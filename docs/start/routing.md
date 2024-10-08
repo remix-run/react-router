@@ -37,6 +37,7 @@ import {
   route,
   index,
   layout,
+  prefix,
 } from "@react-router/dev/routes";
 
 export const routes: RouteConfig = [
@@ -48,7 +49,7 @@ export const routes: RouteConfig = [
     route("register", "./auth/register.tsx"),
   ]),
 
-  route("concerts", [
+  ...prefix("concerts", [
     index("./concerts/home.tsx"),
     route(":city", "./concerts/city.tsx"),
     route("trending", "./concerts/trending.tsx"),
@@ -136,12 +137,13 @@ Every route in `routes.ts` is nested inside the special `app/root.tsx` module.
 
 Using `layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. It's like the root route but they can be added at any level.
 
-```tsx filename=app/routes.ts lines=[9,15]
+```tsx filename=app/routes.ts lines=[10,16]
 import {
   type RouteConfig,
   route,
   layout,
   index,
+  prefix,
 } from "@react-router/dev/routes";
 
 export const routes: RouteConfig = [
@@ -149,7 +151,7 @@ export const routes: RouteConfig = [
     index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
   ]),
-  route("projects", [
+  ...prefix("projects", [
     index("./projects/home.tsx"),
     layout("./projects/project-layout.tsx", [
       route(":pid", "./projects/project.tsx"),
@@ -186,6 +188,34 @@ export const routes: RouteConfig = [
 ```
 
 Note that index routes can't have children.
+
+## Route Prefixes
+
+Using `prefix`, you can add a path prefix to a set of routes without needing to introduce a parent route file.
+
+```tsx filename=app/routes.ts lines=[14]
+import {
+  type RouteConfig,
+  route,
+  layout,
+  index,
+  prefix,
+} from "@react-router/dev/routes";
+
+export const routes: RouteConfig = [
+  layout("./marketing/layout.tsx", [
+    index("./marketing/home.tsx"),
+    route("contact", "./marketing/contact.tsx"),
+  ]),
+  ...prefix("projects", [
+    index("./projects/home.tsx"),
+    layout("./projects/project-layout.tsx", [
+      route(":pid", "./projects/project.tsx"),
+      route(":pid/edit", "./projects/edit-project.tsx"),
+    ]),
+  ]),
+];
+```
 
 ## Dynamic Segments
 
