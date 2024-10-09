@@ -6,12 +6,12 @@
 ### Typesafety improvements
 
 React Router now generates types for each of your route modules.
-You can access those types by importing them from `./+types/<route filename without extension>`.
+You can access those types by importing them from `./+types.<route filename without extension>`.
 For example:
 
 ```ts
 // app/routes/product.tsx
-import type * as Route from "./+types/product";
+import type * as Route from "./+types.product";
 
 export function loader({ params }: Route.LoaderArgs) {}
 
