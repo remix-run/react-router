@@ -121,7 +121,7 @@ let data = useLoaderData<typeof loader>();
 ```
 
 [future-flags]: ../community/api-development-strategy
-[v2-future-flags]: https://remix.run/docs/en/main/start/future-flags
+[v2-future-flags]: https://remix.run/docs/start/future-flags
 [remix-discord]: https://rmx.as/discord
 [github-new-issue]: https://github.com/remix-run/react-router/issues/new/choose
 [routing]: ../start/routing
