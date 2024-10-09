@@ -1,5 +1,24 @@
 # `react-router-dom`
 
+## 6.27.0-pre.0
+
+### Minor Changes
+
+- Stabilize `unstable_patchRoutesOnNavigation` ([#11973](https://github.com/remix-run/react-router/pull/11973))
+- Stabilize `unstable_dataStrategy` ([#11974](https://github.com/remix-run/react-router/pull/11974))
+- Stabilize the `unstable_flushSync` option for navigations and fetchers ([#11989](https://github.com/remix-run/react-router/pull/11989))
+- Stabilize the `unstable_viewTransition` option for navigations and the corresponding `unstable_useViewTransitionState` hook ([#11989](https://github.com/remix-run/react-router/pull/11989))
+
+### Patch Changes
+
+- - Fix bug when submitting to the current contextual route (parent route with an index child) when an `?index` param already exists from a prior submission ([#12003](https://github.com/remix-run/react-router/pull/12003))
+  - Fix `useFormAction` bug - when removing `?index` param it would not keep other non-Remix `index` params
+- - Fix types for `RouteObject` within `PatchRoutesOnNavigationFunction`'s `patch` method so it doesn't expect agnostic route objects passed to `patch` ([#11967](https://github.com/remix-run/react-router/pull/11967))
+  - Add new `PatchRoutesOnNavigationFunctionArgs` type for convenience
+- Updated dependencies:
+  - `react-router@6.27.0-pre.0`
+  - `@remix-run/router@1.20.0-pre.0`
+
 ## 6.26.2
 
 ### Patch Changes
