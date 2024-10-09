@@ -8,5 +8,17 @@
     "react-router-native": "6.26.2",
     "@remix-run/router": "1.19.2"
   },
-  "changesets": []
+  "changesets": [
+    "calm-wombats-design",
+    "chatty-impalas-pump",
+    "gold-frogs-pump",
+    "happy-grapes-fry",
+    "itchy-shoes-sort",
+    "nasty-queens-leave",
+    "silly-walls-sit",
+    "soft-maps-fix",
+    "stabilize-flush-sync",
+    "stabilize-view-transitions",
+    "unlucky-keys-collect"
+  ]
 }
