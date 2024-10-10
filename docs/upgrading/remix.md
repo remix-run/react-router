@@ -113,7 +113,7 @@ Currently, when you upgrade to React Router v7 you're going to get typescript ye
 let data = useLoaderData<typeof loader>();
 ```
 
-**Option 2 - Remove the generics and optionally cast the types manually**
+**Option 2 - Remove the generics and cast the types manually**
 
 ```diff
 -let data = useLoaderData<typeof loader>();
