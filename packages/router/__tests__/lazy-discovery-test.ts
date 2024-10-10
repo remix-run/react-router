@@ -2064,15 +2064,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         actionData: null,
         loaderData: {},
         errors: {
-          a: new ErrorResponseImpl(
-            400,
-            "Bad Request",
-            new Error(
-              'Unable to match URL "/a/b" - the `patchRoutesOnNavigation()` ' +
-                "function threw the following error:\nError: broke!"
-            ),
-            true
-          ),
+          a: new Error("broke!"),
         },
       });
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a"]);
@@ -2139,15 +2131,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         actionData: null,
         loaderData: {},
         errors: {
-          a: new ErrorResponseImpl(
-            400,
-            "Bad Request",
-            new Error(
-              'Unable to match URL "/a/b" - the `patchRoutesOnNavigation()` ' +
-                "function threw the following error:\nError: broke!"
-            ),
-            true
-          ),
+          a: new Error("broke!"),
         },
       });
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a"]);
@@ -2213,16 +2197,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         actionData: null,
         loaderData: {},
         errors: {
-          parent: new ErrorResponseImpl(
-            400,
-            "Bad Request",
-            new Error(
-              'Unable to match URL "/parent/child/grandchild" - the ' +
-                "`patchRoutesOnNavigation()` function threw the following " +
-                "error:\nError: broke!"
-            ),
-            true
-          ),
+          parent: new Error("broke!"),
         },
       });
       expect(router.state.matches.map((m) => m.route.id)).toEqual([
@@ -2274,16 +2249,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         actionData: null,
         loaderData: {},
         errors: {
-          parent: new ErrorResponseImpl(
-            400,
-            "Bad Request",
-            new Error(
-              'Unable to match URL "/parent/child/grandchild" - the ' +
-                "`patchRoutesOnNavigation()` function threw the following " +
-                "error:\nError: broke!"
-            ),
-            true
-          ),
+          parent: new Error("broke!"),
         },
       });
       expect(router.state.matches.map((m) => m.route.id)).toEqual([
