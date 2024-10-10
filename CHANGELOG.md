@@ -222,10 +222,10 @@ Date: 2024-10-10
 
 This release stabilizes a handful of "unstable" APIs in preparation for the pending React Router v7 release (see [these](https://remix.run/blog/merging-remix-and-react-router9) [posts](https://remix.run/blog/incremental-path-to-react-19) for more info):
 
-- `unstable_dataStrategy` (`createBrowserRouter` and friends)
-- `unstable_patchRoutesOnNavigation` (`createBrowserRouter` and friends)
-- `unstable_flushSync` (`useSubmit`, `fetcher.load`, `fetcher.submit`)
-- `unstable_viewTransition` (`<Link>`, `<Form>`, `useNavigate`, `useSubmit`)
+- `unstable_dataStrategy` → `dataStrategy` (`createBrowserRouter` and friends)
+- `unstable_patchRoutesOnNavigation` → `patchRoutesOnNavigation` (`createBrowserRouter` and friends)
+- `unstable_flushSync` → `flushSync` (`useSubmit`, `fetcher.load`, `fetcher.submit`)
+- `unstable_viewTransition` → `viewTransition` (`<Link>`, `<Form>`, `useNavigate`, `useSubmit`)
 
 ### Minor Changes
 
