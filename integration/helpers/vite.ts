@@ -41,9 +41,15 @@ export const viteConfig = {
     port: number;
     fsAllow?: string[];
     spaMode?: boolean;
+    routeChunks?: NonNullable<
+      ReactRouterConfig["future"]
+    >["unstable_routeChunks"];
   }) => {
     let config: ReactRouterConfig = {
       ssr: !args.spaMode,
+      future: {
+        unstable_routeChunks: args.routeChunks,
+      },
     };
 
     return dedent`
@@ -385,10 +391,17 @@ function bufferize(stream: Readable): () => string {
 }
 
 export function createEditor(projectDir: string) {
-  return async (file: string, transform: (contents: string) => string) => {
+  return async function edit(
+    file: string,
+    transform: (contents: string) => string
+  ) {
     let filepath = path.join(projectDir, file);
     let contents = await fs.readFile(filepath, "utf8");
     await fs.writeFile(filepath, transform(contents), "utf8");
+
+    return async function revert() {
+      await fs.writeFile(filepath, contents, "utf8");
+    };
   };
 }
 
