@@ -78,7 +78,7 @@ export default defineConfig({
 
 ### Step 5 - Add a `routes.ts` file
 
-In React Router v7 you define your routes using the [`app/routes.ts`][routing] file. For backwards-compatibility and for folks who prefer [file-based conventions][fs-routing], you can opt-into the same "flat routes" convention you are using in Remix v2 as follows:
+In React Router v7 you define your routes using the [`app/routes.ts`][routing] file. For backwards-compatibility and for folks who prefer [file-based conventions][fs-routing], you can opt-into the same "flat routes" convention you are using in Remix v2 via the new `@react-router/fs-routes` package:
 
 ```ts filename=app/routes.ts
 import { type RouteConfig } from "@react-router/dev/routes";
