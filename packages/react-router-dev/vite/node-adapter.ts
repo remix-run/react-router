@@ -47,14 +47,19 @@ export function fromNodeRequest(
   let url = new URL(nodeReq.originalUrl, origin);
 
   // Abort action/loaders once we can no longer write a response
-  let controller = new AbortController();
-  nodeRes.on("close", () => controller.abort());
-
+  let controller: AbortController | null = new AbortController();
   let init: RequestInit = {
     method: nodeReq.method,
     headers: fromNodeHeaders(nodeReq.headers),
     signal: controller.signal,
   };
+
+  // Abort action/loaders once we can no longer write a response iff we have
+  // not yet sent a response (i.e., `close` without `finish`)
+  // `finish` -> done rendering the response
+  // `close` -> response can no longer be written to
+  nodeRes.on("finish", () => (controller = null));
+  nodeRes.on("close", () => controller?.abort());
 
   if (nodeReq.method !== "GET" && nodeReq.method !== "HEAD") {
     init.body = createReadableStreamFromReadable(nodeReq);
