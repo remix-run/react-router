@@ -780,6 +780,115 @@ test.describe("Client Data", () => {
       expect(html).not.toMatch("Should not see me");
       console.error = _consoleError;
     });
+
+    test("bubbled server loader errors are persisted for hydrating routes", async ({
+      page,
+    }) => {
+      let _consoleError = console.error;
+      console.error = () => {};
+      appFixture = await createAppFixture(
+        await createFixture(
+          {
+            files: {
+              ...getFiles({
+                parentClientLoader: false,
+                parentClientLoaderHydrate: false,
+                childClientLoader: false,
+                childClientLoaderHydrate: false,
+              }),
+              "app/routes/parent.tsx": js`
+                import { Outlet, useLoaderData, useRouteLoaderData, useRouteError } from 'react-router'
+                export function loader() {
+                  return { message: 'Parent Server Loader'};
+                }
+                export async function clientLoader({ serverLoader }) {
+                  console.log('running parent client loader')
+                  // Need a small delay to ensure we capture the server-rendered
+                  // fallbacks for assertions
+                  await new Promise(r => setTimeout(r, 100));
+                  let data = await serverLoader();
+                  return { message: data.message + " (mutated by client)" };
+                }
+                clientLoader.hydrate = true;
+                export default function Component() {
+                  let data = useLoaderData();
+                  return (
+                    <>
+                      <p id="parent-data">{data.message}</p>
+                      <Outlet/>
+                    </>
+                  );
+                }
+                export function ErrorBoundary() {
+                  let data = useRouteLoaderData("routes/parent")
+                  let error = useRouteError();
+                  return (
+                    <>
+                      <h1>Parent Error</h1>
+                      <p id="parent-data">{data?.message}</p>
+                      <p id="parent-error">{error?.message}</p>
+                    </>
+                  );
+                }
+              `,
+              "app/routes/parent.child.tsx": js`
+                import { useRouteError, useLoaderData } from 'react-router'
+                export function loader() {
+                  throw new Error('Child Server Error');
+                }
+                export function clientLoader() {
+                  console.log('running child client loader')
+                  return "Should not see me";
+                }
+                clientLoader.hydrate = true;
+                export default function Component() {
+                  let data = useLoaderData()
+                  return (
+                    <>
+                      <p>Should not see me</p>
+                      <p>{data}</p>;
+                    </>
+                  );
+                }
+              `,
+            },
+          },
+          ServerMode.Development // Avoid error sanitization
+        ),
+        ServerMode.Development // Avoid error sanitization
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+      let logs: string[] = [];
+      page.on("console", (msg) => {
+        let text = msg.text();
+        if (
+          // Chrome logs the 500 as a console error, so skip that since it's not
+          // what we are asserting against here
+          /500 \(Internal Server Error\)/.test(text) ||
+          // Ignore any dev tools messages. This may only happen locally when dev
+          // tools is installed and not in CI but either way we don't care
+          /Download the React DevTools/.test(text)
+        ) {
+          return;
+        }
+        logs.push(text);
+      });
+      await app.goto("/parent/child", false);
+      let html = await app.getHtml("main");
+      expect(html).toMatch("Parent Server Loader</p>");
+      expect(html).toMatch("Child Server Error");
+      expect(html).not.toMatch("Should not see me");
+      // Ensure we hydrate and remain on the boundary
+      await page.waitForSelector(
+        ":has-text('Parent Server Loader (mutated by client)')"
+      );
+      html = await app.getHtml("main");
+      expect(html).toMatch("Parent Server Loader (mutated by client)</p>");
+      expect(html).toMatch("Child Server Error");
+      expect(html).not.toMatch("Should not see me");
+      expect(logs).toEqual(["running parent client loader"]);
+      console.error = _consoleError;
+    });
   });
 
   test.describe("clientLoader - lazy route module", () => {
