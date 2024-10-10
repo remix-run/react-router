@@ -840,6 +840,6 @@ See:
 [querystring]: https://developer.mozilla.org/en-US/docs/Web/API/Location/search
 [usesearchparams]: ../hooks/use-search-params
 [link]: ../components/link
-[location-state]: https://github.com/remix-run/history/blob/main/docs/api-reference.md#locationstate
+[location-state]: ../hooks/use-location#locationstate
 [location]: ../utils/location
 [use-location]: ../hooks/use-location
