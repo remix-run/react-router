@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.20.0-pre.1
+
+### Patch Changes
+
+- Expose errors thown from `patchRoutesOnNavigation` directly to `useRouteError` instead of wrapping them in a 400 `ErrorResponse` instance ([#12111](https://github.com/remix-run/react-router/pull/12111))
+
 ## 1.20.0-pre.0
 
 ### Minor Changes
