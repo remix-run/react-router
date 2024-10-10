@@ -253,6 +253,7 @@ This release stabilizes a handful of "unstable" APIs in preparation for the pend
   - This was originally implemented as an optimization but it proved to be a bit too limiting
   - If you need this optimization you can implement your own cache inside `patchRoutesOnNavigation`
 - Fix types for `RouteObject` within `PatchRoutesOnNavigationFunction`'s `patch` method so it doesn't expect agnostic route objects passed to `patch` ([#11967](https://github.com/remix-run/react-router/pull/11967))
+- Expose errors thrown from `patchRoutesOnNavigation` directly to `useRouteError` instead of wrapping them in a 400 `ErrorResponse` instance ([#12111](https://github.com/remix-run/react-router/pull/12111))
 
 **Full Changelog**: [`v6.26.2...v6.27.0`](https://github.com/remix-run/react-router/compare/react-router@6.26.2...react-router@6.27.0)
 
