@@ -761,19 +761,16 @@ See:
 
 ## Location State
 
-React Router can read and modify the [location state][locationstate], which is a part of [`location`][location] object. You can get the [`location`][location] object using `useLocation`.
+React Router can read and modify the [location state][location-state], which is a part of [`location`][location] object. You can get the [`location`][location] object using `useLocation`.
 
-```jsx lines=[2,5]
+```jsx lines=[2,7]
 function App() {
   const location = useLocation();
-
-  //get location state object from location object
-  const locationState = location.state;
 
   return (
     <p>
       The current location state value is:
-      {locationState.someValue}
+      {location.state.someValue}
     </p>
   );
 }
@@ -781,20 +778,22 @@ function App() {
 
 You can use `<Link state>` or `useNavigate` to change the location state.
 
-```jsx lines=[2,5,10]
+```jsx lines=[2,6,11-13]
 function App() {
   const navigate = useNavigate();
-
-  function handleClick() {
-    navigate("/home", { state: { someValue: "example" } });
-  }
 
   return (
     <>
       <Link to="/home" state={{ someValue: "example" }}>
         Go to home page with state
       </Link>
-      <button onClick={handleClick}>
+      <button
+        onClick={() =>
+          navigate("/home", {
+            state: { someValue: "example" },
+          })
+        }
+      >
         Go to home page with state
       </button>
     </>
@@ -804,7 +803,7 @@ function App() {
 
 See:
 
-- [`useLocation`][uselocation]
+- [`useLocation`][use-location]
 - [`Link`][link]
 - [`useNavigate`][usenavigate]
 
@@ -841,6 +840,6 @@ See:
 [querystring]: https://developer.mozilla.org/en-US/docs/Web/API/Location/search
 [usesearchparams]: ../hooks/use-search-params
 [link]: ../components/link
-[locationstate]: https://github.com/remix-run/history/blob/main/docs/api-reference.md#locationstate
+[location-state]: https://github.com/remix-run/history/blob/main/docs/api-reference.md#locationstate
 [location]: ../utils/location
-[uselocation]: ../hooks/use-location
+[use-location]: ../hooks/use-location
