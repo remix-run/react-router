@@ -1771,7 +1771,7 @@ export function createRouter(init: RouterInit): Router {
       );
       result = results[actionMatch.route.id];
 
-      if (request.signal.aborted) {
+      if (request.signal?.aborted) {
         return { shortCircuited: true };
       }
     }
@@ -2000,7 +2000,7 @@ export function createRouter(init: RouterInit): Router {
         request
       );
 
-    if (request.signal.aborted) {
+    if (request.signal?.aborted) {
       return { shortCircuited: true };
     }
 
@@ -2277,7 +2277,7 @@ export function createRouter(init: RouterInit): Router {
     );
     let actionResult = actionResults[match.route.id];
 
-    if (fetchRequest.signal.aborted) {
+    if (fetchRequest.signal?.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
       if (fetchControllers.get(key) === abortController) {
@@ -2398,7 +2398,7 @@ export function createRouter(init: RouterInit): Router {
         revalidationRequest
       );
 
-    if (abortController.signal.aborted) {
+    if (abortController.signal?.aborted) {
       return;
     }
 
@@ -2564,7 +2564,7 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.delete(key);
     }
 
-    if (fetchRequest.signal.aborted) {
+    if (fetchRequest.signal?.aborted) {
       return;
     }
 
@@ -3231,7 +3231,7 @@ export function createRouter(init: RouterInit): Router {
         }
       }
 
-      if (signal.aborted) {
+      if (signal?.aborted) {
         return { type: "aborted" };
       }
 
@@ -3666,7 +3666,7 @@ export function createStaticHandler(
       );
       result = results[actionMatch.route.id];
 
-      if (request.signal.aborted) {
+      if (request.signal?.aborted) {
         throwStaticHandlerAbortedError(request, isRouteRequest);
       }
     }
@@ -3834,7 +3834,7 @@ export function createStaticHandler(
       dataStrategy
     );
 
-    if (request.signal.aborted) {
+    if (request.signal?.aborted) {
       throwStaticHandlerAbortedError(request, isRouteRequest);
     }
 
@@ -4468,7 +4468,7 @@ async function loadLazyRouteChildren(
         path,
         matches,
         patch: (routeId, children) => {
-          if (!signal.aborted) {
+          if (!signal?.aborted) {
             patchRoutesImpl(
               routeId,
               children,
@@ -5180,7 +5180,7 @@ function processLoaderData(
     invariant(result, "Did not find corresponding fetcher result");
 
     // Process fetcher non-redirect errors
-    if (controller && controller.signal.aborted) {
+    if (controller && controller.signal?.aborted) {
       // Nothing to do for aborted fetchers
       return;
     } else if (isErrorResult(result)) {
