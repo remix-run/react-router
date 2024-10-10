@@ -297,8 +297,18 @@ export function createClientRoutes(
           : routeModule.shouldRevalidate,
       });
 
-      let initialData = initialState?.loaderData?.[route.id];
-      let initialError = initialState?.errors?.[route.id];
+      let hasInitialData =
+        initialState &&
+        initialState.loaderData &&
+        route.id in initialState.loaderData;
+      let initialData = hasInitialData
+        ? initialState?.loaderData?.[route.id]
+        : undefined;
+      let hasInitialError =
+        initialState && initialState.errors && route.id in initialState.errors;
+      let initialError = hasInitialError
+        ? initialState?.errors?.[route.id]
+        : undefined;
       let isHydrationRequest =
         needsRevalidation == null &&
         (routeModule.clientLoader?.hydrate === true || !route.hasLoader);
@@ -327,10 +337,12 @@ export function createClientRoutes(
 
                 // On the first call, resolve with the server result
                 if (isHydrationRequest) {
-                  if (initialError !== undefined) {
+                  if (hasInitialData) {
+                    return initialData;
+                  }
+                  if (hasInitialError) {
                     throw initialError;
                   }
-                  return initialData;
                 }
 
                 // Call the server loader for client-side navigations
