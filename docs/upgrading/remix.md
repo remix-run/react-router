@@ -89,7 +89,7 @@ export const routes: RouteConfig = flatRoutes();
 
 ### Step 6 - Rename components in entry files
 
-If you have an entry.server.tsx and/or an entry.client.tsx file in your application, you will need to rename the main components in this files:
+If you have an `entry.server.tsx` and/or an `entry.client.tsx` file in your application, you will need to rename the main components in this files:
 
 | Entry File         | Remix v2 Component |     | React Router v7 Component |
 | ------------------ | ------------------ | --- | ------------------------- |
