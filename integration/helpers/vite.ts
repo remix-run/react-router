@@ -41,7 +41,9 @@ export const viteConfig = {
     port: number;
     fsAllow?: string[];
     spaMode?: boolean;
-    routeChunks?: boolean;
+    routeChunks?: NonNullable<
+      ReactRouterConfig["future"]
+    >["unstable_routeChunks"];
   }) => {
     let config: ReactRouterConfig = {
       ssr: !args.spaMode,

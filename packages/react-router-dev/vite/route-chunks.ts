@@ -928,7 +928,7 @@ export function detectRouteChunks(
 }
 
 const mainChunkName = "main" as const;
-const chunkedExportNames = ["clientAction", "clientLoader"] as const;
+export const chunkedExportNames = ["clientAction", "clientLoader"] as const;
 export type RouteChunkName =
   | typeof mainChunkName
   | (typeof chunkedExportNames)[number];

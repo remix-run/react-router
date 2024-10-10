@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import getPort from "get-port";
+import dedent from "dedent";
 
 import {
   createProject,
@@ -89,7 +90,7 @@ const files = {
       return () => "clientAction in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
     })();
 
-    export default function UnchunckableRoute() {
+    export default function UnchunkableRoute() {
       inUnchunkableMainChunk();
       const loaderData = useLoaderData();
       const actionData = useActionData();
@@ -151,6 +152,55 @@ test.describe("Route chunks", async () => {
 
     test("production", async ({ page }) => {
       await workflow({ cwd, page, port, routeChunks, mode: "production" });
+    });
+  });
+
+  test.describe("enforce", () => {
+    let routeChunks = "enforce" as const;
+    let port: number;
+    let cwd: string;
+
+    test.describe("chunkable routes", () => {
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject({
+          "vite.config.js": await viteConfig.basic({ port, routeChunks }),
+          ...files,
+          "app/routes/unchunkable.tsx": files["app/routes/chunkable.tsx"],
+        });
+      });
+
+      test("build passes", async () => {
+        let { status } = build({ cwd });
+        expect(status).toBe(0);
+      });
+    });
+
+    test.describe("unchunkable routes", () => {
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject({
+          "vite.config.js": await viteConfig.basic({ port, routeChunks }),
+          ...files,
+        });
+      });
+
+      test("build fails", async () => {
+        let { stderr, status } = build({ cwd });
+        expect(status).toBe(1);
+        expect(stderr.toString()).toMatch(
+          dedent`
+            Route chunks error: routes/unchunkable.tsx
+            
+            - clientAction
+            - clientLoader
+
+            These exports were unable to be split into their own chunks because they reference code in the same file that is used by other route module exports.
+            
+            If you need to share code between these and other exports, you should extract the shared code into a separate module.
+          `
+        );
+      });
     });
   });
 });
