@@ -82,7 +82,7 @@ interface FutureConfig {
   /**
    * Automatically split route modules into multiple chunks when possible.
    */
-  unstable_routeChunks?: boolean;
+  unstable_routeChunks?: boolean | "enforce";
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -502,7 +502,7 @@ export async function resolveReactRouterConfig({
   }
 
   let future: FutureConfig = {
-    unstable_routeChunks: Boolean(userFuture?.unstable_routeChunks),
+    unstable_routeChunks: userFuture?.unstable_routeChunks ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
