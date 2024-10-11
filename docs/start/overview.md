@@ -763,7 +763,7 @@ See:
 
 React Router can read and modify the [location state][location-state], which is a part of [`location`][location] object. You can get the [`location`][location] object using [`useLocation`][use-location].
 
-```jsx lines=[2,7]
+```tsx lines=[2,7]
 function App() {
   const location = useLocation();
 
@@ -776,9 +776,9 @@ function App() {
 }
 ```
 
-You can use `<Link state>` or `useNavigate` to change the location state.
+You can use [`<Link state>`][link-component-state-prop] or [`useNavigate`][use-navigate] to change the location state.
 
-```jsx lines=[2,6,11-13]
+```tsx lines=[2,6,11-13]
 function App() {
   const navigate = useNavigate();
 
@@ -805,7 +805,7 @@ See:
 
 - [`useLocation`][use-location]
 - [`Link`][link]
-- [`useNavigate`][usenavigate]
+- [`useNavigate`][use-navigate]
 
 [path]: ../route/route#path
 [loader]: ../route/loader
@@ -843,3 +843,5 @@ See:
 [location-state]: ../hooks/use-location#locationstate
 [location]: ../utils/location
 [use-location]: ../hooks/use-location
+[use-navigate]: ../hooks/use-navigate
+[link-component-state-prop]: ../components/link#state
