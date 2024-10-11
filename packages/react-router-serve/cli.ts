@@ -83,18 +83,7 @@ async function run() {
       maxAge: "1y",
     })
   );
-  app.use(
-    build.publicPath,
-    express.static(build.assetsBuildDirectory, {
-      // Don't redirect directory index.html request to include a trailing slash
-      redirect: false,
-      setHeaders: function (res, path) {
-        if (path.endsWith(".data")) {
-          res.set("Content-Type", "text/x-turbo");
-        }
-      },
-    })
-  );
+  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 

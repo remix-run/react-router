@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { PassThrough } from "node:stream";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -153,7 +154,9 @@ test.describe("Prerendering", () => {
   });
 
   test("Prerenders known static routes when true is specified", async () => {
+    let buildStdio = new PassThrough();
     fixture = await createFixture({
+      buildStdio,
       prerender: true,
       files: {
         ...files,
@@ -192,6 +195,26 @@ test.describe("Prerendering", () => {
         `,
       },
     });
+
+    let buildOutput: string;
+    let chunks: Buffer[] = [];
+    buildOutput = await new Promise<string>((resolve, reject) => {
+      buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      buildStdio.on("error", (err) => reject(err));
+      buildStdio.on("end", () =>
+        resolve(Buffer.concat(chunks).toString("utf8"))
+      );
+    });
+
+    expect(buildOutput).toContain(
+      [
+        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`.",
+        "You may want to use the `prerender()` API to prerender the following paths:",
+        "  - :slug",
+        "  - *",
+      ].join("\n")
+    );
+
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
@@ -412,6 +435,63 @@ test.describe("Prerendering", () => {
     await app.goto("/not-prerendered");
     await page.waitForSelector("[data-mounted]");
     expect(await app.getHtml()).toContain("<span>NOT-PRERENDERED-false</span>");
+  });
+
+  test("Does not encounter header limits on large prerendered data", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      // Even thogh we are prerendering, we want a running server so we can
+      // hit the pre-rendered HTML file and a non-prerendered route
+      prerender: false,
+      files: {
+        ...files,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter({
+                prerender: ["/", "/about"],
+              })
+            ],
+          });
+        `,
+        "app/routes/about.tsx": js`
+          import { useLoaderData } from 'react-router';
+          export function loader({ request }) {
+            return {
+              prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+              // 24999 characters
+              data: new Array(5000).fill('test').join('-'),
+            };
+          }
+
+          export default function Comp() {
+            let data = useLoaderData();
+            return (
+              <>
+                <h1 data-title>Large loader</h1>
+                <p data-prerendered>{data.prerendered}</p>
+                <p data-length>{data.data.length}</p>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/about");
+    await page.waitForSelector("[data-mounted]");
+    expect(await app.getHtml("[data-title]")).toContain("Large loader");
+    expect(await app.getHtml("[data-prerendered]")).toContain("yes");
+    expect(await app.getHtml("[data-length]")).toBe(
+      '<p data-length="true">24999</p>'
+    );
   });
 
   test("Renders down to the proper HydrateFallback", async ({ page }) => {

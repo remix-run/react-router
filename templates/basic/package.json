@@ -6,24 +6,25 @@
     "dev": "react-router dev",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@react-router/node": "0.0.0-nightly-8f12ed19a-20240924",
-    "@react-router/serve": "0.0.0-nightly-8f12ed19a-20240924",
-    "@tailwindcss/vite": "^4.0.0-alpha.24",
+    "@react-router/node": "7.0.0-pre.0",
+    "@react-router/serve": "7.0.0-pre.0",
     "isbot": "^5.1.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "0.0.0-nightly-8f12ed19a-20240924"
+    "react-router": "7.0.0-pre.0"
   },
   "devDependencies": {
-    "@react-router/dev": "0.0.0-nightly-8f12ed19a-20240924",
+    "@react-router/dev": "7.0.0-pre.0",
     "@types/react": "^18.3.9",
     "@types/react-dom": "^18.3.0",
-    "tailwindcss": "^4.0.0-alpha.24",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
-    "vite": "^5.4.7",
+    "vite": "^5.4.8",
     "vite-tsconfig-paths": "^5.0.1"
   },
   "engines": {

@@ -1831,23 +1831,22 @@ async function handlePrerender(
   } else {
     routesToPrerender = reactRouterConfig.prerender || ["/"];
   }
-  let requestInit = {
-    headers: {
-      // Header that can be used in the loader to know if you're running at
-      // build time or runtime
-      "X-React-Router-Prerender": "yes",
-    },
+  let headers = {
+    // Header that can be used in the loader to know if you're running at
+    // build time or runtime
+    "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
     let hasLoaders = matchRoutes(routes, path)?.some((m) => m.route.loader);
+    let data: string | undefined;
     if (hasLoaders) {
-      await prerenderData(
+      data = await prerenderData(
         handler,
         path,
         clientBuildDirectory,
         reactRouterConfig,
         viteConfig,
-        requestInit
+        { headers }
       );
     }
     await prerenderRoute(
@@ -1856,7 +1855,9 @@ async function handlePrerender(
       clientBuildDirectory,
       reactRouterConfig,
       viteConfig,
-      requestInit
+      data
+        ? { headers: { ...headers, "X-React-Router-Prerender-Data": data } }
+        : { headers }
     );
   }
 
@@ -1896,12 +1897,13 @@ function determineStaticPrerenderRoutes(
   }
   recurse(routes);
 
-  if (isBooleanUsage && paramRoutes) {
+  if (isBooleanUsage && paramRoutes.length > 0) {
     viteConfig.logger.warn(
-      "The following paths were not prerendered because Dynamic Param and Splat " +
-        "routes cannot be prerendered when using `prerender:true`. You may want to " +
-        "consider using the `prerender()` API if you wish to prerender slug and " +
-        "splat routes."
+      [
+        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`.",
+        "You may want to use the `prerender()` API to prerender the following paths:",
+        ...paramRoutes.map((p) => "  - " + p),
+      ].join("\n")
     );
   }
 
@@ -1934,6 +1936,7 @@ async function prerenderData(
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, data);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+  return data;
 }
 
 async function prerenderRoute(

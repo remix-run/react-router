@@ -897,33 +897,18 @@ export function createRouter(init: RouterInit): Router {
     // were marked for explicit hydration
     let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
     let errors = init.hydrationData ? init.hydrationData.errors : null;
-    let isRouteInitialized = (m: AgnosticDataRouteMatch) => {
-      // No loader, nothing to initialize
-      if (!m.route.loader) {
-        return true;
-      }
-      // Explicitly opting-in to running on hydration
-      if (
-        typeof m.route.loader === "function" &&
-        m.route.loader.hydrate === true
-      ) {
-        return false;
-      }
-      // Otherwise, initialized if hydrated with data or an error
-      return (
-        (loaderData && loaderData[m.route.id] !== undefined) ||
-        (errors && errors[m.route.id] !== undefined)
-      );
-    };
-
     // If errors exist, don't consider routes below the boundary
     if (errors) {
       let idx = initialMatches.findIndex(
         (m) => errors![m.route.id] !== undefined
       );
-      initialized = initialMatches.slice(0, idx + 1).every(isRouteInitialized);
+      initialized = initialMatches
+        .slice(0, idx + 1)
+        .every((m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors));
     } else {
-      initialized = initialMatches.every(isRouteInitialized);
+      initialized = initialMatches.every(
+        (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+      );
     }
   }
 
@@ -1564,7 +1549,7 @@ export function createRouter(init: RouterInit): Router {
     // Short circuit if it's only a hash change and not a revalidation or
     // mutation submission.
     //
-    // Ignore on initial page loads because since the initial load will always
+    // Ignore on initial page loads because since the initial hydration will always
     // be "same hash".  For example, on /page#hash and submit a <Form method="post">
     // which will default to a navigation to /page
     if (
@@ -1714,17 +1699,15 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { boundaryId, error } = handleDiscoverRouteError(
-          location.pathname,
-          discoverResult
-        );
+        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
+          .route.id;
         return {
           matches: discoverResult.partialMatches,
           pendingActionResult: [
             boundaryId,
             {
               type: ResultType.error,
-              error,
+              error: discoverResult.error,
             },
           ],
         };
@@ -1887,15 +1870,13 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { boundaryId, error } = handleDiscoverRouteError(
-          location.pathname,
-          discoverResult
-        );
+        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
+          .route.id;
         return {
           matches: discoverResult.partialMatches,
           loaderData: {},
           errors: {
-            [boundaryId]: error,
+            [boundaryId]: discoverResult.error,
           },
         };
       } else if (!discoverResult.matches) {
@@ -2047,13 +2028,9 @@ export function createRouter(init: RouterInit): Router {
       fetcherResults
     );
 
-    // With "partial hydration", preserve SSR errors for routes that don't re-run
+    // Preserve SSR errors during partial hydration
     if (initialHydration && state.errors) {
-      Object.entries(state.errors)
-        .filter(([id]) => !matchesToLoad.some((m) => m.route.id === id))
-        .forEach(([routeId, error]) => {
-          errors = Object.assign(errors || {}, { [routeId]: error });
-        });
+      errors = { ...state.errors, ...errors };
     }
 
     let updatedFetchers = markFetchRedirectsDone();
@@ -2242,8 +2219,7 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
-        let { error } = handleDiscoverRouteError(path, discoverResult);
-        setFetcherError(key, routeId, error, { flushSync });
+        setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
         setFetcherError(
@@ -2527,8 +2503,7 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
-        let { error } = handleDiscoverRouteError(path, discoverResult);
-        setFetcherError(key, routeId, error, { flushSync });
+        setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
         setFetcherError(
@@ -3067,23 +3042,6 @@ export function createRouter(init: RouterInit): Router {
     return { notFoundMatches: matches, route, error };
   }
 
-  function handleDiscoverRouteError(
-    pathname: string,
-    discoverResult: DiscoverRoutesErrorResult
-  ) {
-    return {
-      boundaryId: findNearestBoundary(discoverResult.partialMatches).route.id,
-      error: getInternalRouterError(400, {
-        type: "route-discovery",
-        pathname,
-        message:
-          discoverResult.error != null && "message" in discoverResult.error
-            ? discoverResult.error
-            : String(discoverResult.error),
-      }),
-    };
-  }
-
   // Opt in to capturing and reporting scroll positions during navigations,
   // used by the <ScrollRestoration> component
   function enableScrollRestoration(
@@ -3202,21 +3160,30 @@ export function createRouter(init: RouterInit): Router {
     pathname: string,
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
+    if (!patchRoutesOnNavigationImpl) {
+      return { type: "success", matches };
+    }
+
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
     while (true) {
       let isNonHMR = inFlightDataRoutes == null;
       let routesToUse = inFlightDataRoutes || dataRoutes;
+      let localManifest = manifest;
       try {
-        await loadLazyRouteChildren(
-          patchRoutesOnNavigationImpl!,
-          pathname,
-          partialMatches,
-          routesToUse,
-          manifest,
-          mapRouteProperties,
-          pendingPatchRoutes,
-          signal
-        );
+        await patchRoutesOnNavigationImpl({
+          path: pathname,
+          matches: partialMatches,
+          patch: (routeId, children) => {
+            if (signal.aborted) return;
+            patchRoutesImpl(
+              routeId,
+              children,
+              routesToUse,
+              localManifest,
+              mapRouteProperties
+            );
+          },
+        });
       } catch (e) {
         return { type: "error", error: e, partialMatches };
       } finally {
@@ -3226,7 +3193,7 @@ export function createRouter(init: RouterInit): Router {
         // trigger a re-run of memoized `router.routes` dependencies.
         // HMR will already update the identity and reflow when it lands
         // `inFlightDataRoutes` in `completeNavigation`
-        if (isNonHMR) {
+        if (isNonHMR && !signal.aborted) {
           dataRoutes = [...dataRoutes];
         }
       }
@@ -4195,20 +4162,18 @@ function normalizeNavigateOptions(
   return { path: createPath(parsedPath), submission };
 }
 
-// Filter out all routes below any caught error as they aren't going to
+// Filter out all routes at/below any caught error as they aren't going to
 // render so we don't need to load them
 function getLoaderMatchesUntilBoundary(
   matches: AgnosticDataRouteMatch[],
-  boundaryId: string
+  boundaryId: string,
+  includeBoundary = false
 ) {
-  let boundaryMatches = matches;
-  if (boundaryId) {
-    let index = matches.findIndex((m) => m.route.id === boundaryId);
-    if (index >= 0) {
-      boundaryMatches = matches.slice(0, index);
-    }
+  let index = matches.findIndex((m) => m.route.id === boundaryId);
+  if (index >= 0) {
+    return matches.slice(0, includeBoundary ? index + 1 : index);
   }
-  return boundaryMatches;
+  return matches;
 }
 
 function getMatchesToLoad(
@@ -4217,7 +4182,7 @@ function getMatchesToLoad(
   matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
-  isInitialLoad: boolean,
+  initialHydration: boolean,
   isRevalidationRequired: boolean,
   cancelledFetcherLoads: Set<string>,
   fetchersQueuedForDeletion: Set<string>,
@@ -4236,13 +4201,26 @@ function getMatchesToLoad(
   let nextUrl = history.createURL(location);
 
   // Pick navigation matches that are net-new or qualify for revalidation
-  let boundaryId =
-    pendingActionResult && isErrorResult(pendingActionResult[1])
-      ? pendingActionResult[0]
-      : undefined;
-  let boundaryMatches = boundaryId
-    ? getLoaderMatchesUntilBoundary(matches, boundaryId)
-    : matches;
+  let boundaryMatches = matches;
+  if (initialHydration && state.errors) {
+    // On initial hydration, only consider matches up to _and including_ the boundary.
+    // This is inclusive to handle cases where a server loader ran successfully,
+    // a child server loader bubbled up to this route, but this route has
+    // `clientLoader.hydrate` so we want to still run the `clientLoader` so that
+    // we have a complete version of `loaderData`
+    boundaryMatches = getLoaderMatchesUntilBoundary(
+      matches,
+      Object.keys(state.errors)[0],
+      true
+    );
+  } else if (pendingActionResult && isErrorResult(pendingActionResult[1])) {
+    // If an action threw an error, we call loaders up to, but not including the
+    // boundary
+    boundaryMatches = getLoaderMatchesUntilBoundary(
+      matches,
+      pendingActionResult[0]
+    );
+  }
 
   // Don't revalidate loaders by default after action 4xx/5xx responses
   // when the flag is enabled.  They can still opt-into revalidation via
@@ -4263,15 +4241,8 @@ function getMatchesToLoad(
       return false;
     }
 
-    if (isInitialLoad) {
-      if (typeof route.loader !== "function" || route.loader.hydrate) {
-        return true;
-      }
-      return (
-        !state.loaderData.hasOwnProperty(route.id) &&
-        // Don't re-run if the loader ran and threw an error
-        (!state.errors || state.errors[route.id] === undefined)
-      );
+    if (initialHydration) {
+      return shouldLoadRouteOnHydration(route, state.loaderData, state.errors);
     }
 
     // Always call the loader on new route instances
@@ -4310,11 +4281,12 @@ function getMatchesToLoad(
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches.forEach((f, key) => {
     // Don't revalidate:
-    //  - on initial load (shouldn't be any fetchers then anyway)
-    //  - if fetcher no longer matches the URL
-    //  - if fetcher was unmounted
+    //  - on initial hydration (shouldn't be any fetchers then anyway)
+    //  - if fetcher won't be present in the subsequent render
+    //    - no longer matches the URL (v7_fetcherPersist=false)
+    //    - was unmounted but persisted due to v7_fetcherPersist=true
     if (
-      isInitialLoad ||
+      initialHydration ||
       !matches.some((m) => m.route.id === f.routeId) ||
       fetchersQueuedForDeletion.has(key)
     ) {
@@ -4394,6 +4366,38 @@ function getMatchesToLoad(
   return [navigationMatches, revalidatingFetchers];
 }
 
+function shouldLoadRouteOnHydration(
+  route: AgnosticDataRouteObject,
+  loaderData: RouteData | null | undefined,
+  errors: RouteData | null | undefined
+) {
+  // We dunno if we have a loader - gotta find out!
+  if (route.lazy) {
+    return true;
+  }
+
+  // No loader, nothing to initialize
+  if (!route.loader) {
+    return false;
+  }
+
+  let hasData = loaderData != null && loaderData[route.id] !== undefined;
+  let hasError = errors != null && errors[route.id] !== undefined;
+
+  // Don't run if we error'd during SSR
+  if (!hasData && hasError) {
+    return false;
+  }
+
+  // Explicitly opting-in to running on hydration
+  if (typeof route.loader === "function" && route.loader.hydrate === true) {
+    return true;
+  }
+
+  // Otherwise, run if we're not yet initialized with anything
+  return !hasData && !hasError;
+}
+
 function isNewLoader(
   currentLoaderData: RouteData,
   currentMatch: AgnosticDataRouteMatch,
@@ -4441,53 +4445,6 @@ function shouldRevalidateLoader(
   }
 
   return arg.defaultShouldRevalidate;
-}
-
-/**
- * Idempotent utility to execute patchRoutesOnNavigation() to lazily load route
- * definitions and update the routes/routeManifest
- */
-async function loadLazyRouteChildren(
-  patchRoutesOnNavigationImpl: AgnosticPatchRoutesOnNavigationFunction,
-  path: string,
-  matches: AgnosticDataRouteMatch[],
-  routes: AgnosticDataRouteObject[],
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<
-    string,
-    ReturnType<typeof patchRoutesOnNavigationImpl>
-  >,
-  signal: AbortSignal
-) {
-  let key = [path, ...matches.map((m) => m.route.id)].join("-");
-  try {
-    let pending = pendingRouteChildren.get(key);
-    if (!pending) {
-      pending = patchRoutesOnNavigationImpl({
-        path,
-        matches,
-        patch: (routeId, children) => {
-          if (!signal.aborted) {
-            patchRoutesImpl(
-              routeId,
-              children,
-              routes,
-              manifest,
-              mapRouteProperties
-            );
-          }
-        },
-      });
-      pendingRouteChildren.set(key, pending);
-    }
-
-    if (pending && isPromise<AgnosticRouteObject[]>(pending)) {
-      await pending;
-    }
-  } finally {
-    pendingRouteChildren.delete(key);
-  }
 }
 
 function patchRoutesImpl(
@@ -5310,7 +5267,7 @@ function getInternalRouterError(
     pathname?: string;
     routeId?: string;
     method?: string;
-    type?: "invalid-body" | "route-discovery";
+    type?: "invalid-body";
     message?: string;
   } = {}
 ) {
@@ -5319,11 +5276,7 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    if (type === "route-discovery") {
-      errorMessage =
-        `Unable to match URL "${pathname}" - the \`patchRoutesOnNavigation()\` ` +
-        `function threw the following error:\n${message}`;
-    } else if (method && pathname && routeId) {
+    if (method && pathname && routeId) {
       errorMessage =
         `You made a ${method} request to "${pathname}" but ` +
         `did not provide a \`loader\` for route "${routeId}", ` +

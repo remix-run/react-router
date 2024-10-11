@@ -1,4 +1,4 @@
-# React Router Architect
+# @react-router/architect
 
 Architect server request handler for React Router.
 

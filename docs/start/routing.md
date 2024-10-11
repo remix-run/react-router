@@ -24,9 +24,9 @@ Routes are configured in `app/routes.ts`. Routes have a url pattern to match the
 import { route } from "@react-router/dev/routes";
 
 export const routes = [
-  route("some/path", "./some/file.tsx");
+  route("some/path", "./some/file.tsx"),
   // pattern ^           ^ module file
-]
+];
 ```
 
 Here is a larger sample route config:
@@ -37,6 +37,7 @@ import {
   route,
   index,
   layout,
+  prefix,
 } from "@react-router/dev/routes";
 
 export const routes: RouteConfig = [
@@ -48,7 +49,7 @@ export const routes: RouteConfig = [
     route("register", "./auth/register.tsx"),
   ]),
 
-  route("concerts", [
+  ...prefix("concerts", [
     index("./concerts/home.tsx"),
     route(":city", "./concerts/city.tsx"),
     route("trending", "./concerts/trending.tsx"),
@@ -63,7 +64,7 @@ If you prefer to define your routes via file naming conventions rather than conf
 The files referenced in `routes.ts` define each route's behavior:
 
 ```tsx filename=app/routes.ts
-route("teams/:teamId", "./team.tsx");
+route("teams/:teamId", "./team.tsx"),
 //           route module ^^^^^^^^
 ```
 
@@ -83,7 +84,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 export default function Component({
   loaderData,
 }: Route.ComponentProps) {
-  return <h1>{data.name}</h1>;
+  return <h1>{loaderData.name}</h1>;
 }
 ```
 
@@ -136,12 +137,13 @@ Every route in `routes.ts` is nested inside the special `app/root.tsx` module.
 
 Using `layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. It's like the root route but they can be added at any level.
 
-```tsx filename=app/routes.ts lines=[9,15]
+```tsx filename=app/routes.ts lines=[10,16]
 import {
   type RouteConfig,
   route,
   layout,
   index,
+  prefix,
 } from "@react-router/dev/routes";
 
 export const routes: RouteConfig = [
@@ -149,7 +151,7 @@ export const routes: RouteConfig = [
     index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
   ]),
-  route("projects", [
+  ...prefix("projects", [
     index("./projects/home.tsx"),
     layout("./projects/project-layout.tsx", [
       route(":pid", "./projects/project.tsx"),
@@ -162,7 +164,7 @@ export const routes: RouteConfig = [
 ## Index Routes
 
 ```ts
-index(componentFile);
+index(componentFile),
 ```
 
 Index routes render into their parent's [Outlet][outlet] at their parent's URL (like a default child route).
@@ -187,19 +189,47 @@ export const routes: RouteConfig = [
 
 Note that index routes can't have children.
 
+## Route Prefixes
+
+Using `prefix`, you can add a path prefix to a set of routes without needing to introduce a parent route file.
+
+```tsx filename=app/routes.ts lines=[14]
+import {
+  type RouteConfig,
+  route,
+  layout,
+  index,
+  prefix,
+} from "@react-router/dev/routes";
+
+export const routes: RouteConfig = [
+  layout("./marketing/layout.tsx", [
+    index("./marketing/home.tsx"),
+    route("contact", "./marketing/contact.tsx"),
+  ]),
+  ...prefix("projects", [
+    index("./projects/home.tsx"),
+    layout("./projects/project-layout.tsx", [
+      route(":pid", "./projects/project.tsx"),
+      route(":pid/edit", "./projects/edit-project.tsx"),
+    ]),
+  ]),
+];
+```
+
 ## Dynamic Segments
 
 If a path segment starts with `:` then it becomes a "dynamic segment". When the route matches the URL, the dynamic segment will be parsed from the URL and provided as `params` to other router APIs.
 
 ```ts filename=app/routes.ts
-route("teams/:teamId", "./team.tsx");
+route("teams/:teamId", "./team.tsx"),
 ```
 
 ```tsx filename=app/team.tsx
 import type * as Route from "./+types.team";
 
-async function loader({ params }: Route.LoaderArgs) {
-  //                    ^? { teamId: string }
+export async function loader({ params }: Route.LoaderArgs) {
+  //                           ^? { teamId: string }
 }
 
 export default function Component({
@@ -213,7 +243,7 @@ export default function Component({
 You can have multiple dynamic segments in one route path:
 
 ```ts filename=app/routes.ts
-route("c/:categoryId/p/:productId", "./product.tsx");
+route("c/:categoryId/p/:productId", "./product.tsx"),
 ```
 
 ```tsx filename=app/product.tsx
@@ -229,7 +259,7 @@ async function loader({ params }: LoaderArgs) {
 You can make a route segment optional by adding a `?` to the end of the segment.
 
 ```ts filename=app/routes.ts
-route(":lang?/categories", "./categories.tsx");
+route(":lang?/categories", "./categories.tsx"),
 ```
 
 You can have optional static segments, too:
@@ -243,7 +273,7 @@ route("users/:userId/edit?", "./user.tsx");
 Also known as "catchall" and "star" segments. If a route path pattern ends with `/*` then it will match any characters following the `/`, including other `/` characters.
 
 ```ts filename=app/routes.ts
-route("files/*", "./files.tsx");
+route("files/*", "./files.tsx"),
 ```
 
 ```tsx filename=app/files.tsx
