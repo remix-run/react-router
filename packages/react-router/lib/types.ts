@@ -66,15 +66,12 @@ type _CreateLoaderData<
   ClientLoaderHydrate extends boolean,
   HasHydrateFallback
 > =
-  [HasHydrateFallback, ClientLoaderHydrate]  extends [true, true] ?
+  [HasHydrateFallback, ClientLoaderHydrate] extends [true, true] ?
     IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
     undefined
   :
   [IsDefined<ClientLoaderData>, IsDefined<ServerLoaderData>] extends [true, true] ? ServerLoaderData | ClientLoaderData :
-  IsDefined<ClientLoaderData> extends true ?
-    ClientLoaderHydrate extends true ? ClientLoaderData :
-    ClientLoaderData | undefined
-  :
+  IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
   IsDefined<ServerLoaderData> extends true ? ServerLoaderData :
   undefined
 
@@ -221,7 +218,7 @@ type __tests = [
       CreateLoaderData<{
         clientLoader: () => { a: string; b: Date; c: () => boolean };
       }>,
-      undefined | { a: string; b: Date; c: () => boolean }
+      { a: string; b: Date; c: () => boolean }
     >
   >,
   Expect<
