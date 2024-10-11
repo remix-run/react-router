@@ -26,7 +26,7 @@ export function logV6DeprecationWarnings(
     logDeprecation(
       "v7_startTransition",
       "React Router will begin wrapping state updates in `React.startTransition` in v7",
-      "https://reactrouter.com/en/v7/upgrading/future#v7_starttransition"
+      "https://reactrouter.com/v6/upgrading/future#v7_starttransition"
     );
   }
 
@@ -37,7 +37,7 @@ export function logV6DeprecationWarnings(
     logDeprecation(
       "v7_relativeSplatPath",
       "Relative route resolution within Splat routes is changing in v7",
-      "https://reactrouter.com/en/v7/upgrading/future#v7_relativesplatpath"
+      "https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath"
     );
   }
 
@@ -46,7 +46,7 @@ export function logV6DeprecationWarnings(
       logDeprecation(
         "v7_fetcherPersist",
         "The persistence behavior of fetchers is changing in v7",
-        "https://reactrouter.com/en/v7/upgrading/future#v7_fetcherpersist"
+        "https://reactrouter.com/v6/upgrading/future#v7_fetcherpersist"
       );
     }
 
@@ -54,7 +54,7 @@ export function logV6DeprecationWarnings(
       logDeprecation(
         "v7_normalizeFormMethod",
         "Casing of `formMethod` fields is being normalized to uppercase in v7",
-        "https://reactrouter.com/en/v7/upgrading/future#v7_normalizeformmethod"
+        "https://reactrouter.com/v6/upgrading/future#v7_normalizeformmethod"
       );
     }
 
@@ -62,7 +62,7 @@ export function logV6DeprecationWarnings(
       logDeprecation(
         "v7_partialHydration",
         "`RouterProvider` hydration behavior is changing in v7",
-        "https://reactrouter.com/en/v7/upgrading/future#v7_partialhydration"
+        "https://reactrouter.com/v6/upgrading/future#v7_partialhydration"
       );
     }
 
@@ -70,7 +70,7 @@ export function logV6DeprecationWarnings(
       logDeprecation(
         "v7_skipActionErrorRevalidation",
         "The revalidation behavior after 4xx/5xx `action` responses is changing in v7",
-        "https://reactrouter.com/en/v7/upgrading/future#v7_skipactionerrorrevalidation"
+        "https://reactrouter.com/v6/upgrading/future#v7_skipactionerrorrevalidation"
       );
     }
   }
