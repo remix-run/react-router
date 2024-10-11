@@ -188,7 +188,7 @@ interface SharedSubmitOptions {
   /**
    * Enable flushSync for this submission's state updates
    */
-  unstable_flushSync?: boolean;
+  flushSync?: boolean;
 }
 
 /**
@@ -225,7 +225,7 @@ export interface SubmitOptions extends FetcherSubmitOptions {
   /**
    * Enable view transitions on this submission navigation
    */
-  unstable_viewTransition?: boolean;
+  viewTransition?: boolean;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([

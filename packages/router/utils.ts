@@ -63,14 +63,6 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-/**
- * Result from a loader or action called via dataStrategy
- */
-export interface HandlerResult {
-  type: "data" | "error";
-  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
-}
-
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
@@ -241,28 +233,43 @@ export interface DataStrategyMatch
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => Promise<HandlerResult>
-  ) => Promise<HandlerResult>;
+    ) => DataFunctionReturnValue
+  ) => Promise<DataStrategyResult>;
 }
 
 export interface DataStrategyFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
+  fetcherKey: string | null;
+}
+
+/**
+ * Result from a loader or action called via dataStrategy
+ */
+export interface DataStrategyResult {
+  type: "data" | "error";
+  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
 export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
+  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
 }
 
-export interface AgnosticPatchRoutesOnNavigationFunction<
+export type AgnosticPatchRoutesOnNavigationFunctionArgs<
+  O extends AgnosticRouteObject = AgnosticRouteObject,
   M extends AgnosticRouteMatch = AgnosticRouteMatch
-> {
-  (opts: {
-    path: string;
-    matches: M[];
-    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void;
-  }): void | Promise<void>;
-}
+> = {
+  path: string;
+  matches: M[];
+  patch: (routeId: string | null, children: O[]) => void;
+};
+
+export type AgnosticPatchRoutesOnNavigationFunction<
+  O extends AgnosticRouteObject = AgnosticRouteObject,
+  M extends AgnosticRouteMatch = AgnosticRouteMatch
+> = (
+  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
+) => void | Promise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific

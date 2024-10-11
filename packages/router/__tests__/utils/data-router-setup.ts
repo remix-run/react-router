@@ -322,7 +322,7 @@ export function setup({
     hydrationData,
     future,
     window: testWindow,
-    unstable_dataStrategy: dataStrategy,
+    dataStrategy: dataStrategy,
   }).initialize();
 
   function getRouteHelpers(
