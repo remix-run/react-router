@@ -1690,17 +1690,15 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { boundaryId, error } = handleDiscoverRouteError(
-          location.pathname,
-          discoverResult
-        );
+        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
+          .route.id;
         return {
           matches: discoverResult.partialMatches,
           pendingActionResult: [
             boundaryId,
             {
               type: ResultType.error,
-              error,
+              error: discoverResult.error,
             },
           ],
         };
@@ -1868,15 +1866,13 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { boundaryId, error } = handleDiscoverRouteError(
-          location.pathname,
-          discoverResult
-        );
+        let boundaryId = findNearestBoundary(discoverResult.partialMatches)
+          .route.id;
         return {
           matches: discoverResult.partialMatches,
           loaderData: {},
           errors: {
-            [boundaryId]: error,
+            [boundaryId]: discoverResult.error,
           },
         };
       } else if (!discoverResult.matches) {
@@ -2254,8 +2250,7 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
-        let { error } = handleDiscoverRouteError(path, discoverResult);
-        setFetcherError(key, routeId, error, { flushSync });
+        setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
         setFetcherError(
@@ -2547,8 +2542,7 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return;
       } else if (discoverResult.type === "error") {
-        let { error } = handleDiscoverRouteError(path, discoverResult);
-        setFetcherError(key, routeId, error, { flushSync });
+        setFetcherError(key, routeId, discoverResult.error, { flushSync });
         return;
       } else if (!discoverResult.matches) {
         setFetcherError(
@@ -3122,23 +3116,6 @@ export function createRouter(init: RouterInit): Router {
     cancelActiveDeferreds();
 
     return { notFoundMatches: matches, route, error };
-  }
-
-  function handleDiscoverRouteError(
-    pathname: string,
-    discoverResult: DiscoverRoutesErrorResult
-  ) {
-    return {
-      boundaryId: findNearestBoundary(discoverResult.partialMatches).route.id,
-      error: getInternalRouterError(400, {
-        type: "route-discovery",
-        pathname,
-        message:
-          discoverResult.error != null && "message" in discoverResult.error
-            ? discoverResult.error
-            : String(discoverResult.error),
-      }),
-    };
   }
 
   function cancelActiveDeferreds(
@@ -5485,7 +5462,7 @@ function getInternalRouterError(
     pathname?: string;
     routeId?: string;
     method?: string;
-    type?: "defer-action" | "invalid-body" | "route-discovery";
+    type?: "defer-action" | "invalid-body";
     message?: string;
   } = {}
 ) {
@@ -5494,11 +5471,7 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    if (type === "route-discovery") {
-      errorMessage =
-        `Unable to match URL "${pathname}" - the \`patchRoutesOnNavigation()\` ` +
-        `function threw the following error:\n${message}`;
-    } else if (method && pathname && routeId) {
+    if (method && pathname && routeId) {
       errorMessage =
         `You made a ${method} request to "${pathname}" but ` +
         `did not provide a \`loader\` for route "${routeId}", ` +
