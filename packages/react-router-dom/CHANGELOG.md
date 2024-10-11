@@ -1,14 +1,6 @@
 # `react-router-dom`
 
-## 6.27.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.20.0-pre.1`
-  - `react-router@6.27.0-pre.1`
-
-## 6.27.0-pre.0
+## 6.27.0
 
 ### Minor Changes
 
@@ -24,8 +16,8 @@
 - - Fix types for `RouteObject` within `PatchRoutesOnNavigationFunction`'s `patch` method so it doesn't expect agnostic route objects passed to `patch` ([#11967](https://github.com/remix-run/react-router/pull/11967))
   - Add new `PatchRoutesOnNavigationFunctionArgs` type for convenience
 - Updated dependencies:
-  - `react-router@6.27.0-pre.0`
-  - `@remix-run/router@1.20.0-pre.0`
+  - `react-router@6.27.0`
+  - `@remix-run/router@1.20.0`
 
 ## 6.26.2
 
