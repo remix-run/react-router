@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { PassThrough } from "node:stream";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -153,7 +154,9 @@ test.describe("Prerendering", () => {
   });
 
   test("Prerenders known static routes when true is specified", async () => {
+    let buildStdio = new PassThrough();
     fixture = await createFixture({
+      buildStdio,
       prerender: true,
       files: {
         ...files,
@@ -192,6 +195,26 @@ test.describe("Prerendering", () => {
         `,
       },
     });
+
+    let buildOutput: string;
+    let chunks: Buffer[] = [];
+    buildOutput = await new Promise<string>((resolve, reject) => {
+      buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      buildStdio.on("error", (err) => reject(err));
+      buildStdio.on("end", () =>
+        resolve(Buffer.concat(chunks).toString("utf8"))
+      );
+    });
+
+    expect(buildOutput).toContain(
+      [
+        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`.",
+        "You may want to use the `prerender()` API to prerender the following paths:",
+        "  - :slug",
+        "  - *",
+      ].join("\n")
+    );
+
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
