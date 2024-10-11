@@ -1897,12 +1897,13 @@ function determineStaticPrerenderRoutes(
   }
   recurse(routes);
 
-  if (isBooleanUsage && paramRoutes) {
+  if (isBooleanUsage && paramRoutes.length > 0) {
     viteConfig.logger.warn(
       "The following paths were not prerendered because Dynamic Param and Splat " +
         "routes cannot be prerendered when using `prerender:true`. You may want to " +
         "consider using the `prerender()` API if you wish to prerender slug and " +
-        "splat routes."
+        "splat routes.\n" +
+        paramRoutes.map((p) => "  - " + p).join("\n")
     );
   }
 
