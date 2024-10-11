@@ -776,7 +776,7 @@ function App() {
 }
 ```
 
-You can use [`<Link state>`][link-component-state-prop] or [`useNavigate`][use-navigate] to change the location state.
+You can use [`<Link state>`][link-component-state-prop] or [`useNavigate`][use-navigate] to change the [location state][location-state].
 
 ```tsx lines=[2,6,11-13]
 function App() {
