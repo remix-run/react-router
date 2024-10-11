@@ -375,6 +375,66 @@ You can access those values from the `request.url`
 
 - [useSubmit][usesubmit]
 
+## Registration Form
+
+We can use Mutation Submissions in registration workflow.
+
+```tsx
+function RegisterForm() {
+  const actionData = useActionData();
+
+  return (
+    <Form method="post">
+      <label>Name</label>
+      <input type="text" name="name" />
+
+      <label>Email</label>
+      <input type="email" name="email" />
+
+      <label>Password</label>
+      <input type="password" name="password" />
+
+      <button type="submit">Register</button>
+
+      {actionData && actionData.error && (
+        <p>An error occured: {actionData.error}</p>
+      )}
+    </Form>
+  );
+}
+```
+
+When the user submits the form by clicking "Register", the `action` is executed. Note that we are accessing the returned value from the `action` in our component using `useActionData`[useactiondata].
+
+```tsx
+<Route
+  path="/register"
+  action={async ({ request }) => {
+    const data = await request.formData();
+
+    const postData = {
+      name: data.get("name"),
+      email: data.get("email"),
+      password: data.get("password"),
+    };
+
+    try {
+      await fakePostRequest(postData);
+      return redirect("/dashboard");
+    } catch (e) {
+      return { error: "Cannot send the request" };
+    }
+  }}
+/>
+```
+
+In the `action`, we then access the form data (name, email and password) using the `request.formData` function. After that, the POST request is sent to the server. If it is successful, the user will be redirected to `/dashboard` page. Otherwise, an error message will appear.
+
+**See also:**
+
+- [`useActionData`][useactiondata]
+- [`redirect`][redirect]
+
 [usenavigation]: ../hooks/use-navigation
 [useactiondata]: ../hooks/use-action-data
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
@@ -397,3 +457,4 @@ You can access those values from the `request.url`
 [use-view-transition-state]: ../hooks//use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
+[redirect]: ../fetch/redirect
