@@ -220,12 +220,12 @@ Date: 2024-10-11
 
 #### Stabilized APIs
 
-This release stabilizes a handful of "unstable" APIs in preparation for the pending React Router v7 release (see [these](https://remix.run/blog/merging-remix-and-react-router9) [posts](https://remix.run/blog/incremental-path-to-react-19) for more info):
+This release stabilizes a handful of "unstable" APIs in preparation for the [pending](https://x.com/remix_run/status/1841926034868077009) React Router v7 release (see [these](https://remix.run/blog/merging-remix-and-react-router) [posts](https://remix.run/blog/incremental-path-to-react-19) for more info):
 
-- `unstable_dataStrategy` → `dataStrategy` (`createBrowserRouter` and friends)
-- `unstable_patchRoutesOnNavigation` → `patchRoutesOnNavigation` (`createBrowserRouter` and friends)
-- `unstable_flushSync` → `flushSync` (`useSubmit`, `fetcher.load`, `fetcher.submit`)
-- `unstable_viewTransition` → `viewTransition` (`<Link>`, `<Form>`, `useNavigate`, `useSubmit`)
+- `unstable_dataStrategy` → `dataStrategy` (`createBrowserRouter` and friends) ([Docs](https://reactrouter.com/en/v6/routers/create-browser-router#optsdatastrategy))
+- `unstable_patchRoutesOnNavigation` → `patchRoutesOnNavigation` (`createBrowserRouter` and friends) ([Docs](https://reactrouter.com/en/v6/routers/create-browser-router#optspatchroutesonnavigation))
+- `unstable_flushSync` → `flushSync` (`useSubmit`, `fetcher.load`, `fetcher.submit`) ([Docs](https://reactrouter.com/en/v6/hooks/use-submit#optionsflushsync))
+- `unstable_viewTransition` → `viewTransition` (`<Link>`, `<Form>`, `useNavigate`, `useSubmit`) ([Docs](https://reactrouter.com/en/v6/components/link#viewtransition))
 
 ### Minor Changes
 
