@@ -1,5 +1,15 @@
 # `react-router`
 
+## 7.0.0-pre.1
+
+### Patch Changes
+
+- Fix typegen for routes with a client loader but no server loader ([#12117](https://github.com/remix-run/react-router/pull/12117))
+- - Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See https://expressjs.com/en/resources/middleware/serve-static.html ([#12071](https://github.com/remix-run/react-router/pull/12071))
+  - Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
+- Updated dependencies:
+  - `react-router@7.0.0-pre.1`
+
 ## 7.0.0-pre.0
 
 ### Major Changes
