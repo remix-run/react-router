@@ -100,7 +100,7 @@ export default function Home() {
 ```ts filename=app/routes.js
 import { index } from "@react-router/dev/routes";
 
-export const routes = [index("./home.tsx")];
+export const routes = [index("./home.jsx")];
 ```
 
 ```tsx filename=vite.config.js
