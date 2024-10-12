@@ -761,7 +761,7 @@ See:
 
 ## Location State
 
-React Router can read and modify the [location state][location-state], which is a part of [`location`][location] object. You can get the [`location`][location] object using [`useLocation`][use-location].
+React Router can read and modify the [location state][location-state], which is a part of the [`location`][location] object. You can retrieve the [`location`][location] object using [`useLocation`][use-location].
 
 ```tsx lines=[2,7]
 function App() {
