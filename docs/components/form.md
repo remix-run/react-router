@@ -385,13 +385,13 @@ function RegisterForm() {
 
   return (
     <Form method="post">
-      <label labelFor="name">Name</label>
+      <label htmlFor="name">Name</label>
       <input type="text" name="name" />
 
-      <label labelFor="email">Email</label>
+      <label htmlFor="email">Email</label>
       <input type="email" name="email" />
 
-      <label labelFor="password">Password</label>
+      <label htmlFor="password">Password</label>
       <input type="password" name="password" />
 
       <button type="submit">Register</button>
