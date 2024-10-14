@@ -377,7 +377,7 @@ You can access those values from the `request.url`
 
 ## Registration Form
 
-We can use Mutation Submissions in registration workflow.
+We can use [Mutation Submissions][#mutation-submissions] in registration workflow.
 
 ```tsx
 function RegisterForm() {
@@ -385,26 +385,26 @@ function RegisterForm() {
 
   return (
     <Form method="post">
-      <label>Name</label>
+      <label labelFor="name">Name</label>
       <input type="text" name="name" />
 
-      <label>Email</label>
+      <label labelFor="email">Email</label>
       <input type="email" name="email" />
 
-      <label>Password</label>
+      <label labelFor="password">Password</label>
       <input type="password" name="password" />
 
       <button type="submit">Register</button>
 
-      {actionData && actionData.error && (
+      {actionData?.error ? (
         <p>An error occured: {actionData.error}</p>
-      )}
+      ) : null}
     </Form>
   );
 }
 ```
 
-When the user submits the form by clicking "Register", the `action` is executed. Note that we are accessing the returned value from the `action` in our component using `useActionData`[useactiondata].
+When the user submits the form by clicking "Register", the [`action`][action] function is executed. Note that we are accessing the returned value from the [`action`][action] function in our component using [`useActionData`][useactiondata].
 
 ```tsx
 <Route
@@ -428,7 +428,7 @@ When the user submits the form by clicking "Register", the `action` is executed.
 />
 ```
 
-In the `action`, we then access the form data (name, email and password) using the `request.formData` function. After that, the POST request is sent to the server. If it is successful, the user will be redirected to `/dashboard` page. Otherwise, an error message will appear.
+In the [`action`][action], we then access the form data (`name`, `email` and `password`) using the [`request.formData`][request-formData-method] method. After that, the `POST` request is sent to the server. If it is successful, the user will be redirected to `/dashboard` page. Otherwise, an error message will appear.
 
 **See also:**
 
