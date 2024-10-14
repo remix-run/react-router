@@ -458,3 +458,5 @@ In the [`action`][action], we then access the form data (`name`, `email` and `pa
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
 [redirect]: ../fetch/redirect
+[action]: ../route/action
+[request-formData-method]: ../guides/form-data
