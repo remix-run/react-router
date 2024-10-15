@@ -6,7 +6,7 @@ title: Resource Routes
 
 # Resource Routes
 
-Resource Routes are not part of your application UI, but are still part of your application. By default their Responses are encoded by [turbo-stream][turbo-stream], but they can send any kind of Response.
+Resource Routes are not part of your application UI, but are still part of your application. They can send any kind of Response.
 
 Most routes in React Router are UI Routes, or routes that actually render a component. But routes don't always have to render components. There are a handful of cases where you want to use route as a general-purpose endpoint to your website. Here are a few examples:
 
@@ -115,27 +115,9 @@ Resource Routes do not support [non-standard HTTP methods][nonstandard-http-meth
 
 ## Turbo Stream
 
-Returning bare objects from a Resource Route will automatically encode the responses as a [turbo-stream][turbo-stream], which automatically serializes Dates, Promises, and other objects over the network. React Router automatically deserializes turbo-stream data when you call resource routes from React Router APIs such as `<Form>`, `useSubmit`, or `useFetcher`.
+Returning bare objects or using the [`data` util][data-util] from a Resource Route will automatically encode the responses as a [turbo-stream][turbo-stream], which automatically serializes Dates, Promises, and other objects over the network. React Router automatically deserializes turbo-stream data when you call resource routes from React Router APIs such as `<Form>`, `useSubmit`, or `useFetcher`. 
 
-You can use the turbo-stream package to decode a bare turbo-stream Response.
-
-```ts
-import {decode} from "turbo-stream";
-
-const resourceResponse = await fetch("/resource");
-
-const decoded = await decode(resourceResponse.body);
-
-const time = decoded.value.time;
-
-// Await a Promise from the resource route response
-const streamedData = await decoded.value.promiseData;
-
-// Wait for the stream to finish
-await decoded.done;
-```
-
-Third-party services, like webhooks, that call your resource routes likely can't decode turbo-stream data. You can use Response instances to respond with any other kind of data using `Response.json` or `new Response()` with the `Content-Type` header.
+Third-party services, like webhooks, that call your resource routes likely can't decode turbo-stream data. You should use Response instances to respond with any other kind of data using `Response.json` or `new Response()` with the `Content-Type` header.
 
 ```ts
 export const action = async () => {
@@ -144,6 +126,9 @@ export const action = async () => {
   });
 }
 ```
+
+<docs-warning>turbo-stream is an implementation detail of Resource Routes, and you shouldn't rely on it outside of the React Router APIs. If you want to manually decode turbo-stream responses outside of React Router, such as from a `fetch` call in a mobile app, it is best to manually encode the data using the `turbo-stream` package directly, return that using `new Response`, and have the client decode the response using `turbo-stream`.</docs-warning>
+
 
 ## Client Loaders & Client Actions
 
@@ -208,5 +193,6 @@ export const action = async ({
 
 [vite-plugin]: ../start/rendering
 [turbo-stream]: https://github.com/jacob-ebey/turbo-stream
+[data-util]: ../../api/react-router/data
 [nonstandard-http-methods]: https://github.com/remix-run/react-router/issues/11959
 [escaping]: ../misc/file-route-conventions#escaping-special-characters
