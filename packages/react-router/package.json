@@ -38,6 +38,9 @@
     },
     "./package.json": "./package.json"
   },
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
     "@types/cookie": "^0.6.0",
     "@web3-storage/multipart-parser": "^1.0.0",

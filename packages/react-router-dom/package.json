@@ -30,6 +30,9 @@
     },
     "./package.json": "./package.json"
   },
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
     "react-router": "workspace:*"
   },

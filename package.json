@@ -23,6 +23,7 @@
     "changeset": "changeset",
     "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
+    "tsc": "pnpm -r tsc",
     "version": "node ./scripts/version",
     "watch": "rollup -c -w"
   },
