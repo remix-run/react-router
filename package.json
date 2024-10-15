@@ -2,6 +2,7 @@
   "name": "@remix-run/react-router",
   "private": true,
   "scripts": {
+    "prebuild": "pnpm run tsc -b",
     "build": "rollup -c",
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
