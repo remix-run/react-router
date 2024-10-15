@@ -761,7 +761,51 @@ See:
 
 ## Location State
 
-<docs-info>TODO:</docs-info>
+React Router can read and modify the [location state][location-state], which is a part of the [`location`][location] object. You can retrieve the [`location`][location] object using [`useLocation`][use-location].
+
+```tsx lines=[2,7]
+function App() {
+  const location = useLocation();
+
+  return (
+    <p>
+      The current location state value is:
+      {location.state.someValue}
+    </p>
+  );
+}
+```
+
+You can use [`<Link state>`][link-component-state-prop] or [`useNavigate`][use-navigate] to change the [location state][location-state].
+
+```tsx lines=[2,6,11-13]
+function App() {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Link to="/home" state={{ someValue: "example" }}>
+        Go to home page with state
+      </Link>
+      <button
+        onClick={() =>
+          navigate("/home", {
+            state: { someValue: "example" },
+          })
+        }
+      >
+        Go to home page with state
+      </button>
+    </>
+  );
+}
+```
+
+See:
+
+- [`useLocation`][use-location]
+- [`Link`][link]
+- [`useNavigate`][use-navigate]
 
 [path]: ../route/route#path
 [loader]: ../route/loader
@@ -796,3 +840,8 @@ See:
 [querystring]: https://developer.mozilla.org/en-US/docs/Web/API/Location/search
 [usesearchparams]: ../hooks/use-search-params
 [link]: ../components/link
+[location-state]: ../hooks/use-location#locationstate
+[location]: ../utils/location
+[use-location]: ../hooks/use-location
+[use-navigate]: ../hooks/use-navigate
+[link-component-state-prop]: ../components/link#state
