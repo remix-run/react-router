@@ -24,9 +24,9 @@ export async function clientLoader({
 }
 
 export default function Product({
-  clientLoaderData,
+  loaderData,
 }: Route.ComponentProps) {
-  const { name, description } = clientLoaderData;
+  const { name, description } = loaderData;
   return (
     <div>
       <h1>{name}</h1>
@@ -115,7 +115,7 @@ Note that when server rendering, any URLs that aren't pre-rendered will be serve
 
 ## Using Both Loaders
 
-`loader` and `clientLoader` can be used together. The `loader` will be used on the server for initial SSR (or pre-rendering) and the `clientLoader` will be used on subsequent clientside navigations.
+`loader` and `clientLoader` can be used together. The `loader` will be used on the server for initial SSR (or pre-rendering) and the `clientLoader` will be used on subsequent client-side navigations.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
@@ -135,10 +135,8 @@ export async function clientLoader({
 
 export default function Product({
   loaderData,
-  clientLoaderData,
 }: Route.ComponentProps) {
-  const { name, description } =
-    clientLoaderData || loaderData;
+  const { name, description } = loaderData;
 
   return (
     <div>
