@@ -21,7 +21,7 @@ module.exports = function rollup() {
     "react-router-node"
   );
 
-  const input = [`./${SOURCE_DIR}/index.ts`, `./${SOURCE_DIR}/install.ts`];
+  const input = [`${SOURCE_DIR}/index.ts`, `${SOURCE_DIR}/install.ts`];
 
   return [
     {
