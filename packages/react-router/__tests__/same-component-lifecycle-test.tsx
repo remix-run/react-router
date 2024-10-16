@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route } from "react-router";
+import { MemoryRouter, Route, Routes } from "../index";
 
 describe("when the same component is mounted by two different routes", () => {
   it("mounts only once", () => {

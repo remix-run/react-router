@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, useHref } from "react-router";
+import { MemoryRouter, Route, Routes, useHref } from "../index";
 
 function ShowHref({ to }: { to: string }) {
   return <p>{useHref(to)}</p>;

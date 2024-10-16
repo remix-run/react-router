@@ -1,17 +1,18 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import type { RelativeRoutingType, To } from "react-router";
 import {
-  MemoryRouter,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
   createMemoryRouter,
   createRoutesFromElements,
+  MemoryRouter,
   Outlet,
+  Route,
   RouterProvider,
-} from "react-router";
+  Routes,
+  useLocation,
+  useNavigate,
+  type RelativeRoutingType,
+  type To,
+} from "../index";
 
 describe("useNavigate", () => {
   it("navigates to the new location", async () => {

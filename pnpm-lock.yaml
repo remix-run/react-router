@@ -559,9 +559,6 @@ importers:
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
-      react-router:
-        specifier: workspace:*
-        version: 'link:'
       set-cookie-parser:
         specifier: ^2.6.0
         version: 2.6.0
@@ -774,7 +771,7 @@ importers:
         version: 16.4.5
       esbuild-register:
         specifier: ^3.3.2
-        version: 3.5.0(esbuild@0.17.19)
+        version: 3.5.0(esbuild@0.19.12)
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -11696,10 +11693,10 @@ snapshots:
       is-date-object: 1.0.5
       is-symbol: 1.0.4
 
-  esbuild-register@3.5.0(esbuild@0.17.19):
+  esbuild-register@3.5.0(esbuild@0.19.12):
     dependencies:
       debug: 4.3.4
-      esbuild: 0.17.19
+      esbuild: 0.19.12
     transitivePeerDependencies:
       - supports-color
 

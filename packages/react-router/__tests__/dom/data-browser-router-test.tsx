@@ -1,4 +1,3 @@
-import type { ErrorResponse, Fetcher, RouterState } from "react-router";
 import "@testing-library/jest-dom";
 import {
   act,
@@ -9,7 +8,6 @@ import {
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import type { RouteObject } from "../../index";
 import {
   Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
@@ -35,10 +33,14 @@ import {
   useRouteError,
   useSearchParams,
   useSubmit,
+  type ErrorResponse,
+  type Fetcher,
+  type RouteObject,
+  type RouterState,
 } from "../../index";
 
-import getHtml from "../utils/getHtml";
 import { createDeferred, tick } from "../router/utils/utils";
+import getHtml from "../utils/getHtml";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)

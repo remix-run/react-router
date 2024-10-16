@@ -1,5 +1,4 @@
-import type { RouteObject } from "react-router";
-import { matchRoutes } from "react-router";
+import { matchRoutes, type RouteObject } from "../index";
 
 function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
   let matches = matchRoutes(routes, pathname);

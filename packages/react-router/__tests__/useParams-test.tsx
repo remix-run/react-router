@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
+import { MemoryRouter, Outlet, Route, Routes, useParams } from "../index";
 
 function ShowParams() {
   return <pre>{JSON.stringify(useParams())}</pre>;

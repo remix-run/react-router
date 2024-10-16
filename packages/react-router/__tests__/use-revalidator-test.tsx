@@ -17,7 +17,7 @@ import {
   useNavigation,
   useRevalidator,
   useRouteError,
-} from "react-router";
+} from "../index";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
 

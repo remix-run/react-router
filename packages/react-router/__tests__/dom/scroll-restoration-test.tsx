@@ -1,20 +1,21 @@
+import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/extend-expect";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import { render, fireEvent, screen } from "@testing-library/react";
-import "@testing-library/jest-dom";
 
-import getHtml from "../utils/getHtml";
 import {
   Link,
   Outlet,
   RouterProvider,
   ScrollRestoration,
   createBrowserRouter,
+  createMemoryRouter,
+  redirect,
 } from "../../index";
-import type { FrameworkContextObject } from "../../lib/dom/ssr/entry";
-import { createMemoryRouter, redirect } from "react-router";
 import { FrameworkContext, Scripts } from "../../lib/dom/ssr/components";
-import "@testing-library/jest-dom/extend-expect";
+import type { FrameworkContextObject } from "../../lib/dom/ssr/entry";
+import getHtml from "../utils/getHtml";
 
 describe(`ScrollRestoration`, () => {
   it("restores the scroll position for a page when re-visited", () => {

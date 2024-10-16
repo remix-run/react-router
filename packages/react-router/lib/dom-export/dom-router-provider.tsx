@@ -1,8 +1,10 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import type { RouterProviderProps as BaseRouterProviderProps } from "react-router";
-import { RouterProvider as BaseRouterProvider } from "react-router";
+import {
+  RouterProvider as BaseRouterProvider,
+  type RouterProviderProps as BaseRouterProviderProps,
+} from "../../index";
 
 export { HydratedRouter } from "./hydrated-router";
 

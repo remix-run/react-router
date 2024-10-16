@@ -1,11 +1,5 @@
 import * as React from "react";
 
-import type {
-  UNSAFE_AssetsManifest as AssetsManifest,
-  UNSAFE_RouteModules as RouteModules,
-  DataRouter,
-  HydrationState,
-} from "react-router";
 import {
   UNSAFE_invariant as invariant,
   UNSAFE_FrameworkContext as FrameworkContext,
@@ -22,7 +16,11 @@ import {
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
-} from "react-router";
+  type UNSAFE_AssetsManifest as AssetsManifest,
+  type UNSAFE_RouteModules as RouteModules,
+  type DataRouter,
+  type HydrationState,
+} from "../../index";
 import { RouterProvider } from "./dom-router-provider";
 
 type SSRInfo = {

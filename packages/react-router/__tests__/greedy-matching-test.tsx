@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, Outlet } from "../index";
+import { MemoryRouter, Outlet, Route, Routes } from "../index";
 
 describe("greedy matching", () => {
   let routes = (

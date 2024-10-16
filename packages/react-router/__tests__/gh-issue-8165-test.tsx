@@ -2,11 +2,11 @@ import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
   MemoryRouter,
-  Routes,
-  Route,
-  useParams,
-  useNavigate,
   Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
 } from "../index";
 
 describe("GH Issue #8165", () => {

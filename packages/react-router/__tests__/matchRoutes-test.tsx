@@ -1,6 +1,5 @@
 import * as React from "react";
-import type { RouteObject } from "react-router";
-import { matchRoutes } from "react-router";
+import { matchRoutes, type RouteObject } from "../index";
 
 function pickPaths(
   routes: RouteObject[],

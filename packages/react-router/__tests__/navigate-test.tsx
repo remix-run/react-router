@@ -1,16 +1,16 @@
+import { render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
   MemoryRouter,
   Navigate,
   Outlet,
-  Routes,
   Route,
   RouterProvider,
+  Routes,
   createMemoryRouter,
   useLocation,
-} from "react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+} from "../index";
 
 import getHtml from "../../react-router/__tests__/utils/getHtml";
 
