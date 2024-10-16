@@ -241,7 +241,7 @@ export function selectHtml(source: string, selector: string) {
   return prettyHtml(cheerio.html(el)).trim();
 }
 
-export function prettyHtml(source: string): string {
+export function prettyHtml(source: string) {
   return prettier.format(source, { parser: "html" });
 }
 
