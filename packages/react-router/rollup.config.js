@@ -91,6 +91,7 @@ module.exports = function rollup() {
           // eslint-disable-next-line no-restricted-globals
           tsconfig: path.join(__dirname, "tsconfig.dom.json"),
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -122,6 +123,7 @@ module.exports = function rollup() {
           // eslint-disable-next-line no-restricted-globals
           tsconfig: path.join(__dirname, "tsconfig.dom.json"),
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
       ],
     },
