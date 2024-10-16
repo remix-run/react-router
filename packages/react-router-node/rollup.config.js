@@ -21,38 +21,9 @@ module.exports = function rollup() {
     "react-router-node"
   );
 
-  const input = [`${SOURCE_DIR}/index.ts`, `${SOURCE_DIR}/install.ts`];
+  const input = [`./${SOURCE_DIR}/index.ts`, `./${SOURCE_DIR}/install.ts`];
 
   return [
-    {
-      input,
-      external: (id) => isBareModuleId(id),
-      output: {
-        banner: createBanner(name, version),
-        dir: OUTPUT_DIR,
-        entryFileNames: "[name].mjs",
-        format: "esm",
-        preserveModules: true,
-        exports: "named",
-      },
-      plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts", ".tsx"],
-          ...remixBabelConfig,
-        }),
-        typescript({
-          tsconfig: path.join(__dirname, "tsconfig.json"),
-          exclude: ["__tests__"],
-          noEmitOnError: !WATCH,
-        }),
-        nodeResolve({ extensions: [".ts", ".tsx"] }),
-        copy({
-          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
-        }),
-      ],
-    },
     {
       input,
       external: (id) => isBareModuleId(id),
@@ -70,7 +41,16 @@ module.exports = function rollup() {
           extensions: [".ts", ".tsx"],
           ...remixBabelConfig,
         }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: !WATCH,
+          noForceEmit: true,
+        }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
+        copy({
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
+        }),
       ],
     },
   ];
