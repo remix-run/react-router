@@ -1,4 +1,5 @@
-import "../global";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type * as _ from "../global";
 
 /**
  * Data for a route that was returned from a `loader()`.

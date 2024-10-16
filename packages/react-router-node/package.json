@@ -11,18 +11,16 @@
     "directory": "packages/react-router-node"
   },
   "license": "MIT",
+  "types": "dist/index.d.ts",
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./install": {
       "types": "./dist/install.d.ts",
-      "import": "./dist/install.mjs",
-      "require": "./dist/install.js"
+      "default": "./dist/install.js"
     },
     "./package.json": "./package.json"
   },
@@ -31,7 +29,7 @@
     "./dist/install.mjs"
   ],
   "scripts": {
-    "tsc": "tsc"
+    "build": "tsup"
   },
   "dependencies": {
     "@web3-storage/multipart-parser": "^1.0.0",
@@ -42,6 +40,7 @@
   "devDependencies": {
     "@types/source-map-support": "^0.5.4",
     "react-router": "workspace:*",
+    "tsup": "^8.3.0",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {

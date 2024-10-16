@@ -32,7 +32,7 @@
     "react-router": "bin.js"
   },
   "scripts": {
-    "tsc": "tsc"
+    "build": "tsup"
   },
   "dependencies": {
     "@babel/core": "^7.21.8",
@@ -59,7 +59,7 @@
     "pathe": "^1.1.2",
     "picocolors": "^1.0.0",
     "picomatch": "^2.3.1",
-    "prettier": "^2.7.1",
+    "prettier": "^3.3.3",
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
     "set-cookie-parser": "^2.6.0",
@@ -90,6 +90,8 @@
     "react-router": "workspace:^",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
     "vite": "^5.1.0",
     "wrangler": "^3.28.2"
   },

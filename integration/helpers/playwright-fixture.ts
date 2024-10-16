@@ -1,8 +1,10 @@
 import cp from "node:child_process";
 import type { Page, Response, Request } from "@playwright/test";
 import { test } from "@playwright/test";
-import cheerio from "cheerio";
+import { load } from "cheerio";
 import prettier from "prettier";
+
+let cheerio = load("")
 
 import type { AppFixture } from "./create-fixture.js";
 

@@ -21,7 +21,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "tsc": "tsc"
+    "build": "tsup"
   },
   "dependencies": {
     "@react-router/node": "workspace:*"
@@ -33,6 +33,7 @@
     "express": "^4.19.2",
     "node-mocks-http": "^1.10.1",
     "supertest": "^6.3.3",
+    "tsup": "^8.3.0",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {

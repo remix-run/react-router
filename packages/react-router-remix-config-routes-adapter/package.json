@@ -21,10 +21,11 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "tsc": "tsc"
+    "build": "tsup"
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
+    "tsup": "^8.3.0",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {
