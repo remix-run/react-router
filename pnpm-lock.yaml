@@ -973,9 +973,6 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../packages/react-router-dev
-      '@react-router/fs-routes':
-        specifier: workspace:*
-        version: link:../../packages/react-router-fs-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
