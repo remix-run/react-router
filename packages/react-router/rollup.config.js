@@ -82,7 +82,7 @@ module.exports = function rollup() {
         }),
         typescript({
           // eslint-disable-next-line no-restricted-globals
-          tsconfig: path.join(__dirname, "tsconfig.dom.json"),
+          tsconfig: path.join(__dirname, "tsconfig.json"),
           noEmitOnError: !WATCH,
           noForceEmit: true,
         }),
@@ -110,7 +110,7 @@ module.exports = function rollup() {
         }),
         typescript({
           // eslint-disable-next-line no-restricted-globals
-          tsconfig: path.join(__dirname, "tsconfig.dom.json"),
+          tsconfig: path.join(__dirname, "tsconfig.json"),
           noEmitOnError: !WATCH,
           noForceEmit: true,
         }),
