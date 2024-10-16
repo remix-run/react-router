@@ -15,7 +15,7 @@ export default function Index() {
           <h1 className="leading text-2xl font-bold text-gray-800 dark:text-gray-100">
             Welcome to <span className="sr-only">React Router</span>
           </h1>
-          <div className="w-[450px] max-w-[100vw] p-4 aspect-[605/347]">
+          <div className="w-[500px] max-w-[100vw] p-4">
             <img
               src="/logo-light.svg"
               alt="React Router"
