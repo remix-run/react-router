@@ -150,15 +150,6 @@ const remixBabelConfig = {
   plugins: [
     "@babel/plugin-proposal-export-namespace-from",
     "@babel/plugin-proposal-optional-chaining",
-    // Strip console.debug calls unless REACT_ROUTER_DEBUG=true
-    ...(process.env.REACT_ROUTER_DEBUG === "true"
-      ? []
-      : [
-          [
-            "transform-remove-console",
-            { exclude: ["error", "warn", "log", "info"] },
-          ],
-        ]),
   ],
 };
 

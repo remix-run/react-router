@@ -4,13 +4,13 @@ const path = require("path");
 module.exports = function rollup(options) {
   return [
     "react-router",
+    "react-router-dom", // depends on react-router
+    "react-router-node", // depends on react-router
+    "react-router-express", // depends on react-router-node
+    "react-router-serve", // depends on react-router-node/express
+    "react-router-dev", // depends on react-router-node/express/serve
     "react-router-architect",
     "react-router-cloudflare",
-    "react-router-dom",
-    "react-router-dev",
-    "react-router-express",
-    "react-router-node",
-    "react-router-serve",
     "react-router-fs-routes",
     "react-router-remix-config-routes-adapter",
   ]

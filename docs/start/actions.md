@@ -28,7 +28,7 @@ export async function clientAction({
 }
 
 export default function Project({
-  clientActionData,
+  actionData,
 }: Route.ComponentProps) {
   return (
     <div>
@@ -37,8 +37,8 @@ export default function Project({
         <input type="text" name="title" />
         <button type="submit">Submit</button>
       </Form>
-      {clientActionData ? (
-        <p>{clientActionData.title} updated</p>
+      {actionData ? (
+        <p>{actionData.title} updated</p>
       ) : null}
     </div>
   );
