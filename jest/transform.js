@@ -21,5 +21,5 @@ module.exports = babelJest.createTransformer({
     "@babel/preset-react",
     "@babel/preset-typescript",
   ],
-  plugins: ["babel-plugin-dev-expression", metaPlugin],
+  plugins: [metaPlugin],
 });

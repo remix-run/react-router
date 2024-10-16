@@ -139,9 +139,6 @@ importers:
       babel-jest:
         specifier: ^29.7.0
         version: 29.7.0(@babel/core@7.22.9)
-      babel-plugin-dev-expression:
-        specifier: ^0.2.3
-        version: 0.2.3(@babel/core@7.22.9)
       babel-plugin-transform-remove-console:
         specifier: ^6.9.4
         version: 6.9.4
@@ -3304,11 +3301,6 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     peerDependencies:
       '@babel/core': ^7.8.0
-
-  babel-plugin-dev-expression@0.2.3:
-    resolution: {integrity: sha512-rP5LK9QQTzCW61nVVzw88En1oK8t8gTsIeC6E61oelxNsU842yMjF0G1MxhvUpCkxCEIj7sE8/e5ieTheT//uw==}
-    peerDependencies:
-      '@babel/core': ^7.0.0
 
   babel-plugin-istanbul@6.1.1:
     resolution: {integrity: sha512-Y1IQok9821cC9onCx5otgFfRm7Lm+I+wwxOx738M/WLPZ9Q42m4IG5W0FNX8WLL2gYMZo3JkuXIH2DOpWM+qwA==}
@@ -10787,10 +10779,6 @@ snapshots:
       slash: 3.0.0
     transitivePeerDependencies:
       - supports-color
-
-  babel-plugin-dev-expression@0.2.3(@babel/core@7.22.9):
-    dependencies:
-      '@babel/core': 7.22.9
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
