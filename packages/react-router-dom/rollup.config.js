@@ -39,7 +39,6 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
         typescript({
@@ -76,7 +75,6 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
         replace({
