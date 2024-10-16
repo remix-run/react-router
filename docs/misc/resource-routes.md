@@ -82,7 +82,7 @@ export const loader = async ({
 }: Route.LoaderArgs) => {
   // handle "GET" request
 
-  return {success: true}
+  return { success: true };
 };
 ```
 
@@ -115,20 +115,22 @@ Resource Routes do not support [non-standard HTTP methods][nonstandard-http-meth
 
 ## Turbo Stream
 
-Returning bare objects or using the [`data` util][data-util] from a Resource Route will automatically encode the responses as a [turbo-stream][turbo-stream], which automatically serializes Dates, Promises, and other objects over the network. React Router automatically deserializes turbo-stream data when you call resource routes from React Router APIs such as `<Form>`, `useSubmit`, or `useFetcher`. 
+Returning bare objects or using the [`data` util][data-util] from a Resource Route will automatically encode the responses as a [turbo-stream][turbo-stream], which automatically serializes Dates, Promises, and other objects over the network. React Router automatically deserializes turbo-stream data when you call resource routes from React Router APIs such as `<Form>`, `useSubmit`, or `useFetcher`.
 
 Third-party services, like webhooks, that call your resource routes likely can't decode turbo-stream data. You should use Response instances to respond with any other kind of data using `Response.json` or `new Response()` with the `Content-Type` header.
 
 ```ts
 export const action = async () => {
-  return Response.json({time: Date.now()}, {
-    status: 200,
-  });
-}
+  return Response.json(
+    { time: Date.now() },
+    {
+      status: 200,
+    }
+  );
+};
 ```
 
 <docs-warning>turbo-stream is an implementation detail of Resource Routes, and you shouldn't rely on it outside of the React Router APIs. If you want to manually decode turbo-stream responses outside of React Router, such as from a `fetch` call in a mobile app, it is best to manually encode the data using the `turbo-stream` package directly, return that using `new Response`, and have the client decode the response using `turbo-stream`.</docs-warning>
-
 
 ## Client Loaders & Client Actions
 
@@ -138,19 +140,25 @@ When calling Resource Routes using `<Form>`, `useSubmit`, or Fetchers, Client Lo
 import type * as Route from "./+types.github";
 
 export const action = async () => {
-  return Response.json({time: Date.now()}, {
-    status: 200,
-  });
-}
+  return Response.json(
+    { time: Date.now() },
+    {
+      status: 200,
+    }
+  );
+};
 
-export const clientAction = async ({serverAction}:Route.ClientActionArgs) => {
+export const clientAction = async ({
+  serverAction,
+}: Route.ClientActionArgs) => {
   return Promise.race([
     serverAction,
-    new Promise((resolve, reject) => setTimeout(reject, 5000))
-  ])
-}
+    new Promise((resolve, reject) =>
+      setTimeout(reject, 5000)
+    ),
+  ]);
+};
 ```
-
 
 ## Webhooks
 
@@ -165,9 +173,12 @@ export const action = async ({
   request,
 }: Route.ActionArgs) => {
   if (request.method !== "POST") {
-    return Response.json({ message: "Method not allowed" }, {
-      status: 405,
-    });
+    return Response.json(
+      { message: "Method not allowed" },
+      {
+        status: 405,
+      }
+    );
   }
   const payload = await request.json();
 
@@ -180,9 +191,12 @@ export const action = async ({
     .update(JSON.stringify(payload))
     .digest("hex")}`;
   if (signature !== generatedSignature) {
-    return Response.json({ message: "Signature mismatch" }, {
-      status: 401,
-    });
+    return Response.json(
+      { message: "Signature mismatch" },
+      {
+        status: 401,
+      }
+    );
   }
 
   /* process the webhook (e.g. enqueue a background job) */
