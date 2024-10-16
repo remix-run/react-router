@@ -8,7 +8,7 @@ const {
   isBareModuleId,
   createBanner,
   getBuildDirectories,
-  remixBabelConfig,
+  sharedBabelConfig,
   WATCH,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
@@ -35,12 +35,7 @@ module.exports = function rollup() {
         exports: "named",
       },
       plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts", ".tsx"],
-          ...remixBabelConfig,
-        }),
+        babel(sharedBabelConfig),
         typescript({
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],

@@ -7,7 +7,7 @@ const copy = require("rollup-plugin-copy");
 const {
   createBanner,
   getBuildDirectories,
-  remixBabelConfig,
+  sharedBabelConfig,
   WATCH,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
@@ -32,12 +32,7 @@ module.exports = function rollup() {
         format: "cjs",
       },
       plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts"],
-          ...remixBabelConfig,
-        }),
+        babel(sharedBabelConfig),
         typescript({
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],

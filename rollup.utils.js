@@ -141,7 +141,10 @@ function isBareModuleId(id) {
   return !id.startsWith(".") && !path.isAbsolute(id);
 }
 
-const remixBabelConfig = {
+const sharedBabelConfig = {
+  babelHelpers: "bundled",
+  exclude: /node_modules/,
+  extensions: [".ts", ".tsx"],
   presets: [
     ["@babel/preset-env", { targets: { node: "18" } }],
     "@babel/preset-react",
@@ -160,7 +163,7 @@ module.exports = {
   babelPluginReplaceVersionPlaceholder,
   validateReplacedVersion,
   isBareModuleId,
-  remixBabelConfig,
+  sharedBabelConfig,
   PRETTY,
   WATCH,
 };
