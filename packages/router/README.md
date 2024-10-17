@@ -131,5 +131,5 @@ We use _Future Flags_ in the router to help us introduce breaking changes in an 
 [remix]: https://remix.run
 [react-router-repo]: https://github.com/remix-run/react-router
 [remix-routers-repo]: https://github.com/brophdawg11/remix-routers
-[api-development-strategy]: https://reactrouter.com/en/main/guides/api-development-strategy
+[api-development-strategy]: https://reactrouter.com/v6/guides/api-development-strategy
 [future-flags-post]: https://remix.run/blog/future-flags
