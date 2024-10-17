@@ -60,7 +60,6 @@ export {
   data,
   generatePath,
   isRouteErrorResponse,
-  json,
   matchPath,
   matchRoutes,
   redirect,
@@ -231,11 +230,6 @@ export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memory
 export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
 
 export type { IsCookieFunction } from "./lib/server-runtime/cookies";
-// TODO: (v7) Clean up code paths for these exports
-// export type {
-//   JsonFunction,
-//   RedirectFunction,
-// } from "./lib/server-runtime/responses";
 export type { CreateRequestHandlerFunction } from "./lib/server-runtime/server";
 export type { IsSessionFunction } from "./lib/server-runtime/sessions";
 
@@ -262,11 +256,6 @@ export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
 } from "./lib/router/links";
-
-export type {
-  TypedResponse,
-  JsonFunction,
-} from "./lib/server-runtime/responses";
 
 export type {
   // TODO: (v7) Clean up code paths for these exports

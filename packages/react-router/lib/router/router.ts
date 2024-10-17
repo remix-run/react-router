@@ -730,7 +730,7 @@ const validRequestMethodsArr: FormMethod[] = [
 ];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 
-const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+export const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 const redirectPreserveMethodStatusCodes = new Set([307, 308]);
 
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
@@ -5388,7 +5388,8 @@ export function isDataWithResponseInit(
     value.type === "DataWithResponseInit"
   );
 }
-function isResponse(value: any): value is Response {
+
+export function isResponse(value: any): value is Response {
   return (
     value != null &&
     typeof value.status === "number" &&
@@ -5398,14 +5399,16 @@ function isResponse(value: any): value is Response {
   );
 }
 
-function isRedirectResponse(result: any): result is Response {
-  if (!isResponse(result)) {
-    return false;
-  }
+export function isRedirectStatusCode(statusCode: number): boolean {
+  return redirectStatusCodes.has(statusCode);
+}
 
-  let status = result.status;
-  let location = result.headers.get("Location");
-  return status >= 300 && status <= 399 && location != null;
+export function isRedirectResponse(result: any): result is Response {
+  return (
+    isResponse(result) &&
+    isRedirectStatusCode(result.status) &&
+    result.headers.has("Location")
+  );
 }
 
 function isValidMethod(method: string): method is FormMethod {

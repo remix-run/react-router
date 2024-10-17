@@ -16,21 +16,21 @@ test.describe("pathless layout routes", () => {
       await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { redirect, json } from "react-router";
+            import { data, redirect } from "react-router";
             import { Form, useActionData } from "react-router";
 
             export let loader = async () => {
               let headers = new Headers();
               headers.append("Set-Cookie", "foo=bar");
               headers.append("Set-Cookie", "bar=baz");
-              return json({}, { headers });
+              return data({}, { headers });
             };
 
             export let action = async () => {
               let headers = new Headers();
               headers.append("Set-Cookie", "another=one");
               headers.append("Set-Cookie", "how-about=two");
-              return json({success: true}, { headers });
+              return data({success: true}, { headers });
             };
 
             export default function MultipleSetCookiesPage() {

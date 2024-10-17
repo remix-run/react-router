@@ -1,6 +1,7 @@
 import { encode } from "turbo-stream";
 
 import type { StaticHandler } from "../router/router";
+import { isRedirectStatusCode, isResponse } from "../router/router";
 import type {
   DataStrategyFunctionArgs,
   DataStrategyFunction,
@@ -20,7 +21,6 @@ import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
-import { isRedirectStatusCode, isResponse } from "./responses";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
 

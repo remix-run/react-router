@@ -61,25 +61,21 @@ test.describe("loader in an app", async () => {
           export let loader = () => ({ data: 'whatever' });
         `,
         "app/routes/data[.]json.tsx": js`
-          import { json } from "react-router";
-          export let loader = () => json({hello: "world"});
+          export let loader = () => Response.json({ hello: "world" });
         `,
         "app/assets/icon.svg": SVG_CONTENTS,
         "app/routes/[manifest.webmanifest].tsx": js`
-          import { json } from "react-router";
           import iconUrl from "~/assets/icon.svg";
           export  function loader() {
-            return json(
-              {
-                icons: [
-                  {
-                    src: iconUrl,
-                    sizes: '48x48 72x72 96x96 128x128 192x192 256x256 512x512',
-                    type: 'image/svg+xml',
-                  },
-                ],
-              },
-            );
+            return {
+              icons: [
+                {
+                  src: iconUrl,
+                  sizes: '48x48 72x72 96x96 128x128 192x192 256x256 512x512',
+                  type: 'image/svg+xml',
+                },
+              ],
+            };
           }
         `,
         "app/routes/throw-error.tsx": js`
@@ -108,16 +104,17 @@ test.describe("loader in an app", async () => {
           }
         `,
         "app/routes/no-action.tsx": js`
-          import { json } from "react-router";
           export let loader = () => {
-            return json({ ok: true });
+            return { ok: true };
           }
         `,
         "app/routes/$.tsx": js`
           import { json } from "react-router";
           import { useRouteError } from "react-router";
           export function loader({ request }) {
-            throw json({ message: new URL(request.url).pathname + ' not found' }, {
+            throw Response.json({
+              message: new URL(request.url).pathname + ' not found'
+            }, {
               status: 404
             });
           }

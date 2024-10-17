@@ -45,19 +45,18 @@ test.describe("`useSubmit()` returned function", () => {
           }
         `,
         "app/routes/action.tsx": js`
-          import { json } from "react-router";
           import { useActionData, useSubmit } from "react-router";
 
           export async function action({ request }) {
             let contentType = request.headers.get('Content-Type');
             if (contentType.includes('application/json')) {
-              return json({ value: await request.json() });
+              return { value: await request.json() };
             }
             if (contentType.includes('text/plain')) {
-              return json({ value: await request.text() });
+              return { value: await request.text() };
             }
             let fd = await request.formData();
-            return json({ value: new URLSearchParams(fd.entries()).toString() })
+            return { value: new URLSearchParams(fd.entries()).toString() }
           }
 
           export default function Component() {

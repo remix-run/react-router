@@ -62,435 +62,433 @@ test.describe("Forms", () => {
     fixture = await createFixture({
       files: {
         "app/routes/get-submission.tsx": js`
-            import { useLoaderData, Form } from "react-router";
+          import { useLoaderData, Form } from "react-router";
 
-            export function loader({ request }) {
-              let url = new URL(request.url);
-              return url.searchParams.toString()
-            }
+          export function loader({ request }) {
+            let url = new URL(request.url);
+            return url.searchParams.toString()
+          }
 
-            export default function() {
-              let data = useLoaderData();
-              return (
-                <>
-                  <Form>
-                    <input type="text" name="${LUNCH}" defaultValue="${CHEESESTEAK}" />
-                    <input type="text" name="${ACTION}" defaultValue="${EAT}" />
-                    <button type="submit">
-                    </button>
-                  </Form>
+          export default function() {
+            let data = useLoaderData();
+            return (
+              <>
+                <Form>
+                  <input type="text" name="${LUNCH}" defaultValue="${CHEESESTEAK}" />
+                  <input type="text" name="${ACTION}" defaultValue="${EAT}" />
+                  <button type="submit">
+                  </button>
+                </Form>
 
-                  <Form id="${FORM_WITH_ACTION_INPUT}">
-                    <input type="text" name="${ACTION}" defaultValue="${EAT}" />
-                    <button type="submit">
-                    </button>
-                  </Form>
+                <Form id="${FORM_WITH_ACTION_INPUT}">
+                  <input type="text" name="${ACTION}" defaultValue="${EAT}" />
+                  <button type="submit">
+                  </button>
+                </Form>
 
-                  <Form id="${FORM_WITH_ORPHAN}">
-                    <input id="${KEYBOARD_INPUT}" type="text" />
-                    <button
-                      id="buttonWithValue"
-                      type="submit"
-                      name="${LUNCH}"
-                      value="${LAKSA}"
-                    >
-                      <svg height="100" width="100">
-                        <circle id="svg-button-enhanced" cx="50" cy="50" r="40" stroke="black" strokeWidth="3" fill="red" />
-                      </svg>
-                    </button>
-                  </Form>
+                <Form id="${FORM_WITH_ORPHAN}">
+                  <input id="${KEYBOARD_INPUT}" type="text" />
+                  <button
+                    id="buttonWithValue"
+                    type="submit"
+                    name="${LUNCH}"
+                    value="${LAKSA}"
+                  >
+                    <svg height="100" width="100">
+                      <circle id="svg-button-enhanced" cx="50" cy="50" r="40" stroke="black" strokeWidth="3" fill="red" />
+                    </svg>
+                  </button>
+                </Form>
+
+                <button
+                  type="submit"
+                  id="${ORPHAN_BUTTON}"
+                  form="${FORM_WITH_ORPHAN}"
+                  name="${LUNCH}"
+                  value="${SQUID_INK_HOTDOG}"
+                >Orphan</button>
+
+                <Form>
+                  <input
+                    defaultChecked={true}
+                    type="checkbox"
+                    name="${LUNCH}"
+                    defaultValue="${CHEESESTEAK}"
+                  />
+                  <input
+                    defaultChecked={true}
+                    type="checkbox"
+                    name="${LUNCH}"
+                    defaultValue="${LAKSA}"
+                  />
 
                   <button
+                    id="${CHECKBOX_BUTTON}"
                     type="submit"
-                    id="${ORPHAN_BUTTON}"
-                    form="${FORM_WITH_ORPHAN}"
-                    name="${LUNCH}"
-                    value="${SQUID_INK_HOTDOG}"
-                  >Orphan</button>
+                  >Go</button>
+                </Form>
 
-                  <Form>
-                    <input
-                      defaultChecked={true}
-                      type="checkbox"
-                      name="${LUNCH}"
-                      defaultValue="${CHEESESTEAK}"
-                    />
-                    <input
-                      defaultChecked={true}
-                      type="checkbox"
-                      name="${LUNCH}"
-                      defaultValue="${LAKSA}"
-                    />
-
-                    <button
-                      id="${CHECKBOX_BUTTON}"
-                      type="submit"
-                    >Go</button>
-                  </Form>
-
-                  <pre>{data}</pre>
-                </>
-              )
-            }
-          `,
+                <pre>{data}</pre>
+              </>
+            )
+          }
+        `,
 
         "app/routes/about.tsx": js`
-            export async function action({ request }) {
-              return json({ submitted: true });
-            }
-            export default function () {
-              return <h1>About</h1>;
-            }
-          `,
+          export async function action({ request }) {
+            return { submitted: true };
+          }
+          export default function () {
+            return <h1>About</h1>;
+          }
+        `,
 
         "app/routes/inbox.tsx": js`
-            import { Form } from "react-router";
-            export default function() {
-              return (
-                <>
-                  <Form id="${STATIC_ROUTE_NO_ACTION}">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${STATIC_ROUTE_ABSOLUTE_ACTION}" action="/about">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${STATIC_ROUTE_CURRENT_ACTION}" action=".">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${STATIC_ROUTE_PARENT_ACTION}" action="..">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${STATIC_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../about">
-                    <button>Submit</button>
-                  </Form>
-                </>
-              )
-            }
-          `,
+          import { Form } from "react-router";
+          export default function() {
+            return (
+              <>
+                <Form id="${STATIC_ROUTE_NO_ACTION}">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${STATIC_ROUTE_ABSOLUTE_ACTION}" action="/about">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${STATIC_ROUTE_CURRENT_ACTION}" action=".">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${STATIC_ROUTE_PARENT_ACTION}" action="..">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${STATIC_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../about">
+                  <button>Submit</button>
+                </Form>
+              </>
+            )
+          }
+        `,
 
         "app/routes/blog.tsx": js`
-            import { Form, Outlet } from "react-router";
-            export default function() {
-              return (
-                <>
-                  <h1>Blog</h1>
-                  <Form id="${LAYOUT_ROUTE_NO_ACTION}">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${LAYOUT_ROUTE_ABSOLUTE_ACTION}" action="/about">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${LAYOUT_ROUTE_CURRENT_ACTION}" action=".">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${LAYOUT_ROUTE_PARENT_ACTION}" action="..">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${LAYOUT_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
-                    <button>Submit</button>
-                  </Form>
-                  <Outlet />
-                </>
-              )
-            }
-          `,
+          import { Form, Outlet } from "react-router";
+          export default function() {
+            return (
+              <>
+                <h1>Blog</h1>
+                <Form id="${LAYOUT_ROUTE_NO_ACTION}">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${LAYOUT_ROUTE_ABSOLUTE_ACTION}" action="/about">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${LAYOUT_ROUTE_CURRENT_ACTION}" action=".">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${LAYOUT_ROUTE_PARENT_ACTION}" action="..">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${LAYOUT_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
+                  <button>Submit</button>
+                </Form>
+                <Outlet />
+              </>
+            )
+          }
+        `,
 
         "app/routes/blog._index.tsx": js`
-            import { Form } from "react-router";
-            export function action() {
-              return { ok: true };
-            }
-            export default function() {
-              return (
-                <>
-                  <Form id="${INDEX_ROUTE_NO_ACTION}">
-                    <input type="hidden" name="foo" defaultValue="1" />
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${INDEX_ROUTE_ABSOLUTE_ACTION}" action="/about">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${INDEX_ROUTE_CURRENT_ACTION}" action=".">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${INDEX_ROUTE_PARENT_ACTION}" action="..">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${INDEX_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
-                    <button>Submit</button>
-                  </Form>
+          import { Form } from "react-router";
+          export function action() {
+            return { ok: true };
+          }
+          export default function() {
+            return (
+              <>
+                <Form id="${INDEX_ROUTE_NO_ACTION}">
+                  <input type="hidden" name="foo" defaultValue="1" />
+                  <button>Submit</button>
+                </Form>
+                <Form id="${INDEX_ROUTE_ABSOLUTE_ACTION}" action="/about">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${INDEX_ROUTE_CURRENT_ACTION}" action=".">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${INDEX_ROUTE_PARENT_ACTION}" action="..">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${INDEX_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
+                  <button>Submit</button>
+                </Form>
 
-                  <Form method="post" id="${INDEX_ROUTE_NO_ACTION_POST}">
-                    <input type="hidden" name="bar" defaultValue="2" />
-                    <button>Submit</button>
-                  </Form>
-                </>
-              )
-            }
-          `,
+                <Form method="post" id="${INDEX_ROUTE_NO_ACTION_POST}">
+                  <input type="hidden" name="bar" defaultValue="2" />
+                  <button>Submit</button>
+                </Form>
+              </>
+            )
+          }
+        `,
 
         "app/routes/blog.$postId.tsx": js`
-            import { Form } from "react-router";
-            export default function() {
-              return (
-                <>
-                  <Form id="${DYNAMIC_ROUTE_NO_ACTION}">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${DYNAMIC_ROUTE_ABSOLUTE_ACTION}" action="/about">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${DYNAMIC_ROUTE_CURRENT_ACTION}" action=".">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${DYNAMIC_ROUTE_PARENT_ACTION}" action="..">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${DYNAMIC_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
-                    <button>Submit</button>
-                  </Form>
-                </>
-              )
-            }
-          `,
+          import { Form } from "react-router";
+          export default function() {
+            return (
+              <>
+                <Form id="${DYNAMIC_ROUTE_NO_ACTION}">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${DYNAMIC_ROUTE_ABSOLUTE_ACTION}" action="/about">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${DYNAMIC_ROUTE_CURRENT_ACTION}" action=".">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${DYNAMIC_ROUTE_PARENT_ACTION}" action="..">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${DYNAMIC_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
+                  <button>Submit</button>
+                </Form>
+              </>
+            )
+          }
+        `,
 
         "app/routes/projects.tsx": js`
-            import { Form, Outlet } from "react-router";
-            export default function() {
-              return (
-                <>
-                  <h1>Projects</h1>
-                  <Outlet />
-                </>
-              )
-            }
-          `,
+          import { Form, Outlet } from "react-router";
+          export default function() {
+            return (
+              <>
+                <h1>Projects</h1>
+                <Outlet />
+              </>
+            )
+          }
+        `,
 
         "app/routes/projects._index.tsx": js`
-            export default function() {
-              return <h2>All projects</h2>
-            }
-          `,
+          export default function() {
+            return <h2>All projects</h2>
+          }
+        `,
 
         "app/routes/projects.$.tsx": js`
-            import { Form } from "react-router";
-            export default function() {
-              return (
-                <>
-                  <Form id="${SPLAT_ROUTE_NO_ACTION}">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${SPLAT_ROUTE_ABSOLUTE_ACTION}" action="/about">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${SPLAT_ROUTE_CURRENT_ACTION}" action=".">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${SPLAT_ROUTE_PARENT_ACTION}" action="..">
-                    <button>Submit</button>
-                  </Form>
-                  <Form id="${SPLAT_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
-                    <button>Submit</button>
-                  </Form>
-                </>
-              )
-            }
-          `,
+          import { Form } from "react-router";
+          export default function() {
+            return (
+              <>
+                <Form id="${SPLAT_ROUTE_NO_ACTION}">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${SPLAT_ROUTE_ABSOLUTE_ACTION}" action="/about">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${SPLAT_ROUTE_CURRENT_ACTION}" action=".">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${SPLAT_ROUTE_PARENT_ACTION}" action="..">
+                  <button>Submit</button>
+                </Form>
+                <Form id="${SPLAT_ROUTE_TOO_MANY_DOTS_ACTION}" action="../../../../about">
+                  <button>Submit</button>
+                </Form>
+              </>
+            )
+          }
+        `,
 
         "app/routes/stop-propagation.tsx": js`
-            import { json } from "react-router";
-            import { Form, useActionData } from "react-router";
+          import { Form, useActionData } from "react-router";
 
-            export async function action({ request }) {
-              let formData = await request.formData();
-              return json(Object.fromEntries(formData));
-            }
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return Object.fromEntries(formData);
+          }
 
-            export default function Index() {
-              let actionData = useActionData();
-              return (
-                <div onClick={(event) => event.stopPropagation()}>
-                  {actionData ? <pre id="action-data">{JSON.stringify(actionData)}</pre> : null}
-                  <Form method="post">
-                    <button type="submit" name="intent" value="add">Add</button>
-                  </Form>
-                </div>
-              )
-            }
-          `,
+          export default function Index() {
+            let actionData = useActionData();
+            return (
+              <div onClick={(event) => event.stopPropagation()}>
+                {actionData ? <pre id="action-data">{JSON.stringify(actionData)}</pre> : null}
+                <Form method="post">
+                  <button type="submit" name="intent" value="add">Add</button>
+                </Form>
+              </div>
+            )
+          }
+        `,
 
         "app/routes/form-method.tsx": js`
-            import { Form, useActionData, useLoaderData, useSearchParams } from "react-router";
-            import { json } from "react-router";
+          import { Form, useActionData, useLoaderData, useSearchParams } from "react-router";
 
-            export function action({ request }) {
-              return json(request.method)
-            }
+          export function action({ request }) {
+            return request.method
+          }
 
-            export function loader({ request }) {
-              return json(request.method)
-            }
+          export function loader({ request }) {
+            return request.method
+          }
 
-            export default function() {
-              let actionData = useActionData();
-              let loaderData = useLoaderData();
-              let [searchParams] = useSearchParams();
-              let formMethod = searchParams.get('method') || 'GET';
-              let submitterFormMethod = searchParams.get('submitterFormMethod') || 'GET';
-              return (
-                <>
-                  <Form method={formMethod}>
-                    <button>Submit</button>
-                    <button formMethod={submitterFormMethod}>Submit with {submitterFormMethod}</button>
-                  </Form>
-                  {actionData ? <pre id="action-method">{actionData}</pre> : null}
-                  <pre id="loader-method">{loaderData}</pre>
-                </>
-              )
-            }
-          `,
+          export default function() {
+            let actionData = useActionData();
+            let loaderData = useLoaderData();
+            let [searchParams] = useSearchParams();
+            let formMethod = searchParams.get('method') || 'GET';
+            let submitterFormMethod = searchParams.get('submitterFormMethod') || 'GET';
+            return (
+              <>
+                <Form method={formMethod}>
+                  <button>Submit</button>
+                  <button formMethod={submitterFormMethod}>Submit with {submitterFormMethod}</button>
+                </Form>
+                {actionData ? <pre id="action-method">{actionData}</pre> : null}
+                <pre id="loader-method">{loaderData}</pre>
+              </>
+            )
+          }
+        `,
 
         "app/routes/submitter.tsx": js`
-            import { Form } from "react-router";
+          import { Form } from "react-router";
 
-            export default function() {
-              return (
-                <>
-                  <button name="tasks" value="outside" form="myform">Outside</button>
-                  <Form action="/outputFormData" id="myform">
-                    <input type="text" name="tasks" defaultValue="first" />
-                    <input type="text" name="tasks" defaultValue="second" />
+          export default function() {
+            return (
+              <>
+                <button name="tasks" value="outside" form="myform">Outside</button>
+                <Form action="/outputFormData" id="myform">
+                  <input type="text" name="tasks" defaultValue="first" />
+                  <input type="text" name="tasks" defaultValue="second" />
 
-                    <button name="tasks" value="">Add Task</button>
-                    <button value="">No Name</button>
-                    <input type="image" name="tasks" alt="Add Task" />
-                    <input type="image" alt="No Name" />
+                  <button name="tasks" value="">Add Task</button>
+                  <button value="">No Name</button>
+                  <input type="image" name="tasks" alt="Add Task" />
+                  <input type="image" alt="No Name" />
 
-                    <input type="text" name="tasks" defaultValue="last" />
-                  </Form>
-                </>
-              )
-            }
-          `,
+                  <input type="text" name="tasks" defaultValue="last" />
+                </Form>
+              </>
+            )
+          }
+        `,
 
         "app/routes/file-upload.tsx": js`
-            import { Form, useSearchParams } from "react-router";
+          import { Form, useSearchParams } from "react-router";
 
-            export default function() {
-              const [params] = useSearchParams();
-              return (
-                <Form
-                  action="/outputFormData"
-                  method={params.get("method") ?? undefined}
-                  encType={params.get("encType") ?? undefined}
-                >
-                  <input type="file" name="filey" />
-                  <input type="file" name="filey2" multiple />
-                  <input type="file" name="filey3" />
-                  <button />
-                </Form>
-              )
-            }
-          `,
+          export default function() {
+            const [params] = useSearchParams();
+            return (
+              <Form
+                action="/outputFormData"
+                method={params.get("method") ?? undefined}
+                encType={params.get("encType") ?? undefined}
+              >
+                <input type="file" name="filey" />
+                <input type="file" name="filey2" multiple />
+                <input type="file" name="filey3" />
+                <button />
+              </Form>
+            )
+          }
+        `,
 
         "app/routes/empty-file-upload.tsx": js`
-            import { json, Form, useActionData } from "react-router";
+          import { Form, useActionData } from "react-router";
 
-            export async function action({ request }) {
-              let formData = await request.formData();
-              return json({
-                text: formData.get('text'),
-                file: {
-                  name: formData.get('file').name,
-                  size: formData.get('file').size,
-                },
-                fileMultiple: formData.getAll('fileMultiple').map(f => ({
-                  name: f.name,
-                  size: f.size,
-                })),
-              })
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return {
+              text: formData.get('text'),
+              file: {
+                name: formData.get('file').name,
+                size: formData.get('file').size,
+              },
+              fileMultiple: formData.getAll('fileMultiple').map(f => ({
+                name: f.name,
+                size: f.size,
+              })),
             }
+          }
 
-            export default function() {
-              const actionData = useActionData();
-              return (
-                <Form method="post" encType="multipart/form-data">
-                  <input name="text" />
-                  <input type="file" name="file" />
-                  <input type="file" name="fileMultiple" multiple />
-                  <button type="submit">Submit</button>
-                  {actionData ? <p id="action-data">{JSON.stringify(actionData)}</p> : null}
-                </Form>
-              )
-            }
-          `,
+          export default function() {
+            const actionData = useActionData();
+            return (
+              <Form method="post" encType="multipart/form-data">
+                <input name="text" />
+                <input type="file" name="file" />
+                <input type="file" name="fileMultiple" multiple />
+                <button type="submit">Submit</button>
+                {actionData ? <p id="action-data">{JSON.stringify(actionData)}</p> : null}
+              </Form>
+            )
+          }
+        `,
 
         // Generic route for outputting url-encoded form data (either from the request body or search params)
         //
         // TODO: refactor other tests to use this
         "app/routes/outputFormData.tsx": js`
-            import { useActionData, useSearchParams } from "react-router";
+          import { useActionData, useSearchParams } from "react-router";
 
-            export async function action({ request }) {
-              const formData = await request.formData();
-              const body = new URLSearchParams();
-              for (let [key, value] of formData) {
-                body.append(
-                  key,
-                  value instanceof File ? await streamToString(value.stream()) : value
-                );
-              }
-              return body.toString();
+          export async function action({ request }) {
+            const formData = await request.formData();
+            const body = new URLSearchParams();
+            for (let [key, value] of formData) {
+              body.append(
+                key,
+                value instanceof File ? await streamToString(value.stream()) : value
+              );
             }
+            return body.toString();
+          }
 
-            export default function OutputFormData() {
-              const requestBody = useActionData();
-              const searchParams = useSearchParams()[0];
-              return <input id="formData" defaultValue={requestBody ?? searchParams} />;
-            }
-          `,
+          export default function OutputFormData() {
+            const requestBody = useActionData();
+            const searchParams = useSearchParams()[0];
+            return <input id="formData" defaultValue={requestBody ?? searchParams} />;
+          }
+        `,
 
         "myfile.txt": "stuff",
 
         "app/routes/pathless-layout-parent.tsx": js`
-            import { json, Form, Outlet, useActionData } from "react-router"
+          import { Form, Outlet, useActionData } from "react-router"
 
-            export async function action({ request }) {
-              return json({ submitted: true });
-            }
-            export default function () {
-              let data = useActionData();
-              return (
-                <>
-                  <Form method="post">
-                    <h1>Pathless Layout Parent</h1>
-                    <button type="submit">Submit</button>
-                  </Form>
-                  <Outlet />
-                  <p>{data?.submitted === true ? 'Submitted - Yes' : 'Submitted - No'}</p>
-                </>
-              );
-            }
-          `,
+          export async function action({ request }) {
+            return { submitted: true };
+          }
+          export default function () {
+            let data = useActionData();
+            return (
+              <>
+                <Form method="post">
+                  <h1>Pathless Layout Parent</h1>
+                  <button type="submit">Submit</button>
+                </Form>
+                <Outlet />
+                <p>{data?.submitted === true ? 'Submitted - Yes' : 'Submitted - No'}</p>
+              </>
+            );
+          }
+        `,
 
         "app/routes/pathless-layout-parent._pathless.nested.tsx": js`
-            import { Outlet } from "react-router";
+          import { Outlet } from "react-router";
 
-            export default function () {
-              return (
-                <>
-                  <h2>Pathless Layout</h2>
-                  <Outlet />
-                </>
-              );
-            }
-          `,
+          export default function () {
+            return (
+              <>
+                <h2>Pathless Layout</h2>
+                <Outlet />
+              </>
+            );
+          }
+        `,
 
         "app/routes/pathless-layout-parent._pathless.nested._index.tsx": js`
-            export default function () {
-              return <h3>Pathless Layout Index</h3>
-            }
-          `,
+          export default function () {
+            return <h3>Pathless Layout Index</h3>
+          }
+        `,
       },
     });
 

@@ -1,5 +1,4 @@
-import { isDataWithResponseInit } from "../router/router";
-import { isRedirectStatusCode } from "./responses";
+import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
 import type {
   ActionFunction,
   ActionFunctionArgs,

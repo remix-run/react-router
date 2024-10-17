@@ -1,13 +1,11 @@
 import type { StaticHandler } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
-import {
-  isRouteErrorResponse,
-  json as routerJson,
-  ErrorResponseImpl,
-} from "../router/utils";
+import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
+  isRedirectResponse,
+  isResponse,
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
@@ -19,7 +17,6 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { EntryRoute, ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { isRedirectResponse, isResponse, json } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
 import type { SingleFetchResult, SingleFetchResults } from "./single-fetch";
@@ -252,11 +249,11 @@ async function handleManifestRequest(
       }
     }
 
-    return json(patches, {
+    return Response.json(patches, {
       headers: {
         "Cache-Control": "public, max-age=31536000, immutable",
       },
-    }) as Response; // Override the TypedResponse stuff from json()
+    });
   }
 
   return new Response("Invalid Request", { status: 400 });
@@ -524,7 +521,7 @@ function errorResponseToJson(
   errorResponse: ErrorResponse,
   serverMode: ServerMode
 ): Response {
-  return routerJson(
+  return Response.json(
     serializeError(
       // @ts-expect-error This is "private" from users but intended for internal use
       errorResponse.error || new Error("Unexpected Server Error"),

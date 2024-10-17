@@ -4,7 +4,6 @@
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import { json } from "react-router";
 import type { StaticHandlerContext } from "../../index";
 import {
   Form,
@@ -638,7 +637,7 @@ describe("A <StaticRouterProvider>", () => {
       {
         path: "/",
         loader: () => {
-          throw json(
+          throw Response.json(
             { not: "found" },
             { status: 404, statusText: "Not Found" }
           );
@@ -688,7 +687,7 @@ describe("A <StaticRouterProvider>", () => {
         path: "/",
         lazy: async () => ({
           loader: () => {
-            throw json(
+            throw Response.json(
               { not: "found" },
               { status: 404, statusText: "Not Found" }
             );

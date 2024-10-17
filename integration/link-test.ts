@@ -308,20 +308,18 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.tsx": js`
-          import { json } from "react-router";
-          import { Link, Outlet, useLoaderData, useNavigation } from "react-router";
+          import { data, Link, Outlet, useLoaderData, useNavigation } from "react-router";
           import stylesHref from "~/gists.css?url";
           export function links() {
             return [{ rel: "stylesheet", href: stylesHref }];
           }
           export async function loader() {
-            let data = {
+            return data({
               users: [
                 { id: "ryanflorence", name: "Ryan Florence" },
                 { id: "mjackson", name: "Michael Jackson" },
               ],
-            };
-            return json(data, {
+            }, {
               headers: {
                 "Cache-Control": "public, max-age=60",
               },
@@ -359,7 +357,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.$username.tsx": js`
-          import { json, redirect } from "react-router";
+          import { data, redirect } from "react-router";
           import { Link, useLoaderData, useParams } from "react-router";
           export async function loader({ params }) {
             let { username } = params;
@@ -367,7 +365,7 @@ test.describe("route module link export", () => {
               return redirect("/gists/mjackson", 302);
             }
             if (username === "_why") {
-              return json(null, { status: 404 });
+              return data(null, { status: 404 });
             }
             return ${JSON.stringify(fakeGists)};
           }

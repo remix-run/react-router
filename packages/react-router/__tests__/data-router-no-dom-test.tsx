@@ -53,6 +53,8 @@ describe("RouterProvider works when no DOM APIs are available", () => {
   });
 
   it("is defensive against a view transition navigation", async () => {
+    let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     let router = createMemoryRouter([
       {
         path: "/",
@@ -120,6 +122,14 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         state: null,
       },
     });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "You provided the `viewTransition` option to a router update, but you do " +
+        "not appear to be running in a DOM environment as `window.startViewTransition` " +
+        "is not available."
+    );
+    warnSpy.mockRestore();
 
     unsubscribe();
   });

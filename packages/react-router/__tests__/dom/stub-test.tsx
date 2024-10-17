@@ -8,7 +8,6 @@ import {
   useFetcher,
   useLoaderData,
   useMatches,
-  json,
   createRoutesStub,
 } from "../../index";
 
@@ -62,7 +61,7 @@ test("loaders work", async () => {
         return <pre data-testid="data">Message: {data.message}</pre>;
       },
       loader() {
-        return json({ message: "hello" });
+        return Response.json({ message: "hello" });
       },
     },
   ]);
@@ -87,7 +86,7 @@ test("actions work", async () => {
         );
       },
       action() {
-        return json({ message: "hello" });
+        return Response.json({ message: "hello" });
       },
     },
   ]);
@@ -116,7 +115,7 @@ test("fetchers work", async () => {
     {
       path: "/api",
       loader() {
-        return json({ count: ++count });
+        return Response.json({ count: ++count });
       },
     },
   ]);
@@ -133,7 +132,7 @@ test("fetchers work", async () => {
 // eslint-disable-next-line jest/expect-expect
 test("can pass a predefined loader", () => {
   async function loader(_args: LoaderFunctionArgs) {
-    return json({ hi: "there" });
+    return Response.json({ hi: "there" });
   }
 
   createRoutesStub([
@@ -160,7 +159,7 @@ test("can pass context values", async () => {
           );
         },
         loader({ context }) {
-          return json(context);
+          return Response.json(context);
         },
         children: [
           {
@@ -170,7 +169,7 @@ test("can pass context values", async () => {
               return <pre data-testid="hello">Context: {data.context}</pre>;
             },
             loader({ context }) {
-              return json(context);
+              return Response.json(context);
             },
           },
         ],

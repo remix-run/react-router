@@ -162,11 +162,11 @@ async function workflow({
     contents
       .replace(
         "// imports",
-        `// imports\nimport { json } from "react-router";\nimport { useLoaderData } from "react-router"`
+        `// imports\nimport { useLoaderData } from "react-router"`
       )
       .replace(
         "// loader",
-        `// loader\nexport const loader = () => json({ message: "HDR updated: 0" });`
+        `// loader\nexport const loader = () => ({ message: "HDR updated: 0" });`
       )
       .replace(
         "// hooks",
@@ -279,8 +279,8 @@ async function workflow({
         `// imports\nimport { direct } from "../direct-hdr-dep"`
       )
       .replace(
-        `json({ message: "HDR updated: 2" })`,
-        `json({ message: "HDR updated: " + direct })`
+        `{ message: "HDR updated: 2" }`,
+        `{ message: "HDR updated: " + direct }`
       )
   );
   await page.waitForLoadState("networkidle");

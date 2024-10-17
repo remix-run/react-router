@@ -34,7 +34,7 @@ test.describe("set-cookie revalidation", () => {
 
         "app/root.tsx": js`
             import {
-              json,
+              data,
               Links,
               Meta,
               Outlet,
@@ -48,7 +48,7 @@ test.describe("set-cookie revalidation", () => {
               let session = await sessionStorage.getSession(request.headers.get("Cookie"));
               let message = session.get(MESSAGE_KEY) || null;
 
-              return json(message, {
+              return data(message, {
                 headers: {
                   "Set-Cookie": await sessionStorage.commitSession(session),
                 },

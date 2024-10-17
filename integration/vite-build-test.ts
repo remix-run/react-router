@@ -63,12 +63,11 @@ test.beforeAll(async () => {
     `,
     "app/routes/_index.tsx": js`
       import { useState, useEffect } from "react";
-      import { json } from "react-router";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
       export const loader = () => {
-        return json({ serverOnly1 })
+        return { serverOnly1 }
       }
 
       export const action = () => {
@@ -95,12 +94,10 @@ test.beforeAll(async () => {
       export const serverOnly2 = "SERVER_ONLY_2"
     `,
     "app/routes/resource.ts": js`
-      import { json } from "react-router";
-
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
       export const loader = () => {
-        return json({ serverOnly1 })
+        return { serverOnly1 }
       }
 
       export const action = () => {
@@ -110,16 +107,15 @@ test.beforeAll(async () => {
     `,
     "app/routes/mdx.mdx": js`
       import { useEffect, useState } from "react";
-      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
       export const loader = () => {
-        return json({
+        return {
           serverOnly1,
           content: "MDX route content from loader",
-        })
+        }
       }
 
       export const action = () => {
@@ -170,13 +166,12 @@ test.beforeAll(async () => {
       }
     `,
     "app/routes/dotenv.tsx": js`
-      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       export const loader = () => {
-        return json({
+        return {
           loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE ?? '.env file was NOT loaded, which is a good thing',
-        })
+        }
       }
 
       export default function DotenvRoute() {

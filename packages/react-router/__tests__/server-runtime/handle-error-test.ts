@@ -1,6 +1,5 @@
 import type { ServerBuild } from "../../lib/server-runtime/build";
 import { createRequestHandler } from "../../lib/server-runtime/server";
-import { json } from "../../lib/server-runtime/responses";
 import { ErrorResponseImpl } from "../../lib/router/utils";
 
 function getHandler(routeModule = {}, entryServerModule = {}) {
@@ -90,7 +89,7 @@ describe("handleError", () => {
     it("does not provide user-thrown Responses to handleError", async () => {
       let { handler, handleErrorSpy } = getHandler({
         loader() {
-          throw json(
+          throw Response.json(
             { message: "not found" },
             { status: 404, statusText: "Not Found" }
           );
@@ -145,7 +144,7 @@ describe("handleError", () => {
     it("does not provide user-thrown Responses to handleError", async () => {
       let { handler, handleErrorSpy } = getHandler({
         loader() {
-          throw json(
+          throw Response.json(
             { message: "not found" },
             { status: 404, statusText: "Not Found" }
           );
@@ -201,7 +200,7 @@ describe("handleError", () => {
     it("does not provide user-thrown Responses to handleError", async () => {
       let { handler, handleErrorSpy } = getHandler({
         loader() {
-          throw json(
+          throw Response.json(
             { message: "not found" },
             { status: 404, statusText: "Not Found" }
           );

@@ -26,7 +26,8 @@ For example, consider a UI Route that renders a report, note the link:
 export async function loader({
   params,
 }: LoaderFunctionArgs) {
-  return json(await getReport(params.id));
+  let report = await getReport(params.id);
+  return report;
 }
 
 export default function Report() {

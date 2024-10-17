@@ -46,7 +46,7 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.tsx": js`
-              import { json } from "react-router";
+              import { data } from "react-router";
               import { Outlet, useLoaderData } from "react-router";
 
               export async function loader({ request }) {
@@ -57,7 +57,7 @@ test.describe("Revalidation", () => {
                   .find(c => c.startsWith('parent='))
                 let strValue = (cookie || 'parent=0').split("=")[1];
                 let value = parseInt(strValue, 10) + 1;
-                return json({ value }, {
+                return data({ value }, {
                   headers: {
                     "Set-Cookie": "parent=" + value,
                   }
@@ -86,11 +86,11 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.child.tsx": js`
-              import { json } from "react-router";
+              import { data } from "react-router";
               import { Form, useLoaderData, useRevalidator } from "react-router";
 
               export async function action() {
-                return json({ action: 'data' })
+                return { action: 'data' }
               }
 
               export async function loader({ request }) {
@@ -101,7 +101,7 @@ test.describe("Revalidation", () => {
                   .find(c => c.startsWith('child='))
                 let strValue = (cookie || 'child=0').split("=")[1];
                 let value = parseInt(strValue, 10) + 1;
-                return json({ value }, {
+                return data({ value }, {
                   headers: {
                     "Set-Cookie": "child=" + value,
                   }

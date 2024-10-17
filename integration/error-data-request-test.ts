@@ -58,10 +58,8 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/loader-return-json.jsx`]: js`
-          import { json } from "react-router";
-
           export async function loader() {
-            return json({ ok: true });
+            return { ok: true };
           }
 
           export default function () {
@@ -80,10 +78,8 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/action-return-json.jsx`]: js`
-          import { json } from "react-router";
-
           export async function action() {
-            return json({ ok: true });
+            return { ok: true };
           }
 
           export default function () {

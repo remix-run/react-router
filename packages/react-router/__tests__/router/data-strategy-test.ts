@@ -3,7 +3,6 @@ import type {
   DataStrategyMatch,
   DataStrategyResult,
 } from "../../lib/router/utils";
-import { json } from "../../lib/router/utils";
 import { createDeferred, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
@@ -63,7 +62,7 @@ describe("router dataStrategy", () => {
       expect(A.loaders.json.stub).toHaveBeenCalledTimes(1);
       expect(A.loaders.text.stub).toHaveBeenCalledTimes(1);
 
-      await A.loaders.json.resolve(json({ message: "hello json" }));
+      await A.loaders.json.resolve({ message: "hello json" });
       await A.loaders.text.resolve(new Response("hello text"));
 
       expect(t.router.state.loaderData).toEqual({
@@ -597,7 +596,7 @@ describe("router dataStrategy", () => {
         formData: createFormData({}),
       });
 
-      await A.actions.json.resolve(json({ message: "hello json" }));
+      await A.actions.json.resolve({ message: "hello json" });
 
       expect(t.router.state.actionData).toEqual({
         json: { message: "hello json" },
@@ -686,7 +685,7 @@ describe("router dataStrategy", () => {
         let key = "key";
         let A = await t.fetch("/test", key);
 
-        await A.loaders.json.resolve(json({ message: "hello json" }));
+        await A.loaders.json.resolve({ message: "hello json" });
 
         expect(t.fetchers[key].data.message).toBe("hello json");
 
@@ -772,7 +771,7 @@ describe("router dataStrategy", () => {
           formData: createFormData({}),
         });
 
-        await A.actions.json.resolve(json({ message: "hello json" }));
+        await A.actions.json.resolve({ message: "hello json" });
 
         expect(t.fetchers[key].data.message).toBe("hello json");
 
@@ -881,7 +880,7 @@ describe("router dataStrategy", () => {
       });
 
       let A = await t.navigate("/test");
-      await A.loaders.json.resolve(json({ message: "hello json" }));
+      await A.loaders.json.resolve({ message: "hello json" });
       await A.loaders.reverse.resolve(
         new Response("hello text", {
           headers: { "Content-Type": "application/reverse" },
