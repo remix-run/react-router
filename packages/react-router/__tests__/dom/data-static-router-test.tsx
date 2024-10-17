@@ -4,18 +4,18 @@
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import { json } from "react-router";
-import type { StaticHandlerContext } from "../../index";
 import {
   Form,
   Link,
   Outlet,
+  StaticRouterProvider,
+  createStaticHandler,
+  createStaticRouter,
+  json,
   useLoaderData,
   useLocation,
   useMatches,
-  createStaticHandler,
-  createStaticRouter,
-  StaticRouterProvider,
+  type StaticHandlerContext,
 } from "../../index";
 
 beforeEach(() => {

@@ -1,4 +1,4 @@
-import { matchPath } from "react-router";
+import { matchPath } from "../index";
 
 describe("matchPath", () => {
   it("matches the root / URL", () => {

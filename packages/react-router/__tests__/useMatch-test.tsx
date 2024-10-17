@@ -1,7 +1,12 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import type { PathMatch } from "react-router";
-import { MemoryRouter, Routes, Route, useMatch } from "react-router";
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useMatch,
+  type PathMatch,
+} from "../index";
 
 function ShowMatch({ pattern }: { pattern: string }) {
   return <pre>{JSON.stringify(useMatch(pattern), null, 2)}</pre>;

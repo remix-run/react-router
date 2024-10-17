@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route, createRoutesFromChildren } from "react-router";
+import { Route, createRoutesFromChildren } from "../index";
 
 describe("creating routes from JSX", () => {
   it("creates a route config of nested JavaScript objects", () => {

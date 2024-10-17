@@ -2,12 +2,11 @@
  * @jest-environment node
  */
 
-import type { StaticHandlerContext } from "react-router";
-import { json } from "react-router";
+import { json, type StaticHandlerContext } from "../../index";
 
-import { createRequestHandler } from "../../lib/server-runtime/server";
-import { ServerMode } from "../../lib/server-runtime/mode";
 import type { ServerBuild } from "../../lib/server-runtime/build";
+import { ServerMode } from "../../lib/server-runtime/mode";
+import { createRequestHandler } from "../../lib/server-runtime/server";
 import { mockServerBuild } from "./utils";
 
 function spyConsole() {

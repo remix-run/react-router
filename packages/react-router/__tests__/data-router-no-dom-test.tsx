@@ -4,9 +4,9 @@
 
 import * as React from "react";
 import renderer from "react-test-renderer";
-import { useFetcher } from "../lib/dom/lib";
-import { RouterProvider } from "../lib/dom-export/dom-router-provider";
 import { createMemoryRouter } from "../lib/components";
+import { RouterProvider } from "../lib/dom-export/dom-router-provider";
+import { useFetcher } from "../lib/dom/lib";
 import { useLoaderData, useNavigate } from "../lib/hooks";
 
 describe("RouterProvider works when no DOM APIs are available", () => {

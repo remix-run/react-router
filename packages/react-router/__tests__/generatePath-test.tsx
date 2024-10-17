@@ -1,4 +1,4 @@
-import { generatePath } from "react-router";
+import { generatePath } from "../index";
 
 describe("generatePath", () => {
   describe("with no params", () => {
