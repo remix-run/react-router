@@ -88,7 +88,7 @@ Let's assume the current path is `/main/module`. When you click the "Back" link,
 
 Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing from the current contextual route path. You can opt into this behavior with `relative="path"`:
 
-```jsx
+```tsx
 // Contact and EditContact do not share additional UI layout
 <Route path="/" element={<Layout />}>
   <Route path="contacts/:id" element={<Contact />} />
@@ -114,7 +114,7 @@ Please note that `relative="path"` only impacts the resolution of a relative pat
 
 If you wish to use path-relative routing against the current URL instead of the route hierarchy, you can do that with the current [`location`][use-location] and the `URL` constructor (note the trailing slash behavior):
 
-```js
+```ts
 // Assume the current URL is https://remix.run/docs/en/main/start/quickstart
 let location = useLocation();
 
