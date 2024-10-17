@@ -1,7 +1,6 @@
 import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
 import type { Jsonify } from "./server-runtime/jsonify";
-import type { TypedResponse } from "./server-runtime/responses";
 import type { Serializable } from "./server-runtime/single-fetch";
 
 export type Expect<T extends true> = T;
@@ -33,13 +32,11 @@ type DataFrom<T> =
 
 // prettier-ignore
 type ClientData<T> =
-  T extends TypedResponse<infer U> ? Jsonify<U> :
   T extends DataWithResponseInit<infer U> ? U :
   T
 
 // prettier-ignore
 type ServerData<T> =
-  T extends TypedResponse<infer U> ? Jsonify<U> :
   T extends DataWithResponseInit<infer U> ? Serialize<U> :
   Serialize<T>
 
@@ -174,11 +171,12 @@ type __tests = [
       Pretty<
         ServerDataFrom<
           () =>
-            | TypedResponse<{ json: string; b: Date; c: () => boolean }>
+            | { json: string; b: Date; c: () => boolean }
             | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
         >
       >,
-      { json: string; b: string } | { data: string; b: Date; c: undefined }
+      | { json: string; b: Date; c: undefined }
+      | { data: string; b: Date; c: undefined }
     >
   >,
 
@@ -195,11 +193,12 @@ type __tests = [
       Pretty<
         ClientDataFrom<
           () =>
-            | TypedResponse<{ json: string; b: Date; c: () => boolean }>
+            | { json: string; b: Date; c: () => boolean }
             | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
         >
       >,
-      { json: string; b: string } | { data: string; b: Date; c: () => boolean }
+      | { json: string; b: Date; c: () => boolean }
+      | { data: string; b: Date; c: () => boolean }
     >
   >,
 
