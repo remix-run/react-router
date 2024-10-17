@@ -88,10 +88,13 @@ type _CreateActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
-type DataFunctionArgs<Params> = {
+type ClientDataFunctionArgs<Params> = {
   request: Request;
   params: Params;
-  context?: AppLoadContext;
+};
+
+type ServerDataFunctionArgs<Params> = ClientDataFunctionArgs<Params> & {
+  context: AppLoadContext;
 };
 
 // prettier-ignore
@@ -122,21 +125,21 @@ type Serialize<T> =
 
   undefined
 
-export type CreateServerLoaderArgs<Params> = DataFunctionArgs<Params>;
+export type CreateServerLoaderArgs<Params> = ServerDataFunctionArgs<Params>;
 
 export type CreateClientLoaderArgs<
   Params,
   T extends RouteModule
-> = DataFunctionArgs<Params> & {
+> = ClientDataFunctionArgs<Params> & {
   serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
 };
 
-export type CreateServerActionArgs<Params> = DataFunctionArgs<Params>;
+export type CreateServerActionArgs<Params> = ServerDataFunctionArgs<Params>;
 
 export type CreateClientActionArgs<
   Params,
   T extends RouteModule
-> = DataFunctionArgs<Params> & {
+> = ClientDataFunctionArgs<Params> & {
   serverAction: () => Promise<ServerDataFrom<T["action"]>>;
 };
 
