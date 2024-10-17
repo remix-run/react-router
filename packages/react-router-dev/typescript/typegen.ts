@@ -184,7 +184,7 @@ function parseParams(urlpath: string) {
       if (param.includes(".")) {
         param = param.split(".")[0];
       }
-      const isOptional = param.endsWith("?");
+      let isOptional = param.endsWith("?");
       if (isOptional) {
         param = param.slice(0, -1); // omit trailing `?`
       }
