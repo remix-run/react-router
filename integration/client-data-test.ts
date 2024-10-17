@@ -49,10 +49,9 @@ function getFiles({
       }
     `,
     "app/routes/parent.tsx": js`
-      import { json } from "react-router"
       import { Outlet, useLoaderData } from "react-router"
       export function loader() {
-        return json({ message: 'Parent Server Loader'});
+        return { message: 'Parent Server Loader' };
       }
       ${
         parentClientLoader
@@ -89,13 +88,12 @@ function getFiles({
       }
     `,
     "app/routes/parent.child.tsx": js`
-      import { json } from "react-router"
       import { Form, Outlet, useActionData, useLoaderData } from "react-router"
       export function loader() {
-        return json({ message: 'Child Server Loader'});
+        return { message: 'Child Server Loader' };
       }
       export function action() {
-        return json({ message: 'Child Server Action'});
+        return { message: 'Child Server Action' };
       }
       ${
         childClientLoader
@@ -417,18 +415,13 @@ test.describe("Client Data", () => {
           }),
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
-            import { json } from "react-router";
             import { useLoaderData } from "react-router";
             export function loader() {
-              return json({
-                message: "Child Server Loader Data",
-              });
+              return { message: "Child Server Loader Data" };
             }
             export async function clientLoader({ serverLoader }) {
               await new Promise(r => setTimeout(r, 100));
-              return {
-                message: "Child Client Loader Data",
-              };
+              return { message: "Child Client Loader Data" };
             }
             export function HydrateFallback() {
               return <p>SHOULD NOT SEE ME</p>
@@ -600,19 +593,14 @@ test.describe("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { json } from "react-router";
               import { useLoaderData, useRevalidator } from "react-router";
               let isFirstCall = true;
               export async function loader({ serverLoader }) {
                 if (isFirstCall) {
                   isFirstCall = false
-                  return json({
-                    message: "Child Server Loader Data (1)",
-                  });
+                  return { message: "Child Server Loader Data (1)" };
                 }
-                return json({
-                  message: "Child Server Loader Data (2+)",
-                });
+                return { message: "Child Server Loader Data (2+)" };
               }
               export async function clientLoader({ serverLoader }) {
                 await new Promise(r => setTimeout(r, 100));
@@ -671,13 +659,9 @@ test.describe("Client Data", () => {
               export async function loader({ serverLoader }) {
                 if (isFirstCall) {
                   isFirstCall = false
-                  return json({
-                    message: "Child Server Loader Data (1)",
-                  });
+                  return { message: "Child Server Loader Data (1)" };
                 }
-                return json({
-                  message: "Child Server Loader Data (2+)",
-                });
+                return { message: "Child Server Loader Data (2+)" };
               }
               let isFirstClientCall = true;
               export async function clientLoader({ serverLoader }) {
@@ -799,7 +783,7 @@ test.describe("Client Data", () => {
               "app/routes/parent.tsx": js`
                 import { Outlet, useLoaderData, useRouteLoaderData, useRouteError } from 'react-router'
                 export function loader() {
-                  return { message: 'Parent Server Loader'};
+                  return { message: 'Parent Server Loader' };
                 }
                 export async function clientLoader({ serverLoader }) {
                   console.log('running parent client loader')

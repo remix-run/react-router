@@ -15,17 +15,16 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "react-router";
         import { useActionData, useLoaderData, Form } from "react-router";
 
         export async function action ({ request }) {
           // New event loop causes express request to close
           await new Promise(r => setTimeout(r, 0));
-          return json({ aborted: request.signal.aborted });
+          return { aborted: request.signal.aborted };
         }
 
         export function loader({ request }) {
-          return json({ aborted: request.signal.aborted });
+          return { aborted: request.signal.aborted };
         }
 
         export default function Index() {
