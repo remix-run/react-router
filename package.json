@@ -26,7 +26,7 @@
       "default"
     ]
   },
-  "packageManager": "pnpm@8.10.5",
+  "packageManager": "pnpm@9.12.2",
   "resolutions": {
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
