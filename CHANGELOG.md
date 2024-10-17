@@ -331,7 +331,7 @@ Date: 2024-07-16
 
 #### Stabilized `v7_skipActionErrorRevalidation`
 
-This release stabilizes the `future.unstable_skipActionErrorRevalidation` flag into [`future.v7_skipActionErrorRevalidation`](https://reactrouter.com/upgrading/future#v7_skipactionstatusrevalidation) in preparation for the upcoming React Router v7 release.
+This release stabilizes the `future.unstable_skipActionErrorRevalidation` flag into [`future.v7_skipActionErrorRevalidation`](https://reactrouter.com/v6/upgrading/future#v7_skipactionstatusrevalidation) in preparation for the upcoming React Router v7 release.
 
 - When this flag is enabled, actions that return/throw a `4xx/5xx` `Response` will not trigger a revalidation by default
 - This also stabilizes `shouldRevalidate`'s `unstable_actionStatus` parameter to `actionStatus`
@@ -375,7 +375,7 @@ We're really excited to release our new API for "Lazy Route Discovery" in `v6.24
 
 With "Fog of War", you can now load portions of the route tree lazily via the new `unstable_patchRoutesOnMiss` option passed to `createBrowserRouter` (and it's memory/hash counterparts). This gives you a way to hook into spots where React Router is unable to match a given path and patch new routes into the route tree during the navigation (or fetcher call).
 
-Here's a very small example, but please refer to the [documentation](https://reactrouter.com/en/main/routers/create-browser-router#optsunstable_patchroutesonmiss) for more information and use cases:
+Here's a very small example, but please refer to the [documentation](https://reactrouter.com/v6/routers/create-browser-router#optsunstable_patchroutesonmiss) for more information and use cases:
 
 ```js
 const router = createBrowserRouter(
@@ -431,7 +431,7 @@ Date: 2024-04-23
 
 #### Data Strategy (unstable)
 
-The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/routers/create-browser-router#unstable_datastrategy) for more information.
+The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/v6/routers/create-browser-router#unstable_datastrategy) for more information.
 
 **Note:** This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.
 
@@ -557,7 +557,7 @@ We fixed a splat route path-resolution bug in `6.19.0`, but later determined a l
 
 The buggy behavior is that the default behavior when resolving relative paths inside a splat route would _ignore_ any splat (`*`) portion of the current route path. When the future flag is enabled, splat portions are included in relative path logic within splat routes.
 
-For more information, please refer to the [`useResolvedPath` docs](https://reactrouter.com/hooks/use-resolved-path#splat-paths) and/or the [detailed changelog entry](https://github.com/remix-run/react-router/blob/main/packages/react-router-dom/CHANGELOG.md#6210).
+For more information, please refer to the [`useResolvedPath` docs](https://reactrouter.com/v6/hooks/use-resolved-path#splat-paths) and/or the [detailed changelog entry](https://github.com/remix-run/react-router/blob/main/packages/react-router-dom/CHANGELOG.md#6210).
 
 #### Partial Hydration
 
@@ -632,7 +632,7 @@ function handleClick() {
 ### Minor Changes
 
 - Add `unstable_flushSync` option to `useNavigate`/`useSubmit`/`fetcher.load`/`fetcher.submit` to opt-out of `React.startTransition` and into `ReactDOM.flushSync` for state updates ([#11005](https://github.com/remix-run/react-router/pull/11005))
-- Remove the `unstable_` prefix from the [`useBlocker`](https://reactrouter.com/en/main/hooks/use-blocker) hook as it's been in use for enough time that we are confident in the API ([#10991](https://github.com/remix-run/react-router/pull/10991))
+- Remove the `unstable_` prefix from the [`useBlocker`](https://reactrouter.com/v6/hooks/use-blocker) hook as it's been in use for enough time that we are confident in the API ([#10991](https://github.com/remix-run/react-router/pull/10991))
   - We do not plan to remove the prefix from `unstable_usePrompt` due to differences in how browsers handle `window.confirm` that prevent React Router from guaranteeing consistent/correct behavior
 
 ### Patch Changes
@@ -719,9 +719,9 @@ Date: 2023-10-16
 
 We're excited to release experimental support for the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) in React Router! You can now trigger navigational DOM updates to be wrapped in `document.startViewTransition` to enable CSS animated transitions on SPA navigations in your application.
 
-The simplest approach to enabling a View Transition in your React Router app is via the new [`<Link unstable_viewTransition>`](https://reactrouter.com/components/link#unstable_viewtransition) prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
+The simplest approach to enabling a View Transition in your React Router app is via the new [`<Link unstable_viewTransition>`](https://reactrouter.com/v6/components/link#unstable_viewtransition) prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
 
-If you need to apply more fine-grained styles for your animations, you can leverage the [`unstable_useViewTransitionState`](https://reactrouter.com/hooks/use-view-transition-state) hook which will tell you when a transition is in progress and you can use that to apply classes or styles:
+If you need to apply more fine-grained styles for your animations, you can leverage the [`unstable_useViewTransitionState`](https://reactrouter.com/v6/hooks/use-view-transition-state) hook which will tell you when a transition is in progress and you can use that to apply classes or styles:
 
 ```jsx
 function ImageLink(to, src, alt) {
@@ -740,7 +740,7 @@ function ImageLink(to, src, alt) {
 }
 ```
 
-You can also use the [`<NavLink unstable_viewTransition>`](https://reactrouter.com/components/nav-link#unstable_viewtransition) shorthand which will manage the hook usage for you and automatically add a `transitioning` class to the `<a>` during the transition:
+You can also use the [`<NavLink unstable_viewTransition>`](https://reactrouter.com/v6/components/nav-link#unstable_viewtransition) shorthand which will manage the hook usage for you and automatically add a `transitioning` class to the `<a>` during the transition:
 
 ```css
 a.transitioning img {
@@ -939,7 +939,7 @@ Date: 2023-06-14
 
 #### `future.v7_startTransition`
 
-The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
+The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/v6/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
 
 Therefore, in `6.13.0` the default behavior will no longer leverage `React.startTransition`:
 
@@ -1212,7 +1212,7 @@ export function ErrorBoundary() {
 }
 ```
 
-An example of this in action can be found in the [`examples/lazy-loading-router-provider`](https://github.com/remix-run/react-router/tree/main/examples/lazy-loading-router-provider) directory of the repository. For more info, check out the [`lazy` docs](https://reactrouter.com/en/main/route/lazy).
+An example of this in action can be found in the [`examples/lazy-loading-router-provider`](https://github.com/remix-run/react-router/tree/main/examples/lazy-loading-router-provider) directory of the repository. For more info, check out the [`lazy` docs](https://reactrouter.com/v6/route/lazy).
 
 🙌 Huge thanks to @rossipedia for the [Initial Proposal](https://github.com/remix-run/react-router/discussions/9826) and [POC Implementation](https://github.com/remix-run/react-router/pull/9830).
 

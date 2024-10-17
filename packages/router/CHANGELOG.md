@@ -104,7 +104,7 @@
 - Add support for Lazy Route Discovery (a.k.a. Fog of War) ([#11626](https://github.com/remix-run/react-router/pull/11626))
 
   - RFC: <https://github.com/remix-run/react-router/discussions/11113>
-  - `unstable_patchRoutesOnMiss` docs: <https://reactrouter.com/en/main/routers/create-browser-router>
+  - `unstable_patchRoutesOnMiss` docs: <https://reactrouter.com/v6/routers/create-browser-router>
 
 ## 1.16.1
 
@@ -581,7 +581,7 @@
 
 ### Minor Changes
 
-- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+- Added support for [**Future Flags**](https://reactrouter.com/v6/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
 
   - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
     - `useNavigation().formMethod` is lowercase
@@ -839,6 +839,6 @@ function Comp() {
 
 This is the first stable release of `@remix-run/router`, which provides all the underlying routing and data loading/mutation logic for `react-router`. You should _not_ be using this package directly unless you are authoring a routing library similar to `react-router`.
 
-For an overview of the features provided by `react-router`, we recommend you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/start/overview) and the [tutorial](https://reactrouter.com/start/tutorial).
+For an overview of the features provided by `react-router`, we recommend you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/en/6.4.0/start/overview) and the [tutorial](https://reactrouter.com/en/6.4.0/start/tutorial).
 
 For an overview of the features provided by `@remix-run/router`, please check out the [`README`](./README.md).
