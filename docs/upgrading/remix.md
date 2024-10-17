@@ -98,7 +98,7 @@ If you have an `entry.server.tsx` and/or an `entry.client.tsx` file in your appl
 
 ### Step 7 - Update types for `AppLoadContext`
 
-<docs-info>This is only applicable if you were using a custom server in Remix v2. If you were using `remix-serve` you can skip ths step.</docs-info>
+<docs-info>This is only applicable if you were using a custom server in Remix v2. If you were using `remix-serve` you can skip this step.</docs-info>
 
 If you were using `getLoadContext` in your Remix app, then you'll notice that the `LoaderFunctionArgs`/`ActionFunctionArgs` types now type the `context` parameter incorrectly (optional and typed as `any`). These types accept a generic for the `context` type but even that still leaves the property as optional because it does not exist in React Router SPA apps.
 
