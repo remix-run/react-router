@@ -19,7 +19,9 @@ describe("<Routes>", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <MemoryRouter>
+        <MemoryRouter
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
           <Routes />
         </MemoryRouter>
       );

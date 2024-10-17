@@ -41,7 +41,10 @@ describe("Descendant <Routes>", () => {
 
       TestRenderer.act(() => {
         TestRenderer.create(
-          <MemoryRouter initialEntries={["/courses/react"]}>
+          <MemoryRouter
+            initialEntries={["/courses/react"]}
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          >
             <Routes>
               <Route path="courses" element={<Courses />}>
                 <Route path="react" element={<ReactCourses />} />
@@ -79,7 +82,10 @@ Please change the parent <Route path="react"> to <Route path="react/*">.`);
 
       TestRenderer.act(() => {
         TestRenderer.create(
-          <MemoryRouter initialEntries={["/"]}>
+          <MemoryRouter
+            initialEntries={["/"]}
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          >
             <Routes>
               <Route path="/" element={<ReactCourses />} />
             </Routes>
@@ -124,7 +130,10 @@ Please change the parent <Route path="/"> to <Route path="*">.`);
 
       TestRenderer.act(() => {
         TestRenderer.create(
-          <MemoryRouter initialEntries={["/courses/react"]}>
+          <MemoryRouter
+            initialEntries={["/courses/react"]}
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          >
             <Routes>
               <Route path="courses" element={<Courses />}>
                 <Route path="react/*" element={<ReactCourses />} />

@@ -33,6 +33,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_logV6DeprecationWarnings as logV6DeprecationWarnings,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
   UNSAFE_useRoutesImpl as useRoutesImpl,
@@ -716,6 +717,11 @@ export function RouterProvider({
     [router.future.v7_relativeSplatPath]
   );
 
+  React.useEffect(
+    () => logV6DeprecationWarnings(future, router.future),
+    [future, router.future]
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -807,6 +813,8 @@ export function BrowserRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
+
   return (
     <Router
       basename={basename}
@@ -858,6 +866,8 @@ export function HashRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
+
   return (
     <Router
       basename={basename}
@@ -904,6 +914,8 @@ function HistoryRouter({
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
+
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
