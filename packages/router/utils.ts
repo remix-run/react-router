@@ -1366,6 +1366,9 @@ export type JsonFunction = <Data>(
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
+ *
+ * @deprecated This utility is deprecated in favor of returning raw objects.
+ * This method will be removed in React Router v7.
  */
 export const json: JsonFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
@@ -1604,6 +1607,10 @@ export type DeferFunction = (
   init?: number | ResponseInit
 ) => DeferredData;
 
+/**
+ * @deprecated This utility is deprecated in favor of returning raw objects.
+ * This method will be removed in React Router v7.
+ */
 export const defer: DeferFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
 
