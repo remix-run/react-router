@@ -12,7 +12,7 @@ export default defineConfig([
   {
     clean: true,
     entry,
-    format: ["cjs"],
+    format: ["cjs", "esm"],
     outDir: "dist",
     dts: true,
     banner: {

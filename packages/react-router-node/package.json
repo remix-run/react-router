@@ -15,12 +15,24 @@
   "main": "dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./install": {
-      "types": "./dist/install.d.ts",
-      "default": "./dist/install.js"
+      "import": {
+        "types": "./dist/install.d.mts",
+        "default": "./dist/install.mjs"
+      },
+      "require": {
+        "types": "./dist/install.d.ts",
+        "default": "./dist/install.js"
+      }
     },
     "./package.json": "./package.json"
   },
