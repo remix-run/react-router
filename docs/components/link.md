@@ -67,7 +67,26 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 
 ## `relative`
 
-By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level from the current contextual route. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing from the current contextual route path. You can opt into this behavior with `relative="path"`:
+By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level from the current contextual route. However, `index` routes (or any other routes that don't add to the path) are skipped.
+
+```tsx
+<Route path="main">
+  <Route index element={<Main />} />
+  <Route path="module">
+    <Route index element={<FeatureA />} />
+    <Route path="feature-a" element={<FeatureA />} />
+    <Route path="feature-b" element={<FeatureB />} />
+  </Route>
+</Route>;
+
+function FeatureA() {
+  return <Link to="..">Back</Link>;
+}
+```
+
+Let's assume the current path is `/main/module`. When you click the "Back" link, it navigates one level up in the route hierarchy, skipping routes such as `index` that don't add to the path. As a result, the path becomes `/main`. Now, let's assume the current path is `/main/module/feature-a`. When you click the "Back" link, the path becomes `/main/module`.
+
+Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing from the current contextual route path. You can opt into this behavior with `relative="path"`:
 
 ```jsx
 // Contact and EditContact do not share additional UI layout
