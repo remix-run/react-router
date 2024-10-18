@@ -11,7 +11,7 @@ There are three rendering strategies in React Router:
 - Server Side Rendering
 - Static Pre-rendering
 
-All routes are always client side rendered as the user navigates around the app. However, you can control server rendering and static pre-rendering with the `ssr` and `prerender` options in the Vite plugin.
+You can control server rendering and static pre-rendering with the `ssr` and `prerender` options in the Vite plugin.
 
 ## Server Side Rendering
 
@@ -22,7 +22,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     reactRouter({
-      // defaults to false
+      // defaults to true
       ssr: true,
     }),
   ],
