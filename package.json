@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/react-router",
+  "name": "react-router-prerender-reproduction",
   "private": true,
   "scripts": {
     "build": "rollup -c",
