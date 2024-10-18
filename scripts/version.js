@@ -1,88 +1,144 @@
-{
-  "name": "react-router",
-  "version": "5.1.2",
-  "private": true,
-  "scripts": {
-    "build": "node ./scripts/build.js",
-    "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
-    "lint": "eslint .",
-    "size": "filesize",
-    "start": "node ./scripts/start.js",
-    "test": "node ./scripts/test.js",
-    "watch": "node ./scripts/watch.js"
-  },
-  "dependencies": {
-    "@ampproject/filesize": "^1.0.1",
-    "@ampproject/rollup-plugin-closure-compiler": "^0.13.0",
-    "@babel/core": "^7.7.4",
-    "@babel/preset-env": "^7.7.4",
-    "@babel/preset-modules": "^0.1.2",
-    "@babel/preset-react": "^7.7.4",
-    "@rollup/plugin-commonjs": "^11.0.1",
-    "@rollup/plugin-node-resolve": "^7.0.0",
-    "@rollup/plugin-replace": "^2.2.1",
-    "@typescript-eslint/eslint-plugin": "2.x",
-    "@typescript-eslint/parser": "2.x",
-    "babel-eslint": "10.x",
-    "babel-plugin-dev-expression": "^0.2.2",
-    "chalk": "^3.0.0",
-    "eslint": "6.x",
-    "eslint-config-react-app": "^5.1.0",
-    "eslint-plugin-flowtype": "3.x",
-    "eslint-plugin-import": "2.x",
-    "eslint-plugin-jsx-a11y": "6.x",
-    "eslint-plugin-react": "7.x",
-    "eslint-plugin-react-hooks": "1.x",
-    "history": "^5.0.0-beta.4",
-    "jest": "^24.9.0",
-    "jsonfile": "^5.0.0",
-    "lerna": "^3.13.4",
-    "lerna-changelog": "^0.8.2",
-    "metro-react-native-babel-preset": "^0.57.0",
-    "prettier": "^1.14.3",
-    "prompt-confirm": "^2.0.4",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "react-test-renderer": "^16.12.0",
-    "rollup": "^1.27.9",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-copy": "^3.1.0",
-    "rollup-plugin-ignore": "^1.0.5",
-    "rollup-plugin-prettier": "^0.6.0",
-    "rollup-plugin-terser": "^5.1.2",
-    "semver": "^7.1.2"
-  },
-  "workspaces": {
-    "packages": [
-      "packages/react-router",
-      "packages/react-router-dom",
-      "packages/react-router-native"
-    ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
-    ]
-  },
-  "filesize": [
-    {
-      "path": "build/react-router/react-router.production.min.js",
-      "compression": "none",
-      "maxSize": "5.5 kB"
-    },
-    {
-      "path": "build/react-router/umd/react-router.production.min.js",
-      "compression": "none",
-      "maxSize": "6 kB"
-    },
-    {
-      "path": "build/react-router-dom/react-router-dom.production.min.js",
-      "compression": "none",
-      "maxSize": "2 kB"
-    },
-    {
-      "path": "build/react-router-dom/umd/react-router-dom.production.min.js",
-      "compression": "none",
-      "maxSize": "4.5 kB"
-    }
-  ]
+const path = require("path");
+const { execSync } = require("child_process");
+const fsp = require("fs/promises");
+const chalk = require("chalk");
+const semver = require("semver");
+
+const {
+  ensureCleanWorkingDirectory,
+  getPackageVersion,
+  prompt,
+  updateExamplesPackageConfig,
+  updatePackageConfig,
+} = require("./utils");
+const { EXAMPLES_DIR } = require("./constants");
+
+/**
+ * Get the next version based on current version and the provided version increment
+ * 
+ * @param {string} currentVersion - Current version of the package
+ * @param {string} givenVersion - The version input by user (e.g. 'major', 'minor', 'patch')
+ * @param {string} [prereleaseId] - Optional prerelease ID (for alpha/beta versions)
+ * @param {boolean} isExperimental - Whether the version is experimental
+ * @returns {string} - The next version
+ */
+function getNextVersion(currentVersion, givenVersion, prereleaseId, isExperimental) {
+  if (!givenVersion) {
+    throw new Error("Missing next version. Usage: node version.js [nextVersion]");
+  }
+
+  if (/^pre/.test(givenVersion) && !prereleaseId) {
+    throw new Error(`Missing prerelease id for version ${givenVersion}`);
+  }
+
+  // If experimental, use the given version directly; otherwise, increment the current version
+  const nextVersion = isExperimental
+    ? givenVersion
+    : semver.inc(currentVersion, givenVersion, prereleaseId);
+
+  if (!nextVersion) {
+    throw new Error(`Invalid version specifier: ${givenVersion}`);
+  }
+
+  return nextVersion;
 }
+
+async function run() {
+  try {
+    const args = process.argv.slice(2);
+    const givenVersion = args[0];
+    const prereleaseId = args[1];
+    
+    // Validate if version is experimental
+    const isExperimental = givenVersion && givenVersion.includes("0.0.0-experimental");
+
+    // Ensure working directory is clean (no uncommitted changes)
+    ensureCleanWorkingDirectory();
+
+    // Fetch current versions
+    const currentRouterVersion = await getPackageVersion("router");
+    const currentVersion = await getPackageVersion("react-router");
+
+    // Determine the next version
+    let version = semver.valid(givenVersion) || getNextVersion(currentVersion, givenVersion, prereleaseId, isExperimental);
+    let routerVersion = currentRouterVersion;
+
+    // Confirm version bump (skip for experimental releases)
+    if (!isExperimental) {
+      const confirm = await prompt(`Bump version ${currentVersion} to ${version}? [Y/n] `);
+      if (!confirm) return;
+    }
+
+    // Update @remix-run/router for experimental releases
+    if (isExperimental) {
+      routerVersion = version;
+      await updatePackageConfig("router", config => {
+        config.version = routerVersion;
+      });
+      console.log(chalk.green(`Updated @remix-run/router to version ${version}`));
+    }
+
+    // Update react-router and its dependencies
+    await updatePackageConfig("react-router", config => {
+      config.version = version;
+      if (isExperimental) config.dependencies["@remix-run/router"] = routerVersion;
+    });
+    console.log(chalk.green(`Updated react-router to version ${version}`));
+
+    // Update react-router-dom and its dependencies
+    await updatePackageConfig("react-router-dom", config => {
+      config.version = version;
+      config.dependencies["react-router"] = version;
+      if (isExperimental) config.dependencies["@remix-run/router"] = routerVersion;
+    });
+    console.log(chalk.green(`Updated react-router-dom to version ${version}`));
+
+    // Update other related packages
+    await updatePackageConfig("react-router-dom-v5-compat", config => {
+      config.version = version;
+      config.dependencies["react-router"] = version;
+    });
+    console.log(chalk.green(`Updated react-router-dom-v5-compat to version ${version}`));
+
+    await updatePackageConfig("react-router-native", config => {
+      config.version = version;
+      config.dependencies["react-router"] = version;
+    });
+    console.log(chalk.green(`Updated react-router-native to version ${version}`));
+
+    // Update package versions in the examples folder
+    const examples = await fsp.readdir(EXAMPLES_DIR);
+    for (const example of examples) {
+      const stat = await fsp.stat(path.join(EXAMPLES_DIR, example));
+      if (!stat.isDirectory()) continue;
+
+      await updateExamplesPackageConfig(example, config => {
+        if (config.dependencies["@remix-run/router"]) config.dependencies["@remix-run/router"] = routerVersion;
+        if (config.dependencies["react-router"]) config.dependencies["react-router"] = version;
+        if (config.dependencies["react-router-dom"]) config.dependencies["react-router-dom"] = version;
+      });
+    }
+
+    // Sync the pnpm lockfile if experimental
+    if (isExperimental) {
+      console.log(chalk.green("Syncing pnpm lockfile..."));
+      execSync("pnpm install --no-frozen-lockfile");
+    }
+
+    // Commit and tag the new version
+    execSync(`git commit --all --message="Version ${version}"`);
+    execSync(`git tag -a -m "Version ${version}" v${version}`);
+    console.log(chalk.green(`Committed and tagged version ${version}`));
+
+    // Notify user about manual router update if necessary
+    if (!isExperimental) {
+      console.log(chalk.red(`@remix-run/router must be handled manually!`));
+    }
+
+  } catch (error) {
+    console.error(chalk.red(`Error: ${error.message}`));
+  }
+}
+
+// Run the script
+run().then(() => process.exit(0));
