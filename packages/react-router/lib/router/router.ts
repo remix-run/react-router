@@ -998,13 +998,6 @@ export function createRouter(init: RouterInit): Router {
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
 
-  // Map of pending patchRoutesOnNavigation() promises (keyed by path/matches) so
-  // that we only kick them off once for a given combo
-  let pendingPatchRoutes = new Map<
-    string,
-    ReturnType<AgnosticPatchRoutesOnNavigationFunction>
-  >();
-
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
   let unblockBlockerHistoryUpdate: (() => void) | undefined = undefined;
@@ -2750,7 +2743,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     for (let [routeId, result] of Object.entries(results)) {
-      if (isRedirectDataStrategyResultResult(result)) {
+      if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
         dataResults[routeId] = {
           type: ResultType.redirect,
@@ -2779,8 +2772,6 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
-    let currentMatches = state.matches;
-
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       "loader",
@@ -3861,7 +3852,7 @@ export function createStaticHandler(
           return;
         }
         let result = results[match.route.id];
-        if (isRedirectDataStrategyResultResult(result)) {
+        if (isRedirectDataStrategyResult(result)) {
           let response = result.result as Response;
           // Throw redirects and let the server handle them with an HTTP redirect
           throw normalizeRelativeRoutingRedirectResponse(
@@ -5349,10 +5340,6 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   return false;
 }
 
-function isPromise<T = unknown>(val: unknown): val is Promise<T> {
-  return typeof val === "object" && val != null && "then" in val;
-}
-
 function isDataStrategyResult(result: unknown): result is DataStrategyResult {
   return (
     result != null &&
@@ -5363,7 +5350,7 @@ function isDataStrategyResult(result: unknown): result is DataStrategyResult {
   );
 }
 
-function isRedirectDataStrategyResultResult(result: DataStrategyResult) {
+function isRedirectDataStrategyResult(result: DataStrategyResult) {
   return (
     isResponse(result.result) && redirectStatusCodes.has(result.result.status)
   );

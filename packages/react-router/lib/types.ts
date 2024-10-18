@@ -1,6 +1,5 @@
 import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
-import type { Jsonify } from "./server-runtime/jsonify";
 import type { Serializable } from "./server-runtime/single-fetch";
 
 export type Expect<T extends true> = T;
