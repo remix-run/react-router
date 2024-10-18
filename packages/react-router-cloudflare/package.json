@@ -19,6 +19,10 @@
         "types": "./dist/index.d.mts",
         "default": "./dist/index.mjs"
       },
+      "module-sync": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
       "default": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
