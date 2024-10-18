@@ -1,188 +1,88 @@
-const path = require("path");
-const { execSync } = require("child_process");
-const fsp = require("fs/promises");
-const chalk = require("chalk");
-const semver = require("semver");
-
-const {
-  ensureCleanWorkingDirectory,
-  getPackageVersion,
-  invariant,
-  prompt,
-  updateExamplesPackageConfig,
-  updatePackageConfig,
-} = require("./utils");
-const { EXAMPLES_DIR } = require("./constants");
-
-/**
- * @param {string} currentVersion
- * @param {string} givenVersion
- * @param {string} [prereleaseId]
- * @returns {string}
- */
-function getNextVersion(
-  currentVersion,
-  givenVersion,
-  prereleaseId,
-  isExperimental
-) {
-  invariant(
-    givenVersion != null,
-    `Missing next version. Usage: node version.js [nextVersion]`
-  );
-
-  if (/^pre/.test(givenVersion)) {
-    invariant(
-      prereleaseId != null,
-      `Missing prerelease id. Usage: node version.js ${givenVersion} [prereleaseId]`
-    );
-  }
-
-  let nextVersion = isExperimental
-    ? givenVersion
-    : semver.inc(currentVersion, givenVersion, prereleaseId);
-
-  invariant(nextVersion != null, `Invalid version specifier: ${givenVersion}`);
-
-  return nextVersion;
+{
+  "name": "react-router",
+  "version": "5.1.2",
+  "private": true,
+  "scripts": {
+    "build": "node ./scripts/build.js",
+    "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
+    "lint": "eslint .",
+    "size": "filesize",
+    "start": "node ./scripts/start.js",
+    "test": "node ./scripts/test.js",
+    "watch": "node ./scripts/watch.js"
+  },
+  "dependencies": {
+    "@ampproject/filesize": "^1.0.1",
+    "@ampproject/rollup-plugin-closure-compiler": "^0.13.0",
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/preset-modules": "^0.1.2",
+    "@babel/preset-react": "^7.7.4",
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "@rollup/plugin-replace": "^2.2.1",
+    "@typescript-eslint/eslint-plugin": "2.x",
+    "@typescript-eslint/parser": "2.x",
+    "babel-eslint": "10.x",
+    "babel-plugin-dev-expression": "^0.2.2",
+    "chalk": "^3.0.0",
+    "eslint": "6.x",
+    "eslint-config-react-app": "^5.1.0",
+    "eslint-plugin-flowtype": "3.x",
+    "eslint-plugin-import": "2.x",
+    "eslint-plugin-jsx-a11y": "6.x",
+    "eslint-plugin-react": "7.x",
+    "eslint-plugin-react-hooks": "1.x",
+    "history": "^5.0.0-beta.4",
+    "jest": "^24.9.0",
+    "jsonfile": "^5.0.0",
+    "lerna": "^3.13.4",
+    "lerna-changelog": "^0.8.2",
+    "metro-react-native-babel-preset": "^0.57.0",
+    "prettier": "^1.14.3",
+    "prompt-confirm": "^2.0.4",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-test-renderer": "^16.12.0",
+    "rollup": "^1.27.9",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-copy": "^3.1.0",
+    "rollup-plugin-ignore": "^1.0.5",
+    "rollup-plugin-prettier": "^0.6.0",
+    "rollup-plugin-terser": "^5.1.2",
+    "semver": "^7.1.2"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/react-router",
+      "packages/react-router-dom",
+      "packages/react-router-native"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**"
+    ]
+  },
+  "filesize": [
+    {
+      "path": "build/react-router/react-router.production.min.js",
+      "compression": "none",
+      "maxSize": "5.5 kB"
+    },
+    {
+      "path": "build/react-router/umd/react-router.production.min.js",
+      "compression": "none",
+      "maxSize": "6 kB"
+    },
+    {
+      "path": "build/react-router-dom/react-router-dom.production.min.js",
+      "compression": "none",
+      "maxSize": "2 kB"
+    },
+    {
+      "path": "build/react-router-dom/umd/react-router-dom.production.min.js",
+      "compression": "none",
+      "maxSize": "4.5 kB"
+    }
+  ]
 }
-
-async function run() {
-  try {
-    let args = process.argv.slice(2);
-    let givenVersion = args[0];
-    let prereleaseId = args[1];
-
-    // Check if givenVersion exists before using includes
-    let isExperimental = givenVersion && givenVersion.includes("0.0.0-experimental");
-
-    // 0. Make sure the working directory is clean
-    ensureCleanWorkingDirectory();
-
-    // 1. Get the next version number
-    let currentRouterVersion = await getPackageVersion("router");
-    let currentVersion = await getPackageVersion("react-router");
-    let version = semver.valid(givenVersion);
-    if (version == null) {
-      version = getNextVersion(
-        currentVersion,
-        givenVersion,
-        prereleaseId,
-        isExperimental
-      );
-    }
-
-    // We will only bump the router version if this is an experimental
-    let routerVersion = currentRouterVersion;
-
-    // 2. Confirm the next version number (skip prompt on experimental CI releases)
-    let answer = isExperimental
-      ? true
-      : await prompt(
-          `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
-        );
-
-    if (answer === false) return 0;
-
-    // We only handle @remix-run/router for experimental since in normal/pre
-    // releases it's versioned independently from the rest of the packages
-    if (isExperimental) {
-      routerVersion = version;
-      // 2.5. Update @remix-run/router version
-      await updatePackageConfig("router", (config) => {
-        config.version = routerVersion;
-      });
-      console.log(
-        chalk.green(`  Updated @remix-run/router to version ${version}`)
-      );
-    }
-
-    // 3. Update react-router version
-    await updatePackageConfig("react-router", (config) => {
-      config.version = version;
-      if (isExperimental) {
-        config.dependencies["@remix-run/router"] = routerVersion;
-      }
-    });
-    console.log(chalk.green(`  Updated react-router to version ${version}`));
-
-    // 4. Update react-router-dom version + react-router dep
-    await updatePackageConfig("react-router-dom", (config) => {
-      config.version = version;
-      if (isExperimental) {
-        config.dependencies["@remix-run/router"] = routerVersion;
-      }
-      config.dependencies["react-router"] = version;
-    });
-    console.log(
-      chalk.green(`  Updated react-router-dom to version ${version}`)
-    );
-
-    // 4.1 Update react-router-dom-v5-compat version + react-router dep
-    await updatePackageConfig("react-router-dom-v5-compat", (config) => {
-      config.version = version;
-      config.dependencies["react-router"] = version;
-    });
-    console.log(
-      chalk.green(`  Updated react-router-dom-v5-compat to version ${version}`)
-    );
-
-    // 5. Update react-router-native version + react-router dep
-    await updatePackageConfig("react-router-native", (config) => {
-      config.version = version;
-      config.dependencies["react-router"] = version;
-    });
-    console.log(
-      chalk.green(`  Updated react-router-native to version ${version}`)
-    );
-
-    // 6. Update react-router and react-router-dom versions in the examples
-    let examples = await fsp.readdir(EXAMPLES_DIR);
-    for (const example of examples) {
-      let stat = await fsp.stat(path.join(EXAMPLES_DIR, example));
-      if (!stat.isDirectory()) continue;
-
-      await updateExamplesPackageConfig(example, (config) => {
-        if (config.dependencies["@remix-run/router"]) {
-          config.dependencies["@remix-run/router"] = routerVersion;
-        }
-        if (config.dependencies["react-router"]) {
-          config.dependencies["react-router"] = version;
-        }
-        if (config.dependencies["react-router-dom"]) {
-          config.dependencies["react-router-dom"] = version;
-        }
-      });
-    }
-
-    // 7. Sync up the pnpm-lock.yaml for pnpm if this is an experimental release
-    if (isExperimental) {
-      console.log(chalk.green("  Syncing pnpm lockfile..."));
-      execSync("pnpm install --no-frozen-lockfile");
-    }
-
-    // 8. Commit and tag
-    execSync(`git commit --all --message="Version ${version}"`);
-    execSync(`git tag -a -m "Version ${version}" v${version}`);
-    console.log(chalk.green(`  Committed and tagged version ${version}`));
-
-    if (!isExperimental) {
-      console.log(
-        chalk.red(
-          `  🚨 @remix-run/router isn't handled by this script, do it manually!`
-        )
-      );
-    }
-  } catch (error) {
-    console.log();
-    console.error(chalk.red(`  ${error.message}`));
-    console.log();
-    return 1;
-  }
-
-  return 0;
-}
-
-run().then((code) => {
-  process.exit(code);
-});
