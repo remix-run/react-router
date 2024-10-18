@@ -30,11 +30,16 @@
       }
     },
     "./install": {
+      "node": {
+        "types": "./dist/install.d.ts",
+        "module-sync": "./dist/install.mjs",
+        "default": "./dist/install.js"
+      },
       "import": {
         "types": "./dist/install.d.mts",
         "default": "./dist/install.mjs"
       },
-      "require": {
+      "default": {
         "types": "./dist/install.d.ts",
         "default": "./dist/install.js"
       }
