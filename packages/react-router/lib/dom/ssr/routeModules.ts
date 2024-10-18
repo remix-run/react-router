@@ -200,7 +200,11 @@ export async function loadRouteModule(
   }
 
   try {
-    let routeModule = await import(/* webpackIgnore: true */ route.module);
+    let routeModule = await import(
+      /* @vite-ignore */
+      /* webpackIgnore: true */
+      route.module
+    );
     routeModulesCache[route.id] = routeModule;
     return routeModule;
   } catch (error: unknown) {
