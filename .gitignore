@@ -22,6 +22,7 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
+.turbo
 .eslintcache
 .tmp
 /.env

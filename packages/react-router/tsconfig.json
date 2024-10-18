@@ -16,6 +16,11 @@
     "skipLibCheck": true,
 
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "react-router": ["./index.ts"]
+    }
   }
 }

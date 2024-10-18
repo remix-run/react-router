@@ -3,10 +3,12 @@ import * as v from "valibot";
 import pick from "lodash/pick";
 import invariant from "../invariant";
 
-let appDirectory: string;
+declare global {
+  var __reactRouterAppDirectory: string;
+}
 
 export function setAppDirectory(directory: string) {
-  appDirectory = directory;
+  globalThis.__reactRouterAppDirectory = directory;
 }
 
 /**
@@ -14,8 +16,8 @@ export function setAppDirectory(directory: string) {
  * This is designed to support resolving file system routes.
  */
 export function getAppDirectory() {
-  invariant(appDirectory);
-  return appDirectory;
+  invariant(globalThis.__reactRouterAppDirectory);
+  return globalThis.__reactRouterAppDirectory;
 }
 
 export interface RouteManifestEntry {

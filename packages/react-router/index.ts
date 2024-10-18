@@ -1,4 +1,4 @@
-// Expose old @remix-run/router API
+// Expose old @remix-run/router API y2
 export type { InitialEntry, Location, Path, To } from "./lib/router/history";
 export type {
   HydrationState,

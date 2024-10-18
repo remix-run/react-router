@@ -5,7 +5,7 @@ import { type BinaryLike, createHash } from "node:crypto";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
-import babel from "@babel/core";
+import * as babel from "@babel/core";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
