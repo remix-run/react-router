@@ -129,21 +129,15 @@ export interface LinksFunction {
  *
  * ```ts
  * // app/root.tsx
- * const loader = () => {
- *  return json({ hello: "world" } as const)
- * }
+ * const loader = () => ({ hello: "world" })
  * export type Loader = typeof loader
  *
  * // app/routes/sales.tsx
- * const loader = () => {
- *  return json({ salesCount: 1074 })
- * }
+ * const loader = () => ({ salesCount: 1074 })
  * export type Loader = typeof loader
  *
  * // app/routes/sales/customers.tsx
- * const loader = () => {
- *   return json({ customerCount: 74 })
- * }
+ * const loader = () => ({ customerCount: 74 })
  * export type Loader = typeof loader
  *
  * // app/routes/sales/customers/$customersId.tsx
@@ -151,9 +145,7 @@ export interface LinksFunction {
  * import type { Loader as SalesLoader } from "../../sales"
  * import type { Loader as CustomersLoader } from "../../sales/customers"
  *
- * const loader = () => {
- *   return json({ name: "Customer name" })
- * }
+ * const loader = () => ({ name: "Customer name" })
  *
  * const meta: MetaFunction<typeof loader, {
  *  "root": RootLoader,

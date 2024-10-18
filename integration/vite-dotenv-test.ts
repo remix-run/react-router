@@ -14,13 +14,12 @@ let files = {
   `,
   "app/routes/dotenv.tsx": String.raw`
     import { useState, useEffect } from "react";
-    import { json } from "react-router";
     import { useLoaderData } from "react-router";
 
     export const loader = () => {
-      return json({
+      return {
         loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
-      })
+      }
     }
 
     export default function DotenvRoute() {
