@@ -4,7 +4,7 @@ import { test } from "@playwright/test";
 import { load } from "cheerio";
 import prettier from "prettier";
 
-let cheerio = load("")
+let cheerio = load("");
 
 import type { AppFixture } from "./create-fixture.js";
 

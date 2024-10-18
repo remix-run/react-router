@@ -17,6 +17,10 @@
 
     "outDir": "dist",
     "rootDir": ".",
-    "noEmit": true
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "react-router": ["./index.ts"]
+    }
   }
 }

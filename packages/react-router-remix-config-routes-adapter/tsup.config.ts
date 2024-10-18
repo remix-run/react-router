@@ -3,8 +3,7 @@ import { defineConfig } from "tsup";
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.js";
 
-// @ts-expect-error - no types
-import pkg from "./package.json" with { type: "json" };
+import pkg from "./package.json";
 
 const entry = ["index.ts"];
 

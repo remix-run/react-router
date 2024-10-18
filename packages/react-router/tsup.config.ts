@@ -3,8 +3,7 @@ import { defineConfig } from "tsup";
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.js";
 
-// @ts-expect-error - no types
-import pkg from "./package.json" with { type: "json" };
+import pkg from "./package.json";
 
 const entry = ["index.ts", "dom-export.tsx", "lib/types.ts"];
 
@@ -15,6 +14,9 @@ export default defineConfig([
     format: ["cjs"],
     outDir: "dist",
     dts: true,
+    external: [
+      /*.*/
+    ],
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },
@@ -29,6 +31,9 @@ export default defineConfig([
     format: ["esm"],
     outDir: "dist",
     dts: true,
+    external: [
+      /*.*/
+    ],
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },

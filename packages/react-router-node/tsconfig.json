@@ -14,6 +14,7 @@
     "rootDir": ".",
     "outDir": "./dist",
     "noEmit": true,
+    "resolveJsonModule": true,
 
     // Avoid naming conflicts between lib.dom.d.ts and globals.ts
     "skipLibCheck": true

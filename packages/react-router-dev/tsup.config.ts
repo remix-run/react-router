@@ -5,8 +5,7 @@ import { defineConfig } from "tsup";
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.js";
 
-// @ts-expect-error - no types
-import pkg from "./package.json" with { type: "json" };
+import pkg from "./package.json";
 
 const entry = [
   "cli/index.ts",
@@ -36,7 +35,7 @@ export default defineConfig([
           await fsp.mkdir("dist/static", { recursive: true });
           await fsp.copyFile(
             "vite/static/refresh-utils.cjs",
-            "dist/static/refresh-utils.cjs",
+            "dist/static/refresh-utils.cjs"
           );
 
           await fsp.mkdir("dist/config/defaults", { recursive: true });
@@ -44,7 +43,7 @@ export default defineConfig([
           for (const file of files) {
             await fsp.copyFile(
               `config/defaults/${file}`,
-              `dist/config/defaults/${file}`,
+              `dist/config/defaults/${file}`
             );
           }
         },
