@@ -1,4 +1,3 @@
-// FIXME: @remix-run/router isn't being automatically versioned
 const path = require("path");
 const { execSync } = require("child_process");
 const fsp = require("fs/promises");
@@ -53,7 +52,9 @@ async function run() {
     let args = process.argv.slice(2);
     let givenVersion = args[0];
     let prereleaseId = args[1];
-    let isExperimental = givenVersion.includes("0.0.0-experimental");
+
+    // Check if givenVersion exists before using includes
+    let isExperimental = givenVersion && givenVersion.includes("0.0.0-experimental");
 
     // 0. Make sure the working directory is clean
     ensureCleanWorkingDirectory();
