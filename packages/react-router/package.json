@@ -24,11 +24,12 @@
   "module": "./dist/index.mjs",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
+      "node": {
+        "types": "./dist/index.d.ts",
+        "module-sync": "./dist/index.mjs",
+        "default": "./dist/index.js"
       },
-      "module-sync": {
+      "import": {
         "types": "./dist/index.d.mts",
         "default": "./dist/index.mjs"
       },
@@ -41,19 +42,17 @@
       "import": {
         "types": "./dist/lib/types.d.mts"
       },
-      "module-sync": {
-        "types": "./dist/lib/types.d.mts"
-      },
       "default": {
         "types": "./dist/lib/types.d.ts"
       }
     },
     "./dom": {
-      "import": {
-        "types": "./dist/dom-export.d.mts",
-        "default": "./dist/dom-export.mjs"
+      "node": {
+        "types": "./dist/dom-export.d.ts",
+        "module-sync": "./dist/dom-export.mjs",
+        "default": "./dist/dom-export.js"
       },
-      "module-sync": {
+      "import": {
         "types": "./dist/dom-export.d.mts",
         "default": "./dist/dom-export.mjs"
       },
