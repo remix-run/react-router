@@ -2,7 +2,7 @@
   "name": "@remix-run/react-router",
   "private": true,
   "scripts": {
-    "build": "pnpm run --recursive --filter=\"./packages/**/*\" build",
+    "build": "turbo build --filter=\"./packages/**/*\"",
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
@@ -103,6 +103,7 @@
     "remark-stringify": "^10.0.2",
     "semver": "^7.5.4",
     "tslib": "^2.6.2",
+    "turbo": "^2.1.3",
     "type-fest": "^2.19.0",
     "typedoc": "^0.25.13",
     "typescript": "^5.4.5",
