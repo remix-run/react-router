@@ -1,20 +1,85 @@
+/* Global Styles */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6; /* Improved readability with line height */
+  margin: 0; /* Reset margin */
+  padding: 0; /* Reset padding */
+  background-color: #f9f9f9; /* Light background for contrast */
+  color: #333; /* Dark text for readability */
 }
 
+/* Code Styles */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  background-color: #f4f4f4; /* Light gray background for code blocks */
+  border-radius: 3px; /* Slightly rounded corners */
+  padding: 2px 4px; /* Padding around code for better spacing */
+  color: #c7254e; /* Code text color */
 }
 
+/* Main Content Styles */
 main > :first-child {
-  margin-top: 0;
+  margin-top: 0; /* Remove top margin for the first child */
 }
 
 main > :last-child {
-  margin-bottom: 0;
+  margin-bottom: 0; /* Remove bottom margin for the last child */
 }
+
+/* Responsive Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0; /* Remove default margins */
+  font-weight: bold; /* Ensure headings are bold */
+}
+
+h1 {
+  font-size: 2.5em; /* Responsive size for main headings */
+}
+
+h2 {
+  font-size: 2em; /* Secondary heading size */
+}
+
+h3 {
+  font-size: 1.75em; /* Tertiary heading size */
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center; /* Center text utility class */
+}
+
+.mb-4 {
+  margin-bottom: 1rem; /* Utility for bottom margin */
+}
+
+.mt-4 {
+  margin-top: 1rem; /* Utility for top margin */
+}
+
+/* Link Styles */
+a {
+  color: #007bff; /* Bootstrap primary link color */
+  text-decoration: none; /* Remove underline */
+}
+
+a:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Button Styles */
+button {
+  font-family: inherit; /* Inherit font family from body */
+  border: none; /* Remove default border */
+  border-radius: 4px; /* Rounded corners for buttons */
+  padding: 10px 20px; /* Padding for buttons */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+button:hover {
+  background-color: rgba(0, 123, 255, 0.1); /* Light blue background on hover */
+}
+
