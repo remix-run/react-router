@@ -104,7 +104,7 @@ hydrateRoot(
 );
 ```
 
-```diff filename=app/server.client.stx
+```diff filename=app/entry.server.tsx
 - import { RemixServer } from "@remix-run/react";
 + import { ServerRouter } from "react-router";
 
