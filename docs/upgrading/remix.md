@@ -91,7 +91,7 @@ export const routes: RouteConfig = flatRoutes();
 
 If you have an `entry.client.tsx` and/or an `entry.server.tsx` file in your application, you will need to install `react-router` package and rename the main components in these files:
 
-```diff filename=app/entry.client.stx
+```diff filename=app/entry.client.tsx
 - import { RemixBrowser } from "@remix-run/react";
 + import { HydratedRouter } from "react-router/dom";
 
