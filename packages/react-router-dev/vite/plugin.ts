@@ -1888,7 +1888,7 @@ async function handlePrerender(
         reactRouterConfig,
         viteConfig,
         data
-          ? { headers: { ...headers, "X-React-Router-Prerender-Data": data } }
+          ? { headers: { ...headers, "X-React-Router-Prerender-Data": encodeURI(data) } }
           : { headers }
       );
     }
