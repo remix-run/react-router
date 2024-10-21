@@ -89,7 +89,15 @@ export const routes: RouteConfig = flatRoutes();
 
 ### Step 6 - Rename components in entry files
 
-If you have an `entry.client.tsx` and/or an `entry.server.tsx` file in your application, you will need to install `react-router` package and rename the main components in these files:
+If you have an `entry.server.tsx` and/or an `entry.client.tsx` file in your application, you will need to update the main components in these files:
+
+```diff filename=app/entry.server.tsx
+- import { RemixServer } from "@remix-run/react";
++ import { ServerRouter } from "react-router";
+
+- <RemixServer context={remixContext} url={request.url} />,
++ <ServerRouter context={remixContext} url={request.url} />,
+```
 
 ```diff filename=app/entry.client.tsx
 - import { RemixBrowser } from "@remix-run/react";
@@ -104,13 +112,6 @@ hydrateRoot(
 );
 ```
 
-```diff filename=app/entry.server.tsx
-- import { RemixServer } from "@remix-run/react";
-+ import { ServerRouter } from "react-router";
-
-- <RemixServer context={remixContext} url={request.url} />,
-+ <ServerRouter context={remixContext} url={request.url} />,
-```
 
 ### Step 7 - Update types for `AppLoadContext`
 
