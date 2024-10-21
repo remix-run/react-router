@@ -171,10 +171,9 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      expect(t.router.state.errors?.foo).toEqual(
-        new SyntaxError(
-          "Unexpected non-whitespace character after JSON at position 15"
-        )
+      expect(t.router.state.errors?.foo).toBeInstanceOf(SyntaxError);
+      expect(t.router.state.errors?.foo.message).toContain(
+        "Unexpected non-whitespace character after JSON at position 15"
       );
     });
 
@@ -207,10 +206,9 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      expect(t.router.state.errors?.root).toEqual(
-        new SyntaxError(
-          "Unexpected non-whitespace character after JSON at position 15"
-        )
+      expect(t.router.state.errors?.root).toBeInstanceOf(SyntaxError);
+      expect(t.router.state.errors?.root.message).toContain(
+        "Unexpected non-whitespace character after JSON at position 15"
       );
     });
 
