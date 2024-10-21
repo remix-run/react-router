@@ -14,7 +14,6 @@ import {
 import {
   ErrorResponseImpl,
   isRouteErrorResponse,
-  json,
   redirect,
 } from "../../lib/router/utils";
 import { createDeferred } from "./utils/data-router-setup";
@@ -60,8 +59,8 @@ describe("ssr", () => {
         {
           id: "json",
           path: "json",
-          loader: () => json({ type: "loader" }),
-          action: () => json({ type: "action" }),
+          loader: () => Response.json({ type: "loader" }),
+          action: () => Response.json({ type: "action" }),
         },
         {
           id: "deferred",
@@ -1069,7 +1068,7 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
@@ -1090,12 +1089,12 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "CHILD" }, { status: 202 }),
+                loader: () => Response.json({ data: "CHILD" }, { status: 202 }),
                 action: () => {
                   throw new Error("💥");
                 },
@@ -1114,7 +1113,7 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
@@ -1135,12 +1134,12 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "CHILD" }, { status: 202 }),
+                loader: () => Response.json({ data: "CHILD" }, { status: 202 }),
                 action: () => {
                   throw new Response(null, { status: 400 });
                 },
@@ -1159,13 +1158,13 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "ROOT" }, { status: 202 }),
-                action: () => json({ data: "ROOT" }, { status: 203 }),
+                loader: () => Response.json({ data: "ROOT" }, { status: 202 }),
+                action: () => Response.json({ data: "ROOT" }, { status: 203 }),
               },
             ],
           },
@@ -1181,12 +1180,12 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "ROOT" }, { status: 202 }),
+                loader: () => Response.json({ data: "ROOT" }, { status: 202 }),
               },
             ],
           },
@@ -1944,7 +1943,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses returned from loaders", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -1959,7 +1958,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses returned from actions", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -1974,7 +1973,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses thrown from loaders", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -1994,7 +1993,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses thrown from actions", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",

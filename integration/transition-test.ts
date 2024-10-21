@@ -147,7 +147,7 @@ test.describe("rendering", () => {
           };
 
           export const loader = async () => {
-            return json({});
+            return {};
           };
 
           export default function GitHubIssue1691() {

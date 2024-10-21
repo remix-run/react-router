@@ -10,6 +10,7 @@ const {
   getBuildDirectories,
   createBanner,
   WATCH,
+  remixBabelConfig,
 } = require("../../rollup.utils");
 const { name: packageName, version } = require("./package.json");
 
@@ -23,9 +24,7 @@ module.exports = function rollup() {
 
   return [
     {
-      external(id) {
-        return isBareModuleId(id);
-      },
+      external: (id) => isBareModuleId(id),
       input: `${SOURCE_DIR}/index.ts`,
       output: {
         banner: createBanner(packageName, version),
@@ -39,11 +38,13 @@ module.exports = function rollup() {
           babelHelpers: "bundled",
           exclude: /node_modules/,
           extensions: [".ts"],
+          ...remixBabelConfig,
         }),
         typescript({
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
         nodeResolve({ extensions: [".ts"] }),
         copy({

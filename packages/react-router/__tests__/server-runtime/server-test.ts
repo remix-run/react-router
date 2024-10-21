@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { json, type StaticHandlerContext } from "../../index";
+import type { StaticHandlerContext } from "../../index";
 
 import type { ServerBuild } from "../../lib/server-runtime/build";
 import { ServerMode } from "../../lib/server-runtime/mode";
@@ -132,7 +132,7 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceLoader = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let build = mockServerBuild({
         root: {
@@ -162,10 +162,10 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceLoader = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let subResourceLoader = jest.fn(() => {
-        return json("sub");
+        return Response.json("sub");
       });
       let build = mockServerBuild({
         root: {
@@ -275,7 +275,7 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceAction = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let build = mockServerBuild({
         root: {
@@ -305,10 +305,10 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceAction = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let subResourceAction = jest.fn(() => {
-        return json("sub");
+        return Response.json("sub");
       });
       let build = mockServerBuild({
         root: {

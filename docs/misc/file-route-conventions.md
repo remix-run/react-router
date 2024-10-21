@@ -281,7 +281,7 @@ export async function serverLoader({ params }) {
 
 ## Escaping Special Characters
 
-If you want one of the special characters used for these route conventions to actually be a part of the URL, you can escape the conventions with `[]` characters.
+If you want one of the special characters used for these route conventions to actually be a part of the URL, you can escape the conventions with `[]` characters. This can be especially helpful for [resource routes][resource_routes] that include an extension in the URL.
 
 | Filename                            | URL                 |
 | ----------------------------------- | ------------------- |
@@ -290,6 +290,8 @@ If you want one of the special characters used for these route conventions to ac
 | `app/routes/weird-url.[_index].tsx` | `/weird-url/_index` |
 | `app/routes/dolla-bills-[$].tsx`    | `/dolla-bills-$`    |
 | `app/routes/[[so-weird]].tsx`       | `/[so-weird]`       |
+| `app/routes/reports.$id[.pdf].ts    | `/reports/123.pdf   |
+| `app/routes/reports.$id[.].ts       | `/reports/123.pdf   |
 
 ## Folders for Organization
 
@@ -371,3 +373,4 @@ app/routes/app._index/route.tsx
 [nested_routes]: #nested-routes
 [dot_delimiters]: #dot-delimiters
 [dynamic_segments]: #dynamic-segments
+[resource_routes]: ../misc/resource-routes

@@ -30,8 +30,7 @@ module.exports = function rollup() {
       output: {
         banner: createBanner(name, version),
         dir: OUTPUT_DIR,
-        entryFileNames: "[name].mjs",
-        format: "esm",
+        format: "cjs",
         preserveModules: true,
         exports: "named",
       },
@@ -46,31 +45,12 @@ module.exports = function rollup() {
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
         copy({
           targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
         }),
-      ],
-    },
-    {
-      input,
-      external: (id) => isBareModuleId(id),
-      output: {
-        banner: createBanner(name, version),
-        dir: OUTPUT_DIR,
-        format: "cjs",
-        preserveModules: true,
-        exports: "named",
-      },
-      plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts", ".tsx"],
-          ...remixBabelConfig,
-        }),
-        nodeResolve({ extensions: [".ts", ".tsx"] }),
       ],
     },
   ];

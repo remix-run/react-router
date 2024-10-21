@@ -11,7 +11,6 @@ import {
   StaticRouterProvider,
   createStaticHandler,
   createStaticRouter,
-  json,
   useLoaderData,
   useLocation,
   useMatches,
@@ -638,7 +637,7 @@ describe("A <StaticRouterProvider>", () => {
       {
         path: "/",
         loader: () => {
-          throw json(
+          throw Response.json(
             { not: "found" },
             { status: 404, statusText: "Not Found" }
           );
@@ -688,7 +687,7 @@ describe("A <StaticRouterProvider>", () => {
         path: "/",
         lazy: async () => ({
           loader: () => {
-            throw json(
+            throw Response.json(
               { not: "found" },
               { status: 404, statusText: "Not Found" }
             );
