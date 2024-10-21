@@ -753,9 +753,6 @@ describe("ssr", () => {
       let e;
       try {
         let contextPromise = query(request);
-        // Note this works in Node 18+ - but it does not work if using the
-        // `abort-controller` polyfill which doesn't yet support a custom `reason`
-        // See: https://github.com/mysticatea/abort-controller/issues/33
         controller.abort(new Error("Oh no!"));
         // This should resolve even though we never resolved the loader
         await contextPromise;
@@ -2082,9 +2079,6 @@ describe("ssr", () => {
       let e;
       try {
         let statePromise = queryRoute(request, { routeId: "root" });
-        // Note this works in Node 18+ - but it does not work if using the
-        // `abort-controller` polyfill which doesn't yet support a custom `reason`
-        // See: https://github.com/mysticatea/abort-controller/issues/33
         controller.abort(new Error("Oh no!"));
         // This should resolve even though we never resolved the loader
         await statePromise;

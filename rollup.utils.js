@@ -143,7 +143,7 @@ function isBareModuleId(id) {
 
 const remixBabelConfig = {
   presets: [
-    ["@babel/preset-env", { targets: { node: "18" } }],
+    ["@babel/preset-env", { targets: { node: "20" } }],
     "@babel/preset-react",
     "@babel/preset-typescript",
   ],
