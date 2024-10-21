@@ -1,8 +1,7 @@
 import "@testing-library/jest-dom";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
-import type { LoaderFunction } from "react-router";
-import {} from "react-router";
+import { RouterProvider as ReactRouterDom_RouterProvider } from "../../dom-export";
 import {
   Outlet,
   RouterProvider as ReactRouter_RouterProvider,
@@ -11,11 +10,11 @@ import {
   createMemoryRouter,
   useLoaderData,
   useRouteError,
+  type LoaderFunction,
 } from "../../index";
-import { RouterProvider as ReactRouterDom_RouterProvider } from "../../dom-export";
 
-import getHtml from "../utils/getHtml";
 import { createDeferred, tick } from "../router/utils/utils";
+import getHtml from "../utils/getHtml";
 
 let didAssertMissingHydrateFallback = false;
 

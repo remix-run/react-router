@@ -1,9 +1,10 @@
-import { createStaticHandler } from "react-router";
+import "@testing-library/jest-dom/extend-expect";
 import { act, fireEvent, render } from "@testing-library/react";
 import * as React from "react";
 
 import {
   createMemoryRouter,
+  createStaticHandler,
   Link,
   NavLink,
   Outlet,
@@ -13,7 +14,6 @@ import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
-import "@testing-library/jest-dom/extend-expect";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
 type PrefetchEventHandlerProps = {

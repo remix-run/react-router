@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, Outlet } from "react-router";
+import { MemoryRouter, Outlet, Route, Routes } from "../index";
 
 describe("A layout route", () => {
   it("does not match when none of its children do", () => {

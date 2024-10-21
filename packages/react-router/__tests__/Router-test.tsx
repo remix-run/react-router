@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, useLocation } from "react-router";
+import { MemoryRouter, useLocation } from "../index";
 
 describe("<Router>", () => {
   let consoleError: jest.SpyInstance;

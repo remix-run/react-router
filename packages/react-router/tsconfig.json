@@ -16,6 +16,10 @@
     "skipLibCheck": true,
 
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+
+    "paths": {
+      "react-router": ["./index.ts"]
+    }
   }
 }

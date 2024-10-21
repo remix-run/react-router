@@ -831,6 +831,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Pre-bundle router dependencies to avoid router duplicates.
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
+              "react-router/dom",
               // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
               ...(hasDependency("react-router-dom")
                 ? ["react-router-dom"]
@@ -849,6 +850,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
               // see description for `optimizeDeps.include`
               "react-router",
+              "react-router/dom",
               "react-router-dom",
             ],
           },

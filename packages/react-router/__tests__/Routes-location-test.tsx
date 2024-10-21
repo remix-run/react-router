@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Route, Routes, useParams } from "react-router";
+import { MemoryRouter, Route, Routes, useParams } from "../index";
 
 describe("<Routes> with a location", () => {
   function Home() {

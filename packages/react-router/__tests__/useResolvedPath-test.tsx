@@ -1,14 +1,14 @@
+import { prettyDOM, render } from "@testing-library/react";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import type { Path } from "react-router";
 import {
   MemoryRouter,
-  Routes,
   Route,
-  useResolvedPath,
+  Routes,
   useLocation,
-} from "react-router";
-import { prettyDOM, render } from "@testing-library/react";
+  useResolvedPath,
+  type Path,
+} from "../index";
 
 function ShowResolvedPath({ path }: { path: string | Path }) {
   return <pre>{JSON.stringify(useResolvedPath(path))}</pre>;

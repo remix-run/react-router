@@ -4,17 +4,17 @@
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import type { StaticHandlerContext } from "../../index";
 import {
   Form,
   Link,
   Outlet,
+  StaticRouterProvider,
+  createStaticHandler,
+  createStaticRouter,
   useLoaderData,
   useLocation,
   useMatches,
-  createStaticHandler,
-  createStaticRouter,
-  StaticRouterProvider,
+  type StaticHandlerContext,
 } from "../../index";
 
 beforeEach(() => {

@@ -1,14 +1,14 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import type { RouteObject } from "react-router";
 import {
   MemoryRouter,
   Outlet,
-  Routes,
   Route,
+  Routes,
   useParams,
   useRoutes,
-} from "react-router";
+  type RouteObject,
+} from "../index";
 
 describe("route matching", () => {
   function describeRouteMatching(routes: React.ReactNode) {

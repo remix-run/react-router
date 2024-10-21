@@ -2,11 +2,11 @@ import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
   MemoryRouter,
-  Routes,
   Route,
+  Routes,
   useOutlet,
   useOutletContext,
-} from "react-router";
+} from "../index";
 
 describe("useOutlet", () => {
   describe("when there is no child route", () => {

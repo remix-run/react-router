@@ -69,6 +69,9 @@ module.exports = function rollup() {
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
+        paths: {
+          "react-router": "./index.mjs",
+        },
       },
       external: (id) => isBareModuleId(id),
       plugins: [
@@ -215,6 +218,9 @@ module.exports = function rollup() {
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
+        paths: {
+          "react-router": "./react-router.development.js",
+        },
       },
       external: (id) => isBareModuleId(id),
       plugins: [
@@ -246,6 +252,9 @@ module.exports = function rollup() {
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
+        paths: {
+          "react-router": "./react-router.production.min.js",
+        },
       },
       external: (id) => isBareModuleId(id),
       plugins: [
@@ -371,6 +380,9 @@ module.exports = function rollup() {
           react: "React",
           "react-router": "ReactRouter",
         },
+        paths: {
+          "react-router": "./react-router.development.js",
+        },
         name: "ReactRouterDOMExport",
       },
       external: (id) => isBareModuleId(id),
@@ -406,6 +418,9 @@ module.exports = function rollup() {
         globals: {
           react: "React",
           "react-router": "ReactRouter",
+        },
+        paths: {
+          "react-router": "./react-router.production.min.js",
         },
         name: "ReactRouterDomExport",
       },

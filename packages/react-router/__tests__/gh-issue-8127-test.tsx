@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route } from "../index";
+import { MemoryRouter, Route, Routes } from "../index";
 
 describe("GH Issue #8127", () => {
   it("works", () => {
