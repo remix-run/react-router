@@ -39,12 +39,7 @@
       }
     },
     "./types": {
-      "import": {
-        "types": "./dist/lib/types.d.mts"
-      },
-      "default": {
-        "types": "./dist/lib/types.d.ts"
-      }
+      "types": "./dist/lib/types.d.ts"
     },
     "./dom": {
       "node": {
