@@ -112,7 +112,6 @@ hydrateRoot(
 );
 ```
 
-
 ### Step 7 - Update types for `AppLoadContext`
 
 <docs-info>This is only applicable if you were using a custom server in Remix v2. If you were using `remix-serve` you can skip this step.</docs-info>
