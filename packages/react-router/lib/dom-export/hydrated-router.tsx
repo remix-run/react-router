@@ -20,7 +20,7 @@ import {
   type UNSAFE_RouteModules as RouteModules,
   type DataRouter,
   type HydrationState,
-} from "../../index";
+} from "react-router";
 import { RouterProvider } from "./dom-router-provider";
 
 type SSRInfo = {

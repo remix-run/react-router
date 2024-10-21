@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import {
   RouterProvider as BaseRouterProvider,
   type RouterProviderProps as BaseRouterProviderProps,
-} from "../../index";
+} from "react-router";
 
 export { HydratedRouter } from "./hydrated-router";
 
