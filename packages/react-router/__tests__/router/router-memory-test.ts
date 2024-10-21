@@ -211,36 +211,4 @@ describe("a memory router", () => {
 
     router.dispose();
   });
-
-  it("throws on submitting FormData when it's not available", async () => {
-    if (global.FormData) {
-      // This is globally available in Node 18, this test is primarily for Node 16
-      // eslint-disable-next-line jest/no-conditional-expect
-      expect(true).toBe(true);
-      return;
-    }
-
-    let actionSpy = jest.fn();
-
-    let router = createRouter({
-      routes: [
-        {
-          path: "/",
-          action: actionSpy,
-        },
-      ],
-      history: createMemoryHistory(),
-    });
-
-    await expect(() =>
-      router.navigate("/", {
-        formMethod: "post",
-        body: { key: "value" },
-      })
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"FormData is not available in this environment"`
-    );
-
-    router.dispose();
-  });
 });
