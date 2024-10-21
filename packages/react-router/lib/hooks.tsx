@@ -31,6 +31,7 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
+  AgnosticRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
@@ -534,7 +535,12 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+  let matches =
+    dataRouterState &&
+    dataRouterState.matches &&
+    dataRouterState.matches.length > 0
+      ? (dataRouterState.matches as AgnosticRouteMatch<string, RouteObject>[])
+      : matchRoutes(routes, { pathname: remainingPathname });
 
   if (ENABLE_DEV_WARNINGS) {
     warning(
