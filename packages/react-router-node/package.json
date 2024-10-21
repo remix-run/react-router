@@ -18,10 +18,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./install": {
-      "types": "./dist/install.d.ts",
-      "default": "./dist/install.js"
-    },
     "./package.json": "./package.json"
   },
   "sideEffects": [

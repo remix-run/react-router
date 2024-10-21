@@ -21,11 +21,9 @@ module.exports = function rollup() {
     "react-router-node"
   );
 
-  const input = [`${SOURCE_DIR}/index.ts`, `${SOURCE_DIR}/install.ts`];
-
   return [
     {
-      input,
+      input: `${SOURCE_DIR}/index.ts`,
       external: (id) => isBareModuleId(id),
       output: {
         banner: createBanner(name, version),

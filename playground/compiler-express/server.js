@@ -1,10 +1,7 @@
 import { createRequestHandler } from "@react-router/express";
-import { installGlobals } from "@react-router/node";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
-
-installGlobals();
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
