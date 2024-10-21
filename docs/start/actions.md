@@ -17,6 +17,7 @@ Client actions only run in the browser and take priority over a server action wh
 // route('/projects/:projectId', './project.tsx')
 import type * as Route from "./+types.project";
 import { Form } from "react-router";
+import { someApi } from "./api";
 
 export async function clientAction({
   request,
@@ -53,13 +54,14 @@ Server actions only run on the server and are removed from client bundles.
 // route('/projects/:projectId', './project.tsx')
 import type * as Route from "./+types.project";
 import { Form } from "react-router";
+import { fakeDb } from "../db";
 
 export async function action({
   request,
 }: Route.ActionArgs) {
   let formData = await request.formData();
   let title = await formData.get("title");
-  let project = await someApi.updateProject({ title });
+  let project = await fakeDb.updateProject({ title });
   return project;
 }
 
@@ -78,6 +80,38 @@ export default function Project({
       ) : null}
     </div>
   );
+}
+```
+
+### Custom Status Codes and Headers
+
+If you need to return a custom HTTP status code or custom headers from your `action`, you can do so using the [`data`][data] utility:
+
+```tsx filename=app/project.tsx lines=[3,11-14,19]
+// route('/projects/:projectId', './project.tsx')
+import type * as Route from "./+types.project";
+import { data } from "react-router";
+import { fakeDb } from "../db";
+
+export async function action({
+  request,
+}: Route.ActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  if (!title) {
+    throw data(
+      { message: "Invalid title" },
+      { status: 400 }
+    );
+  }
+
+  if (!projectExists(title)) {
+    let project = await fakeDb.createProject({ title });
+    return data(project, { status: 201 });
+  } else {
+    let project = await fakeDb.updateProject({ title });
+    return project;
+  }
 }
 ```
 
@@ -159,4 +193,7 @@ fetcher.submit(
 );
 ```
 
-See the [Using Fetchers](../misc/fetchers) guide for more information.
+See the [Using Fetchers][fetchers] guide for more information.
+
+[fetchers]: ../misc/fetchers
+[data]: ../../api/react-router/data
