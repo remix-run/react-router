@@ -8,11 +8,13 @@ title: Custom Node.js
   This document is a work in progress. There's not much to see here (yet).
 </docs-warning>
 
-## Polyfilling `fetch`
+## Version Support
 
 React Router officially supports Active and Maintenance[Node LTS veleases][node-releases] ([^1]) at any given point in time. Dropping support for End of Life Node versions may be done in a React Router Minor release.
 
 [^1]: Based on timing, React Router may drop support for a Node Maintenance LTS version shortly before it goes end-of-life if it better aligns with a React Router Major SemVer release.
+
+## Polyfilling `fetch`
 
 At the time React Router v7 was released, all versions had a usable `fetch` implementation so there is generally no need to polyfill any `fetch` APIs so long as you're on Node 22 or one of the later Node 20 releases.
 
