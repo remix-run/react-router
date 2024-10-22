@@ -95,9 +95,7 @@ const customServerFile = ({
 
   return js`
     import { createRequestHandler } from "@react-router/express";
-    import { installGlobals } from "@react-router/node";
     import express from "express";
-    installGlobals();
 
     const viteDevServer =
       process.env.NODE_ENV === "production"
@@ -488,9 +486,7 @@ test.describe("Vite base / React Router basename / express build", async () => {
       // Slim server that only serves basename (route) requests from the React Router handler
       "server.mjs": String.raw`
         import { createRequestHandler } from "@react-router/express";
-        import { installGlobals } from "@react-router/node";
         import express from "express";
-        installGlobals();
 
         const app = express();
         app.all(

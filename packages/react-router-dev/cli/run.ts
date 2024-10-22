@@ -81,9 +81,15 @@ ${colors.logoBlue("react-router")}
 export async function run(argv: string[] = process.argv.slice(2)) {
   // Check the node version
   let versions = process.versions;
-  if (versions && versions.node && semver.major(versions.node) < 18) {
+  let MINIMUM_NODE_VERSION = 20;
+  if (
+    versions &&
+    versions.node &&
+    semver.major(versions.node) < MINIMUM_NODE_VERSION
+  ) {
     throw new Error(
-      `️🚨 Oops, Node v${versions.node} detected. react-router requires a Node version greater than 18.`
+      `️🚨 Oops, Node v${versions.node} detected. react-router requires ` +
+        `a Node version greater than ${MINIMUM_NODE_VERSION}.`
     );
   }
 

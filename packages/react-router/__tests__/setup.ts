@@ -1,15 +1,19 @@
 // https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-if (!globalThis.fetch) {
+if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
   const { TextDecoder, TextEncoder } = require("node:util");
-  globalThis.TextDecoder = TextDecoder;
   globalThis.TextEncoder = TextEncoder;
+  globalThis.TextDecoder = TextDecoder;
+}
 
+if (!globalThis.ReadableStream || !globalThis.WritableStream) {
   const { ReadableStream, WritableStream } = require("node:stream/web");
   globalThis.ReadableStream = ReadableStream;
   globalThis.WritableStream = WritableStream;
+}
 
+if (!globalThis.fetch) {
   const { fetch, FormData, Request, Response, Headers } = require("undici");
 
   globalThis.fetch = fetch;
@@ -20,17 +24,6 @@ if (!globalThis.fetch) {
   globalThis.FormData = globalThis.FormData || FormData;
 }
 
-if (!globalThis.AbortController) {
-  const { AbortController } = require("abort-controller");
-  globalThis.AbortController = AbortController;
-}
-
-if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
-  const { TextDecoder, TextEncoder } = require("node:util");
-  globalThis.TextEncoder = TextEncoder;
-  globalThis.TextDecoder = TextDecoder;
-}
-
 if (!globalThis.TextEncoderStream) {
   const { TextEncoderStream } = require("node:stream/web");
   globalThis.TextEncoderStream = TextEncoderStream;
@@ -39,14 +32,4 @@ if (!globalThis.TextEncoderStream) {
 if (!globalThis.TransformStream) {
   const { TransformStream } = require("node:stream/web");
   globalThis.TransformStream = TransformStream;
-}
-
-if (!globalThis.File) {
-  const { File } = require("undici");
-  globalThis.File = File;
-}
-
-if (!globalThis.crypto) {
-  const { webcrypto } = require("node:crypto");
-  globalThis.crypto = webcrypto;
 }
