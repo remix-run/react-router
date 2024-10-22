@@ -1,10 +1,5 @@
 import "../global";
 
-/**
- * Data for a route that was returned from a `loader()`.
- */
-export type AppData = unknown;
-
 export async function createRequestInit(
   request: Request
 ): Promise<RequestInit> {

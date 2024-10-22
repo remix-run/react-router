@@ -100,16 +100,13 @@ export function createStaticHandlerDataRoutes(
               invariant("data" in result, "Unable to process prerendered data");
               return result.data;
             }
-            let val = await callRouteHandler(
-              route.module.loader!,
-              args as LoaderFunctionArgs
-            );
+            let val = await callRouteHandler(route.module.loader!, args);
             return val;
           }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>
-            callRouteHandler(route.module.action!, args as ActionFunctionArgs)
+            callRouteHandler(route.module.action!, args)
         : undefined,
       handle: route.module.handle,
     };

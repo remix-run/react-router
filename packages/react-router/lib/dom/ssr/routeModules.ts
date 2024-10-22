@@ -1,17 +1,15 @@
 import type { ComponentType, ReactElement } from "react";
 import type { Location } from "../../router/history";
 import type {
-  ActionFunction as RRActionFunction,
-  ActionFunctionArgs as RRActionFunctionArgs,
-  LoaderFunction as RRLoaderFunction,
-  LoaderFunctionArgs as RRLoaderFunctionArgs,
+  ActionFunction,
+  ActionFunctionArgs,
+  LoaderFunction,
+  LoaderFunctionArgs,
   Params,
   ShouldRevalidateFunction,
-  LoaderFunctionArgs,
 } from "../../router/utils";
 
 import type { SerializeFrom } from "./components";
-import type { AppData } from "./data";
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
@@ -38,13 +36,13 @@ export interface RouteModule {
  */
 export type ClientActionFunction = (
   args: ClientActionFunctionArgs
-) => ReturnType<RRActionFunction>;
+) => ReturnType<ActionFunction>;
 
 /**
  * Arguments passed to a route `clientAction` function
  */
-export type ClientActionFunctionArgs = RRActionFunctionArgs<undefined> & {
-  serverAction: <T = AppData>() => Promise<SerializeFrom<T>>;
+export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
+  serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
 /**
@@ -52,15 +50,15 @@ export type ClientActionFunctionArgs = RRActionFunctionArgs<undefined> & {
  */
 export type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs
-) => ReturnType<RRLoaderFunction>) & {
+) => ReturnType<LoaderFunction>) & {
   hydrate?: boolean;
 };
 
 /**
  * Arguments passed to a route `clientLoader` function
  */
-export type ClientLoaderFunctionArgs = RRLoaderFunctionArgs<undefined> & {
-  serverLoader: <T = AppData>() => Promise<SerializeFrom<T>>;
+export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
+  serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
 /**
@@ -95,19 +93,6 @@ export type LayoutComponent = ComponentType<{
 export interface LinksFunction {
   (): LinkDescriptor[];
 }
-
-// Loose copy from @react-router/server-runtime to avoid circular imports
-type LoaderFunction = (
-  args: LoaderFunctionArgs & {
-    // Context is always provided in Remix, and typed for module augmentation support.
-    context: unknown;
-    // TODO: (v7) Make this non-optional once single-fetch is the default
-    response?: {
-      status: number | undefined;
-      headers: Headers;
-    };
-  }
-) => ReturnType<RRLoaderFunction>;
 
 export interface MetaMatch<
   RouteId extends string = string,
@@ -144,7 +129,7 @@ export interface MetaArgs<
   >
 > {
   data:
-    | (Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData)
+    | (Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown)
     | undefined;
   params: Params;
   location: Location;

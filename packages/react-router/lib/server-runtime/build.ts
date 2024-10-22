@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "./routeModules";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "../router/utils";
 import type {
   AssetsManifest,
   EntryContext,
