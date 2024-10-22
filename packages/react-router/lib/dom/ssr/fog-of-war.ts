@@ -1,10 +1,10 @@
 import * as React from "react";
 import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
-import { matchRoutes } from "../../router/utils";
+import { RouteManifest, matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
-import { createClientRoutes } from "./routes";
+import { EntryRoute, createClientRoutes } from "./routes";
 
 declare global {
   interface Navigator {
@@ -233,13 +233,12 @@ export async function fetchAndApplyManifestPatches(
 
   // Patch routes we don't know about yet into the manifest
   let knownRoutes = new Set(Object.keys(manifest.routes));
-  let patches: AssetsManifest["routes"] = Object.values(serverPatches).reduce(
-    (acc, route) =>
-      !knownRoutes.has(route.id)
-        ? Object.assign(acc, { [route.id]: route })
-        : acc,
-    {}
-  );
+  let patches = Object.values(serverPatches).reduce((acc, route) => {
+    if (route && !knownRoutes.has(route.id)) {
+      acc[route.id] = route;
+    }
+    return acc;
+  }, {} as RouteManifest<EntryRoute>);
   Object.assign(manifest.routes, patches);
 
   // Track discovered paths so we don't have to fetch them again
@@ -249,7 +248,7 @@ export async function fetchAndApplyManifestPatches(
   // in their new children
   let parentIds = new Set<string | undefined>();
   Object.values(patches).forEach((patch) => {
-    if (!patch.parentId || !patches[patch.parentId]) {
+    if (patch && (!patch.parentId || !patches[patch.parentId])) {
       parentIds.add(patch.parentId);
     }
   });

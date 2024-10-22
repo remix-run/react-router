@@ -234,6 +234,8 @@ async function singleFetchLoaderNavigationStrategy(
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
 
+        let manifestRoute = manifest.routes[m.route.id];
+
         if (!m.shouldLoad) {
           // If we're not yet initialized and this is the initial load, respect
           // `shouldLoad` because we're only dealing with `clientLoader.hydrate`
@@ -247,7 +249,8 @@ async function singleFetchLoaderNavigationStrategy(
           // via `shouldRevalidate`
           if (
             m.route.id in router.state.loaderData &&
-            manifest.routes[m.route.id].hasLoader &&
+            manifestRoute &&
+            manifestRoute.hasLoader &&
             routeModules[m.route.id]?.shouldRevalidate
           ) {
             foundOptOutRoute = true;
@@ -257,8 +260,8 @@ async function singleFetchLoaderNavigationStrategy(
 
         // When a route has a client loader, it opts out of the singular call and
         // calls it's server loader via `serverLoader()` using a `?_routes` param
-        if (manifest.routes[m.route.id].hasClientLoader) {
-          if (manifest.routes[m.route.id].hasLoader) {
+        if (manifestRoute && manifestRoute.hasClientLoader) {
+          if (manifestRoute.hasLoader) {
             foundOptOutRoute = true;
           }
           try {
@@ -276,7 +279,7 @@ async function singleFetchLoaderNavigationStrategy(
         }
 
         // Load this route on the server if it has a loader
-        if (manifest.routes[m.route.id].hasLoader) {
+        if (manifestRoute && manifestRoute.hasLoader) {
           routesParams.add(m.route.id);
         }
 

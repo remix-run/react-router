@@ -58,6 +58,7 @@ export function ServerRouter({
     // * or doesn't have a server loader and we have no data to render
     if (
       route &&
+      manifestRoute &&
       shouldHydrateRouteLoader(manifestRoute, route, context.isSpaMode) &&
       (route.HydrateFallback || !manifestRoute.hasLoader)
     ) {

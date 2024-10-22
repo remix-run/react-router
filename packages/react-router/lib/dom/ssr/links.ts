@@ -26,7 +26,9 @@ export function getKeyedLinksForMatches(
       let module = routeModules[match.route.id];
       let route = manifest.routes[match.route.id];
       return [
-        route.css ? route.css.map((href) => ({ rel: "stylesheet", href })) : [],
+        route && route.css
+          ? route.css.map((href) => ({ rel: "stylesheet", href }))
+          : [],
         module?.links?.() || [],
       ];
     })
@@ -138,11 +140,12 @@ export async function getKeyedPrefetchLinks(
 ): Promise<KeyedHtmlLinkDescriptor[]> {
   let links = await Promise.all(
     matches.map(async (match) => {
-      let mod = await loadRouteModule(
-        manifest.routes[match.route.id],
-        routeModules
-      );
-      return mod.links ? mod.links() : [];
+      let route = manifest.routes[match.route.id];
+      if (route) {
+        let mod = await loadRouteModule(route, routeModules);
+        return mod.links ? mod.links() : [];
+      }
+      return [];
     })
   );
 
@@ -197,7 +200,7 @@ export function getNewMatchesForLinks(
   if (mode === "data") {
     return nextMatches.filter((match, index) => {
       let manifestRoute = manifest.routes[match.route.id];
-      if (!manifestRoute.hasLoader) {
+      if (!manifestRoute || !manifestRoute.hasLoader) {
         return false;
       }
 
@@ -235,6 +238,7 @@ export function getModuleLinkHrefs(
     matches
       .map((match) => {
         let route = manifestPatch.routes[match.route.id];
+        if (!route) return [];
         let hrefs = [route.module];
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
@@ -256,12 +260,11 @@ function getCurrentPageModulePreloadHrefs(
     matches
       .map((match) => {
         let route = manifest.routes[match.route.id];
+        if (!route) return [];
         let hrefs = [route.module];
-
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
         }
-
         return hrefs;
       })
       .flat(1)

@@ -2,6 +2,7 @@ import { splitCookiesString } from "set-cookie-parser";
 
 import type { ServerBuild } from "./build";
 import type { StaticHandlerContext } from "../router/router";
+import invariant from "./invariant";
 
 export function getDocumentHeaders(
   build: ServerBuild,
@@ -37,7 +38,9 @@ export function getDocumentHeaders(
 
   return matches.reduce((parentHeaders, match, idx) => {
     let { id } = match.route;
-    let routeModule = build.routes[id].module;
+    let route = build.routes[id];
+    invariant(route, `Route with id "${id}" not found in build`);
+    let routeModule = route.module;
     let loaderHeaders = context.loaderHeaders[id] || new Headers();
     let actionHeaders = context.actionHeaders[id] || new Headers();
 

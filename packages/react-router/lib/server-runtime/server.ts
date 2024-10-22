@@ -15,7 +15,7 @@ import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
-import type { EntryRoute, ServerRoute } from "./routes";
+import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
@@ -30,6 +30,7 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
+import type { EntryRoute } from "../dom/ssr/routes";
 
 export type RequestHandler = (
   request: Request,
@@ -244,7 +245,10 @@ async function handleManifestRequest(
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
-          patches[routeId] = build.assets.routes[routeId];
+          let route = build.assets.routes[routeId];
+          if (route) {
+            patches[routeId] = route;
+          }
         }
       }
     }

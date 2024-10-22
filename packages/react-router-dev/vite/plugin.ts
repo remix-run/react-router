@@ -2023,11 +2023,13 @@ function groupRoutesByParentId(manifest: ServerBuild["routes"]) {
   let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;

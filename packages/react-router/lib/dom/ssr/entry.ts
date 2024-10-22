@@ -1,7 +1,8 @@
 import type { StaticHandlerContext } from "../../router/router";
 
-import type { RouteManifest, EntryRoute } from "./routes";
+import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
+import { RouteManifest } from "../../router/utils";
 
 // Object passed to RemixContext.Provider
 

@@ -337,7 +337,10 @@ export type AgnosticDataRouteObject =
   | AgnosticDataIndexRouteObject
   | AgnosticDataNonIndexRouteObject;
 
-export type RouteManifest = Record<string, AgnosticDataRouteObject | undefined>;
+export type RouteManifest<R = AgnosticDataRouteObject> = Record<
+  string,
+  R | undefined
+>;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
