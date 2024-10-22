@@ -32,9 +32,6 @@ import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
 
-// TODO: Temporary shim until we figure out the way to handle typings in v7
-export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
-
 function useDataRouterContext() {
   let context = React.useContext(DataRouterContext);
   invariant(

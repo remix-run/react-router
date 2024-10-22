@@ -1,3 +1,7 @@
+import type {
+  ClientLoaderFunctionArgs,
+  ClientActionFunctionArgs,
+} from "./dom/ssr/routeModules";
 import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
 import type { Serializable } from "./server-runtime/single-fetch";
@@ -120,6 +124,19 @@ type Serialize<T> =
   T extends Record<any, any> ? {[K in keyof T]: Serialize<T[K]>} :
 
   undefined
+
+/**
+ * @deprecated Generics on data APIs such as `useLoaderData`, `useActionData`,
+ * `meta`, etc. are deprecated in favor of the `Route.*` types generated via
+ * `react-router typegen`
+ */
+export type DeprecatedSerializeFrom<T> = T extends (
+  ...args: infer Args
+) => unknown
+  ? Args extends [ClientLoaderFunctionArgs | ClientActionFunctionArgs]
+    ? ClientData<DataFrom<T>>
+    : ServerData<DataFrom<T>>
+  : T;
 
 export type CreateServerLoaderArgs<Params> = ServerDataFunctionArgs<Params>;
 
