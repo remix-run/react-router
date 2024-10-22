@@ -10,7 +10,7 @@ title: Custom Node.js
 
 ## Polyfilling `fetch`
 
-React Router officially supports Active and Maintenance[^1] [Node LTS veleases][node-releases] at any given point in time. Dropping support for End of Life Node versions may be done in a React Router Minor release.
+React Router officially supports Active and Maintenance[Node LTS veleases][node-releases] ([^1]) at any given point in time. Dropping support for End of Life Node versions may be done in a React Router Minor release.
 
 [^1]: Based on timing, React Router may drop support for a Node Maintenance LTS version shortly before it goes end-of-life if it better aligns with a React Router Major SemVer release.
 
