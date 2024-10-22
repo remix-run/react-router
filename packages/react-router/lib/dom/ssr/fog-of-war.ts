@@ -1,10 +1,12 @@
 import * as React from "react";
 import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as DataRouter } from "../../router/router";
-import { RouteManifest, matchRoutes } from "../../router/utils";
+import type { RouteManifest } from "../../router/utils";
+import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
-import { EntryRoute, createClientRoutes } from "./routes";
+import type { EntryRoute } from "./routes";
+import { createClientRoutes } from "./routes";
 
 declare global {
   interface Navigator {
