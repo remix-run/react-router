@@ -171,7 +171,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 5.1.0-rc-5dcb0097-20240918(eslint@8.57.0)
+        version: 5.1.0-rc-69d4b800-20241021(eslint@8.57.0)
       fs-extra:
         specifier: ^10.1.0
         version: 10.1.0
@@ -557,8 +557,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       cookie:
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^1.0.1
+        version: 1.0.1
       react-router:
         specifier: workspace:*
         version: 'link:'
@@ -3651,6 +3651,10 @@ packages:
     resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
 
+  cookie@1.0.1:
+    resolution: {integrity: sha512-Xd8lFX4LM9QEEwxQpF9J9NTUh8pmdJO0cyRJhFiDoLTk2eH8FXlRv2IFGYVadZpqI3j8fhNrSdKCeYPxiAhLXw==}
+    engines: {node: '>=18'}
+
   cookiejar@2.1.4:
     resolution: {integrity: sha512-LDx6oHrK+PhzLKJU9j5S7/Y3jM/mUHvD/DeI1WQmJn652iPC5Y4TBzC9l+5OMOXlyTTA+SmVUPm0HQUwpD5Jqw==}
 
@@ -4152,8 +4156,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@5.1.0-rc-5dcb0097-20240918:
-    resolution: {integrity: sha512-Kx+m5yAm0w1RSpzo0vQ4aN7kIlM9bcAvWyCRWqS5HjxxnzChMAYg4a3fQlwxFvwZ3WkoHA9HecJUBRTf49L5ew==}
+  eslint-plugin-react-hooks@5.1.0-rc-69d4b800-20241021:
+    resolution: {integrity: sha512-BlHwxPe59W888jvcwa2dRJXzJf2DWJm9ZMwlpaeobPzW1gaghptM+ISk/E2UK/PTVuDmdkuqZ4je/9v3QE99Gg==}
     engines: {node: '>=10'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -4189,6 +4193,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -11246,6 +11251,8 @@ snapshots:
 
   cookie@0.6.0: {}
 
+  cookie@1.0.1: {}
+
   cookiejar@2.1.4: {}
 
   core-js-compat@3.32.0:
@@ -11929,7 +11936,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@5.1.0-rc-5dcb0097-20240918(eslint@8.57.0):
+  eslint-plugin-react-hooks@5.1.0-rc-69d4b800-20241021(eslint@8.57.0):
     dependencies:
       eslint: 8.57.0
 
