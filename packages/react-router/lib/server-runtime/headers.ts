@@ -44,7 +44,7 @@ export function getDocumentHeaders(
     // Only expose errorHeaders to the leaf headers() function to
     // avoid duplication via parentHeaders
     let includeErrorHeaders =
-      errorHeaders != undefined && idx === matches.length - 1;
+      errorHeaders != null && idx === matches.length - 1;
     // Only prepend cookies from errorHeaders at the leaf renderable route
     // when it's not the same as loaderHeaders/actionHeaders to avoid
     // duplicate cookies

@@ -40,7 +40,6 @@ test.describe("ErrorBoundary (thrown responses)", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { json } from "react-router";
           import {
             Links,
             Meta,
@@ -50,7 +49,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
             useMatches,
           } from "react-router";
 
-          export const loader = () => json("${ROOT_DATA}");
+          export const loader = () => "${ROOT_DATA}";
 
           export default function Root() {
             const data = useLoaderData();

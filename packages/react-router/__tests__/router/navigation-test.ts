@@ -1,5 +1,4 @@
 import type { HydrationState } from "../../lib/router/router";
-import { json } from "../../lib/router/utils";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
@@ -104,10 +103,12 @@ describe("navigations", () => {
       });
     });
 
-    it("unwraps non-redirect json Responses (json helper)", async () => {
+    it("unwraps non-redirect json Responses (Response.json() helper)", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo");
-      await A.loaders.foo.resolve(json({ key: "value" }, 200));
+      await A.loaders.foo.resolve(
+        Response.json({ key: "value" }, { status: 200 })
+      );
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
         foo: { key: "value" },

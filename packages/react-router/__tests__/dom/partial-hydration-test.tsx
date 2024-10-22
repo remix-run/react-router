@@ -91,6 +91,7 @@ describe("Partial Hydration Behavior", () => {
         }
       );
       let { container } = render(
+        // eslint-disable-next-line react/jsx-pascal-case
         <ReactRouter_RouterProvider router={router} />
       );
 
@@ -179,6 +180,7 @@ describe("Partial Hydration Behavior", () => {
         }
       );
       let { container } = render(
+        // eslint-disable-next-line react/jsx-pascal-case
         <ReactRouter_RouterProvider router={router} />
       );
 

@@ -216,11 +216,7 @@ export function RouterProvider({
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
-      {
-        deletedFetchers,
-        flushSync: flushSync,
-        viewTransitionOpts: viewTransitionOpts,
-      }
+      { deletedFetchers, flushSync, viewTransitionOpts }
     ) => {
       deletedFetchers.forEach((key) => fetcherData.current.delete(key));
       newState.fetchers.forEach((fetcher, key) => {

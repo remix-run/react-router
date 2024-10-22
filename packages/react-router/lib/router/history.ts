@@ -435,6 +435,7 @@ export function createHashHistory(
       search = "",
       hash = "",
     } = parsePath(path);
+
     // Hash URL should always have a leading / just like window.location.pathname
     // does, so if an app ends up at a route like /#something then we add a
     // leading slash so all of our path-matching behaves the same as if it would
@@ -519,7 +520,7 @@ export function warning(cond: any, message: string) {
 }
 
 function createKey() {
-  return Math.random().toString(36).substr(2, 8);
+  return Math.random().toString(36).substring(2, 10);
 }
 
 /**
@@ -585,14 +586,14 @@ export function parsePath(path: string): Partial<Path> {
   if (path) {
     let hashIndex = path.indexOf("#");
     if (hashIndex >= 0) {
-      parsedPath.hash = path.substr(hashIndex);
-      path = path.substr(0, hashIndex);
+      parsedPath.hash = path.substring(hashIndex);
+      path = path.substring(0, hashIndex);
     }
 
     let searchIndex = path.indexOf("?");
     if (searchIndex >= 0) {
-      parsedPath.search = path.substr(searchIndex);
-      path = path.substr(0, searchIndex);
+      parsedPath.search = path.substring(searchIndex);
+      path = path.substring(0, searchIndex);
     }
 
     if (path) {

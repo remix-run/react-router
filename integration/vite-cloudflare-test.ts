@@ -69,7 +69,6 @@ const files: Files = async ({ port }) => ({
     import {
       type LoaderFunctionArgs,
       type ActionFunctionArgs,
-      json,
       Form,
       useLoaderData,
     } from "react-router";
@@ -79,7 +78,7 @@ const files: Files = async ({ port }) => ({
     export async function loader({ context }: LoaderFunctionArgs) {
       const { MY_KV } = context.cloudflare.env;
       const value = await MY_KV.get(key);
-      return json({ value, extra: context.extra });
+      return { value, extra: context.extra };
     }
 
     export async function action({ request, context }: ActionFunctionArgs) {
