@@ -123,9 +123,9 @@ When a `NavLink` is active it will automatically apply `<a aria-current="page">`
 
 The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
-## `unstable_viewTransition`
+## `viewTransition`
 
-The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. By default, during the transition a `transitioning` class will be added to the `<a>` element that you can use to customize the view transition.
+The `viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. By default, during the transition a `transitioning` class will be added to the `<a>` element that you can use to customize the view transition.
 
 ```css
 a.transitioning p {
@@ -138,7 +138,7 @@ a.transitioning img {
 ```
 
 ```jsx
-<NavLink to={to} unstable_viewTransition>
+<NavLink to={to} viewTransition>
   <p>Image Number {idx}</p>
   <img src={src} alt={`Img ${idx}`} />
 </NavLink>
@@ -147,7 +147,7 @@ a.transitioning img {
 You may also use the `className`/`style` props or the render props passed to `children` to further customize based on the `isTransitioning` value.
 
 ```jsx
-<NavLink to={to} unstable_viewTransition>
+<NavLink to={to} viewTransition>
   {({ isTransitioning }) => (
     <>
       <p
@@ -172,10 +172,6 @@ You may also use the `className`/`style` props or the render props passed to `ch
   )}
 </NavLink>
 ```
-
-<docs-warning>
-Please note that this API is marked unstable and may be subject to breaking changes without a major release.
-</docs-warning>
 
 [aria-current]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API

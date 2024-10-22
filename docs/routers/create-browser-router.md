@@ -51,8 +51,8 @@ function createBrowserRouter(
     basename?: string;
     future?: FutureConfig;
     hydrationData?: HydrationState;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+    dataStrategy?: DataStrategyFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
     window?: Window;
   }
 ): RemixRouter;
@@ -184,15 +184,13 @@ const router = createBrowserRouter(
 );
 ```
 
-## `opts.unstable_dataStrategy`
+## `opts.dataStrategy`
 
 <docs-warning>This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warning>
 
-<docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
-
 By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
 
-The `unstable_dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
+The `dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
 
 ### Type Declaration
 
@@ -232,7 +230,7 @@ interface DataStrategyResult {
 
 ### Overview
 
-`unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives 2 new parameters: `matches` and `fetcherKey`:
+`dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives 2 new parameters: `matches` and `fetcherKey`:
 
 - **`matches`** - An array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
   - **`match.shouldLoad`** - A boolean value indicating whether this route handler should be called in this pass
@@ -247,9 +245,9 @@ interface DataStrategyResult {
     - It is safe to call `match.resolve` for all matches, even if they have `shouldLoad=false`, and it will no-op if no loading is required
     - You should generally always call `match.resolve()` for `shouldLoad:true` routes to ensure that any `route.lazy` implementations are processed
     - See the examples below for how to implement custom handler execution via `match.resolve`
-- **`fetcherKey`** - The key of the fetcher we are calling `unstable_dataStrategy` for, otherwise `null` for navigational executions
+- **`fetcherKey`** - The key of the fetcher we are calling `dataStrategy` for, otherwise `null` for navigational executions
 
-The `dataStrategy` function should return a key/value object of `routeId -> DataStrategyResult` and should include entries for any routes where a handler was executed. A `DataStrategyResult` indicates if the handler was successful or not based on the `DataStrategyResult["type"]` field. If the returned `DataStrategyResult["result"]` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but want to preserve the status code, you can use the `unstable_data` utility to return your decoded data along with a `ResponseInit`.
+The `dataStrategy` function should return a key/value object of `routeId -> DataStrategyResult` and should include entries for any routes where a handler was executed. A `DataStrategyResult` indicates if the handler was successful or not based on the `DataStrategyResult["type"]` field. If the returned `DataStrategyResult["result"]` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but want to preserve the status code, you can use the `data` utility to return your decoded data along with a `ResponseInit`.
 
 ### Example Use Cases
 
@@ -259,7 +257,7 @@ In the simplest case, let's look at hooking into this API to add some logging fo
 
 ```ts
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({ request, matches }) {
+  async dataStrategy({ request, matches }) {
     // Grab only the matches we need to run handlers for
     const matchesToLoad = matches.filter(
       (m) => m.shouldLoad
@@ -290,7 +288,7 @@ If you want to avoid the `reduce`, you can manually build up the `results` objec
 
 ```ts
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({ request, matches }) {
+  async dataStrategy({ request, matches }) {
     const matchesToLoad = matches.filter(
       (m) => m.shouldLoad
     );
@@ -353,11 +351,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({
-    request,
-    params,
-    matches,
-  }) {
+  async dataStrategy({ request, params, matches }) {
     // Run middleware sequentially and let them add data to `context`
     let context = {};
     for (const match of matches) {
@@ -426,7 +420,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  unstable_dataStrategy({ request, params, matches }) {
+  dataStrategy({ request, params, matches }) {
     // Compose route fragments into a single GQL payload
     let gql = getFragmentsFromRouteHandles(matches);
     let data = await fetchGql(gql);
@@ -438,22 +432,20 @@ let router = createBrowserRouter(routes, {
 });
 ```
 
-## `opts.unstable_patchRoutesOnNavigation`
-
-<docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
+## `opts.patchRoutesOnNavigation`
 
 By default, React Router wants you to provide a full route tree up front via `createBrowserRouter(routes)`. This allows React Router to perform synchronous route matching, execute loaders, and then render route components in the most optimistic manner without introducing waterfalls. The tradeoff is that your initial JS bundle is larger by definition - which may slow down application start-up times as your application grows.
 
-To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route _definition_ aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your routes up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects until the route is actually navigated to.
+To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route _definition_ aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your route definitions (the lightweight part) up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects (the heavier part) until the route is actually navigated to.
 
 In some cases, even this doesn't go far enough. For very large applications, providing all route definitions up front can be prohibitively expensive. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
 
-This is where `unstable_patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
+This is where `patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
 ### Type Declaration
 
 ```ts
-export interface unstable_PatchRoutesOnNavigationFunction {
+export interface PatchRoutesOnNavigationFunction {
   (opts: {
     path: string;
     matches: RouteMatch[];
@@ -467,7 +459,7 @@ export interface unstable_PatchRoutesOnNavigationFunction {
 
 ### Overview
 
-`unstable_patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
+`patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
 
 **Patching children into an existing route**
 
@@ -481,10 +473,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path === "/a") {
         // Load/patch the `a` route as a child of the route with id `root`
         let route = await getARoute();
@@ -496,7 +485,7 @@ const router = createBrowserRouter(
 );
 ```
 
-In the above example, if the user clicks a link to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnNavigation` with `/a` and a `matches` array containing the root route match. By calling `patch`, the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
+In the above example, if the user clicks a link to `/a`, React Router won't match any routes initially and will call `patchRoutesOnNavigation` with a `path = "/a"` and a `matches` array containing the root route match. By calling `patch('root', [route])`, the new route will be added to the route tree as a child of the `root` route and React Router will perform matching on the updated routes. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
 **Patching new root-level routes**
 
@@ -512,10 +501,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path === "/root-sibling") {
         // Load/patch the `/root-sibling` route as a sibling of the root route
         let route = await getRootSiblingRoute();
@@ -540,10 +526,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
         patch(null, children);
@@ -556,6 +539,8 @@ let router = createBrowserRouter(
   }
 );
 ```
+
+<docs-info>If in-progress execution of `patchRoutesOnNavigation` is interrupted by a subsequent navigation, then any remaining `patch` calls in the interrupted execution will not update the route tree because the operation was cancelled.</docs-info>
 
 **Co-locating route discovery with route definition**
 
@@ -598,10 +583,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      matches,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ matches, patch }) {
       let leafRoute = matches[matches.length - 1]?.route;
       if (leafRoute?.handle?.lazyChildren) {
         let children =
@@ -611,6 +593,88 @@ let router = createBrowserRouter(
     },
   }
 );
+```
+
+### A note on routes with parameters
+
+Because React Router uses ranked routes to find the best match for a given path, there is an interesting ambiguity introduced when only a partial route tree is known at any given point in time. If we match a fully static route such as `path: "/about/contact-us"` then we know we've found the right match since it's composed entirely of static URL segments, and thus we do not need to bother asking for any other potentially higher-scoring routes.
+
+However, routes with parameters (dynamic or splat) can't make this assumption because there might be a not-yet-discovered route tht scores higher. Consider a full route tree such as:
+
+```js
+// Assume this is the full route tree for your app
+const routes = [
+  {
+    path: "/",
+    Component: Home,
+  },
+  {
+    id: "blog",
+    path: "/blog",
+    Component: BlogLayout,
+    children: [
+      { path: "new", Component: NewPost },
+      { path: ":slug", Component: BlogPost },
+    ],
+  },
+];
+```
+
+And then assume we want to use `patchRoutesOnNavigation` to fill this in as the user navigates around:
+
+```js
+// Start with only the index route
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: Home,
+    },
+  ],
+  {
+    patchRoutesOnNavigation({ path, patch }) {
+      if (path === "/blog/new") {
+        patch("blog", [
+          {
+            path: "new",
+            Component: NewPost,
+          },
+        ]);
+      } else if (path.startsWith("/blog")) {
+        patch("blog", [
+          {
+            path: ":slug",
+            Component: BlogPost,
+          },
+        ]);
+      }
+    },
+  }
+);
+```
+
+If the user were to a blog post first (i.e., `/blog/my-post`) we would patch in the `:slug` route. Then if the user navigated to `/blog/new` to write a new post, we'd match `/blog/:slug` but it wouldn't be the _right_ match! We need to call `patchRoutesOnNavigation` just in case there exists a higher-scoring route we've not yet discovered, which in this case there is.
+
+So, anytime React Router matches a path that contains at least one param, it will call `patchRoutesOnNavigation` and match routes again just to confirm it has found the best match.
+
+If your `patchRoutesOnNavigation` implementation is expensive or making side-effect `fetch` calls to a backend server, you may want to consider tracking previously seen routes to avoid over-fetching in cases where you know the proper route has already been found. This can usually be as simple as maintaining a small cache of prior `path` values for which you've already patched in the right routes:
+
+```js
+let discoveredRoutes = new Set();
+
+const router = createBrowserRouter(routes, {
+  patchRoutesOnNavigation({ path, patch }) {
+    if (discoveredRoutes.has(path)) {
+      // We've seen this before so nothing to patch in and we can let the router
+      // use the routes it already knows about
+      return;
+    }
+
+    discoveredRoutes.add(path);
+
+    // ... patch routes in accordingly
+  },
+});
 ```
 
 ## `opts.window`

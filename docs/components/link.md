@@ -23,7 +23,7 @@ interface LinkProps
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
-  unstable_viewTransition?: boolean;
+  viewTransition?: boolean;
 }
 
 type To = string | Partial<Path>;
@@ -171,24 +171,23 @@ let { state } = useLocation();
 
 The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
-## `unstable_viewTransition`
+## `viewTransition`
 
-The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`:
+The `viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`:
 
 ```jsx
-<Link to={to} unstable_viewTransition>
+<Link to={to} viewTransition>
   Click me
 </Link>
 ```
 
-If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state] hook (or check out the `transitioning` class and `isTransitioning` render prop in [NavLink][navlink]):
+If you need to apply specific styles for this view transition, you will also need to leverage the [`useViewTransitionState()`][use-view-transition-state] hook (or check out the `transitioning` class and `isTransitioning` render prop in [NavLink][navlink]):
 
 ```jsx
 function ImageLink(to) {
-  const isTransitioning =
-    unstable_useViewTransitionState(to);
+  const isTransitioning = useViewTransitionState(to);
   return (
-    <Link to={to} unstable_viewTransition>
+    <Link to={to} viewTransition>
       <p
         style={{
           viewTransitionName: isTransitioning
@@ -212,9 +211,7 @@ function ImageLink(to) {
 }
 ```
 
-<docs-warning>`unstable_viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
-
-<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+<docs-warning>`viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
 
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
