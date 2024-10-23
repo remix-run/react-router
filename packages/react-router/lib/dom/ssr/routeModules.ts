@@ -96,11 +96,11 @@ export interface LinksFunction {
 
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
-  data: Loader extends LoaderFunction
+  data: Loader extends LoaderFunction | ClientLoaderFunction
     ? DeprecatedSerializeFrom<Loader>
     : unknown;
   handle?: RouteHandle;
@@ -110,10 +110,10 @@ export interface MetaMatch<
 }
 
 export type MetaMatches<
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -124,14 +124,14 @@ export type MetaMatches<
 >;
 
 export interface MetaArgs<
-  Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > {
   data:
-    | (Loader extends LoaderFunction
+    | (Loader extends LoaderFunction | ClientLoaderFunction
         ? DeprecatedSerializeFrom<Loader>
         : unknown)
     | undefined;
@@ -192,11 +192,11 @@ export interface MetaArgs<
  * ```
  */
 export interface MetaFunction<
-  Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }
