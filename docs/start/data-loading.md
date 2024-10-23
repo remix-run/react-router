@@ -65,6 +65,35 @@ export default function Product({
 
 Note that the `loader` function is removed from client bundles so you can use server only APIs without worrying about them being included in the browser.
 
+### Custom Status Codes and Headers
+
+If you need to return a custom HTTP status code or custom headers from your `loader`, you can do so using the [`data`][data] utility:
+
+```tsx filename=app/product.tsx lines=[3,6-8,14,17-21]
+// route("products/:pid", "./product.tsx");
+import type * as Route from "./+types.product";
+import { data } from "react-router";
+import { fakeDb } from "../db";
+
+export function headers({ loaderHeaders }: HeadersArgs) {
+  return loaderHeaders;
+}
+
+export async function loader({ params }: Route.LoaderArgs) {
+  const product = await fakeDb.getProduct(params.pid);
+
+  if (!product) {
+    throw data(null, { status: 404 });
+  }
+
+  return data(product, {
+    headers: {
+      "Cache-Control": "public; max-age=300",
+    },
+  });
+}
+```
+
 ## Static Data Loading
 
 When pre-rendering, loaders are used to fetch data during the production build.
@@ -195,3 +224,4 @@ export async function Product({ id }: { id: string }) {
 ```
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching
+[data]: ../../api/react-router/data

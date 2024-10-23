@@ -74,7 +74,6 @@
     "@types/wait-on": "^5.3.2",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",
-    "abort-controller": "^3.0.0",
     "babel-jest": "^29.7.0",
     "babel-plugin-dev-expression": "^0.2.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
@@ -114,7 +113,7 @@
     "vite-tsconfig-paths": "^4.2.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "pnpm": {
     "patchedDependencies": {

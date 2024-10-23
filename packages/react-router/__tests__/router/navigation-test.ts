@@ -1,5 +1,4 @@
 import type { HydrationState } from "../../lib/router/router";
-import { json } from "../../lib/router/utils";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
@@ -104,10 +103,12 @@ describe("navigations", () => {
       });
     });
 
-    it("unwraps non-redirect json Responses (json helper)", async () => {
+    it("unwraps non-redirect json Responses (Response.json() helper)", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo");
-      await A.loaders.foo.resolve(json({ key: "value" }, 200));
+      await A.loaders.foo.resolve(
+        Response.json({ key: "value" }, { status: 200 })
+      );
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
         foo: { key: "value" },
@@ -170,11 +171,10 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 16/18 versus 20 output different errors here :/
-      let expected = process.version.startsWith("v18")
-        ? "Unexpected token } in JSON at position 15"
-        : "Unexpected non-whitespace character after JSON at position 15";
-      expect(t.router.state.errors?.foo).toEqual(new SyntaxError(expected));
+      expect(t.router.state.errors?.foo).toBeInstanceOf(SyntaxError);
+      expect(t.router.state.errors?.foo.message).toContain(
+        "Unexpected non-whitespace character after JSON at position 15"
+      );
     });
 
     it("bubbles errors when unwrapping Responses", async () => {
@@ -206,11 +206,10 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 16/18 versus 20 output different errors here :/
-      let expected = process.version.startsWith("v18")
-        ? "Unexpected token } in JSON at position 15"
-        : "Unexpected non-whitespace character after JSON at position 15";
-      expect(t.router.state.errors?.root).toEqual(new SyntaxError(expected));
+      expect(t.router.state.errors?.root).toBeInstanceOf(SyntaxError);
+      expect(t.router.state.errors?.root.message).toContain(
+        "Unexpected non-whitespace character after JSON at position 15"
+      );
     });
 
     it("does not fetch unchanging layout data", async () => {

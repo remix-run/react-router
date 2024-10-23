@@ -89,12 +89,56 @@ export const routes: RouteConfig = flatRoutes();
 
 ### Step 6 - Rename components in entry files
 
-If you have an `entry.server.tsx` and/or an `entry.client.tsx` file in your application, you will need to rename the main components in this files:
+If you have an `entry.server.tsx` and/or an `entry.client.tsx` file in your application, you will need to update the main components in these files:
 
-| Entry File         | Remix v2 Component |     | React Router v7 Component |
-| ------------------ | ------------------ | --- | ------------------------- |
-| `entry.server.tsx` | `<RemixServer>`    | ➡️  | `<ServerRouter>`          |
-| `entry.client.stx` | `<RemixBrowser>`   | ➡️  | `<HydratedRouter>`        |
+```diff filename=app/entry.server.tsx
+- import { RemixServer } from "@remix-run/react";
++ import { ServerRouter } from "react-router";
+
+- <RemixServer context={remixContext} url={request.url} />,
++ <ServerRouter context={remixContext} url={request.url} />,
+```
+
+```diff filename=app/entry.client.tsx
+- import { RemixBrowser } from "@remix-run/react";
++ import { HydratedRouter } from "react-router/dom";
+
+hydrateRoot(
+  document,
+  <StrictMode>
+-   <RemixBrowser />
++   <HydratedRouter />
+  </StrictMode>,
+);
+```
+
+### Step 7 - Update types for `AppLoadContext`
+
+<docs-info>This is only applicable if you were using a custom server in Remix v2. If you were using `remix-serve` you can skip this step.</docs-info>
+
+If you were using `getLoadContext` in your Remix app, then you'll notice that the `LoaderFunctionArgs`/`ActionFunctionArgs` types now type the `context` parameter incorrectly (optional and typed as `any`). These types accept a generic for the `context` type but even that still leaves the property as optional because it does not exist in React Router SPA apps.
+
+The proper long term fix is to move to the new [`Route.LoaderArgs`][server-loaders]/[`Route.ActionArgs`][server-actions] types from the new typegen in React Router v7.
+
+However, the short-term solution to ease the upgrade is to use TypeScript's [module augmentation][ts-module-augmentation] feature to override the built in `LoaderFunctionArgs`/`ActionFunctionArgs` interfaces.
+
+You can do this with the following code in your `vite.config.ts`:
+
+```ts filename="vite.config.ts"
+// Your AppLoadContext used in v2
+interface AppLoadContext {
+  whatever: string;
+}
+
+// Tell v7 the type of the context and that it is non-optional
+declare module "react-router" {
+  interface LoaderFunctionArgs {
+    context: AppLoadContext;
+  }
+}
+```
+
+This should allow you to upgrade and ship your application on React Router v7, and then you can incrementally migrate routes to the new typegen approach.
 
 ## Known Prerelease Issues
 
@@ -127,3 +171,6 @@ let data = useLoaderData<typeof loader>();
 [routing]: ../start/routing
 [fs-routing]: ../misc/file-route-conventions
 [v7-changelog-types]: https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#typesafety-improvements
+[server-loaders]: ../start/data-loading#server-data-loading
+[server-actions]: ../start/actions#server-actions
+[ts-module-augmentation]: https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation

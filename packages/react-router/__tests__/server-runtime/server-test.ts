@@ -3,7 +3,6 @@
  */
 
 import type { StaticHandlerContext } from "react-router";
-import { json } from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
@@ -133,7 +132,7 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceLoader = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let build = mockServerBuild({
         root: {
@@ -163,10 +162,10 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceLoader = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let subResourceLoader = jest.fn(() => {
-        return json("sub");
+        return Response.json("sub");
       });
       let build = mockServerBuild({
         root: {
@@ -276,7 +275,7 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceAction = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let build = mockServerBuild({
         root: {
@@ -306,10 +305,10 @@ describe("shared server runtime", () => {
         return "root";
       });
       let resourceAction = jest.fn(() => {
-        return json("resource");
+        return Response.json("resource");
       });
       let subResourceAction = jest.fn(() => {
-        return json("sub");
+        return Response.json("sub");
       });
       let build = mockServerBuild({
         root: {

@@ -57,13 +57,10 @@ test.describe("route config", () => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
-        import { type RouteConfig } from "@react-router/dev/routes";
+        import { type RouteConfig, index } from "@react-router/dev/routes";
 
         export const routes: RouteConfig = [
-          {
-            file: "test-route-1.tsx",
-            index: true,
-          },
+          index("test-route-1.tsx"),
         ];
       `,
       "app/test-route-1.tsx": `
@@ -115,13 +112,10 @@ test.describe("route config", () => {
         export { routes } from "./actual-routes";
       `,
       "app/actual-routes.ts": js`
-        import { type RouteConfig } from "@react-router/dev/routes";
+        import { type RouteConfig, index } from "@react-router/dev/routes";
 
         export const routes: RouteConfig = [
-          {
-            file: "test-route-1.tsx",
-            index: true,
-          },
+          index("test-route-1.tsx"),
         ];
       `,
       "app/test-route-1.tsx": `
@@ -167,13 +161,10 @@ test.describe("route config", () => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
-        import { type RouteConfig } from "@react-router/dev/routes";
+        import { type RouteConfig, index } from "@react-router/dev/routes";
 
         export const routes: RouteConfig = [
-          {
-            file: "test-route-1.tsx",
-            index: true,
-          },
+          index("test-route-1.tsx"),
         ];
       `,
       "app/test-route-1.tsx": `
@@ -231,13 +222,10 @@ test.describe("route config", () => {
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
         import path from "node:path";
-        import { type RouteConfig } from "@react-router/dev/routes";
+        import { type RouteConfig, index } from "@react-router/dev/routes";
 
         export const routes: RouteConfig = [
-          {
-            file: path.resolve(import.meta.dirname, "test-route.tsx"),
-            index: true,
-          },
+          index(path.resolve(import.meta.dirname, "test-route.tsx")),
         ];
       `,
       "app/test-route.tsx": `

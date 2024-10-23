@@ -1,4 +1,3 @@
-import { json } from "../../lib/server-runtime/responses";
 import { createRequestHandler } from "../../lib/server-runtime/server";
 
 describe("createRequestHandler", () => {
@@ -9,7 +8,8 @@ describe("createRequestHandler", () => {
           id: "routes/test",
           path: "/test",
           module: {
-            loader: ({ request }) => json(request.headers.get("X-Foo")),
+            loader: ({ request }) =>
+              Response.json(request.headers.get("X-Foo")),
           } as any,
         },
       },

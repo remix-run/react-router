@@ -1,6 +1,7 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
+import { isResponse } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -13,7 +14,7 @@ import {
   redirect,
   data,
 } from "../../router/utils";
-import { createRequestInit, isResponse } from "./data";
+import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";

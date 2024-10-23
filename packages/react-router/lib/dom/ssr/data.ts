@@ -6,16 +6,6 @@ import type * as _ from "../global";
  */
 export type AppData = unknown;
 
-export function isResponse(value: any): value is Response {
-  return (
-    value != null &&
-    typeof value.status === "number" &&
-    typeof value.statusText === "string" &&
-    typeof value.headers === "object" &&
-    typeof value.body !== "undefined"
-  );
-}
-
 export async function createRequestInit(
   request: Request
 ): Promise<RequestInit> {

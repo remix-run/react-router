@@ -730,7 +730,7 @@ const validRequestMethodsArr: FormMethod[] = [
 ];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 
-const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+export const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 const redirectPreserveMethodStatusCodes = new Set([307, 308]);
 
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
@@ -997,13 +997,6 @@ export function createRouter(init: RouterInit): Router {
   // Store blocker functions in a separate Map outside of router state since
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
-
-  // Map of pending patchRoutesOnNavigation() promises (keyed by path/matches) so
-  // that we only kick them off once for a given combo
-  let pendingPatchRoutes = new Map<
-    string,
-    ReturnType<AgnosticPatchRoutesOnNavigationFunction>
-  >();
 
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
@@ -2750,7 +2743,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     for (let [routeId, result] of Object.entries(results)) {
-      if (isRedirectDataStrategyResultResult(result)) {
+      if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
         dataResults[routeId] = {
           type: ResultType.redirect,
@@ -2779,8 +2772,6 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
-    let currentMatches = state.matches;
-
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       "loader",
@@ -3861,7 +3852,7 @@ export function createStaticHandler(
           return;
         }
         let result = results[match.route.id];
-        if (isRedirectDataStrategyResultResult(result)) {
+        if (isRedirectDataStrategyResult(result)) {
           let response = result.result as Response;
           // Throw redirects and let the server handle them with an HTTP redirect
           throw normalizeRelativeRoutingRedirectResponse(
@@ -5349,10 +5340,6 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   return false;
 }
 
-function isPromise<T = unknown>(val: unknown): val is Promise<T> {
-  return typeof val === "object" && val != null && "then" in val;
-}
-
 function isDataStrategyResult(result: unknown): result is DataStrategyResult {
   return (
     result != null &&
@@ -5363,7 +5350,7 @@ function isDataStrategyResult(result: unknown): result is DataStrategyResult {
   );
 }
 
-function isRedirectDataStrategyResultResult(result: DataStrategyResult) {
+function isRedirectDataStrategyResult(result: DataStrategyResult) {
   return (
     isResponse(result.result) && redirectStatusCodes.has(result.result.status)
   );
@@ -5388,7 +5375,8 @@ export function isDataWithResponseInit(
     value.type === "DataWithResponseInit"
   );
 }
-function isResponse(value: any): value is Response {
+
+export function isResponse(value: any): value is Response {
   return (
     value != null &&
     typeof value.status === "number" &&
@@ -5398,14 +5386,16 @@ function isResponse(value: any): value is Response {
   );
 }
 
-function isRedirectResponse(result: any): result is Response {
-  if (!isResponse(result)) {
-    return false;
-  }
+export function isRedirectStatusCode(statusCode: number): boolean {
+  return redirectStatusCodes.has(statusCode);
+}
 
-  let status = result.status;
-  let location = result.headers.get("Location");
-  return status >= 300 && status <= 399 && location != null;
+export function isRedirectResponse(result: any): result is Response {
+  return (
+    isResponse(result) &&
+    isRedirectStatusCode(result.status) &&
+    result.headers.has("Location")
+  );
 }
 
 function isValidMethod(method: string): method is FormMethod {
