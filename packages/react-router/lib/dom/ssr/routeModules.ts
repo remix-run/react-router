@@ -9,10 +9,10 @@ import type {
   ShouldRevalidateFunction,
 } from "../../router/utils";
 
-import type { SerializeFrom } from "./components";
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
+import type { SerializeFrom } from "../../types";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
@@ -96,11 +96,13 @@ export interface LinksFunction {
 
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
-  data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
+  data: Loader extends LoaderFunction | ClientLoaderFunction
+    ? SerializeFrom<Loader>
+    : unknown;
   handle?: RouteHandle;
   params: DataRouteMatch["params"];
   meta: MetaDescriptor[];
@@ -108,10 +110,10 @@ export interface MetaMatch<
 }
 
 export type MetaMatches<
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -122,14 +124,16 @@ export type MetaMatches<
 >;
 
 export interface MetaArgs<
-  Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > {
   data:
-    | (Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown)
+    | (Loader extends LoaderFunction | ClientLoaderFunction
+        ? SerializeFrom<Loader>
+        : unknown)
     | undefined;
   params: Params;
   location: Location;
@@ -188,11 +192,11 @@ export interface MetaArgs<
  * ```
  */
 export interface MetaFunction<
-  Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }

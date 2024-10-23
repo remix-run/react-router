@@ -817,14 +817,14 @@ export function Routes({
   return useRoutes(createRoutesFromChildren(children), location);
 }
 
-export interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): React.ReactNode;
+export interface AwaitResolveRenderFunction<Resolve = any> {
+  (data: Awaited<Resolve>): React.ReactNode;
 }
 
 /**
  * @category Types
  */
-export interface AwaitProps {
+export interface AwaitProps<Resolve> {
   /**
   When using a function, the resolved value is provided as the parameter.
 
@@ -923,7 +923,7 @@ export interface AwaitProps {
   }
   ```
    */
-  resolve: TrackedPromise | any;
+  resolve: Resolve;
 }
 
 /**
@@ -967,7 +967,11 @@ function Book() {
 @category Components
 
 */
-export function Await({ children, errorElement, resolve }: AwaitProps) {
+export function Await<Resolve>({
+  children,
+  errorElement,
+  resolve,
+}: AwaitProps<Resolve>) {
   return (
     <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
       <ResolveAwait>{children}</ResolveAwait>
