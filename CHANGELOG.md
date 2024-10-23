@@ -285,7 +285,8 @@ The following APIs have been removed in React Router v7:
 
 React Router v7 requires the following minimum versions:
 
-- `node@18`
+- `node@20`
+  - React Router no longer provides an `installGlobals` method to [polyfill](https://reactrouter.com/dev/guides/deploying/custom-node#polyfilling-fetch) the `fetch` API
 - `react@18`, `react-dom@18`
 
 #### Adopted Future Flag Behaviors
@@ -693,11 +694,14 @@ async function fakeGetSlugsFromCms() {
 - Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
 - Allow returning `undefined` from loaders and actions ([#11680](https://github.com/remix-run/react-router/pull/11680), [#12057]([https://github.com/remix-run/react-router/pull/1205))
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
+- Remove the deprecated `json` utility ([#12146](https://github.com/remix-run/react-router/pull/12146))
+  - You can use [`Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static) if you still need to construct JSON responses in your app
 
 ### Major Changes (`@react-router/*`)
 
 - Remove `future.v3_singleFetch` flag ([#11522](https://github.com/remix-run/react-router/pull/11522))
-- Update minimum `node` version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+- Drop support for Node 16 and 18, update minimum Node version to 20 ([#11690](https://github.com/remix-run/react-router/pull/11690), [#12171](https://github.com/remix-run/react-router/pull/12171))
+  - Remove `installGlobals()` as this should no longer be necessary
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - No longer re-export APIs from `react-router` through different runtime/adapter packages ([#11702](https://github.com/remix-run/react-router/pull/11702))
 - For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs
@@ -712,6 +716,23 @@ async function fakeGetSlugsFromCms() {
     - `createSessionStorageFactory`
     - `createCookieSessionStorageFactory`
     - `createMemorySessionStorageFactory`
+- Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
+  - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
+  - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
+    - `Record<string, Route> -> Record<string, Route | undefined>`
+  - Removed `AppData` type in favor of inlining `unknown` in the few locations it was used
+  - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
+- Migrate Remix v2 type generics to React Router ([#12180](https://github.com/remix-run/react-router/pull/12180))
+  - These generics are provided for Remix v2 migration purposes
+  - These generics and the APIs they exist on should be considered informally deprecated in favor of the new `Route.*` types
+  - Anyone migrating from React Router v6 should probably not leverage these new generics and should migrate straight to the `Route.*` types
+  - For React Router v6 users, these generics are new and should not impact your app, with one exception
+    - `useFetcher` previously had an optional generic (used primarily by Remix v2) that expected the data type
+    - This has been updated in v7 to expect the type of the function that generates the data (i.e., `typeof loader`/`typeof action`)
+    - Therefore, you should update your usages:
+      - ❌ `useFetcher<LoaderData>()`
+      - ✅ `useFetcher<typeof loader>()`
+- Update `cookie` dependency to `^1.0.1` - please see the [release notes](https://github.com/jshttp/cookie/releases) for any breaking changes ([#12172](https://github.com/remix-run/react-router/pull/12172))
 - `@react-router/cloudflare` - For Remix consumers migrating to React Router, all exports from `@remix-run/cloudflare-pages` are now provided for React Router consumers in the `@react-router/cloudflare` package. There is no longer a separate package for Cloudflare Pages. ([#11801](https://github.com/remix-run/react-router/pull/11801))
 - `@react-router/cloudflare` - The `@remix-run/cloudflare-workers` package has been deprecated. Remix consumers migrating to React Router should use the `@react-router/cloudflare` package directly. For guidance on how to use `@react-router/cloudflare` within a Cloudflare Workers context, refer to the Cloudflare Workers template. ([#11801](https://github.com/remix-run/react-router/pull/11801))
 - `@react-router/dev` - For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareDevProxyVitePlugin` exports have been renamed and moved. ([#11904](https://github.com/remix-run/react-router/pull/11904))
@@ -747,6 +768,7 @@ async function fakeGetSlugsFromCms() {
 
 ### Patch Changes
 
+- Replace `substr` with `substring` ([#12080](https://github.com/remix-run/react-router/pull/12080))
 - `react-router` - Fix redirects returned from loaders/actions using `data()` ([#12021](https://github.com/remix-run/react-router/pull/12021))
 
 ### Changes by Package

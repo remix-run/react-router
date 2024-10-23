@@ -1,5 +1,18 @@
 # `@remix-run/node`
 
+## 7.0.0-pre.2
+
+### Major Changes
+
+- Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
+
+  - Remove `installGlobals()` as this should no longer be necessary
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.0.0-pre.2`
+
 ## 7.0.0-pre.1
 
 ### Patch Changes

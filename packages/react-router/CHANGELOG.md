@@ -1,5 +1,43 @@
 # `react-router`
 
+## 7.0.0-pre.2
+
+### Major Changes
+
+- Migrate Remix type generics to React Router ([#12180](https://github.com/remix-run/react-router/pull/12180))
+
+  - These generics are provided for Remix v2 migration purposes
+  - These generics and the APIs they exist on should be considered informally deprecated in favor of the new `Route.*` types
+  - Anyone migrating from React Router v6 should probably not leverage these new generics and should migrate straight to the `Route.*` types
+  - For React Router v6 users, these generics are new and should not impact your app, with one exception
+    - `useFetcher` previously had an optional generic (used primarily by Remix v2) that expected the data type
+    - This has been updated in v7 to expect the type of the function that generates the data (i.e., `typeof loader`/`typeof action`)
+    - Therefore, you should update your usages:
+      - ❌ `useFetcher<LoaderData>()`
+      - ✅ `useFetcher<typeof loader>()`
+
+- - Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
+    - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
+    - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
+      - `Record<string, Route> -> Record<string, Route | undefined>`
+    - Removed `AppData` type in favor of inlining `unknown` in the few locations it was used
+    - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
+- Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
+
+  - Remove `installGlobals()` as this should no longer be necessary
+
+- Update `cookie` dependency to `^1.0.1` - please see the [release notes](https://github.com/jshttp/cookie/releases) for any breaking changes ([#12172](https://github.com/remix-run/react-router/pull/12172))
+
+### Patch Changes
+
+- Replace `substr` with `substring` ([#12080](https://github.com/remix-run/react-router/pull/12080))
+- Remove the deprecated `json` utility ([#12146](https://github.com/remix-run/react-router/pull/12146))
+
+  - You can use [`Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static) if you still need to construct JSON responses in your app
+
+- Updated dependencies:
+  - `react-router@7.0.0-pre.2`
+
 ## 7.0.0-pre.1
 
 ### Patch Changes
