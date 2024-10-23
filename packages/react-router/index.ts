@@ -213,12 +213,6 @@ export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
 export { createCookie, isCookie } from "./lib/server-runtime/cookies";
 
-// TODO: (v7) Clean up code paths for these exports
-// export {
-//   json,
-//   redirect,
-//   redirectDocument,
-// } from "./lib/server-runtime/responses";
 export { createRequestHandler } from "./lib/server-runtime/server";
 export {
   createSession,
@@ -258,16 +252,6 @@ export type {
 } from "./lib/router/links";
 
 export type {
-  // TODO: (v7) Clean up code paths for these exports
-  // ActionFunction,
-  // ActionFunctionArgs,
-  // LinksFunction,
-  // LoaderFunction,
-  // LoaderFunctionArgs,
-  // ServerRuntimeMetaArgs,
-  // ServerRuntimeMetaDescriptor,
-  // ServerRuntimeMetaFunction,
-  DataFunctionArgs,
   HeadersArgs,
   HeadersFunction,
 } from "./lib/server-runtime/routeModules";

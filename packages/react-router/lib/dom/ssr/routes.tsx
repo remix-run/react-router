@@ -4,6 +4,7 @@ import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
+  RouteManifest,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
 } from "../../router/utils";
@@ -18,12 +19,7 @@ import invariant from "./invariant";
 import { useRouteError } from "../../hooks";
 import type { DataRouteObject } from "../../context";
 
-export interface RouteManifest<Route> {
-  [routeId: string]: Route;
-}
-
-// NOTE: make sure to change the Route in server-runtime if you change this
-interface Route {
+export interface Route {
   index?: boolean;
   caseSensitive?: boolean;
   id: string;
@@ -31,7 +27,6 @@ interface Route {
   path?: string;
 }
 
-// NOTE: make sure to change the EntryRoute in server-runtime if you change this
 export interface EntryRoute extends Route {
   hasAction: boolean;
   hasLoader: boolean;
@@ -50,11 +45,13 @@ function groupRoutesByParentId(manifest: RouteManifest<EntryRoute>) {
   let routes: Record<string, Omit<EntryRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;

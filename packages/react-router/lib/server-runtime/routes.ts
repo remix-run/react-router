@@ -2,14 +2,12 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
+  RouteManifest,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
-import type {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-  ServerRouteModule,
-} from "./routeModules";
+import type { Route } from "../dom/ssr/routes";
+import type { ServerRouteModule } from "./routeModules";
 import type {
   SingleFetchResult,
   SingleFetchResults,
@@ -17,33 +15,7 @@ import type {
 import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
 
-export interface RouteManifest<Route> {
-  [routeId: string]: Route;
-}
-
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
-
-// NOTE: make sure to change the Route in remix-react/react-router-dev if you change this
-export interface Route {
-  index?: boolean;
-  caseSensitive?: boolean;
-  id: string;
-  parentId?: string;
-  path?: string;
-}
-
-// NOTE: make sure to change the EntryRoute in react-router/react-router-dev if you change this
-export interface EntryRoute extends Route {
-  hasAction: boolean;
-  hasLoader: boolean;
-  hasClientAction: boolean;
-  hasClientLoader: boolean;
-  hasErrorBoundary: boolean;
-  imports?: string[];
-  css?: string[];
-  module: string;
-  parentId?: string;
-}
 
 export interface ServerRoute extends Route {
   children: ServerRoute[];
@@ -54,11 +26,13 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;
@@ -126,16 +100,13 @@ export function createStaticHandlerDataRoutes(
               invariant("data" in result, "Unable to process prerendered data");
               return result.data;
             }
-            let val = await callRouteHandler(
-              route.module.loader!,
-              args as LoaderFunctionArgs
-            );
+            let val = await callRouteHandler(route.module.loader!, args);
             return val;
           }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>
-            callRouteHandler(route.module.action!, args as ActionFunctionArgs)
+            callRouteHandler(route.module.action!, args)
         : undefined,
       handle: route.module.handle,
     };

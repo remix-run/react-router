@@ -366,7 +366,8 @@ function PrefetchPageLinksImpl({
     let routesParams = new Set<string>();
     let foundOptOutRoute = false;
     nextMatches.forEach((m) => {
-      if (!manifest.routes[m.route.id].hasLoader) {
+      let manifestRoute = manifest.routes[m.route.id];
+      if (!manifestRoute || !manifestRoute.hasLoader) {
         return;
       }
 
@@ -376,7 +377,7 @@ function PrefetchPageLinksImpl({
         routeModules[m.route.id]?.shouldRevalidate
       ) {
         foundOptOutRoute = true;
-      } else if (manifest.routes[m.route.id].hasClientLoader) {
+      } else if (manifestRoute.hasClientLoader) {
         foundOptOutRoute = true;
       } else {
         routesParams.add(m.route.id);
@@ -682,7 +683,7 @@ ${matches
   .map(
     (match, index) =>
       `import * as route${index} from ${JSON.stringify(
-        manifest.routes[match.route.id].module
+        manifest.routes[match.route.id]!.module
       )};`
   )
   .join("\n")}
@@ -728,7 +729,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
   let routePreloads = matches
     .map((match) => {
       let route = manifest.routes[match.route.id];
-      return (route.imports || []).concat([route.module]);
+      return route ? (route.imports || []).concat([route.module]) : [];
     })
     .flat(1);
 
