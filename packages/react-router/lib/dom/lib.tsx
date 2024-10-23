@@ -88,7 +88,7 @@ import {
   useResolvedPath,
   useRouteId,
 } from "../hooks";
-import { DeprecatedSerializeFrom } from "../types";
+import type { DeprecatedSerializeFrom } from "../types";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
