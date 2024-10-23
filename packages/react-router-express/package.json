@@ -32,7 +32,20 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsup"
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "*.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
   },
   "dependencies": {
     "@react-router/node": "workspace:*"
@@ -45,7 +58,8 @@
     "node-mocks-http": "^1.10.1",
     "supertest": "^6.3.3",
     "tsup": "^8.3.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
   },
   "peerDependencies": {
     "express": "^4.17.1",

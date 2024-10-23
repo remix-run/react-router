@@ -5,7 +5,7 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["index.ts", "dom-export.tsx", "lib/types.ts"];
+const entry = ["index.ts", "dom-export.ts", "lib/types.ts"];
 
 export default defineConfig([
   {

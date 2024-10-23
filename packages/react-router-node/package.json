@@ -51,7 +51,21 @@
     "./dist/install.mjs"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "sessions/**",
+        "*.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
   },
   "dependencies": {
     "@web3-storage/multipart-parser": "^1.0.0",
@@ -63,7 +77,8 @@
     "@types/source-map-support": "^0.5.4",
     "react-router": "workspace:*",
     "tsup": "^8.3.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
   },
   "peerDependencies": {
     "react-router": "workspace:*",

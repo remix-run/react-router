@@ -22,7 +22,7 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
-.turbo
+.wireit
 .eslintcache
 .tmp
 /.env

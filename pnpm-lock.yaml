@@ -208,9 +208,6 @@ importers:
       tslib:
         specifier: ^2.6.2
         version: 2.6.2
-      turbo:
-        specifier: ^2.2.3
-        version: 2.2.3
       type-fest:
         specifier: ^2.19.0
         version: 2.19.0
@@ -566,6 +563,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-architect:
     dependencies:
@@ -603,6 +603,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-cloudflare:
     devDependencies:
@@ -618,6 +621,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-dev:
     dependencies:
@@ -790,6 +796,9 @@ importers:
       vite:
         specifier: ^5.1.0
         version: 5.1.3(@types/node@18.19.26)(terser@5.15.0)
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
       wrangler:
         specifier: ^3.28.2
         version: 3.64.0(@cloudflare/workers-types@4.20240712.0)
@@ -812,6 +821,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-express:
     dependencies:
@@ -846,6 +858,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-fs-routes:
     dependencies:
@@ -862,6 +877,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-node:
     dependencies:
@@ -890,6 +908,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-remix-config-routes-adapter:
     devDependencies:
@@ -902,6 +923,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   packages/react-router-serve:
     dependencies:
@@ -948,6 +972,9 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
+      wireit:
+        specifier: 0.14.9
+        version: 0.14.9
 
   playground/compiler:
     dependencies:
@@ -3573,6 +3600,10 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
+  balanced-match@3.0.1:
+    resolution: {integrity: sha512-vjtV3hiLqYDNRoiAv0zC4QaGAMPomEoq83PRmYIofPswwZurCeWR5LByXm7SyoL0Zh5+2z0+HC7jG8gSZJUh0w==}
+    engines: {node: '>= 16'}
+
   basic-auth@2.0.1:
     resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
     engines: {node: '>= 0.8'}
@@ -3603,6 +3634,10 @@ packages:
 
   brace-expansion@2.0.1:
     resolution: {integrity: sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==}
+
+  brace-expansion@4.0.0:
+    resolution: {integrity: sha512-l/mOwLWs7BQIgOKrL46dIAbyCKvPV7YJPDspkuc88rHsZRlg3hptUGdU7Trv0VFP4d3xnSGBQrKu5ZvGB7UeIw==}
+    engines: {node: '>= 18'}
 
   braces@3.0.2:
     resolution: {integrity: sha512-b8um+L1RzM3WDSzvhm6gIz1yfTbBt6YTlcEKAvsmqCZZFw46z626lVj9j1yEPW33H5H+lBQpZMP1k8l+78Ha0A==}
@@ -6345,6 +6380,9 @@ packages:
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
+  proper-lockfile@4.1.2:
+    resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
+
   property-information@6.5.0:
     resolution: {integrity: sha512-PgTgs/BlvHxOu8QuEN7wi5A0OmXaBcHpmCSTehcs6Uuu9IkDIEo13Hy7n898RHfrQ49vKCoGeWZSaAK01nwVig==}
 
@@ -7090,42 +7128,8 @@ packages:
     engines: {node: '>=8.0.0'}
     hasBin: true
 
-  turbo-darwin-64@2.2.3:
-    resolution: {integrity: sha512-Rcm10CuMKQGcdIBS3R/9PMeuYnv6beYIHqfZFeKWVYEWH69sauj4INs83zKMTUiZJ3/hWGZ4jet9AOwhsssLyg==}
-    cpu: [x64]
-    os: [darwin]
-
-  turbo-darwin-arm64@2.2.3:
-    resolution: {integrity: sha512-+EIMHkuLFqUdJYsA3roj66t9+9IciCajgj+DVek+QezEdOJKcRxlvDOS2BUaeN8kEzVSsNiAGnoysFWYw4K0HA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  turbo-linux-64@2.2.3:
-    resolution: {integrity: sha512-UBhJCYnqtaeOBQLmLo8BAisWbc9v9daL9G8upLR+XGj6vuN/Nz6qUAhverN4Pyej1g4Nt1BhROnj6GLOPYyqxQ==}
-    cpu: [x64]
-    os: [linux]
-
-  turbo-linux-arm64@2.2.3:
-    resolution: {integrity: sha512-hJYT9dN06XCQ3jBka/EWvvAETnHRs3xuO/rb5bESmDfG+d9yQjeTMlhRXKrr4eyIMt6cLDt1LBfyi+6CQ+VAwQ==}
-    cpu: [arm64]
-    os: [linux]
-
   turbo-stream@2.4.0:
     resolution: {integrity: sha512-FHncC10WpBd2eOmGwpmQsWLDoK4cqsA/UT/GqNoaKOQnT8uzhtCbg3EoUDMvqpOSAI0S26mr0rkjzbOO6S3v1g==}
-
-  turbo-windows-64@2.2.3:
-    resolution: {integrity: sha512-NPrjacrZypMBF31b4HE4ROg4P3nhMBPHKS5WTpMwf7wydZ8uvdEHpESVNMOtqhlp857zbnKYgP+yJF30H3N2dQ==}
-    cpu: [x64]
-    os: [win32]
-
-  turbo-windows-arm64@2.2.3:
-    resolution: {integrity: sha512-fnNrYBCqn6zgKPKLHu4sOkihBI/+0oYFr075duRxqUZ+1aLWTAGfHZLgjVeLh3zR37CVzuerGIPWAEkNhkWEIw==}
-    cpu: [arm64]
-    os: [win32]
-
-  turbo@2.2.3:
-    resolution: {integrity: sha512-5lDvSqIxCYJ/BAd6rQGK/AzFRhBkbu4JHVMLmGh/hCb7U3CqSnr5Tjwfy9vc+/5wG2DJ6wttgAaA7MoCgvBKZQ==}
-    hasBin: true
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -7542,6 +7546,11 @@ packages:
   which@3.0.1:
     resolution: {integrity: sha512-XA1b62dzQzLfaEOSQFTCOd5KFf/1VSzZo7/7TUjnya6u0vGGKzU96UQBZTAThCb2j4/xjBAyii1OhRLJEivHvg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+    hasBin: true
+
+  wireit@0.14.9:
+    resolution: {integrity: sha512-hFc96BgyslfO1WGSzQqOVYd5N3TB+4u9w70L9GHR/T7SYjvFmeznkYMsRIjMLhPcVabCEYPW1vV66wmIVDs+dQ==}
+    engines: {node: '>=18.0.0'}
     hasBin: true
 
   workerd@1.20240614.0:
@@ -11339,6 +11348,8 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
+  balanced-match@3.0.1: {}
+
   basic-auth@2.0.1:
     dependencies:
       safe-buffer: 5.1.2
@@ -11380,6 +11391,10 @@ snapshots:
   brace-expansion@2.0.1:
     dependencies:
       balanced-match: 1.0.2
+
+  brace-expansion@4.0.0:
+    dependencies:
+      balanced-match: 3.0.1
 
   braces@3.0.2:
     dependencies:
@@ -15001,6 +15016,12 @@ snapshots:
       object-assign: 4.1.1
       react-is: 16.13.1
 
+  proper-lockfile@4.1.2:
+    dependencies:
+      graceful-fs: 4.2.11
+      retry: 0.12.0
+      signal-exit: 3.0.7
+
   property-information@6.5.0: {}
 
   proxy-addr@2.0.7:
@@ -15921,34 +15942,7 @@ snapshots:
       wcwidth: 1.0.1
       yargs: 17.7.2
 
-  turbo-darwin-64@2.2.3:
-    optional: true
-
-  turbo-darwin-arm64@2.2.3:
-    optional: true
-
-  turbo-linux-64@2.2.3:
-    optional: true
-
-  turbo-linux-arm64@2.2.3:
-    optional: true
-
   turbo-stream@2.4.0: {}
-
-  turbo-windows-64@2.2.3:
-    optional: true
-
-  turbo-windows-arm64@2.2.3:
-    optional: true
-
-  turbo@2.2.3:
-    optionalDependencies:
-      turbo-darwin-64: 2.2.3
-      turbo-darwin-arm64: 2.2.3
-      turbo-linux-64: 2.2.3
-      turbo-linux-arm64: 2.2.3
-      turbo-windows-64: 2.2.3
-      turbo-windows-arm64: 2.2.3
 
   type-check@0.4.0:
     dependencies:
@@ -16497,6 +16491,14 @@ snapshots:
   which@3.0.1:
     dependencies:
       isexe: 2.0.0
+
+  wireit@0.14.9:
+    dependencies:
+      brace-expansion: 4.0.0
+      chokidar: 3.6.0
+      fast-glob: 3.2.11
+      jsonc-parser: 3.2.1
+      proper-lockfile: 4.1.2
 
   workerd@1.20240614.0:
     optionalDependencies:
