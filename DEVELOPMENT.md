@@ -68,6 +68,7 @@ You may need to make changes to a pre-release prior to publishing a final stable
     - `git checkout main`
     - `git merge --no-ff release-next`
     - `git push origin main`
+    - _Note:_ For the `v7.0.0` stable release, there will probably be a bunch of conflicts on `docs/**/*.md` files here because we have made changes to v6 docs but in `dev` we removed a lot of those files in favor of auto-generated API docs. To resolve those conflicts, we should accept the deletion from the `release-next` branch.
   - Merge the `release-next` branch into `dev` **using a non-fast-forward merge** and push it up to GitHub
     - `git checkout dev`
     - `git merge --no-ff release-next`
@@ -90,11 +91,16 @@ After the `6.25.0` release, we branched off a `v6` branch for continued `6.x` wo
 - Starting the release process for 6.x is the same as outlined above, with a few changes:
   - Branch from `v6` instead of `dev`
   - Use the name `release-v6` to avoid collisions with the ongoing v7 (pre)releases using `release-next`
-  - Do not merge `main` into the `release-v6` branch
+  - **Do not** merge `main` into the `release-v6` branch
 - The process of the PRs and iterating on prereleases remains the same
 - Once the stable release is out:
   - Merge `release-v6` back to `v6` with a **Normal Merge**
+  - **Do not** merge `release-v6` to `main`
   - Copy the updated changelog entry for the `6.X.Y` version to `main`
+  - Copy the docs changes to `main` so they show up on the live docs site for v6
+    - `git checkout main`
+    - `git diff react-router@6.X.Y...react-router@6.X.Y docs/ > ./docs.patch`
+    - `git apply ./docs.patch`
   - The _code_ changes should already be in the `dev` branch but confirm that the commits in this release are all included in `dev` already:
     - I.e., https://github.com/remix-run/react-router/compare/react-router@6.26.1...react-router@6.26.2
     - If one or more are not, then you can manually bring them over by cherry-picking the commit (or re-doing the work)
