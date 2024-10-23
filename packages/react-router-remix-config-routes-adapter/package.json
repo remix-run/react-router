@@ -21,11 +21,26 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "tsc": "tsc"
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "*.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "typescript": "^5.1.6"
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
   },
   "peerDependencies": {
     "@react-router/dev": "workspace:^",

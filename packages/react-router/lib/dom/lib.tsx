@@ -38,7 +38,8 @@ import {
   stripBasename,
 } from "../router/utils";
 
-import "./global";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type * as _ from "./global";
 import type {
   SubmitOptions,
   URLSearchParamsInit,
@@ -108,7 +109,9 @@ const isBrowser =
 // Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
 // to detect and properly classify live websites as being built with React Router:
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
-const REACT_ROUTER_VERSION = "0";
+declare global {
+  const REACT_ROUTER_VERSION: string;
+}
 try {
   if (isBrowser) {
     window.__reactRouterVersion = REACT_ROUTER_VERSION;

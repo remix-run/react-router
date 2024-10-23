@@ -239,7 +239,11 @@ export async function loadRouteModule(
   }
 
   try {
-    let routeModule = await import(/* webpackIgnore: true */ route.module);
+    let routeModule = await import(
+      /* @vite-ignore */
+      /* webpackIgnore: true */
+      route.module
+    );
     routeModulesCache[route.id] = routeModule;
     return routeModule;
   } catch (error: unknown) {
@@ -262,7 +266,7 @@ export async function loadRouteModule(
       window.__reactRouterContext &&
       window.__reactRouterContext.isSpaMode &&
       // @ts-expect-error
-      typeof import.meta.hot !== "undefined"
+      import.meta.hot
     ) {
       // In SPA Mode (which implies vite) we don't want to perform a hard reload
       // on dev-time errors since it's a vite compilation error and a reload is

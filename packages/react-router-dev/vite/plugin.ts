@@ -5,7 +5,7 @@ import { type BinaryLike, createHash } from "node:crypto";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
-import babel from "@babel/core";
+import * as babel from "@babel/core";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
@@ -831,6 +831,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Pre-bundle router dependencies to avoid router duplicates.
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
+              "react-router/dom",
               // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
               ...(hasDependency("react-router-dom")
                 ? ["react-router-dom"]
@@ -849,6 +850,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
               // see description for `optimizeDeps.include`
               "react-router",
+              "react-router/dom",
               "react-router-dom",
             ],
           },
