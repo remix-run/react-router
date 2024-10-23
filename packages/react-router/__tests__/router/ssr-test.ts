@@ -14,7 +14,6 @@ import {
 import {
   ErrorResponseImpl,
   isRouteErrorResponse,
-  json,
   redirect,
 } from "../../lib/router/utils";
 import { createDeferred } from "./utils/data-router-setup";
@@ -60,8 +59,8 @@ describe("ssr", () => {
         {
           id: "json",
           path: "json",
-          loader: () => json({ type: "loader" }),
-          action: () => json({ type: "action" }),
+          loader: () => Response.json({ type: "loader" }),
+          action: () => Response.json({ type: "action" }),
         },
         {
           id: "deferred",
@@ -754,9 +753,6 @@ describe("ssr", () => {
       let e;
       try {
         let contextPromise = query(request);
-        // Note this works in Node 18+ - but it does not work if using the
-        // `abort-controller` polyfill which doesn't yet support a custom `reason`
-        // See: https://github.com/mysticatea/abort-controller/issues/33
         controller.abort(new Error("Oh no!"));
         // This should resolve even though we never resolved the loader
         await contextPromise;
@@ -1069,7 +1065,7 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
@@ -1090,12 +1086,12 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "CHILD" }, { status: 202 }),
+                loader: () => Response.json({ data: "CHILD" }, { status: 202 }),
                 action: () => {
                   throw new Error("💥");
                 },
@@ -1114,7 +1110,7 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
@@ -1135,12 +1131,12 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "CHILD" }, { status: 202 }),
+                loader: () => Response.json({ data: "CHILD" }, { status: 202 }),
                 action: () => {
                   throw new Response(null, { status: 400 });
                 },
@@ -1159,13 +1155,13 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "ROOT" }, { status: 202 }),
-                action: () => json({ data: "ROOT" }, { status: 203 }),
+                loader: () => Response.json({ data: "ROOT" }, { status: 202 }),
+                action: () => Response.json({ data: "ROOT" }, { status: 203 }),
               },
             ],
           },
@@ -1181,12 +1177,12 @@ describe("ssr", () => {
           {
             id: "root",
             path: "/",
-            loader: () => json({ data: "ROOT" }, { status: 201 }),
+            loader: () => Response.json({ data: "ROOT" }, { status: 201 }),
             children: [
               {
                 id: "child",
                 index: true,
-                loader: () => json({ data: "ROOT" }, { status: 202 }),
+                loader: () => Response.json({ data: "ROOT" }, { status: 202 }),
               },
             ],
           },
@@ -1944,7 +1940,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses returned from loaders", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -1959,7 +1955,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses returned from actions", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -1974,7 +1970,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses thrown from loaders", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -1994,7 +1990,7 @@ describe("ssr", () => {
     });
 
     it("should not unwrap responses thrown from actions", async () => {
-      let response = json({ key: "value" });
+      let response = Response.json({ key: "value" });
       let { queryRoute } = createStaticHandler([
         {
           id: "root",
@@ -2083,9 +2079,6 @@ describe("ssr", () => {
       let e;
       try {
         let statePromise = queryRoute(request, { routeId: "root" });
-        // Note this works in Node 18+ - but it does not work if using the
-        // `abort-controller` polyfill which doesn't yet support a custom `reason`
-        // See: https://github.com/mysticatea/abort-controller/issues/33
         controller.abort(new Error("Oh no!"));
         // This should resolve even though we never resolved the loader
         await statePromise;

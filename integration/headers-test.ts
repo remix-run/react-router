@@ -17,10 +17,9 @@ test.describe.skip("headers export", () => {
       {
         files: {
           "app/root.tsx": js`
-            import { json } from "react-router";
             import { Links, Meta, Outlet, Scripts } from "react-router";
 
-            export const loader = () => json({});
+            export const loader = () => ({});
 
             export default function Root() {
               return (
@@ -39,10 +38,10 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function loader() {
-              return json(null, {
+              return data(null, {
                 headers: {
                   "${ROOT_HEADER_KEY}": "${ROOT_HEADER_VALUE}"
                 }
@@ -61,10 +60,10 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/action.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function action() {
-              return json(null, {
+              return data(null, {
                 headers: {
                   "${ACTION_HKEY}": "${ACTION_HVALUE}"
                 }
@@ -159,11 +158,11 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/cookie.tsx": js`
-            import { json, Outlet } from "react-router";
+            import { data, Outlet } from "react-router";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("parent-throw")) {
-                throw json(null, { headers: { "Set-Cookie": "parent-thrown-cookie=true" } });
+                throw data(null, { headers: { "Set-Cookie": "parent-thrown-cookie=true" } });
               }
               return null
             };
@@ -178,13 +177,13 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/cookie.child.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("throw")) {
-                throw json(null, { headers: { "Set-Cookie": "thrown-cookie=true" } });
+                throw data(null, { headers: { "Set-Cookie": "thrown-cookie=true" } });
               }
-              return json(null, {
+              return data(null, {
                 headers: { "Set-Cookie": "normal-cookie=true" },
               });
             };
@@ -239,10 +238,10 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function loader() {
-              return json(null, {
+              return data(null, {
                 headers: {
                   "${HEADER_KEY}": "${HEADER_VALUE}"
                 }

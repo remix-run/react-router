@@ -143,22 +143,13 @@ function isBareModuleId(id) {
 
 const remixBabelConfig = {
   presets: [
-    ["@babel/preset-env", { targets: { node: "18" } }],
+    ["@babel/preset-env", { targets: { node: "20" } }],
     "@babel/preset-react",
     "@babel/preset-typescript",
   ],
   plugins: [
     "@babel/plugin-proposal-export-namespace-from",
     "@babel/plugin-proposal-optional-chaining",
-    // Strip console.debug calls unless REACT_ROUTER_DEBUG=true
-    ...(process.env.REACT_ROUTER_DEBUG === "true"
-      ? []
-      : [
-          [
-            "transform-remove-console",
-            { exclude: ["error", "warn", "log", "info"] },
-          ],
-        ]),
   ],
 };
 

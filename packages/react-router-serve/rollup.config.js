@@ -42,6 +42,7 @@ module.exports = function rollup() {
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
         nodeResolve({ extensions: [".ts"] }),
         copy({

@@ -1,5 +1,3 @@
-export { installGlobals } from "./globals";
-
 export { createFileSessionStorage } from "./sessions/fileStorage";
 
 export {

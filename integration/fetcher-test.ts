@@ -149,7 +149,6 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/fetcher-echo.tsx": js`
-          import { json } from "react-router";
           import { useFetcher } from "react-router";
 
           export async function action({ request }) {
@@ -164,13 +163,13 @@ test.describe("useFetcher", () => {
             } else {
               value = (await request.formData()).get('value');
             }
-            return json({ data: "ACTION (" + contentType + ") " + value })
+            return { data: "ACTION (" + contentType + ") " + value }
           }
 
           export async function loader({ request }) {
             await new Promise(r => setTimeout(r, 1000));
             let value = new URL(request.url).searchParams.get('value');
-            return json({ data: "LOADER " + value })
+            return { data: "LOADER " + value }
           }
 
           export default function Index() {

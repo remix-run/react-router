@@ -53,6 +53,7 @@ module.exports = function rollup() {
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
         copy({
           targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
@@ -90,6 +91,7 @@ module.exports = function rollup() {
           // eslint-disable-next-line no-restricted-globals
           tsconfig: path.join(__dirname, "tsconfig.dom.json"),
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -121,6 +123,7 @@ module.exports = function rollup() {
           // eslint-disable-next-line no-restricted-globals
           tsconfig: path.join(__dirname, "tsconfig.dom.json"),
           noEmitOnError: !WATCH,
+          noForceEmit: true,
         }),
       ],
     },

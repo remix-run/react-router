@@ -1,20 +1,18 @@
 import type { ComponentType, ReactElement } from "react";
 import type { Location } from "../../router/history";
 import type {
-  ActionFunction as RRActionFunction,
-  ActionFunctionArgs as RRActionFunctionArgs,
-  LoaderFunction as RRLoaderFunction,
-  LoaderFunctionArgs as RRLoaderFunctionArgs,
+  ActionFunction,
+  ActionFunctionArgs,
+  LoaderFunction,
+  LoaderFunctionArgs,
   Params,
   ShouldRevalidateFunction,
-  LoaderFunctionArgs,
 } from "../../router/utils";
 
-import type { SerializeFrom } from "./components";
-import type { AppData } from "./data";
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
+import type { SerializeFrom } from "../../types";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
@@ -38,13 +36,13 @@ export interface RouteModule {
  */
 export type ClientActionFunction = (
   args: ClientActionFunctionArgs
-) => ReturnType<RRActionFunction>;
+) => ReturnType<ActionFunction>;
 
 /**
  * Arguments passed to a route `clientAction` function
  */
-export type ClientActionFunctionArgs = RRActionFunctionArgs<undefined> & {
-  serverAction: <T = AppData>() => Promise<SerializeFrom<T>>;
+export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
+  serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
 /**
@@ -52,15 +50,15 @@ export type ClientActionFunctionArgs = RRActionFunctionArgs<undefined> & {
  */
 export type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs
-) => ReturnType<RRLoaderFunction>) & {
+) => ReturnType<LoaderFunction>) & {
   hydrate?: boolean;
 };
 
 /**
  * Arguments passed to a route `clientLoader` function
  */
-export type ClientLoaderFunctionArgs = RRLoaderFunctionArgs<undefined> & {
-  serverLoader: <T = AppData>() => Promise<SerializeFrom<T>>;
+export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
+  serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
 /**
@@ -96,26 +94,15 @@ export interface LinksFunction {
   (): LinkDescriptor[];
 }
 
-// Loose copy from @react-router/server-runtime to avoid circular imports
-type LoaderFunction = (
-  args: LoaderFunctionArgs & {
-    // Context is always provided in Remix, and typed for module augmentation support.
-    context: unknown;
-    // TODO: (v7) Make this non-optional once single-fetch is the default
-    response?: {
-      status: number | undefined;
-      headers: Headers;
-    };
-  }
-) => ReturnType<RRLoaderFunction>;
-
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
-  data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
+  data: Loader extends LoaderFunction | ClientLoaderFunction
+    ? SerializeFrom<Loader>
+    : unknown;
   handle?: RouteHandle;
   params: DataRouteMatch["params"];
   meta: MetaDescriptor[];
@@ -123,10 +110,10 @@ export interface MetaMatch<
 }
 
 export type MetaMatches<
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -137,14 +124,16 @@ export type MetaMatches<
 >;
 
 export interface MetaArgs<
-  Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > {
   data:
-    | (Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData)
+    | (Loader extends LoaderFunction | ClientLoaderFunction
+        ? SerializeFrom<Loader>
+        : unknown)
     | undefined;
   params: Params;
   location: Location;
@@ -152,12 +141,62 @@ export interface MetaArgs<
   error?: unknown;
 }
 
+/**
+ * A function that returns an array of data objects to use for rendering
+ * metadata HTML tags in a route. These tags are not rendered on descendant
+ * routes in the route hierarchy. In other words, they will only be rendered on
+ * the route in which they are exported.
+ *
+ * @param Loader - The type of the current route's loader function
+ * @param MatchLoaders - Mapping from a parent route's filepath to its loader
+ * function type
+ *
+ * Note that parent route filepaths are relative to the `app/` directory.
+ *
+ * For example, if this meta function is for `/sales/customers/$customerId`:
+ *
+ * ```ts
+ * // app/root.tsx
+ * const loader = () => ({ hello: "world" })
+ * export type Loader = typeof loader
+ *
+ * // app/routes/sales.tsx
+ * const loader = () => ({ salesCount: 1074 })
+ * export type Loader = typeof loader
+ *
+ * // app/routes/sales/customers.tsx
+ * const loader = () => ({ customerCount: 74 })
+ * export type Loader = typeof loader
+ *
+ * // app/routes/sales/customers/$customersId.tsx
+ * import type { Loader as RootLoader } from "../../../root"
+ * import type { Loader as SalesLoader } from "../../sales"
+ * import type { Loader as CustomersLoader } from "../../sales/customers"
+ *
+ * const loader = () => ({ name: "Customer name" })
+ *
+ * const meta: MetaFunction<typeof loader, {
+ *  "root": RootLoader,
+ *  "routes/sales": SalesLoader,
+ *  "routes/sales/customers": CustomersLoader,
+ * }> = ({ data, matches }) => {
+ *   const { name } = data
+ *   //      ^? string
+ *   const { customerCount } = matches.find((match) => match.id === "routes/sales/customers").data
+ *   //      ^? number
+ *   const { salesCount } = matches.find((match) => match.id === "routes/sales").data
+ *   //      ^? number
+ *   const { hello } = matches.find((match) => match.id === "root").data
+ *   //      ^? "world"
+ * }
+ * ```
+ */
 export interface MetaFunction<
-  Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<
     string,
-    unknown
-  >
+    LoaderFunction | ClientLoaderFunction | unknown
+  > = Record<string, unknown>
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }

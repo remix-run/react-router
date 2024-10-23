@@ -1,6 +1,5 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
-import { json } from "../../lib/router/utils";
 
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
@@ -210,7 +209,7 @@ describe("lazily loaded route modules", () => {
             await tick();
             return {
               async loader() {
-                return json({ value: "LAZY LOADER" });
+                return Response.json({ value: "LAZY LOADER" });
               },
             };
           },
@@ -234,7 +233,7 @@ describe("lazily loaded route modules", () => {
             await tick();
             return {
               async loader() {
-                return json({ value: "LAZY LOADER" });
+                return Response.json({ value: "LAZY LOADER" });
               },
             };
           },
@@ -429,7 +428,7 @@ describe("lazily loaded route modules", () => {
       let consoleWarn = jest.spyOn(console, "warn");
       let lazyLoaderStub = jest.fn(async () => {
         await tick();
-        return json({ value: "LAZY LOADER" });
+        return Response.json({ value: "LAZY LOADER" });
       });
 
       let { query } = createStaticHandler([
@@ -438,7 +437,7 @@ describe("lazily loaded route modules", () => {
           path: "/lazy",
           loader: async () => {
             await tick();
-            return json({ value: "STATIC LOADER" });
+            return Response.json({ value: "STATIC LOADER" });
           },
           lazy: async () => {
             await tick();
@@ -470,7 +469,7 @@ describe("lazily loaded route modules", () => {
       let consoleWarn = jest.spyOn(console, "warn");
       let lazyLoaderStub = jest.fn(async () => {
         await tick();
-        return json({ value: "LAZY LOADER" });
+        return Response.json({ value: "LAZY LOADER" });
       });
 
       let { query } = createStaticHandler([
@@ -479,7 +478,7 @@ describe("lazily loaded route modules", () => {
           path: "/lazy",
           loader: async () => {
             await tick();
-            return json({ value: "STATIC LOADER" });
+            return Response.json({ value: "STATIC LOADER" });
           },
           lazy: async () => {
             await tick();

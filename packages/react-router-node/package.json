@@ -16,13 +16,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    },
-    "./install": {
-      "types": "./dist/install.d.ts",
-      "import": "./dist/install.mjs",
-      "require": "./dist/install.js"
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -54,7 +48,7 @@
     }
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "files": [
     "dist/",

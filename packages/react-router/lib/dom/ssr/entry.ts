@@ -1,14 +1,15 @@
 import type { StaticHandlerContext } from "../../router/router";
 
-import type { RouteManifest, EntryRoute } from "./routes";
+import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
-
-// Object passed to RemixContext.Provider
+import type { RouteManifest } from "../../router/utils";
 
 type SerializedError = {
   message: string;
   stack?: string;
 };
+
+// Object passed to RemixContext.Provider
 export interface FrameworkContextObject {
   manifest: AssetsManifest;
   routeModules: RouteModules;

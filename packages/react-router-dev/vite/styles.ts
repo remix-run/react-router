@@ -171,14 +171,16 @@ const findDeps = async (
 };
 
 const groupRoutesByParentId = (manifest: ServerRouteManifest) => {
-  let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
+  let routes: Record<string, NonNullable<ServerRoute>[]> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;
@@ -189,11 +191,8 @@ const groupRoutesByParentId = (manifest: ServerRouteManifest) => {
 const createRoutes = (
   manifest: ServerRouteManifest,
   parentId: string = "",
-  routesByParentId: Record<
-    string,
-    Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
-): ServerRoute[] => {
+  routesByParentId = groupRoutesByParentId(manifest)
+): NonNullable<ServerRoute>[] => {
   return (routesByParentId[parentId] || []).map((route) => ({
     ...route,
     children: createRoutes(manifest, route.id, routesByParentId),

@@ -5,7 +5,10 @@ export function createEntryRouteModules(
   manifest: ServerRouteManifest
 ): RouteModules<EntryRouteModule> {
   return Object.keys(manifest).reduce((memo, routeId) => {
-    memo[routeId] = manifest[routeId].module;
+    let route = manifest[routeId];
+    if (route) {
+      memo[routeId] = route.module;
+    }
     return memo;
   }, {} as RouteModules<EntryRouteModule>);
 }

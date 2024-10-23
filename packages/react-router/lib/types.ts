@@ -1,7 +1,9 @@
+import type {
+  ClientLoaderFunctionArgs,
+  ClientActionFunctionArgs,
+} from "./dom/ssr/routeModules";
 import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
-import type { Jsonify } from "./server-runtime/jsonify";
-import type { TypedResponse } from "./server-runtime/responses";
 import type { Serializable } from "./server-runtime/single-fetch";
 
 export type Expect<T extends true> = T;
@@ -33,13 +35,11 @@ type DataFrom<T> =
 
 // prettier-ignore
 type ClientData<T> =
-  T extends TypedResponse<infer U> ? Jsonify<U> :
   T extends DataWithResponseInit<infer U> ? U :
   T
 
 // prettier-ignore
 type ServerData<T> =
-  T extends TypedResponse<infer U> ? Jsonify<U> :
   T extends DataWithResponseInit<infer U> ? Serialize<U> :
   Serialize<T>
 
@@ -88,10 +88,13 @@ type _CreateActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
-type DataFunctionArgs<Params> = {
+type ClientDataFunctionArgs<Params> = {
   request: Request;
   params: Params;
-  context?: AppLoadContext;
+};
+
+type ServerDataFunctionArgs<Params> = ClientDataFunctionArgs<Params> & {
+  context: AppLoadContext;
 };
 
 // prettier-ignore
@@ -122,21 +125,32 @@ type Serialize<T> =
 
   undefined
 
-export type CreateServerLoaderArgs<Params> = DataFunctionArgs<Params>;
+/**
+ * @deprecated Generics on data APIs such as `useLoaderData`, `useActionData`,
+ * `meta`, etc. are deprecated in favor of the `Route.*` types generated via
+ * `react-router typegen`
+ */
+export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
+  ? Args extends [ClientLoaderFunctionArgs | ClientActionFunctionArgs]
+    ? ClientData<DataFrom<T>>
+    : ServerData<DataFrom<T>>
+  : T;
+
+export type CreateServerLoaderArgs<Params> = ServerDataFunctionArgs<Params>;
 
 export type CreateClientLoaderArgs<
   Params,
   T extends RouteModule
-> = DataFunctionArgs<Params> & {
+> = ClientDataFunctionArgs<Params> & {
   serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
 };
 
-export type CreateServerActionArgs<Params> = DataFunctionArgs<Params>;
+export type CreateServerActionArgs<Params> = ServerDataFunctionArgs<Params>;
 
 export type CreateClientActionArgs<
   Params,
   T extends RouteModule
-> = DataFunctionArgs<Params> & {
+> = ClientDataFunctionArgs<Params> & {
   serverAction: () => Promise<ServerDataFrom<T["action"]>>;
 };
 
@@ -174,11 +188,12 @@ type __tests = [
       Pretty<
         ServerDataFrom<
           () =>
-            | TypedResponse<{ json: string; b: Date; c: () => boolean }>
+            | { json: string; b: Date; c: () => boolean }
             | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
         >
       >,
-      { json: string; b: string } | { data: string; b: Date; c: undefined }
+      | { json: string; b: Date; c: undefined }
+      | { data: string; b: Date; c: undefined }
     >
   >,
 
@@ -195,11 +210,12 @@ type __tests = [
       Pretty<
         ClientDataFrom<
           () =>
-            | TypedResponse<{ json: string; b: Date; c: () => boolean }>
+            | { json: string; b: Date; c: () => boolean }
             | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
         >
       >,
-      { json: string; b: string } | { data: string; b: Date; c: () => boolean }
+      | { json: string; b: Date; c: () => boolean }
+      | { data: string; b: Date; c: () => boolean }
     >
   >,
 
