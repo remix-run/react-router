@@ -48,7 +48,7 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { DeprecatedSerializeFrom } from "./types";
+import type { SerializeFrom } from "./types";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -1083,10 +1083,10 @@ export function useMatches(): UIMatch[] {
 
   @category Hooks
  */
-export function useLoaderData<T = any>(): DeprecatedSerializeFrom<T> {
+export function useLoaderData<T = any>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-  return state.loaderData[routeId] as DeprecatedSerializeFrom<T>;
+  return state.loaderData[routeId] as SerializeFrom<T>;
 }
 
 /**
@@ -1118,9 +1118,9 @@ export function useLoaderData<T = any>(): DeprecatedSerializeFrom<T> {
  */
 export function useRouteLoaderData<T = any>(
   routeId: string
-): DeprecatedSerializeFrom<T> | undefined {
+): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
-  return state.loaderData[routeId] as DeprecatedSerializeFrom<T> | undefined;
+  return state.loaderData[routeId] as SerializeFrom<T> | undefined;
 }
 
 /**
@@ -1148,13 +1148,11 @@ export function useRouteLoaderData<T = any>(
 
   @category Hooks
  */
-export function useActionData<T = any>():
-  | DeprecatedSerializeFrom<T>
-  | undefined {
+export function useActionData<T = any>(): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
   return (state.actionData ? state.actionData[routeId] : undefined) as
-    | DeprecatedSerializeFrom<T>
+    | SerializeFrom<T>
     | undefined;
 }
 

@@ -88,7 +88,7 @@ import {
   useResolvedPath,
   useRouteId,
 } from "../hooks";
-import type { DeprecatedSerializeFrom } from "../types";
+import type { SerializeFrom } from "../types";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -1814,7 +1814,7 @@ export function useFetcher<T = any>({
     ```
    */
   key?: string;
-} = {}): FetcherWithComponents<DeprecatedSerializeFrom<T>> {
+} = {}): FetcherWithComponents<SerializeFrom<T>> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetcherData = React.useContext(FetchersContext);

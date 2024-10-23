@@ -12,7 +12,7 @@ import type {
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
-import type { DeprecatedSerializeFrom } from "../../types";
+import type { SerializeFrom } from "../../types";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
@@ -42,7 +42,7 @@ export type ClientActionFunction = (
  * Arguments passed to a route `clientAction` function
  */
 export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
-  serverAction: <T = unknown>() => Promise<DeprecatedSerializeFrom<T>>;
+  serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
 /**
@@ -58,7 +58,7 @@ export type ClientLoaderFunction = ((
  * Arguments passed to a route `clientLoader` function
  */
 export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
-  serverLoader: <T = unknown>() => Promise<DeprecatedSerializeFrom<T>>;
+  serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
 /**
@@ -101,7 +101,7 @@ export interface MetaMatch<
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
   data: Loader extends LoaderFunction | ClientLoaderFunction
-    ? DeprecatedSerializeFrom<Loader>
+    ? SerializeFrom<Loader>
     : unknown;
   handle?: RouteHandle;
   params: DataRouteMatch["params"];
@@ -132,7 +132,7 @@ export interface MetaArgs<
 > {
   data:
     | (Loader extends LoaderFunction | ClientLoaderFunction
-        ? DeprecatedSerializeFrom<Loader>
+        ? SerializeFrom<Loader>
         : unknown)
     | undefined;
   params: Params;

@@ -130,9 +130,7 @@ type Serialize<T> =
  * `meta`, etc. are deprecated in favor of the `Route.*` types generated via
  * `react-router typegen`
  */
-export type DeprecatedSerializeFrom<T> = T extends (
-  ...args: infer Args
-) => unknown
+export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
   ? Args extends [ClientLoaderFunctionArgs | ClientActionFunctionArgs]
     ? ClientData<DataFrom<T>>
     : ServerData<DataFrom<T>>
