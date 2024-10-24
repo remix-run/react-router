@@ -373,7 +373,7 @@ export let getServerBuildDirectory = (ctx: ReactRouterPluginContext) =>
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
   path.join(reactRouterConfig.buildDirectory, "client");
 
-let defaultEntriesDir = path.resolve(__dirname, "..", "config", "defaults");
+let defaultEntriesDir = path.resolve(__dirname, "config", "defaults");
 let defaultEntries = fse
   .readdirSync(defaultEntriesDir)
   .map((filename) => path.join(defaultEntriesDir, filename));

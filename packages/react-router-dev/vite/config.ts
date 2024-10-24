@@ -529,7 +529,7 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
+  let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
   let userEntryServerFile = findEntry(appDirectory, "entry.server");

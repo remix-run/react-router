@@ -117,7 +117,7 @@ export async function generateEntry(
     return;
   }
 
-  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
+  let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
 
   let defaultEntryServer = path.resolve(
