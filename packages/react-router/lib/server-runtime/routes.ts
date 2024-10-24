@@ -79,9 +79,12 @@ export function createStaticHandlerDataRoutes(
             // If we're prerendering, use the data passed in from prerendering
             // the .data route so we dom't call loaders twice
             if (args.request.headers.has("X-React-Router-Prerender-Data")) {
-              let encoded = args.request.headers.get(
+              const preRenderedData = args.request.headers.get(
                 "X-React-Router-Prerender-Data"
               );
+              let encoded = preRenderedData
+                ? decodeURI(preRenderedData)
+                : preRenderedData;
               invariant(encoded, "Missing prerendered data for route");
               let uint8array = new TextEncoder().encode(encoded);
               let stream = new ReadableStream({
