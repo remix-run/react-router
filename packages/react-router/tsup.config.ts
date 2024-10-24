@@ -14,9 +14,6 @@ export default defineConfig([
     format: ["cjs"],
     outDir: "dist",
     dts: true,
-    external: [
-      /*.*/
-    ],
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },
@@ -31,9 +28,6 @@ export default defineConfig([
     format: ["esm"],
     outDir: "dist",
     dts: true,
-    external: [
-      /*.*/
-    ],
     banner: {
       js: createBanner(pkg.name, pkg.version),
     },
