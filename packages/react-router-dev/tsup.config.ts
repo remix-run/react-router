@@ -15,7 +15,7 @@ const entry = [
   "typescript/plugin.ts",
 ];
 
-const external = ["./static/refresh-utils.cjs"];
+const external = ["./static/refresh-utils.cjs", /^(?!\.)/];
 
 export default defineConfig([
   {

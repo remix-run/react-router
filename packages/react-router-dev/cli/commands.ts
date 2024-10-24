@@ -117,7 +117,12 @@ export async function generateEntry(
     return;
   }
 
-  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
+  let defaultsDirectory = path.resolve(
+    path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "defaults"
+  );
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
 
   let defaultEntryServer = path.resolve(
