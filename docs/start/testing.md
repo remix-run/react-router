@@ -5,7 +5,7 @@ order: 9
 
 # Testing
 
-When components use things like `useLoaderData`, `<Link>`, etc, they are required to be rendered in context of a React Router app. The `createStub` function creates that context to test components in isolation.
+When components use things like `useLoaderData`, `<Link>`, etc, they are required to be rendered in context of a React Router app. The `createRoutesStub` function creates that context to test components in isolation.
 
 Consider a login form component that relies on `useActionData`
 
@@ -32,10 +32,11 @@ export function LoginForm() {
 }
 ```
 
-We can test this component with `createStub`. It takes an array of objects that resemble route modules with loaders, actions, and components.
+We can test this component with `createRoutesStub`. It takes an array of objects that resemble route modules with loaders, actions, and components.
 
 ```tsx
-import { createStub, route } from "react-router/testing";
+import { route } from "@react-router/dev/routes";
+import { createRoutesStub } from "react-router";
 import * as Test from "@testing-library/react";
 import { LoginForm } from "./LoginForm";
 
@@ -43,7 +44,7 @@ test("LoginForm renders error messages", async () => {
   const USER_MESSAGE = "Username is required";
   const PASSWORD_MESSAGE = "Password is required";
 
-  const Stub = createStub([
+  const Stub = createRoutesStub([
     route("/login", {
       Component: LoginForm,
       action() {
