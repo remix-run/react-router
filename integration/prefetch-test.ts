@@ -31,8 +31,8 @@ function fixtureFactory(mode: PrefetchType): FixtureInit {
 
         export default function Root() {
           const styles =
-          'a:hover { color: red; } a:hover:after { content: " (hovered)"; }' +
-          'a:focus { color: green; } a:focus:after { content: " (focused)"; }';
+            'a:hover { color: red; } a:hover:after { content: " (hovered)"; }' +
+            'a:focus { color: green; } a:focus:after { content: " (focused)"; }';
 
           return (
             <html lang="en">
@@ -132,23 +132,36 @@ test.describe("prefetch=render", () => {
   test("adds prefetch tags on hydration", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
+
     // Both data and asset fetch for /with-loader
     await page.waitForSelector(
       "#nav link[rel='prefetch'][as='fetch'][href='/with-loader.data']",
       { state: "attached" }
     );
     await page.waitForSelector(
-      "#nav link[rel='modulepreload'][href^='/build/routes/with-loader-']",
+      "#nav link[rel='modulepreload'][href^='/assets/with-loader-']",
       { state: "attached" }
     );
+
     // Only asset fetch for /without-loader
     await page.waitForSelector(
-      "#nav link[rel='modulepreload'][href^='/build/routes/without-loader-']",
+      "#nav link[rel='modulepreload'][href^='/assets/without-loader-']",
+      { state: "attached" }
+    );
+
+    // These 2 are common and duped for both - but they've already loaded on
+    // page load so they don't trigger network requests
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+      { state: "attached" }
+    );
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
       { state: "attached" }
     );
 
     // Ensure no other links in the #nav element
-    expect(await page.locator("#nav link").count()).toBe(3);
+    expect(await page.locator("#nav link").count()).toBe(7);
   });
 });
 
@@ -187,17 +200,33 @@ test.describe("prefetch=intent (hover)", () => {
     );
     // Check href prefix due to hashed filenames
     await page.waitForSelector(
-      "#nav link[rel='modulepreload'][href^='/build/routes/with-loader-']",
+      "#nav link[rel='modulepreload'][href^='/assets/with-loader-']",
       { state: "attached" }
     );
-    expect(await page.locator("#nav link").count()).toBe(2);
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+      { state: "attached" }
+    );
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+      { state: "attached" }
+    );
+    expect(await page.locator("#nav link").count()).toBe(4);
 
     await page.hover("a[href='/without-loader']");
     await page.waitForSelector(
-      "#nav link[rel='modulepreload'][href^='/build/routes/without-loader-']",
+      "#nav link[rel='modulepreload'][href^='/assets/without-loader-']",
       { state: "attached" }
     );
-    expect(await page.locator("#nav link").count()).toBe(1);
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+      { state: "attached" }
+    );
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+      { state: "attached" }
+    );
+    expect(await page.locator("#nav link").count()).toBe(3);
   });
 
   test("removes prefetch tags after navigating to/from the page", async ({
@@ -209,7 +238,7 @@ test.describe("prefetch=intent (hover)", () => {
     // Links added on hover
     await page.hover("a[href='/with-loader']");
     await page.waitForSelector("#nav link", { state: "attached" });
-    expect(await page.locator("#nav link").count()).toBe(2);
+    expect(await page.locator("#nav link").count()).toBe(4);
 
     // Links removed upon navigating to the page
     await page.click("a[href='/with-loader']");
@@ -259,19 +288,34 @@ test.describe("prefetch=intent (focus)", () => {
       "#nav link[rel='prefetch'][as='fetch'][href='/with-loader.data']",
       { state: "attached" }
     );
-    // Check href prefix due to hashed filenames
     await page.waitForSelector(
-      "#nav link[rel='modulepreload'][href^='/build/routes/with-loader-']",
+      "#nav link[rel='modulepreload'][href^='/assets/with-loader-']",
       { state: "attached" }
     );
-    expect(await page.locator("#nav link").count()).toBe(2);
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+      { state: "attached" }
+    );
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+      { state: "attached" }
+    );
+    expect(await page.locator("#nav link").count()).toBe(4);
 
     await page.focus("a[href='/without-loader']");
     await page.waitForSelector(
-      "#nav link[rel='modulepreload'][href^='/build/routes/without-loader-']",
+      "#nav link[rel='modulepreload'][href^='/assets/without-loader-']",
       { state: "attached" }
     );
-    expect(await page.locator("#nav link").count()).toBe(1);
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+      { state: "attached" }
+    );
+    await page.waitForSelector(
+      "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+      { state: "attached" }
+    );
+    expect(await page.locator("#nav link").count()).toBe(3);
   });
 });
 
@@ -333,7 +377,7 @@ test.describe("prefetch=viewport", () => {
       { state: "attached" }
     );
     await page.waitForSelector(
-      "div link[rel='modulepreload'][href^='/build/routes/test-']",
+      "div link[rel='modulepreload'][href^='/assets/test-']",
       { state: "attached" }
     );
 
@@ -358,7 +402,7 @@ test.describe("other scenarios", () => {
       files: {
         "app/root.tsx": js`
           import { Links, Meta, Scripts, useFetcher } from "react-router";
-          import globalCss from "./global.css";
+          import globalCss from "./global.css?url";
 
           export function links() {
             return [{ rel: "stylesheet", href: globalCss }];
@@ -446,8 +490,8 @@ test.describe("other scenarios", () => {
 
           export default function Root() {
             const styles =
-            'a:hover { color: red; } a:hover:after { content: " (hovered)"; }' +
-            'a:focus { color: green; } a:focus:after { content: " (focused)"; }';
+              'a:hover { color: red; } a:hover:after { content: " (hovered)"; }' +
+              'a:focus { color: green; } a:focus:after { content: " (focused)"; }';
 
             return (
               <html lang="en">
@@ -493,7 +537,7 @@ test.describe("other scenarios", () => {
 
         "app/routes/with-nested-links.tsx": js`
           import { Outlet } from "react-router";
-          import globalCss from "../global.css";
+          import globalCss from "../global.css?url";
 
           export function links() {
             return [
@@ -516,8 +560,8 @@ test.describe("other scenarios", () => {
         `,
 
         "app/routes/with-nested-links.nested.tsx": js`
-          import globalCss from '../global.css';
-          import localCss from '../local.css';
+          import globalCss from '../global.css?url';
+          import localCss from '../local.css?url';
 
           export function links() {
             return [
