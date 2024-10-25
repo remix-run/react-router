@@ -1693,8 +1693,7 @@ export class ErrorResponseImpl implements ErrorResponse {
 }
 
 /**
- * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response thrown from an action/loader
+ * Check if the given error is an ErrorResponse thrown from an action/loader
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (
