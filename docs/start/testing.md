@@ -35,7 +35,6 @@ export function LoginForm() {
 We can test this component with `createRoutesStub`. It takes an array of objects that resemble route modules with loaders, actions, and components.
 
 ```tsx
-import { route } from "@react-router/dev/routes";
 import { createRoutesStub } from "react-router";
 import * as Test from "@testing-library/react";
 import { LoginForm } from "./LoginForm";
@@ -45,7 +44,8 @@ test("LoginForm renders error messages", async () => {
   const PASSWORD_MESSAGE = "Password is required";
 
   const Stub = createRoutesStub([
-    route("/login", {
+    {
+      path: "/login",
       Component: LoginForm,
       action() {
         return {
