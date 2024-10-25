@@ -180,6 +180,10 @@ function parseParams(urlpath: string) {
     .filter((s) => s.startsWith(":"))
     .forEach((param) => {
       param = param.slice(1); // omit leading `:`
+      // If there was an escaped dot, we need to remove it (eg $lang[.]xml => lang.xml => lang)
+      if (param.includes(".")) {
+        param = param.split(".")[0];
+      }
       let isOptional = param.endsWith("?");
       if (isOptional) {
         param = param.slice(0, -1); // omit trailing `?`
