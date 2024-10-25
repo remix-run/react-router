@@ -316,7 +316,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = "node-template";
+  let template = "vite-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -324,25 +324,6 @@ export async function createFixtureProject(
 
   await fse.ensureDir(projectDir);
   await fse.copy(integrationTemplateDir, projectDir);
-  // let reactRouterDev = path.join(
-  //   projectDir,
-  //   "node_modules/@react-router/dev/dist/cli/index.js"
-  // );
-  // await fse.chmod(reactRouterDev, 0o755);
-  // await fse.ensureSymlink(
-  //   reactRouterDev,
-  //   path.join(projectDir, "node_modules/.bin/rr")
-  // );
-  //
-  // let reactRouterServe = path.join(
-  //   projectDir,
-  //   "node_modules/@react-router/serve/dist/cli.js"
-  // );
-  // await fse.chmod(reactRouterServe, 0o755);
-  // await fse.ensureSymlink(
-  //   reactRouterServe,
-  //   path.join(projectDir, "node_modules/.bin/react-router-serve")
-  // );
 
   let hasViteConfig = Object.keys(init.files ?? {}).some((filename) =>
     filename.startsWith("vite.config.")
