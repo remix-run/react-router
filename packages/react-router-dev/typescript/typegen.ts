@@ -28,7 +28,7 @@ function getDirectory(ctx: Context) {
 export function getPath(ctx: Context, route: RouteManifestEntry): string {
   return Path.join(
     getDirectory(ctx),
-    "app",
+    Path.basename(ctx.appDirectory),
     Path.dirname(route.file),
     "+types." + Pathe.filename(route.file) + ".d.ts"
   );
