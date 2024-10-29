@@ -1,4 +1,3 @@
-
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 
