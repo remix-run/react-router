@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.0.0-pre.4
+
+### Patch Changes
+
+- [REMOVE] Changeset to bump pre.4 release ([`8a5cf097f`](https://github.com/remix-run/react-router/commit/8a5cf097f98f12e32d42e85ecd87523b72a85195))
+
 ## 7.0.0-pre.3
 
 ## 7.0.0-pre.2
