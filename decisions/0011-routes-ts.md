@@ -92,4 +92,4 @@ As of the creation of this decision document, the only available build context i
 
 ### Remix's `routes` option has an adapter for easy migration
 
-Some Remix consumers used the `routes` option to define config-based routes or use community file system routing conventions. To ease the migration, the `@react-router/remix-config-routes-adapter` package provides a `remixConfigRoutes` function that accepts Remix's `routes` config value as an argument.
+Some Remix consumers used the `routes` option to define config-based routes or use community file system routing conventions. To ease the migration, the `@react-router/remix-routes-option-adapter` package provides a `remixRoutesOptionAdapter` function that accepts Remix's `routes` config value as an argument.

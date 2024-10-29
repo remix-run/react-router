@@ -1,14 +1,14 @@
 {
-  "name": "@react-router/remix-config-routes-adapter",
+  "name": "@react-router/remix-routes-option-adapter",
   "version": "6.26.2",
-  "description": "Remix config route support for React Router",
+  "description": "Adapter for Remix's \"routes\" config option, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/react-router",
-    "directory": "packages/react-router-remix-config-routes-adapter"
+    "directory": "packages/react-router-remix-routes-option-adapter"
   },
   "license": "MIT",
   "main": "dist/index.js",
