@@ -1,5 +1,20 @@
 # `react-router-dom`
 
+## 6.28.0-pre.0
+
+### Minor Changes
+
+- - Log deprecation warnings for v7 flags ([#11750](https://github.com/remix-run/react-router/pull/11750))
+  - Add deprecation warnings to `json`/`defer` in favor of returning raw objects
+    - These methods will be removed in React Router v7
+
+### Patch Changes
+
+- Update JSDoc URLs for new website structure (add /v6/ segment) ([#12141](https://github.com/remix-run/react-router/pull/12141))
+- Updated dependencies:
+  - `react-router@6.28.0-pre.0`
+  - `@remix-run/router@1.21.0-pre.0`
+
 ## 6.27.0
 
 ### Minor Changes
