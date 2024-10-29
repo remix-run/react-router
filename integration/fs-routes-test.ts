@@ -28,7 +28,7 @@ test.describe("fs-routes", () => {
         "app/routes.ts": js`
           import { type RouteConfig } from "@react-router/dev/routes";  
           import { flatRoutes } from "@react-router/fs-routes";
-          import { remixConfigRoutes } from "@react-router/remix-config-routes-adapter";
+          import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
 
           export const routes: RouteConfig = [
             ...await flatRoutes({
@@ -36,7 +36,7 @@ test.describe("fs-routes", () => {
             }),
 
             // Ensure Remix back compat layer works
-            ...await remixConfigRoutes(async (defineRoutes) => {
+            ...await remixRoutesOptionAdapter(async (defineRoutes) => {
               // Ensure async routes work
               return defineRoutes((route) => {
                 route("/remix/config/route", "remix-config-route.tsx")

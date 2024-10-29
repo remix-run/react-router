@@ -12,7 +12,7 @@ module.exports = function rollup(options) {
     "react-router-architect",
     "react-router-cloudflare",
     "react-router-fs-routes",
-    "react-router-remix-config-routes-adapter",
+    "react-router-remix-routes-option-adapter",
   ]
     .flatMap((dir) => {
       let configPath = path.join("packages", dir, "rollup.config.js");

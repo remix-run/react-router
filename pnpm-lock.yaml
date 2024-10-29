@@ -377,9 +377,9 @@ importers:
       '@react-router/fs-routes':
         specifier: workspace:*
         version: link:../../../packages/react-router-fs-routes
-      '@react-router/remix-config-routes-adapter':
+      '@react-router/remix-routes-option-adapter':
         specifier: workspace:*
-        version: link:../../../packages/react-router-remix-config-routes-adapter
+        version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -435,9 +435,9 @@ importers:
       '@react-router/fs-routes':
         specifier: workspace:*
         version: link:../../../packages/react-router-fs-routes
-      '@react-router/remix-config-routes-adapter':
+      '@react-router/remix-routes-option-adapter':
         specifier: workspace:*
-        version: link:../../../packages/react-router-remix-config-routes-adapter
+        version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -496,9 +496,9 @@ importers:
       '@react-router/fs-routes':
         specifier: workspace:*
         version: link:../../../packages/react-router-fs-routes
-      '@react-router/remix-config-routes-adapter':
+      '@react-router/remix-routes-option-adapter':
         specifier: workspace:*
-        version: link:../../../packages/react-router-remix-config-routes-adapter
+        version: link:../../../packages/react-router-remix-routes-option-adapter
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -909,7 +909,7 @@ importers:
         specifier: 0.14.9
         version: 0.14.9
 
-  packages/react-router-remix-config-routes-adapter:
+  packages/react-router-remix-routes-option-adapter:
     devDependencies:
       '@react-router/dev':
         specifier: workspace:*
