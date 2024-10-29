@@ -196,7 +196,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequest(
         serverMode,
-        _build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -479,7 +478,6 @@ async function handleDocumentRequest(
 
 async function handleResourceRequest(
   serverMode: ServerMode,
-  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
