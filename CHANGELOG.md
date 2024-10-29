@@ -770,6 +770,8 @@ async function fakeGetSlugsFromCms() {
 
 - Replace `substr` with `substring` ([#12080](https://github.com/remix-run/react-router/pull/12080))
 - `react-router` - Fix redirects returned from loaders/actions using `data()` ([#12021](https://github.com/remix-run/react-router/pull/12021))
+- `@react-router/dev` - Enable prerendering for resource routes ([#12200](https://github.com/remix-run/react-router/pull/12200))
+- `@react-router/dev` - resolve config directory relative to flat output file structure ([#12187](https://github.com/remix-run/react-router/pull/12187))
 
 ### Changes by Package
 
