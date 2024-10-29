@@ -567,8 +567,15 @@ test.describe("SPA Mode", () => {
       expect(await page.locator("[data-root]").textContent()).toBe("Root");
       expect(await page.locator("[data-index]").textContent()).toBe("Index");
 
-      // Hydrates without issues
-      expect(logs).toEqual([]);
+      // Hydrates without issues - this message is expected due to the nested <Routes>
+      expect(logs).toEqual([
+        'You rendered descendant <Routes> (or called `useRoutes()`) at "/" ' +
+          '(under <Route path="">) but the parent route path has no trailing "*". ' +
+          "This means if you navigate deeper, the parent won't match anymore and " +
+          "therefore the child routes will never render." +
+          "\n\n" +
+          'Please change the parent <Route path=""> to <Route path="/*">.',
+      ]);
     });
 
     test("wraps default root HydrateFallback in user-provided Layout", async ({

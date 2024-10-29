@@ -1,4 +1,5 @@
 import type { Writable } from "node:stream";
+import { Readable } from "node:stream";
 import path from "node:path";
 import url from "node:url";
 import fse from "fs-extra";
@@ -15,6 +16,7 @@ import {
   UNSAFE_decodeViaTurboStream as decodeViaTurboStream,
 } from "react-router";
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
+import { createReadableStreamFromReadable } from "@react-router/node";
 
 import { viteConfig } from "./vite.js";
 
@@ -54,40 +56,23 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     );
   };
 
-  if (init.spaMode || init.prerender) {
-    let requestDocument = init.spaMode
-      ? () => {
-          let html = fse.readFileSync(
-            path.join(projectDir, "build/client/index.html")
-          );
-          return new Response(html, {
-            headers: {
-              "Content-Type": "text/html",
-            },
-          });
-        }
-      : (href: string) => {
-          let pathname = new URL(href, "test://test").pathname;
-          let file = pathname.endsWith(".data")
-            ? pathname
-            : pathname + "/index.html";
-          let html = fse.readFileSync(
-            path.join(projectDir, "build/client" + file)
-          );
-          return new Response(html, {
-            headers: {
-              "Content-Type": "text/html",
-            },
-          });
-        };
-
+  if (init.spaMode) {
     return {
       projectDir,
       build: null,
       isSpaMode: init.spaMode,
       prerender: init.prerender,
-      requestDocument,
-      requestResource: () => {
+      requestDocument() {
+        let html = fse.readFileSync(
+          path.join(projectDir, "build/client/index.html")
+        );
+        return new Response(html, {
+          headers: {
+            "Content-Type": "text/html",
+          },
+        });
+      },
+      requestResource() {
         throw new Error("Cannot requestResource in SPA Mode tests");
       },
       requestSingleFetchData: () => {
@@ -95,6 +80,49 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       },
       postDocument: () => {
         throw new Error("Cannot postDocument in SPA Mode tests");
+      },
+      getBrowserAsset,
+      useReactRouterServe: init.useReactRouterServe,
+    };
+  }
+
+  if (init.prerender) {
+    return {
+      projectDir,
+      build: null,
+      isSpaMode: init.spaMode,
+      prerender: init.prerender,
+      requestDocument(href: string) {
+        let file = new URL(href, "test://test").pathname + "/index.html";
+        let html = fse.readFileSync(
+          path.join(projectDir, "build/client" + file)
+        );
+        return new Response(html, {
+          headers: {
+            "Content-Type": "text/html",
+          },
+        });
+      },
+      requestResource(href: string) {
+        let data = fse.readFileSync(
+          path.join(projectDir, "build/client", href)
+        );
+        return new Response(data);
+      },
+      async requestSingleFetchData(href: string) {
+        let data = fse.readFileSync(
+          path.join(projectDir, "build/client", href)
+        );
+        let stream = createReadableStreamFromReadable(Readable.from(data));
+        return {
+          status: 200,
+          statusText: "OK",
+          headers: new Headers(),
+          data: (await decodeViaTurboStream(stream, global)).value,
+        };
+      },
+      postDocument: () => {
+        throw new Error("Cannot postDocument in Prerender tests");
       },
       getBrowserAsset,
       useReactRouterServe: init.useReactRouterServe,
@@ -316,7 +344,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = "node-template";
+  let template = "vite-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -324,25 +352,6 @@ export async function createFixtureProject(
 
   await fse.ensureDir(projectDir);
   await fse.copy(integrationTemplateDir, projectDir);
-  // let reactRouterDev = path.join(
-  //   projectDir,
-  //   "node_modules/@react-router/dev/dist/cli/index.js"
-  // );
-  // await fse.chmod(reactRouterDev, 0o755);
-  // await fse.ensureSymlink(
-  //   reactRouterDev,
-  //   path.join(projectDir, "node_modules/.bin/rr")
-  // );
-  //
-  // let reactRouterServe = path.join(
-  //   projectDir,
-  //   "node_modules/@react-router/serve/dist/cli.js"
-  // );
-  // await fse.chmod(reactRouterServe, 0o755);
-  // await fse.ensureSymlink(
-  //   reactRouterServe,
-  //   path.join(projectDir, "node_modules/.bin/react-router-serve")
-  // );
 
   let hasViteConfig = Object.keys(init.files ?? {}).some((filename) =>
     filename.startsWith("vite.config.")

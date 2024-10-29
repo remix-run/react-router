@@ -5,7 +5,7 @@ import { type BinaryLike, createHash } from "node:crypto";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
-import babel from "@babel/core";
+import * as babel from "@babel/core";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
@@ -373,7 +373,12 @@ export let getServerBuildDirectory = (ctx: ReactRouterPluginContext) =>
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
   path.join(reactRouterConfig.buildDirectory, "client");
 
-let defaultEntriesDir = path.resolve(__dirname, "..", "config", "defaults");
+let defaultEntriesDir = path.resolve(
+  path.dirname(require.resolve("@react-router/dev/package.json")),
+  "dist",
+  "config",
+  "defaults"
+);
 let defaultEntries = fse
   .readdirSync(defaultEntriesDir)
   .map((filename) => path.join(defaultEntriesDir, filename));
@@ -831,6 +836,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Pre-bundle router dependencies to avoid router duplicates.
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
+              "react-router/dom",
               // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
               ...(hasDependency("react-router-dom")
                 ? ["react-router-dom"]
@@ -849,6 +855,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
               // see description for `optimizeDeps.include`
               "react-router",
+              "react-router/dom",
               "react-router-dom",
             ],
           },
@@ -1769,7 +1776,7 @@ async function getPrerenderBuildAndHandler(
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
   let { createRequestHandler: createHandler } = await import("react-router");
   return {
-    build,
+    build: build as ServerBuild,
     handler: createHandler(build, viteConfig.mode),
   };
 }
@@ -1837,7 +1844,8 @@ async function handlePrerender(
     "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
-    let hasLoaders = matchRoutes(routes, path)?.some((m) => m.route.loader);
+    let matches = matchRoutes(routes, path);
+    let hasLoaders = matches?.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {
       data = await prerenderData(
@@ -1849,16 +1857,41 @@ async function handlePrerender(
         { headers }
       );
     }
-    await prerenderRoute(
-      handler,
-      path,
-      clientBuildDirectory,
-      reactRouterConfig,
-      viteConfig,
-      data
-        ? { headers: { ...headers, "X-React-Router-Prerender-Data": data } }
-        : { headers }
-    );
+
+    // When prerendering a resource route, we don't want to pass along the
+    // `.data` file since we want to prerender the raw Response returned from
+    // the loader.  Presumably this is for routes where a file extension is
+    // already included, such as `app/routes/items[.json].tsx` that will
+    // render into `/items.json`
+    let leafRoute = matches ? matches[matches.length - 1].route : null;
+    let manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
+    let isResourceRoute =
+      manifestRoute &&
+      !manifestRoute.default &&
+      !manifestRoute.ErrorBoundary &&
+      manifestRoute.loader;
+
+    if (isResourceRoute) {
+      await prerenderResourceRoute(
+        handler,
+        path,
+        clientBuildDirectory,
+        reactRouterConfig,
+        viteConfig,
+        { headers }
+      );
+    } else {
+      await prerenderRoute(
+        handler,
+        path,
+        clientBuildDirectory,
+        reactRouterConfig,
+        viteConfig,
+        data
+          ? { headers: { ...headers, "X-React-Router-Prerender-Data": data } }
+          : { headers }
+      );
+    }
   }
 
   await prerenderManifest(
@@ -1966,6 +1999,31 @@ async function prerenderRoute(
   let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, html);
+  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+}
+
+async function prerenderResourceRoute(
+  handler: RequestHandler,
+  prerenderPath: string,
+  clientBuildDirectory: string,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  viteConfig: Vite.ResolvedConfig,
+  requestInit: RequestInit
+) {
+  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
+    .replace(/\/\/+/g, "/")
+    .replace(/\/$/g, "");
+  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  let response = await handler(request);
+  let text = await response.text();
+
+  validatePrerenderedResponse(response, text, "Prerender", normalizedPath);
+
+  // Write out the resource route file
+  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  await fse.ensureDir(path.dirname(outfile));
+  await fse.outputFile(outfile, text);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 

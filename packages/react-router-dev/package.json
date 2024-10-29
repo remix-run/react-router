@@ -32,7 +32,25 @@
     "react-router": "bin.js"
   },
   "scripts": {
-    "tsc": "tsc"
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "cli/**",
+        "config/**",
+        "typescript/**",
+        "vite/**",
+        "*.ts",
+        "bin.js",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
   },
   "dependencies": {
     "@babel/core": "^7.21.8",
@@ -90,7 +108,10 @@
     "react-router": "workspace:^",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
     "vite": "^5.1.0",
+    "wireit": "0.14.9",
     "wrangler": "^3.28.2"
   },
   "peerDependencies": {

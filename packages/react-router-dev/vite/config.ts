@@ -529,7 +529,12 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
+  let defaultsDirectory = path.resolve(
+    path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "defaults"
+  );
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
   let userEntryServerFile = findEntry(appDirectory, "entry.server");

@@ -97,7 +97,7 @@ async function run() {
     await ensureBuildVersion("react-router-cloudflare", version);
     await ensureBuildVersion("react-router-fs-routes", version);
     await ensureBuildVersion(
-      "react-router-remix-config-routes-adapter",
+      "react-router-remix-routes-option-adapter",
       version
     );
 
@@ -111,7 +111,7 @@ async function run() {
     publishBuild("react-router-architect", tag);
     publishBuild("react-router-cloudflare", tag);
     publishBuild("react-router-fs-routes", tag);
-    publishBuild("react-router-remix-config-routes-adapter", tag);
+    publishBuild("react-router-remix-routes-option-adapter", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);
