@@ -22,15 +22,17 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
   - `git commit -a -m "Enter prerelease mode"`
   - `git push --set-upstream origin release-next`
 - Wait for the release workflow to finish - the Changesets action will open a PR that will increment all versions and generate the changelogs
-- Check out the PR branch created by changesets locally
-- _Optional:_ Review the updated `CHANGELOG.md` files in the PR locally and make any adjustments necessary, then merge the PR into the `release-next` branch.
-  - `find packages -name 'CHANGELOG.md' -mindepth 2 -maxdepth 2 -exec code {} \;`
-  - Usually for prereleases there's not much to change here because the prerelease sections will be deleted prior to the final stable release anyway
+- If you need/want to make any changes to the `CHANGELOG.md` files, you can do so and commit directly to the PR branch
+  - This is usually not required for prereleases
 - Once the changesets files are in good shape, merge the PR to `release-next`
 - Once the PR is merged, the release workflow will publish the updated `X.Y.Z-pre.*` packages to npm
+
+### Prepare the draft release notes
+
 - At this point, you can begin crafting the release notes for the eventual stable release in the root `CHANGELOG.md` file in the repo
   - Copy the template for a new release and update the version numbers and links accordingly
   - Copy the relevant changelog entries from all packages into the release notes and adjust accordingly
+    - `find packages -name 'CHANGELOG.md' -mindepth 2 -maxdepth 2 -exec code {} \;`
   - Commit these changes directly to the `release-next` branch - they will not trigger a new prerelease since they do not include a changeset
 
 ### Iterating a pre-release
@@ -96,15 +98,24 @@ After the `6.25.0` release, we branched off a `v6` branch for continued `6.x` wo
 - Once the stable release is out:
   - Merge `release-v6` back to `v6` with a **Normal Merge**
   - **Do not** merge `release-v6` to `main`
-  - Copy the updated changelog entry for the `6.X.Y` version to `main`
+  - Copy the updated root `CHANGELOG.md` entry for the `6.X.Y` release to `main` and `dev`
+    - `git checkout main`
+    - `git diff react-router@6.X.Y...react-router@6.X.Y -- "***CHANGELOG.md" > ./docs.patch`
+    - `git apply ./docs.patch`
+    - `git checkout dev`
+    - `git apply ./docs.patch`
+    - `rm ./docs.patch`
   - Copy the docs changes to `main` so they show up on the live docs site for v6
     - `git checkout main`
     - `git diff react-router@6.X.Y...react-router@6.X.Y docs/ > ./docs.patch`
     - `git apply ./docs.patch`
-  - The _code_ changes should already be in the `dev` branch but confirm that the commits in this release are all included in `dev` already:
-    - I.e., https://github.com/remix-run/react-router/compare/react-router@6.26.1...react-router@6.26.2
-    - If one or more are not, then you can manually bring them over by cherry-picking the commit (or re-doing the work)
-    - You should not include a changelog in your commit to `dev`
+    - `rm ./docs.patch`
+  - The _code_ changes should already be in the `dev` branch
+    - This should have happened at the time the v6 change was made (except for changes such as deprecation warnings)
+    - Confirm that the commits in this release are all included in `dev` already:
+      - I.e., https://github.com/remix-run/react-router/compare/react-router@6.26.1...react-router@6.26.2
+      - If one or more are not, then you can manually bring them over by cherry-picking the commit (or re-doing the work)
+      - You should not include a changelog in your commit to `dev`
   - Copy the updated changelogs from `release-next` over to `dev` so the changelogs continue to reflect this new 6x release into the v7 releases
 
 ### Notes on 7.0.0-pre.N released during the v7 prerelease
