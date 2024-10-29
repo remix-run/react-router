@@ -355,6 +355,72 @@ test.describe("Prerendering", () => {
     expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
   });
 
+  test("Pre-renders resource routes with file extensions", async () => {
+    fixture = await createFixture({
+      prerender: true,
+      files: {
+        ...files,
+        "app/routes/text[.txt].tsx": js`
+          export function loader() {
+            return new Response("Hello, world");
+          }
+        `,
+        "app/routes/json[.json].tsx": js`
+          export function loader() {
+            return new Response(JSON.stringify({ hello: 'world' }), {
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let clientDir = path.join(fixture.projectDir, "build", "client");
+    expect(listAllFiles(clientDir).sort()).toEqual([
+      "__manifest",
+      "_root.data",
+      "about.data",
+      "about/index.html",
+      "favicon.ico",
+      "index.html",
+      "json.json",
+      "json.json.data",
+      "text.txt",
+      "text.txt.data",
+    ]);
+
+    let res = await fixture.requestResource("/json.json");
+    expect(await res.json()).toEqual({ hello: "world" });
+
+    let dataRes = await fixture.requestSingleFetchData("/json.json.data");
+    expect(dataRes.data).toEqual({
+      root: {
+        data: null,
+      },
+      "routes/json[.json]": {
+        data: {
+          hello: "world",
+        },
+      },
+    });
+
+    res = await fixture.requestResource("/text.txt");
+    expect(await res.text()).toBe("Hello, world");
+
+    dataRes = await fixture.requestSingleFetchData("/text.txt.data");
+    expect(dataRes.data).toEqual({
+      root: {
+        data: null,
+      },
+      "routes/text[.txt]": {
+        data: "Hello, world",
+      },
+    });
+  });
+
   test("Hydrates into a navigable app", async ({ page }) => {
     fixture = await createFixture({
       prerender: true,
