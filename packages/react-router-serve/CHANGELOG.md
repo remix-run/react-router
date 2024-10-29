@@ -1,5 +1,14 @@
 # `@remix-run/serve`
 
+## 7.0.0-pre.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.0.0-pre.3`
+  - `@react-router/express@7.0.0-pre.3`
+  - `@react-router/node@7.0.0-pre.3`
+
 ## 7.0.0-pre.2
 
 ### Patch Changes

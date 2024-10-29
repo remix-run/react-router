@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 7.0.0-pre.3
+
+### Patch Changes
+
+- Enable prerendering for resource routes ([#12200](https://github.com/remix-run/react-router/pull/12200))
+- resolve config directory relative to flat output file structure ([#12187](https://github.com/remix-run/react-router/pull/12187))
+- Updated dependencies:
+  - `react-router@7.0.0-pre.3`
+  - `@react-router/node@7.0.0-pre.3`
+  - `@react-router/serve@7.0.0-pre.3`
+
 ## 7.0.0-pre.2
 
 ### Major Changes

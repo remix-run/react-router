@@ -18,7 +18,8 @@
     "@react-router/serve": "6.26.2",
     "@playground/compiler": "0.0.0",
     "@playground/compiler-express": "0.0.0",
-    "@playground/compiler-spa": "0.0.0"
+    "@playground/compiler-spa": "0.0.0",
+    "@react-router/remix-routes-option-adapter": "7.0.0-pre.2"
   },
   "changesets": [
     "angry-papayas-flow",
@@ -29,6 +30,7 @@
     "curvy-teachers-explain",
     "drop-node-16",
     "early-beds-obey",
+    "eighty-dolls-juggle",
     "expose-promises",
     "fair-beans-design",
     "fair-cheetahs-hope",
@@ -58,6 +60,7 @@
     "remove-prefetchpagedescriptor",
     "route-component-export-props",
     "router-provider-hydration",
+    "serious-beds-approve",
     "silly-papayas-trade",
     "silver-cats-shave",
     "sour-cycles-lie",
