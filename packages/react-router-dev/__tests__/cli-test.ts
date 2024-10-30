@@ -121,6 +121,7 @@ describe("remix CLI", () => {
             --config, -c        Use specified Vite config file (string)
             --no-typescript     Generate plain JavaScript files
           \`typegen\` Options:
+            --config, -c        Use specified Vite config file (string)
             --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
           Build your project:
