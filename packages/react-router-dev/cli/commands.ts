@@ -11,7 +11,7 @@ import type { RoutesFormat } from "../config/format";
 import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
-import * as Typegen from "../typescript/typegen";
+import * as Typegen from "../typegen";
 
 export async function routes(
   reactRouterRoot?: string,

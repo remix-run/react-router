@@ -6,16 +6,16 @@ import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
 import pc from "picocolors";
 
-import * as Logger from "../logger";
-import type { RouteConfig } from "../config/routes";
+import * as Logger from "./logger";
+import type { RouteConfig } from "./config/routes";
 import {
   configRoutesToRouteManifest,
   type RouteManifest,
   type RouteManifestEntry,
-} from "../config/routes";
-import * as ViteNode from "../vite/vite-node";
-import { findEntry } from "../vite/config";
-import { loadPluginContext } from "../vite/plugin";
+} from "./config/routes";
+import * as ViteNode from "./vite/vite-node";
+import { findEntry } from "./vite/config";
+import { loadPluginContext } from "./vite/plugin";
 
 type Context = {
   rootDirectory: string;
