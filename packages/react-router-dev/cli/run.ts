@@ -45,6 +45,8 @@ ${colors.blueBright("react-router")}
   \`reveal\` Options:
     --config, -c        Use specified Vite config file (string)
     --no-typescript     Generate plain JavaScript files
+  \`typegen\` Options:
+    --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
   ${colors.underline("Build your project")}:
 
@@ -72,6 +74,7 @@ ${colors.blueBright("react-router")}
   ${colors.underline("Generate types for route modules")}:
 
    $ react-router typegen
+   $ react-router typegen --watch
 `;
 
 /**
@@ -133,6 +136,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--sourcemapServer": isBooleanFlag("--sourcemapServer")
         ? Boolean
         : String,
+      "--watch": Boolean,
     },
     {
       argv,
@@ -181,7 +185,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       await commands.dev(input[1], flags);
       break;
     case "typegen":
-      await commands.typegen(input[1]);
+      await commands.typegen(input[1], flags);
       break;
     default:
       // `react-router ./my-project` is shorthand for `react-router dev ./my-project`

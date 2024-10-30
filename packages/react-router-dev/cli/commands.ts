@@ -197,7 +197,15 @@ async function createClientEntry(
   return contents;
 }
 
-export async function typegen(root: string) {
+export async function typegen(root: string, flags: { watch: boolean }) {
+  root ??= process.cwd();
+
+  if (flags.watch) {
+    await Typegen.watch(root);
+    await new Promise(() => {}); // keep alive
+    return;
+  }
+
   let ctx = await loadPluginContext({ root });
   await Typegen.writeAll({
     rootDirectory: root,
