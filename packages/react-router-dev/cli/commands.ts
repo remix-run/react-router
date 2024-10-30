@@ -2,8 +2,8 @@ import * as path from "node:path";
 import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
+import colors from "picocolors";
 
-import * as colors from "../colors";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
 import { formatRoutes } from "../config/format";
@@ -104,7 +104,7 @@ export async function generateEntry(
     let list = conjunctionListFormat.format(entriesArray);
 
     console.error(
-      colors.error(`Invalid entry file. Valid entry files are ${list}`)
+      colors.red(`Invalid entry file. Valid entry files are ${list}`)
     );
     return;
   }
@@ -113,7 +113,7 @@ export async function generateEntry(
   let deps = pkgJson.content.dependencies ?? {};
 
   if (!deps["@react-router/node"]) {
-    console.error(colors.error(`No default server entry detected.`));
+    console.error(colors.red(`No default server entry detected.`));
     return;
   }
 
@@ -171,7 +171,7 @@ async function checkForEntry(
     let exists = await fse.pathExists(entryPath);
     if (exists) {
       let relative = path.relative(rootDirectory, entryPath);
-      console.error(colors.error(`Entry file ${relative} already exists.`));
+      console.error(colors.red(`Entry file ${relative} already exists.`));
       return process.exit(1);
     }
   }
