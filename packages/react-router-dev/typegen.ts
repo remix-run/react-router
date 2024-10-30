@@ -27,15 +27,6 @@ function getDirectory(ctx: Context) {
   return Path.join(ctx.rootDirectory, ".react-router/types");
 }
 
-export function getPath(ctx: Context, route: RouteManifestEntry): string {
-  return Path.join(
-    getDirectory(ctx),
-    Path.relative(ctx.rootDirectory, ctx.appDirectory),
-    Path.dirname(route.file),
-    "+types." + Pathe.filename(route.file) + ".d.ts"
-  );
-}
-
 export async function watch(
   rootDirectory: string,
   options: { configFile?: string } = {}
@@ -140,7 +131,12 @@ export async function writeAll(ctx: Context): Promise<void> {
   fs.rmSync(getDirectory(ctx), { recursive: true, force: true });
   Object.values(ctx.routes).forEach((route) => {
     if (!fs.existsSync(Path.join(ctx.appDirectory, route.file))) return;
-    const typesPath = getPath(ctx, route);
+    const typesPath = Path.join(
+      getDirectory(ctx),
+      Path.relative(ctx.rootDirectory, ctx.appDirectory),
+      Path.dirname(route.file),
+      "+types." + Pathe.filename(route.file) + ".d.ts"
+    );
     const content = getModule(ctx.routes, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
