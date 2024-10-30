@@ -197,16 +197,19 @@ async function createClientEntry(
   return contents;
 }
 
-export async function typegen(root: string, flags: { watch: boolean }) {
+export async function typegen(
+  root: string,
+  flags: { watch: boolean; config?: string }
+) {
   root ??= process.cwd();
 
   if (flags.watch) {
-    await Typegen.watch(root);
+    await Typegen.watch(root, { configFile: flags.config });
     await new Promise(() => {}); // keep alive
     return;
   }
 
-  let ctx = await loadPluginContext({ root });
+  let ctx = await loadPluginContext({ root, configFile: flags.config });
   await Typegen.writeAll({
     rootDirectory: root,
     appDirectory: ctx.reactRouterConfig.appDirectory,

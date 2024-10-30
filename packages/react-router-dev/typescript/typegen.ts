@@ -36,10 +36,16 @@ export function getPath(ctx: Context, route: RouteManifestEntry): string {
   );
 }
 
-export async function watch(rootDirectory: string) {
+export async function watch(
+  rootDirectory: string,
+  options: { configFile?: string } = {}
+) {
   const watchStart = performance.now();
 
-  const vitePluginCtx = await loadPluginContext({ root: rootDirectory });
+  const vitePluginCtx = await loadPluginContext({
+    root: rootDirectory,
+    configFile: options.configFile,
+  });
   const routesTsPath = Path.join(
     vitePluginCtx.reactRouterConfig.appDirectory,
     "routes.ts"
