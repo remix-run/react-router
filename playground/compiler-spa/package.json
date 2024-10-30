@@ -8,6 +8,7 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "preview": "vite preview",
+    "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
