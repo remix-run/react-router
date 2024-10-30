@@ -46,9 +46,24 @@ export async function watch(
     root: rootDirectory,
     configFile: options.configFile,
   });
-  const routesTsPath = Path.join(
+  const routeConfigFile = findEntry(
     vitePluginCtx.reactRouterConfig.appDirectory,
-    "routes.ts"
+    "routes"
+  );
+  if (!routeConfigFile) {
+    Logger.warn(
+      `Could not find route config within ${pc.blue(
+        Path.relative(
+          vitePluginCtx.rootDirectory,
+          vitePluginCtx.reactRouterConfig.appDirectory
+        )
+      )}`
+    );
+    process.exit(1);
+  }
+  const routeConfigPath = Path.join(
+    vitePluginCtx.reactRouterConfig.appDirectory,
+    routeConfigFile
   );
 
   const routesViteNodeContext = await ViteNode.createContext({
@@ -70,7 +85,7 @@ export async function watch(
     routesViteNodeContext.runner.moduleCache.clear();
 
     const routeConfig: RouteConfig = (
-      await routesViteNodeContext.runner.executeFile(routesTsPath)
+      await routesViteNodeContext.runner.executeFile(routeConfigPath)
     ).routes;
 
     return {
