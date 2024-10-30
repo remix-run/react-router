@@ -100,6 +100,7 @@ async function run() {
       "react-router-remix-routes-option-adapter",
       version
     );
+    await ensureBuildVersion("create-react-router", version);
 
     // 4. Publish to npm
     publishBuild("react-router", tag);
@@ -112,6 +113,7 @@ async function run() {
     publishBuild("react-router-cloudflare", tag);
     publishBuild("react-router-fs-routes", tag);
     publishBuild("react-router-remix-routes-option-adapter", tag);
+    publishBuild("create-react-router", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);
