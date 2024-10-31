@@ -4,16 +4,18 @@ import Chokidar from "chokidar";
 import dedent from "dedent";
 import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
+import pc from "picocolors";
 
-import type { RouteConfig } from "../config/routes";
+import * as Logger from "./logger";
+import type { RouteConfig } from "./config/routes";
 import {
   configRoutesToRouteManifest,
   type RouteManifest,
   type RouteManifestEntry,
-} from "../config/routes";
-import * as ViteNode from "../vite/vite-node";
-import { findEntry } from "../vite/config";
-import { loadPluginContext } from "../vite/plugin";
+} from "./config/routes";
+import * as ViteNode from "./vite/vite-node";
+import { findEntry } from "./vite/config";
+import { loadPluginContext } from "./vite/plugin";
 
 type Context = {
   rootDirectory: string;
@@ -25,20 +27,34 @@ function getDirectory(ctx: Context) {
   return Path.join(ctx.rootDirectory, ".react-router/types");
 }
 
-export function getPath(ctx: Context, route: RouteManifestEntry): string {
-  return Path.join(
-    getDirectory(ctx),
-    Path.relative(ctx.rootDirectory, ctx.appDirectory),
-    Path.dirname(route.file),
-    "+types." + Pathe.filename(route.file) + ".d.ts"
-  );
-}
+export async function watch(
+  rootDirectory: string,
+  options: { configFile?: string } = {}
+) {
+  const watchStart = performance.now();
 
-export async function watch(rootDirectory: string) {
-  const vitePluginCtx = await loadPluginContext({ root: rootDirectory });
-  const routesTsPath = Path.join(
+  const vitePluginCtx = await loadPluginContext({
+    root: rootDirectory,
+    configFile: options.configFile,
+  });
+  const routeConfigFile = findEntry(
     vitePluginCtx.reactRouterConfig.appDirectory,
-    "routes.ts"
+    "routes"
+  );
+  if (!routeConfigFile) {
+    Logger.warn(
+      `Could not find route config within ${pc.blue(
+        Path.relative(
+          vitePluginCtx.rootDirectory,
+          vitePluginCtx.reactRouterConfig.appDirectory
+        )
+      )}`
+    );
+    process.exit(1);
+  }
+  const routeConfigPath = Path.join(
+    vitePluginCtx.reactRouterConfig.appDirectory,
+    routeConfigFile
   );
 
   const routesViteNodeContext = await ViteNode.createContext({
@@ -52,13 +68,15 @@ export async function watch(rootDirectory: string) {
     );
     if (rootRouteFile) {
       routes.root = { path: "", id: "root", file: rootRouteFile };
+    } else {
+      Logger.warn(`Could not find \`root\` route`);
     }
 
     routesViteNodeContext.devServer.moduleGraph.invalidateAll();
     routesViteNodeContext.runner.moduleCache.clear();
 
     const routeConfig: RouteConfig = (
-      await routesViteNodeContext.runner.executeFile(routesTsPath)
+      await routesViteNodeContext.runner.executeFile(routeConfigPath)
     ).routes;
 
     return {
@@ -73,9 +91,14 @@ export async function watch(rootDirectory: string) {
     routes: await getRoutes(),
   };
   await writeAll(ctx);
+  Logger.info("generated initial types", {
+    durationMs: performance.now() - watchStart,
+  });
 
   const watcher = Chokidar.watch(ctx.appDirectory, { ignoreInitial: true });
   watcher.on("all", async (event, path) => {
+    const eventStart = performance.now();
+
     path = Path.normalize(path);
     ctx.routes = await getRoutes();
 
@@ -84,14 +107,21 @@ export async function watch(rootDirectory: string) {
     );
     if (routeConfigChanged) {
       await writeAll(ctx);
+      Logger.info("changed route config", {
+        durationMs: performance.now() - eventStart,
+      });
       return;
     }
 
-    const isRoute = Object.values(ctx.routes).find(
+    const route = Object.values(ctx.routes).find(
       (route) => path === Path.join(ctx.appDirectory, route.file)
     );
-    if (isRoute && (event === "add" || event === "unlink")) {
+    if (route && (event === "add" || event === "unlink")) {
       await writeAll(ctx);
+      Logger.info(
+        `${event === "add" ? "added" : "removed"} route ${pc.blue(route.file)}`,
+        { durationMs: performance.now() - eventStart }
+      );
       return;
     }
   });
@@ -101,7 +131,12 @@ export async function writeAll(ctx: Context): Promise<void> {
   fs.rmSync(getDirectory(ctx), { recursive: true, force: true });
   Object.values(ctx.routes).forEach((route) => {
     if (!fs.existsSync(Path.join(ctx.appDirectory, route.file))) return;
-    const typesPath = getPath(ctx, route);
+    const typesPath = Path.join(
+      getDirectory(ctx),
+      Path.relative(ctx.rootDirectory, ctx.appDirectory),
+      Path.dirname(route.file),
+      "+types." + Pathe.filename(route.file) + ".d.ts"
+    );
     const content = getModule(ctx.routes, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
