@@ -19,7 +19,7 @@ export const routes: RouteConfig = [
 ];
 ```
 
-Then, you can import route-specific types like so:
+You can import route-specific types like so:
 
 ```tsx filename=app/routes/product.tsx
 import type * as Route from "./+types.product";

@@ -76,6 +76,7 @@ ${colors.blueBright("react-router")}
 
    $ react-router typegen
    $ react-router typegen --watch
+   $ react-router typegen --config vite.react-router.config.ts
 `;
 
 /**

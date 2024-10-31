@@ -273,7 +273,7 @@ However, there were a couple drawbacks:
    Without this knowledge, its hard to know if you've set up typegen correctly.
    And even if you do know this, its tedious to find out what went wrong.
 
-After we decided not to purse "zero-effort typesafety" (as described above), our TypeScript plugin was already a simple passthrough that kicked off typegen as a side-effect.
+After we decided not to pursue "zero-effort typesafety" (as described above), our TypeScript plugin was already a simple passthrough that kicked off typegen as a side-effect.
 This was an additional indication that maybe a TypeScript plugin was not the right place for our typegen.
 
 ## Summary

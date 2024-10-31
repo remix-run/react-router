@@ -150,7 +150,8 @@ describe("remix CLI", () => {
           Generate types for route modules:
 
            $ react-router typegen
-           $ react-router typegen --watch"
+           $ react-router typegen --watch
+           $ react-router typegen --config vite.react-router.config.ts"
       `);
     });
   });

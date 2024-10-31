@@ -6,7 +6,7 @@ To know more about how type safety works in React Router, check out our [dedicat
 
 # Setting up type safety
 
-React Router generates types for into a `.react-router/` directory at the root of your app.
+React Router generates types into a `.react-router/` directory at the root of your app.
 This directory is fully managed by React Router and is derived from your route config (`app/routes.ts` by default), so it should be gitignore'd.
 
 👉 **Add `.react-router/` to `.gitignore`**
@@ -15,8 +15,8 @@ This directory is fully managed by React Router and is derived from your route c
 .react-router/
 ```
 
-You should also ensure that generated types are always present before running typechecking,
-especially for running typechecking in CI.
+Make sure generated types are always present before type checking,
+especially when running type checking in CI.
 
 👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
 
@@ -42,11 +42,9 @@ And to be able to import them as if they files next to your route modules, you'l
 }
 ```
 
-## Automatic typegen in VSCode (optional)
+During development, its nice to have a dedicate `package.json` script to run type generation in watch mode.
 
-If you'd rather not need to remember to run `react-router typegen --watch` every time you start working on your app, you can use [VSCode Tasks](https://code.visualstudio.com/docs/editor/tasks) to automate this.
-
-👉 **Add a `typegen:watch` script**
+👉 **Add a `typegen --watch` script** (optional)
 
 ```json filename=package.json
 {
@@ -55,6 +53,11 @@ If you'd rather not need to remember to run `react-router typegen --watch` every
   }
 }
 ```
+
+## Automatic typegen in VSCode (optional)
+
+If you'd rather not need to remember to run `react-router typegen --watch` every time you start working on your app, you can use [VSCode Tasks](https://code.visualstudio.com/docs/editor/tasks) to automate this.
+Let's make use of the `typegen:watch` script you added earlier.
 
 👉 **Configure a VSCode task for `typegen:watch`**
 
