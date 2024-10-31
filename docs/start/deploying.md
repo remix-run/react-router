@@ -103,7 +103,7 @@ This template includes:
 
 ### Manual Fullstack Deployment
 
-If you want to deploy to your own server or a different hosting provider, see the [Manual Deployment](../misc/manual-deployment) guide.
+If you want to deploy to your own server or a different hosting provider, see the [Manual Deployment](../how-to/manual-deployment) guide.
 
 ## Static Hosting
 

@@ -373,4 +373,4 @@ app/routes/app._index/route.tsx
 [nested_routes]: #nested-routes
 [dot_delimiters]: #dot-delimiters
 [dynamic_segments]: #dynamic-segments
-[resource_routes]: ../misc/resource-routes
+[resource_routes]: ../how-to/resource-routes

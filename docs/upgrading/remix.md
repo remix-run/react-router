@@ -169,7 +169,7 @@ let data = useLoaderData<typeof loader>();
 [remix-discord]: https://rmx.as/discord
 [github-new-issue]: https://github.com/remix-run/react-router/issues/new/choose
 [routing]: ../start/routing
-[fs-routing]: ../misc/file-route-conventions
+[fs-routing]: ../how-to/file-route-conventions
 [v7-changelog-types]: https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#typesafety-improvements
 [server-loaders]: ../start/data-loading#server-data-loading
 [server-actions]: ../start/actions#server-actions

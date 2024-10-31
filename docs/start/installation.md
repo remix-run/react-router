@@ -134,4 +134,4 @@ npm run dev
 
 [Routing](./routing)
 
-[manual_usage]: ../misc/manual-usage
+[manual_usage]: ../how-to/manual-usage

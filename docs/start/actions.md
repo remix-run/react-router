@@ -195,5 +195,5 @@ fetcher.submit(
 
 See the [Using Fetchers][fetchers] guide for more information.
 
-[fetchers]: ../misc/fetchers
+[fetchers]: ../how-to/fetchers
 [data]: ../../api/react-router/data

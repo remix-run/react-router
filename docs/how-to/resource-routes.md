@@ -210,4 +210,4 @@ export const action = async ({
 [turbo-stream]: https://github.com/jacob-ebey/turbo-stream
 [data-util]: ../../api/react-router/data
 [nonstandard-http-methods]: https://github.com/remix-run/react-router/issues/11959
-[escaping]: ../misc/file-route-conventions#escaping-special-characters
+[escaping]: ../how-to/file-route-conventions#escaping-special-characters
