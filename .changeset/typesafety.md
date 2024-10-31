@@ -11,7 +11,7 @@ For example:
 
 ```ts
 // app/routes/product.tsx
-import type * as Route from "./+types/product";
+import type { Route } from "./+types/product";
 
 export function loader({ params }: Route.LoaderArgs) {}
 
