@@ -190,9 +190,9 @@ interface Context {
 
 async function introStep(ctx: Context) {
   log(
-    `\n${color.bgWhite(` ${color.black("react-router")} `)}  ${color.green(
-      color.bold(`v${ctx.reactRouterVersion}`)
-    )} ${color.bold("💿 Let's build a better website...")}`
+    `\n${" ".repeat(9)}${color.green(
+      color.bold("create-react-router")
+    )} ${color.bold(`v${ctx.reactRouterVersion}`)}`
   );
 
   if (!ctx.interactive) {
