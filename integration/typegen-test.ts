@@ -111,4 +111,24 @@ test.describe("typegen", () => {
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
   });
+
+  test("splat", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/routes/splat.$.tsx": tsx`
+        import type { Route } from "./+types.splat.$"
+
+        function assertType<T>(t: T) {}
+
+        export function loader({ params }: Route.LoaderArgs) {
+          assertType<string>(params["*"])
+          return null
+        }
+      `,
+    });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
 });
