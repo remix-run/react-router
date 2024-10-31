@@ -76,7 +76,7 @@ There's a subtle detail to be aware of when linking to resource routes. You need
 To handle `GET` requests export a loader function:
 
 ```tsx
-import type * as Route from "./+types.resource";
+import type { Route } from "./+types.resource";
 
 export const loader = async ({
   request,
@@ -90,7 +90,7 @@ export const loader = async ({
 To handle `POST`, `PUT`, `PATCH` or `DELETE` requests export an action function:
 
 ```tsx
-import type * as Route from "./+types.resource";
+import type { Route } from "./+types.resource";
 
 export const action = async ({
   request,
@@ -138,7 +138,7 @@ export const action = async () => {
 When calling Resource Routes using `<Form>`, `useSubmit`, or Fetchers, Client Loaders and Actions defined in the Resource Route will participate in the request lifecycle.
 
 ```ts
-import type * as Route from "./+types.github";
+import type { Route } from "./+types.github";
 
 export const action = async () => {
   return Response.json(
@@ -166,7 +166,7 @@ export const clientAction = async ({
 Resource routes can be used to handle webhooks. For example, you can create a webhook that receives notifications from GitHub when a new commit is pushed to a repository:
 
 ```tsx
-import type * as Route from "./+types.github";
+import type { Route } from "./+types.github";
 
 import crypto from "node:crypto";
 

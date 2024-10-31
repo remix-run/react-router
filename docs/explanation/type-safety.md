@@ -22,7 +22,7 @@ export const routes: RouteConfig = [
 You can import route-specific types like so:
 
 ```tsx filename=app/routes/product.tsx
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 // types generated for this route 👆
 
 export function loader({ params }: Route.LoaderArgs) {
