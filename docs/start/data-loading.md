@@ -13,7 +13,7 @@ Data is provided to the route component from `loader` and `clientLoader`.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 
 export async function clientLoader({
   params,
@@ -42,7 +42,7 @@ When server rendering, `loader` is used for both initial page loads and client n
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 import { fakeDb } from "../db";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -71,7 +71,7 @@ If you need to return a custom HTTP status code or custom headers from your `loa
 
 ```tsx filename=app/product.tsx lines=[3,6-8,14,17-21]
 // route("products/:pid", "./product.tsx");
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 import { data } from "react-router";
 import { fakeDb } from "../db";
 
@@ -100,7 +100,7 @@ When pre-rendering, loaders are used to fetch data during the production build.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 
 export async function loader({ params }: Route.LoaderArgs) {
   let product = await getProductFromCSVFile(params.pid);
@@ -148,7 +148,7 @@ Note that when server rendering, any URLs that aren't pre-rendered will be serve
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 import { fakeDb } from "../db";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -186,7 +186,7 @@ In the future, rendered async components in loaders are available on `loaderData
 
 ```tsx filename=app/product-page.tsx
 // route("products/:pid", "./product-page.tsx");
-import type * as Route from "./+types.product";
+import type { Route } from "./+types.product";
 import Product from "./product";
 import Reviews from "./reviews";
 
