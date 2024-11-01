@@ -3,5 +3,5 @@
 Create a new React Router app.
 
 ```sh
-npx create-react-router
+npm create react-router
 ```

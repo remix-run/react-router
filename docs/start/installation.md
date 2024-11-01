@@ -11,25 +11,25 @@ The full feature-set is easiest to use with Vite plugin so the getting started g
 
 To use React Router minimally with your own bundling, server rendering, etc. refer to [Manual Usage][manual_usage] guide.
 
-## Starter Templates
+## Starter Template
 
-Most projects start with a template. Let's use a basic template maintained by React Router with `degit`:
+Most projects start with a template. Let's use a basic template maintained by React Router:
 
 ```shellscript nonumber
-npx degit remix-run/react-router/templates/basic#dev my-app
+npm create react-router@latest
 ```
 
-Now change into the new directory and start the app
+After following the prompts, change into the new directory and start the app
 
 ```shellscript nonumber
-cd my-app
+cd my-react-router-app
 npm i
 npm run dev
 ```
 
 You can now open your browser to `http://localhost:5173`
 
-TODO: Show how to find and use community templates
+<!-- TODO: Show how to find and use community templates -->
 
 ## Without the Vite Plugin
 
