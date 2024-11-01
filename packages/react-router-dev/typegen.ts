@@ -182,12 +182,12 @@ function formattedParamsProperties(
   const properties = Object.entries(params).map(([name, values]) => {
     if (values.length === 1) {
       const isOptional = values[0];
-      return indent + (isOptional ? `${name}?: string` : `${name}: string`);
+      return indent + (isOptional ? `"${name}"?: string` : `"${name}": string`);
     }
     const items = values.map((isOptional) =>
       isOptional ? "string | undefined" : "string"
     );
-    return indent + `${name}: [${items.join(", ")}]`;
+    return indent + `"${name}": [${items.join(", ")}]`;
   });
 
   // prettier-ignore
@@ -226,5 +226,8 @@ function parseParams(urlpath: string) {
       result[param].push(isOptional);
       return;
     });
+
+  const hasSplat = segments.at(-1) === "*";
+  if (hasSplat) result["*"] = [false];
   return result;
 }
