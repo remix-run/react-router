@@ -62,8 +62,8 @@ test.describe("typegen", () => {
   test("repeated param", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
-      "app/routes/repeated.$id.$id?.$id.tsx": tsx`
-        import type { Route } from "./+types.repeated.$id.$id?.$id"
+      "app/routes/repeated.$id.($id).$id.tsx": tsx`
+        import type { Route } from "./+types.repeated.$id.($id).$id"
 
         function assertType<T>(t: T) {}
 
