@@ -262,7 +262,10 @@ interface DOMRouterOpts {
   unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
   window?: Window;
 }
-
+/**
+* Initializes and returns a browser-based router instance for handling client-side navigation
+* within a Remix application.
+*/
 export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
