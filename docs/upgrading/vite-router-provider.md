@@ -1,7 +1,8 @@
 ---
 title: Adopting Vite (RouterProvider)
-hidden: true
 ---
+
+<docs-warning>This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release</docs-warning>
 
 # Adopting Vite (RouterProvider)
 

@@ -1,11 +1,10 @@
 ---
 title: Upgrading from Remix
-hidden: true
 ---
 
 # Upgrading from Remix
 
-<docs-warning>This guide is still in development and is subject to change as React Router stabilizes prior to the `7.0.0` stable release</docs-warning>
+<docs-warning>This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release</docs-warning>
 
 Our intention is for the **Remix v2 -> React Router v7** upgrade path to be as non-breaking as possible via the use of [Future Flags][future-flags] for minor and straightforward code adjustments. To best prepare for this eventual upgrade, you can start by adopting all of the existing [Remix v2 Future Flags][v2-future-flags].
 
