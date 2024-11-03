@@ -137,13 +137,23 @@ export async function writeAll(ctx: Context): Promise<void> {
       Path.dirname(route.file),
       "+types." + Pathe.filename(route.file) + ".d.ts"
     );
-    const content = getModule(ctx.routes, route);
+    const importPath = Path.relative(
+      Path.dirname(Path.resolve(typesPath)),
+      Path.join(ctx.appDirectory, route.file)
+    )
+      .replace(/\.[^.]+$/, "")
+      .replace(/^[^.]/, "./$&");
+    const content = getModule(ctx.routes, route, importPath);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });
 }
 
-function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
+function getModule(
+  routes: RouteManifest,
+  route: RouteManifestEntry,
+  importPath: string
+): string {
   return dedent`
     // React Router generated types for route:
     // ${route.file}
@@ -152,7 +162,7 @@ function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
 
     export type Params = {${formattedParamsProperties(routes, route)}}
 
-    type RouteModule = typeof import("./${Pathe.filename(route.file)}")
+    type RouteModule = typeof import("${importPath}")
 
     export namespace Route {
       export type LoaderData = T.CreateLoaderData<RouteModule>
