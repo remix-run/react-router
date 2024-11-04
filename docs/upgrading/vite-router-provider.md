@@ -159,7 +159,7 @@ Note that your `root.tsx` file will be statically generated and served as the en
 At this point you should be able to to boot the app.
 
 ```shellscript
-npm react-router vite:dev
+npx react-router dev
 ```
 
 If you're having trouble
