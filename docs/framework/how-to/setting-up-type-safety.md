@@ -2,7 +2,7 @@
 title: Setting up type safety
 ---
 
-To know more about how type safety works in React Router, check out our [dedicated explanation](../explanation/type-safety.md).
+To know more about how type safety works in React Router, check out our [dedicated explanation](../../explanation/type-safety).
 
 # Setting up type safety
 
