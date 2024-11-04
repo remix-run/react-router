@@ -4,7 +4,6 @@ import { act } from "react-dom/test-utils";
 import type { Blocker, RouteObject } from "../../index";
 import {
   createMemoryRouter,
-  json,
   Link,
   NavLink,
   Outlet,
@@ -19,7 +18,7 @@ const LOADER_LATENCY_MS = 200;
 
 async function slowLoader() {
   await sleep(LOADER_LATENCY_MS / 2);
-  return json(null);
+  return Response.json(null);
 }
 
 describe("navigation blocking with useBlocker", () => {

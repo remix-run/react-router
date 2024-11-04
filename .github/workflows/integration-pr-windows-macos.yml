@@ -21,7 +21,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[20]"
+      node_version: "[22]"
       browser: '["firefox"]'
 
   integration-msedge:
@@ -30,7 +30,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "windows-latest"
-      node_version: "[20]"
+      node_version: "[22]"
       browser: '["msedge"]'
 
   integration-webkit:
@@ -39,5 +39,5 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "macos-latest"
-      node_version: "[20]"
+      node_version: "[22]"
       browser: '["webkit"]'

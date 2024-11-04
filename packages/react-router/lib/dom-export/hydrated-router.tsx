@@ -133,6 +133,7 @@ function createHydratedRouter(): DataRouter {
         // * or doesn't have a server loader and we have no data to render
         if (
           route &&
+          manifestRoute &&
           shouldHydrateRouteLoader(
             manifestRoute,
             route,

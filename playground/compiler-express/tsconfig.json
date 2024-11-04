@@ -27,7 +27,6 @@
       "~/*": ["./app/*"]
     },
     "noEmit": true,
-    "plugins": [{ "name": "@react-router/dev" }],
     "rootDirs": [".", "./.react-router/types"]
   }
 }

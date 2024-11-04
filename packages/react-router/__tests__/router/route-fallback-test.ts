@@ -5,6 +5,7 @@ import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
 
 import { urlMatch } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
+import { tick } from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   urlMatch(url: string);
@@ -188,7 +189,7 @@ describe("route HydrateFallback", () => {
     let parentSpy = jest.fn(() => parentDfd.promise);
     let childDfd = createDeferred();
     let childSpy = jest.fn(() => childDfd.promise);
-    let router = createRouter({
+    router = createRouter({
       history: createMemoryHistory({ initialEntries: ["/child"] }),
       routes: [
         {
@@ -230,7 +231,6 @@ describe("route HydrateFallback", () => {
       },
     });
 
-    router.dispose();
     consoleWarnSpy.mockReset();
   });
 
@@ -242,7 +242,7 @@ describe("route HydrateFallback", () => {
     let parentSpy = jest.fn(() => parentDfd.promise);
     let childDfd = createDeferred();
     let childSpy = jest.fn(() => childDfd.promise);
-    let router = createRouter({
+    router = createRouter({
       history: createMemoryHistory({ initialEntries: ["/child"] }),
       routes: [
         {
@@ -284,7 +284,6 @@ describe("route HydrateFallback", () => {
       },
     });
 
-    router.dispose();
     consoleWarnSpy.mockReset();
   });
 
@@ -294,7 +293,7 @@ describe("route HydrateFallback", () => {
       .mockImplementation(() => {});
     let parentDfd = createDeferred();
     let parentSpy = jest.fn(() => parentDfd.promise);
-    let router = createRouter({
+    router = createRouter({
       history: createMemoryHistory({ initialEntries: ["/child"] }),
       routes: [
         {
@@ -322,7 +321,116 @@ describe("route HydrateFallback", () => {
       },
     });
 
-    router.dispose();
     consoleWarnSpy.mockReset();
+  });
+
+  it("does not kick off initial data loads below SSR error boundaries (child throw)", async () => {
+    let parentCount = 0;
+    let childCount = 0;
+    let routes = [
+      {
+        id: "parent",
+        path: "/",
+        loader: () => `PARENT ${++parentCount}`,
+        hasErrorBoundary: true,
+        children: [
+          {
+            path: "child",
+            loader: () => `CHILD ${++childCount}`,
+          },
+        ],
+      },
+    ];
+
+    // @ts-expect-error
+    routes[0].loader.hydrate = true;
+    // @ts-expect-error
+    routes[0].children[0].loader.hydrate = true;
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/child"] }),
+      routes,
+      hydrationData: {
+        loaderData: {
+          parent: "PARENT 0",
+        },
+        errors: {
+          // Child threw and bubbled to parent
+          parent: "CHILD SSR ERROR",
+        },
+      },
+    }).initialize();
+    expect(router.state).toMatchObject({
+      initialized: false,
+      navigation: IDLE_NAVIGATION,
+      loaderData: {
+        parent: "PARENT 0",
+      },
+      errors: {
+        parent: "CHILD SSR ERROR",
+      },
+    });
+    await tick();
+    expect(router.state).toMatchObject({
+      initialized: true,
+      navigation: IDLE_NAVIGATION,
+      loaderData: {
+        parent: "PARENT 1",
+      },
+      errors: {
+        parent: "CHILD SSR ERROR",
+      },
+    });
+
+    expect(parentCount).toBe(1);
+    expect(childCount).toBe(0);
+  });
+
+  it("does not kick off initial data loads at SSR error boundaries (boundary throw)", async () => {
+    let parentCount = 0;
+    let childCount = 0;
+    let routes = [
+      {
+        id: "parent",
+        path: "/",
+        loader: () => `PARENT ${++parentCount}`,
+        hasErrorBoundary: true,
+        children: [
+          {
+            path: "child",
+            loader: () => `CHILD ${++childCount}`,
+          },
+        ],
+      },
+    ];
+
+    // @ts-expect-error
+    routes[0].loader.hydrate = true;
+    // @ts-expect-error
+    routes[0].children[0].loader.hydrate = true;
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/child"] }),
+      routes,
+      hydrationData: {
+        loaderData: {},
+        errors: {
+          // Parent threw
+          parent: "PARENT SSR ERROR",
+        },
+      },
+    }).initialize();
+
+    expect(router.state).toMatchObject({
+      initialized: true,
+      navigation: IDLE_NAVIGATION,
+      loaderData: {},
+      errors: {
+        parent: "PARENT SSR ERROR",
+      },
+    });
+
+    expect(parentCount).toBe(0);
+    expect(childCount).toBe(0);
   });
 });

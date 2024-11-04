@@ -1,4 +1,3 @@
-import type { JsonFunction } from "../server-runtime/responses";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 
@@ -338,7 +337,10 @@ export type AgnosticDataRouteObject =
   | AgnosticDataIndexRouteObject
   | AgnosticDataNonIndexRouteObject;
 
-export type RouteManifest = Record<string, AgnosticDataRouteObject | undefined>;
+export type RouteManifest<R = AgnosticDataRouteObject> = Record<
+  string,
+  R | undefined
+>;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
@@ -1306,26 +1308,6 @@ export const normalizeSearch = (search: string): string =>
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
-/**
- * This is a shortcut for creating `application/json` responses. Converts `data`
- * to JSON and sets the `Content-Type` header.
- *
- * @category Utils
- */
-export const json: JsonFunction = (data, init = {}) => {
-  let responseInit = typeof init === "number" ? { status: init } : init;
-
-  let headers = new Headers(responseInit.headers);
-  if (!headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json; charset=utf-8");
-  }
-
-  return new Response(JSON.stringify(data), {
-    ...responseInit,
-    headers,
-  });
-};
-
 export class DataWithResponseInit<D> {
   type: string = "DataWithResponseInit";
   data: D;
@@ -1349,6 +1331,9 @@ export function data<D>(data: D, init?: number | ResponseInit) {
     typeof init === "number" ? { status: init } : init
   );
 }
+
+// This is now only used by the Await component and will eventually probably
+// go away in favor of the format used by `React.use`
 export interface TrackedPromise extends Promise<any> {
   _tracked?: boolean;
   _data?: any;

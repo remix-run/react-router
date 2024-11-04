@@ -102,10 +102,12 @@ const files: Files = async ({ port }) => ({
     };
   `,
   "app/routes/get-cookies.tsx": js`
-    import { json, LoaderFunctionArgs } from "react-router";
+    import type { LoaderFunctionArgs } from "react-router";
     import { useLoaderData } from "react-router"
 
-    export const loader = ({ request }: LoaderFunctionArgs) => json({cookies: request.headers.get("Cookie")});
+    export const loader = ({ request }: LoaderFunctionArgs) => ({
+      cookies: request.headers.get("Cookie")
+    });
 
     export default function IndexRoute() {
       const { cookies } = useLoaderData<typeof loader>();
@@ -128,13 +130,12 @@ const files: Files = async ({ port }) => ({
     }
   `,
   "app/routes/mdx.mdx": js`
-    import { json } from "react-router";
     import { useLoaderData } from "react-router";
 
     export const loader = () => {
-      return json({
+      return {
         content: "MDX route content from loader",
-      })
+      }
     }
 
     export function MdxComponent() {
@@ -151,13 +152,12 @@ const files: Files = async ({ port }) => ({
   `,
   "app/routes/dotenv.tsx": js`
     import { useState, useEffect } from "react";
-    import { json } from "react-router";
     import { useLoaderData } from "react-router";
 
     export const loader = () => {
-      return json({
+      return {
         loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
-      })
+      }
     }
 
     export default function DotenvRoute() {

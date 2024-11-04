@@ -26,7 +26,9 @@ export function getKeyedLinksForMatches(
       let module = routeModules[match.route.id];
       let route = manifest.routes[match.route.id];
       return [
-        route.css ? route.css.map((href) => ({ rel: "stylesheet", href })) : [],
+        route && route.css
+          ? route.css.map((href) => ({ rel: "stylesheet", href }))
+          : [],
         module?.links?.() || [],
       ];
     })
@@ -138,11 +140,12 @@ export async function getKeyedPrefetchLinks(
 ): Promise<KeyedHtmlLinkDescriptor[]> {
   let links = await Promise.all(
     matches.map(async (match) => {
-      let mod = await loadRouteModule(
-        manifest.routes[match.route.id],
-        routeModules
-      );
-      return mod.links ? mod.links() : [];
+      let route = manifest.routes[match.route.id];
+      if (route) {
+        let mod = await loadRouteModule(route, routeModules);
+        return mod.links ? mod.links() : [];
+      }
+      return [];
     })
   );
 
@@ -168,8 +171,6 @@ export function getNewMatchesForLinks(
   location: Location,
   mode: "data" | "assets"
 ): AgnosticDataRouteMatch[] {
-  let path = parsePathPatch(page);
-
   let isNew = (match: AgnosticDataRouteMatch, index: number) => {
     if (!currentMatches[index]) return true;
     return match.route.id !== currentMatches[index].route.id;
@@ -186,48 +187,47 @@ export function getNewMatchesForLinks(
     );
   };
 
-  // NOTE: keep this mostly up-to-date w/ the transition data diff, but this
+  if (mode === "assets") {
+    return nextMatches.filter(
+      (match, index) => isNew(match, index) || matchPathChanged(match, index)
+    );
+  }
+
+  // NOTE: keep this mostly up-to-date w/ the router data diff, but this
   // version doesn't care about submissions
-  let newMatches =
-    mode === "data" && location.search !== path.search
-      ? // this is really similar to stuff in transition.ts, maybe somebody smarter
-        // than me (or in less of a hurry) can share some of it. You're the best.
-        nextMatches.filter((match, index) => {
-          let manifestRoute = manifest.routes[match.route.id];
-          if (!manifestRoute.hasLoader) {
-            return false;
-          }
+  // TODO: this is really similar to stuff in router.ts, maybe somebody smarter
+  // than me (or in less of a hurry) can share some of it. You're the best.
+  if (mode === "data") {
+    return nextMatches.filter((match, index) => {
+      let manifestRoute = manifest.routes[match.route.id];
+      if (!manifestRoute || !manifestRoute.hasLoader) {
+        return false;
+      }
 
-          if (isNew(match, index) || matchPathChanged(match, index)) {
-            return true;
-          }
+      if (isNew(match, index) || matchPathChanged(match, index)) {
+        return true;
+      }
 
-          if (match.route.shouldRevalidate) {
-            let routeChoice = match.route.shouldRevalidate({
-              currentUrl: new URL(
-                location.pathname + location.search + location.hash,
-                window.origin
-              ),
-              currentParams: currentMatches[0]?.params || {},
-              nextUrl: new URL(page, window.origin),
-              nextParams: match.params,
-              defaultShouldRevalidate: true,
-            });
-            if (typeof routeChoice === "boolean") {
-              return routeChoice;
-            }
-          }
-          return true;
-        })
-      : nextMatches.filter((match, index) => {
-          let manifestRoute = manifest.routes[match.route.id];
-          return (
-            (mode === "assets" || manifestRoute.hasLoader) &&
-            (isNew(match, index) || matchPathChanged(match, index))
-          );
+      if (match.route.shouldRevalidate) {
+        let routeChoice = match.route.shouldRevalidate({
+          currentUrl: new URL(
+            location.pathname + location.search + location.hash,
+            window.origin
+          ),
+          currentParams: currentMatches[0]?.params || {},
+          nextUrl: new URL(page, window.origin),
+          nextParams: match.params,
+          defaultShouldRevalidate: true,
         });
+        if (typeof routeChoice === "boolean") {
+          return routeChoice;
+        }
+      }
+      return true;
+    });
+  }
 
-  return newMatches;
+  return [];
 }
 
 export function getModuleLinkHrefs(
@@ -238,6 +238,7 @@ export function getModuleLinkHrefs(
     matches
       .map((match) => {
         let route = manifest.routes[match.route.id];
+        if (!route) return [];
         let hrefs = [route.module];
         if (route.clientActionModule) {
           hrefs = hrefs.concat(route.clientActionModule);
@@ -301,13 +302,6 @@ function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
 
     return deduped;
   }, [] as KeyedLinkDescriptor<Descriptor>[]);
-}
-
-// https://github.com/remix-run/history/issues/897
-function parsePathPatch(href: string) {
-  let path = parsePath(href);
-  if (path.search === undefined) path.search = "";
-  return path;
 }
 
 // Detect if this browser supports <link rel="preload"> (or has it enabled).

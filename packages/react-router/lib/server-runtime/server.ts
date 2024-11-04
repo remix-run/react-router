@@ -1,13 +1,11 @@
 import type { StaticHandler } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
-import {
-  isRouteErrorResponse,
-  json as routerJson,
-  ErrorResponseImpl,
-} from "../router/utils";
+import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
+  isRedirectResponse,
+  isResponse,
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
@@ -17,9 +15,8 @@ import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
-import type { EntryRoute, ServerRoute } from "./routes";
+import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { isRedirectResponse, isResponse, json } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
 import type { SingleFetchResult, SingleFetchResults } from "./single-fetch";
@@ -33,6 +30,7 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
+import type { EntryRoute } from "../dom/ssr/routes";
 
 export type RequestHandler = (
   request: Request,
@@ -198,7 +196,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequest(
         serverMode,
-        _build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -247,16 +244,19 @@ async function handleManifestRequest(
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
-          patches[routeId] = build.assets.routes[routeId];
+          let route = build.assets.routes[routeId];
+          if (route) {
+            patches[routeId] = route;
+          }
         }
       }
     }
 
-    return json(patches, {
+    return Response.json(patches, {
       headers: {
         "Cache-Control": "public, max-age=31536000, immutable",
       },
-    }) as Response; // Override the TypedResponse stuff from json()
+    });
   }
 
   return new Response("Invalid Request", { status: 400 });
@@ -478,7 +478,6 @@ async function handleDocumentRequest(
 
 async function handleResourceRequest(
   serverMode: ServerMode,
-  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
@@ -524,7 +523,7 @@ function errorResponseToJson(
   errorResponse: ErrorResponse,
   serverMode: ServerMode
 ): Response {
-  return routerJson(
+  return Response.json(
     serializeError(
       // @ts-expect-error This is "private" from users but intended for internal use
       errorResponse.error || new Error("Unexpected Server Error"),

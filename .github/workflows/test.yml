@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18
           - 20
+          - 22
 
     runs-on: ubuntu-latest
 
@@ -44,6 +44,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
           check-latest: true
+
+      - uses: google/wireit@setup-github-actions-caching/v2
 
       - name: Disable GitHub Actions Annotations
         run: |

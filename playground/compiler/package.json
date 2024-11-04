@@ -8,6 +8,7 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
+    "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -27,6 +28,6 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

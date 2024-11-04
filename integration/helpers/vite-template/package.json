@@ -8,7 +8,7 @@
     "dev": "react-router dev",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
     "@react-router/express": "workspace:*",
@@ -26,7 +26,7 @@
   "devDependencies": {
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
-    "@react-router/remix-config-routes-adapter": "workspace:*",
+    "@react-router/remix-routes-option-adapter": "workspace:*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "eslint": "^8.38.0",
@@ -36,6 +36,6 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

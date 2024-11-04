@@ -1,4 +1,4 @@
-import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
+import type { ParseOptions, SerializeOptions } from "cookie";
 
 import type { Cookie, CookieOptions } from "./cookies";
 import { createCookie, isCookie } from "./cookies";
@@ -176,7 +176,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   getSession: (
     cookieHeader?: string | null,
-    options?: CookieParseOptions
+    options?: ParseOptions
   ) => Promise<Session<Data, FlashData>>;
 
   /**
@@ -185,7 +185,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   commitSession: (
     session: Session<Data, FlashData>,
-    options?: CookieSerializeOptions
+    options?: SerializeOptions
   ) => Promise<string>;
 
   /**
@@ -194,7 +194,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   destroySession: (
     session: Session<Data, FlashData>,
-    options?: CookieSerializeOptions
+    options?: SerializeOptions
   ) => Promise<string>;
 }
 

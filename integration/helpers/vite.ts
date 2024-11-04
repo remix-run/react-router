@@ -75,10 +75,7 @@ export const EXPRESS_SERVER = (args: {
 }) =>
   String.raw`
     import { createRequestHandler } from "@react-router/express";
-    import { installGlobals } from "@react-router/node";
     import express from "express";
-
-    installGlobals();
 
     let viteDevServer =
       process.env.NODE_ENV === "production"

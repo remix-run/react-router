@@ -19,7 +19,6 @@ module.exports = {
     ),
   },
   modulePathIgnorePatterns: ignorePatterns,
-  setupFiles: ["<rootDir>/__tests__/setup.ts"],
   testMatch: ["<rootDir>/**/*-test.[jt]s?(x)"],
   transform: {
     "\\.[jt]sx?$": require.resolve("./transform"),

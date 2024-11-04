@@ -3,10 +3,12 @@ import * as v from "valibot";
 import pick from "lodash/pick";
 import invariant from "../invariant";
 
-let appDirectory: string;
+declare global {
+  var __reactRouterAppDirectory: string;
+}
 
 export function setAppDirectory(directory: string) {
-  appDirectory = directory;
+  globalThis.__reactRouterAppDirectory = directory;
 }
 
 /**
@@ -14,8 +16,8 @@ export function setAppDirectory(directory: string) {
  * This is designed to support resolving file system routes.
  */
 export function getAppDirectory() {
-  invariant(appDirectory);
-  return appDirectory;
+  invariant(globalThis.__reactRouterAppDirectory);
+  return globalThis.__reactRouterAppDirectory;
 }
 
 export interface RouteManifestEntry {
@@ -183,18 +185,18 @@ type CreateRouteOptions = Pick<
  * Helper function for creating a route config entry, for use within
  * `routes.ts`.
  */
-function createRoute(
+function route(
   path: string | null | undefined,
   file: string,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
-function createRoute(
+function route(
   path: string | null | undefined,
   file: string,
   options: CreateRouteOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
-function createRoute(
+function route(
   path: string | null | undefined,
   file: string,
   optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
@@ -227,10 +229,7 @@ type CreateIndexOptions = Pick<
  * Helper function for creating a route config entry for an index route, for use
  * within `routes.ts`.
  */
-function createIndex(
-  file: string,
-  options?: CreateIndexOptions
-): RouteConfigEntry {
+function index(file: string, options?: CreateIndexOptions): RouteConfigEntry {
   return {
     file,
     index: true,
@@ -249,16 +248,13 @@ type CreateLayoutOptions = Pick<
  * Helper function for creating a route config entry for a layout route, for use
  * within `routes.ts`.
  */
-function createLayout(
-  file: string,
-  children?: RouteConfigEntry[]
-): RouteConfigEntry;
-function createLayout(
+function layout(file: string, children?: RouteConfigEntry[]): RouteConfigEntry;
+function layout(
   file: string,
   options: CreateLayoutOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
-function createLayout(
+function layout(
   file: string,
   optionsOrChildren: CreateLayoutOptions | RouteConfigEntry[] | undefined,
   children?: RouteConfigEntry[]
@@ -278,19 +274,39 @@ function createLayout(
   };
 }
 
-export const route = createRoute;
-export const index = createIndex;
-export const layout = createLayout;
+/**
+ * Helper function for adding a path prefix to a set of routes without needing
+ * to introduce a parent route file, for use within `routes.ts`.
+ */
+function prefix(
+  prefixPath: string,
+  routes: RouteConfigEntry[]
+): RouteConfigEntry[] {
+  return routes.map((route) => {
+    if (route.index || typeof route.path === "string") {
+      return {
+        ...route,
+        path: route.path ? joinRoutePaths(prefixPath, route.path) : prefixPath,
+        children: route.children,
+      };
+    } else if (route.children) {
+      return {
+        ...route,
+        children: prefix(prefixPath, route.children),
+      };
+    }
+    return route;
+  });
+}
+
+const helpers = { route, index, layout, prefix };
+export { route, index, layout, prefix };
 /**
  * Creates a set of route config helpers that resolve file paths relative to the
  * given directory, for use within `routes.ts`. This is designed to support
  * splitting route config into multiple files within different directories.
  */
-export function relative(directory: string): {
-  route: typeof route;
-  index: typeof index;
-  layout: typeof layout;
-} {
+export function relative(directory: string): typeof helpers {
   return {
     /**
      * Helper function for creating a route config entry, for use within
@@ -319,6 +335,10 @@ export function relative(directory: string): {
     layout: (file, ...rest) => {
       return layout(resolve(directory, file), ...(rest as any));
     },
+
+    // Passthrough of helper functions that don't need relative scoping so that
+    // a complete API is still provided.
+    prefix,
   };
 }
 
@@ -370,4 +390,11 @@ function normalizeSlashes(file: string) {
 
 function stripFileExtension(file: string) {
   return file.replace(/\.[a-z0-9]+$/i, "");
+}
+
+function joinRoutePaths(path1: string, path2: string): string {
+  return [
+    path1.replace(/\/+$/, ""), // Remove trailing slashes
+    path2.replace(/^\/+/, ""), // Remove leading slashes
+  ].join("/");
 }

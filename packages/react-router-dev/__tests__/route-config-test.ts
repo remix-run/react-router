@@ -1,10 +1,23 @@
+import path from "node:path";
+import { normalizePath } from "vite";
+
 import {
   validateRouteConfig,
   route,
   layout,
   index,
+  prefix,
   relative,
 } from "../config/routes";
+
+const cleanPathsForSnapshot = (obj: any): any =>
+  JSON.parse(
+    JSON.stringify(obj, (_key, value) =>
+      typeof value === "string" && path.isAbsolute(value)
+        ? normalizePath(value.replace(process.cwd(), "{{CWD}}"))
+        : value
+    )
+  );
 
 describe("route config", () => {
   describe("validateRouteConfig", () => {
@@ -12,9 +25,9 @@ describe("route config", () => {
       expect(
         validateRouteConfig({
           routeConfigFile: "routes.ts",
-          routeConfig: [
+          routeConfig: prefix("prefix", [
             route("parent", "parent.tsx", [route("child", "child.tsx")]),
-          ],
+          ]),
         }).valid
       ).toBe(true);
     });
@@ -306,42 +319,196 @@ describe("route config", () => {
       });
     });
 
+    describe("prefix", () => {
+      it("adds a prefix to routes", () => {
+        expect(prefix("prefix", [route("route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to routes with a blank path", () => {
+        expect(prefix("prefix", [route("", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix with a trailing slash to routes", () => {
+        expect(prefix("prefix/", [route("route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to routes with leading slash", () => {
+        expect(prefix("prefix", [route("/route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix with a trailing slash to routes with leading slash", () => {
+        expect(prefix("prefix/", [route("/route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to index routes", () => {
+        expect(prefix("prefix", [index("routes/index.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/index.tsx",
+              "index": true,
+              "path": "prefix",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to children of layout routes", () => {
+        expect(
+          prefix("prefix", [
+            layout("routes/layout.tsx", [route("route", "routes/route.tsx")]),
+          ])
+        ).toMatchInlineSnapshot(`
+          [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "file": "routes/route.tsx",
+                  "path": "prefix/route",
+                },
+              ],
+              "file": "routes/layout.tsx",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to children of nested layout routes", () => {
+        expect(
+          prefix("prefix", [
+            layout("routes/layout-1.tsx", [
+              route("layout-1-child", "routes/layout-1-child.tsx"),
+              layout("routes/layout-2.tsx", [
+                route("layout-2-child", "routes/layout-2-child.tsx"),
+                layout("routes/layout-3.tsx", [
+                  route("layout-3-child", "routes/layout-3-child.tsx"),
+                ]),
+              ]),
+            ]),
+          ])
+        ).toMatchInlineSnapshot(`
+          [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "file": "routes/layout-1-child.tsx",
+                  "path": "prefix/layout-1-child",
+                },
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "file": "routes/layout-2-child.tsx",
+                      "path": "prefix/layout-2-child",
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": undefined,
+                          "file": "routes/layout-3-child.tsx",
+                          "path": "prefix/layout-3-child",
+                        },
+                      ],
+                      "file": "routes/layout-3.tsx",
+                    },
+                  ],
+                  "file": "routes/layout-2.tsx",
+                },
+              ],
+              "file": "routes/layout-1.tsx",
+            },
+          ]
+        `);
+      });
+    });
+
     describe("relative", () => {
       it("supports relative routes", () => {
-        let { route } = relative("/path/to/dirname");
+        let { route } = relative(path.join(process.cwd(), "/path/to/dirname"));
         expect(
-          route("parent", "nested/parent.tsx", [
-            route("child", "nested/child.tsx", { id: "child" }),
-          ])
+          cleanPathsForSnapshot(
+            route("parent", "nested/parent.tsx", [
+              route("child", "nested/child.tsx", { id: "child" }),
+            ])
+          )
         ).toMatchInlineSnapshot(`
           {
             "children": [
               {
-                "children": undefined,
-                "file": "/path/to/dirname/nested/child.tsx",
+                "file": "{{CWD}}/path/to/dirname/nested/child.tsx",
                 "id": "child",
                 "path": "child",
               },
             ],
-            "file": "/path/to/dirname/nested/parent.tsx",
+            "file": "{{CWD}}/path/to/dirname/nested/parent.tsx",
             "path": "parent",
           }
         `);
       });
 
       it("supports relative index routes", () => {
-        let { index } = relative("/path/to/dirname");
-        expect([
-          index("nested/without-options.tsx"),
-          index("nested/with-options.tsx", { id: "with-options" }),
-        ]).toMatchInlineSnapshot(`
+        let { index } = relative(path.join(process.cwd(), "/path/to/dirname"));
+        expect(
+          cleanPathsForSnapshot([
+            index("nested/without-options.tsx"),
+            index("nested/with-options.tsx", { id: "with-options" }),
+          ])
+        ).toMatchInlineSnapshot(`
           [
             {
-              "file": "/path/to/dirname/nested/without-options.tsx",
+              "file": "{{CWD}}/path/to/dirname/nested/without-options.tsx",
               "index": true,
             },
             {
-              "file": "/path/to/dirname/nested/with-options.tsx",
+              "file": "{{CWD}}/path/to/dirname/nested/with-options.tsx",
               "id": "with-options",
               "index": true,
             },
@@ -350,23 +517,29 @@ describe("route config", () => {
       });
 
       it("supports relative layout routes", () => {
-        let { layout } = relative("/path/to/dirname");
+        let { layout } = relative(path.join(process.cwd(), "/path/to/dirname"));
         expect(
-          layout("nested/parent.tsx", [
-            layout("nested/child.tsx", { id: "child" }),
-          ])
+          cleanPathsForSnapshot(
+            layout("nested/parent.tsx", [
+              layout("nested/child.tsx", { id: "child" }),
+            ])
+          )
         ).toMatchInlineSnapshot(`
           {
             "children": [
               {
-                "children": undefined,
-                "file": "/path/to/dirname/nested/child.tsx",
+                "file": "{{CWD}}/path/to/dirname/nested/child.tsx",
                 "id": "child",
               },
             ],
-            "file": "/path/to/dirname/nested/parent.tsx",
+            "file": "{{CWD}}/path/to/dirname/nested/parent.tsx",
           }
         `);
+      });
+
+      it("provides passthrough for non-relative APIs", () => {
+        let { prefix: relativePrefix } = relative("/path/to/dirname");
+        expect(relativePrefix).toBe(prefix);
       });
     });
   });

@@ -22,6 +22,8 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
+      - uses: google/wireit@setup-github-actions-caching/v2
+
       - name: Disable GitHub Actions Annotations
         run: |
           echo "::remove-matcher owner=tsc::"

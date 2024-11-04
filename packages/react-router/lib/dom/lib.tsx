@@ -38,7 +38,8 @@ import {
   stripBasename,
 } from "../router/utils";
 
-import "./global";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type * as _ from "./global";
 import type {
   SubmitOptions,
   URLSearchParamsInit,
@@ -88,6 +89,7 @@ import {
   useResolvedPath,
   useRouteId,
 } from "../hooks";
+import type { SerializeFrom } from "../types";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -107,7 +109,9 @@ const isBrowser =
 // Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
 // to detect and properly classify live websites as being built with React Router:
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
-const REACT_ROUTER_VERSION = "0";
+declare global {
+  const REACT_ROUTER_VERSION: string;
+}
 try {
   if (isBrowser) {
     window.__reactRouterVersion = REACT_ROUTER_VERSION;
@@ -1247,7 +1251,7 @@ enum DataRouterStateHook {
 function getDataRouterConsoleError(
   hookName: DataRouterHook | DataRouterStateHook
 ) {
-  return `${hookName} must be used within a data router.  See https://reactrouter.com/routers/picking-a-router.`;
+  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
 }
 
 function useDataRouterContext(hookName: DataRouterHook) {
@@ -1792,7 +1796,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
   @category Hooks
  */
-export function useFetcher<TData = any>({
+export function useFetcher<T = any>({
   key,
 }: {
   /**
@@ -1813,7 +1817,7 @@ export function useFetcher<TData = any>({
     ```
    */
   key?: string;
-} = {}): FetcherWithComponents<TData> {
+} = {}): FetcherWithComponents<SerializeFrom<T>> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetcherData = React.useContext(FetchersContext);

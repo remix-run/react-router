@@ -2,8 +2,8 @@ import * as path from "node:path";
 import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
+import colors from "picocolors";
 
-import * as colors from "../colors";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
 import { formatRoutes } from "../config/format";
@@ -11,7 +11,7 @@ import type { RoutesFormat } from "../config/format";
 import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
-import * as Typegen from "../typescript/typegen";
+import * as Typegen from "../typegen";
 
 export async function routes(
   reactRouterRoot?: string,
@@ -104,7 +104,7 @@ export async function generateEntry(
     let list = conjunctionListFormat.format(entriesArray);
 
     console.error(
-      colors.error(`Invalid entry file. Valid entry files are ${list}`)
+      colors.red(`Invalid entry file. Valid entry files are ${list}`)
     );
     return;
   }
@@ -113,11 +113,16 @@ export async function generateEntry(
   let deps = pkgJson.content.dependencies ?? {};
 
   if (!deps["@react-router/node"]) {
-    console.error(colors.error(`No default server entry detected.`));
+    console.error(colors.red(`No default server entry detected.`));
     return;
   }
 
-  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
+  let defaultsDirectory = path.resolve(
+    path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "defaults"
+  );
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
 
   let defaultEntryServer = path.resolve(
@@ -166,7 +171,7 @@ async function checkForEntry(
     let exists = await fse.pathExists(entryPath);
     if (exists) {
       let relative = path.relative(rootDirectory, entryPath);
-      console.error(colors.error(`Entry file ${relative} already exists.`));
+      console.error(colors.red(`Entry file ${relative} already exists.`));
       return process.exit(1);
     }
   }
@@ -192,8 +197,19 @@ async function createClientEntry(
   return contents;
 }
 
-export async function typegen(root: string) {
-  let ctx = await loadPluginContext({ root });
+export async function typegen(
+  root: string,
+  flags: { watch: boolean; config?: string }
+) {
+  root ??= process.cwd();
+
+  if (flags.watch) {
+    await Typegen.watch(root, { configFile: flags.config });
+    await new Promise(() => {}); // keep alive
+    return;
+  }
+
+  let ctx = await loadPluginContext({ root, configFile: flags.config });
   await Typegen.writeAll({
     rootDirectory: root,
     appDirectory: ctx.reactRouterConfig.appDirectory,

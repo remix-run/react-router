@@ -4,7 +4,9 @@ import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
+  RouteManifest,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
 } from "../../router/utils";
 import { ErrorResponseImpl } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
@@ -17,12 +19,7 @@ import invariant from "./invariant";
 import { useRouteError } from "../../hooks";
 import type { DataRouteObject } from "../../context";
 
-export interface RouteManifest<Route> {
-  [routeId: string]: Route;
-}
-
-// NOTE: make sure to change the Route in server-runtime if you change this
-interface Route {
+export interface Route {
   index?: boolean;
   caseSensitive?: boolean;
   id: string;
@@ -30,7 +27,6 @@ interface Route {
   path?: string;
 }
 
-// NOTE: make sure to change the EntryRoute in server-runtime if you change this
 export interface EntryRoute extends Route {
   hasAction: boolean;
   hasLoader: boolean;
@@ -51,11 +47,13 @@ function groupRoutesByParentId(manifest: RouteManifest<EntryRoute>) {
   let routes: Record<string, Omit<EntryRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;
@@ -290,17 +288,25 @@ export function createClientRoutes(
         ...dataRoute,
         ...getRouteComponents(route, routeModule, isSpaMode),
         handle: routeModule.handle,
-        shouldRevalidate: needsRevalidation
-          ? wrapShouldRevalidateForHdr(
-              route.id,
-              routeModule.shouldRevalidate,
-              needsRevalidation
-            )
-          : routeModule.shouldRevalidate,
+        shouldRevalidate: getShouldRevalidateFunction(
+          routeModule,
+          route.id,
+          needsRevalidation
+        ),
       });
 
-      let initialData = initialState?.loaderData?.[route.id];
-      let initialError = initialState?.errors?.[route.id];
+      let hasInitialData =
+        initialState &&
+        initialState.loaderData &&
+        route.id in initialState.loaderData;
+      let initialData = hasInitialData
+        ? initialState?.loaderData?.[route.id]
+        : undefined;
+      let hasInitialError =
+        initialState && initialState.errors && route.id in initialState.errors;
+      let initialError = hasInitialError
+        ? initialState?.errors?.[route.id]
+        : undefined;
       let isHydrationRequest =
         needsRevalidation == null &&
         (routeModule.clientLoader?.hydrate === true || !route.hasLoader);
@@ -329,10 +335,12 @@ export function createClientRoutes(
 
                 // On the first call, resolve with the server result
                 if (isHydrationRequest) {
-                  if (initialError !== undefined) {
+                  if (hasInitialData) {
+                    return initialData;
+                  }
+                  if (hasInitialError) {
                     throw initialError;
                   }
-                  return initialData;
                 }
 
                 // Call the server loader for client-side navigations
@@ -490,19 +498,15 @@ export function createClientRoutes(
             });
         }
 
-        if (needsRevalidation) {
-          lazyRoute.shouldRevalidate = wrapShouldRevalidateForHdr(
-            route.id,
-            mod.shouldRevalidate,
-            needsRevalidation
-          );
-        }
-
         return {
           ...(lazyRoute.loader ? { loader: lazyRoute.loader } : {}),
           ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
           hasErrorBoundary: lazyRoute.hasErrorBoundary,
-          shouldRevalidate: lazyRoute.shouldRevalidate,
+          shouldRevalidate: getShouldRevalidateFunction(
+            lazyRoute,
+            route.id,
+            needsRevalidation
+          ),
           handle: lazyRoute.handle,
           // No need to wrap these in layout since the root route is never
           // loaded via route.lazy()
@@ -524,6 +528,31 @@ export function createClientRoutes(
     if (children.length > 0) dataRoute.children = children;
     return dataRoute;
   });
+}
+
+function getShouldRevalidateFunction(
+  route: Partial<DataRouteObject>,
+  routeId: string,
+  needsRevalidation: Set<string> | undefined
+) {
+  // During HDR we force revalidation for updated routes
+  if (needsRevalidation) {
+    return wrapShouldRevalidateForHdr(
+      routeId,
+      route.shouldRevalidate,
+      needsRevalidation
+    );
+  }
+
+  // Single fetch revalidates by default, so override the RR default value which
+  // matches the multi-fetch behavior with `true`
+  if (route.shouldRevalidate) {
+    let fn = route.shouldRevalidate;
+    return (opts: ShouldRevalidateFunctionArgs) =>
+      fn({ ...opts, defaultShouldRevalidate: true });
+  }
+
+  return route.shouldRevalidate;
 }
 
 // When an HMR / HDR update happens we opt out of all user-defined

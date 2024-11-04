@@ -32,9 +32,6 @@ import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
 
-// TODO: Temporary shim until we figure out the way to handle typings in v7
-export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
-
 function useDataRouterContext() {
   let context = React.useContext(DataRouterContext);
   invariant(
@@ -366,7 +363,8 @@ function PrefetchPageLinksImpl({
     let routesParams = new Set<string>();
     let foundOptOutRoute = false;
     nextMatches.forEach((m) => {
-      if (!manifest.routes[m.route.id].hasLoader) {
+      let manifestRoute = manifest.routes[m.route.id];
+      if (!manifestRoute || !manifestRoute.hasLoader) {
         return;
       }
 
@@ -376,7 +374,7 @@ function PrefetchPageLinksImpl({
         routeModules[m.route.id]?.shouldRevalidate
       ) {
         foundOptOutRoute = true;
-      } else if (manifest.routes[m.route.id].hasClientLoader) {
+      } else if (manifestRoute.hasClientLoader) {
         foundOptOutRoute = true;
       } else {
         routesParams.add(m.route.id);
@@ -682,6 +680,7 @@ ${matches
   .map((match, routeIndex) => {
     let routeVarName = `route${routeIndex}`;
     let manifestEntry = manifest.routes[match.route.id];
+    invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
     let { clientActionModule, clientLoaderModule, module } = manifestEntry;
 
     // Ordered lowest to highest priority in terms of merging chunks

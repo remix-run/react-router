@@ -1,7 +1,8 @@
 ---
 title: Adopting Vite (RouterProvider)
-hidden: true
 ---
+
+<docs-warning>This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release</docs-warning>
 
 # Adopting Vite (RouterProvider)
 
@@ -230,7 +231,7 @@ The first few routes you migrate are the hardest because you often have to acces
 
 ## Enable SSR and/or Pre-rendering
 
-If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying](./deploying) for more information.
+If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying](../start/deploying) for more information.
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";

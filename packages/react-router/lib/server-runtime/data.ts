@@ -1,11 +1,10 @@
-import { isDataWithResponseInit } from "../router/router";
-import { isRedirectStatusCode } from "./responses";
 import type {
-  ActionFunction,
-  ActionFunctionArgs,
   LoaderFunction,
+  ActionFunction,
   LoaderFunctionArgs,
-} from "./routeModules";
+  ActionFunctionArgs,
+} from "../router/utils";
+import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -16,11 +15,6 @@ import type {
 export interface AppLoadContext {
   [key: string]: unknown;
 }
-
-/**
- * Data for a route that was returned from a `loader()`.
- */
-export type AppData = unknown;
 
 // Need to use RR's version here to permit the optional context even
 // though we know it'll always be provided in remix

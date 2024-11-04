@@ -1,10 +1,13 @@
-import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
+import type { ParseOptions, SerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
 import { sign, unsign } from "./crypto";
 import { warnOnce } from "./warnings";
 
-export type { CookieParseOptions, CookieSerializeOptions };
+export type {
+  ParseOptions as CookieParseOptions,
+  SerializeOptions as CookieSerializeOptions,
+};
 
 export interface CookieSignatureOptions {
   /**
@@ -18,8 +21,8 @@ export interface CookieSignatureOptions {
   secrets?: string[];
 }
 
-export type CookieOptions = CookieParseOptions &
-  CookieSerializeOptions &
+export type CookieOptions = ParseOptions &
+  SerializeOptions &
   CookieSignatureOptions;
 
 /**
@@ -55,16 +58,13 @@ export interface Cookie {
    * Parses a raw `Cookie` header and returns the value of this cookie or
    * `null` if it's not present.
    */
-  parse(
-    cookieHeader: string | null,
-    options?: CookieParseOptions
-  ): Promise<any>;
+  parse(cookieHeader: string | null, options?: ParseOptions): Promise<any>;
 
   /**
    * Serializes the given value to a string and returns the `Set-Cookie`
    * header.
    */
-  serialize(value: any, options?: CookieSerializeOptions): Promise<string>;
+  serialize(value: any, options?: SerializeOptions): Promise<string>;
 }
 
 /**
@@ -98,11 +98,17 @@ export const createCookie = (
     async parse(cookieHeader, parseOptions) {
       if (!cookieHeader) return null;
       let cookies = parse(cookieHeader, { ...options, ...parseOptions });
-      return name in cookies
-        ? cookies[name] === ""
-          ? ""
-          : await decodeCookieValue(cookies[name], secrets)
-        : null;
+      if (name in cookies) {
+        let value = cookies[name];
+        if (typeof value === "string" && value !== "") {
+          let decoded = await decodeCookieValue(value, secrets);
+          return decoded;
+        } else {
+          return "";
+        }
+      } else {
+        return null;
+      }
     },
     async serialize(value, serializeOptions) {
       return serialize(
