@@ -8,6 +8,7 @@
     "build": "react-router build",
     "dev": "node ./server.js",
     "start": "cross-env NODE_ENV=production node ./server.js",
+    "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
