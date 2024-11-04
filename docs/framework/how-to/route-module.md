@@ -33,7 +33,7 @@ export async function loader() {
 }
 ```
 
-This function is only ever run on the server. On the initial server render, it will provide data to the HTML document. On navigations in the browser, Remix will call the function via [`fetch`][fetch] from the browser.
+This function is only ever run on the server. On the initial server render, it will provide data to the HTML document. On navigations in the browser, React Router will call the function via [`fetch`][fetch] from the browser.
 
 This means you can talk directly to your database, use server-only API secrets, etc. Any code that isn't used to render the UI will be removed from the browser bundle.
 
@@ -62,9 +62,9 @@ export async function clientLoader({ serverLoader }) {
 }
 ```
 
-By default, `clientLoader` **will not** execute for the route during hydration of your Remix app on the initial SSR document request. This is for the primary (and simpler) use-case where the `clientLoader` does not change the shape of the server `loader` data and is just an optimization on subsequent client side navigations (to read from a cache or hit an API directly).
+By default, `clientLoader` **will not** execute for the route during hydration of your React Router app on the initial SSR document request. This is for the primary (and simpler) use-case where the `clientLoader` does not change the shape of the server `loader` data and is just an optimization on subsequent client side navigations (to read from a cache or hit an API directly).
 
-If you need to run your `clientLoader` during hydration on the initial document request, you can opt-in by setting `clientLoader.hydrate=true`. This will tell Remix that it needs to run the `clientLoader` on hydration. Without a `HydrateFallback`, your route component will be SSR'd with the server `loader` data - and then `clientLoader` will run and the returned data will be updated in-place in the hydrated route Component.
+If you need to run your `clientLoader` during hydration on the initial document request, you can opt-in by setting `clientLoader.hydrate=true`. This will tell React Router that it needs to run the `clientLoader` on hydration. Without a `HydrateFallback`, your route component will be SSR'd with the server `loader` data - and then `clientLoader` will run and the returned data will be updated in-place in the hydrated route Component.
 
 <docs-info>If a route exports a `clientLoader` and does not export a server `loader`, then `clientLoader.hydrate` is automatically treated as `true` since there is no server data to SSR with. Therefore, we always need to run the `clientLoader` on hydration before rendering the route component.</docs-info>
 
@@ -153,7 +153,7 @@ See also:
 
 ## `ErrorBoundary`
 
-A Remix `ErrorBoundary` component works just like normal React [error boundaries][error-boundaries], but with a few extra capabilities. When there is an error in your route component, the `ErrorBoundary` will be rendered in its place, nested inside any parent routes. `ErrorBoundary` components also render when there is an error in the `loader` or `action` functions for a route, so all errors for that route may be handled in one spot.
+A React Router `ErrorBoundary` component works just like normal React [error boundaries][error-boundaries], but with a few extra capabilities. When there is an error in your route component, the `ErrorBoundary` will be rendered in its place, nested inside any parent routes. `ErrorBoundary` components also render when there is an error in the `loader` or `action` functions for a route, so all errors for that route may be handled in one spot.
 
 The most common use-cases tend to be:
 
@@ -169,7 +169,7 @@ To obtain the thrown object, you can use the [`useRouteError`][use-route-error] 
 import {
   isRouteErrorResponse,
   useRouteError,
-} from "@remix-run/react";
+} from "react-router";
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -200,7 +200,7 @@ export function ErrorBoundary() {
 
 ## `HydrateFallback`
 
-A `HydrateFallback` component is your way of informing Remix that you do not want to render your route component until _after_ the `clientLoader` has run on hydration. When exported, Remix will render the fallback during SSR instead of your default route component, and will render your route component client-side once the `clientLoader` completes.
+A `HydrateFallback` component is your way of informing React Router that you do not want to render your route component until _after_ the `clientLoader` has run on hydration. When exported, React Router will render the fallback during SSR instead of your default route component, and will render your route component client-side once the `clientLoader` completes.
 
 The most common use-cases for this are client-only routes (such an in-browser canvas game) and augmenting your server data with client-side data (such as saved user preferences).
 
@@ -256,7 +256,7 @@ There are a few nuances worth noting around the behavior of `HydrateFallback`:
 - It is only relevant on initial document request and hydration, and will not be rendered on any subsequent client-side navigations
 - It is only relevant when you are also setting [`clientLoader.hydrate=true`][hydrate-true] on a given route
 - It is also relevant if you do have a `clientLoader` without a server `loader`, as this implies `clientLoader.hydrate=true` since there is otherwise no loader data at all to return from `useLoaderData`
-  - Even if you do not specify a `HydrateFallback` in this case, Remix will not render your route component and will bubble up to any ancestor `HydrateFallback` component
+  - Even if you do not specify a `HydrateFallback` in this case, React Router will not render your route component and will bubble up to any ancestor `HydrateFallback` component
   - This is to ensure that `useLoaderData` remains "happy-path"
   - Without a server `loader`, `useLoaderData` would return `undefined` in any rendered route components
 - You cannot render an `<Outlet/>` in a `HydrateFallback` because children routes can't be guaranteed to operate correctly since their ancestor loader data may not yet be available if they are running `clientLoader` functions on hydration (i.e., use cases such as `useRouteLoaderData()` or `useMatches()`)
@@ -266,16 +266,15 @@ There are a few nuances worth noting around the behavior of `HydrateFallback`:
 Each route can define its own HTTP headers. One of the common headers is the [`Cache-Control` header][cache-control-header] that indicates to browser and CDN caches where and for how long a page is able to be cached.
 
 ```tsx
-import type { HeadersFunction } from "@remix-run/node"; // or cloudflare/deno
-
-export const headers = ({
+export function headers({
   actionHeaders,
   errorHeaders,
   loaderHeaders,
   parentHeaders,
-}) => ({
-  "X-Stretchy-Pants": "its for fun",
-  "Cache-Control": "max-age=300, s-maxage=3600",
+}) {
+  return {
+    "X-Stretchy-Pants": "its for fun",
+    "Cache-Control": "max-age=300, s-maxage=3600",
 });
 ```
 
@@ -369,24 +368,24 @@ By default, meta descriptors will render a [`<meta>` tag][meta-element] in most 
 - `{ "script:ld+json" }` renders a `<script type="application/ld+json">` tag, and its value should be a serializable object that is stringified and injected into the tag.
 
 ```tsx
-export const meta: MetaFunction = () => {
+export function meta() {
   return [
     {
       "script:ld+json": {
         "@context": "https://schema.org",
         "@type": "Organization",
-        name: "Remix",
-        url: "https://remix.run",
+        name: "React Router",
+        url: "https://reactrouter.com",
       },
     },
   ];
-};
+}
 ```
 
 A meta descriptor can also render a [`<link>` tag][link-element] by setting the `tagName` property to `"link"`. This is useful for `<link>` tags associated with SEO like `canonical` URLs. For asset links like stylesheets and favicons, you should use the [`links` export][links] instead.
 
 ```tsx
-export const meta: MetaFunction = () => {
+export function meta() {
   return [
     {
       tagName: "link",
@@ -394,7 +393,7 @@ export const meta: MetaFunction = () => {
       href: "https://remix.run",
     },
   ];
-};
+}
 ```
 
 **See also**
@@ -406,7 +405,7 @@ export const meta: MetaFunction = () => {
 This function lets apps optimize which routes data should be reloaded after actions and for client-side navigations.
 
 ```tsx
-import type { ShouldRevalidateFunction } from "@remix-run/react";
+
 
 export function shouldRevalidate({
   actionResult,
@@ -424,11 +423,11 @@ export function shouldRevalidate({
 }
 ```
 
-<docs-warning>This feature is an <i>additional</i> optimization. In general, Remix's design already optimizes which loaders need to be called and when. When you use this feature you risk your UI getting out of sync with your server. Use with caution!</docs-warning>
+<docs-warning>This feature is an <i>additional</i> optimization. In general, React Routers's design already optimizes which loaders need to be called and when. When you use this feature you risk your UI getting out of sync with your server. Use with caution!</docs-warning>
 
-During client-side transitions, Remix will optimize reloading of routes that are already rendering, like not reloading layout routes that aren't changing. In other cases, like form submissions or search param changes, Remix doesn't know which routes need to be reloaded, so it reloads them all to be safe. This ensures your UI always stays in sync with the state on your server.
+During client-side transitions, React Router will optimize reloading of routes that are already rendering, like not reloading layout routes that aren't changing. In other cases, like form submissions or search param changes, React Router doesn't know which routes need to be reloaded, so it reloads them all to be safe. This ensures your UI always stays in sync with the state on your server.
 
-This function lets apps further optimize by returning `false` when Remix is about to reload a route. If you define this function on a route module, Remix will defer to your function on every navigation and every revalidation after an action is called. Again, this makes it possible for your UI to get out of sync with your server if you do it wrong, so be careful.
+This function lets apps further optimize by returning `false` when React Router is about to reload a route. If you define this function on a route module, React Router will defer to your function on every navigation and every revalidation after an action is called. Again, this makes it possible for your UI to get out of sync with your server if you do it wrong, so be careful.
 
 `fetcher.load` calls also revalidate, but because they load a specific URL, they don't have to worry about route param or URL search param revalidations. `fetcher.load`'s only revalidate by default after action submissions and explicit revalidation requests via [`useRevalidator`][use-revalidator].
 
