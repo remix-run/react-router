@@ -163,7 +163,7 @@ Note that your `root.tsx` file will be statically generated and served as the en
 At this point you should be able to to boot the app and see the root layout.
 
 ```shellscript
-npm react-router vite:dev
+npx react-router dev
 ```
 
 - Search the [Upgrading Discussion](#TODO) category
