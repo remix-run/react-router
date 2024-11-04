@@ -71,4 +71,4 @@ With [`rootDirs` configured][setting-up-type-safety], TypeScript can import thes
 
 For a deeper dive into some of the design decisions, check out our [type inference decision doc](https://github.com/remix-run/react-router/blob/dev/decisions/0012-type-inference.md).
 
-[setting-up-type-safety]: ../how-to/setting-up-type-safety.md
+[setting-up-type-safety]: ../framework/how-to/setting-up-type-safety.md
