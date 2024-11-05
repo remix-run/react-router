@@ -1002,6 +1002,76 @@ describe("createMemoryRouter", () => {
     `);
   });
 
+  it("provides location and matches to actions/loaders", async () => {
+    let loaderSpy = jest.fn(() => "LOADER");
+    let actionSpy = jest.fn(() => "ACTION");
+
+    let router = createMemoryRouter(
+      createRoutesFromElements(
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<Foo />} />
+          <Route
+            path="bar"
+            loader={loaderSpy}
+            action={actionSpy}
+            element={<Bar />}
+          />
+        </Route>
+      ),
+      { initialEntries: ["/foo"] }
+    );
+
+    render(<RouterProvider router={router} />);
+
+    function Layout() {
+      return (
+        <>
+          <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+          <MemoryNavigate to="/bar" formMethod="post">
+            Post to Bar
+          </MemoryNavigate>
+          <Outlet />
+        </>
+      );
+    }
+
+    function Foo() {
+      return <h1>Foo</h1>;
+    }
+
+    function Bar() {
+      return <h1>Bar</h1>;
+    }
+
+    expect(loaderSpy).not.toHaveBeenCalled();
+    expect(actionSpy).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+    waitFor(() => screen.getByText("Bar"));
+
+    expect(actionSpy).not.toHaveBeenCalled();
+    expect(loaderSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        location: expect.objectContaining({
+          pathname: "/bar",
+        }),
+        matches: expect.arrayContaining([
+          expect.objectContaining({
+            pathname: "/bar",
+            route: expect.objectContaining({
+              action: actionSpy,
+              loader: loaderSpy,
+            }),
+          }),
+        ]),
+      })
+    );
+
+    fireEvent.click(screen.getByText("Post to Bar"));
+    waitFor(() => expect(actionSpy).toHaveBeenCalled());
+    expect(loaderSpy).toHaveBeenCalledTimes(2);
+  });
+
   describe("errors", () => {
     it("renders hydration errors on leaf elements using errorElement", async () => {
       let router = createMemoryRouter(
