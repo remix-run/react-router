@@ -4,6 +4,10 @@ title: Type safety
 
 # Type safety
 
+<docs-info>
+If you haven't done so already, check out our guide for <a href="../framework/how-to/setting-up-type-safety">setting up type safety</a> in a new project.
+</docs-info>
+
 React Router generates types for each route in your app that you can use to get type safety for each route module export.
 
 For example, let's say you have a `products/:id` route configured:
@@ -36,8 +40,6 @@ export default function Component({
   return <h1>Hello, {loaderData.planet}!</h1>;
 }
 ```
-
-If you haven't done so already, check out our guide for [setting up type safety][setting-up-type-safety] in a new project.
 
 ## `typegen` command
 
