@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.0.0-pre.5
+
+### Patch Changes
+
+- No changes ([`506329c4e`](https://github.com/remix-run/react-router/commit/506329c4e2e7aba9837cbfa44df6103b49423745))
+
 ## 7.0.0-pre.4
 
 ### Patch Changes
