@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  // This task is used to autogenerate type for React Router route modules
+  // Feel free to remove it and use run `npm run typegen:watch` manually
+  "tasks": [
+    {
+      "label": "React Router: Typegen",
+      "type": "shell",
+      "command": "npm run typegen:watch",
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    }
+  ]
+}
