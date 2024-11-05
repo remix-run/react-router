@@ -22,13 +22,9 @@ function typecheck(cwd: string) {
 
 const viteConfig = tsx`
   import { reactRouter } from "@react-router/dev/vite";
-  import tsconfigPaths from "vite-tsconfig-paths";
 
   export default {
-    plugins: [
-      reactRouter(),
-      tsconfigPaths()
-    ],
+    plugins: [reactRouter()],
   };
 `;
 
