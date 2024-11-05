@@ -59,24 +59,46 @@ test.describe("typegen", () => {
     expect(proc.status).toBe(0);
   });
 
-  test("repeated param", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig,
-      "app/routes/repeated.$id.($id).$id.tsx": tsx`
-        import type { Route } from "./+types.repeated.$id.($id).$id"
+  test.describe("params", () => {
+    test("repeated", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes/repeated.$id.($id).$id.tsx": tsx`
+          import type { Route } from "./+types.repeated.$id.($id).$id"
 
-        function assertType<T>(t: T) {}
+          function assertType<T>(t: T) {}
 
-        export function loader({ params }: Route.LoaderArgs) {
-          assertType<[string, string | undefined, string]>(params.id)
-          return null
-        }
-      `,
+          export function loader({ params }: Route.LoaderArgs) {
+            assertType<[string, string | undefined, string]>(params.id)
+            return null
+          }
+        `,
+      });
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
     });
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
+
+    test("splat", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes/splat.$.tsx": tsx`
+          import type { Route } from "./+types.splat.$"
+
+          function assertType<T>(t: T) {}
+
+          export function loader({ params }: Route.LoaderArgs) {
+            assertType<string>(params["*"])
+            return null
+          }
+        `,
+      });
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
   });
 
   test("clientLoader.hydrate = true", async () => {
@@ -103,26 +125,6 @@ test.describe("typegen", () => {
         export default function Component({ loaderData }: Route.ComponentProps) {
           assertType<{ client: string }>(loaderData)
           return <h1>Hello from {loaderData.client}!</h1>
-        }
-      `,
-    });
-    const proc = typecheck(cwd);
-    expect(proc.stdout.toString()).toBe("");
-    expect(proc.stderr.toString()).toBe("");
-    expect(proc.status).toBe(0);
-  });
-
-  test("splat", async () => {
-    const cwd = await createProject({
-      "vite.config.ts": viteConfig,
-      "app/routes/splat.$.tsx": tsx`
-        import type { Route } from "./+types.splat.$"
-
-        function assertType<T>(t: T) {}
-
-        export function loader({ params }: Route.LoaderArgs) {
-          assertType<string>(params["*"])
-          return null
         }
       `,
     });
