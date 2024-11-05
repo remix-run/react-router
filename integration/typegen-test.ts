@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
+import * as path from "node:path";
 
 import { expect, test } from "@playwright/test";
 import dedent from "dedent";
+import fse from "fs-extra";
 
 import { createProject } from "./helpers/vite";
 
@@ -124,6 +126,39 @@ test.describe("typegen", () => {
         }
       `,
     });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
+
+  test("custom app dir", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": tsx`
+        import { reactRouter } from "@react-router/dev/vite";
+
+        export default {
+          plugins: [reactRouter({ appDirectory: "src/myapp" })],
+        };
+      `,
+      "app/routes/products.$id.tsx": tsx`
+        import type { Route } from "./+types.products.$id"
+
+        function assertType<T>(t: T) {}
+
+        export function loader({ params }: Route.LoaderArgs) {
+          assertType<string>(params.id)
+          return { planet: "world" }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          assertType<string>(loaderData.planet)
+          return <h1>Hello, {loaderData.planet}!</h1>
+        }
+      `,
+    });
+    fse.moveSync(path.join(cwd, "app"), path.join(cwd, "src/myapp"));
+
     const proc = typecheck(cwd);
     expect(proc.stdout.toString()).toBe("");
     expect(proc.stderr.toString()).toBe("");
