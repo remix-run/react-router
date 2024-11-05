@@ -2,6 +2,8 @@
 title: Route Module
 ---
 
+<docs-info>Route Modules are a Framework only feature</docs-info>
+
 # Route Module
 
 The following can be exported from a route module to handle the behavior of that route:
@@ -390,7 +392,7 @@ export function meta() {
     {
       tagName: "link",
       rel: "canonical",
-      href: "https://remix.run",
+      href: "https://reactrouter.com",
     },
   ];
 }
