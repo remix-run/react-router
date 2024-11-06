@@ -13,16 +13,22 @@ To use React Router minimally with your own bundling, server rendering, etc. ref
 
 ## Starter Template
 
-Most projects start with a template. Let's use a basic template maintained by React Router with `degit`:
+Most projects start with a template. Let's use a basic template maintained by React Router:
 
 ```shellscript nonumber
-npx degit remix-run/react-router/templates/basic#dev my-app
+npm create react-router@pre <projectDir>
+# or
+pnpm create react-router@pre <projectDir>
+# or
+bunx create-react-router@pre <projectDir>
+# or
+yarn create react-router@pre <projectDir>
 ```
 
 Now change into the new directory and start the app
 
 ```shellscript nonumber
-cd my-app
+cd my-react-router-app
 npm i
 npm run dev
 ```
