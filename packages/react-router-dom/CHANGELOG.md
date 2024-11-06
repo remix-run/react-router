@@ -1,6 +1,6 @@
 # `react-router-dom`
 
-## 6.28.0-pre.0
+## 6.28.0
 
 ### Minor Changes
 
@@ -12,8 +12,8 @@
 
 - Update JSDoc URLs for new website structure (add /v6/ segment) ([#12141](https://github.com/remix-run/react-router/pull/12141))
 - Updated dependencies:
-  - `react-router@6.28.0-pre.0`
-  - `@remix-run/router@1.21.0-pre.0`
+  - `react-router@6.28.0`
+  - `@remix-run/router@1.21.0`
 
 ## 6.27.0
 
@@ -28,7 +28,9 @@
 ### Patch Changes
 
 - Fix bug when submitting to the current contextual route (parent route with an index child) when an `?index` param already exists from a prior submission ([#12003](https://github.com/remix-run/react-router/pull/12003))
+
 - Fix `useFormAction` bug - when removing `?index` param it would not keep other non-Remix `index` params ([#12003](https://github.com/remix-run/react-router/pull/12003))
+
 - Fix types for `RouteObject` within `PatchRoutesOnNavigationFunction`'s `patch` method so it doesn't expect agnostic route objects passed to `patch` ([#11967](https://github.com/remix-run/react-router/pull/11967))
 
 - Updated dependencies:
