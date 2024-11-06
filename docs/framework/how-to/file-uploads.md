@@ -79,7 +79,7 @@ npm i @mjackson/file-storage
 
 Create a file that exports a `LocalFileStorage` instance to be used by different routes.
 
-```ts filename=file-storage.server.ts
+```ts filename=avatar-storage.server.ts
 import { LocalFileStorage } from "@mjackson/file-storage/local";
 
 export const fileStorage = new LocalFileStorage(
@@ -103,7 +103,7 @@ import {
 import {
   fileStorage,
   getStorageKey,
-} from "~/file-storage.server";
+} from "~/avatar-storage.server";
 import type { Route } from "./+types.user";
 
 export async function action({
@@ -167,7 +167,7 @@ Create a [resource route][resource-route] that streams the file as a response.
 import {
   fileStorage,
   getStorageKey,
-} from "~/file-storage.server";
+} from "~/avatar-storage.server";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const storageKey = getStorageKey(params.id);
