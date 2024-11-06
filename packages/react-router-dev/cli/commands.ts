@@ -204,15 +204,9 @@ export async function typegen(
   root ??= process.cwd();
 
   if (flags.watch) {
-    await Typegen.watch(root, { configFile: flags.config });
+    await Typegen.watch(root, flags.config);
     await new Promise(() => {}); // keep alive
     return;
   }
-
-  let ctx = await loadPluginContext({ root, configFile: flags.config });
-  await Typegen.writeAll({
-    rootDirectory: root,
-    appDirectory: ctx.reactRouterConfig.appDirectory,
-    routes: ctx.reactRouterConfig.routes,
-  });
+  await Typegen.run(root, flags.config);
 }
