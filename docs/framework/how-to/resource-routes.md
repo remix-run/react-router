@@ -2,8 +2,6 @@
 title: Resource Routes
 ---
 
-<docs-info>This feature is available when using the [React Router Vite Plugin][vite-plugin]</docs-info>
-
 # Resource Routes
 
 Resource Routes are not part of your application UI, but are still part of your application. They can send any kind of Response.
