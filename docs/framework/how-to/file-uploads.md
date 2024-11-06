@@ -182,7 +182,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   return new Response(file, {
     headers: {
       "Content-Type": file.type,
-      "Content-Disposition": `attachment; filename=${storageKey}`,
+      "Content-Disposition": `attachment; filename=${file.name}`,
     },
   });
 }
