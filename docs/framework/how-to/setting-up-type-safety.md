@@ -2,9 +2,11 @@
 title: Setting up type safety
 ---
 
-To know more about how type safety works in React Router, check out our [dedicated explanation](../../explanation/type-safety).
-
 # Setting up type safety
+
+<docs-info>
+To learn more about how type safety works in React Router, check out our <a href="../../explanation/type-safety">dedicated explanation</a>.
+</docs-info>
 
 React Router generates types into a `.react-router/` directory at the root of your app.
 This directory is fully managed by React Router and is derived from your route config (`app/routes.ts` by default), so it should be gitignore'd.
@@ -93,3 +95,27 @@ For monorepos, you can create this file in the repo root and use the [`cwd` opti
 </docs-info>
 
 Now, VSCode will automatically run the `typegen:watch` script in a dedicated terminal anytime you open your project.
+
+## Automatic typegen in your `dev` script (optional)
+
+You can also adjust your `dev` script to automatically run type generation when you start your development server.
+
+👉 **Install `npm-run-all` (or a similar tool to run multiple scripts in parallel)**
+
+```shellscript nonumber
+npm i -D npm-run-all
+```
+
+👉 **Add `dev:typegen` to your `dev` script**
+
+```json
+{
+  "scripts": {
+    "dev": "run-p dev:*",
+    "dev:react-router": "react-router dev",
+    "dev:typegen": "react-router typegen --watch"
+  }
+}
+```
+
+Now when you run `npm run dev`, it will automatically run type generation in watch mode.
