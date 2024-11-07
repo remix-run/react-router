@@ -218,7 +218,7 @@ Date: YYYY-MM-DD
 
 ## v6.28.0
 
-Date: YYYY-MM-DD
+Date: 2024-11-06
 
 ### What's Changed
 
