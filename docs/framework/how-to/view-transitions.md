@@ -4,7 +4,7 @@ title: View Transitions
 
 # View Transitions
 
-Enable smooth animations between page transitions in your React Router applications using the View Transitions API. This feature allows you to create seamless visual transitions during client-side navigation.
+Enable smooth animations between page transitions in your React Router applications using the [View Transitions API][view-transitions-api]. This feature allows you to create seamless visual transitions during client-side navigation.
 
 ## Basic View Transition
 
@@ -20,9 +20,11 @@ The simplest way to enable view transitions is by adding the `viewTransition` pr
 
 Without any additional CSS, this provides a basic cross-fade animation between pages.
 
+For more information on using the View Transitions API, please refer to the ["Smooth transitions with the View Transition API" guide][view-transitions-guide] from the Google Chrome team.
+
 ## Image Gallery Example
 
-Let's build an image gallery that demonstrates more advanced view transitions. We'll create a list of images that expand into a detail view with smooth animations.
+Let's build an image gallery that demonstrates how to trigger and use view transitions. We'll create a list of images that expand into a detail view with smooth animations.
 
 👉 **Create the image gallery route**
 
