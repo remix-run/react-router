@@ -97,6 +97,36 @@ test.describe("typegen", () => {
       expect(proc.stderr.toString()).toBe("");
       expect(proc.status).toBe(0);
     });
+
+    test("with extension", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes/$a[.]xml.tsx": tsx`
+          import type { Route } from "./+types.$a[.]xml"
+
+          function assertType<T>(t: T) {}
+
+          export function loader({ params }: Route.LoaderArgs) {
+            assertType<string>(params["a"])
+            return null
+          }
+        `,
+        "app/routes/$b?[.]pdf.tsx": tsx`
+          import type { Route } from "./+types.$b?[.]pdf"
+
+          function assertType<T>(t: T) {}
+
+          export function loader({ params }: Route.LoaderArgs) {
+            assertType<string | undefined>(params["b"])
+            return null
+          }
+        `,
+      });
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
   });
 
   test("clientLoader.hydrate = true", async () => {

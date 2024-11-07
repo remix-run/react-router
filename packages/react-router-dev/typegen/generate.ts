@@ -76,19 +76,16 @@ function parseParams(urlpath: string) {
   const result: Record<string, boolean[]> = {};
 
   let segments = urlpath.split("/");
-  segments
-    .filter((s) => s.startsWith(":"))
-    .forEach((param) => {
-      param = param.slice(1); // omit leading `:`
-      let isOptional = param.endsWith("?");
-      if (isOptional) {
-        param = param.slice(0, -1); // omit trailing `?`
-      }
+  segments.forEach((segment) => {
+    const match = segment.match(/^:([\w-]+)(\?)?/);
+    if (!match) return;
+    const param = match[1];
+    const isOptional = match[2] !== undefined;
 
-      result[param] ??= [];
-      result[param].push(isOptional);
-      return;
-    });
+    result[param] ??= [];
+    result[param].push(isOptional);
+    return;
+  });
 
   const hasSplat = segments.at(-1) === "*";
   if (hasSplat) result["*"] = [false];
