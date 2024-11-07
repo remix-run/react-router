@@ -1003,12 +1003,13 @@ describe("createMemoryRouter", () => {
   });
 
   it("provides location and matches to actions/loaders", async () => {
+    let rootLoaderSpy = jest.fn(() => "ROOT LOADER");
     let loaderSpy = jest.fn(() => "LOADER");
     let actionSpy = jest.fn(() => "ACTION");
 
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Layout />} loader={rootLoaderSpy}>
           <Route path="foo" element={<Foo />} />
           <Route
             path="bar"
@@ -1043,19 +1044,46 @@ describe("createMemoryRouter", () => {
       return <h1>Bar</h1>;
     }
 
+    expect(rootLoaderSpy).toHaveBeenCalledTimes(1);
     expect(loaderSpy).not.toHaveBeenCalled();
     expect(actionSpy).not.toHaveBeenCalled();
 
+    await waitFor(() => screen.getByText("Link to Bar"));
     fireEvent.click(screen.getByText("Link to Bar"));
-    waitFor(() => screen.getByText("Bar"));
+    await waitFor(() => screen.getByText("Bar"));
 
+    expect(rootLoaderSpy).toHaveBeenCalledTimes(1);
+    expect(rootLoaderSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        location: expect.objectContaining({
+          pathname: "/foo",
+        }),
+        matches: [
+          expect.objectContaining({
+            pathname: "/",
+            route: expect.objectContaining({
+              loader: rootLoaderSpy,
+            }),
+          }),
+          expect.objectContaining({
+            pathname: "/foo",
+          }),
+        ],
+      })
+    );
     expect(actionSpy).not.toHaveBeenCalled();
     expect(loaderSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         location: expect.objectContaining({
           pathname: "/bar",
         }),
-        matches: expect.arrayContaining([
+        matches: [
+          expect.objectContaining({
+            pathname: "/",
+            route: expect.objectContaining({
+              loader: rootLoaderSpy,
+            }),
+          }),
           expect.objectContaining({
             pathname: "/bar",
             route: expect.objectContaining({
@@ -1063,12 +1091,13 @@ describe("createMemoryRouter", () => {
               loader: loaderSpy,
             }),
           }),
-        ]),
+        ],
       })
     );
 
     fireEvent.click(screen.getByText("Post to Bar"));
     waitFor(() => expect(actionSpy).toHaveBeenCalled());
+    expect(rootLoaderSpy).toHaveBeenCalledTimes(2);
     expect(loaderSpy).toHaveBeenCalledTimes(2);
   });
 
