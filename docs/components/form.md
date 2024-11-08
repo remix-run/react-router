@@ -377,7 +377,7 @@ You can access those values from the `request.url`
 
 ## Registration Form
 
-We can use [Mutation Submissions][#mutation-submissions] in registration workflow.
+We can use [Mutation Submissions][mutation-submissions] in registration workflow.
 
 ```tsx
 function RegisterForm() {
@@ -460,3 +460,4 @@ In the [`action`][action], we then access the form data (`name`, `email` and `pa
 [redirect]: ../fetch/redirect
 [action]: ../route/action
 [request-formData-method]: ../guides/form-data
+[mutation-submissions]: #mutation-submissions
