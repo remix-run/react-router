@@ -13,182 +13,186 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v6.27.0](#v6270)
+  - [v6.28.0](#v6280)
     - [What's Changed](#whats-changed)
-      - [Stabilized APIs](#stabilized-apis)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
-  - [v6.26.2](#v6262)
-    - [Patch Changes](#patch-changes-1)
-  - [v6.26.1](#v6261)
-    - [Patch Changes](#patch-changes-2)
-  - [v6.26.0](#v6260)
-    - [Minor Changes](#minor-changes-1)
-    - [Patch Changes](#patch-changes-3)
-  - [v6.25.1](#v6251)
-    - [Patch Changes](#patch-changes-4)
-  - [v6.25.0](#v6250)
+  - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-1)
-      - [Stabilized `v7_skipActionErrorRevalidation`](#stabilized-v7_skipactionerrorrevalidation)
+      - [Stabilized APIs](#stabilized-apis)
+    - [Minor Changes](#minor-changes-1)
+    - [Patch Changes](#patch-changes-1)
+  - [v6.26.2](#v6262)
+    - [Patch Changes](#patch-changes-2)
+  - [v6.26.1](#v6261)
+    - [Patch Changes](#patch-changes-3)
+  - [v6.26.0](#v6260)
     - [Minor Changes](#minor-changes-2)
+    - [Patch Changes](#patch-changes-4)
+  - [v6.25.1](#v6251)
     - [Patch Changes](#patch-changes-5)
-  - [v6.24.1](#v6241)
-    - [Patch Changes](#patch-changes-6)
-  - [v6.24.0](#v6240)
+  - [v6.25.0](#v6250)
     - [What's Changed](#whats-changed-2)
-      - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
+      - [Stabilized `v7_skipActionErrorRevalidation`](#stabilized-v7_skipactionerrorrevalidation)
     - [Minor Changes](#minor-changes-3)
+    - [Patch Changes](#patch-changes-6)
+  - [v6.24.1](#v6241)
     - [Patch Changes](#patch-changes-7)
-  - [v6.23.1](#v6231)
-    - [Patch Changes](#patch-changes-8)
-  - [v6.23.0](#v6230)
+  - [v6.24.0](#v6240)
     - [What's Changed](#whats-changed-3)
+      - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
+    - [Minor Changes](#minor-changes-4)
+    - [Patch Changes](#patch-changes-8)
+  - [v6.23.1](#v6231)
+    - [Patch Changes](#patch-changes-9)
+  - [v6.23.0](#v6230)
+    - [What's Changed](#whats-changed-4)
       - [Data Strategy (unstable)](#data-strategy-unstable)
       - [Skip Action Error Revalidation (unstable)](#skip-action-error-revalidation-unstable)
-    - [Minor Changes](#minor-changes-4)
-  - [v6.22.3](#v6223)
-    - [Patch Changes](#patch-changes-9)
-  - [v6.22.2](#v6222)
-    - [Patch Changes](#patch-changes-10)
-  - [v6.22.1](#v6221)
-    - [Patch Changes](#patch-changes-11)
-  - [v6.22.0](#v6220)
-    - [What's Changed](#whats-changed-4)
-      - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
     - [Minor Changes](#minor-changes-5)
+  - [v6.22.3](#v6223)
+    - [Patch Changes](#patch-changes-10)
+  - [v6.22.2](#v6222)
+    - [Patch Changes](#patch-changes-11)
+  - [v6.22.1](#v6221)
     - [Patch Changes](#patch-changes-12)
-  - [v6.21.3](#v6213)
-    - [Patch Changes](#patch-changes-13)
-  - [v6.21.2](#v6212)
-    - [Patch Changes](#patch-changes-14)
-  - [v6.21.1](#v6211)
-    - [Patch Changes](#patch-changes-15)
-  - [v6.21.0](#v6210)
+  - [v6.22.0](#v6220)
     - [What's Changed](#whats-changed-5)
+      - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
+    - [Minor Changes](#minor-changes-6)
+    - [Patch Changes](#patch-changes-13)
+  - [v6.21.3](#v6213)
+    - [Patch Changes](#patch-changes-14)
+  - [v6.21.2](#v6212)
+    - [Patch Changes](#patch-changes-15)
+  - [v6.21.1](#v6211)
+    - [Patch Changes](#patch-changes-16)
+  - [v6.21.0](#v6210)
+    - [What's Changed](#whats-changed-6)
       - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
       - [Partial Hydration](#partial-hydration)
-    - [Minor Changes](#minor-changes-6)
-    - [Patch Changes](#patch-changes-16)
-  - [v6.20.1](#v6201)
-    - [Patch Changes](#patch-changes-17)
-  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-7)
+    - [Patch Changes](#patch-changes-17)
+  - [v6.20.1](#v6201)
     - [Patch Changes](#patch-changes-18)
-  - [v6.19.0](#v6190)
-    - [What's Changed](#whats-changed-6)
-      - [`unstable_flushSync` API](#unstable_flushsync-api)
+  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-8)
     - [Patch Changes](#patch-changes-19)
-  - [v6.18.0](#v6180)
+  - [v6.19.0](#v6190)
     - [What's Changed](#whats-changed-7)
-      - [New Fetcher APIs](#new-fetcher-apis)
-      - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
+      - [`unstable_flushSync` API](#unstable_flushsync-api)
     - [Minor Changes](#minor-changes-9)
     - [Patch Changes](#patch-changes-20)
-  - [v6.17.0](#v6170)
+  - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-8)
-      - [View Transitions 🚀](#view-transitions-)
+      - [New Fetcher APIs](#new-fetcher-apis)
+      - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
     - [Minor Changes](#minor-changes-10)
     - [Patch Changes](#patch-changes-21)
-  - [v6.16.0](#v6160)
+  - [v6.17.0](#v6170)
+    - [What's Changed](#whats-changed-9)
+      - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-11)
     - [Patch Changes](#patch-changes-22)
-  - [v6.15.0](#v6150)
+  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-12)
     - [Patch Changes](#patch-changes-23)
-  - [v6.14.2](#v6142)
-    - [Patch Changes](#patch-changes-24)
-  - [v6.14.1](#v6141)
-    - [Patch Changes](#patch-changes-25)
-  - [v6.14.0](#v6140)
-    - [What's Changed](#whats-changed-9)
-      - [JSON/Text Submissions](#jsontext-submissions)
+  - [v6.15.0](#v6150)
     - [Minor Changes](#minor-changes-13)
+    - [Patch Changes](#patch-changes-24)
+  - [v6.14.2](#v6142)
+    - [Patch Changes](#patch-changes-25)
+  - [v6.14.1](#v6141)
     - [Patch Changes](#patch-changes-26)
-  - [v6.13.0](#v6130)
+  - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-10)
-      - [`future.v7_startTransition`](#futurev7_starttransition)
+      - [JSON/Text Submissions](#jsontext-submissions)
     - [Minor Changes](#minor-changes-14)
     - [Patch Changes](#patch-changes-27)
-  - [v6.12.1](#v6121)
-    - [Patch Changes](#patch-changes-28)
-  - [v6.12.0](#v6120)
+  - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-11)
-      - [`React.startTransition` support](#reactstarttransition-support)
+      - [`future.v7_startTransition`](#futurev7_starttransition)
     - [Minor Changes](#minor-changes-15)
+    - [Patch Changes](#patch-changes-28)
+  - [v6.12.1](#v6121)
     - [Patch Changes](#patch-changes-29)
-  - [v6.11.2](#v6112)
-    - [Patch Changes](#patch-changes-30)
-  - [v6.11.1](#v6111)
-    - [Patch Changes](#patch-changes-31)
-  - [v6.11.0](#v6110)
-    - [Minor Changes](#minor-changes-16)
-    - [Patch Changes](#patch-changes-32)
-  - [v6.10.0](#v6100)
+  - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-12)
+      - [`React.startTransition` support](#reactstarttransition-support)
+    - [Minor Changes](#minor-changes-16)
+    - [Patch Changes](#patch-changes-30)
+  - [v6.11.2](#v6112)
+    - [Patch Changes](#patch-changes-31)
+  - [v6.11.1](#v6111)
+    - [Patch Changes](#patch-changes-32)
+  - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-17)
-      - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
     - [Patch Changes](#patch-changes-33)
-  - [v6.9.0](#v690)
+  - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-13)
+    - [Minor Changes](#minor-changes-18)
+      - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
+    - [Patch Changes](#patch-changes-34)
+  - [v6.9.0](#v690)
+    - [What's Changed](#whats-changed-14)
       - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
       - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
-    - [Minor Changes](#minor-changes-18)
-    - [Patch Changes](#patch-changes-34)
-  - [v6.8.2](#v682)
-    - [Patch Changes](#patch-changes-35)
-  - [v6.8.1](#v681)
-    - [Patch Changes](#patch-changes-36)
-  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-19)
+    - [Patch Changes](#patch-changes-35)
+  - [v6.8.2](#v682)
+    - [Patch Changes](#patch-changes-36)
+  - [v6.8.1](#v681)
     - [Patch Changes](#patch-changes-37)
-  - [v6.7.0](#v670)
+  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-20)
     - [Patch Changes](#patch-changes-38)
-  - [v6.6.2](#v662)
-    - [Patch Changes](#patch-changes-39)
-  - [v6.6.1](#v661)
-    - [Patch Changes](#patch-changes-40)
-  - [v6.6.0](#v660)
-    - [What's Changed](#whats-changed-14)
+  - [v6.7.0](#v670)
     - [Minor Changes](#minor-changes-21)
+    - [Patch Changes](#patch-changes-39)
+  - [v6.6.2](#v662)
+    - [Patch Changes](#patch-changes-40)
+  - [v6.6.1](#v661)
     - [Patch Changes](#patch-changes-41)
-  - [v6.5.0](#v650)
+  - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-15)
     - [Minor Changes](#minor-changes-22)
     - [Patch Changes](#patch-changes-42)
-  - [v6.4.5](#v645)
-    - [Patch Changes](#patch-changes-43)
-  - [v6.4.4](#v644)
-    - [Patch Changes](#patch-changes-44)
-  - [v6.4.3](#v643)
-    - [Patch Changes](#patch-changes-45)
-  - [v6.4.2](#v642)
-    - [Patch Changes](#patch-changes-46)
-  - [v6.4.1](#v641)
-    - [Patch Changes](#patch-changes-47)
-  - [v6.4.0](#v640)
+  - [v6.5.0](#v650)
     - [What's Changed](#whats-changed-16)
-      - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-48)
-  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-23)
-  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-43)
+  - [v6.4.5](#v645)
+    - [Patch Changes](#patch-changes-44)
+  - [v6.4.4](#v644)
+    - [Patch Changes](#patch-changes-45)
+  - [v6.4.3](#v643)
+    - [Patch Changes](#patch-changes-46)
+  - [v6.4.2](#v642)
+    - [Patch Changes](#patch-changes-47)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-48)
+  - [v6.4.0](#v640)
+    - [What's Changed](#whats-changed-17)
+      - [Remix Data APIs](#remix-data-apis)
     - [Patch Changes](#patch-changes-49)
-  - [v6.2.1](#v621)
-    - [Patch Changes](#patch-changes-50)
-  - [v6.2.0](#v620)
+  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-24)
+  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-50)
+  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-51)
-  - [v6.1.1](#v611)
-    - [Patch Changes](#patch-changes-52)
-  - [v6.1.0](#v610)
+  - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-25)
+    - [Patch Changes](#patch-changes-52)
+  - [v6.1.1](#v611)
     - [Patch Changes](#patch-changes-53)
-  - [v6.0.2](#v602)
+  - [v6.1.0](#v610)
+    - [Minor Changes](#minor-changes-26)
     - [Patch Changes](#patch-changes-54)
-  - [v6.0.1](#v601)
+  - [v6.0.2](#v602)
     - [Patch Changes](#patch-changes-55)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-56)
   - [v6.0.0](#v600)
 
 </details>
@@ -211,6 +215,26 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 -->
+
+## v6.28.0
+
+Date: 2024-11-06
+
+### What's Changed
+
+- In preparation for v7 we've added deprecation warnings for any future flags that you have not yet opted into. Please use the flags to better prepare for eventually upgrading to v7.
+
+### Minor Changes
+
+- Log deprecation warnings for v7 flags ([#11750](https://github.com/remix-run/react-router/pull/11750))
+  - Add deprecation warnings to `json`/`defer` in favor of returning raw objects
+    - These methods will be removed in React Router v7
+
+### Patch Changes
+
+- Update JSDoc URLs for new website structure (add /v6/ segment) ([#12141](https://github.com/remix-run/react-router/pull/12141))
+
+**Full Changelog**: [`v6.27.0...v6.28.0`](https://github.com/remix-run/react-router/compare/react-router@6.27.0...react-router@6.28.0)
 
 ## v6.27.0
 
@@ -331,7 +355,7 @@ Date: 2024-07-16
 
 #### Stabilized `v7_skipActionErrorRevalidation`
 
-This release stabilizes the `future.unstable_skipActionErrorRevalidation` flag into [`future.v7_skipActionErrorRevalidation`](https://reactrouter.com/upgrading/future#v7_skipactionstatusrevalidation) in preparation for the upcoming React Router v7 release.
+This release stabilizes the `future.unstable_skipActionErrorRevalidation` flag into [`future.v7_skipActionErrorRevalidation`](https://reactrouter.com/v6/upgrading/future#v7_skipactionstatusrevalidation) in preparation for the upcoming React Router v7 release.
 
 - When this flag is enabled, actions that return/throw a `4xx/5xx` `Response` will not trigger a revalidation by default
 - This also stabilizes `shouldRevalidate`'s `unstable_actionStatus` parameter to `actionStatus`
@@ -375,7 +399,7 @@ We're really excited to release our new API for "Lazy Route Discovery" in `v6.24
 
 With "Fog of War", you can now load portions of the route tree lazily via the new `unstable_patchRoutesOnMiss` option passed to `createBrowserRouter` (and it's memory/hash counterparts). This gives you a way to hook into spots where React Router is unable to match a given path and patch new routes into the route tree during the navigation (or fetcher call).
 
-Here's a very small example, but please refer to the [documentation](https://reactrouter.com/en/main/routers/create-browser-router#optsunstable_patchroutesonmiss) for more information and use cases:
+Here's a very small example, but please refer to the [documentation](https://reactrouter.com/v6/routers/create-browser-router#optsunstable_patchroutesonmiss) for more information and use cases:
 
 ```js
 const router = createBrowserRouter(
@@ -431,7 +455,7 @@ Date: 2024-04-23
 
 #### Data Strategy (unstable)
 
-The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/routers/create-browser-router#unstable_datastrategy) for more information.
+The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/v6/routers/create-browser-router#unstable_datastrategy) for more information.
 
 **Note:** This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.
 
@@ -557,7 +581,7 @@ We fixed a splat route path-resolution bug in `6.19.0`, but later determined a l
 
 The buggy behavior is that the default behavior when resolving relative paths inside a splat route would _ignore_ any splat (`*`) portion of the current route path. When the future flag is enabled, splat portions are included in relative path logic within splat routes.
 
-For more information, please refer to the [`useResolvedPath` docs](https://reactrouter.com/hooks/use-resolved-path#splat-paths) and/or the [detailed changelog entry](https://github.com/remix-run/react-router/blob/main/packages/react-router-dom/CHANGELOG.md#6210).
+For more information, please refer to the [`useResolvedPath` docs](https://reactrouter.com/v6/hooks/use-resolved-path#splat-paths) and/or the [detailed changelog entry](https://github.com/remix-run/react-router/blob/main/packages/react-router-dom/CHANGELOG.md#6210).
 
 #### Partial Hydration
 
@@ -632,7 +656,7 @@ function handleClick() {
 ### Minor Changes
 
 - Add `unstable_flushSync` option to `useNavigate`/`useSubmit`/`fetcher.load`/`fetcher.submit` to opt-out of `React.startTransition` and into `ReactDOM.flushSync` for state updates ([#11005](https://github.com/remix-run/react-router/pull/11005))
-- Remove the `unstable_` prefix from the [`useBlocker`](https://reactrouter.com/en/main/hooks/use-blocker) hook as it's been in use for enough time that we are confident in the API ([#10991](https://github.com/remix-run/react-router/pull/10991))
+- Remove the `unstable_` prefix from the [`useBlocker`](https://reactrouter.com/v6/hooks/use-blocker) hook as it's been in use for enough time that we are confident in the API ([#10991](https://github.com/remix-run/react-router/pull/10991))
   - We do not plan to remove the prefix from `unstable_usePrompt` due to differences in how browsers handle `window.confirm` that prevent React Router from guaranteeing consistent/correct behavior
 
 ### Patch Changes
@@ -719,9 +743,9 @@ Date: 2023-10-16
 
 We're excited to release experimental support for the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) in React Router! You can now trigger navigational DOM updates to be wrapped in `document.startViewTransition` to enable CSS animated transitions on SPA navigations in your application.
 
-The simplest approach to enabling a View Transition in your React Router app is via the new [`<Link unstable_viewTransition>`](https://reactrouter.com/components/link#unstable_viewtransition) prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
+The simplest approach to enabling a View Transition in your React Router app is via the new [`<Link unstable_viewTransition>`](https://reactrouter.com/v6/components/link#unstable_viewtransition) prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
 
-If you need to apply more fine-grained styles for your animations, you can leverage the [`unstable_useViewTransitionState`](https://reactrouter.com/hooks/use-view-transition-state) hook which will tell you when a transition is in progress and you can use that to apply classes or styles:
+If you need to apply more fine-grained styles for your animations, you can leverage the [`unstable_useViewTransitionState`](https://reactrouter.com/v6/hooks/use-view-transition-state) hook which will tell you when a transition is in progress and you can use that to apply classes or styles:
 
 ```jsx
 function ImageLink(to, src, alt) {
@@ -740,7 +764,7 @@ function ImageLink(to, src, alt) {
 }
 ```
 
-You can also use the [`<NavLink unstable_viewTransition>`](https://reactrouter.com/components/nav-link#unstable_viewtransition) shorthand which will manage the hook usage for you and automatically add a `transitioning` class to the `<a>` during the transition:
+You can also use the [`<NavLink unstable_viewTransition>`](https://reactrouter.com/v6/components/nav-link#unstable_viewtransition) shorthand which will manage the hook usage for you and automatically add a `transitioning` class to the `<a>` during the transition:
 
 ```css
 a.transitioning img {
@@ -939,7 +963,7 @@ Date: 2023-06-14
 
 #### `future.v7_startTransition`
 
-The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
+The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/v6/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
 
 Therefore, in `6.13.0` the default behavior will no longer leverage `React.startTransition`:
 
@@ -1212,7 +1236,7 @@ export function ErrorBoundary() {
 }
 ```
 
-An example of this in action can be found in the [`examples/lazy-loading-router-provider`](https://github.com/remix-run/react-router/tree/main/examples/lazy-loading-router-provider) directory of the repository. For more info, check out the [`lazy` docs](https://reactrouter.com/en/main/route/lazy).
+An example of this in action can be found in the [`examples/lazy-loading-router-provider`](https://github.com/remix-run/react-router/tree/main/examples/lazy-loading-router-provider) directory of the repository. For more info, check out the [`lazy` docs](https://reactrouter.com/v6/route/lazy).
 
 🙌 Huge thanks to @rossipedia for the [Initial Proposal](https://github.com/remix-run/react-router/discussions/9826) and [POC Implementation](https://github.com/remix-run/react-router/pull/9830).
 
