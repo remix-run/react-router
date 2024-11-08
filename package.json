@@ -14,7 +14,7 @@
     "playground": "node ./scripts/playground.js",
     "prerelease": "pnpm build",
     "release": "changeset publish",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "typecheck": "pnpm run --recursive --parallel typecheck",
     "test:integration:run": "pnpm playwright:integration",
