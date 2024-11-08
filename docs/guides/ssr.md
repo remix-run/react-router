@@ -326,4 +326,4 @@ Again, we recommend you give [Remix](https://remix.run) a look. It's the best wa
 [partialhydration]: ../routers/create-browser-router#partial-hydration-data
 [rendertostring]: https://react.dev/reference/react-dom/server/renderToString
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
-[defer]: https://reactrouter.com/en/main/utils/defer
+[defer]: ../utils/defer
