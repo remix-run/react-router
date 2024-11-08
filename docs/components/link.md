@@ -218,7 +218,7 @@ function ImageLink(to) {
 [history-replace-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
 [history-push-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/pushState
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
-[use-view-transition-state]: ../hooks//use-view-transition-state
+[use-view-transition-state]: ../hooks/use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
 [picking-a-router]: ../routers/picking-a-router
 [navlink]: ./nav-link
