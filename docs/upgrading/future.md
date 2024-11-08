@@ -200,7 +200,7 @@ createBrowserRouter(routes, {
 });
 ```
 
-## v7_skipActionStatusRevalidation
+## v7_skipActionErrorRevalidation
 
 <docs-warning>If you are not using a `createBrowserRouter` you can skip this</docs-warning>
 
@@ -211,7 +211,7 @@ When this flag is enabled, loaders will no longer revalidate by default after an
 ```tsx
 createBrowserRouter(routes, {
   future: {
-    v7_skipActionStatusRevalidation: true,
+    v7_skipActionErrorRevalidation: true,
   },
 });
 ```
