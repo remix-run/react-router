@@ -333,6 +333,8 @@ describe("fetchers", () => {
         foo: "FOO DATA",
       });
       expect(A.loaders.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: new Request("http://localhost/foo", {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
@@ -3156,6 +3158,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
@@ -3184,6 +3188,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
@@ -3210,6 +3216,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
@@ -3236,6 +3244,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
@@ -3263,6 +3273,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
@@ -3292,6 +3304,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
@@ -3320,6 +3334,8 @@ describe("fetchers", () => {
       await F.actions.root.resolve("ACTION");
 
       expect(F.actions.root.stub).toHaveBeenCalledWith({
+        location: expect.anything(),
+        matches: expect.anything(),
         params: {},
         request: expect.any(Request),
       });
