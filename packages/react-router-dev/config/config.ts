@@ -522,8 +522,6 @@ export async function createConfigLoader({
     await new Promise((resolve) => fsWatcher!.on("ready", resolve));
 
     fsWatcher.on("all", async (eventName, rawFilepath) => {
-      console.log("eventName", eventName);
-      console.log("rawFilepath", rawFilepath);
       let filepath = path.normalize(rawFilepath);
 
       let appFileAddedOrRemoved =
@@ -535,8 +533,6 @@ export async function createConfigLoader({
         reactRouterConfigFile &&
         eventName === "change" &&
         filepath === path.normalize(reactRouterConfigFile);
-
-      console.log("reactRouterConfigFileChanged", reactRouterConfigFileChanged);
 
       let configModuleGraphChanged = Boolean(
         viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
