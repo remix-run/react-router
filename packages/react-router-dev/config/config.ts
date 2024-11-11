@@ -16,6 +16,7 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { ssrExternals } from "../vite/ssr-externals";
+import invariant from "../invariant";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -518,7 +519,11 @@ export async function createConfigLoader({
       { ignoreInitial: true }
     );
 
+    await new Promise((resolve) => fsWatcher!.on("ready", resolve));
+
     fsWatcher.on("all", async (eventName, rawFilepath) => {
+      console.log("eventName", eventName);
+      console.log("rawFilepath", rawFilepath);
       let filepath = path.normalize(rawFilepath);
 
       let appFileAddedOrRemoved =
@@ -530,6 +535,8 @@ export async function createConfigLoader({
         reactRouterConfigFile &&
         eventName === "change" &&
         filepath === path.normalize(reactRouterConfigFile);
+
+      console.log("reactRouterConfigFileChanged", reactRouterConfigFileChanged);
 
       let configModuleGraphChanged = Boolean(
         viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)

@@ -14,6 +14,9 @@ module.exports = {
     "@react-router/node$": "<rootDir>/../react-router-node/index.ts",
     "@react-router/serve$": "<rootDir>/../react-router-serve/index.ts",
     "^react-router$": "<rootDir>/../react-router/index.ts",
+    "^@web3-storage/multipart-parser$": require.resolve(
+      "@web3-storage/multipart-parser"
+    ),
   },
   modulePathIgnorePatterns: ignorePatterns,
   testMatch: ["<rootDir>/**/*-test.[jt]s?(x)"],

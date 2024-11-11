@@ -62,10 +62,7 @@ describe.skip("the reveal command", () => {
   for (let runtime of runtimes) {
     it(`generates a "${runtime}" specific entry.server.tsx file in the app directory`, async () => {
       let projectDir = await getProjectDir(`entry.server.${runtime}`);
-      fse.copySync(
-        path.join(__dirname, "fixtures", `reveal-${runtime}`),
-        projectDir
-      );
+      fse.copySync(path.join(__dirname, "fixtures", runtime), projectDir);
 
       let entryClientFile = path.join(projectDir, "app", "entry.client.tsx");
       let entryServerFile = path.join(projectDir, "app", "entry.server.tsx");
@@ -82,10 +79,7 @@ describe.skip("the reveal command", () => {
 
     it(`generates a "${runtime}" specific entry.server.jsx file in the app directory`, async () => {
       let projectDir = await getProjectDir(`entry.server.${runtime}-js`);
-      fse.copySync(
-        path.join(__dirname, "fixtures", `reveal-${runtime}`),
-        projectDir
-      );
+      fse.copySync(path.join(__dirname, "fixtures", runtime), projectDir);
 
       let entryClientFile = path.join(projectDir, "app", "entry.client.jsx");
       let entryServerFile = path.join(projectDir, "app", "entry.server.jsx");

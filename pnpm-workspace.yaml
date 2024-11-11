@@ -2,5 +2,4 @@ packages:
   - "integration"
   - "integration/helpers/*"
   - "packages/*"
-  - "packages/react-router-dev/__tests__/fixtures/*"
   - "playground/*"
