@@ -36,3 +36,97 @@ You may provide financial support for this project by donating [via Open Collect
 ## About
 
 React Router is developed and maintained by [Remix Software](https://remix.run) and many [amazing contributors](https://github.com/remix-run/react-router/graphs/contributors).
+
+## Codemod for Migrating from v5 to v6
+
+We have provided a codemod script to help you migrate your codebase from React Router v5 to v6. This script uses jscodeshift to transform your code automatically.
+
+### How to Use the Codemod
+
+1. Install jscodeshift globally if you haven't already:
+
+   ```sh
+   npm install -g jscodeshift
+   ```
+
+2. Run the codemod script on your project directory:
+
+   ```sh
+   jscodeshift -t codemod/migrate-v5-to-v6.js <path-to-your-project>
+   ```
+
+   Replace `<path-to-your-project>` with the path to the root directory of your project.
+
+### Codemod for TypeScript Projects
+
+The codemod script also supports TypeScript projects. To run the codemod on a TypeScript project, use the following command:
+
+```sh
+jscodeshift -t codemod/migrate-v5-to-v6.js --parser=tsx <path-to-your-project>
+```
+
+### Examples of the Migration Process
+
+Here are some examples of how the codemod script transforms your code:
+
+#### Example 1: Replacing `Switch` with `Routes`
+
+Before:
+
+```jsx
+import { Switch, Route } from 'react-router-dom';
+
+<Switch>
+  <Route path="/home" component={Home} />
+  <Route path="/about" component={About} />
+</Switch>;
+```
+
+After:
+
+```jsx
+import { Routes, Route } from 'react-router-dom';
+
+<Routes>
+  <Route path="/home" element={<Home />} />
+  <Route path="/about" element={<About />} />
+</Routes>;
+```
+
+#### Example 2: Replacing `useHistory` with `useNavigate`
+
+Before:
+
+```jsx
+import { useHistory } from 'react-router-dom';
+
+const history = useHistory();
+history.push('/home');
+```
+
+After:
+
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+const navigate = useNavigate();
+navigate('/home');
+```
+
+#### Example 3: Replacing `Redirect` with `Navigate`
+
+Before:
+
+```jsx
+import { Redirect } from 'react-router-dom';
+
+<Redirect to="/home" />;
+```
+
+After:
+
+```jsx
+import { Navigate } from 'react-router-dom';
+
+<Navigate to="/home" />;
+```
