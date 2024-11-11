@@ -2,8 +2,8 @@
   "name": "@remix-run/react-router",
   "private": true,
   "scripts": {
-    "build": "pnpm run --filter=\"./packages/**/*\" build",
-    "watch": "pnpm build && pnpm run --filter=\"./packages/**/*\" --parallel build --watch",
+    "build": "pnpm run --filter=\"./packages/*\" build",
+    "watch": "pnpm build && pnpm run --filter=\"./packages/*\" --parallel build --watch",
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
