@@ -30,14 +30,25 @@ const viteConfig = tsx`
   };
 `;
 
+const assertType = tsx`
+  export function assertType<T>(t: T) {}
+`;
+
 test.describe("typegen", () => {
   test("basic", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
-      "app/routes/products.$id.tsx": tsx`
-        import type { Route } from "./+types.products.$id"
+      "app/assertType.ts": assertType,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        function assertType<T>(t: T) {}
+        export const routes: RouteConfig = [
+          route("products/:id", "routes/product.tsx")
+        ]
+      `,
+      "app/routes/product.tsx": tsx`
+        import { assertType } from "../assertType"
+        import type { Route } from "./+types.product"
 
         export function loader({ params }: Route.LoaderArgs) {
           assertType<string>(params.id)
@@ -61,10 +72,17 @@ test.describe("typegen", () => {
     test("repeated", async () => {
       const cwd = await createProject({
         "vite.config.ts": viteConfig,
-        "app/routes/repeated.$id.($id).$id.tsx": tsx`
-          import type { Route } from "./+types.repeated.$id.($id).$id"
+        "app/assertType.ts": assertType,
+        "app/routes.ts": tsx`
+          import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          function assertType<T>(t: T) {}
+          export const routes: RouteConfig = [
+            route("repeated-params/:id/:id?/:id", "routes/repeated-params.tsx")
+          ]
+        `,
+        "app/routes/repeated-params.tsx": tsx`
+          import { assertType } from "../assertType"
+          import type { Route } from "./+types.repeated-params"
 
           export function loader({ params }: Route.LoaderArgs) {
             assertType<[string, string | undefined, string]>(params.id)
@@ -81,13 +99,57 @@ test.describe("typegen", () => {
     test("splat", async () => {
       const cwd = await createProject({
         "vite.config.ts": viteConfig,
-        "app/routes/splat.$.tsx": tsx`
-          import type { Route } from "./+types.splat.$"
+        "app/assertType.ts": assertType,
+        "app/routes.ts": tsx`
+          import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          function assertType<T>(t: T) {}
+          export const routes: RouteConfig = [
+            route("splat/*", "routes/splat.tsx")
+          ]
+        `,
+        "app/routes/splat.tsx": tsx`
+          import { assertType } from "../assertType"
+          import type { Route } from "./+types.splat"
 
           export function loader({ params }: Route.LoaderArgs) {
             assertType<string>(params["*"])
+            return null
+          }
+        `,
+      });
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
+
+    test("with extension", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/assertType.ts": assertType,
+        "app/routes.ts": tsx`
+          import { type RouteConfig, route } from "@react-router/dev/routes";
+
+          export const routes: RouteConfig = [
+            route(":lang.xml", "routes/param-with-ext.tsx"),
+            route(":user?.pdf", "routes/optional-param-with-ext.tsx"),
+          ]
+        `,
+        "app/routes/param-with-ext.tsx": tsx`
+          import { assertType } from "../assertType"
+          import type { Route } from "./+types.param-with-ext"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            assertType<string>(params["lang"])
+            return null
+          }
+        `,
+        "app/routes/optional-param-with-ext.tsx": tsx`
+          import { assertType } from "../assertType"
+          import type { Route } from "./+types.optional-param-with-ext"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            assertType<string | undefined>(params["user"])
             return null
           }
         `,
@@ -102,10 +164,10 @@ test.describe("typegen", () => {
   test("clientLoader.hydrate = true", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
+      "app/assertType.ts": assertType,
       "app/routes/_index.tsx": tsx`
+        import { assertType } from "../assertType"
         import type { Route } from "./+types._index"
-
-        function assertType<T>(t: T) {}
 
         export function loader() {
           return { server: "server" }
@@ -141,10 +203,10 @@ test.describe("typegen", () => {
           plugins: [reactRouter({ appDirectory: "src/myapp" })],
         };
       `,
+      "app/assertType.ts": assertType,
       "app/routes/products.$id.tsx": tsx`
+        import { assertType } from "../assertType"
         import type { Route } from "./+types.products.$id"
-
-        function assertType<T>(t: T) {}
 
         export function loader({ params }: Route.LoaderArgs) {
           assertType<string>(params.id)

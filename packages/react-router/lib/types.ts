@@ -5,12 +5,8 @@ import type {
 import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
 import type { Serializable } from "./server-runtime/single-fetch";
+import type { Equal, Expect } from "./test-types";
 
-export type Expect<T extends true> = T;
-// prettier-ignore
-type Equal<X, Y> =
-  (<T>() => T extends X ? 1 : 2) extends
-  (<T>() => T extends Y ? 1 : 2) ? true : false
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
 type Fn = (...args: any[]) => unknown;

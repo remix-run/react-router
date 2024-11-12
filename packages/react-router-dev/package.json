@@ -39,7 +39,7 @@
       "files": [
         "cli/**",
         "config/**",
-        "typescript/**",
+        "typegen/**",
         "vite/**",
         "*.ts",
         "bin.js",
