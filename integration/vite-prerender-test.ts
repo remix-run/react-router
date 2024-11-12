@@ -560,6 +560,93 @@ test.describe("Prerendering", () => {
     );
   });
 
+  test("Handles UTF-8 characters in prerendered and non-prerendered routes", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      prerender: false,
+      files: {
+        ...files,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+  
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter({
+                prerender: ["/", "/utf8-prerendered"],
+              })
+            ],
+          });
+        `,
+        "app/routes/utf8-prerendered.tsx": js`
+          import { useLoaderData } from 'react-router';
+          export function loader({ request }) {
+            return {
+              prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+              data: "한글 데이터 - UTF-8 문자",
+            };
+          }
+  
+          export default function Comp() {
+            let data = useLoaderData();
+            return (
+              <>
+                <h1 data-title>UTF-8 Prerendered</h1>
+                <p data-prerendered>{data.prerendered}</p>
+                <p data-content>{data.data}</p>
+              </>
+            );
+          }
+        `,
+        "app/routes/utf8-not-prerendered.tsx": js`
+          import { useLoaderData } from 'react-router';
+          export function loader({ request }) {
+            return {
+              prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+              data: "非プリレンダリングデータ - UTF-8文字",
+            };
+          }
+  
+          export default function Comp() {
+            let data = useLoaderData();
+            return (
+              <>
+                <h1 data-title>UTF-8 Not Prerendered</h1>
+                <p data-prerendered>{data.prerendered}</p>
+                <p data-content>{data.data}</p>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let app = new PlaywrightFixture(appFixture, page);
+
+    // Test prerendered route with UTF-8 characters
+    await app.goto("/utf8-prerendered");
+    await page.waitForSelector("[data-mounted]");
+    expect(await app.getHtml("[data-title]")).toContain("UTF-8 Prerendered");
+    expect(await app.getHtml("[data-prerendered]")).toContain("yes");
+    expect(await app.getHtml("[data-content]")).toContain(
+      "한글 데이터 - UTF-8 문자"
+    );
+
+    // Test non-prerendered route with UTF-8 characters
+    await app.goto("/utf8-not-prerendered");
+    await page.waitForSelector("[data-mounted]");
+    expect(await app.getHtml("[data-title]")).toContain(
+      "UTF-8 Not Prerendered"
+    );
+    expect(await app.getHtml("[data-prerendered]")).toContain("no");
+    expect(await app.getHtml("[data-content]")).toContain(
+      "非プリレンダリングデータ - UTF-8文字"
+    );
+  });
+
   test("Renders down to the proper HydrateFallback", async ({ page }) => {
     fixture = await createFixture({
       prerender: true,
