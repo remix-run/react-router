@@ -473,13 +473,11 @@ async function resolveConfig({
 }
 
 export async function createConfigLoader({
-  root: userRoot,
+  rootDirectory: userRoot,
   command,
-  onChange,
 }: {
-  root?: string;
+  rootDirectory?: string;
   command?: "dev" | "build";
-  onChange?: (result: Result<ResolvedReactRouterConfig>) => void;
 }) {
   let root = userRoot ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
@@ -510,61 +508,81 @@ export async function createConfigLoader({
 
   let fsWatcher: FSWatcher | undefined;
 
-  if (onChange) {
-    fsWatcher = chokidar.watch(
-      [
-        ...(reactRouterConfigFile ? [reactRouterConfigFile] : []),
-        ...(appDirectory ? [appDirectory] : []),
-      ],
-      { ignoreInitial: true }
-    );
-
-    await new Promise((resolve) => fsWatcher!.on("ready", resolve));
-
-    fsWatcher.on("all", async (eventName, rawFilepath) => {
-      let filepath = path.normalize(rawFilepath);
-
-      let appFileAddedOrRemoved =
-        appDirectory &&
-        (eventName === "add" || eventName === "unlink") &&
-        filepath.startsWith(path.normalize(appDirectory));
-
-      let reactRouterConfigFileChanged =
-        reactRouterConfigFile &&
-        eventName === "change" &&
-        filepath === path.normalize(reactRouterConfigFile);
-
-      let configModuleGraphChanged = Boolean(
-        viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
-      );
-
-      if (configModuleGraphChanged || appFileAddedOrRemoved) {
-        viteNodeContext.devServer?.moduleGraph.invalidateAll();
-        viteNodeContext.runner?.moduleCache.clear();
-      }
-
-      if (
-        appFileAddedOrRemoved ||
-        reactRouterConfigFileChanged ||
-        configModuleGraphChanged
-      ) {
-        onChange(await getConfig());
-      }
-    });
-  }
+  type ChangeHandler = (args: {
+    result: Result<ResolvedReactRouterConfig>;
+    routeConfigChanged: boolean;
+  }) => void;
+  let changeHandlers: ChangeHandler[] = [];
 
   return {
-    get: getConfig,
+    getConfig,
+    onChange: (handler: ChangeHandler) => {
+      changeHandlers.push(handler);
+
+      if (!fsWatcher) {
+        fsWatcher = chokidar.watch(
+          [
+            ...(reactRouterConfigFile ? [reactRouterConfigFile] : []),
+            ...(appDirectory ? [appDirectory] : []),
+          ],
+          { ignoreInitial: true }
+        );
+
+        fsWatcher.on("all", async (eventName, rawFilepath) => {
+          let filepath = path.normalize(rawFilepath);
+
+          let appFileAddedOrRemoved =
+            appDirectory &&
+            (eventName === "add" || eventName === "unlink") &&
+            filepath.startsWith(path.normalize(appDirectory));
+
+          let reactRouterConfigFileChanged =
+            reactRouterConfigFile &&
+            eventName === "change" &&
+            filepath === path.normalize(reactRouterConfigFile);
+
+          let configModuleGraphChanged = Boolean(
+            viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
+          );
+
+          if (configModuleGraphChanged || appFileAddedOrRemoved) {
+            viteNodeContext.devServer?.moduleGraph.invalidateAll();
+            viteNodeContext.runner?.moduleCache.clear();
+          }
+
+          // todo: isolate from rest of config
+          let routeConfigChanged = configModuleGraphChanged;
+
+          if (
+            appFileAddedOrRemoved ||
+            reactRouterConfigFileChanged ||
+            configModuleGraphChanged
+          ) {
+            let result = await getConfig();
+            for (let handler of changeHandlers) {
+              handler({ result, routeConfigChanged });
+            }
+          }
+        });
+      }
+
+      return () => {
+        changeHandlers = changeHandlers.filter(
+          (changeHandler) => changeHandler !== handler
+        );
+      };
+    },
     close: async () => {
+      changeHandlers = [];
       await viteNodeContext.devServer.close();
       await fsWatcher?.close();
     },
   };
 }
 
-export async function loadConfig({ root }: { root: string }) {
-  let configLoader = await createConfigLoader({ root });
-  let config = await configLoader.get();
+export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
+  let configLoader = await createConfigLoader({ rootDirectory });
+  let config = await configLoader.getConfig();
   await configLoader.close();
   return config;
 }

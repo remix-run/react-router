@@ -36,9 +36,14 @@ import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
-  type ReactRouterConfig,
   type ResolvedReactRouterConfig,
-  resolveReactRouterConfig,
+  createConfigLoader,
+} from "../config/config";
+import {
+  // todo: clean these up
+  // type ReactRouterConfig,
+  // type ResolvedReactRouterConfig,
+  // resolveReactRouterConfig,
   resolveEntryFiles,
   resolvePublicPath,
 } from "./config";
@@ -418,16 +423,12 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
-type ReactRouterVitePlugin = (config?: ReactRouterConfig) => Vite.Plugin[];
+type ReactRouterVitePlugin = () => Vite.Plugin[];
 /**
  * React Router [Vite plugin.](https://vitejs.dev/guide/using-plugins.html)
  */
-export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
-  let reactRouterUserConfig = _config ?? {};
-
-  // Prevent mutations to the user config
-  reactRouterUserConfig = deepFreeze(reactRouterUserConfig);
-
+export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
+  let rootDirectory: string;
   let viteCommand: Vite.ResolvedConfig["command"];
   let viteUserConfig: Vite.UserConfig;
   let viteConfigEnv: Vite.ConfigEnv;
@@ -442,24 +443,32 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   // change or route file addition/removal.
   let ctx: ReactRouterPluginContext;
 
+  let reactRouterConfigLoader: Awaited<ReturnType<typeof createConfigLoader>>;
+
+  let logger: Vite.Logger;
+
+  let firstLoad = true;
+
   /** Mutates `ctx` as a side-effect */
   let updatePluginContext = async ({
     routeConfigChanged = false,
   }: {
     routeConfigChanged?: boolean;
   } = {}): Promise<void> => {
-    let rootDirectory =
-      viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
-
     invariant(routesViteNodeContext);
-    let reactRouterConfig = await resolveReactRouterConfig({
-      rootDirectory,
-      reactRouterUserConfig,
-      routeConfigChanged,
-      viteUserConfig,
-      viteCommand,
-      routesViteNodeContext,
-    });
+
+    let reactRouterConfig: ResolvedReactRouterConfig;
+    let reactRouterConfigResult = await reactRouterConfigLoader.getConfig();
+
+    if (reactRouterConfigResult.ok) {
+      reactRouterConfig = reactRouterConfigResult.value;
+    } else {
+      logger.error(reactRouterConfigResult.error);
+      if (firstLoad) {
+        process.exit(1);
+      }
+      return;
+    }
 
     let { entryClientFilePath, entryServerFilePath } = await resolveEntryFiles({
       rootDirectory,
@@ -479,6 +488,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             serverBundleBuildConfig: getServerBundleBuildConfig(viteUserConfig),
           }
         : { isSsrBuild: false };
+
+    firstLoad = false;
 
     ctx = {
       reactRouterConfig,
@@ -748,6 +759,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
+
+        logger = vite.createLogger(viteUserConfig.logLevel, {
+          prefix: "[react-router]",
+        });
+
+        rootDirectory =
+          viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+
+        reactRouterConfigLoader = await createConfigLoader({
+          rootDirectory,
+          command: viteCommand === "serve" ? "dev" : "build",
+        });
 
         routesViteNodeContext = await ViteNode.createContext({
           root: viteUserConfig.root,
@@ -1062,47 +1085,32 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           },
         });
 
-        // Invalidate virtual modules and update cached plugin config via file watcher
-        viteDevServer.watcher.on("all", async (eventName, rawFilepath) => {
-          let { normalizePath } = importViteEsmSync();
-          let filepath = normalizePath(rawFilepath);
+        reactRouterConfigLoader.onChange(
+          async ({ result, routeConfigChanged }) => {
+            if (result.ok) {
+              let lastReactRouterConfig = ctx.reactRouterConfig;
 
-          let appFileAddedOrRemoved =
-            (eventName === "add" || eventName === "unlink") &&
-            filepath.startsWith(
-              normalizePath(ctx.reactRouterConfig.appDirectory)
-            );
+              if (routeConfigChanged) {
+                logger.info(colors.green("Route config changed."), {
+                  clear: true,
+                  timestamp: true,
+                });
+              }
 
-          invariant(viteConfig?.configFile);
-          let viteConfigChanged =
-            eventName === "change" &&
-            filepath === normalizePath(viteConfig.configFile);
+              await updatePluginContext({ routeConfigChanged });
 
-          let routeConfigChanged = Boolean(
-            routesViteNodeContext?.devServer?.moduleGraph.getModuleById(
-              filepath
-            )
-          );
-
-          if (routeConfigChanged || appFileAddedOrRemoved) {
-            routesViteNodeContext?.devServer?.moduleGraph.invalidateAll();
-            routesViteNodeContext?.runner?.moduleCache.clear();
-          }
-
-          if (
-            appFileAddedOrRemoved ||
-            viteConfigChanged ||
-            routeConfigChanged
-          ) {
-            let lastReactRouterConfig = ctx.reactRouterConfig;
-
-            await updatePluginContext({ routeConfigChanged });
-
-            if (!isEqualJson(lastReactRouterConfig, ctx.reactRouterConfig)) {
+              if (!isEqualJson(lastReactRouterConfig, ctx.reactRouterConfig)) {
+                invalidateVirtualModules(viteDevServer);
+              }
+            } else {
               invalidateVirtualModules(viteDevServer);
+              logger.error(result.error, {
+                clear: true,
+                timestamp: true,
+              });
             }
           }
-        });
+        );
 
         return () => {
           // Let user servers handle SSR requests in middleware mode,
@@ -1236,6 +1244,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       async buildEnd() {
         await viteChildCompiler?.close();
         await routesViteNodeContext?.devServer?.close();
+        await reactRouterConfigLoader.close();
       },
     },
     {
@@ -1739,7 +1748,7 @@ async function getRouteMetadata(
 
 async function getPrerenderBuildAndHandler(
   viteConfig: Vite.ResolvedConfig,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string
 ) {
   let serverBuildPath = path.join(
@@ -1756,7 +1765,7 @@ async function getPrerenderBuildAndHandler(
 
 async function handleSpaMode(
   viteConfig: Vite.ResolvedConfig,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
   clientBuildDirectory: string
 ) {
@@ -1784,7 +1793,7 @@ async function handleSpaMode(
 
 async function handlePrerender(
   viteConfig: Vite.ResolvedConfig,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
   clientBuildDirectory: string
 ) {
@@ -1921,7 +1930,7 @@ async function prerenderData(
   handler: RequestHandler,
   prerenderPath: string,
   clientBuildDirectory: string,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
@@ -1949,7 +1958,7 @@ async function prerenderRoute(
   handler: RequestHandler,
   prerenderPath: string,
   clientBuildDirectory: string,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
@@ -1979,7 +1988,7 @@ async function prerenderResourceRoute(
   handler: RequestHandler,
   prerenderPath: string,
   clientBuildDirectory: string,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
@@ -2003,7 +2012,7 @@ async function prerenderResourceRoute(
 async function prerenderManifest(
   build: ServerBuild,
   clientBuildDirectory: string,
-  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig
 ) {
   let normalizedPath = `${reactRouterConfig.basename}/__manifest`.replace(
