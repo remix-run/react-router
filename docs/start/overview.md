@@ -622,7 +622,7 @@ Consider a search field that updates a list as the user types:
                      ^ lose correct state
 ```
 
-Even though the query for `q?=ryan` went out later, it completed earlier. If not handled correctly, the results will briefly be the correct values for `?q=ryan` but then flip over the incorrect results for `?q=ry`. Throttling and debouncing are not enough (you can still interrupt the requests that get through). You need cancellation.
+Even though the query for `?q=ryan` went out later, it completed earlier. If not handled correctly, the results will briefly be the correct values for `?q=ryan` but then flip over the incorrect results for `?q=ry`. Throttling and debouncing are not enough (you can still interrupt the requests that get through). You need cancellation.
 
 If you're using React Router's data conventions you avoid this problem completely and automatically.
 
