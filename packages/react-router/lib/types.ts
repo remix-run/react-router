@@ -93,9 +93,22 @@ type ServerDataFunctionArgs<Params> = ClientDataFunctionArgs<Params> & {
   context: AppLoadContext;
 };
 
+/**
+ * A brand that can be applied to a type to indicate that it will serialize
+ * to a specific type when transported to the client from a loader.
+ * Only use this if you have additional serialization/deserialization logic
+ * in your application.
+ */
+export type SerializesTo<T> = {
+  $__RR_SerializesTo?: [T];
+};
+
 // prettier-ignore
 type Serialize<T> =
-  // First, let type stay as-is if its already serializable...
+  // First, if type has a `SerializesTo` brand, use that type
+  T extends SerializesTo<infer To> ? To :
+
+  // Then, let type stay as-is if its already serializable...
   T extends Serializable ? T :
 
   // ...then don't allow functions to be serialized...
