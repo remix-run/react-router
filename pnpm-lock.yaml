@@ -547,9 +547,6 @@ importers:
       set-cookie-parser:
         specifier: ^2.6.0
         version: 2.6.0
-      source-map:
-        specifier: ^0.7.3
-        version: 0.7.4
       turbo-stream:
         specifier: 2.4.0
         version: 2.4.0
@@ -15953,7 +15950,7 @@ snapshots:
   postcss@8.4.38:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.0.0
+      picocolors: 1.1.1
       source-map-js: 1.2.0
 
   preferred-pm@3.0.3:
