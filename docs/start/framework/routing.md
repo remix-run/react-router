@@ -300,5 +300,9 @@ function Wizard() {
 
 Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
 
+---
+
+Next: [Route Module](./route-module)
+
 [file-route-conventions]: ../how-to/file-route-conventions
 [outlet]: ../../api/react-router/Outlet

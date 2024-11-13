@@ -318,6 +318,10 @@ export function shouldRevalidate(
 }
 ```
 
+---
+
+Next: [Rendering Strategies](./rendering)
+
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
 [client-loader-params]: https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunctionArgs
