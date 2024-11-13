@@ -821,6 +821,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
           ssr: {
             external: ssrExternals,
+            resolve: {
+              conditions: viteCommand === "build" ? [] : ["development"],
+              externalConditions:
+                viteCommand === "build" ? [] : ["development"],
+            },
           },
           optimizeDeps: {
             include: [
