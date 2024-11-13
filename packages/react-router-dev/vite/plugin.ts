@@ -858,6 +858,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               "react-router/dom",
               "react-router-dom",
             ],
+            conditions: viteCommand === "build" ? [] : ["development"],
           },
           base: viteUserConfig.base,
 
