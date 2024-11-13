@@ -44,7 +44,7 @@
       }
     },
     "./route-module": {
-      "types": "./dist/production/lib/route-module.d.ts"
+      "types": "./dist/production/lib/types/route-module.d.ts"
     },
     "./dom": {
       "node": {
