@@ -8,3 +8,5 @@ export type Equal<X, Y> =
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
 export type Func = (...args: any[]) => unknown;
+
+export type Pretty<T> = { [K in keyof T]: T[K] } & {};

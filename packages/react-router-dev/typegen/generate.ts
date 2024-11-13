@@ -11,7 +11,7 @@ export function generate(
     // React Router generated types for route:
     // ${route.file}
 
-    import * as T from "react-router/types"
+    import * as T from "react-router/route-module"
 
     export type Params = {${formatParamProperties(routes, route)}}
 
