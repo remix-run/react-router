@@ -48,7 +48,7 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types";
+import type { SerializeFrom } from "./types/route-data";
 
 // Provided by the build system
 declare const __DEV__: boolean;

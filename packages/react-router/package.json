@@ -43,8 +43,8 @@
         "default": "./dist/production/index.js"
       }
     },
-    "./types": {
-      "types": "./dist/production/lib/types.d.ts"
+    "./route-module": {
+      "types": "./dist/production/lib/route-module.d.ts"
     },
     "./dom": {
       "node": {

@@ -1,46 +1,18 @@
-import type {
-  ClientLoaderFunctionArgs,
-  ClientActionFunctionArgs,
-} from "./dom/ssr/routeModules";
-import type { DataWithResponseInit } from "./router/utils";
-import type { AppLoadContext } from "./server-runtime/data";
-import type { Serializable } from "./server-runtime/single-fetch";
-import type { Equal, Expect } from "./test-types";
+import type { AppLoadContext } from "../server-runtime/data";
+import type { ClientDataFrom, ServerDataFrom } from "./route-data";
+import type { Equal, Expect, Func } from "./utils";
 
-type IsAny<T> = 0 extends 1 & T ? true : false;
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
-type Fn = (...args: any[]) => unknown;
 
 type RouteModule = {
-  loader?: Fn;
-  clientLoader?: Fn;
-  action?: Fn;
-  clientAction?: Fn;
+  loader?: Func;
+  clientLoader?: Func;
+  action?: Func;
+  clientAction?: Func;
   HydrateFallback?: unknown;
   default?: unknown;
   ErrorBoundary?: unknown;
 };
-
-type VoidToUndefined<T> = Equal<T, void> extends true ? undefined : T;
-
-// prettier-ignore
-type DataFrom<T> =
-  IsAny<T> extends true ? undefined :
-  T extends Fn ? VoidToUndefined<Awaited<ReturnType<T>>> :
-  undefined
-
-// prettier-ignore
-type ClientData<T> =
-  T extends DataWithResponseInit<infer U> ? U :
-  T
-
-// prettier-ignore
-type ServerData<T> =
-  T extends DataWithResponseInit<infer U> ? Serialize<U> :
-  Serialize<T>
-
-type ServerDataFrom<T> = ServerData<DataFrom<T>>;
-type ClientDataFrom<T> = ClientData<DataFrom<T>>;
 
 // prettier-ignore
 type IsHydrate<ClientLoader> =
@@ -52,7 +24,7 @@ export type CreateLoaderData<T extends RouteModule> = _CreateLoaderData<
   ServerDataFrom<T["loader"]>,
   ClientDataFrom<T["clientLoader"]>,
   IsHydrate<T["clientLoader"]>,
-  T extends { HydrateFallback: Fn } ? true : false
+  T extends { HydrateFallback: Func } ? true : false
 >;
 
 // prettier-ignore
@@ -93,45 +65,6 @@ type ServerDataFunctionArgs<Params> = ClientDataFunctionArgs<Params> & {
   context: AppLoadContext;
 };
 
-// prettier-ignore
-type Serialize<T> =
-  // First, let type stay as-is if its already serializable...
-  T extends Serializable ? T :
-
-  // ...then don't allow functions to be serialized...
-  T extends (...args: any[]) => unknown ? undefined :
-
-  // ...lastly handle inner types for all container types allowed by `turbo-stream`
-
-  // Promise
-  T extends Promise<infer U> ? Promise<Serialize<U>> :
-
-  // Map & Set
-  T extends Map<infer K, infer V> ? Map<Serialize<K>, Serialize<V>> :
-  T extends Set<infer U> ? Set<Serialize<U>> :
-
-  // Array
-  T extends [] ? [] :
-  T extends readonly [infer F, ...infer R] ? [Serialize<F>, ...Serialize<R>] :
-  T extends Array<infer U> ? Array<Serialize<U>> :
-  T extends readonly unknown[] ? readonly Serialize<T[number]>[] :
-
-  // Record
-  T extends Record<any, any> ? {[K in keyof T]: Serialize<T[K]>} :
-
-  undefined
-
-/**
- * @deprecated Generics on data APIs such as `useLoaderData`, `useActionData`,
- * `meta`, etc. are deprecated in favor of the `Route.*` types generated via
- * `react-router typegen`
- */
-export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
-  ? Args extends [ClientLoaderFunctionArgs | ClientActionFunctionArgs]
-    ? ClientData<DataFrom<T>>
-    : ServerData<DataFrom<T>>
-  : T;
-
 export type CreateServerLoaderArgs<Params> = ServerDataFunctionArgs<Params>;
 
 export type CreateClientLoaderArgs<
@@ -167,54 +100,8 @@ export type CreateErrorBoundaryProps<Params, LoaderData, ActionData> = {
   actionData?: ActionData;
 };
 
-type Pretty<T> = { [K in keyof T]: T[K] } & {};
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
-  // ServerDataFrom
-  Expect<Equal<ServerDataFrom<any>, undefined>>,
-  Expect<
-    Equal<
-      ServerDataFrom<() => { a: string; b: Date; c: () => boolean }>,
-      { a: string; b: Date; c: undefined }
-    >
-  >,
-  Expect<
-    Equal<
-      Pretty<
-        ServerDataFrom<
-          () =>
-            | { json: string; b: Date; c: () => boolean }
-            | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
-        >
-      >,
-      | { json: string; b: Date; c: undefined }
-      | { data: string; b: Date; c: undefined }
-    >
-  >,
-
-  // ClientDataFrom
-  Expect<Equal<ClientDataFrom<any>, undefined>>,
-  Expect<
-    Equal<
-      ClientDataFrom<() => { a: string; b: Date; c: () => boolean }>,
-      { a: string; b: Date; c: () => boolean }
-    >
-  >,
-  Expect<
-    Equal<
-      Pretty<
-        ClientDataFrom<
-          () =>
-            | { json: string; b: Date; c: () => boolean }
-            | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
-        >
-      >,
-      | { json: string; b: Date; c: () => boolean }
-      | { data: string; b: Date; c: () => boolean }
-    >
-  >,
-
   // LoaderData
   Expect<Equal<CreateLoaderData<{}>, undefined>>,
   Expect<
