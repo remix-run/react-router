@@ -1,5 +1,7 @@
 ---
 title: File Uploads
+# need to validate this guide and get rid of remixisms like file system routes
+hidden: true
 ---
 
 # File Uploads

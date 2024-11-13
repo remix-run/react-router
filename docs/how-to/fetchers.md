@@ -8,12 +8,6 @@ Fetchers are useful for creating complex, dynamic user interfaces that require m
 
 Fetchers track their own, independent state and can be used to load data, mutate data, submit forms, and generally interact with loaders and actions.
 
-## React 19
-
-With the introduction of form actions, transitions, `useOptimistic`, `useActionState`, and `useFormStatus`, React has extended its scope into the same use cases as fetchers. You may want to consider using React's built-in APIs before reaching for a fetcher in React Router.
-
-If you are on React 18, fetchers are still a great way to manage complex data interactions.
-
 ## Calling Actions
 
 The most common case for a fetcher is to submit data to an action, triggering a revalidation of route data. Consider the following route module:
@@ -175,69 +169,6 @@ export default function Component() {
 }
 ```
 
-### With React 19
-
-You can use form actions, `useActionState`, and `useOptimistic` instead of fetchers with React 19.
-
-- Action: `clientAction` moves into a React action function but goes mostly unchanged
-- Revalidation: Route data is revalidated manually now with `useRevalidator`
-- Pending states: `useActionState` provides the pending flag instead of `fetcher.state`
-- Optimistic UI: `useOptimistic` provides the optimistic value instead of reading from `fetcher.formData`
-
-```tsx
-import {
-  useLoaderData,
-  useRevalidator,
-} from "react-router";
-import { useActionState, useOptimistic } from "react";
-
-async function updateTitleAction(formData: formData) {
-  await new Promise((res) => setTimeout(res, 1000));
-  let data = await request.formData();
-
-  let title = data.get("title") as string;
-  if (title.trim() === "") {
-    return { ok: false, error: "Title cannot be empty" };
-  }
-
-  localStorage.setItem("title", title);
-  return { ok: true, error: null };
-}
-
-export async function clientLoader() {
-  // ...
-}
-
-export default function Component() {
-  let data = useLoaderData();
-  let revalidator = useRevalidator();
-  let [title, setTitle] = useOptimistic(data.title);
-  let [state, action, pending] = useActionState(
-    async (_prev: any, formData: FormData) => {
-      setTitle(formData.get("title") as string);
-      let result = await updateTitleAction(formData);
-      if (result.ok) await revalidator.revalidate();
-      return result;
-    },
-    null
-  );
-
-  return (
-    <div>
-      <h1>{title}</h1>
-
-      <form action={action}>
-        <input type="text" name="title" />
-        {pending && <p>Saving...</p>}
-        {state?.error && (
-          <p style={{ color: "red" }}>{state.error}</p>
-        )}
-      </form>
-    </div>
-  );
-}
-```
-
 ## Loading Data
 
 Another common use case for fetchers is to load data from a route for something like a combobox.
@@ -368,61 +299,4 @@ Fetchers can be submitted programmatically with `fetcher.submit`:
 </fetcher.Form>
 ```
 
-Note the input event's form is passed as the first argument to `fetcher.submit`. The fetcher will use that form to submit the request, reading it's attributes and serializing the data from it's elements.
-
-### With React 19
-
-When using React 19, you can do the same thing with form actions, `useActionState`, and `useTransition` without needing to configure a route for the search.
-
-```tsx filename=./search-users.tsx
-const users = [
-  { id: 1, name: "Ryan" },
-  { id: 2, name: "Michael" },
-  // ...
-];
-
-async function search(_: any, formData: FormData) {
-  let query = formData.get("q") as string;
-  await new Promise((res) => setTimeout(res, 250));
-  return users.filter((user) =>
-    user.name.toLowerCase().includes(query.toLowerCase())
-  );
-}
-```
-
-```tsx
-import { useActionState, useTransition } from "react";
-import { searchUsers } from "./search-users";
-
-export default function UserSearchCombobox() {
-  let [, startTransition] = useTransition();
-  let [data, action, pending] = useActionState(
-    searchUsers,
-    null
-  );
-  return (
-    <div>
-      <form action={action}>
-        <input
-          type="text"
-          name="q"
-          onChange={(event) => {
-            startTransition(() => {
-              action(
-                new FormData(event.currentTarget.form!)
-              );
-            });
-          }}
-        />
-      </form>
-      {data && (
-        <ul style={{ opacity: pending ? 0.25 : 1 }}>
-          {data.map((user) => (
-            <li key={user.id}>{user.name}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-```
+Note the input event's form is passed as the first argument to `fetcher.submit`. The fetcher will use that form to submit the request, reading it's attributes and serializing the data from its elements.

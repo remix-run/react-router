@@ -291,13 +291,12 @@ If you want one of the special characters used for these route conventions to ac
 | `app/routes/dolla-bills-[$].tsx`    | `/dolla-bills-$`    |
 | `app/routes/[[so-weird]].tsx`       | `/[so-weird]`       |
 | `app/routes/reports.$id[.pdf].ts    | `/reports/123.pdf   |
-| `app/routes/reports.$id[.].ts       | `/reports/123.pdf   |
 
 ## Folders for Organization
 
 Routes can also be folders with a `route.tsx` file inside defining the route module. The rest of the files in the folder will not become routes. This allows you to organize your code closer to the routes that use them instead of repeating the feature names across other folders.
 
-<docs-info>The files inside a folder have no meaning for the route paths, the route path is completely defined by the folder name</docs-info>
+The files inside a folder have no meaning for the route paths, the route path is completely defined by the folder name.
 
 Consider these routes:
 
