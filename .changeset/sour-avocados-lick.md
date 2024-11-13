@@ -1,5 +1,5 @@
 ---
-"react-router": patch
+"react-router": minor
 ---
 
 Add `SerializesTo` brand type.
