@@ -5,24 +5,12 @@ order: 1
 
 # Installation
 
-React Router can be used minimally with your own bundling and data loading (like previous versions) or maximally with the built-in Vite plugin (that adds framework features that came from Remix).
-
-The full feature-set is easiest to use with Vite plugin so the getting started guides will focus there.
-
-To use React Router minimally with your own bundling, server rendering, etc. refer to [Manual Usage][manual_usage] guide.
-
-## Starter Template
+## Installation with a starter template
 
 Most projects start with a template. Let's use a basic template maintained by React Router:
 
 ```shellscript nonumber
-npm create react-router@pre <projectDir>
-# or
-pnpm create react-router@pre <projectDir>
-# or
-bunx create-react-router@pre <projectDir>
-# or
-yarn create react-router@pre <projectDir>
+npm create react-router@pre my-react-router-app
 ```
 
 Now change into the new directory and start the app
@@ -37,9 +25,7 @@ You can now open your browser to `http://localhost:5173`
 
 <!-- TODO: Show how to find and use community templates -->
 
-## Without the Vite Plugin
-
-## Manual Installation with Vite
+## Manual Installation without a template
 
 Instead of a starter template, you can set up a project from scratch.
 

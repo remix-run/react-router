@@ -1,14 +1,12 @@
 ---
-title: Adopting Vite (Routes)
+title: Framework Adoption from RouterProvider
 ---
 
 <docs-warning>This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release</docs-warning>
 
-# Adopting Vite (Routes)
+# Adopting Vite (RouterProvider)
 
-If you are using `<RouterProvider>` please see [Adopting Route Modules from RouterProvider](./vite-router-provider) instead.
-
-If you are using `<Routes>` this is the right place.
+If you are not using `<RouterProvider>` please see [Adopting Route Modules from Component Routes](./vite-component-routes) instead.
 
 The React Router vite plugin adds framework features to React Router. This document wil help you adopt the plugin in your app if you'd like.
 
@@ -53,11 +51,11 @@ export default defineConfig({
 
 ## 2. Add the Root entry point
 
-In a typical Vite app, the `index.html` file is the entry point for bundling. The React Router Vite plugin moves the entry point to a `root.tsx` file so you can use React to render the shell of your app instead of static HTML, and eventually upgrade to Server Rendering if you want.
+In a typical Vite app, the `index.html` file is the entry point for bundling. The React Router Vite plugin uses `root.tsx`. This let's you use React to render the shell instead of static HTML.
 
-For example, if your current `index.html` looks like this:
+If your current `index.html` looks like this:
 
-```html filename="index.html"
+```html filename=index.html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -107,44 +105,43 @@ export default function Root() {
 
 ## 3. Add client entry module
 
-In the typical Vite app setup the `index.html` file points to `src/main.tsx` as the client entry point. React Router uses a file named `src/entry.client.tsx` instead.
+In the typical Vite app setup the `index.html` file points to `src/main.tsx` as the client entry point. React Router uses a file named `src/entry.client.tsx`.
 
 If your current `src/main.tsx` looks like this:
 
 ```tsx filename=src/main.tsx
-import "./index.css";
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 
-ReactDOM.createRoot(
-  document.getElementById("root")!
-).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+const router = createBrowserRouter(YOUR_ROUTES);
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <RouterProvider router={router} />
 );
 ```
 
-You would rename it to `entry.client.tsx` and have it look like this:
+You would rename it to `entry.client.tsx` and change it to this:
 
 ```tsx filename=src/entry.client.tsx
-import "./index.css";
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { HydratedRouter } from "react-router/dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { HydratedRouter } from "react-router-dom";
 
 ReactDOM.hydrateRoot(
   document,
   <StrictMode>
-    <HydratedRouter />
+    <HydratedRouter routes={YOUR_ROUTES} />
   </StrictMode>
 );
 ```
 
 - Use `hydrateRoot` instead of `createRoot`
-- Render a `<HydratedRouter>` instead of your `<App/>` component
-- Note that we stopped rendering the `<App/>` component, it'll come back in a later step, for now we want to simply get the app booting with the new entry points.
+- Use `<HydratedRouter>` instead of `<RouterProvider>`
+- Pass your routes to `<HydratedRouter>`
 
 ## 4. Shuffle stuff around
 
@@ -154,69 +151,49 @@ In general:
 
 - `root.tsx` contains any rendering things like context providers, layouts, styles, etc.
 - `entry.client.tsx` should be as minimal as possible
-- Remember to _not_ try to render your existing `<App/>` component so isolate steps
 
 Note that your `root.tsx` file will be statically generated and served as the entry point of your app, so just that module will need to be compatible with server rendering. This is where most of your trouble will come.
 
 ## 5. Boot the app
 
-At this point you should be able to to boot the app and see the root layout.
+At this point you should be able to to boot the app.
 
 ```shellscript
 npx react-router dev
 ```
 
+If you're having trouble
+
+- Comment out the `routes` prop to `<HydratedRouter>` to isolate the problem to the new entry points
 - Search the [Upgrading Discussion](#TODO) category
 - Reach out for help on [Twitter](https://x.com/remix_run) or [Discord](https://rmx.as/discord)
 
 Make sure you can boot your app at this point before moving on.
 
-## 6. Configure Catchall Route
-
-To get back to rendering your app, we'll configure a "catchall" route that matches all URLs so that your existing `<Routes>` get a chance to render.
-
-Create a file at `src/routes.ts` and add this:
-
-```ts filename=src/routes.ts
-import { type RouteConfig } from "@react-router/dev/routes";
-
-export const routes: RouteConfig = [
-  {
-    path: "*",
-    file: "src/catchall.tsx",
-  },
-];
-```
-
-And then create the catchall route module and render your existing root App component within it.
-
-```tsx filename=src/catchall.tsx
-import App from "./App";
-
-export default function Component() {
-  return <App />;
-}
-```
-
-Your app should be back on the screen and working as usual!
-
 ## 6. Migrate a route to a Route Module
 
-You can now incrementally migrate your routes to route modules.
+You can now incrementally migrate your routes to route modules. First create a `routes.ts` file that exports your routes.
 
 Given an existing route like this:
 
-```tsx filename=src/App.tsx
+```tsx filename=src/entry.client.tsx
 // ...
 import Page from "./containers/page";
 
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/pages/:id" element={<Page />} />
-    </Routes>
-  );
-}
+ReactDOM.hydrateRoot(
+  document,
+  <StrictMode>
+    <HydratedRouter
+      routes={[
+        // ...
+        {
+          path: "/pages/:id",
+          element: <Page />,
+        },
+      ]}
+    />
+  </StrictMode>
+);
 ```
 
 You can move the definition to a `routes.ts` file:
@@ -228,10 +205,6 @@ export const routes: RouteConfig = [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
-  },
-  {
-    path: "*",
-    file: "src/catchall.tsx",
   },
 ];
 ```
@@ -254,11 +227,11 @@ export default function Component() {
 
 You'll now get inferred type safety with params, loader data, and more.
 
-The first few routes you migrate are the hardest because you often have to access various abstractions a bit differently than before (like in a loader instead of from a hook or context). But once the trickiest bits get dealt with, you get into an incremental groove.
+The first few routes you migrate are the hardest because you often have to access the same abstractions a bit differently than before (like in a loader instead of from a hook or context). But once the trickiest bits get dealt with, you get into an incremental groove.
 
-## Enable SSR and Pre-rendering
+## Enable SSR and/or Pre-rendering
 
-If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin.
+If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying](../start/deploying) for more information.
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
@@ -269,13 +242,9 @@ export default defineConfig({
     reactRouter({
       ssr: true,
       async prerender() {
-        return ["/", "/about", "/contact"];
+        return ["/", "/pages/about"];
       },
     }),
   ],
 });
 ```
-
-See [Deploying][deploying] for more information on deploying a server.
-
-[deploying]: ../start/deploying

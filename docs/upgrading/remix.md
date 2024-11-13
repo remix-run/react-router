@@ -1,5 +1,6 @@
 ---
 title: Upgrading from Remix
+order: 2
 ---
 
 # Upgrading from Remix
