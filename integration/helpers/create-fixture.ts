@@ -18,7 +18,7 @@ import {
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
 import { createReadableStreamFromReadable } from "@react-router/node";
 
-import { viteConfig } from "./vite.js";
+import { viteConfig, reactRouterConfig } from "./vite.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
@@ -357,6 +357,10 @@ export async function createFixtureProject(
     filename.startsWith("vite.config.")
   );
 
+  let hasReactRouterConfig = Object.keys(init.files ?? {}).some((filename) =>
+    filename.startsWith("react-router.config.")
+  );
+
   let { spaMode } = init;
 
   await writeTestFiles(
@@ -366,7 +370,13 @@ export async function createFixtureProject(
         : {
             "vite.config.js": await viteConfig.basic({
               port,
-              spaMode,
+            }),
+          }),
+      ...(hasReactRouterConfig
+        ? {}
+        : {
+            "react-router.config.ts": reactRouterConfig({
+              ssr: !spaMode,
             }),
           }),
       ...init.files,

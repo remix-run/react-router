@@ -120,51 +120,54 @@ test.describe(() => {
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
+      "react-router.config.ts": dedent(js`
+        export default {
+          buildEnd: async ({ buildManifest }) => {
+            let fs = await import("node:fs");
+            await fs.promises.writeFile(
+              "build/test-manifest.json",
+              JSON.stringify(buildManifest, null, 2)
+            );
+          },
+          serverBundles: async ({ branch }) => {
+            // Smoke test to ensure we can read the route files via 'route.file'
+            await Promise.all(branch.map(async (route) => {
+              const fs = await import("node:fs/promises");
+              const routeFileContents = await fs.readFile(route.file, "utf8");
+              if (!routeFileContents.includes(${JSON.stringify(
+                ROUTE_FILE_COMMENT
+              )})) {
+                throw new Error("Couldn't file route file test comment");
+              }
+            }));
+
+            if (branch.some((route) => route.id === "routes/_index")) {
+              return "root";
+            }
+
+            if (branch.some((route) => route.id === "routes/bundle-a")) {
+              return "bundle-a";
+            }
+
+            if (branch.some((route) => route.id === "routes/bundle-b")) {
+              return "bundle-b";
+            }
+
+            if (branch.some((route) => route.id === "routes/_pathless.bundle-c")) {
+              return "bundle-c";
+            }
+
+            throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
+          }
+        }
+      `),
       "vite.config.ts": dedent(js`
         import { reactRouter } from "@react-router/dev/vite";
 
         export default {
           ${await viteConfig.server({ port })}
           build: { manifest: true },
-          plugins: [reactRouter({
-            buildEnd: async ({ buildManifest }) => {
-              let fs = await import("node:fs");
-              await fs.promises.writeFile(
-                "build/test-manifest.json",
-                JSON.stringify(buildManifest, null, 2)
-              );
-            },
-            serverBundles: async ({ branch }) => {
-              // Smoke test to ensure we can read the route files via 'route.file'
-              await Promise.all(branch.map(async (route) => {
-                const fs = await import("node:fs/promises");
-                const routeFileContents = await fs.readFile(route.file, "utf8");
-                if (!routeFileContents.includes(${JSON.stringify(
-                  ROUTE_FILE_COMMENT
-                )})) {
-                  throw new Error("Couldn't file route file test comment");
-                }
-              }));
-
-              if (branch.some((route) => route.id === "routes/_index")) {
-                return "root";
-              }
-
-              if (branch.some((route) => route.id === "routes/bundle-a")) {
-                return "bundle-a";
-              }
-
-              if (branch.some((route) => route.id === "routes/bundle-b")) {
-                return "bundle-b";
-              }
-
-              if (branch.some((route) => route.id === "routes/_pathless.bundle-c")) {
-                return "bundle-c";
-              }
-
-              throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
-            }
-          })]
+          plugins: [reactRouter()]
         }
       `),
       ...files,

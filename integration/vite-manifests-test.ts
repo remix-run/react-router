@@ -51,21 +51,24 @@ test.describe(() => {
 
   test.beforeAll(async () => {
     cwd = await createProject({
+      "react-router.config.ts": dedent(js`
+        export default {
+          buildEnd: async ({ buildManifest }) => {
+            let fs = await import("node:fs");
+            await fs.promises.writeFile(
+              "build/test-manifest.json",
+              JSON.stringify(buildManifest, null, 2),
+              "utf-8",
+            );
+          },
+        }
+      `),
       "vite.config.ts": dedent(js`
         import { reactRouter } from "@react-router/dev/vite";
 
         export default {
           build: { manifest: true },
-          plugins: [reactRouter({
-            buildEnd: async ({ buildManifest }) => {
-              let fs = await import("node:fs");
-              await fs.promises.writeFile(
-                "build/test-manifest.json",
-                JSON.stringify(buildManifest, null, 2),
-                "utf-8",
-              );
-            },
-          })],
+          plugins: [reactRouter()],
         }
       `),
       ...files,

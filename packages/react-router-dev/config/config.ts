@@ -6,6 +6,7 @@ import chokidar, { type FSWatcher } from "chokidar";
 import colors from "picocolors";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
+import cloneDeep from "lodash/cloneDeep";
 
 import {
   type RouteManifest,
@@ -16,7 +17,6 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { ssrExternals } from "../vite/ssr-externals";
-import invariant from "../invariant";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -321,6 +321,9 @@ async function resolveConfig({
     }
   }
 
+  // Prevent mutations to the user config
+  reactRouterUserConfig = deepFreeze(cloneDeep(reactRouterUserConfig));
+
   let presets: ReactRouterConfig[] = (
     await Promise.all(
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
@@ -468,6 +471,10 @@ async function resolveConfig({
     serverModuleFormat,
     ssr,
   });
+
+  for (let preset of reactRouterUserConfig.presets ?? []) {
+    await preset.reactRouterConfigResolved?.({ reactRouterConfig });
+  }
 
   return ok(reactRouterConfig);
 }
