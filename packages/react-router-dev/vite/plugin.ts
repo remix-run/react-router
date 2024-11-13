@@ -1224,7 +1224,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               serverBuildDirectory,
               clientBuildDirectory
             );
-          } else if (!ctx.reactRouterConfig.ssr) {
+          }
+
+          // If we are in SPA mode, *always* generate the `index.html` that can be served at any location for hydration.
+          if (!ctx.reactRouterConfig.ssr) {
             await handleSpaMode(
               viteConfig,
               ctx.reactRouterConfig,
