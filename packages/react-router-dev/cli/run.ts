@@ -92,8 +92,8 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     versions.node &&
     semver.major(versions.node) < MINIMUM_NODE_VERSION
   ) {
-    throw new Error(
-      `️🚨 Oops, Node v${versions.node} detected. react-router requires ` +
+    console.warn(
+      `️⚠️ Oops, Node v${versions.node} detected. react-router requires ` +
         `a Node version greater than ${MINIMUM_NODE_VERSION}.`
     );
   }
