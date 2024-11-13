@@ -459,12 +459,10 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
-        "react-router.config.ts": js`
-          export default {
-            // Don't prerender the /not-prerendered route
-            prerender: ["/", "/about"],
-          }
-        `,
+        "react-router.config.ts": reactRouterConfig({
+          // Don't prerender the /not-prerendered route
+          prerender: ["/", "/about"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
@@ -519,11 +517,9 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
-        "react-router.config.ts": js`
-          export default {
-            prerender: ["/", "/about"],
-          }
-        `,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/about"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
@@ -575,17 +571,16 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/utf8-prerendered"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
   
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                prerender: ["/", "/utf8-prerendered"],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/utf8-prerendered.tsx": js`
@@ -660,11 +655,9 @@ test.describe("Prerendering", () => {
       prerender: true,
       files: {
         ...files,
-        "react-router.config.ts": js`
-          export default {
-            prerender: ['/', '/parent', '/parent/child'],
-          }
-        `,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/parent", "/parent/child"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
