@@ -5,17 +5,15 @@ import type {
 import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
 import type { Serializable } from "./server-runtime/single-fetch";
-import type { Equal, Expect } from "./test-types";
+import type { Equal, Expect, Func, IsAny } from "./types/utils";
 
-type IsAny<T> = 0 extends 1 & T ? true : false;
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
-type Fn = (...args: any[]) => unknown;
 
 type RouteModule = {
-  loader?: Fn;
-  clientLoader?: Fn;
-  action?: Fn;
-  clientAction?: Fn;
+  loader?: Func;
+  clientLoader?: Func;
+  action?: Func;
+  clientAction?: Func;
   HydrateFallback?: unknown;
   default?: unknown;
   ErrorBoundary?: unknown;
@@ -26,7 +24,7 @@ type VoidToUndefined<T> = Equal<T, void> extends true ? undefined : T;
 // prettier-ignore
 type DataFrom<T> =
   IsAny<T> extends true ? undefined :
-  T extends Fn ? VoidToUndefined<Awaited<ReturnType<T>>> :
+  T extends Func ? VoidToUndefined<Awaited<ReturnType<T>>> :
   undefined
 
 // prettier-ignore
@@ -52,7 +50,7 @@ export type CreateLoaderData<T extends RouteModule> = _CreateLoaderData<
   ServerDataFrom<T["loader"]>,
   ClientDataFrom<T["clientLoader"]>,
   IsHydrate<T["clientLoader"]>,
-  T extends { HydrateFallback: Fn } ? true : false
+  T extends { HydrateFallback: Func } ? true : false
 >;
 
 // prettier-ignore
