@@ -541,9 +541,6 @@ importers:
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
-      '@web3-storage/multipart-parser':
-        specifier: ^1.0.0
-        version: 1.0.0
       cookie:
         specifier: ^1.0.1
         version: 1.0.1
@@ -892,9 +889,6 @@ importers:
 
   packages/react-router-node:
     dependencies:
-      '@web3-storage/multipart-parser':
-        specifier: ^1.0.0
-        version: 1.0.0
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
