@@ -2,7 +2,10 @@ import fs from "node:fs";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
 import path from "pathe";
-import chokidar, { type FSWatcher } from "chokidar";
+import chokidar, {
+  type FSWatcher,
+  type EmitArgs as ChokidarEmitArgs,
+} from "chokidar";
 import colors from "picocolors";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
@@ -479,13 +482,28 @@ async function resolveConfig({
   return ok(reactRouterConfig);
 }
 
+type ChokidarEventName = ChokidarEmitArgs[0];
+
+type ChangeHandler = (args: {
+  result: Result<ResolvedReactRouterConfig>;
+  routeConfigChanged: boolean;
+  path: string;
+  event: ChokidarEventName;
+}) => void;
+
+export type ConfigLoader = {
+  getConfig: () => Promise<Result<ResolvedReactRouterConfig>>;
+  onChange: (handler: ChangeHandler) => () => void;
+  close: () => Promise<void>;
+};
+
 export async function createConfigLoader({
   rootDirectory: userRoot,
   command,
 }: {
   rootDirectory?: string;
   command?: "dev" | "build";
-}) {
+}): Promise<ConfigLoader> {
   let root = userRoot ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
   let viteNodeContext = await ViteNode.createContext({
@@ -514,11 +532,6 @@ export async function createConfigLoader({
   }
 
   let fsWatcher: FSWatcher | undefined;
-
-  type ChangeHandler = (args: {
-    result: Result<ResolvedReactRouterConfig>;
-    routeConfigChanged: boolean;
-  }) => void;
   let changeHandlers: ChangeHandler[] = [];
 
   return {
@@ -535,17 +548,18 @@ export async function createConfigLoader({
           { ignoreInitial: true }
         );
 
-        fsWatcher.on("all", async (eventName, rawFilepath) => {
+        fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
+          let [event, rawFilepath] = args;
           let filepath = path.normalize(rawFilepath);
 
           let appFileAddedOrRemoved =
             appDirectory &&
-            (eventName === "add" || eventName === "unlink") &&
+            (event === "add" || event === "unlink") &&
             filepath.startsWith(path.normalize(appDirectory));
 
           let reactRouterConfigFileChanged =
             reactRouterConfigFile &&
-            eventName === "change" &&
+            event === "change" &&
             filepath === path.normalize(reactRouterConfigFile);
 
           let configModuleGraphChanged = Boolean(
@@ -567,7 +581,12 @@ export async function createConfigLoader({
           ) {
             let result = await getConfig();
             for (let handler of changeHandlers) {
-              handler({ result, routeConfigChanged });
+              handler({
+                result,
+                routeConfigChanged,
+                path: filepath,
+                event,
+              });
             }
           }
         });

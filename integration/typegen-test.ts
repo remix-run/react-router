@@ -34,8 +34,7 @@ const assertType = tsx`
   export function assertType<T>(t: T) {}
 `;
 
-// TODO: Re-enable this test
-test.describe.skip("typegen", () => {
+test.describe("typegen", () => {
   test("basic", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
