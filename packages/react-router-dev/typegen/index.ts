@@ -36,28 +36,26 @@ export async function watch(rootDirectory: string, configFile?: string) {
     async ({ result, routeConfigChanged, event, path }) => {
       const eventStart = performance.now();
 
-      if (routeConfigChanged) {
-        await writeAll(ctx);
-        Logger.info("changed route config", {
-          durationMs: performance.now() - eventStart,
-        });
-        return;
-      }
-
       if (result.ok) {
         ctx.config = result.value;
 
-        // TODO: Can these values be calculated within the config loader?
-        const route = findRoute(ctx, path);
-        if (route && (event === "add" || event === "unlink")) {
+        if (routeConfigChanged) {
           await writeAll(ctx);
-          Logger.info(
-            `${event === "add" ? "added" : "removed"} route ${pc.blue(
-              route.file
-            )}`,
-            { durationMs: performance.now() - eventStart }
-          );
-          return;
+          Logger.info("changed route config", {
+            durationMs: performance.now() - eventStart,
+          });
+
+          // TODO: Can these values be calculated within the config loader?
+          const route = findRoute(ctx, path);
+          if (route && (event === "add" || event === "unlink")) {
+            Logger.info(
+              `${event === "add" ? "added" : "removed"} route ${pc.blue(
+                route.file
+              )}`,
+              { durationMs: performance.now() - eventStart }
+            );
+            return;
+          }
         }
       } else {
         Logger.error(result.error, {
