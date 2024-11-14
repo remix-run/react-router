@@ -6,7 +6,7 @@ import { type RouteManifest, type RouteManifestEntry } from "../config/routes";
 import { getTypesPath, type Context } from "./context";
 
 export function generate(ctx: Context, route: RouteManifestEntry): string {
-  const lineage = getRouteLineage(ctx.routes, route);
+  const lineage = getRouteLineage(ctx.config.routes, route);
   const urlpath = lineage.map((route) => route.path).join("/");
   const typesPath = getTypesPath(ctx, route);
 
