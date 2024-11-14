@@ -39,8 +39,8 @@ import {
   type ResolvedReactRouterConfig,
   createConfigLoader,
   resolveEntryFiles,
+  ssrExternals,
 } from "../config/config";
-import { ssrExternals } from "./ssr-externals";
 import * as WithProps from "./with-props";
 
 export async function resolveViteConfig({
