@@ -1081,33 +1081,37 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         reactRouterConfigLoader.onChange(
-          async ({ result, configCodeUpdated, routeConfigChanged }) => {
-            if (result.ok) {
-              let lastReactRouterConfig = ctx.reactRouterConfig;
-
-              if (routeConfigChanged) {
-                logger.info(colors.green("Route config changed."), {
-                  clear: true,
-                  timestamp: true,
-                });
-              } else if (configCodeUpdated) {
-                logger.info(colors.green("Config updated."), {
-                  clear: true,
-                  timestamp: true,
-                });
-              }
-
-              await updatePluginContext();
-
-              if (!isEqualJson(lastReactRouterConfig, ctx.reactRouterConfig)) {
-                invalidateVirtualModules(viteDevServer);
-              }
-            } else {
+          async ({
+            result,
+            configCodeUpdated,
+            configChanged,
+            routeConfigChanged,
+          }) => {
+            if (!result.ok) {
               invalidateVirtualModules(viteDevServer);
               logger.error(result.error, {
                 clear: true,
                 timestamp: true,
               });
+              return;
+            }
+
+            if (routeConfigChanged) {
+              logger.info(colors.green("Route config changed."), {
+                clear: true,
+                timestamp: true,
+              });
+            } else if (configCodeUpdated) {
+              logger.info(colors.green("Config updated."), {
+                clear: true,
+                timestamp: true,
+              });
+            }
+
+            await updatePluginContext();
+
+            if (configChanged) {
+              invalidateVirtualModules(viteDevServer);
             }
           }
         );

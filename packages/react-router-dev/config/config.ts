@@ -487,6 +487,7 @@ type ChokidarEventName = ChokidarEmitArgs[0];
 type ChangeHandler = (args: {
   result: Result<ResolvedReactRouterConfig>;
   configCodeUpdated: boolean;
+  configChanged: boolean;
   routeConfigChanged: boolean;
   path: string;
   event: ChokidarEventName;
@@ -581,6 +582,9 @@ export async function createConfigLoader({
           ) {
             let result = await getConfig();
 
+            let configChanged =
+              result.ok && !isEqualJson(lastConfig, result.value);
+
             let routeConfigChanged =
               result.ok &&
               !isEqualJson(lastConfig?.routes, result.value.routes);
@@ -589,6 +593,7 @@ export async function createConfigLoader({
               handler({
                 result,
                 configCodeUpdated,
+                configChanged,
                 routeConfigChanged,
                 path: filepath,
                 event,
