@@ -110,40 +110,6 @@ export const config: Config = {
 
 Note that when server rendering, any URLs that aren't pre-rendered will be server rendered as usual, allowing you to pre-render some data at a single route while still server rendering the rest.
 
-## Streaming Data with Suspense
-
-Returning promises from loaders speeds up initial renders by streaming the data with UI fallbacks.
-
-```tsx filename=app/product.tsx lines=[2-3,13-14,22-23]
-export async function loader({ params }) {
-  // 1. return a promise from loader
-  const reviews = fakeService.getReviews(params.pid);
-  const product = await fakeDb.getProduct(params.pid);
-  return { reviews, product };
-}
-
-export default function Product({ loaderData }) {
-  const { product, reviews } = loaderData;
-  return (
-    <div>
-      <ProductPage data={product} />
-      {/* 2. pass to component wrapped in suspense */}
-      <Suspense fallback={<div>Loading Reviews</div>}>
-        <Reviews data={reviews} />
-      </Suspense>
-    </div>
-  );
-}
-
-function Reviews({ data }) {
-  // 3. access resolved value with React.use
-  const reviews = React.use(data);
-  return reviews.map((review) => (
-    <Review key={review.id} data={review} />
-  ));
-}
-```
-
 ## Using Both Loaders
 
 `loader` and `clientLoader` can be used together. The `loader` will be used on the server for initial SSR (or pre-rendering) and the `clientLoader` will be used on subsequent client-side navigations.
@@ -178,11 +144,13 @@ export default function Product({
 }
 ```
 
-For more advanced use cases with `clientLoader` like caching, refer to [Advanced Data Fetching][advanced_data_fetching].
-
 ---
 
 Next: [Actions](./actions)
+
+See also:
+
+- [Streaming with Suspense](../../how-to/suspense)
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching
 [data]: ../../api/react-router/data
