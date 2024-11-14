@@ -49,7 +49,6 @@ import {
 } from "./config";
 import { ssrExternals } from "./ssr-externals";
 import * as WithProps from "./with-props";
-import * as ViteNode from "./vite-node";
 
 export async function resolveViteConfig({
   configFile,
@@ -435,7 +434,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let viteConfig: Vite.ResolvedConfig | undefined;
   let cssModulesManifest: Record<string, string> = {};
   let viteChildCompiler: Vite.ViteDevServer | null = null;
-  let routesViteNodeContext: ViteNode.Context | null = null;
+  let reactRouterConfigLoader: Awaited<ReturnType<typeof createConfigLoader>>;
+  let logger: Vite.Logger;
+  let firstLoad = true;
 
   // This is initialized by `updatePluginContext` during Vite's `config`
   // hook, so most of the code can assume this defined without null check.
@@ -443,20 +444,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   // change or route file addition/removal.
   let ctx: ReactRouterPluginContext;
 
-  let reactRouterConfigLoader: Awaited<ReturnType<typeof createConfigLoader>>;
-
-  let logger: Vite.Logger;
-
-  let firstLoad = true;
-
   /** Mutates `ctx` as a side-effect */
   let updatePluginContext = async ({
     routeConfigChanged = false,
   }: {
     routeConfigChanged?: boolean;
   } = {}): Promise<void> => {
-    invariant(routesViteNodeContext);
-
     let reactRouterConfig: ResolvedReactRouterConfig;
     let reactRouterConfigResult = await reactRouterConfigLoader.getConfig();
 
@@ -476,6 +469,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     });
 
     let publicPath = resolvePublicPath(viteUserConfig);
+
+    if (
+      reactRouterConfig.basename !== "/" &&
+      viteCommand === "serve" &&
+      !viteUserConfig.server?.middlewareMode &&
+      !reactRouterConfig.basename.startsWith(publicPath)
+    ) {
+      logger.error(
+        colors.red(
+          "When using the React Router `basename` and the Vite `base` config, " +
+            "the `basename` config must begin with `base` for the default " +
+            "Vite dev server."
+        )
+      );
+      process.exit(1);
+    }
+
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
     let ssrBuildCtx: ReactRouterPluginSsrBuildContext =
@@ -770,17 +780,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
           command: viteCommand === "serve" ? "dev" : "build",
-        });
-
-        routesViteNodeContext = await ViteNode.createContext({
-          root: viteUserConfig.root,
-          mode: viteConfigEnv.mode,
-          server: {
-            watch: viteCommand === "build" ? null : undefined,
-          },
-          ssr: {
-            external: ssrExternals,
-          },
         });
 
         await updatePluginContext();
@@ -1243,7 +1242,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
       async buildEnd() {
         await viteChildCompiler?.close();
-        await routesViteNodeContext?.devServer?.close();
         await reactRouterConfigLoader.close();
       },
     },

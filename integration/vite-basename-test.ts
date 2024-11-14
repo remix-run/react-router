@@ -154,7 +154,7 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
     }
   }
 
-  test.afterAll(async () => await stop());
+  test.afterAll(async () => await stop?.());
 
   test("works when the base and basename are the same", async ({ page }) => {
     await setup({ base: "/mybase/", basename: "/mybase/" });
@@ -166,8 +166,7 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
     await workflowDev({ page, cwd, port, basename: "/mybase/app/" });
   });
 
-  // TODO: Fix this
-  test.skip("errors if basename does not start with base", async ({ page }) => {
+  test("errors if basename does not start with base", async ({ page }) => {
     await setup({
       base: "/mybase/",
       basename: "/notmybase/",
