@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import { execSync } from "node:child_process";
+import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
 import path from "pathe";
@@ -19,6 +21,7 @@ import {
   validateRouteConfig,
   configRoutesToRouteManifest,
 } from "./routes";
+import { detectPackageManager } from "../cli/detectPackageManager";
 import { ssrExternals } from "../vite/ssr-externals";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -627,6 +630,76 @@ export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
   let config = await configLoader.getConfig();
   await configLoader.close();
   return config;
+}
+
+export async function resolveEntryFiles({
+  rootDirectory,
+  reactRouterConfig,
+}: {
+  rootDirectory: string;
+  reactRouterConfig: ResolvedReactRouterConfig;
+}) {
+  let { appDirectory } = reactRouterConfig;
+
+  let defaultsDirectory = path.resolve(
+    path.dirname(require.resolve("@react-router/dev/package.json")),
+    "dist",
+    "config",
+    "defaults"
+  );
+
+  let userEntryClientFile = findEntry(appDirectory, "entry.client");
+  let userEntryServerFile = findEntry(appDirectory, "entry.server");
+
+  let entryServerFile: string;
+  let entryClientFile = userEntryClientFile || "entry.client.tsx";
+
+  let pkgJson = await PackageJson.load(rootDirectory);
+  let deps = pkgJson.content.dependencies ?? {};
+
+  if (userEntryServerFile) {
+    entryServerFile = userEntryServerFile;
+  } else {
+    if (!deps["@react-router/node"]) {
+      throw new Error(
+        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`
+      );
+    }
+
+    if (!deps["isbot"]) {
+      console.log(
+        "adding `isbot@5` to your package.json, you should commit this change"
+      );
+
+      pkgJson.update({
+        dependencies: {
+          ...pkgJson.content.dependencies,
+          isbot: "^5",
+        },
+      });
+
+      await pkgJson.save();
+
+      let packageManager = detectPackageManager() ?? "npm";
+
+      execSync(`${packageManager} install`, {
+        cwd: rootDirectory,
+        stdio: "inherit",
+      });
+    }
+
+    entryServerFile = `entry.server.node.tsx`;
+  }
+
+  let entryClientFilePath = userEntryClientFile
+    ? path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
+    : path.resolve(defaultsDirectory, entryClientFile);
+
+  let entryServerFilePath = userEntryServerFile
+    ? path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
+    : path.resolve(defaultsDirectory, entryServerFile);
+
+  return { entryClientFilePath, entryServerFilePath };
 }
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];

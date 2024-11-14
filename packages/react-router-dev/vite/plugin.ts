@@ -38,15 +38,8 @@ import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
   type ResolvedReactRouterConfig,
   createConfigLoader,
-} from "../config/config";
-import {
-  // todo: clean these up
-  // type ReactRouterConfig,
-  // type ResolvedReactRouterConfig,
-  // resolveReactRouterConfig,
   resolveEntryFiles,
-  resolvePublicPath,
-} from "./config";
+} from "../config/config";
 import { ssrExternals } from "./ssr-externals";
 import * as WithProps from "./with-props";
 
@@ -464,7 +457,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       reactRouterConfig,
     });
 
-    let publicPath = resolvePublicPath(viteUserConfig);
+    let publicPath = viteUserConfig.base ?? "/";
 
     if (
       reactRouterConfig.basename !== "/" &&
