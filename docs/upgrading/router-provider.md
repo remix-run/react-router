@@ -2,7 +2,15 @@
 title: Framework Adoption from RouterProvider
 ---
 
-<docs-warning>This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release</docs-warning>
+<docs-warning>
+
+This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release
+
+<!-- TODO: remove these links, there just here in the meantime until this doc is updated -->
+
+Checkout this <a href="https://github.com/brophdawg11/react-router-v6-to-v7-upgrade">example repo</a> and <a href="https://www.youtube.com/live/Vjau1QeTAPg">livestream</a> for a walkthrough of what an upgrade process might look like.
+
+</docs-warning>
 
 # Adopting Vite (RouterProvider)
 

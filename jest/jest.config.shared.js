@@ -24,4 +24,7 @@ module.exports = {
     "\\.[jt]sx?$": require.resolve("./transform"),
   },
   watchPathIgnorePatterns: [...ignorePatterns, "\\/node_modules\\/"],
+  globals: {
+    __DEV__: true,
+  },
 };

@@ -7,6 +7,8 @@ order: 5
 
 Data is provided to the route component from `loader` and `clientLoader`.
 
+Loader data is automatically serialized from loaders and deserialized in components. In addition to primitive values like strings and numbers, loaders can return promises, maps, sets, dates and more.
+
 ## Client Data Loading
 
 `clientLoader` is used to fetch data on the client. This is useful for pages or full projects that you'd prefer to fetch data from the browser only.
@@ -65,35 +67,6 @@ export default function Product({
 
 Note that the `loader` function is removed from client bundles so you can use server only APIs without worrying about them being included in the browser.
 
-### Custom Status Codes and Headers
-
-If you need to return a custom HTTP status code or custom headers from your `loader`, you can do so using the [`data`][data] utility:
-
-```tsx filename=app/product.tsx lines=[3,6-8,14,17-21]
-// route("products/:pid", "./product.tsx");
-import type { Route } from "./+types.product";
-import { data } from "react-router";
-import { fakeDb } from "../db";
-
-export function headers({ loaderHeaders }: HeadersArgs) {
-  return loaderHeaders;
-}
-
-export async function loader({ params }: Route.LoaderArgs) {
-  const product = await fakeDb.getProduct(params.pid);
-
-  if (!product) {
-    throw data(null, { status: 404 });
-  }
-
-  return data(product, {
-    headers: {
-      "Cache-Control": "public; max-age=300",
-    },
-  });
-}
-```
-
 ## Static Data Loading
 
 When pre-rendering, loaders are used to fetch data during the production build.
@@ -120,27 +93,22 @@ export default function Product({
 }
 ```
 
-The URLs to pre-render are specified in the Vite plugin.
+The URLs to pre-render are specified in react-router.config.ts:
 
-```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
 
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      async prerender() {
-        let products = await readProductsFromCSVFile();
-        return products.map(
-          (product) => `/products/${product.id}`
-        );
-      },
-    }),
-  ],
-});
+export const config: Config = {
+  async prerender() {
+    let products = await readProductsFromCSVFile();
+    return products.map(
+      (product) => `/products/${product.id}`
+    );
+  },
+};
 ```
 
-Note that when server rendering, any URLs that aren't pre-rendered will be server rendered as usual.
+Note that when server rendering, any URLs that aren't pre-rendered will be server rendered as usual, allowing you to pre-render some data at a single route while still server rendering the rest.
 
 ## Using Both Loaders
 
@@ -176,52 +144,13 @@ export default function Product({
 }
 ```
 
-For more advanced use cases with `clientLoader` like caching, refer to [Advanced Data Fetching][advanced_data_fetching].
+---
 
-## Async Components with React Server Components
+Next: [Actions](./actions)
 
-<docs-warning>RSC is not supported yet</docs-warning>
+See also:
 
-In the future, rendered async components in loaders are available on `loaderData` like any other value:
-
-```tsx filename=app/product-page.tsx
-// route("products/:pid", "./product-page.tsx");
-import type { Route } from "./+types.product";
-import Product from "./product";
-import Reviews from "./reviews";
-
-export async function loader({ params }: Route.LoaderArgs) {
-  return {
-    product: <Product id={params.pid} />,
-    reviews: <Reviews productId={params.pid} />,
-  };
-}
-
-export default function ProductPage({
-  loaderData,
-}: Route.ComponentProps) {
-  return (
-    <div>
-      {loaderData.product}
-      <Suspense fallback={<div>loading...</div>}>
-        {loaderData.reviews}
-      </Suspense>
-    </div>
-  );
-}
-```
-
-```tsx filename=app/product.tsx
-export async function Product({ id }: { id: string }) {
-  const product = await fakeDb.getProduct(id);
-  return (
-    <div>
-      <h1>{product.title}</h1>
-      <p>{product.description}</p>
-    </div>
-  );
-}
-```
+- [Streaming with Suspense](../../how-to/suspense)
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching
 [data]: ../../api/react-router/data

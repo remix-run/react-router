@@ -1,22 +1,14 @@
 import fs from "node:fs";
 
 import * as Path from "pathe";
-import * as Pathe from "pathe/utils";
 import pc from "picocolors";
 
 import * as Logger from "../logger";
-import { generate } from "./generate";
-import {
-  type ResolvedReactRouterConfig,
-  type ConfigLoader,
-  createConfigLoader,
-} from "../config/config";
+import { createConfigLoader } from "../config/config";
 
-type Context = {
-  rootDirectory: string;
-  configLoader: ConfigLoader;
-  config: ResolvedReactRouterConfig;
-};
+import { generate } from "./generate";
+import type { Context } from "./context";
+import { getTypesDir, getTypesPath } from "./paths";
 
 export async function run(rootDirectory: string) {
   const ctx = await createContext({ rootDirectory, watch: false });
@@ -96,18 +88,13 @@ function findRoute(ctx: Context, path: string) {
 }
 
 async function writeAll(ctx: Context): Promise<void> {
-  const typegenDir = Path.join(ctx.rootDirectory, ".react-router/types");
+  const typegenDir = getTypesDir(ctx);
 
   fs.rmSync(typegenDir, { recursive: true, force: true });
   Object.values(ctx.config.routes).forEach((route) => {
     if (!fs.existsSync(Path.join(ctx.config.appDirectory, route.file))) return;
-    const typesPath = Path.join(
-      typegenDir,
-      Path.relative(ctx.rootDirectory, ctx.config.appDirectory),
-      Path.dirname(route.file),
-      "+types." + Pathe.filename(route.file) + ".d.ts"
-    );
-    const content = generate(ctx.config.routes, route);
+    const typesPath = getTypesPath(ctx, route);
+    const content = generate(ctx, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });

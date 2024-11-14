@@ -4,6 +4,111 @@ title: Form Validation
 
 # Form Validation
 
-<docs-warning>
-  This document is a work in progress. There's not much to see here (yet).
-</docs-warning>
+This guide walks you through implementing form validation for a simple signup form. Here, we focus on capturing the fundamentals to help you understand the essential elements of form validation in Remix, including actions, action data, and rendering errors.
+
+## 1. Setting Up
+
+We'll start by creating a basic signup route with form.
+
+```ts filename=routes.ts
+import { route } from "@react-router/dev/routes";
+
+export const routes = [route("signup", "signup.tsx")];
+```
+
+```tsx filename=signup.tsx
+import type { Route } from "./+types.signup";
+import { useFetcher } from "react-router";
+
+export default function Signup(_: Route.ComponentProps) {
+  let fetcher = useFetcher();
+  return (
+    <fetcher.Form method="post">
+      <p>
+        <input type="email" name="email" />
+      </p>
+
+      <p>
+        <input type="password" name="password" />
+      </p>
+
+      <button type="submit">Sign Up</button>
+    </fetcher.Form>
+  );
+}
+```
+
+## 2. Defining the Action
+
+In this step, we'll define a server `action` in the same file as our `Signup` component. Note that the aim here is to provide a broad overview of the mechanics involved rather than digging deep into form validation rules or error object structures. We'll use rudimentary checks for the email and password to demonstrate the core concepts.
+
+```tsx filename=signup.tsx
+import type { Route } from "./+types.signup";
+import { redirect, useFetcher, data } from "react-router";
+
+export default function Signup(_: Route.ComponentProps) {
+  // omitted for brevity
+}
+
+export async function action({
+  request,
+}: Route.ActionArgs) {
+  const formData = await request.formData();
+  const email = String(formData.get("email"));
+  const password = String(formData.get("password"));
+
+  const errors = {};
+
+  if (!email.includes("@")) {
+    errors.email = "Invalid email address";
+  }
+
+  if (password.length < 12) {
+    errors.password =
+      "Password should be at least 12 characters";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return data({ errors }, { status: 400 });
+  }
+
+  // Redirect to dashboard if validation is successful
+  return redirect("/dashboard");
+}
+```
+
+If any validation errors are found, they are returned from the `action` to the fetcher. This is our way of signaling to the UI that something needs to be corrected, otherwise the user will be redirected to the dashboard.
+
+Note the `data({ errors }, { status: 400 })` call. Setting a 400 status is the web standard way to signal to the client that there was a validation error (Bad Request). In React Router, only 200 status codes trigger page data revalidation so a 400 prevent that.
+
+## 3. Displaying Validation Errors
+
+Finally, we'll modify the `Signup` component to display validation errors, if any, from `fetcher.data`.
+
+```tsx filename=signup.tsx lines=[3,8,13-15]
+export default function Signup(_: Route.ComponentProps) {
+  let fetcher = useFetcher();
+  let errors = fetcher.data?.errors;
+  return (
+    <fetcher.Form method="post">
+      <p>
+        <input type="email" name="email" />
+        {errors?.email ? <em>{errors.email}</em> : null}
+      </p>
+
+      <p>
+        <input type="password" name="password" />
+        {errors?.password ? (
+          <em>{errors.password}</em>
+        ) : null}
+      </p>
+
+      <button type="submit">Sign Up</button>
+    </fetcher.Form>
+  );
+}
+```
+
+## Conclusion
+
+And there you have it! You've successfully set up a basic form validation flow in Remix. The beauty of this approach is that the errors will automatically display based on the `action` data, and they will be updated each time the user re-submits the form. This reduces the amount of boilerplate code you have to write, making your development process more efficient.

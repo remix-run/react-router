@@ -48,11 +48,11 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types";
+import type { SerializeFrom } from "./types/route-data";
 
-// TODO: Let's get this back to using an import map and development/production
-// condition once we get the rollup build replaced
-const ENABLE_DEV_WARNINGS = true;
+// Provided by the build system
+declare const __DEV__: boolean;
+const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
   Resolves a URL against the current location.

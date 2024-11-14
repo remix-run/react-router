@@ -11,21 +11,15 @@ There are three rendering strategies in React Router:
 - Server Side Rendering
 - Static Pre-rendering
 
-All routes are always client side rendered as the user navigates around the app. However, you can control server rendering and static pre-rendering with the `ssr` and `prerender` options in the Vite plugin.
+All routes are always client side rendered as the user navigates around the app. However, you can control server rendering and static pre-rendering with the `ssr` and `prerender` config options.
 
 ## Server Side Rendering
 
-```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
 
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      // defaults to false
-      ssr: true,
-    }),
-  ],
+export const config: Config = {
+  ssr: true,
 });
 ```
 
@@ -34,43 +28,18 @@ Server side rendering requires a deployment that supports it. Though it's a glob
 ## Static Pre-rendering
 
 ```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+import type { Config } from "@react-router/dev/config";
 
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      // return a list of URLs to prerender at build time
-      async prerender() {
-        return ["/", "/about", "/contact"];
-      },
-    }),
-  ],
-});
+export const config: Config = {
+  // return a list of URLs to prerender at build time
+  async prerender() {
+    return ["/", "/about", "/contact"];
+  },
+};
 ```
 
 Pre-rendering is a build-time operation that generates static HTML and client navigation data payloads for a list of URLs. This is useful for SEO and performance, especially for deployments without server rendering. When pre-rendering, route module loaders are used to fetch data at build time.
 
-## React Server Components
+---
 
-<docs-warning>RSC is still in development</docs-warning>
-
-In the future you will be able to return elements from loaders and actions to keep them out of browser bundles.
-
-```tsx
-export async function loader() {
-  return {
-    products: <Products />,
-    reviews: <Reviews />,
-  };
-}
-
-export default function App({ data }) {
-  return (
-    <div>
-      {data.products}
-      {data.reviews}
-    </div>
-  );
-}
-```
+Next: [Data Loading](./data-loading)

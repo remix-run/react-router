@@ -817,6 +817,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           ssr: {
             external: ssrExternals,
+            resolve: {
+              conditions: viteCommand === "build" ? [] : ["development"],
+              externalConditions:
+                viteCommand === "build" ? [] : ["development"],
+            },
           },
           optimizeDeps: {
             include: [
@@ -854,6 +859,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router/dom",
               "react-router-dom",
             ],
+            conditions: viteCommand === "build" ? [] : ["development"],
           },
           base: viteUserConfig.base,
 
@@ -1214,7 +1220,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               serverBuildDirectory,
               clientBuildDirectory
             );
-          } else if (!ctx.reactRouterConfig.ssr) {
+          }
+
+          // If we are in SPA mode, *always* generate the `index.html` that can be served at any location for hydration.
+          if (!ctx.reactRouterConfig.ssr) {
             await handleSpaMode(
               viteConfig,
               ctx.reactRouterConfig,

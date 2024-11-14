@@ -8,44 +8,32 @@ Pre-rendering allows you to render a pages at build time instead of on a server 
 
 ## Configuration
 
-Add the `prerender` option to your Vite plugin, there are three signatures:
+Add the `prerender` option to your config, there are three signatures:
 
-```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
 
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      // all static route paths
-      // (no dynamic segments like "/post/:slug")
-      prerender: true,
+export default {
+  // all static route paths
+  // (no dynamic segments like "/post/:slug")
+  prerender: true,
 
-      // any url
-      prerender: ["/", "/blog", "/blog/popular-post"],
+  // any url
+  prerender: ["/", "/blog", "/blog/popular-post"],
 
-      // with async url dependencies like a CMS
-      async prerender() {
-        let posts = await getPosts();
-        return posts.map((post) => post.href);
-      },
-
-      // with async and static paths
-      async prerender({ getStaticPaths }) {
-        let posts = await getPosts();
-        let static = getStaticPaths();
-        return static.concat(
-          posts.map((post) => post.href)
-        );
-      },
-    }),
-  ],
-});
+  // async function for dependencies like a CMS
+  async prerender({ getStaticPaths }) {
+    let posts = await fakeGetPostsFromCMS();
+    return ["/", "/blog"].concat(
+      posts.map((post) => post.href)
+    );
+  },
+} satisfies Config;
 ```
 
 ## Data Loading and Pre-rendering
 
-There is no extra application API for pre-rendering. Pre-rendering uses the same route loaders as server rendering to provide data to components:
+There is no extra application API for pre-rendering. Pre-rendering uses the same route loaders as server rendering:
 
 ```tsx
 export async function loader({ request, params }) {
@@ -60,9 +48,11 @@ export function Post({ loaderData }) {
 
 Instead of a request coming to your route on a deployed server, the build creates a `new Request()` and runs it through your app just like a server would.
 
-## Static Results
+When server rendering, requests to paths that have not been pre-rendered will be server rendered as usual.
 
-The rendered result will be written out to your `build/client` directory, you'll notice two files for each path: an HTML file for initial document requests from users and `[name].data` files for the data React Router fetches for client side routing.
+## Static File Output
+
+The rendered result will be written out to your `build/client` directory. You'll notice two files for each path: an HTML file for initial document requests `[name].data` files for client side navigation.
 
 The output of your build will indicate what files were pre-rendered:
 
@@ -80,46 +70,4 @@ Prerender: Generated build/client/blog/my-first-post/index.html
 ...
 ```
 
-During development with `react-router dev`, pre-rendering doesn't save the rendering results to the public directory, this only happens for `react-router build`.
-
-## Deploying/Serving
-
-You have multiple options for deploying a site with pre-rendering enabled.
-
-### Static Deployment
-
-If you pre-render all of the paths in your application, you can deploy your `build/client/` directory to a CDN of your choosing and you've got a fully-static site that hydrates into a SPA, loads pre-rendered server data on navigations and can perform dynamic data loading and mutations via `clientLoader` and `clientAction`.
-
-### Serving via react-router-serve
-
-By default, `react-router-serve` will serve these files via [`express.static`][express-static] and any paths that do not match a static file will fall through to the React Router handler.
-
-This even allows you to run a hybrid setup where _some_ of your routes are pre-rendered and others are dynamically rendered at runtime. For example, you could prerender anything inside `/blog/*` and server-render anything inside `/auth/*`.
-
-### Manual Server Configuration
-
-If you want more control over your server, you can serve these static files just like your assets in your own server - but you probably want to differentiate the caching headers on hashed static assets versus static `.html`/`.data` files.
-
-```js
-// Serve hashed static assets such as JS/CSS files with a long-lived Cache-Control header
-app.use(
-  "/assets",
-  express.static("build/client/assets", {
-    immutable: true,
-    maxAge: "1y",
-  })
-);
-
-// Serve static HTML and .data requests without Cache-Control
-app.use("/", express.static("build/client"));
-
-// Serve remaining unhandled requests via your React Router handler
-app.all(
-  "*",
-  createRequestHandler({
-    build: await import("./build/server/index.js"),
-  })
-);
-```
-
-[express-static]: https://expressjs.com/en/4x/api.html#express.static
+During development, pre-rendering doesn't save the rendered results to the public directory, this only happens for `react-router build`.

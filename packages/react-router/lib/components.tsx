@@ -62,9 +62,9 @@ import {
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 
-// TODO: Let's get this back to using an import map and development/production
-// condition once we get the rollup build replaced
-const ENABLE_DEV_WARNINGS = true;
+// Provided by the build system
+declare const __DEV__: boolean;
+const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
  * @private

@@ -5,17 +5,6 @@ order: 2
 
 # Routing
 
-Your routes are the foundation of React Router's features, they define:
-
-- automatic code-splitting
-- data loading
-- actions
-- revalidation
-- error boundaries
-- and more
-
-The rest of the getting started guides will cover these features in more detail while this guide will give you a basic understanding of routing.
-
 ## Configuring Routes
 
 Routes are configured in `app/routes.ts`. Routes have a url pattern to match the URL and a file path to the route module to define its behavior.
@@ -88,7 +77,7 @@ export default function Component({
 }
 ```
 
-Route modules have more features like actions, headers, and error boundaries, but they will be covered in later guides.
+Route modules have more features like actions, headers, and error boundaries, but they will be covered in the next guide: [Route Modules](./route-module)
 
 ## Nested Routes
 
@@ -288,32 +277,6 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 const { "*": splat } = params;
 ```
 
-## Linking
-
-Link to routes from your UI with `Link` and `NavLink`
-
-```tsx
-import { NavLink, Link } from "react-router";
-
-function Header() {
-  return (
-    <nav>
-      {/* NavLink makes it easy to show active states */}
-      <NavLink
-        to="/"
-        className={({ isActive }) =>
-          isActive ? "active" : ""
-        }
-      >
-        Home
-      </NavLink>
-
-      <Link to="/concerts/salt-lake-city">Concerts</Link>
-    </nav>
-  );
-}
-```
-
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
@@ -336,6 +299,10 @@ function Wizard() {
 ```
 
 Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
+
+---
+
+Next: [Route Module](./route-module)
 
 [file-route-conventions]: ../how-to/file-route-conventions
 [outlet]: ../../api/react-router/Outlet

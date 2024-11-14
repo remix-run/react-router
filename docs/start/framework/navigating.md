@@ -172,3 +172,7 @@ export function useLogoutAfterInactivity() {
   });
 }
 ```
+
+---
+
+Next: [Pending UI](./pending-ui)

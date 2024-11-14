@@ -5,10 +5,10 @@ order: 1
 
 # React Router Home
 
-React Router is a multi-strategy router for React. You can use it maximally as a React framework or minimally as a library with your own architecture.
+React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or minimally as a library with your own architecture.
 
-- [Getting Started - Framework](./framework/start/installation)
-- [Getting Started - Library](./library/installation)
+- [Getting Started - Framework](./start/framework/installation)
+- [Getting Started - Library](./start/library/installation)
 
 If you are caught up on future flags, upgrading from React Router v6 or Remix is generally non-breaking:
 
