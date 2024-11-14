@@ -13,13 +13,19 @@ export function generate(
 
     import * as T from "react-router/route-module"
 
-    export type Params = {${formatParamProperties(routes, route)}}
+    type Params = {${formatParamProperties(routes, route)}}
 
     type RouteModule = typeof import("./${Pathe.filename(route.file)}")
+    type LoaderData = T.CreateLoaderData<RouteModule>
+    type ActionData = T.CreateActionData<RouteModule>
+
+    export type Info = {
+      params: Params
+      loaderData: LoaderData
+      actionData: ActionData
+    }
 
     export namespace Route {
-      export type LoaderData = T.CreateLoaderData<RouteModule>
-      export type ActionData = T.CreateActionData<RouteModule>
 
       export type LinkDescriptors = T.LinkDescriptors
       export type LinksFunction = () => LinkDescriptors
