@@ -503,8 +503,8 @@ export async function createConfigLoader({
   rootDirectory: userRoot,
   command,
 }: {
+  command: "dev" | "build";
   rootDirectory?: string;
-  command?: "dev" | "build";
 }): Promise<ConfigLoader> {
   let root = userRoot ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
