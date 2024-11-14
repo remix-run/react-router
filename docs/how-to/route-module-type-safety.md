@@ -1,5 +1,5 @@
 ---
-title: Setting up type safety
+title: Route Module Type Safety
 ---
 
 # Route Module Type Safety
