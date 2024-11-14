@@ -445,11 +445,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let ctx: ReactRouterPluginContext;
 
   /** Mutates `ctx` as a side-effect */
-  let updatePluginContext = async ({
-    routeConfigChanged = false,
-  }: {
-    routeConfigChanged?: boolean;
-  } = {}): Promise<void> => {
+  let updatePluginContext = async (): Promise<void> => {
     let reactRouterConfig: ResolvedReactRouterConfig;
     let reactRouterConfigResult = await reactRouterConfigLoader.getConfig();
 
@@ -1096,7 +1092,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 });
               }
 
-              await updatePluginContext({ routeConfigChanged });
+              await updatePluginContext();
 
               if (!isEqualJson(lastReactRouterConfig, ctx.reactRouterConfig)) {
                 invalidateVirtualModules(viteDevServer);
