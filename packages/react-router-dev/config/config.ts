@@ -541,7 +541,11 @@ export async function createConfigLoader({
   return {
     getConfig,
     onChange: (handler: ChangeHandler) => {
-      changeHandlers.push(handler);
+      if (!watch) {
+        throw new Error(
+          "onChange is not supported when watch mode is disabled"
+        );
+      }
 
       if (!fsWatcher) {
         fsWatcher = chokidar.watch(
