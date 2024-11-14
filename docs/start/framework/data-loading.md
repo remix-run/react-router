@@ -98,14 +98,14 @@ The URLs to pre-render are specified in react-router.config.ts:
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
-export const config: Config = {
+export default {
   async prerender() {
     let products = await readProductsFromCSVFile();
     return products.map(
       (product) => `/products/${product.id}`
     );
   },
-};
+} satisfies Config;
 ```
 
 Note that when server rendering, any URLs that aren't pre-rendered will be server rendered as usual, allowing you to pre-render some data at a single route while still server rendering the rest.
