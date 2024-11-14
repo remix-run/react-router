@@ -501,19 +501,17 @@ export type ConfigLoader = {
 
 export async function createConfigLoader({
   rootDirectory: userRoot,
-  command,
+  watch,
 }: {
-  command: "dev" | "build";
+  watch: boolean;
   rootDirectory?: string;
 }): Promise<ConfigLoader> {
   let root = userRoot ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
   let viteNodeContext = await ViteNode.createContext({
     root,
-    mode: command === "build" ? "production" : "development",
-    server: {
-      watch: command === "build" ? null : undefined,
-    },
+    mode: watch ? "development" : "production",
+    server: !watch ? { watch: null } : {},
     ssr: {
       external: ssrExternals,
     },
@@ -622,7 +620,10 @@ export async function createConfigLoader({
 }
 
 export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
-  let configLoader = await createConfigLoader({ rootDirectory });
+  let configLoader = await createConfigLoader({
+    rootDirectory,
+    watch: false,
+  });
   let config = await configLoader.getConfig();
   await configLoader.close();
   return config;

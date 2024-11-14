@@ -775,7 +775,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
-          command: viteCommand === "serve" ? "dev" : "build",
+          watch: viteCommand === "serve",
         });
 
         await updatePluginContext();

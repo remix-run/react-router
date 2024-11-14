@@ -19,13 +19,13 @@ type Context = {
 };
 
 export async function run(rootDirectory: string) {
-  const ctx = await createContext(rootDirectory, "build");
+  const ctx = await createContext({ rootDirectory, watch: false });
   await writeAll(ctx);
 }
 
 export async function watch(rootDirectory: string) {
   const watchStart = performance.now();
-  const ctx = await createContext(rootDirectory, "dev");
+  const ctx = await createContext({ rootDirectory, watch: true });
 
   await writeAll(ctx);
   Logger.info("generated initial types", {
@@ -66,11 +66,14 @@ export async function watch(rootDirectory: string) {
   );
 }
 
-async function createContext(
-  rootDirectory: string,
-  command: "dev" | "build"
-): Promise<Context> {
-  const configLoader = await createConfigLoader({ rootDirectory, command });
+async function createContext({
+  rootDirectory,
+  watch,
+}: {
+  rootDirectory: string;
+  watch: boolean;
+}): Promise<Context> {
+  const configLoader = await createConfigLoader({ rootDirectory, watch });
   const configResult = await configLoader.getConfig();
 
   // TODO: handle errors
