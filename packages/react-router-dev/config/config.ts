@@ -486,6 +486,7 @@ type ChokidarEventName = ChokidarEmitArgs[0];
 
 type ChangeHandler = (args: {
   result: Result<ResolvedReactRouterConfig>;
+  configCodeUpdated: boolean;
   routeConfigChanged: boolean;
   path: string;
   event: ChokidarEventName;
@@ -531,6 +532,8 @@ export async function createConfigLoader({
     appDirectory = initialConfigResult.value.appDirectory;
   }
 
+  let lastConfig = initialConfigResult.value;
+
   let fsWatcher: FSWatcher | undefined;
   let changeHandlers: ChangeHandler[] = [];
 
@@ -562,31 +565,38 @@ export async function createConfigLoader({
             event === "change" &&
             filepath === path.normalize(reactRouterConfigFile);
 
-          let configModuleGraphChanged = Boolean(
+          let configCodeUpdated = Boolean(
             viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
           );
 
-          if (configModuleGraphChanged || appFileAddedOrRemoved) {
+          if (configCodeUpdated || appFileAddedOrRemoved) {
             viteNodeContext.devServer?.moduleGraph.invalidateAll();
             viteNodeContext.runner?.moduleCache.clear();
           }
 
-          // todo: isolate from rest of config
-          let routeConfigChanged = configModuleGraphChanged;
-
           if (
             appFileAddedOrRemoved ||
             reactRouterConfigFileChanged ||
-            configModuleGraphChanged
+            configCodeUpdated
           ) {
             let result = await getConfig();
+
+            let routeConfigChanged =
+              result.ok &&
+              !isEqualJson(lastConfig?.routes, result.value.routes);
+
             for (let handler of changeHandlers) {
               handler({
                 result,
+                configCodeUpdated,
                 routeConfigChanged,
                 path: filepath,
                 event,
               });
+            }
+
+            if (result.ok) {
+              lastConfig = result.value;
             }
           }
         });
@@ -628,4 +638,8 @@ function findEntry(
   }
 
   return undefined;
+}
+
+function isEqualJson(v1: unknown, v2: unknown) {
+  return JSON.stringify(v1) === JSON.stringify(v2);
 }

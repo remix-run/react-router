@@ -1081,12 +1081,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         reactRouterConfigLoader.onChange(
-          async ({ result, routeConfigChanged }) => {
+          async ({ result, configCodeUpdated, routeConfigChanged }) => {
             if (result.ok) {
               let lastReactRouterConfig = ctx.reactRouterConfig;
 
               if (routeConfigChanged) {
                 logger.info(colors.green("Route config changed."), {
+                  clear: true,
+                  timestamp: true,
+                });
+              } else if (configCodeUpdated) {
+                logger.info(colors.green("Config updated."), {
                   clear: true,
                   timestamp: true,
                 });
