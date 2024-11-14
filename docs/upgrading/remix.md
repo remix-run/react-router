@@ -19,6 +19,32 @@ Adopt all existing [future flags][v2-future-flags] in your Remix v2 application.
 
 ### Step 2 - Update dependencies
 
+You can automatically update your packages and imports with a [codemod][codemod] created by community member [James Restall][jrestall]
+
+**👉 Run the codemod (automated)**
+
+The codemod updates all of your packages and imports. Be sure to commit your changes before running the codemod, in case you need to revert.
+
+```shellscript nonumber
+npx codemod remix/2/react-router/upgrade
+```
+
+**👉 Run the codemod**
+
+After the codemod updates your dependencies, you need to go ahead and run your install to remove Remix packages and add the new React Router packages.
+
+<docs-warning>
+
+While still in prerelease, you need to update your `package.json` to point to the prerelease versions of the `react-router` packages.
+
+</docs-warning>
+
+```shellscript nonumber
+npm install
+```
+
+**👉 Update your dependencies (manual)**
+
 You'll need to update your dependencies from the `@remix-run/*` packages to `react-router` and `@react-router/*` packages in `package.json` and in your code where you import from packages:
 
 | Remix v2 Package            |     | React Router v7 Package    |
@@ -151,3 +177,5 @@ This should allow you to upgrade and ship your application on React Router v7, a
 [server-actions]: ../start/actions#server-actions
 [ts-module-augmentation]: https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
 [type-safety]: ../explanation/type-safety
+[codemod]: https://codemod.com/registry/remix-2-react-router-upgrade
+[jrestall]: https://github.com/jrestall
