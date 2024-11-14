@@ -94,7 +94,7 @@ type BuildEndHook = (args: {
 
 export type ReactRouterConfig = {
   /**
-   * The path to the `app` directory, relative to `remix.config.js`. Defaults
+   * The path to the `app` directory, relative to the root directory. Defaults
    * to `"app"`.
    */
   appDirectory?: string;
