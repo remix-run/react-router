@@ -21,6 +21,13 @@ export function generate(
       export type LoaderData = T.CreateLoaderData<RouteModule>
       export type ActionData = T.CreateActionData<RouteModule>
 
+      export type LinkDescriptors = T.LinkDescriptors
+      export type LinksFunction = () => LinkDescriptors
+
+      export type MetaArgs = T.CreateMetaArgs<Params, LoaderData>
+      export type MetaDescriptors = T.MetaDescriptors
+      export type MetaFunction = (args: MetaArgs) => MetaDescriptors
+
       export type LoaderArgs = T.CreateServerLoaderArgs<Params>
       export type ClientLoaderArgs = T.CreateClientLoaderArgs<Params, RouteModule>
       export type ActionArgs = T.CreateServerActionArgs<Params>

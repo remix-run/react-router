@@ -1,4 +1,8 @@
+import type { MetaDescriptor } from "../dom/ssr/routeModules";
+import type { LinkDescriptor } from "../router/links";
 import type { AppLoadContext } from "../server-runtime/data";
+
+import type { MetaMatch } from "./meta-match";
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
 import type { Equal, Expect, Func } from "./utils";
 
@@ -13,6 +17,17 @@ type RouteModule = {
   default?: unknown;
   ErrorBoundary?: unknown;
 };
+
+export type LinkDescriptors = LinkDescriptor[];
+
+export type CreateMetaArgs<Params, LoaderData> = {
+  location: Location;
+  params: Params;
+  data: LoaderData;
+  error?: unknown;
+  matches: Array<MetaMatch<unknown>>;
+};
+export type MetaDescriptors = MetaDescriptor[];
 
 // prettier-ignore
 type IsHydrate<ClientLoader> =
