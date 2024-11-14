@@ -547,6 +547,8 @@ export async function createConfigLoader({
         );
       }
 
+      changeHandlers.push(handler);
+
       if (!fsWatcher) {
         fsWatcher = chokidar.watch(
           [
