@@ -1606,10 +1606,6 @@ function findConfig(
   return undefined;
 }
 
-function isEqualJson(v1: unknown, v2: unknown) {
-  return JSON.stringify(v1) === JSON.stringify(v2);
-}
-
 function addRefreshWrapper(
   reactRouterConfig: ResolvedReactRouterConfig,
   code: string,
