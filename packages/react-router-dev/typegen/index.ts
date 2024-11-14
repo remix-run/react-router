@@ -76,7 +76,6 @@ async function createContext({
   const configLoader = await createConfigLoader({ rootDirectory, watch });
   const configResult = await configLoader.getConfig();
 
-  // TODO: handle errors
   if (!configResult.ok) {
     throw new Error(configResult.error);
   }
