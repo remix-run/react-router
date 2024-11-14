@@ -33,6 +33,8 @@ export interface RouteModule {
 
 /**
  * A function that handles data mutations for a route on the client
+ *
+ * @deprecated Use `Route.ClientActionArgs` from generated `+types.<route>`
  */
 export type ClientActionFunction = (
   args: ClientActionFunctionArgs
@@ -40,6 +42,8 @@ export type ClientActionFunction = (
 
 /**
  * Arguments passed to a route `clientAction` function
+ *
+ * @deprecated Use `Route.ClientActionArgs` from generated `+types.<route>`
  */
 export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
   serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
@@ -47,6 +51,8 @@ export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
 
 /**
  * A function that loads data for a route on the client
+ *
+ * @deprecated Use `Route.ClientLoaderArgs` from generated `+types.<route>`
  */
 export type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs
@@ -56,6 +62,8 @@ export type ClientLoaderFunction = ((
 
 /**
  * Arguments passed to a route `clientLoader` function
+ *
+ * @deprecated Use `Route.ClientLoaderArgs` from generated `+types.<route>`
  */
 export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
   serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
@@ -88,6 +96,8 @@ export type LayoutComponent = ComponentType<{
  * A function that defines `<link>` tags to be inserted into the `<head>` of
  * the document on route transitions.
  *
+ * @deprecated Use `Route.LinksFunction` from generated `+types.<route>`
+ *
  * @see https://remix.run/route/meta
  */
 export interface LinksFunction {
@@ -109,6 +119,9 @@ export interface MetaMatch<
   error?: unknown;
 }
 
+/**
+ * @deprecated Use `{ matches }` from `Route.MetaArgs` from generated `+types.<route>`
+ */
 export type MetaMatches<
   MatchLoaders extends Record<
     string,
@@ -123,6 +136,9 @@ export type MetaMatches<
   }[keyof MatchLoaders]
 >;
 
+/**
+ * @deprecated Use `Route.MetaArgs` from generated `+types.<route>`
+ */
 export interface MetaArgs<
   Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
   MatchLoaders extends Record<
@@ -146,6 +162,8 @@ export interface MetaArgs<
  * metadata HTML tags in a route. These tags are not rendered on descendant
  * routes in the route hierarchy. In other words, they will only be rendered on
  * the route in which they are exported.
+ *
+ * @deprecated Use `Route.MetaFunction` from generated `+types.<route>`
  *
  * @param Loader - The type of the current route's loader function
  * @param MatchLoaders - Mapping from a parent route's filepath to its loader
