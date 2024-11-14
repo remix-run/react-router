@@ -205,7 +205,6 @@ export type {
   MetaFunction,
   LinksFunction,
 } from "./lib/dom/ssr/routeModules";
-export type { MetaMatch } from "./lib/types/meta-match";
 export type { ServerRouterProps } from "./lib/dom/ssr/server";
 export { ServerRouter } from "./lib/dom/ssr/server";
 export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";

@@ -231,4 +231,71 @@ test.describe("typegen", () => {
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
   });
+
+  test("meta matches", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export const routes: RouteConfig = [
+          route("parent1/:parent1", "routes/parent1.tsx", [
+            route("parent2/:parent2", "routes/parent2.tsx", [
+              route("current", "routes/current.tsx")
+            ])
+          ])
+        ]
+      `,
+      "app/routes/parent1.tsx": tsx`
+        import { Outlet } from "react-router"
+
+        export function loader() {
+          return { parent1: 1 }
+        }
+
+        export default function Component() {
+          return (
+            <section>
+              <h1>Parent1</h1>
+              <Outlet />
+            </section>
+          )
+        }
+      `,
+      "app/routes/parent2.tsx": tsx`
+        import { Outlet } from "react-router"
+
+        export function loader() {
+          return { parent2: 2 }
+        }
+
+        export default function Component() {
+          return (
+            <section>
+              <h2>Parent2</h2>
+              <Outlet />
+            </section>
+          )
+        }
+      `,
+      "app/routes/current.tsx": tsx`
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types.current"
+
+        export function meta({ matches }: Route.MetaArgs) {
+          const parent1 = matches[1]
+          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+
+          const parent2 = matches[2]
+          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+          return []
+        }
+      `,
+    });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
 });

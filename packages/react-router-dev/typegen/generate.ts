@@ -1,30 +1,59 @@
 import dedent from "dedent";
+import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
 
 import { type RouteManifest, type RouteManifestEntry } from "../config/routes";
+import { getTypesPath, type Context } from "./context";
 
-export function generate(
-  routes: RouteManifest,
-  route: RouteManifestEntry
-): string {
+export function generate(ctx: Context, route: RouteManifestEntry): string {
+  const lineage = getRouteLineage(ctx.routes, route);
+  const urlpath = lineage.map((route) => route.path).join("/");
+  const typesPath = getTypesPath(ctx, route);
+
+  const parents = lineage.slice(0, -1);
+  const parentTypeImports = parents
+    .map((parent, i) => {
+      let rel = Path.relative(
+        Path.dirname(typesPath),
+        getTypesPath(ctx, parent)
+      );
+      if (rel.startsWith("+")) rel = "./" + rel;
+      const indent = i === 0 ? "" : "  ".repeat(2);
+      const imp = `${indent}import type { Info as Parent${i} } from "${rel}"`;
+      return imp;
+    })
+    .join("\n");
+
   return dedent`
     // React Router generated types for route:
     // ${route.file}
 
-    import * as T from "react-router/route-module"
+    import type * as T from "react-router/route-module"
 
-    export type Params = {${formatParamProperties(routes, route)}}
+    ${parentTypeImports}
+    type Parents = [${parents.map((_, i) => `Parent${i}`).join(", ")}]
+
+    type Params = {${formatParamProperties(urlpath)}}
 
     type RouteModule = typeof import("./${Pathe.filename(route.file)}")
+    type LoaderData = T.CreateLoaderData<RouteModule>
+    type ActionData = T.CreateActionData<RouteModule>
+
+    export type Info = {
+      id: "${route.id}"
+      file: "${route.file}"
+      path: "${route.path}"
+      params: Params
+      loaderData: LoaderData
+      actionData: ActionData
+    }
 
     export namespace Route {
-      export type LoaderData = T.CreateLoaderData<RouteModule>
-      export type ActionData = T.CreateActionData<RouteModule>
 
       export type LinkDescriptors = T.LinkDescriptors
       export type LinksFunction = () => LinkDescriptors
 
-      export type MetaArgs = T.CreateMetaArgs<Params, LoaderData>
+      export type MetaArgs = T.CreateMetaArgs<Params, LoaderData, Parents>
       export type MetaDescriptors = T.MetaDescriptors
       export type MetaFunction = (args: MetaArgs) => MetaDescriptors
 
@@ -40,13 +69,18 @@ export function generate(
   `;
 }
 
-function formatParamProperties(
-  routes: RouteManifest,
-  route: RouteManifestEntry
-) {
-  const urlpath = getRouteLineage(routes, route)
-    .map((route) => route.path)
-    .join("/");
+function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
+  const result: RouteManifestEntry[] = [];
+  while (route) {
+    result.push(route);
+    if (!route.parentId) break;
+    route = routes[route.parentId];
+  }
+  result.reverse();
+  return result;
+}
+
+function formatParamProperties(urlpath: string) {
   const params = parseParams(urlpath);
   const indent = "  ".repeat(3);
   const properties = Object.entries(params).map(([name, values]) => {
@@ -66,17 +100,6 @@ function formatParamProperties(
     "\n" + properties.join("\n") + "\n";
 
   return body;
-}
-
-function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
-  const result: RouteManifestEntry[] = [];
-  while (route) {
-    result.push(route);
-    if (!route.parentId) break;
-    route = routes[route.parentId];
-  }
-  result.reverse();
-  return result;
 }
 
 function parseParams(urlpath: string) {

@@ -2,26 +2,17 @@ import fs from "node:fs";
 
 import Chokidar from "chokidar";
 import * as Path from "pathe";
-import * as Pathe from "pathe/utils";
 import pc from "picocolors";
 
 import * as Logger from "../logger";
 import type { RouteConfig } from "../config/routes";
-import {
-  configRoutesToRouteManifest,
-  type RouteManifest,
-} from "../config/routes";
+import { configRoutesToRouteManifest } from "../config/routes";
 import * as ViteNode from "../vite/vite-node";
 import { findEntry } from "../vite/config";
 import { loadPluginContext } from "../vite/plugin";
 import { generate } from "./generate";
-
-type Context = {
-  rootDirectory: string;
-  appDirectory: string;
-  routeConfigEnv: ViteNode.Context;
-  routes: RouteManifest;
-};
+import type { Context } from "./context";
+import { getTypesDir, getTypesPath } from "./paths";
 
 export async function run(rootDirectory: string, configFile?: string) {
   const ctx = await createContext(rootDirectory, configFile);
@@ -130,18 +121,13 @@ async function getRoutes(
 }
 
 async function writeAll(ctx: Context): Promise<void> {
-  const typegenDir = Path.join(ctx.rootDirectory, ".react-router/types");
+  const typegenDir = getTypesDir(ctx);
 
   fs.rmSync(typegenDir, { recursive: true, force: true });
   Object.values(ctx.routes).forEach((route) => {
     if (!fs.existsSync(Path.join(ctx.appDirectory, route.file))) return;
-    const typesPath = Path.join(
-      typegenDir,
-      Path.relative(ctx.rootDirectory, ctx.appDirectory),
-      Path.dirname(route.file),
-      "+types." + Pathe.filename(route.file) + ".d.ts"
-    );
-    const content = generate(ctx.routes, route);
+    const typesPath = getTypesPath(ctx, route);
+    const content = generate(ctx, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });

@@ -2,9 +2,8 @@ import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
 import type { AppLoadContext } from "../server-runtime/data";
 
-import type { MetaMatch } from "./meta-match";
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
-import type { Equal, Expect, Func } from "./utils";
+import type { Equal, Expect, Func, Pretty } from "./utils";
 
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
 
@@ -20,12 +19,34 @@ type RouteModule = {
 
 export type LinkDescriptors = LinkDescriptor[];
 
-export type CreateMetaArgs<Params, LoaderData> = {
+type RouteInfo = {
+  id: unknown;
+  params: unknown;
+  loaderData: unknown;
+};
+
+type MetaMatch<T extends RouteInfo> = Pretty<
+  Pick<T, "id" | "params"> & {
+    pathname: string;
+    meta: MetaDescriptor[];
+    data: T["loaderData"];
+    handle?: unknown;
+    error?: unknown;
+  }
+>;
+
+// prettier-ignore
+type MetaMatches<T extends RouteInfo[]> =
+  T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
+    ? [MetaMatch<F>, ...MetaMatches<R>]
+    : [];
+
+export type CreateMetaArgs<Params, LoaderData, Parents extends RouteInfo[]> = {
   location: Location;
   params: Params;
   data: LoaderData;
   error?: unknown;
-  matches: Array<MetaMatch<unknown>>;
+  matches: MetaMatches<Parents>;
 };
 export type MetaDescriptors = MetaDescriptor[];
 
