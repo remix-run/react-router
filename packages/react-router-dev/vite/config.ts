@@ -78,7 +78,12 @@ export type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
-interface FutureConfig {}
+interface FutureConfig {
+  /**
+   * Automatically split route modules into multiple chunks when possible.
+   */
+  unstable_routeChunks?: boolean | "enforce";
+}
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
@@ -177,7 +182,7 @@ export type ResolvedReactRouterConfig = Readonly<{
   /**
    * Enabled future flags
    */
-  future: FutureConfig;
+  future: Required<FutureConfig>;
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
@@ -341,6 +346,7 @@ export async function resolveReactRouterConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
+    future: userFuture,
     prerender,
     serverBuildFile,
     serverBundles,
@@ -495,7 +501,9 @@ export async function resolveReactRouterConfig({
     routes = lastValidRoutes;
   }
 
-  let future: FutureConfig = {};
+  let future: FutureConfig = {
+    unstable_routeChunks: userFuture?.unstable_routeChunks ?? false,
+  };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
