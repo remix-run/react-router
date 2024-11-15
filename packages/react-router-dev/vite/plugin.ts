@@ -747,7 +747,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         rootDirectory =
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
-        Typegen.watch(rootDirectory);
+        Typegen.watch(rootDirectory, {
+          // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
+          logger: vite.createLogger("warn", { prefix: "[react-router]" }),
+        });
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,

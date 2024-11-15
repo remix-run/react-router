@@ -2,8 +2,8 @@ import fs from "node:fs";
 
 import * as Path from "pathe";
 import pc from "picocolors";
+import type vite from "vite";
 
-import * as Logger from "../logger";
 import { createConfigLoader } from "../config/config";
 
 import { generate } from "./generate";
@@ -15,46 +15,29 @@ export async function run(rootDirectory: string) {
   await writeAll(ctx);
 }
 
-export async function watch(rootDirectory: string) {
-  const watchStart = performance.now();
+export async function watch(
+  rootDirectory: string,
+  { logger }: { logger?: vite.Logger } = {}
+) {
   const ctx = await createContext({ rootDirectory, watch: true });
-
   await writeAll(ctx);
-  Logger.info("generated initial types", {
-    durationMs: performance.now() - watchStart,
-  });
+  logger?.info(pc.green("generated types"), { timestamp: true, clear: true });
 
-  ctx.configLoader.onChange(
-    async ({ result, routeConfigChanged, event, path }) => {
-      const eventStart = performance.now();
-
-      if (result.ok) {
-        ctx.config = result.value;
-
-        if (routeConfigChanged) {
-          await writeAll(ctx);
-          Logger.info("changed route config", {
-            durationMs: performance.now() - eventStart,
-          });
-
-          const route = findRoute(ctx, path);
-          if (route && (event === "add" || event === "unlink")) {
-            Logger.info(
-              `${event === "add" ? "added" : "removed"} route ${pc.blue(
-                route.file
-              )}`,
-              { durationMs: performance.now() - eventStart }
-            );
-            return;
-          }
-        }
-      } else {
-        Logger.error(result.error, {
-          durationMs: performance.now() - eventStart,
-        });
-      }
+  ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
+    if (!result.ok) {
+      logger?.error(pc.red(result.error), { timestamp: true, clear: true });
+      return;
     }
-  );
+
+    ctx.config = result.value;
+    if (routeConfigChanged) {
+      await writeAll(ctx);
+      logger?.info(pc.green("regenerated types"), {
+        timestamp: true,
+        clear: true,
+      });
+    }
+  });
 }
 
 async function createContext({
@@ -78,12 +61,6 @@ async function createContext({
     rootDirectory,
     config,
   };
-}
-
-function findRoute(ctx: Context, path: string) {
-  return Object.values(ctx.config.routes).find(
-    (route) => path === Path.join(ctx.config.appDirectory, route.file)
-  );
 }
 
 async function writeAll(ctx: Context): Promise<void> {

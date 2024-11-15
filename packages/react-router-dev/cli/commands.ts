@@ -12,6 +12,10 @@ import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
+import {
+  importViteEsmSync,
+  preloadViteEsm,
+} from "../vite/import-vite-esm-sync";
 
 export async function routes(
   reactRouterRoot?: string,
@@ -201,7 +205,11 @@ export async function typegen(root: string, flags: { watch: boolean }) {
   root ??= process.cwd();
 
   if (flags.watch) {
-    await Typegen.watch(root);
+    await preloadViteEsm();
+    const vite = importViteEsmSync();
+    const logger = vite.createLogger("info", { prefix: "[react-router]" });
+
+    await Typegen.watch(root, { logger });
     await new Promise(() => {}); // keep alive
     return;
   }
