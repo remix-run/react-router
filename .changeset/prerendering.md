@@ -7,19 +7,17 @@
   - `prerender` can either be an array of string paths, or a function (sync or async) that returns an array of strings so that you can dynamically generate the paths by talking to your CMS, etc.
 
 ```ts
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      async prerender() {
-        let slugs = await fakeGetSlugsFromCms();
-        // Prerender these paths into `.html` files at build time, and `.data`
-        // files if they have loaders
-        return ["/", "/about", ...slugs.map((slug) => `/product/${slug}`)];
-      },
-    }),
-    tsconfigPaths(),
-  ],
-});
+// react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  async prerender() {
+    let slugs = await fakeGetSlugsFromCms();
+    // Prerender these paths into `.html` files at build time, and `.data`
+    // files if they have loaders
+    return ["/", "/about", ...slugs.map((slug) => `/product/${slug}`)];
+  },
+} satisfies Config;
 
 async function fakeGetSlugsFromCms() {
   await new Promise((r) => setTimeout(r, 1000));
