@@ -13,6 +13,10 @@
   },
   "license": "MIT",
   "exports": {
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
     "./routes": {
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"

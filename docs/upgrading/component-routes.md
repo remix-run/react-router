@@ -261,19 +261,14 @@ The first few routes you migrate are the hardest because you often have to acces
 If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin.
 
 ```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+import type { Config } from "@react-router/dev/config";
 
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      ssr: true,
-      async prerender() {
-        return ["/", "/about", "/contact"];
-      },
-    }),
-  ],
-});
+export default {
+  ssr: true,
+  async prerender() {
+    return ["/", "/about", "/contact"];
+  },
+} satisfies Config;
 ```
 
 See [Deploying][deploying] for more information on deploying a server.

@@ -14,7 +14,7 @@ import {
   type BuildManifest,
   type ServerBundlesBuildManifest,
   configRouteToBranchRoute,
-} from "./config";
+} from "../config/config";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
 import invariant from "../invariant";
 import { preloadViteEsm } from "./import-vite-esm-sync";

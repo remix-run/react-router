@@ -8,21 +8,18 @@ The `manifest` option been superseded by the more powerful `buildEnd` hook since
 
 If you were using the `manifest` option, you can replace it with a `buildEnd` hook that writes the manifest to disk like this:
 
-```js
-import { reactRouter } from "@react-router/dev/vite";
+```ts
+// react-router.config.ts
+import type { Config } from "@react-router/dev/config";
 import { writeFile } from "node:fs/promises";
 
 export default {
-  plugins: [
-    reactRouter({
-      async buildEnd({ buildManifest }) {
-        await writeFile(
-          "build/manifest.json",
-          JSON.stringify(buildManifest, null, 2),
-          "utf-8"
-        );
-      },
-    }),
-  ],
-};
+  async buildEnd({ buildManifest }) {
+    await writeFile(
+      "build/manifest.json",
+      JSON.stringify(buildManifest, null, 2),
+      "utf-8"
+    );
+  },
+} satisfies Config;
 ```

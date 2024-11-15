@@ -1,12 +1,18 @@
-import type * as Vite from "vite";
+import fs from "node:fs";
 import { execSync } from "node:child_process";
-import path from "node:path";
-import fse from "fs-extra";
+import PackageJson from "@npmcli/package-json";
+import * as ViteNode from "../vite/vite-node";
+import type * as Vite from "vite";
+import path from "pathe";
+import chokidar, {
+  type FSWatcher,
+  type EmitArgs as ChokidarEmitArgs,
+} from "chokidar";
 import colors from "picocolors";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
-import PackageJson from "@npmcli/package-json";
-import type * as ViteNode from "./vite-node";
+import cloneDeep from "lodash/cloneDeep";
+import isEqual from "lodash/isEqual";
 
 import {
   type RouteManifest,
@@ -15,9 +21,8 @@ import {
   setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
-} from "../config/routes";
+} from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
-import { importViteEsmSync } from "./import-vite-esm-sync";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -90,7 +95,7 @@ type BuildEndHook = (args: {
 
 export type ReactRouterConfig = {
   /**
-   * The path to the `app` directory, relative to `remix.config.js`. Defaults
+   * The path to the `app` directory, relative to the root directory. Defaults
    * to `"app"`.
    */
   appDirectory?: string;
@@ -275,33 +280,63 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
-export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
-  return viteUserConfig.base ?? "/";
+type Result<T> =
+  | {
+      ok: true;
+      value: T;
+      error?: undefined;
+    }
+  | {
+      ok: false;
+      value?: undefined;
+      error: string;
+    };
+
+function ok<T>(value: T): Result<T> {
+  return { ok: true, value };
 }
 
-let isFirstLoad = true;
-let lastValidRoutes: RouteManifest = {};
+function err<T>(error: string): Result<T> {
+  return { ok: false, error };
+}
 
-export async function resolveReactRouterConfig({
-  rootDirectory,
-  reactRouterUserConfig,
-  routeConfigChanged,
-  viteUserConfig,
-  viteCommand,
-  routesViteNodeContext,
+async function resolveConfig({
+  root,
+  viteNodeContext,
+  reactRouterConfigFile,
 }: {
-  rootDirectory: string;
-  reactRouterUserConfig: ReactRouterConfig;
-  routeConfigChanged: boolean;
-  viteUserConfig: Vite.UserConfig;
-  viteCommand: Vite.ConfigEnv["command"];
-  routesViteNodeContext: ViteNode.Context;
-}) {
-  let vite = importViteEsmSync();
+  root: string;
+  viteNodeContext: ViteNode.Context;
+  reactRouterConfigFile?: string;
+}): Promise<Result<ResolvedReactRouterConfig>> {
+  let reactRouterUserConfig: ReactRouterConfig = {};
 
-  let logger = vite.createLogger(viteUserConfig.logLevel, {
-    prefix: "[react-router]",
-  });
+  if (reactRouterConfigFile) {
+    try {
+      if (!fs.existsSync(reactRouterConfigFile)) {
+        return err(`${reactRouterConfigFile} no longer exists`);
+      }
+
+      let configModule = await viteNodeContext.runner.executeFile(
+        reactRouterConfigFile
+      );
+
+      if (configModule.default === undefined) {
+        return err(`${reactRouterConfigFile} must provide a default export`);
+      }
+
+      if (typeof configModule.default !== "object") {
+        return err(`${reactRouterConfigFile} must export a config`);
+      }
+
+      reactRouterUserConfig = configModule.default;
+    } catch (error) {
+      return err(`Error loading ${reactRouterConfigFile}: ${error}`);
+    }
+  }
+
+  // Prevent mutations to the user config
+  reactRouterUserConfig = deepFreeze(cloneDeep(reactRouterUserConfig));
 
   let presets: ReactRouterConfig[] = (
     await Promise.all(
@@ -351,15 +386,7 @@ export async function resolveReactRouterConfig({
     ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
   };
 
-  // Log warning for incompatible vite config flags
   if (!ssr && serverBundles) {
-    console.warn(
-      colors.yellow(
-        colors.bold("⚠️  SPA Mode: ") +
-          "the `serverBundles` config is invalid with " +
-          "`ssr:false` and will be ignored`"
-      )
-    );
     serverBundles = undefined;
   }
 
@@ -370,47 +397,24 @@ export async function resolveReactRouterConfig({
     typeof prerender === "function";
 
   if (!isValidPrerenderConfig) {
-    logger.error(
-      colors.red(
-        "The `prerender` config must be a boolean, an array of string paths, " +
-          "or a function returning a boolean or array of string paths"
-      )
+    return err(
+      "The `prerender` config must be a boolean, an array of string paths, " +
+        "or a function returning a boolean or array of string paths"
     );
-    process.exit(1);
   }
 
-  let appDirectory = path.resolve(rootDirectory, userAppDirectory || "app");
-  let buildDirectory = path.resolve(rootDirectory, userBuildDirectory);
-  let publicPath = resolvePublicPath(viteUserConfig);
-
-  if (
-    basename !== "/" &&
-    viteCommand === "serve" &&
-    !viteUserConfig.server?.middlewareMode &&
-    !basename.startsWith(publicPath)
-  ) {
-    logger.error(
-      colors.red(
-        "When using the React Router `basename` and the Vite `base` config, " +
-          "the `basename` config must begin with `base` for the default " +
-          "Vite dev server."
-      )
-    );
-    process.exit(1);
-  }
+  let appDirectory = path.resolve(root, userAppDirectory || "app");
+  let buildDirectory = path.resolve(root, userBuildDirectory);
 
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
     let rootRouteDisplayPath = path.relative(
-      rootDirectory,
+      root,
       path.join(appDirectory, "root.tsx")
     );
-    logger.error(
-      colors.red(
-        `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
-      )
+    return err(
+      `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
     );
-    process.exit(1);
   }
 
   let routes: RouteManifest = {
@@ -419,21 +423,18 @@ export async function resolveReactRouterConfig({
 
   let routeConfigFile = findEntry(appDirectory, "routes");
 
-  class FriendlyError extends Error {}
-
   try {
     if (!routeConfigFile) {
-      let routeConfigDisplayPath = vite.normalizePath(
-        path.relative(rootDirectory, path.join(appDirectory, "routes.ts"))
+      let routeConfigDisplayPath = path.relative(
+        root,
+        path.join(appDirectory, "routes.ts")
       );
-      throw new FriendlyError(
-        `Route config file not found at "${routeConfigDisplayPath}".`
-      );
+      return err(`Route config file not found at "${routeConfigDisplayPath}".`);
     }
 
     setAppDirectory(appDirectory);
     let routeConfigExport: RouteConfig = (
-      await routesViteNodeContext.runner.executeFile(
+      await viteNodeContext.runner.executeFile(
         path.join(appDirectory, routeConfigFile)
       )
     ).routes;
@@ -446,53 +447,32 @@ export async function resolveReactRouterConfig({
     });
 
     if (!result.valid) {
-      throw new FriendlyError(result.message);
+      return err(result.message);
     }
 
-    routes = { ...routes, ...configRoutesToRouteManifest(routeConfig) };
-
-    lastValidRoutes = routes;
-
-    if (routeConfigChanged) {
-      logger.info(colors.green("Route config changed."), {
-        clear: true,
-        timestamp: true,
-      });
-    }
+    routes = {
+      ...routes,
+      ...configRoutesToRouteManifest(routeConfig),
+    };
   } catch (error: any) {
-    logger.error(
-      error instanceof FriendlyError
-        ? colors.red(error.message)
-        : [
-            colors.red(`Route config in "${routeConfigFile}" is invalid.`),
-            "",
-            error.loc?.file && error.loc?.column && error.frame
-              ? [
-                  path.relative(appDirectory, error.loc.file) +
-                    ":" +
-                    error.loc.line +
-                    ":" +
-                    error.loc.column,
-                  error.frame.trim?.(),
-                ]
-              : error.stack,
-          ]
-            .flat()
-            .join("\n") + "\n",
-      {
-        error,
-        clear: !isFirstLoad,
-        timestamp: !isFirstLoad,
-      }
+    return err(
+      [
+        colors.red(`Route config in "${routeConfigFile}" is invalid.`),
+        "",
+        error.loc?.file && error.loc?.column && error.frame
+          ? [
+              path.relative(appDirectory, error.loc.file) +
+                ":" +
+                error.loc.line +
+                ":" +
+                error.loc.column,
+              error.frame.trim?.(),
+            ]
+          : error.stack,
+      ]
+        .flat()
+        .join("\n")
     );
-
-    // Bail if this is the first time loading config, otherwise keep the dev server running
-    if (isFirstLoad) {
-      process.exit(1);
-    }
-
-    // Keep dev server running with the last valid routes to allow for correction
-    routes = lastValidRoutes;
   }
 
   let future: FutureConfig = {};
@@ -515,9 +495,152 @@ export async function resolveReactRouterConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  isFirstLoad = false;
+  return ok(reactRouterConfig);
+}
 
-  return reactRouterConfig;
+type ChokidarEventName = ChokidarEmitArgs[0];
+
+type ChangeHandler = (args: {
+  result: Result<ResolvedReactRouterConfig>;
+  configCodeUpdated: boolean;
+  configChanged: boolean;
+  routeConfigChanged: boolean;
+  path: string;
+  event: ChokidarEventName;
+}) => void;
+
+export type ConfigLoader = {
+  getConfig: () => Promise<Result<ResolvedReactRouterConfig>>;
+  onChange: (handler: ChangeHandler) => () => void;
+  close: () => Promise<void>;
+};
+
+export async function createConfigLoader({
+  rootDirectory: root,
+  watch,
+}: {
+  watch: boolean;
+  rootDirectory?: string;
+}): Promise<ConfigLoader> {
+  root = root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+
+  let viteNodeContext = await ViteNode.createContext({
+    root,
+    mode: watch ? "development" : "production",
+    server: !watch ? { watch: null } : {},
+    ssr: {
+      external: ssrExternals,
+    },
+  });
+
+  let reactRouterConfigFile = findEntry(root, "react-router.config", {
+    absolute: true,
+  });
+
+  let getConfig = () =>
+    resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
+
+  let appDirectory: string;
+
+  let initialConfigResult = await getConfig();
+
+  if (!initialConfigResult.ok) {
+    throw new Error(initialConfigResult.error);
+  }
+
+  appDirectory = initialConfigResult.value.appDirectory;
+
+  let lastConfig = initialConfigResult.value;
+
+  let fsWatcher: FSWatcher | undefined;
+  let changeHandlers: ChangeHandler[] = [];
+
+  return {
+    getConfig,
+    onChange: (handler: ChangeHandler) => {
+      if (!watch) {
+        throw new Error(
+          "onChange is not supported when watch mode is disabled"
+        );
+      }
+
+      changeHandlers.push(handler);
+
+      if (!fsWatcher) {
+        fsWatcher = chokidar.watch(
+          [
+            ...(reactRouterConfigFile ? [reactRouterConfigFile] : []),
+            appDirectory,
+          ],
+          { ignoreInitial: true }
+        );
+
+        fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
+          let [event, rawFilepath] = args;
+          let filepath = path.normalize(rawFilepath);
+
+          let appFileAddedOrRemoved =
+            appDirectory &&
+            (event === "add" || event === "unlink") &&
+            filepath.startsWith(path.normalize(appDirectory));
+
+          let configCodeUpdated = Boolean(
+            viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
+          );
+
+          if (configCodeUpdated || appFileAddedOrRemoved) {
+            viteNodeContext.devServer?.moduleGraph.invalidateAll();
+            viteNodeContext.runner?.moduleCache.clear();
+          }
+
+          if (appFileAddedOrRemoved || configCodeUpdated) {
+            let result = await getConfig();
+
+            let configChanged = result.ok && !isEqual(lastConfig, result.value);
+
+            let routeConfigChanged =
+              result.ok && !isEqual(lastConfig?.routes, result.value.routes);
+
+            for (let handler of changeHandlers) {
+              handler({
+                result,
+                configCodeUpdated,
+                configChanged,
+                routeConfigChanged,
+                path: filepath,
+                event,
+              });
+            }
+
+            if (result.ok) {
+              lastConfig = result.value;
+            }
+          }
+        });
+      }
+
+      return () => {
+        changeHandlers = changeHandlers.filter(
+          (changeHandler) => changeHandler !== handler
+        );
+      };
+    },
+    close: async () => {
+      changeHandlers = [];
+      await viteNodeContext.devServer.close();
+      await fsWatcher?.close();
+    },
+  };
+}
+
+export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
+  let configLoader = await createConfigLoader({
+    rootDirectory,
+    watch: false,
+  });
+  let config = await configLoader.getConfig();
+  await configLoader.close();
+  return config;
 }
 
 export async function resolveEntryFiles({
@@ -590,12 +713,46 @@ export async function resolveEntryFiles({
   return { entryClientFilePath, entryServerFilePath };
 }
 
+export const ssrExternals = isInReactRouterMonorepo()
+  ? [
+      // This is only needed within this repo because these packages
+      // are linked to a directory outside of node_modules so Vite
+      // treats them as internal code by default.
+      "react-router",
+      "react-router-dom",
+      "@react-router/architect",
+      "@react-router/cloudflare",
+      "@react-router/dev",
+      "@react-router/express",
+      "@react-router/node",
+      "@react-router/serve",
+    ]
+  : undefined;
+
+function isInReactRouterMonorepo() {
+  // We use '@react-router/node' for this check since it's a
+  // dependency of this package and guaranteed to be in node_modules
+  let serverRuntimePath = path.dirname(
+    require.resolve("@react-router/node/package.json")
+  );
+  let serverRuntimeParentDir = path.basename(
+    path.resolve(serverRuntimePath, "..")
+  );
+  return serverRuntimeParentDir === "packages";
+}
+
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 
-export function findEntry(dir: string, basename: string): string | undefined {
+function findEntry(
+  dir: string,
+  basename: string,
+  options?: { absolute?: boolean }
+): string | undefined {
   for (let ext of entryExts) {
     let file = path.resolve(dir, basename + ext);
-    if (fse.existsSync(file)) return path.relative(dir, file);
+    if (fs.existsSync(file)) {
+      return options?.absolute ?? false ? file : path.relative(dir, file);
+    }
   }
 
   return undefined;

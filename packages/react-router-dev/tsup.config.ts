@@ -7,7 +7,13 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["cli/index.ts", "routes.ts", "vite.ts", "vite/cloudflare.ts"];
+const entry = [
+  "cli/index.ts",
+  "config.ts",
+  "routes.ts",
+  "vite.ts",
+  "vite/cloudflare.ts",
+];
 
 const external = ["./static/refresh-utils.cjs", /\.json$/];
 

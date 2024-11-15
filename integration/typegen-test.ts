@@ -201,12 +201,10 @@ test.describe("typegen", () => {
 
   test("custom app dir", async () => {
     const cwd = await createProject({
-      "vite.config.ts": tsx`
-        import { reactRouter } from "@react-router/dev/vite";
-
+      "react-router.config.ts": tsx`
         export default {
-          plugins: [reactRouter({ appDirectory: "src/myapp" })],
-        };
+          appDirectory: "src/myapp",
+        }
       `,
       "app/expect-type.ts": expectType,
       "app/routes/products.$id.tsx": tsx`

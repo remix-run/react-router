@@ -1,9 +1,7 @@
-import type { RouteManifest } from "../config/routes";
-import type * as ViteNode from "../vite/vite-node";
+import type { ConfigLoader, ResolvedReactRouterConfig } from "../config/config";
 
 export type Context = {
   rootDirectory: string;
-  appDirectory: string;
-  routeConfigEnv: ViteNode.Context;
-  routes: RouteManifest;
+  configLoader: ConfigLoader;
+  config: ResolvedReactRouterConfig;
 };

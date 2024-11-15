@@ -10,8 +10,12 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import { reactRouterConfig } from "./helpers/vite.js";
 
 let files = {
+  "react-router.config.ts": reactRouterConfig({
+    prerender: true,
+  }),
   "vite.config.ts": js`
     import { defineConfig } from "vite";
     import { reactRouter } from "@react-router/dev/vite";
@@ -19,9 +23,7 @@ let files = {
     export default defineConfig({
       build: { manifest: true },
       plugins: [
-        reactRouter({
-          prerender: true,
-        })
+        reactRouter()
       ],
     });
   `,
@@ -250,6 +252,14 @@ test.describe("Prerendering", () => {
       prerender: true,
       files: {
         ...files,
+        "react-router.config.ts": js`
+          export default {
+            async prerender() {
+              await new Promise(r => setTimeout(r, 1));
+              return ['/', '/about'];
+            },
+          }
+        `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
@@ -257,12 +267,7 @@ test.describe("Prerendering", () => {
           export default defineConfig({
             build: { manifest: true },
             plugins: [
-              reactRouter({
-                async prerender() {
-                  await new Promise(r => setTimeout(r, 1));
-                  return ['/', '/about'];
-                },
-              })
+              reactRouter()
             ],
           });
         `,
@@ -299,19 +304,20 @@ test.describe("Prerendering", () => {
     fixture = await createFixture({
       files: {
         ...files,
+        "react-router.config.ts": js`
+          export default {
+            async prerender({ getStaticPaths }) {
+              return [...getStaticPaths(), "/a", "/b"];
+            },
+          }
+        `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                async prerender({ getStaticPaths }) {
-                  return [...getStaticPaths(), "/a", "/b"];
-                },
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/$slug.tsx": js`
@@ -453,18 +459,17 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          // Don't prerender the /not-prerendered route
+          prerender: ["/", "/about"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                // Don't prerender the /not-prerendered route
-                prerender: ["/", "/about"],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/about.tsx": js`
@@ -512,17 +517,16 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/about"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                prerender: ["/", "/about"],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/about.tsx": js`
@@ -567,17 +571,16 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/utf8-prerendered"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
   
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                prerender: ["/", "/utf8-prerendered"],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/utf8-prerendered.tsx": js`
@@ -652,17 +655,16 @@ test.describe("Prerendering", () => {
       prerender: true,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/parent", "/parent/child"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                prerender: ['/', '/parent', '/parent/child'],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/parent.tsx": js`

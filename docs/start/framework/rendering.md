@@ -27,7 +27,7 @@ Server side rendering requires a deployment that supports it. Though it's a glob
 
 ## Static Pre-rendering
 
-```ts filename=vite.config.ts
+```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
 export default {
