@@ -848,7 +848,7 @@ export interface AwaitProps<Resolve> {
   }
   ```
   */
-  children: React.ReactNode | AwaitResolveRenderFunction;
+  children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
   The error element renders instead of the children when the promise rejects.
