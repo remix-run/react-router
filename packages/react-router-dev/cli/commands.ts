@@ -197,16 +197,13 @@ async function createClientEntry(
   return contents;
 }
 
-export async function typegen(
-  root: string,
-  flags: { watch: boolean; config?: string }
-) {
+export async function typegen(root: string, flags: { watch: boolean }) {
   root ??= process.cwd();
 
   if (flags.watch) {
-    await Typegen.watch(root, flags.config);
+    await Typegen.watch(root);
     await new Promise(() => {}); // keep alive
     return;
   }
-  await Typegen.run(root, flags.config);
+  await Typegen.run(root);
 }
