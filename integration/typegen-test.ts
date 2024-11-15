@@ -304,4 +304,38 @@ test.describe("typegen", () => {
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
   });
+
+  test("route files with absolute paths", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import path from "node:path";
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export const routes: RouteConfig = [
+          route("absolute/:id", path.resolve(__dirname, "routes/absolute.tsx")),
+        ];
+      `,
+      "app/routes/absolute.tsx": tsx`
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/absolute"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params.id, string>>
+          return { planet: "world" }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          return <h1>Hello, {loaderData.planet}!</h1>
+        }
+      `,
+    });
+
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
 });
