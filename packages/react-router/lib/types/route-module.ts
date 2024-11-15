@@ -126,10 +126,30 @@ export type CreateHydrateFallbackProps<Params> = {
   params: Params;
 };
 
-export type CreateComponentProps<Params, LoaderData, ActionData> = {
+type Match<T extends RouteInfo> = Pretty<
+  Pick<T, "id" | "params"> & {
+    pathname: string;
+    data: T["loaderData"];
+    handle: unknown;
+  }
+>;
+
+// prettier-ignore
+type Matches<T extends RouteInfo[]> =
+  T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
+    ? [Match<F>, ...Matches<R>]
+    : [];
+
+export type CreateComponentProps<
+  Params,
+  LoaderData,
+  ActionData,
+  Parents extends RouteInfo[]
+> = {
   params: Params;
   loaderData: LoaderData;
   actionData?: ActionData;
+  matches: Matches<Parents>;
 };
 
 export type CreateErrorBoundaryProps<Params, LoaderData, ActionData> = {

@@ -65,7 +65,7 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
       export type ClientActionArgs = T.CreateClientActionArgs<Params, RouteModule>
 
       export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Params>
-      export type ComponentProps = T.CreateComponentProps<Params, LoaderData, ActionData>
+      export type ComponentProps = T.CreateComponentProps<Params, LoaderData, ActionData, Parents>
       export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Params, LoaderData, ActionData>
     }
   `;
