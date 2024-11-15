@@ -309,7 +309,7 @@ export default function Root() {
 By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
 
 ```tsx
-import type { Route } from "./+types.my-route";
+import type { Route } from "./+types/my-route";
 
 export function shouldRevalidate(
   arg: Route.ShouldRevalidateArg

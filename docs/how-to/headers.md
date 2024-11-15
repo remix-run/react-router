@@ -13,7 +13,7 @@ If you need to return a custom HTTP status code or custom headers from your `loa
 
 ```tsx filename=app/product.tsx lines=[3,6-8,14,17-21]
 // route("products/:pid", "./product.tsx");
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 import { data } from "react-router";
 import { fakeDb } from "../db";
 
@@ -42,7 +42,7 @@ If you need to return a custom HTTP status code or custom headers from your `act
 
 ```tsx filename=app/project.tsx lines=[3,11-14,19]
 // route('/projects/:projectId', './project.tsx')
-import type { Route } from "./+types.project";
+import type { Route } from "./+types/project";
 import { data } from "react-router";
 import { fakeDb } from "../db";
 

@@ -12,7 +12,7 @@ In the future, async components can be rendered in loaders like any other data:
 
 ```tsx filename=app/product-page.tsx
 // route("products/:pid", "./product-page.tsx");
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 import Product from "./product";
 import Reviews from "./reviews";
 

@@ -61,7 +61,7 @@ Here's a sample route module:
 
 ```tsx filename=app/team.tsx
 // provides type safety/inference
-import type { Route } from "./+types.team";
+import type { Route } from "./+types/team";
 
 // provides `loaderData` to the component
 export async function loader({ params }: Route.LoaderArgs) {
@@ -215,7 +215,7 @@ route("teams/:teamId", "./team.tsx"),
 ```
 
 ```tsx filename=app/team.tsx
-import type { Route } from "./+types.team";
+import type { Route } from "./+types/team";
 
 export async function loader({ params }: Route.LoaderArgs) {
   //                           ^? { teamId: string }
@@ -236,7 +236,7 @@ route("c/:categoryId/p/:productId", "./product.tsx"),
 ```
 
 ```tsx filename=app/product.tsx
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 
 async function loader({ params }: LoaderArgs) {
   //                    ^? { categoryId: string; productId: string }

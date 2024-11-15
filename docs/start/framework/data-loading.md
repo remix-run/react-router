@@ -15,7 +15,7 @@ Loader data is automatically serialized from loaders and deserialized in compone
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 
 export async function clientLoader({
   params,
@@ -44,7 +44,7 @@ When server rendering, `loader` is used for both initial page loads and client n
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 import { fakeDb } from "../db";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -73,7 +73,7 @@ When pre-rendering, loaders are used to fetch data during the production build.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 
 export async function loader({ params }: Route.LoaderArgs) {
   let product = await getProductFromCSVFile(params.pid);
@@ -116,7 +116,7 @@ Note that when server rendering, any URLs that aren't pre-rendered will be serve
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 import { fakeDb } from "../db";
 
 export async function loader({ params }: Route.LoaderArgs) {

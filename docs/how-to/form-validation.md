@@ -17,7 +17,7 @@ export const routes = [route("signup", "signup.tsx")];
 ```
 
 ```tsx filename=signup.tsx
-import type { Route } from "./+types.signup";
+import type { Route } from "./+types/signup";
 import { useFetcher } from "react-router";
 
 export default function Signup(_: Route.ComponentProps) {
@@ -43,7 +43,7 @@ export default function Signup(_: Route.ComponentProps) {
 In this step, we'll define a server `action` in the same file as our `Signup` component. Note that the aim here is to provide a broad overview of the mechanics involved rather than digging deep into form validation rules or error object structures. We'll use rudimentary checks for the email and password to demonstrate the core concepts.
 
 ```tsx filename=signup.tsx
-import type { Route } from "./+types.signup";
+import type { Route } from "./+types/signup";
 import { redirect, useFetcher, data } from "react-router";
 
 export default function Signup(_: Route.ComponentProps) {

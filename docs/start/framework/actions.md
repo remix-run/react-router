@@ -15,7 +15,7 @@ Client actions only run in the browser and take priority over a server action wh
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import type { Route } from "./+types.project";
+import type { Route } from "./+types/project";
 import { Form } from "react-router";
 import { someApi } from "./api";
 
@@ -52,7 +52,7 @@ Server actions only run on the server and are removed from client bundles.
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import type { Route } from "./+types.project";
+import type { Route } from "./+types/project";
 import { Form } from "react-router";
 import { fakeDb } from "../db";
 

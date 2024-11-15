@@ -105,7 +105,7 @@ The detail view needs to use the same view transition names to create a seamless
 ```tsx filename=routes/image-details.tsx
 import { Link } from "react-router";
 import { images } from "./home";
-import type { Route } from "./+types.image-details";
+import type { Route } from "./+types/image-details";
 
 export default function ImageDetailsRoute({
   params,

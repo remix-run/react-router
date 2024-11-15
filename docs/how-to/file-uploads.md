@@ -106,7 +106,7 @@ import {
   fileStorage,
   getStorageKey,
 } from "~/avatar-storage.server";
-import type { Route } from "./+types.user";
+import type { Route } from "./+types/user";
 
 export async function action({
   request,

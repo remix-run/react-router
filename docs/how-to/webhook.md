@@ -9,7 +9,7 @@ hidden: true
 Resource routes can be used to handle webhooks. For example, you can create a webhook that receives notifications from GitHub when a new commit is pushed to a repository:
 
 ```tsx
-import type { Route } from "./+types.github";
+import type { Route } from "./+types/github";
 
 import crypto from "node:crypto";
 
