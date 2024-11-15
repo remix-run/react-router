@@ -395,27 +395,6 @@ export let setReactRouterDevLoadContext = (
   reactRouterDevLoadContext = loadContext;
 };
 
-// Inlined from https://github.com/jsdf/deep-freeze
-let deepFreeze = (o: any) => {
-  Object.freeze(o);
-  let oIsFunction = typeof o === "function";
-  let hasOwnProp = Object.prototype.hasOwnProperty;
-  Object.getOwnPropertyNames(o).forEach(function (prop) {
-    if (
-      hasOwnProp.call(o, prop) &&
-      (oIsFunction
-        ? prop !== "caller" && prop !== "callee" && prop !== "arguments"
-        : true) &&
-      o[prop] !== null &&
-      (typeof o[prop] === "object" || typeof o[prop] === "function") &&
-      !Object.isFrozen(o[prop])
-    ) {
-      deepFreeze(o[prop]);
-    }
-  });
-  return o;
-};
-
 type ReactRouterVitePlugin = () => Vite.Plugin[];
 /**
  * React Router [Vite plugin.](https://vitejs.dev/guide/using-plugins.html)
@@ -825,6 +804,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             },
           },
           optimizeDeps: {
+            entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
+              ? [
+                  ctx.entryClientFilePath,
+                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
+                    path.join(ctx.reactRouterConfig.appDirectory, route.file)
+                  ),
+                ]
+              : [],
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
               // even if React dependencies are not direct dependencies.
