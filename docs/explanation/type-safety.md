@@ -1,12 +1,10 @@
 ---
-title: Type safety
+title: Type Safety
 ---
 
-# Type safety
+# Type Safety
 
-<docs-info>
 If you haven't done so already, check out our guide for <a href="../framework/how-to/setting-up-type-safety">setting up type safety</a> in a new project.
-</docs-info>
 
 React Router generates types for each route in your app that you can use to get type safety for each route module export.
 
