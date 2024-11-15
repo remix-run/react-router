@@ -12,6 +12,7 @@ import colors from "picocolors";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
 import cloneDeep from "lodash/cloneDeep";
+import isEqual from "lodash/isEqual";
 
 import {
   type RouteManifest,
@@ -316,12 +317,20 @@ async function resolveConfig({
 
   if (reactRouterConfigFile) {
     try {
+      if (!fs.existsSync(reactRouterConfigFile)) {
+        return err(`${reactRouterConfigFile} no longer exists`);
+      }
+
       let configModule = await viteNodeContext.runner.executeFile(
         reactRouterConfigFile
       );
 
+      if (configModule.default === undefined) {
+        return err(`${reactRouterConfigFile} must provide a default export`);
+      }
+
       if (typeof configModule.default !== "object") {
-        return err(`${reactRouterConfigFile} must export an object`);
+        return err(`${reactRouterConfigFile} must export a config`);
       }
 
       reactRouterUserConfig = configModule.default;
@@ -381,6 +390,10 @@ async function resolveConfig({
     ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
   };
 
+  if (!ssr && serverBundles) {
+    serverBundles = undefined;
+  }
+
   let isValidPrerenderConfig =
     prerender == null ||
     typeof prerender === "boolean" ||
@@ -416,8 +429,9 @@ async function resolveConfig({
 
   try {
     if (!routeConfigFile) {
-      let routeConfigDisplayPath = path.normalize(
-        path.relative(root, path.join(appDirectory, "routes.ts"))
+      let routeConfigDisplayPath = path.relative(
+        root,
+        path.join(appDirectory, "routes.ts")
       );
       return err(`Route config file not found at "${routeConfigDisplayPath}".`);
     }
@@ -506,13 +520,13 @@ export type ConfigLoader = {
 };
 
 export async function createConfigLoader({
-  rootDirectory: userRoot,
+  rootDirectory: root,
   watch,
 }: {
   watch: boolean;
   rootDirectory?: string;
 }): Promise<ConfigLoader> {
-  let root = userRoot ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+  root = root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
   let viteNodeContext = await ViteNode.createContext({
     root,
@@ -530,12 +544,15 @@ export async function createConfigLoader({
   let getConfig = () =>
     resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
 
-  let appDirectory: string | undefined;
+  let appDirectory: string;
 
   let initialConfigResult = await getConfig();
-  if (initialConfigResult.ok) {
-    appDirectory = initialConfigResult.value.appDirectory;
+
+  if (!initialConfigResult.ok) {
+    throw new Error(initialConfigResult.error);
   }
+
+  appDirectory = initialConfigResult.value.appDirectory;
 
   let lastConfig = initialConfigResult.value;
 
@@ -557,7 +574,7 @@ export async function createConfigLoader({
         fsWatcher = chokidar.watch(
           [
             ...(reactRouterConfigFile ? [reactRouterConfigFile] : []),
-            ...(appDirectory ? [appDirectory] : []),
+            appDirectory,
           ],
           { ignoreInitial: true }
         );
@@ -571,11 +588,6 @@ export async function createConfigLoader({
             (event === "add" || event === "unlink") &&
             filepath.startsWith(path.normalize(appDirectory));
 
-          let reactRouterConfigFileChanged =
-            reactRouterConfigFile &&
-            event === "change" &&
-            filepath === path.normalize(reactRouterConfigFile);
-
           let configCodeUpdated = Boolean(
             viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
           );
@@ -585,19 +597,13 @@ export async function createConfigLoader({
             viteNodeContext.runner?.moduleCache.clear();
           }
 
-          if (
-            appFileAddedOrRemoved ||
-            reactRouterConfigFileChanged ||
-            configCodeUpdated
-          ) {
+          if (appFileAddedOrRemoved || configCodeUpdated) {
             let result = await getConfig();
 
-            let configChanged =
-              result.ok && !isEqualJson(lastConfig, result.value);
+            let configChanged = result.ok && !isEqual(lastConfig, result.value);
 
             let routeConfigChanged =
-              result.ok &&
-              !isEqualJson(lastConfig?.routes, result.value.routes);
+              result.ok && !isEqual(lastConfig?.routes, result.value.routes);
 
             for (let handler of changeHandlers) {
               handler({
@@ -754,8 +760,4 @@ function findEntry(
   }
 
   return undefined;
-}
-
-function isEqualJson(v1: unknown, v2: unknown) {
-  return JSON.stringify(v1) === JSON.stringify(v2);
 }

@@ -37,7 +37,6 @@ export async function watch(rootDirectory: string) {
             durationMs: performance.now() - eventStart,
           });
 
-          // TODO: Can these values be calculated within the config loader?
           const route = findRoute(ctx, path);
           if (route && (event === "add" || event === "unlink")) {
             Logger.info(

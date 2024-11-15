@@ -37,6 +37,7 @@ import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
   type ResolvedReactRouterConfig,
+  type ConfigLoader,
   createConfigLoader,
   resolveEntryFiles,
   ssrExternals,
@@ -427,7 +428,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let viteConfig: Vite.ResolvedConfig | undefined;
   let cssModulesManifest: Record<string, string> = {};
   let viteChildCompiler: Vite.ViteDevServer | null = null;
-  let reactRouterConfigLoader: Awaited<ReturnType<typeof createConfigLoader>>;
+  let reactRouterConfigLoader: ConfigLoader;
   let logger: Vite.Logger;
   let firstLoad = true;
 
