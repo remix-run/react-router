@@ -91,7 +91,6 @@ async function writeAll(ctx: Context): Promise<void> {
 
   fs.rmSync(typegenDir, { recursive: true, force: true });
   Object.values(ctx.config.routes).forEach((route) => {
-    if (!fs.existsSync(Path.join(ctx.config.appDirectory, route.file))) return;
     const typesPath = getTypesPath(ctx, route);
     const content = generate(ctx, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });

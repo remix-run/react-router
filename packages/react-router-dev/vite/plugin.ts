@@ -23,6 +23,7 @@ import {
 import jsesc from "jsesc";
 import colors from "picocolors";
 
+import * as Typegen from "../typegen";
 import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
@@ -745,6 +746,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         rootDirectory =
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+
+        Typegen.watch(rootDirectory);
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
