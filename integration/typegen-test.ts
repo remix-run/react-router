@@ -230,7 +230,7 @@ test.describe("typegen", () => {
     expect(proc.status).toBe(0);
   });
 
-  test("meta matches", async () => {
+  test("matches", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
       "app/expect-type.ts": expectType,
@@ -288,6 +288,14 @@ test.describe("typegen", () => {
           const parent2 = matches[2]
           type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
           return []
+        }
+
+        export default function Component({ matches }: Route.ComponentProps) {
+          const parent1 = matches[1]
+          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+
+          const parent2 = matches[2]
+          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
         }
       `,
     });

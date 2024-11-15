@@ -23,9 +23,14 @@ type RouteModule = {
 export type LinkDescriptors = LinkDescriptor[];
 
 type RouteInfo = {
+  parents: RouteInfo[];
+  module: RouteModule;
   id: unknown;
+  file: string;
+  path: string;
   params: unknown;
   loaderData: unknown;
+  actionData: unknown;
 };
 
 type MetaMatch<T extends RouteInfo> = Pretty<
@@ -44,12 +49,12 @@ type MetaMatches<T extends RouteInfo[]> =
     ? [MetaMatch<F>, ...MetaMatches<R>]
     : [];
 
-export type CreateMetaArgs<Params, LoaderData, Parents extends RouteInfo[]> = {
+export type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
-  params: Params;
-  data: LoaderData;
+  params: T["params"];
+  data: T["loaderData"];
   error?: unknown;
-  matches: MetaMatches<Parents>;
+  matches: MetaMatches<T["parents"]>;
 };
 export type MetaDescriptors = MetaDescriptor[];
 
@@ -95,48 +100,61 @@ type _CreateActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
-type ClientDataFunctionArgs<Params> = {
+type ClientDataFunctionArgs<T extends RouteInfo> = {
   request: Request;
-  params: Params;
+  params: T["params"];
 };
 
-type ServerDataFunctionArgs<Params> = ClientDataFunctionArgs<Params> & {
+type ServerDataFunctionArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
   context: AppLoadContext;
 };
 
-export type CreateServerLoaderArgs<Params> = ServerDataFunctionArgs<Params>;
+export type CreateServerLoaderArgs<T extends RouteInfo> =
+  ServerDataFunctionArgs<T>;
 
-export type CreateClientLoaderArgs<
-  Params,
-  T extends RouteModule
-> = ClientDataFunctionArgs<Params> & {
-  serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
+export type CreateClientLoaderArgs<T extends RouteInfo> =
+  ClientDataFunctionArgs<T> & {
+    serverLoader: () => Promise<ServerDataFrom<T["module"]["loader"]>>;
+  };
+
+export type CreateServerActionArgs<T extends RouteInfo> =
+  ServerDataFunctionArgs<T>;
+
+export type CreateClientActionArgs<T extends RouteInfo> =
+  ClientDataFunctionArgs<T> & {
+    serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
+  };
+
+export type CreateHydrateFallbackProps<T extends RouteInfo> = {
+  params: T["params"];
 };
 
-export type CreateServerActionArgs<Params> = ServerDataFunctionArgs<Params>;
+type Match<T extends RouteInfo> = Pretty<
+  Pick<T, "id" | "params"> & {
+    pathname: string;
+    data: T["loaderData"];
+    handle: unknown;
+  }
+>;
 
-export type CreateClientActionArgs<
-  Params,
-  T extends RouteModule
-> = ClientDataFunctionArgs<Params> & {
-  serverAction: () => Promise<ServerDataFrom<T["action"]>>;
+// prettier-ignore
+type Matches<T extends RouteInfo[]> =
+  T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
+    ? [Match<F>, ...Matches<R>]
+    : [];
+
+export type CreateComponentProps<T extends RouteInfo> = {
+  params: T["params"];
+  loaderData: T["loaderData"];
+  actionData?: T["actionData"];
+  matches: Matches<T["parents"]>;
 };
 
-export type CreateHydrateFallbackProps<Params> = {
-  params: Params;
-};
-
-export type CreateComponentProps<Params, LoaderData, ActionData> = {
-  params: Params;
-  loaderData: LoaderData;
-  actionData?: ActionData;
-};
-
-export type CreateErrorBoundaryProps<Params, LoaderData, ActionData> = {
-  params: Params;
+export type CreateErrorBoundaryProps<T extends RouteInfo> = {
+  params: T["params"];
   error: unknown;
-  loaderData?: LoaderData;
-  actionData?: ActionData;
+  loaderData?: T["loaderData"];
+  actionData?: T["actionData"];
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
