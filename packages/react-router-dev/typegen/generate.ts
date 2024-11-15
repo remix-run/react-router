@@ -3,7 +3,8 @@ import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
 
 import { type RouteManifest, type RouteManifestEntry } from "../config/routes";
-import { getTypesPath, type Context } from "./context";
+import { type Context } from "./context";
+import { getTypesPath } from "./paths";
 
 export function generate(ctx: Context, route: RouteManifestEntry): string {
   const lineage = getRouteLineage(ctx.routes, route);
@@ -13,14 +14,15 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
   const parents = lineage.slice(0, -1);
   const parentTypeImports = parents
     .map((parent, i) => {
-      let rel = Path.relative(
+      const rel = Path.relative(
         Path.dirname(typesPath),
         getTypesPath(ctx, parent)
       );
-      if (rel.startsWith("+")) rel = "./" + rel;
+
       const indent = i === 0 ? "" : "  ".repeat(2);
-      const imp = `${indent}import type { Info as Parent${i} } from "${rel}"`;
-      return imp;
+      let source = noExtension(rel);
+      if (!source.startsWith("../")) source = "./" + source;
+      return `${indent}import type { Info as Parent${i} } from "${source}"`;
     })
     .join("\n");
 
@@ -35,7 +37,7 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
 
     type Params = {${formatParamProperties(urlpath)}}
 
-    type RouteModule = typeof import("./${Pathe.filename(route.file)}")
+    type RouteModule = typeof import("../${Pathe.filename(route.file)}")
     type LoaderData = T.CreateLoaderData<RouteModule>
     type ActionData = T.CreateActionData<RouteModule>
 
@@ -68,6 +70,9 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
     }
   `;
 }
+
+const noExtension = (path: string) =>
+  Path.join(Path.dirname(path), Pathe.filename(path));
 
 function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
   const result: RouteManifestEntry[] = [];

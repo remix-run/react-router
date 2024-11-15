@@ -52,7 +52,7 @@ test.describe("typegen", () => {
       `,
       "app/routes/product.tsx": tsx`
         import { Expect, Equal } from "../expect-type"
-        import type { Route } from "./+types.product"
+        import type { Route } from "./+types/product"
 
         export function loader({ params }: Route.LoaderArgs) {
           type Test = Expect<Equal<typeof params.id, string>>
@@ -86,7 +86,7 @@ test.describe("typegen", () => {
         `,
         "app/routes/repeated-params.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types.repeated-params"
+          import type { Route } from "./+types/repeated-params"
 
           export function loader({ params }: Route.LoaderArgs) {
             type Expected = [string, string | undefined, string]
@@ -114,7 +114,7 @@ test.describe("typegen", () => {
         `,
         "app/routes/splat.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types.splat"
+          import type { Route } from "./+types/splat"
 
           export function loader({ params }: Route.LoaderArgs) {
             type Test = Expect<Equal<typeof params["*"], string>>
@@ -142,7 +142,7 @@ test.describe("typegen", () => {
         `,
         "app/routes/param-with-ext.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types.param-with-ext"
+          import type { Route } from "./+types/param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
             type Test = Expect<Equal<typeof params["lang"], string>>
@@ -151,7 +151,7 @@ test.describe("typegen", () => {
         `,
         "app/routes/optional-param-with-ext.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types.optional-param-with-ext"
+          import type { Route } from "./+types/optional-param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
             type Test = Expect<Equal<typeof params["user"], string | undefined>>
@@ -172,7 +172,7 @@ test.describe("typegen", () => {
       "app/expect-type.ts": expectType,
       "app/routes/_index.tsx": tsx`
         import { Expect, Equal } from "../expect-type"
-        import type { Route } from "./+types._index"
+        import type { Route } from "./+types/_index"
 
         export function loader() {
           return { server: "server" }
@@ -211,7 +211,7 @@ test.describe("typegen", () => {
       "app/expect-type.ts": expectType,
       "app/routes/products.$id.tsx": tsx`
         import { Expect, Equal } from "../expect-type"
-        import type { Route } from "./+types.products.$id"
+        import type { Route } from "./+types/products.$id"
 
         export function loader({ params }: Route.LoaderArgs) {
           type Test = Expect<Equal<typeof params.id, string>>
@@ -281,7 +281,7 @@ test.describe("typegen", () => {
       `,
       "app/routes/current.tsx": tsx`
         import { Expect, Equal } from "../expect-type"
-        import type { Route } from "./+types.current"
+        import type { Route } from "./+types/current"
 
         export function meta({ matches }: Route.MetaArgs) {
           const parent1 = matches[1]
