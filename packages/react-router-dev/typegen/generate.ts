@@ -1,4 +1,4 @@
-import dedent from "dedent";
+import ts from "dedent";
 import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
 
@@ -26,47 +26,43 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
     })
     .join("\n");
 
-  return dedent`
+  return ts`
     // React Router generated types for route:
     // ${route.file}
 
     import type * as T from "react-router/route-module"
 
     ${parentTypeImports}
-    type Parents = [${parents.map((_, i) => `Parent${i}`).join(", ")}]
 
-    type Params = {${formatParamProperties(urlpath)}}
-
-    type RouteModule = typeof import("../${Pathe.filename(route.file)}")
-    type LoaderData = T.CreateLoaderData<RouteModule>
-    type ActionData = T.CreateActionData<RouteModule>
+    type Module = typeof import("../${Pathe.filename(route.file)}")
 
     export type Info = {
+      parents: [${parents.map((_, i) => `Parent${i}`).join(", ")}],
       id: "${route.id}"
       file: "${route.file}"
       path: "${route.path}"
-      params: Params
-      loaderData: LoaderData
-      actionData: ActionData
+      params: {${formatParamProperties(urlpath)}}
+      module: Module
+      loaderData: T.CreateLoaderData<Module>
+      actionData: T.CreateActionData<Module>
     }
 
     export namespace Route {
-
       export type LinkDescriptors = T.LinkDescriptors
       export type LinksFunction = () => LinkDescriptors
 
-      export type MetaArgs = T.CreateMetaArgs<Params, LoaderData, Parents>
+      export type MetaArgs = T.CreateMetaArgs<Info>
       export type MetaDescriptors = T.MetaDescriptors
       export type MetaFunction = (args: MetaArgs) => MetaDescriptors
 
-      export type LoaderArgs = T.CreateServerLoaderArgs<Params>
-      export type ClientLoaderArgs = T.CreateClientLoaderArgs<Params, RouteModule>
-      export type ActionArgs = T.CreateServerActionArgs<Params>
-      export type ClientActionArgs = T.CreateClientActionArgs<Params, RouteModule>
+      export type LoaderArgs = T.CreateServerLoaderArgs<Info>
+      export type ClientLoaderArgs = T.CreateClientLoaderArgs<Info>
+      export type ActionArgs = T.CreateServerActionArgs<Info>
+      export type ClientActionArgs = T.CreateClientActionArgs<Info>
 
-      export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Params>
-      export type ComponentProps = T.CreateComponentProps<Params, LoaderData, ActionData, Parents>
-      export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Params, LoaderData, ActionData>
+      export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Info>
+      export type ComponentProps = T.CreateComponentProps<Info>
+      export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Info>
     }
   `;
 }
@@ -87,24 +83,17 @@ function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
 
 function formatParamProperties(urlpath: string) {
   const params = parseParams(urlpath);
-  const indent = "  ".repeat(3);
   const properties = Object.entries(params).map(([name, values]) => {
     if (values.length === 1) {
       const isOptional = values[0];
-      return indent + (isOptional ? `"${name}"?: string` : `"${name}": string`);
+      return isOptional ? `"${name}"?: string` : `"${name}": string`;
     }
     const items = values.map((isOptional) =>
       isOptional ? "string | undefined" : "string"
     );
-    return indent + `"${name}": [${items.join(", ")}]`;
+    return `"${name}": [${items.join(", ")}]`;
   });
-
-  // prettier-ignore
-  const body =
-    properties.length === 0 ? "" :
-    "\n" + properties.join("\n") + "\n";
-
-  return body;
+  return properties.join("; ");
 }
 
 function parseParams(urlpath: string) {
