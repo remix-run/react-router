@@ -1,4 +1,4 @@
-import { defineConfig } from "tsup";
+import { defineConfig, Options } from "tsup";
 
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.js";
@@ -38,6 +38,6 @@ const config = (enableDevWarnings: boolean) =>
         __DEV__: JSON.stringify(enableDevWarnings),
       },
     },
-  ]);
+  ]) as Options[];
 
 export default defineConfig([...config(false), ...config(true)]);
