@@ -825,6 +825,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             },
           },
           optimizeDeps: {
+            entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
+              ? [
+                  ctx.entryClientFilePath,
+                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
+                    path.join(ctx.reactRouterConfig.appDirectory, route.file)
+                  ),
+                ]
+              : [],
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
               // even if React dependencies are not direct dependencies.

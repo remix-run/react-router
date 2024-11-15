@@ -83,7 +83,9 @@ export type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
-interface FutureConfig {}
+interface FutureConfig {
+  unstable_optimizeDeps: boolean;
+}
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
@@ -475,7 +477,10 @@ async function resolveConfig({
     );
   }
 
-  let future: FutureConfig = {};
+  let future: FutureConfig = {
+    unstable_optimizeDeps:
+      reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
+  };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
