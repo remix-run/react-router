@@ -13,6 +13,6 @@ export function getTypesPath(ctx: Context, route: RouteManifestEntry) {
     getTypesDir(ctx),
     Path.relative(ctx.rootDirectory, ctx.config.appDirectory),
     Path.dirname(route.file),
-    "+types." + Pathe.filename(route.file) + ".d.ts"
+    "+types/" + Pathe.filename(route.file) + ".d.ts"
   );
 }

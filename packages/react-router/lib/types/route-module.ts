@@ -8,6 +8,8 @@ import type { Equal, Expect, Func, Pretty } from "./utils";
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
 
 type RouteModule = {
+  meta?: Func;
+  links?: Func;
   loader?: Func;
   clientLoader?: Func;
   action?: Func;
