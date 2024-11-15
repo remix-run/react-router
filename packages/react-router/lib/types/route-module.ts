@@ -17,6 +17,7 @@ type RouteModule = {
   HydrateFallback?: unknown;
   default?: unknown;
   ErrorBoundary?: unknown;
+  [key: string]: unknown; // allow user-defined exports
 };
 
 export type LinkDescriptors = LinkDescriptor[];
