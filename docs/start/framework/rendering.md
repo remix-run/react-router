@@ -16,9 +16,9 @@ All routes are always client side rendered as the user navigates around the app.
 ## Server Side Rendering
 
 ```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
+import { defineConfig } from "@react-router/dev/config";
 
-export const config: Config = {
+export default defineConfig({
   ssr: true,
 });
 ```
@@ -27,15 +27,15 @@ Server side rendering requires a deployment that supports it. Though it's a glob
 
 ## Static Pre-rendering
 
-```ts filename=vite.config.ts
-import type { Config } from "@react-router/dev/config";
+```ts filename=react-router.config.ts
+import { defineConfig } from "@react-router/dev/config";
 
-export const config: Config = {
+export default defineConfig({
   // return a list of URLs to prerender at build time
   async prerender() {
     return ["/", "/about", "/contact"];
   },
-};
+});
 ```
 
 Pre-rendering is a build-time operation that generates static HTML and client navigation data payloads for a list of URLs. This is useful for SEO and performance, especially for deployments without server rendering. When pre-rendering, route module loaders are used to fetch data at build time.

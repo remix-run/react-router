@@ -1,5 +1,5 @@
-import type { Config } from "@react-router/dev/config";
+import { defineConfig } from "@react-router/dev/config";
 
-export default {
+export default defineConfig({
   ssr: false,
-} satisfies Config;
+});

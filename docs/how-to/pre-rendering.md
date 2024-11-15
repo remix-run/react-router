@@ -11,9 +11,9 @@ Pre-rendering allows you to render a pages at build time instead of on a server 
 Add the `prerender` option to your config, there are three signatures:
 
 ```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
+import { defineConfig } from "@react-router/dev/config";
 
-export default {
+export default defineConfig({
   // all static route paths
   // (no dynamic segments like "/post/:slug")
   prerender: true,
@@ -28,7 +28,7 @@ export default {
       posts.map((post) => post.href)
     );
   },
-} satisfies Config;
+});
 ```
 
 ## Data Loading and Pre-rendering

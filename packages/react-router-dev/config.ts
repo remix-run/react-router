@@ -4,3 +4,5 @@ export type {
   Preset,
   ServerBundlesFunction,
 } from "./config/config";
+
+export { defineConfig } from "./config/config";
