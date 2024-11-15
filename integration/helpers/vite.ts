@@ -42,9 +42,9 @@ export const reactRouterConfig = ({
   };
 
   return dedent`
-    import { defineConfig } from "@react-router/dev/config";
+    import type { Config } from "@react-router/dev/config";
 
-    export default defineConfig(${JSON.stringify(config)});
+    export default ${JSON.stringify(config)} satisfies Config;
   `;
 };
 

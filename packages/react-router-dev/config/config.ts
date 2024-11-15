@@ -217,10 +217,6 @@ export type ResolvedReactRouterConfig = Readonly<{
   ssr: boolean;
 }>;
 
-export function defineConfig<T extends ReactRouterConfig>(config: T): T {
-  return config;
-}
-
 let mergeReactRouterConfig = (
   ...configs: ReactRouterConfig[]
 ): ReactRouterConfig => {
