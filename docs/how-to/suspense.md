@@ -15,7 +15,7 @@ React Router awaits route loaders before rendering route components. To unblock 
 ```tsx
 import type { Route } from "./+types/my-route";
 
-export async function loader({}: Route.LoaderArg) {
+export async function loader({}: Route.LoaderArgs) {
   // note this is NOT awaited
   let nonCriticalData = new Promise((res) =>
     setTimeout(() => "non-critical", 5000)
