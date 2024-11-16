@@ -141,4 +141,4 @@ export async function action({
 
 Route modules also provide conventions for SEO, asset loading, error boundaries, and more.
 
-[Get Started](./framework/start/installation) with React Router as a framework.
+[Get Started](./start/framework/installation) with React Router as a framework.
