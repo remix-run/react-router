@@ -454,7 +454,7 @@ async function resolveConfig({
 
     routes = {
       ...routes,
-      ...configRoutesToRouteManifest(routeConfig),
+      ...configRoutesToRouteManifest(appDirectory, routeConfig),
     };
   } catch (error: any) {
     return err(

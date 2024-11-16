@@ -9,14 +9,10 @@ export function getTypesDir(ctx: Context) {
 }
 
 export function getTypesPath(ctx: Context, route: RouteManifestEntry) {
-  const rel = Path.isAbsolute(route.file)
-    ? Path.relative(ctx.config.appDirectory, route.file)
-    : route.file;
-
   return Path.join(
     getTypesDir(ctx),
     Path.relative(ctx.rootDirectory, ctx.config.appDirectory),
-    Path.dirname(rel),
-    "+types/" + Pathe.filename(rel) + ".ts"
+    Path.dirname(route.file),
+    "+types/" + Pathe.filename(route.file) + ".ts"
   );
 }
