@@ -13,7 +13,7 @@ React Router supports React Suspense by returning promises from loaders and acti
 React Router awaits route loaders before rendering route components. To unblock the loader for non-critical data, return the promise instead of awaiting it in the loader.
 
 ```tsx
-import * as Route from "./+types/my-route";
+import type { Route } from "./+types/my-route";
 
 export async function loader({}: Route.LoaderArg) {
   // note this is NOT awaited

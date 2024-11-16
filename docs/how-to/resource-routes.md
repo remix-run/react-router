@@ -17,7 +17,7 @@ route("/reports/pdf/:id", "pdf-report.ts");
 ```
 
 ```tsx filename=pdf-report.ts
-import * as Route from "./+types/pdf-report";
+import type { Route } from "./+types/pdf-report";
 
 export async function loader({ params }: Route.LoaderArg) {
   const report = await getReport(params.id);
