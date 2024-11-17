@@ -16,9 +16,9 @@ import {
   route,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   route("products/:id", "./routes/product.tsx"),
-];
+] satisfies RouteConfig;
 ```
 
 You can import route-specific types like so:

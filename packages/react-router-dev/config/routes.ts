@@ -139,7 +139,7 @@ export function validateRouteConfig({
   if (!routeConfig) {
     return {
       valid: false,
-      message: `No "routes" export defined in "${routeConfigFile}.`,
+      message: `Route config must be the default export in "${routeConfigFile}".`,
     };
   }
 

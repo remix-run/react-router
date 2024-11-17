@@ -180,12 +180,12 @@ Create a file at `src/routes.ts` and add this:
 ```ts filename=src/routes.ts
 import { type RouteConfig } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   {
     path: "*",
     file: "src/catchall.tsx",
   },
-];
+] satisfies RouteConfig;
 ```
 
 And then create the catchall route module and render your existing root App component within it.
@@ -224,7 +224,7 @@ You can move the definition to a `routes.ts` file:
 ```tsx filename=src/routes.ts
 import { type RouteConfig } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
@@ -233,7 +233,7 @@ export const routes: RouteConfig = [
     path: "*",
     file: "src/catchall.tsx",
   },
-];
+] satisfies RouteConfig;
 ```
 
 And then edit the route module to use the Route Module API:

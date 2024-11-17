@@ -9,13 +9,16 @@ order: 2
 
 Routes are configured in `app/routes.ts`. Routes have a url pattern to match the URL and a file path to the route module to define its behavior.
 
-```tsx
-import { route } from "@react-router/dev/routes";
+```ts filename=app/routes.ts
+import {
+  type RouteConfig,
+  route,
+} from "@react-router/dev/routes";
 
-export const routes = [
+export default [
   route("some/path", "./some/file.tsx"),
   // pattern ^           ^ module file
-];
+] satisfies RouteConfig;
 ```
 
 Here is a larger sample route config:
@@ -29,7 +32,7 @@ import {
   prefix,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   index("./home.tsx"),
   route("about", "./about.tsx"),
 
@@ -43,7 +46,7 @@ export const routes: RouteConfig = [
     route(":city", "./concerts/city.tsx"),
     route("trending", "./concerts/trending.tsx"),
   ]),
-];
+] satisfies RouteConfig;
 ```
 
 If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
@@ -90,14 +93,14 @@ import {
   index,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   // parent route
   route("dashboard", "./dashboard.tsx", [
     // child routes
     index("./home.tsx"),
     route("settings", "./settings.tsx"),
   ]),
-];
+] satisfies RouteConfig;
 ```
 
 The path of the parent is automatically included in the child, so this config creates both `"/dashboard"` and `"/dashboard/settings"` URLs.
@@ -135,7 +138,7 @@ import {
   prefix,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   layout("./marketing/layout.tsx", [
     index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
@@ -147,7 +150,7 @@ export const routes: RouteConfig = [
       route(":pid/edit", "./projects/edit-project.tsx"),
     ]),
   ]),
-];
+] satisfies RouteConfig;
 ```
 
 ## Index Routes
@@ -165,7 +168,7 @@ import {
   index,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   // renders into the root.tsx Outlet at /
   index("./home.tsx"),
   route("dashboard", "./dashboard.tsx", [
@@ -173,7 +176,7 @@ export const routes: RouteConfig = [
     index("./dashboard-home.tsx"),
     route("settings", "./dashboard-settings.tsx"),
   ]),
-];
+] satisfies RouteConfig;
 ```
 
 Note that index routes can't have children.
@@ -191,7 +194,7 @@ import {
   prefix,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   layout("./marketing/layout.tsx", [
     index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
@@ -203,7 +206,7 @@ export const routes: RouteConfig = [
       route(":pid/edit", "./projects/edit-project.tsx"),
     ]),
   ]),
-];
+] satisfies RouteConfig;
 ```
 
 ## Dynamic Segments

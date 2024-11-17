@@ -11,9 +11,14 @@ This guide walks you through implementing form validation for a simple signup fo
 We'll start by creating a basic signup route with form.
 
 ```ts filename=routes.ts
-import { route } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  route,
+} from "@react-router/dev/routes";
 
-export const routes = [route("signup", "signup.tsx")];
+export default [
+  route("signup", "signup.tsx"),
+] satisfies RouteConfig;
 ```
 
 ```tsx filename=signup.tsx

@@ -110,7 +110,7 @@ In React Router v7 you define your routes using the [`app/routes.ts`][routing] f
 import { type RouteConfig } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
-export const routes: RouteConfig = flatRoutes();
+export default flatRoutes() satisfies RouteConfig;
 ```
 
 ### Step 6 - Rename components in entry files

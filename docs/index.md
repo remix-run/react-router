@@ -66,7 +66,7 @@ import {
   prefix,
 } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   index("./home.tsx"),
   route("about", "./about.tsx"),
 
@@ -81,7 +81,7 @@ export const routes: RouteConfig = [
     route(":city/:id", "./concerts/show.tsx")
     route("trending", "./concerts/trending.tsx"),
   ]),
-];
+] satisfies RouteConfig;
 ```
 
 You'll have access to the Route Module API, which most of the other features are built on.
