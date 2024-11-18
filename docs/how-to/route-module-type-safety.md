@@ -32,10 +32,7 @@ Edit your tsconfig to get TypeScript to use the generated types. Additionally, `
 
 ## 3. Generate types before type checking
 
-React Router's Vite plugin automatically generates types as you edit your app.
-That means all you need to do is run `react-router dev` (or your custom dev server) to get to up-to-date types in your routes.
-
-If you want to run type checking separately — for example, as part of your Continuous Integration pipeline — you'll need to make sure to generate types _before_ running typechecking:
+If you want to run type checking as its own command — for example, as part of your Continuous Integration pipeline — you'll need to make sure to generate types _before_ running typechecking:
 
 ```json
 {
@@ -84,3 +81,10 @@ In eslint, you can get this behavior by setting `prefer: "type-imports"` for the
   ]
 }
 ```
+
+## Conclusion
+
+React Router's Vite plugin should be automatically generating types into `.react-router/types/` anytime you edit your route config (`routes.ts`).
+That means all you need to do is run `react-router dev` (or your custom dev server) to get to up-to-date types in your routes.
+
+Check out our [Type Safety Explanation](../explanation/type-safety) for an example of how to pull in those types into your routes.

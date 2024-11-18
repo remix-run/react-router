@@ -47,12 +47,6 @@ You can manually generate types with the `typegen` command:
 react-router typegen
 ```
 
-You can also use `--watch` to automatically regenerate types as files change:
-
-```sh
-react-router typegen --watch
-```
-
 The following types are generated for each route:
 
 - `LoaderArgs`
@@ -62,6 +56,15 @@ The following types are generated for each route:
 - `HydrateFallbackProps`
 - `ComponentProps` (for the `default` export)
 - `ErrorBoundaryProps`
+
+### --watch
+
+If you run `react-router dev` — or if your custom server calls `vite.createServer` — then React Router's Vite plugin is already generating up-to-date types for you.
+But if you really need to run type generation on its own, you can also use `--watch` to automatically regenerate types as files change:
+
+```sh
+react-router typegen --watch
+```
 
 ## How it works
 
