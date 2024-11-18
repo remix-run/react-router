@@ -79,8 +79,15 @@ Client loaders can participate in initial page load hydration of server rendered
 export async function clientLoader() {
   // ...
 }
-clientLoader.hydrate = true;
+clientLoader.hydrate = true as const;
 ```
+
+<docs-info>
+
+By using `as const`, TypeScript will infer that the type for `clientLoader.hydrate` is `true` instead of `boolean`.
+That way, React Router can derive types for `loaderData` based on the value of `clientLoader.hydrate`.
+
+</docs-info>
 
 See also:
 
