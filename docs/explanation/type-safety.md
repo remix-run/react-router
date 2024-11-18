@@ -4,7 +4,7 @@ title: Type Safety
 
 # Type Safety
 
-If you haven't done so already, check out our guide for <a href="../framework/how-to/setting-up-type-safety">setting up type safety</a> in a new project.
+If you haven't done so already, check out our guide for [setting up type safety][route-module-type-safety] in a new project.
 
 React Router generates types for each route in your app that you can use to get type safety for each route module export.
 
@@ -67,8 +67,8 @@ The following types are generated for each route:
 
 React Router's type generation executes your route config (`app/routes.ts` by default) to determine the routes for your app.
 It then generates a `+types/<route file>.d.ts` for each route within a special `.react-router/types/` directory.
-With [`rootDirs` configured][setting-up-type-safety], TypeScript can import these generated files as if they were right next to their corresponding route modules.
+With [`rootDirs` configured][route-module-type-safety], TypeScript can import these generated files as if they were right next to their corresponding route modules.
 
 For a deeper dive into some of the design decisions, check out our [type inference decision doc](https://github.com/remix-run/react-router/blob/dev/decisions/0012-type-inference.md).
 
-[setting-up-type-safety]: ../framework/how-to/setting-up-type-safety
+[route-module-type-safety]: ../how-to/route-module-type-safety
