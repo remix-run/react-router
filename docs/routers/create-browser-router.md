@@ -513,7 +513,7 @@ const router = createBrowserRouter(
 );
 ```
 
-**Patching sub-trees asyncronously**
+**Patching sub-trees asynchronously**
 
 You can also perform asynchronous matching to lazily fetch entire sections of your application:
 
