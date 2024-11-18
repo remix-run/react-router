@@ -10,7 +10,7 @@ This guide walks you through implementing form validation for a simple signup fo
 
 We'll start by creating a basic signup route with form.
 
-```ts filename=routes.ts
+```ts filename=app/routes.ts
 import {
   type RouteConfig,
   route,
