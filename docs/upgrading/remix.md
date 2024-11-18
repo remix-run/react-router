@@ -243,16 +243,16 @@ If you used the codemod you can skip this step as it was automatically completed
 If you have an `entry.server.tsx` and/or an `entry.client.tsx` file in your application, you will need to update the main components in these files:
 
 ```diff filename=app/entry.server.tsx
-- import { RemixServer } from "@remix-run/react";
-+ import { ServerRouter } from "react-router";
+-import { RemixServer } from "@remix-run/react";
++import { ServerRouter } from "react-router";
 
-- <RemixServer context={remixContext} url={request.url} />,
-+ <ServerRouter context={remixContext} url={request.url} />,
+-<RemixServer context={remixContext} url={request.url} />,
++<ServerRouter context={remixContext} url={request.url} />,
 ```
 
 ```diff filename=app/entry.client.tsx
-- import { RemixBrowser } from "@remix-run/react";
-+ import { HydratedRouter } from "react-router/dom";
+-import { RemixBrowser } from "@remix-run/react";
++import { HydratedRouter } from "react-router/dom";
 
 hydrateRoot(
   document,
@@ -281,7 +281,7 @@ However, the short-term solution to ease the upgrade is to use TypeScript's [mod
 
 You can do this with the following code in your `vite.config.ts`:
 
-```ts filename="vite.config.ts"
+```ts filename=react-router.config.ts
 // Your AppLoadContext used in v2
 interface AppLoadContext {
   whatever: string;
@@ -295,7 +295,16 @@ declare module "react-router" {
 }
 ```
 
-This should allow you to upgrade and ship your application on React Router v7, and then you can incrementally migrate routes to the new typegen approach.
+This should allow you to upgrade and ship your application on React Router v7, and then you can incrementally migrate routes to the [new typegen approach][type-safety].
+
+## Next steps
+
+Congratulations! You are now on React Router v7. Go ahead and run your application to make sure everything is working as expected.
+
+You may also want to check out some of the new features in React Router v7:
+
+- [Type safety improvements][route-module-type-safety]
+- [Route pre-rendering][route-pre-rendering]
 
 [incremental-path-to-react-19]: https://remix.run/blog/incremental-path-to-react-19
 [future-flags]: ../community/api-development-strategy
@@ -311,3 +320,5 @@ This should allow you to upgrade and ship your application on React Router v7, a
 [type-safety]: ../explanation/type-safety
 [codemod]: https://codemod.com/registry/remix-2-react-router-upgrade
 [jrestall]: https://github.com/jrestall
+[route-module-type-safety]: ../how-to/route-module-type-safety
+[route-pre-rendering]: ../how-to/pre-rendering
