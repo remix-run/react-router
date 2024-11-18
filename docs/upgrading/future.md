@@ -200,6 +200,33 @@ createBrowserRouter(routes, {
 });
 ```
 
+**Update your Code**
+
+With partial hydration, you need to provide a `HydrateFallback` component to render during initial hydration. Additionally, if you were using `fallbackElement` before, you need to remove it as it is now deprecated. In most cases, you will want to reuse the `fallbackElement` as the `HydrateFallback`.
+
+👉 **Replace `fallbackElement` with `HydrateFallback`**
+
+```diff
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: Layout,
++      HydrateFallback: Fallback,
+      // or
++      hydrateFallbackElement: <Fallback />,
+      children: [],
+    },
+  ],
+);
+
+
+<RouterProvider
+  router={router}
+-  fallbackElement={<Fallback />}
+/>
+```
+
 ## v7_skipActionErrorRevalidation
 
 <docs-warning>If you are not using a `createBrowserRouter` you can skip this</docs-warning>
