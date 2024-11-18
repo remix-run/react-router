@@ -209,12 +209,12 @@ You can move the definition to a `routes.ts` file:
 ```tsx filename=src/routes.ts
 import { type RouteConfig } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [
+export default [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
   },
-];
+] satisfies RouteConfig;
 ```
 
 And then edit the route module to use the Route Module API:

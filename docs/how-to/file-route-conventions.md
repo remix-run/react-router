@@ -20,7 +20,7 @@ Then use it to provide route config in your `app/routes.ts` file:
 import { type RouteConfig } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
-export const routes: RouteConfig = flatRoutes();
+export default flatRoutes() satisfies RouteConfig;
 ```
 
 This will look for routes in the `app/routes` directory by default, but this can be configured via the `rootDirectory` option which is relative to your app directory:
@@ -29,9 +29,9 @@ This will look for routes in the `app/routes` directory by default, but this can
 import { type RouteConfig } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
-export const routes: RouteConfig = flatRoutes({
+export default flatRoutes({
   rootDirectory: "file-routes",
-});
+}) satisfies RouteConfig;
 ```
 
 The rest of this guide will assume you're using the default `app/routes` directory.

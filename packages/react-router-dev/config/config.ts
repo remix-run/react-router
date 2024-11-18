@@ -435,12 +435,11 @@ async function resolveConfig({
     }
 
     setAppDirectory(appDirectory);
-    let routeConfigExport: RouteConfig = (
+    let routeConfigExport = (
       await viteNodeContext.runner.executeFile(
         path.join(appDirectory, routeConfigFile)
       )
-    ).routes;
-
+    ).default;
     let routeConfig = await routeConfigExport;
 
     let result = validateRouteConfig({

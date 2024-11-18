@@ -46,9 +46,9 @@ test.describe("typegen", () => {
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           route("products/:id", "routes/product.tsx")
-        ]
+        ] satisfies RouteConfig;
       `,
       "app/routes/product.tsx": tsx`
         import { Expect, Equal } from "../expect-type"
@@ -80,9 +80,9 @@ test.describe("typegen", () => {
         "app/routes.ts": tsx`
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export const routes: RouteConfig = [
+          export default [
             route("repeated-params/:id/:id?/:id", "routes/repeated-params.tsx")
-          ]
+          ] satisfies RouteConfig;
         `,
         "app/routes/repeated-params.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
@@ -108,9 +108,9 @@ test.describe("typegen", () => {
         "app/routes.ts": tsx`
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export const routes: RouteConfig = [
+          export default [
             route("splat/*", "routes/splat.tsx")
-          ]
+          ] satisfies RouteConfig;
         `,
         "app/routes/splat.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
@@ -135,10 +135,10 @@ test.describe("typegen", () => {
         "app/routes.ts": tsx`
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export const routes: RouteConfig = [
+          export default [
             route(":lang.xml", "routes/param-with-ext.tsx"),
             route(":user?.pdf", "routes/optional-param-with-ext.tsx"),
-          ]
+          ] satisfies RouteConfig;
         `,
         "app/routes/param-with-ext.tsx": tsx`
           import { Expect, Equal } from "../expect-type"
@@ -237,13 +237,13 @@ test.describe("typegen", () => {
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           route("parent1/:parent1", "routes/parent1.tsx", [
             route("parent2/:parent2", "routes/parent2.tsx", [
               route("current", "routes/current.tsx")
             ])
           ])
-        ]
+        ] satisfies RouteConfig;
       `,
       "app/routes/parent1.tsx": tsx`
         import { Outlet } from "react-router"
@@ -313,9 +313,9 @@ test.describe("typegen", () => {
         import path from "node:path";
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           route("absolute/:id", path.resolve(__dirname, "routes/absolute.tsx")),
-        ];
+        ] satisfies RouteConfig;
       `,
       "app/routes/absolute.tsx": tsx`
         import { Expect, Equal } from "../expect-type"

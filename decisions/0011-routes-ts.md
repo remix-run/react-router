@@ -48,16 +48,6 @@ Remix ships with a default set of file system routing conventions. While conveni
 
 Any project using the Vite plugin must have a `routes.ts` file which exports an array of route config objects.
 
-### Route config is exported via the `routes` export
-
-We specifically chose to use the `routes` export instead of the more traditional `default` export you might expect in a config file. There are a couple of reasons for this:
-
-1. The `RouteConfig` type can be annotated up-front and inline (`export const routes: RouteConfig = [...]`).
-
-   In contrast, default exports either require a variable to be declared first (`let routes: RouteConfig = ...; export default routes;`), or they require the use of a `satisfies` annotation at the _end_ of the file (`export default ... satisfies RouteConfig`) which can be easy to miss when dealing with large route configs.
-
-2. In other areas of the framework we've come to prefer using named exports. We want to avoid introducing many different default exports that mean different things in different contexts. Named exports are much more self-documenting when looking at the file contents alone, especially if additional exports are added in the future.
-
 ### `routes.ts` is in the `app` directory
 
 There are a few reasons for this:
