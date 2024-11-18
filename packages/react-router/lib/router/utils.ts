@@ -123,12 +123,16 @@ interface DataFunctionArgs<Context> {
 
 /**
  * Arguments passed to loader functions
+ *
+ * @deprecated Use `Route.LoaderArgs` from generated `+types/<route>`
  */
 export interface LoaderFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
+ *
+ * @deprecated Use `Route.ActionArgs` from generated `+types/<route>`
  */
 export interface ActionFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {}
@@ -144,6 +148,8 @@ type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 
 /**
  * Route loader function signature
+ *
+ * @deprecated Use `Route.LoaderArgs` from generated `+types/<route>` to add type for named arguments to this function
  */
 export type LoaderFunction<Context = any> = {
   (
@@ -154,6 +160,8 @@ export type LoaderFunction<Context = any> = {
 
 /**
  * Route action function signature
+ *
+ * @deprecated Use `Route.ActionArgs` from generated `+types/<route>` to add types for named arguments to this function
  */
 export interface ActionFunction<Context = any> {
   (
@@ -407,6 +415,8 @@ export type ParamParseKey<Segment extends string> =
 
 /**
  * The parameters that were parsed from the URL path.
+ *
+ * @deprecated Use type safe `param` named argument for route module exports or the `Info['params']` type from generated `+types/<route>`
  */
 export type Params<Key extends string = string> = {
   readonly [key in Key]: string | undefined;
@@ -552,6 +562,11 @@ export function matchRoutesImpl<
   return matches;
 }
 
+/**
+ * Route match information from `useMatches()`
+ *
+ * @deprecated Use type safe `matches` named argument for route module exports or the `Info['loaderData']` type from generated `+types/<route>`
+ */
 export interface UIMatch<Data = unknown, Handle = unknown> {
   id: string;
   pathname: string;

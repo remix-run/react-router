@@ -34,7 +34,7 @@ export interface RouteModule {
 /**
  * A function that handles data mutations for a route on the client
  *
- * @deprecated Use `Route.ClientActionArgs` from generated `+types.<route>`
+ * @deprecated Use `Route.ClientActionArgs` from generated `+types/<route>` to add types for named arguments to this function
  */
 export type ClientActionFunction = (
   args: ClientActionFunctionArgs
@@ -43,7 +43,7 @@ export type ClientActionFunction = (
 /**
  * Arguments passed to a route `clientAction` function
  *
- * @deprecated Use `Route.ClientActionArgs` from generated `+types.<route>`
+ * @deprecated Use `Route.ClientActionArgs` from generated `+types/<route>`
  */
 export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
   serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
@@ -52,7 +52,7 @@ export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
 /**
  * A function that loads data for a route on the client
  *
- * @deprecated Use `Route.ClientLoaderArgs` from generated `+types.<route>`
+ * @deprecated Use `Route.ClientLoaderArgs` from generated `+types/<route>` to add type for named arguments to this function
  */
 export type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs
@@ -63,7 +63,7 @@ export type ClientLoaderFunction = ((
 /**
  * Arguments passed to a route `clientLoader` function
  *
- * @deprecated Use `Route.ClientLoaderArgs` from generated `+types.<route>`
+ * @deprecated Use `Route.ClientLoaderArgs` from generated `+types/<route>`
  */
 export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
   serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
@@ -96,7 +96,7 @@ export type LayoutComponent = ComponentType<{
  * A function that defines `<link>` tags to be inserted into the `<head>` of
  * the document on route transitions.
  *
- * @deprecated Use `Route.LinksFunction` from generated `+types.<route>`
+ * @deprecated Use `Route.LinksFunction` from generated `+types/<route>`
  *
  * @see https://remix.run/route/meta
  */
@@ -120,7 +120,7 @@ export interface MetaMatch<
 }
 
 /**
- * @deprecated Use `{ matches }` from `Route.MetaArgs` from generated `+types.<route>`
+ * @deprecated Use `{ matches }` from `Route.MetaArgs` from generated `+types/<route>`
  */
 export type MetaMatches<
   MatchLoaders extends Record<
@@ -137,7 +137,7 @@ export type MetaMatches<
 >;
 
 /**
- * @deprecated Use `Route.MetaArgs` from generated `+types.<route>`
+ * @deprecated Use `Route.MetaArgs` from generated `+types/<route>`
  */
 export interface MetaArgs<
   Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
@@ -163,7 +163,7 @@ export interface MetaArgs<
  * routes in the route hierarchy. In other words, they will only be rendered on
  * the route in which they are exported.
  *
- * @deprecated Use `Route.MetaFunction` from generated `+types.<route>`
+ * @deprecated Use `Route.MetaFunction` from generated `+types/<route>`
  *
  * @param Loader - The type of the current route's loader function
  * @param MatchLoaders - Mapping from a parent route's filepath to its loader
