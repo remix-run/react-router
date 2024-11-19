@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.26.2",
+  "version": "0.0.0-nightly-68f43b8cd-20241119",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
