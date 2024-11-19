@@ -44,7 +44,12 @@
       }
     },
     "./route-module": {
-      "types": "./dist/production/lib/types/route-module.d.ts"
+      "import": {
+        "types": "./dist/production/lib/types/route-module.d.mts"
+      },
+      "default": {
+        "types": "./dist/production/lib/types/route-module.d.ts"
+      }
     },
     "./dom": {
       "node": {
