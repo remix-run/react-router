@@ -10,8 +10,12 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import { reactRouterConfig } from "./helpers/vite.js";
 
 let files = {
+  "react-router.config.ts": reactRouterConfig({
+    prerender: true,
+  }),
   "vite.config.ts": js`
     import { defineConfig } from "vite";
     import { reactRouter } from "@react-router/dev/vite";
@@ -19,9 +23,7 @@ let files = {
     export default defineConfig({
       build: { manifest: true },
       plugins: [
-        reactRouter({
-          prerender: true,
-        })
+        reactRouter()
       ],
     });
   `,
@@ -250,6 +252,14 @@ test.describe("Prerendering", () => {
       prerender: true,
       files: {
         ...files,
+        "react-router.config.ts": js`
+          export default {
+            async prerender() {
+              await new Promise(r => setTimeout(r, 1));
+              return ['/', '/about'];
+            },
+          }
+        `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
@@ -257,12 +267,7 @@ test.describe("Prerendering", () => {
           export default defineConfig({
             build: { manifest: true },
             plugins: [
-              reactRouter({
-                async prerender() {
-                  await new Promise(r => setTimeout(r, 1));
-                  return ['/', '/about'];
-                },
-              })
+              reactRouter()
             ],
           });
         `,
@@ -299,19 +304,20 @@ test.describe("Prerendering", () => {
     fixture = await createFixture({
       files: {
         ...files,
+        "react-router.config.ts": js`
+          export default {
+            async prerender({ getStaticPaths }) {
+              return [...getStaticPaths(), "/a", "/b"];
+            },
+          }
+        `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                async prerender({ getStaticPaths }) {
-                  return [...getStaticPaths(), "/a", "/b"];
-                },
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/$slug.tsx": js`
@@ -453,18 +459,17 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          // Don't prerender the /not-prerendered route
+          prerender: ["/", "/about"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                // Don't prerender the /not-prerendered route
-                prerender: ["/", "/about"],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/about.tsx": js`
@@ -512,17 +517,16 @@ test.describe("Prerendering", () => {
       prerender: false,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/about"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                prerender: ["/", "/about"],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/about.tsx": js`
@@ -560,22 +564,107 @@ test.describe("Prerendering", () => {
     );
   });
 
+  test("Handles UTF-8 characters in prerendered and non-prerendered routes", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      prerender: false,
+      files: {
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/utf8-prerendered"],
+        }),
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+  
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [reactRouter()],
+          });
+        `,
+        "app/routes/utf8-prerendered.tsx": js`
+          import { useLoaderData } from 'react-router';
+          export function loader({ request }) {
+            return {
+              prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+              data: "한글 데이터 - UTF-8 문자",
+            };
+          }
+  
+          export default function Comp() {
+            let data = useLoaderData();
+            return (
+              <>
+                <h1 data-title>UTF-8 Prerendered</h1>
+                <p data-prerendered>{data.prerendered}</p>
+                <p data-content>{data.data}</p>
+              </>
+            );
+          }
+        `,
+        "app/routes/utf8-not-prerendered.tsx": js`
+          import { useLoaderData } from 'react-router';
+          export function loader({ request }) {
+            return {
+              prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+              data: "非プリレンダリングデータ - UTF-8文字",
+            };
+          }
+  
+          export default function Comp() {
+            let data = useLoaderData();
+            return (
+              <>
+                <h1 data-title>UTF-8 Not Prerendered</h1>
+                <p data-prerendered>{data.prerendered}</p>
+                <p data-content>{data.data}</p>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let app = new PlaywrightFixture(appFixture, page);
+
+    // Test prerendered route with UTF-8 characters
+    await app.goto("/utf8-prerendered");
+    await page.waitForSelector("[data-mounted]");
+    expect(await app.getHtml("[data-title]")).toContain("UTF-8 Prerendered");
+    expect(await app.getHtml("[data-prerendered]")).toContain("yes");
+    expect(await app.getHtml("[data-content]")).toContain(
+      "한글 데이터 - UTF-8 문자"
+    );
+
+    // Test non-prerendered route with UTF-8 characters
+    await app.goto("/utf8-not-prerendered");
+    await page.waitForSelector("[data-mounted]");
+    expect(await app.getHtml("[data-title]")).toContain(
+      "UTF-8 Not Prerendered"
+    );
+    expect(await app.getHtml("[data-prerendered]")).toContain("no");
+    expect(await app.getHtml("[data-content]")).toContain(
+      "非プリレンダリングデータ - UTF-8文字"
+    );
+  });
+
   test("Renders down to the proper HydrateFallback", async ({ page }) => {
     fixture = await createFixture({
       prerender: true,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/", "/parent", "/parent/child"],
+        }),
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },
-            plugins: [
-              reactRouter({
-                prerender: ['/', '/parent', '/parent/child'],
-              })
-            ],
+            plugins: [reactRouter()],
           });
         `,
         "app/routes/parent.tsx": js`

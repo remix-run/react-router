@@ -1,4 +1,4 @@
-import type { Route } from "./+types._index";
+import type { Route } from "./+types/_index";
 
 export function loader({ params }: Route.LoaderArgs) {
   return { planet: "world", date: new Date(), fn: () => 1 };

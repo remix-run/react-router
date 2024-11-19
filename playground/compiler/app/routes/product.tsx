@@ -1,4 +1,4 @@
-import type { Route } from "./+types.product";
+import type { Route } from "./+types/product";
 
 export function loader({ params }: Route.LoaderArgs) {
   return { name: `Super cool product #${params.id}` };

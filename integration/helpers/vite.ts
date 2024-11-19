@@ -14,7 +14,7 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import type { ReactRouterConfig } from "@react-router/dev/vite";
+import type { Config } from "@react-router/dev/config";
 
 const require = createRequire(import.meta.url);
 
@@ -22,6 +22,31 @@ const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
+
+export const reactRouterConfig = ({
+  ssr,
+  basename,
+  prerender,
+  appDirectory,
+}: {
+  ssr?: boolean;
+  basename?: string;
+  prerender?: boolean | string[];
+  appDirectory?: string;
+}) => {
+  let config: Config = {
+    ssr,
+    basename,
+    prerender,
+    appDirectory,
+  };
+
+  return dedent`
+    import type { Config } from "@react-router/dev/config";
+
+    export default ${JSON.stringify(config)} satisfies Config;
+  `;
+};
 
 export const viteConfig = {
   server: async (args: { port: number; fsAllow?: string[] }) => {
@@ -37,15 +62,7 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: {
-    port: number;
-    fsAllow?: string[];
-    spaMode?: boolean;
-  }) => {
-    let config: ReactRouterConfig = {
-      ssr: !args.spaMode,
-    };
-
+  basic: async (args: { port: number; fsAllow?: string[] }) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -54,7 +71,7 @@ export const viteConfig = {
       export default {
         ${await viteConfig.server(args)}
         plugins: [
-          reactRouter(${JSON.stringify(config)}),
+          reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
         ],

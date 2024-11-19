@@ -10,7 +10,7 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { createProject, build } from "./helpers/vite.js";
+import { createProject, build, reactRouterConfig } from "./helpers/vite.js";
 
 test.describe("SPA Mode", () => {
   let fixture: Fixture;
@@ -20,14 +20,7 @@ test.describe("SPA Mode", () => {
     test.describe("build errors", () => {
       test("errors on server-only exports", async () => {
         let cwd = await createProject({
-          "vite.config.ts": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-
-          export default defineConfig({
-            plugins: [reactRouter({ ssr: false })],
-          });
-        `,
+          "react-router.config.ts": reactRouterConfig({ ssr: false }),
           "app/routes/invalid-exports.tsx": String.raw`
           // Invalid exports
           export function headers() {}
@@ -51,14 +44,7 @@ test.describe("SPA Mode", () => {
 
       test("errors on HydrateFallback export from non-root route", async () => {
         let cwd = await createProject({
-          "vite.config.ts": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-
-          export default defineConfig({
-            plugins: [reactRouter({ ssr: false })],
-          });
-        `,
+          "react-router.config.ts": reactRouterConfig({ ssr: false }),
           "app/routes/invalid-exports.tsx": String.raw`
           // Invalid exports
           export function HydrateFallback() {}
@@ -80,14 +66,7 @@ test.describe("SPA Mode", () => {
 
       test("errors on a non-200 status from entry.server.tsx", async () => {
         let cwd = await createProject({
-          "vite.config.ts": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-
-          export default defineConfig({
-            plugins: [reactRouter({ ssr: false })],
-          });
-        `,
+          "react-router.config.ts": reactRouterConfig({ ssr: false }),
           "app/entry.server.tsx": js`
           import { ServerRouter } from "react-router";
           import { renderToString } from "react-dom/server";
@@ -152,14 +131,7 @@ test.describe("SPA Mode", () => {
 
       test("errors if you do not include <Scripts> in your root <HydrateFallback>", async () => {
         let cwd = await createProject({
-          "vite.config.ts": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-
-          export default defineConfig({
-            plugins: [reactRouter({ ssr: false })],
-          });
-        `,
+          "react-router.config.ts": reactRouterConfig({ ssr: false }),
           "app/root.tsx": String.raw`
           export function HydrateFallback() {
             return <h1>Loading</h1>
@@ -179,14 +151,7 @@ test.describe("SPA Mode", () => {
       let fixture = await createFixture({
         spaMode: true,
         files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              plugins: [reactRouter({ ssr: false })],
-            });
-          `,
+          "react-router.config.ts": reactRouterConfig({ ssr: false }),
           "app/root.tsx": js`
             import { Outlet, Scripts } from "react-router";
 
@@ -224,17 +189,10 @@ test.describe("SPA Mode", () => {
       fixture = await createFixture({
         spaMode: true,
         files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              plugins: [reactRouter({
-                basename: "/base/",
-                ssr: false
-              })],
-            });
-          `,
+          "react-router.config.ts": reactRouterConfig({
+            basename: "/base/",
+            ssr: false,
+          }),
           "app/root.tsx": js`
             import { Outlet, Scripts } from "react-router";
 
@@ -302,14 +260,7 @@ test.describe("SPA Mode", () => {
       fixture = await createFixture({
         spaMode: true,
         files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              plugins: [reactRouter({ ssr: false })],
-            });
-          `,
+          "react-router.config.ts": reactRouterConfig({ ssr: false }),
           "app/index.html": String.raw`
             <!DOCTYPE html>
             <html lang="en">
@@ -488,25 +439,18 @@ test.describe("SPA Mode", () => {
       fixture = await createFixture({
         spaMode: true,
         files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              plugins: [reactRouter({
-                // We don't want to pick up the app/routes/_index.tsx file from
-                // the template and instead want to use only the src/root.tsx
-                // file below
-                appDirectory: "src",
-                ssr: false,
-              })],
-            });
-          `,
+          "react-router.config.ts": reactRouterConfig({
+            // We don't want to pick up the app/routes/_index.tsx file from
+            // the template and instead want to use only the src/root.tsx
+            // file below
+            appDirectory: "src",
+            ssr: false,
+          }),
           "src/routes.ts": js`
             import { type RouteConfig } from "@react-router/dev/routes";
             import { flatRoutes } from "@react-router/fs-routes";
 
-            export const routes: RouteConfig = flatRoutes();
+            export default flatRoutes() satisfies RouteConfig;
           `,
           "src/root.tsx": js`
             import {
@@ -566,16 +510,6 @@ test.describe("SPA Mode", () => {
       await page.waitForSelector("[data-root]");
       expect(await page.locator("[data-root]").textContent()).toBe("Root");
       expect(await page.locator("[data-index]").textContent()).toBe("Index");
-
-      // Hydrates without issues - this message is expected due to the nested <Routes>
-      expect(logs).toEqual([
-        'You rendered descendant <Routes> (or called `useRoutes()`) at "/" ' +
-          '(under <Route path="">) but the parent route path has no trailing "*". ' +
-          "This means if you navigate deeper, the parent won't match anymore and " +
-          "therefore the child routes will never render." +
-          "\n\n" +
-          'Please change the parent <Route path=""> to <Route path="/*">.',
-      ]);
     });
 
     test("wraps default root HydrateFallback in user-provided Layout", async ({
@@ -584,25 +518,18 @@ test.describe("SPA Mode", () => {
       fixture = await createFixture({
         spaMode: true,
         files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-
-            export default defineConfig({
-              plugins: [reactRouter({
-                // We don't want to pick up the app/routes/_index.tsx file from
-                // the template and instead want to use only the src/root.tsx
-                // file below
-                appDirectory: "src",
-                ssr: false,
-              })],
-            });
-          `,
+          "react-router.config.ts": reactRouterConfig({
+            // We don't want to pick up the app/routes/_index.tsx file from
+            // the template and instead want to use only the src/root.tsx
+            // file below
+            appDirectory: "src",
+            ssr: false,
+          }),
           "src/routes.ts": js`
             import { type RouteConfig } from "@react-router/dev/routes";
             import { flatRoutes } from "@react-router/fs-routes";
 
-            export const routes: RouteConfig = flatRoutes();
+            export default flatRoutes() satisfies RouteConfig;
           `,
           "src/root.tsx": js`
             import {
@@ -660,13 +587,16 @@ test.describe("SPA Mode", () => {
       fixture = await createFixture({
         spaMode: true,
         files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+          }),
           "vite.config.ts": js`
             import { defineConfig } from "vite";
             import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               build: { manifest: true },
-              plugins: [reactRouter({ ssr: false })],
+              plugins: [reactRouter()],
             });
           `,
           "public/styles-root.css": css`

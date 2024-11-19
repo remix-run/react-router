@@ -11,6 +11,7 @@ import {
   dev,
   viteDevCmd,
   reactRouterServe,
+  reactRouterConfig,
 } from "./helpers/vite.js";
 import { js } from "./helpers/create-fixture.js";
 
@@ -55,7 +56,7 @@ const sharedFiles = {
   `,
 };
 
-async function viteConfigFile({
+async function configFiles({
   port,
   base,
   basename,
@@ -64,21 +65,20 @@ async function viteConfigFile({
   base?: string;
   basename?: string;
 }) {
-  return js`
+  return {
+    "react-router.config.ts": reactRouterConfig({
+      basename: basename !== "/" ? basename : undefined,
+    }),
+    "vite.config.js": js`
     import { reactRouter } from "@react-router/dev/vite";
 
     export default {
       ${base !== "/" ? 'base: "' + base + '",' : ""}
       ${await viteConfig.server({ port })}
-      plugins: [
-        ${
-          basename !== "/"
-            ? 'reactRouter({ basename: "' + basename + '" }),'
-            : "reactRouter(),"
-        }
-      ]
+      plugins: [reactRouter()]
     }
-  `;
+  `,
+  };
 }
 
 const customServerFile = ({
@@ -146,7 +146,7 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
   }) {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await viteConfigFile({ port, base, basename }),
+      ...(await configFiles({ port, base, basename })),
       ...(files || sharedFiles),
     });
     if (startServer !== false) {
@@ -154,7 +154,7 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
     }
   }
 
-  test.afterAll(async () => await stop());
+  test.afterAll(async () => await stop?.());
 
   test("works when the base and basename are the same", async ({ page }) => {
     await setup({ base: "/mybase/", basename: "/mybase/" });
@@ -268,7 +268,7 @@ test.describe("Vite base / React Router basename / express dev", async () => {
   }) {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await viteConfigFile({ port, base, basename }),
+      ...(await configFiles({ port, base, basename })),
       "server.mjs": customServerFile({ port, basename }),
       ...sharedFiles,
     });
@@ -394,7 +394,7 @@ test.describe("Vite base / React Router basename / vite build", () => {
   }) {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await viteConfigFile({ port, base, basename }),
+      ...(await configFiles({ port, base, basename })),
       ...sharedFiles,
     });
     build({ cwd });
@@ -440,7 +440,7 @@ test.describe("Vite base / React Router basename / express build", async () => {
   }) {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await viteConfigFile({ port, base, basename }),
+      ...(await configFiles({ port, base, basename })),
       "server.mjs": customServerFile({ port, base, basename }),
       ...sharedFiles,
     });
@@ -478,11 +478,11 @@ test.describe("Vite base / React Router basename / express build", async () => {
   test("works when when base is an absolute external URL", async ({ page }) => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await viteConfigFile({
+      ...(await configFiles({
         port,
         base: "https://cdn.example.com/assets/",
         basename: "/app/",
-      }),
+      })),
       // Slim server that only serves basename (route) requests from the React Router handler
       "server.mjs": String.raw`
         import { createRequestHandler } from "@react-router/express";

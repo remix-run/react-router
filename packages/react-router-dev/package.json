@@ -13,6 +13,10 @@
   },
   "license": "MIT",
   "exports": {
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
     "./routes": {
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"
@@ -31,7 +35,8 @@
     "react-router": "bin.js"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {
@@ -39,7 +44,7 @@
       "files": [
         "cli/**",
         "config/**",
-        "typescript/**",
+        "typegen/**",
         "vite/**",
         "*.ts",
         "bin.js",

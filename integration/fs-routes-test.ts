@@ -30,7 +30,7 @@ test.describe("fs-routes", () => {
           import { flatRoutes } from "@react-router/fs-routes";
           import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
 
-          export const routes: RouteConfig = [
+          export default [
             ...await flatRoutes({
               ignoredRouteFiles: ["**/ignored-route.*"],
             }),
@@ -42,7 +42,7 @@ test.describe("fs-routes", () => {
                 route("/remix/config/route", "remix-config-route.tsx")
               });
             })
-          ];
+          ] satisfies RouteConfig;
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";

@@ -1,3 +1,4 @@
+import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 
@@ -342,6 +343,26 @@ export type RouteManifest<R = AgnosticDataRouteObject> = Record<
   R | undefined
 >;
 
+// prettier-ignore
+type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+// prettier-ignore
+type Regez_AZ = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+type Regex_09 = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+type Regex_w = Regex_az | Regez_AZ | Regex_09 | "_";
+type ParamChar = Regex_w | "-";
+
+// Emulates regex `+`
+type RegexMatchPlus<
+  CharPattern extends string,
+  T extends string
+> = T extends `${infer First}${infer Rest}`
+  ? First extends CharPattern
+    ? RegexMatchPlus<CharPattern, Rest> extends never
+      ? First
+      : `${First}${RegexMatchPlus<CharPattern, Rest>}`
+    : never
+  : never;
+
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
   // split path into individual path segments
@@ -349,21 +370,12 @@ type _PathParam<Path extends string> =
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
     Path extends `:${infer Param}`
-    ? Param extends `${infer Optional}?`
-      ? Optional
-      : Param
+    ? Param extends `${infer Optional}?${string}`
+      ? RegexMatchPlus<ParamChar, Optional>
+      : RegexMatchPlus<ParamChar, Param>
     : // otherwise, there aren't any params present
       never;
 
-/**
- * Examples:
- * "/a/b/*" -> "*"
- * ":a" -> "a"
- * "/a/:b" -> "b"
- * "/a/blahblahblah:b" -> "b"
- * "/:a/:b" -> "a" | "b"
- * "/:a/b/:c/*" -> "a" | "c" | "*"
- */
 export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
@@ -373,6 +385,18 @@ export type PathParam<Path extends string> =
     ? "*" | _PathParam<Rest>
     : // look for params in the absence of wildcards
       _PathParam<Path>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _tests = [
+  Expect<Equal<PathParam<"/a/b/*">, "*">>,
+  Expect<Equal<PathParam<":a">, "a">>,
+  Expect<Equal<PathParam<"/a/:b">, "b">>,
+  Expect<Equal<PathParam<"/a/blahblahblah:b">, never>>,
+  Expect<Equal<PathParam<"/:a/:b">, "a" | "b">>,
+  Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
+  Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
+  Expect<Equal<PathParam<"/:lang?.xml">, "lang">>
+];
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise, return the union of the

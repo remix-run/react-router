@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router";
-import { matchRoutes } from "react-router";
+import { matchPath, matchRoutes } from "react-router";
 
 function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
   let matches = matchRoutes(routes, pathname);
@@ -167,6 +167,24 @@ describe("path matching", () => {
         },
       ]
     `);
+  });
+
+  test("dynamic segment params match word with dashes `(\\w-)+`", () => {
+    expect(
+      matchPath("/sitemap/:lang.xml", "/sitemap/blah.xml")?.params
+    ).toStrictEqual({ lang: "blah" });
+    expect(
+      matchPath("/sitemap/:lang.xml", "/sitemap/blah")?.params
+    ).toStrictEqual(undefined);
+    expect(
+      matchPath("/sitemap/:lang.:xml", "/sitemap/blah.:xml")?.params
+    ).toStrictEqual({ lang: "blah" });
+    expect(
+      matchPath("/sitemap/:lang.:xml", "/sitemap/blah.pdf")?.params
+    ).toStrictEqual(undefined);
+    expect(
+      matchPath("/sitemap/:lang?.xml", "/sitemap/.xml")?.params
+    ).toStrictEqual({ lang: undefined });
   });
 });
 
