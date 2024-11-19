@@ -7,7 +7,7 @@ order: 2
 
 React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19]) for more information).
 
-The Remix v2 -> React Router v7 upgrade is simple and requires mostly updates to dependencies if you are caught up on all [Remix v2 future flags][v2-future-flags] (step 1).
+The Remix v2 -> React Router v7 upgrade requires mostly updates to dependencies if you are caught up on all [Remix v2 future flags][v2-future-flags] (step 1).
 
 <docs-info>
 
@@ -71,7 +71,7 @@ If you prefer not to use the codemod, you can manually update your dependencies.
 | `@remix-run/node`                  | ➡️  | `@react-router/node`                         |
 | `@remix-run/react`                 | ➡️  | `react-router`                               |
 | `@remix-run/route-config`          | ➡️  | `@react-router/dev`                          |
-| `@remix-run/routes-option-adapter` | ➡️  | ` @react-router/remix-routes-option-adapter` |
+| `@remix-run/routes-option-adapter` | ➡️  | `@react-router/remix-routes-option-adapter`  |
 | `@remix-run/serve`                 | ➡️  | `@react-router/serve`                        |
 | `@remix-run/server-runtime`        | ➡️  | `react-router`                               |
 | `@remix-run/testing`               | ➡️  | `react-router`                               |
@@ -116,9 +116,9 @@ In React Router v7 you define your routes using the `app/routes.ts` file. View t
 +import { flatRoutes } from "@react-router/fs-routes";
 +import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
 
-export default {
+export default [
   // however your routes are defined
-} satisfies RouteConfig;
+] satisfies RouteConfig;
 
 ```
 
@@ -220,6 +220,7 @@ Change `vite.config.ts` to import and use the new `reactRouter` plugin from `@re
 ```diff
 -import { vitePlugin as remix } from "@remix-run/dev";
 +import { reactRouter } from "@react-router/dev/vite";
++import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -279,7 +280,7 @@ The proper long term fix is to move to the new [`Route.LoaderArgs`][server-loade
 
 However, the short-term solution to ease the upgrade is to use TypeScript's [module augmentation][ts-module-augmentation] feature to override the built in `LoaderFunctionArgs`/`ActionFunctionArgs` interfaces.
 
-You can do this with the following code in your `vite.config.ts`:
+You can do this with the following code in `react-router.config.ts`:
 
 ```ts filename=react-router.config.ts
 // Your AppLoadContext used in v2
