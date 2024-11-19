@@ -12,9 +12,9 @@ Checkout this <a href="https://github.com/brophdawg11/react-router-v6-to-v7-upgr
 
 </docs-warning>
 
-# Adopting Vite (RouterProvider)
+# Framework Adoption from RouterProvider
 
-If you are not using `<RouterProvider>` please see [Adopting Route Modules from Component Routes](./vite-component-routes) instead.
+If you are not using `<RouterProvider>` please see [Framework Adoption from Component Routes][upgrade-component-routes] instead.
 
 The React Router vite plugin adds framework features to React Router. This document wil help you adopt the plugin in your app if you'd like.
 
@@ -24,18 +24,23 @@ The Vite plugin adds:
 
 - Route loaders, actions, and automatic data revalidation
 - Typesafe Routes Modules
-- Typesafe Route paths across your app
 - Automatic route code-splitting
 - Automatic scroll restoration across navigations
 - Optional Static pre-rendering
 - Optional Server rendering
-- Optional React Server Components
 
 The initial setup will likely be a bit of a pain, but once complete, adopting the new features is incremental, you can do one route at a time.
 
-## 1. Install Vite
+## Prerequisites
 
-First install the React Router vite plugin:
+In order to use the Vite plugin, your project needs to be running
+
+- Node.js 20+ (if using Node as your runtime)
+- Vite 5+
+
+## 1. Install the Vite plugin
+
+First install the React Router Vite plugin:
 
 ```shellscript nonumber
 npm install -D @react-router/dev
@@ -251,3 +256,5 @@ export default {
   },
 } satisfies Config;
 ```
+
+[upgrade-component-routes]: ./component-routes
