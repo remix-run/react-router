@@ -1,5 +1,4 @@
 ---
-"integration": patch
 "@react-router/dev": patch
 "react-router": patch
 ---
