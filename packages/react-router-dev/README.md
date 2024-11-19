@@ -1,6 +1,4 @@
-# @react-router/dev
-
-Dev tools and CLI for [React Router.](https://github.com/remix-run/react-router)
+Dev tools and CLI for React Router that enables framework features through bundler integration like server rendering, code splitting, HMR, etc.
 
 ```sh
 npm install @react-router/dev

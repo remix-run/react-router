@@ -40,4 +40,8 @@ const config = (enableDevWarnings: boolean) =>
     },
   ]);
 
-export default defineConfig([...config(false), ...config(true)]);
+export default defineConfig([
+  // @ts-expect-error
+  ...config(false),
+  ...config(true),
+]);
