@@ -24,6 +24,7 @@ Edit your tsconfig to get TypeScript to use the generated types. Additionally, `
 {
   "include": [".react-router/types/**/*"],
   "compilerOptions": {
+    "types": ["@react-router/node", "vite/client"],
     "rootDirs": [".", "./.react-router/types"]
   }
 }

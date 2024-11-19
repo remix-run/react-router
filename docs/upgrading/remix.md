@@ -182,6 +182,8 @@ export default defineConfig({
 
 The config that was previously passed to the `remix` plugin in `vite.config.ts` is now exported from `react-router.config.ts`.
 
+Note: At this point you should remove the v3 future flags you added in step 1.
+
 ```shellscript nonumber
 touch react-router.config.ts
 ```
@@ -192,6 +194,7 @@ export default defineConfig({
   plugins: [
 -   remix({
 -     ssr: true,
+-     future: {/* all the v3 flags */}
 -   }),
 +   remix(),
     tsconfigPaths(),
@@ -232,7 +235,46 @@ export default defineConfig({
 });
 ```
 
-## 7. Rename components in entry files
+## 7. Enable type safety
+
+<docs-info>
+
+If you're not using TypeScript, you can skip this step.
+
+</docs-info>
+
+React Router automatically generates types for your route modules into a `.react-router/` directory at the root of your app. This directory is fully managed by React Router and should be gitignore'd. Learn more about the [new type safety features][type-safety].
+
+**👉 Add `.react-router/` to `.gitignore`**
+
+```txt
+.react-router/
+```
+
+**👉 Update `tsconfig.json`**
+
+Update the `types` field in your `tsconfig.json` to include:
+
+- `.react-router/types/**/*` path in the `include` field
+- The appropriate `@react-router/*` package in the `types` field
+- `rootDirs` for simplified relative imports
+
+```diff
+{
+  "include": [
+    /* ... */
++   ".react-router/types/**/*"
+  ],
+  "compilerOptions": {
+-   "types": ["@remix-run/node", "vite/client"],
++   "types": ["@react-router/node", "vite/client"],
+    /* ... */
++   "rootDirs": [".", "./.react-router/types"]
+  }
+}
+```
+
+## 8. Rename components in entry files
 
 <docs-info>
 
@@ -263,7 +305,7 @@ hydrateRoot(
 );
 ```
 
-## 8. Update types for `AppLoadContext`
+## 9. Update types for `AppLoadContext`
 
 <docs-info>
 
@@ -295,20 +337,10 @@ declare module "react-router" {
 
 This should allow you to upgrade and ship your application on React Router v7, and then you can incrementally migrate routes to the [new typegen approach][type-safety].
 
-## Next steps
-
 Congratulations! You are now on React Router v7. Go ahead and run your application to make sure everything is working as expected.
 
-You may also want to check out some of the new features in React Router v7:
-
-- [Type safety improvements][route-module-type-safety]
-- [Route pre-rendering][route-pre-rendering]
-
 [incremental-path-to-react-19]: https://remix.run/blog/incremental-path-to-react-19
-[future-flags]: ../community/api-development-strategy
 [v2-future-flags]: https://remix.run/docs/start/future-flags
-[remix-discord]: https://rmx.as/discord
-[github-new-issue]: https://github.com/remix-run/react-router/issues/new/choose
 [routing]: ../start/framework/routing
 [fs-routing]: ../how-to/file-route-conventions
 [v7-changelog-types]: https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#typesafety-improvements
@@ -318,5 +350,3 @@ You may also want to check out some of the new features in React Router v7:
 [type-safety]: ../explanation/type-safety
 [codemod]: https://codemod.com/registry/remix-2-react-router-upgrade
 [jrestall]: https://github.com/jrestall
-[route-module-type-safety]: ../how-to/route-module-type-safety
-[route-pre-rendering]: ../how-to/pre-rendering
