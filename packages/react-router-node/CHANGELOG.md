@@ -1,5 +1,14 @@
 # `@remix-run/node`
 
+## 7.0.0-pre.6
+
+### Patch Changes
+
+- Add createRequestListener to @react-router/node ([`6c1344247`](https://github.com/remix-run/react-router/commit/6c134424770aeb7ec3478902d730cc815070ed06))
+- Remove unneeded dependency on @web3-storage/multipart-parser ([#12274](https://github.com/remix-run/react-router/pull/12274))
+- Updated dependencies:
+  - `react-router@7.0.0-pre.6`
+
 ## 7.0.0-pre.5
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # `@remix-run/dev`
 
+## 7.0.0-pre.6
+
+### Patch Changes
+
+- chore: warn instead of error for min node version in CLI ([#12270](https://github.com/remix-run/react-router/pull/12270))
+- chore: re-enable development warnings through a `development` exports condition. ([#12269](https://github.com/remix-run/react-router/pull/12269))
+- if we are in SAP mode, always render the `index.html` for hydration ([#12268](https://github.com/remix-run/react-router/pull/12268))
+- fix(react-router): (v7) fix static prerender of non-ascii characters ([#12161](https://github.com/remix-run/react-router/pull/12161))
+- Updated dependencies:
+  - `@react-router/node@7.0.0-pre.6`
+  - `react-router@7.0.0-pre.6`
+  - `@react-router/serve@7.0.0-pre.6`
+
 ## 7.0.0-pre.5
 
 ### Patch Changes

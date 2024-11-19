@@ -1,5 +1,13 @@
 # `@remix-run/express`
 
+## 7.0.0-pre.6
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/node@7.0.0-pre.6`
+  - `react-router@7.0.0-pre.6`
+
 ## 7.0.0-pre.5
 
 ### Patch Changes

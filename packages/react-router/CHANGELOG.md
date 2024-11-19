@@ -1,5 +1,14 @@
 # `react-router`
 
+## 7.0.0-pre.6
+
+### Patch Changes
+
+- chore: re-enable development warnings through a `development` exports condition. ([#12269](https://github.com/remix-run/react-router/pull/12269))
+- Remove unneeded dependency on @web3-storage/multipart-parser ([#12274](https://github.com/remix-run/react-router/pull/12274))
+- fix(react-router): (v7) fix static prerender of non-ascii characters ([#12161](https://github.com/remix-run/react-router/pull/12161))
+- Remove unneeded dependency on source-map ([#12275](https://github.com/remix-run/react-router/pull/12275))
+
 ## 7.0.0-pre.5
 
 ## 7.0.0-pre.4
