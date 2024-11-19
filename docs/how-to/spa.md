@@ -49,7 +49,7 @@ export async function clientAction({
 
 Pre-rendering can be configured for paths with static data known at build time for faster initial page loads. Refer to [Pre-rendering](./pre-rendering) to set it up.
 
-## 4. Serve all URLs to index.html
+## 4. Direct all URLs to index.html
 
 After running `react-router build`, deploy the `build/client` directory to whatever static host you prefer.
 
