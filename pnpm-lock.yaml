@@ -886,6 +886,9 @@ importers:
 
   packages/react-router-node:
     dependencies:
+      '@mjackson/node-fetch-server':
+        specifier: ^0.2.0
+        version: 0.2.0
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -2755,6 +2758,9 @@ packages:
     resolution: {integrity: sha512-j0II91OCm4ld+l5QVgXXMQGxVVcAWIQJakYWi1dv5pefDHASJyCYER2TsdH7Alf958GoFSM7ugukWyvDq/UY4A==}
     peerDependencies:
       rollup: '>=2'
+
+  '@mjackson/node-fetch-server@0.2.0':
+    resolution: {integrity: sha512-EMlH1e30yzmTpGLQjlFmaDAjyOeZhng1/XCd7DExR8PNAnG/G1tyruZxEoUe11ClnwGhGrtsdnyyUx1frSzjng==}
 
   '@mswjs/cookies@0.2.2':
     resolution: {integrity: sha512-mlN83YSrcFgk7Dm1Mys40DLssI1KdJji2CMKN8eOlBqsTADYzj2+jWzsANsUTFbxDMWPD5e9bfA1RGqBpS3O1g==}
@@ -10618,6 +10624,8 @@ snapshots:
       vfile: 6.0.1
     transitivePeerDependencies:
       - supports-color
+
+  '@mjackson/node-fetch-server@0.2.0': {}
 
   '@mswjs/cookies@0.2.2':
     dependencies:
