@@ -61,20 +61,20 @@ If you prefer not to use the codemod, you can manually update your dependencies.
 <details>
 <summary>Expand to see a table of package name changes in alphabetical order</summary>
 
-| Remix v2 Package                   |     | React Router v7 Package                      |
-| ---------------------------------- | --- | -------------------------------------------- |
-| `@remix-run/architect`             | ➡️  | `@react-router/architect`                    |
-| `@remix-run/cloudflare`            | ➡️  | `@react-router/cloudflare`                   |
-| `@remix-run/dev`                   | ➡️  | `@react-router/dev`                          |
-| `@remix-run/express`               | ➡️  | `@react-router/express`                      |
-| `@remix-run/fs-routes`             | ➡️  | `@react-router/fs-routes`                    |
-| `@remix-run/node`                  | ➡️  | `@react-router/node`                         |
-| `@remix-run/react`                 | ➡️  | `react-router`                               |
-| `@remix-run/route-config`          | ➡️  | `@react-router/dev`                          |
-| `@remix-run/routes-option-adapter` | ➡️  | `@react-router/remix-routes-option-adapter`  |
-| `@remix-run/serve`                 | ➡️  | `@react-router/serve`                        |
-| `@remix-run/server-runtime`        | ➡️  | `react-router`                               |
-| `@remix-run/testing`               | ➡️  | `react-router`                               |
+| Remix v2 Package                   |     | React Router v7 Package                     |
+| ---------------------------------- | --- | ------------------------------------------- |
+| `@remix-run/architect`             | ➡️  | `@react-router/architect`                   |
+| `@remix-run/cloudflare`            | ➡️  | `@react-router/cloudflare`                  |
+| `@remix-run/dev`                   | ➡️  | `@react-router/dev`                         |
+| `@remix-run/express`               | ➡️  | `@react-router/express`                     |
+| `@remix-run/fs-routes`             | ➡️  | `@react-router/fs-routes`                   |
+| `@remix-run/node`                  | ➡️  | `@react-router/node`                        |
+| `@remix-run/react`                 | ➡️  | `react-router`                              |
+| `@remix-run/route-config`          | ➡️  | `@react-router/dev`                         |
+| `@remix-run/routes-option-adapter` | ➡️  | `@react-router/remix-routes-option-adapter` |
+| `@remix-run/serve`                 | ➡️  | `@react-router/serve`                       |
+| `@remix-run/server-runtime`        | ➡️  | `react-router`                              |
+| `@remix-run/testing`               | ➡️  | `react-router`                              |
 
 </details>
 
@@ -220,7 +220,6 @@ Change `vite.config.ts` to import and use the new `reactRouter` plugin from `@re
 ```diff
 -import { vitePlugin as remix } from "@remix-run/dev";
 +import { reactRouter } from "@react-router/dev/vite";
-+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -270,8 +269,6 @@ hydrateRoot(
 
 If you were using `remix-serve` you can skip this step. This is only applicable if you were using a custom server in Remix v2.
 
-Additionally, if you used the codemod you can skip this step as it was automatically completed.
-
 </docs-info>
 
 If you were using `getLoadContext` in your Remix app, then you'll notice that the `LoaderFunctionArgs`/`ActionFunctionArgs` types now type the `context` parameter incorrectly (optional and typed as `any`). These types accept a generic for the `context` type but even that still leaves the property as optional because it does not exist in React Router SPA apps.
@@ -280,7 +277,7 @@ The proper long term fix is to move to the new [`Route.LoaderArgs`][server-loade
 
 However, the short-term solution to ease the upgrade is to use TypeScript's [module augmentation][ts-module-augmentation] feature to override the built in `LoaderFunctionArgs`/`ActionFunctionArgs` interfaces.
 
-You can do this with the following code in `react-router.config.ts`:
+You can do this with the following code in `react-router.config.ts` (just make sure it gets picked up by your `tsconfig.json`'s `include` paths):
 
 ```ts filename=react-router.config.ts
 // Your AppLoadContext used in v2
