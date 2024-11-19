@@ -68,6 +68,7 @@
     }
   },
   "dependencies": {
+    "@mjackson/node-fetch-server": "^0.2.0",
     "source-map-support": "^0.5.21",
     "stream-slice": "^0.1.2",
     "undici": "^6.19.2"
