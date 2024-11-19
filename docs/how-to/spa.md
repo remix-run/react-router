@@ -11,7 +11,7 @@ There are two ways to ship a single page app with React Router
 
 ## 1. Disable Server Rendering
 
-Server rendering and enabled by default. Set the ssr flag to false in `react-router.config.ts` to disable it.
+Server rendering is enabled by default. Set the ssr flag to false in `react-router.config.ts` to disable it.
 
 ```ts filename=react-router.config.ts lines=[4]
 import { type Config } from "@react-router/dev/config";
