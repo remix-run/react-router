@@ -279,12 +279,6 @@ export default function Component() {
 
 Your app should be back on the screen and working as usual!
 
-<docs-warning>
-
-Note: You will get some warnings in your console about descendent routes. You can ignore these for now as it is caused by the temporary catchall route. Once you move all your routes to Route Modules this will go away.
-
-</docs-warning>
-
 ## 9. Migrate a route to a Route Module
 
 You can now incrementally migrate your routes to route modules.
