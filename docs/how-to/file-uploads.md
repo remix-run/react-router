@@ -1,16 +1,32 @@
 ---
 title: File Uploads
-# need to validate this guide and get rid of remixisms like file system routes
-hidden: true
 ---
 
 # File Uploads
 
 Handle file uploads in your React Router applications. This guide uses some packages from the [Remix The Web][remix-the-web] project to make file uploads easier.
 
-_Thank you to David Adams for [his original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) on how to implement file uploads in Remix. You can refer to it for even more examples._
+_Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) which this doc is based on. You can refer to it for even more examples._
 
 ## Basic File Upload
+
+👉 **Setup some routes**
+
+You can setup your routes however you like. This example uses the following structure:
+
+```ts filename=routes.ts
+import {
+  type RouteConfig,
+  route,
+} from "@react-router/dev/routes";
+
+export default [
+  // ... other routes
+  route("user/:id", "pages/user-profile.tsx", [
+    route("avatar", "api/upload-avatar.tsx"),
+  ]),
+] satisfies RouteConfig;
+```
 
 👉 **Add the form data parser**
 
@@ -32,7 +48,7 @@ You must set the form's `enctype` to `multipart/form-data` for file uploads to w
 
 </docs-warning>
 
-```tsx filename=routes/user.$id.tsx
+```tsx filename=pages/user-profile.tsx
 import {
   type FileUpload,
   parseFormData,
@@ -57,10 +73,10 @@ export async function action({
 
 export default function Component() {
   return (
-    <Form method="post" encType="multipart/form-data">
+    <form method="post" encType="multipart/form-data">
       <input type="file" name="avatar" />
       <button>Submit</button>
-    </Form>
+    </form>
   );
 }
 ```
@@ -97,7 +113,7 @@ export function getStorageKey(userId: string) {
 
 Update the form's `action` to store files in the `fileStorage` instance.
 
-```tsx filename=routes/user.$id.tsx
+```tsx filename=pages/user-profile.tsx
 import {
   FileUpload,
   parseFormData,
@@ -106,7 +122,7 @@ import {
   fileStorage,
   getStorageKey,
 } from "~/avatar-storage.server";
-import type { Route } from "./+types/user";
+import type { Route } from "./+types/user-profile";
 
 export async function action({
   request,
@@ -165,11 +181,12 @@ export default function UserPage({
 
 Create a [resource route][resource-route] that streams the file as a response.
 
-```tsx filename=routes/user.$id.avatar.tsx
+```tsx filename=api/upload-avatar.tsx
 import {
   fileStorage,
   getStorageKey,
 } from "~/avatar-storage.server";
+import type { Route } from "./+types/upload-avatar";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const storageKey = getStorageKey(params.id);
@@ -194,4 +211,4 @@ export async function loader({ params }: Route.LoaderArgs) {
 [form-data-parser]: https://github.com/mjackson/remix-the-web/tree/main/packages/form-data-parser
 [file-storage]: https://github.com/mjackson/remix-the-web/tree/main/packages/file-storage
 [file]: https://developer.mozilla.org/en-US/docs/Web/API/File
-[resource-route]: ../how-to/resource-routes.md
+[resource-route]: ../how-to/resource-routes
