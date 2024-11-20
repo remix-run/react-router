@@ -479,7 +479,7 @@ export function useRoutesImpl(
     let parentPath = (parentRoute && parentRoute.path) || "";
     warningOnce(
       parentPathname,
-      !parentRoute || parentPath.endsWith("*"),
+      !parentRoute || parentPath.endsWith("*") || parentPath.endsWith("*?"),
       `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +
