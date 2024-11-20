@@ -4,7 +4,7 @@ title: HTTP Headers
 
 # HTTP Headers
 
-Headers are defined with the route module `headers` export.
+Headers are primarily defined with the route module `headers` export. You can also set headers in `entry.server.tsx`.
 
 ## From Route Modules
 
@@ -100,3 +100,34 @@ export function headers({ parentHeaders }: HeadersArgs) {
 ```
 
 You can avoid the need to merge headers by only defining headers in "leaf routes" (index routes and child routes without children) and not in parent routes.
+
+## From `entry.server.tsx`
+
+The `handleRequest` export receives the headers from the route module as an argument. You can append global headers here.
+
+```tsx
+export default function handleRequest(
+  request,
+  responseStatusCode,
+  responseHeaders,
+  routerContext,
+  loadContext
+) {
+  // set, append global headers
+  responseHeaders.set(
+    "X-App-Version",
+    routerContext.manifest.version
+  );
+
+  return new Response(await getStream(), {
+    headers: responseHeaders,
+    status: responseStatusCode,
+  });
+}
+```
+
+If you don't have an `entry.server.tsx` run the `reveal` command:
+
+```shellscript nonumber
+react-router reveal
+```
