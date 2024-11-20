@@ -2,8 +2,6 @@
 title: Framework Adoption from Component Routes
 ---
 
-<docs-warning>This guide is mostly a stub and in active development, it will be wrong about many things before the final v7 release</docs-warning>
-
 # Framework Adoption from Component Routes
 
 If you are using `<RouterProvider>` please see [Framework Adoption from RouterProvider][upgrade-router-provider] instead.
@@ -23,7 +21,7 @@ The Vite plugin adds:
 - Optional Static pre-rendering
 - Optional Server rendering
 
-The initial setup will likely be a bit of a pain, but once complete, adopting the new features is incremental, you can do one route at a time.
+The initial setup will require the most work, but once complete, adopting the new features is incremental, you can do one route at a time.
 
 ## Prerequisites
 
@@ -34,13 +32,21 @@ In order to use the Vite plugin, your project needs to be running
 
 ## 1. Install the Vite plugin
 
-First install the React Router Vite plugin:
+**👉 Install the React Router Vite plugin**
 
 ```shellscript nonumber
 npm install -D @react-router/dev
 ```
 
-Then swap out the React plugin for React Router.
+**👉 Install a runtime adapter**
+
+We will assume you are using Node as your runtime
+
+```shellscript nonumber
+npm install @react-router/node
+```
+
+**👉 Swap out the React plugin for React Router.**
 
 ```diff filename=vite.config.ts
 -import react from '@vitejs/plugin-react'
@@ -58,7 +64,9 @@ export default defineConfig({
 
 ## 2. Add the React Router config
 
-Create a `react-router.config.ts` file in the root of your project. In this config you can tell React Router about your project, like where to find the app directory.
+**👉 Create a `react-router.config.ts` file**
+
+Add the following to the root of your project. In this config you can tell React Router about your project, like where to find the app directory and to not use SSR (server-side rendering) for now.
 
 ```shellscript nonumber
 touch react-router.config.ts
@@ -76,6 +84,8 @@ export default {
 ## 3. Add the Root entry point
 
 In a typical Vite app, the `index.html` file is the entry point for bundling. The React Router Vite plugin moves the entry point to a `root.tsx` file so you can use React to render the shell of your app instead of static HTML, and eventually upgrade to Server Rendering if you want.
+
+**👉 Move your existing `index.html` to `root.tsx`**
 
 For example, if your current `index.html` looks like this:
 
@@ -145,21 +155,26 @@ export default function Root() {
 
 ## 4. Add client entry module
 
-In the typical Vite app setup the `index.html` file points to `src/main.tsx` as the client entry point. React Router uses a file named `src/entry.client.tsx` instead.
+In the typical Vite app the `index.html` file points to `src/main.tsx` as the client entry point. React Router uses a file named `src/entry.client.tsx` instead.
+
+**👉 Make `src/entry.client.tsx` your entry point**
 
 If your current `src/main.tsx` looks like this:
 
 ```tsx filename=src/main.tsx
-import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
+import { BrowserRouter } from "react-router";
+import "./index.css";
+import App from "./App";
 
 ReactDOM.createRoot(
   document.getElementById("root")!
 ).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
 ```
@@ -167,10 +182,10 @@ ReactDOM.createRoot(
 You would rename it to `entry.client.tsx` and have it look like this:
 
 ```tsx filename=src/entry.client.tsx
-import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
+import "./index.css";
 
 ReactDOM.hydrateRoot(
   document,
@@ -182,7 +197,7 @@ ReactDOM.hydrateRoot(
 
 - Use `hydrateRoot` instead of `createRoot`
 - Render a `<HydratedRouter>` instead of your `<App/>` component
-- Note that we stopped rendering the `<App/>` component. We'll bring it back in a later step, for now we want to simply get the app booting with the new entry points.
+- Note: we stopped rendering the `<App/>` component. We'll bring it back in a later step, but first we want to get the app to boot with the new entry point.
 
 ## 5. Shuffle stuff around
 
@@ -200,6 +215,8 @@ Note that your `root.tsx` file will be statically generated and served as the en
 
 The React Router Vite plugin uses a `routes.ts` file to configure your routes. For now we'll add a simple catchall route to get things going.
 
+**👉 Setup a `catchall.tsx` route**
+
 ```shellscript nonumber
 touch src/routes.ts src/catchall.tsx
 ```
@@ -211,13 +228,16 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  // * matches all URLs, the ? makes it optional so it will match / as well
   route("*?", "catchall.tsx"),
 ] satisfies RouteConfig;
 ```
 
+**👉 Render a placeholder route**
+
 Eventually we'll replace this with our original `App` component, but for now we'll just render something simple to make sure we can boot the app.
 
-```tsx filename=src/home.tsx
+```tsx filename=src/catchall.tsx
 export default function Component() {
   return <div>Hello, world!</div>;
 }
@@ -229,7 +249,7 @@ export default function Component() {
 
 At this point you should be able to to boot the app and see the root layout.
 
-Add the following script to your `package.json` to boot the app:
+**👉 Add `dev` script and run the app**
 
 ```json filename=package.json
 "scripts": {
@@ -243,9 +263,11 @@ Now make sure you can boot your app at this point before moving on:
 npm run dev
 ```
 
-## 8. Configure Catchall Route
+## 8. Render your app
 
 To get back to rendering your app, we'll update the "catchall" route we setup earlier that matches all URLs so that your existing `<Routes>` get a chance to render.
+
+**👉 Update the catchall route to render your app**
 
 ```tsx filename=src/catchall.tsx
 import App from "./App";
@@ -257,7 +279,11 @@ export default function Component() {
 
 Your app should be back on the screen and working as usual!
 
-Note: You will get some warnings in your console about descendent routes. You can ignore these for now, as we will be moving routes to Route Modules in the next step.
+<docs-warning>
+
+Note: You will get some warnings in your console about descendent routes. You can ignore these for now as it is caused by the temporary catchall route. Once you move all your routes to Route Modules this will go away.
+
+</docs-warning>
 
 ## 9. Migrate a route to a Route Module
 
@@ -267,18 +293,18 @@ Given an existing route like this:
 
 ```tsx filename=src/App.tsx
 // ...
-import Page from "./containers/page";
+import About from "./containers/About";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/pages/:id" element={<Page />} />
+      <Route path="/about" element={<About />} />
     </Routes>
   );
 }
 ```
 
-You can move the definition to a `routes.ts` file:
+**👉 Add the route definition to `routes.ts`**
 
 ```tsx filename=src/routes.ts
 import {
@@ -287,28 +313,29 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  route("/pages/:id", "./containers/page.tsx"),
+  route("/about", "./pages/about.tsx"),
   route("*?", "catchall.tsx"),
 ] satisfies RouteConfig;
 ```
 
-And then edit the route module to use the [Route Module API][route-modules]:
+**👉 Add the route module**
+
+Edit the route module to use the [Route Module API][route-modules]:
 
 ```tsx filename=src/pages/about.tsx
-import { useLoaderData } from "react-router";
-
-export async function clientLoader({ params }) {
-  let page = await getPage(params.id);
-  return page;
+export async function clientLoader() {
+  // you can now fetch data here
+  return {
+    title: "About page",
+  };
 }
 
-export default function Component() {
-  let data = useLoaderData();
-  return <h1>{data.title}</h1>;
+export default function Component({ loaderData }) {
+  return <h1>{loaderData.title}</h1>;
 }
 ```
 
-You'll now get inferred type safety with params, loader data, and more.
+See [Type Safety][type-safety] to setup autogenerated type safety for params, loader data, and more.
 
 The first few routes you migrate are the hardest because you often have to access various abstractions a bit differently than before (like in a loader instead of from a hook or context). But once the trickiest bits get dealt with, you get into an incremental groove.
 
@@ -333,3 +360,4 @@ See [Deploying][deploying] for more information on deploying a server.
 [deploying]: ../start/deploying
 [configuring-routes]: ../start/framework/routing
 [route-modules]: ../start/framework/route-module
+[type-safety]: ../how-to/route-module-type-safety
