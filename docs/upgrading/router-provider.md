@@ -38,7 +38,74 @@ In order to use the Vite plugin, your project needs to be running
 - Node.js 20+ (if using Node as your runtime)
 - Vite 5+
 
-## 1. Install the Vite plugin
+## 1. Move route definitions into route modules
+
+The React Router Vite plugin renders it's own `RouterProvider`, so we can't render an existing `RouterProvider` within it. Instead you will need to format all of your route definitions to follow the [Route Module API][route-modules].
+
+This exercise will take the longest, however there are several benefits to doing this even before you enable the React Router Vite plugin.
+
+- Route modules will be lazy loaded, decreasing the initial bundle size of your app
+- Route definitions will be uniform, simplifying your app's architecture
+- Moving to route modules is incremental, you can do one route at a time
+
+**👉 Move your route definitions into route modules**
+
+Export each piece of your route definition as a separate named export, following the [Route Module API][route-modules].
+
+```tsx filename=src/routes/about.tsx
+export async function clientLoader() {
+  return {
+    title: "About",
+  };
+}
+
+export default function About() {
+  let data = useLoaderData();
+  return <div>{data.title}</div>;
+}
+```
+
+**👉 Create a convert function**
+
+Create a helper function to convert route module definitions into the format expected by your data router:
+
+```tsx filename=src/main.tsx
+function convert(m: any) {
+  let {
+    clientLoader,
+    clientAction,
+    default: Component,
+    ...rest
+  } = m;
+  return {
+    ...rest,
+    loader: clientLoader,
+    action: clientAction,
+    Component,
+  };
+}
+```
+
+**👉 Lazy load and convert your route modules**
+
+Instead of importing your route modules directly, you'll lazy load them and convert them to the format expected by your data router. Not only does your route definition now conform to the Route Module API, but you also get the benefits of code-splitting your routes.
+
+```diff filename=src/main.tsx
+let router = createBrowserRouter([
+  // ... other routes
+  {
+    path: "about",
+-   loader: aboutLoader,
+-   Component: About,
++   lazy: () => import("./routes/about").then(convert),
+  },
+  // ... other routes
+]);
+```
+
+## 2. Install the Vite plugin
+
+Once all of your route definitions are converted to route modules, you can adopt the React Router Vite plugin.
 
 **👉 Install the React Router Vite plugin**
 
@@ -70,7 +137,7 @@ export default defineConfig({
 });
 ```
 
-## 2. Add the React Router config
+## 3. Add the React Router config
 
 **👉 Create a `react-router.config.ts` file**
 
@@ -89,7 +156,7 @@ export default {
 } satisfies Config;
 ```
 
-## 3. Add the Root entry point
+## 4. Add the Root entry point
 
 In a typical Vite app, the `index.html` file is the entry point for bundling. The React Router Vite plugin moves the entry point to a `root.tsx` file so you can use React to render the shell of your app instead of static HTML, and eventually upgrade to Server Rendering if you want.
 
@@ -161,104 +228,159 @@ export default function Root() {
 }
 ```
 
-## 4. Add client entry module
+**👉 Move everything above `RouterProvider` to `root.tsx`**
 
-<!-- TODO: from here on out this is wrong, for Brooks to update -->
+Any global styles, context providers, etc. should be moved into `root.tsx` so they can be shared across all routes.
 
-In the typical Vite app the `index.html` file points to `src/main.tsx` as the client entry point. React Router uses a file named `src/entry.client.tsx` instead.
+For example, if your `App.tsx` looks like this:
 
-**👉 Make `src/entry.client.tsx` your entry point**
-
-If your current `src/main.tsx` looks like this:
-
-```tsx filename=src/main.tsx
-import React from "react";
-import ReactDOM from "react-dom/client";
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-
-const router = createBrowserRouter(YOUR_ROUTES);
-
-ReactDOM.createRoot(
-  document.getElementById("root")!
-).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
-);
-```
-
-You would rename it to `entry.client.tsx` and change it to this:
-
-```tsx filename=src/entry.client.tsx
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { HydratedRouter } from "react-router/dom";
+```tsx filename=src/App.tsx
 import "./index.css";
 
-ReactDOM.hydrateRoot(
-  document,
-  <React.StrictMode>
-    <HydratedRouter />
-  </React.StrictMode>
-);
+export default function App() {
+  return (
+    <OtherProviders>
+      <AppLayout>
+        <RouterProvider router={router} />
+      </AppLayout>
+    </OtherProviders>
+  );
+}
 ```
 
-- Use `hydrateRoot` instead of `createRoot`
-- Use `<HydratedRouter>` instead of `<RouterProvider>`
-- Note: we stopped passing the routes prop for now. We'll bring it back in a later step, but first we want to get the app to boot with the new entry point.
+You would move everything above the `RouterProvider` into `root.tsx`.
 
-## 5. Shuffle stuff around
+```diff filename=src/root.tsx
++import "./index.css";
 
-Between `root.tsx` and `entry.client.tsx`, you may want to shuffle some stuff around between them.
+// ... other imports and Layout
 
-In general:
+export default function Root() {
+  return (
++   <OtherProviders>
++     <AppLayout>
+        <Outlet />
++     </AppLayout>
++   </OtherProviders>
+  );
+}
+```
 
-- `root.tsx` contains any rendering things like context providers, layouts, styles, etc.
-- `entry.client.tsx` should be as minimal as possible
-- Remember to _not_ try to pass your existing routes yet, we'll do that in a later step
+## 5. Migrate your routes
 
-Note that your `root.tsx` file will be statically generated and served as the entry point of your app, so just that module will need to be compatible with server rendering. This is where most of your trouble will come.
+The React Router Vite plugin uses a `routes.ts` file to configure your routes. The format will be pretty similar to the definitions of your data router.
 
-## 6. Setup your routes
-
-The React Router Vite plugin uses a `routes.ts` file to configure your routes. For now we'll add a simple catchall route to get things going.
-
-**👉 Setup a `catchall.tsx` route**
+**👉 Move definitions to a `routes.ts` file**
 
 ```shellscript nonumber
 touch src/routes.ts src/catchall.tsx
 ```
 
-```ts filename=src/routes.ts
-import {
-  type RouteConfig,
-  route,
-} from "@react-router/dev/routes";
+Take your route definitions and move them into the `routes.ts` file.
+
+```tsx filename=src/main.tsx
+const router = createBrowserRouter([
+  {
+    path: "/",
+    lazy: () => import("./routes/layout").then(convert),
+    children: [
+      {
+        index: true,
+        lazy: () => import("./routes/home").then(convert),
+      },
+      {
+        path: "about",
+        lazy: () => import("./routes/about").then(convert),
+      },
+      {
+        path: "todos",
+        lazy: () => import("./routes/todos").then(convert),
+        children: [
+          {
+            path: ":id",
+            lazy: () =>
+              import("./routes/todo").then(convert),
+          },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+At this point, if you're using TypeScript, you'll see that the formats don't match exactly. Updating them is straightforward.
+
+```tsx filename=src/routes.ts
+import type { RouteConfig } from "@react-router/dev/routes";
 
 export default [
-  // * matches all URLs, the ? makes it optional so it will match / as well
-  route("*?", "catchall.tsx"),
+  {
+    path: "/",
+    lazy: () => import("./routes/layout").then(convert),
+    children: [
+      {
+        index: true,
+        lazy: () => import("./routes/home").then(convert),
+      },
+      {
+        path: "about",
+        lazy: () => import("./routes/about").then(convert),
+      },
+      {
+        path: "todos",
+        lazy: () => import("./routes/todos").then(convert),
+        children: [
+          {
+            path: ":id",
+            lazy: () =>
+              import("./routes/todo").then(convert),
+          },
+        ],
+      },
+    ],
+  },
 ] satisfies RouteConfig;
 ```
 
-**👉 Render a placeholder route**
-
-Eventually we'll replace this with our original routes, but for now we'll just render something simple to make sure we can boot the app.
-
-```tsx filename=src/catchall.tsx
-export default function Component() {
-  return <div>Hello, world!</div>;
-}
+```diff filename=src/routes.ts
+export default [
+  {
+    path: "/",
+-   lazy: () => import("./routes/layout").then(convert),
++   file: "./routes/layout.tsx",
+    children: [
+      {
+        index: true,
+-       lazy: () => import("./routes/home").then(convert),
++       file: "./routes/home.tsx",
+      },
+      {
+        path: "about",
+-       lazy: () => import("./routes/about").then(convert),
++       file: "./routes/about.tsx",
+      },
+      {
+        path: "todos",
+-       lazy: () => import("./routes/todos").then(convert),
++       file: "./routes/todos.tsx",
+        children: [
+          {
+            path: ":id",
+-           lazy: () => import("./routes/todo").then(convert),
++           file: "./routes/todo.tsx",
+          },
+        ],
+      },
+    ],
+  },
+] satisfies RouteConfig;
 ```
 
-[View our guide on configuring routes][configuring-routes] to learn more about the `routes.ts` file.
+[View our guide on configuring routes][configuring-routes] to learn more about the `routes.ts` file and helper functions to further simplify the route definitions.
 
 ## 7. Boot the app
 
-At this point you should be able to to boot the app and see the root layout.
+At this point you should be fully migrated to the React Router Vite plugin. Go ahead and update your `dev` script and run the app to make sure everything is working.
 
 **👉 Add `dev` script and run the app**
 
@@ -274,102 +396,9 @@ Now make sure you can boot your app at this point before moving on:
 npm run dev
 ```
 
-## 8. Add your routes
-
-To get back to rendering your routes, we'll update the `routes.ts` file to include your existing routes.
-
-**👉 Update routes.ts with your existing routes**
-
-```ts filename=src/routes.ts
-import {
-  type RouteConfig,
-  route,
-} from "@react-router/dev/routes";
-
-// Convert your existing routes to the new format
-export default [
-  route("/", "routes/index.tsx"),
-  route("/about", "routes/about.tsx"),
-  // ... other routes
-] satisfies RouteConfig;
-```
-
-Your app should be back on the screen and working as usual!
-
-If you're having trouble
-
-- Comment out the `routes` prop to `<HydratedRouter>` to isolate the problem to the new entry points
-- Search the [Upgrading Discussion](#TODO) category
-- Reach out for help on [Twitter](https://x.com/remix_run) or [Discord](https://rmx.as/discord)
-
-Make sure you can boot your app at this point before moving on.
-
-## 9. Migrate a route to a Route Module
-
-You can now incrementally migrate your routes to route modules. First create a `routes.ts` file that exports your routes.
-
-Given an existing route like this:
-
-```tsx filename=src/entry.client.tsx
-// ...
-import Page from "./containers/page";
-
-ReactDOM.hydrateRoot(
-  document,
-  <StrictMode>
-    <HydratedRouter
-      routes={[
-        // ...
-        {
-          path: "/pages/:id",
-          element: <Page />,
-        },
-      ]}
-    />
-  </StrictMode>
-);
-```
-
-You can move the definition to a `routes.ts` file:
-
-```tsx filename=src/routes.ts
-import { type RouteConfig } from "@react-router/dev/routes";
-
-export default [
-  {
-    path: "/pages/:id",
-    file: "./containers/page.tsx",
-  },
-] satisfies RouteConfig;
-```
-
-And then edit the route module to use the Route Module API:
-
-```tsx filename=src/pages/about.tsx
-import { useLoaderData } from "react-router";
-
-export async function clientLoader({ params }) {
-  let page = await getPage(params.id);
-  return page;
-}
-
-export default function Component() {
-  let data = useLoaderData();
-  return <h1>{data.title}</h1>;
-}
-```
-
-See [Type Safety][type-safety] to setup autogenerated type safety for params, loader data, and more.
-
-The first few routes you migrate are the hardest because you often have to access various abstractions a bit differently than before (like in a loader instead of from a hook or context). But once the trickiest bits get dealt with, you get into an incremental groove.
-
 ## Enable SSR and/or Pre-rendering
 
 If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying][deploying] for more information.
-
-## Enable SSR and Pre-rendering
-
-If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin.
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
