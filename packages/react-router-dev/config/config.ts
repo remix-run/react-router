@@ -22,8 +22,6 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
-import { importViteEsmSync } from "../vite/import-vite-esm-sync";
-import { preloadViteEsm } from "../vite/import-vite-esm-sync";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -530,12 +528,15 @@ export async function createConfigLoader({
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
+  let vite = await import("vite");
   let viteNodeContext = await ViteNode.createContext({
     root,
     mode: watch ? "development" : "production",
     server: !watch ? { watch: null } : {},
     ssr: { external: ssrExternals },
-    customLogger: await createCustomLogger(),
+    customLogger: vite.createLogger("warn", {
+      prefix: "[react-router]",
+    }),
   });
 
   let reactRouterConfigFile: string | undefined;
@@ -584,9 +585,11 @@ export async function createConfigLoader({
             let dirname = Path.dirname(path);
 
             return (
-              path !== root &&
-              dirname !== root &&
-              !dirname.startsWith(appDirectory)
+              !dirname.startsWith(appDirectory) &&
+              // Ensure we're only watching files outside of the app directory
+              // that are at the root level, not nested in subdirectories
+              path !== root && // Watch the root directory itself
+              dirname !== root // Watch files at the root level
             );
           },
         });
@@ -802,27 +805,6 @@ function isInReactRouterMonorepo() {
     Path.resolve(serverRuntimePath, "..")
   );
   return serverRuntimeParentDir === "packages";
-}
-
-async function createCustomLogger() {
-  await preloadViteEsm();
-  const vite = importViteEsmSync();
-
-  let customLogger = vite.createLogger(undefined, {
-    prefix: "[react-router config]",
-  });
-
-  // Patch the info method to filter out page reload messages that show up in
-  // the terminal when adding or removing the config file
-  let originalInfo = customLogger.info;
-  customLogger.info = function (msg, options) {
-    if (msg.includes("page reload")) {
-      return;
-    }
-    return originalInfo.call(this, msg, options);
-  };
-
-  return customLogger;
 }
 
 function omitRoutes(
