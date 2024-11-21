@@ -534,6 +534,7 @@ export async function createConfigLoader({
     mode: watch ? "development" : "production",
     server: !watch ? { watch: null } : {},
     ssr: { external: ssrExternals },
+    // Filter out any info level logs from vite-node
     customLogger: vite.createLogger("warn", {
       prefix: "[react-router]",
     }),
