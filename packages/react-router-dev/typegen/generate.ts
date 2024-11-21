@@ -55,6 +55,9 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
       export type MetaDescriptors = T.MetaDescriptors
       export type MetaFunction = (args: MetaArgs) => MetaDescriptors
 
+      export type HeadersArgs = T.HeadersArgs
+      export type HeadersFunction = (args: HeadersArgs) => Headers | HeadersInit
+
       export type LoaderArgs = T.CreateServerLoaderArgs<Info>
       export type ClientLoaderArgs = T.CreateClientLoaderArgs<Info>
       export type ActionArgs = T.CreateServerActionArgs<Info>

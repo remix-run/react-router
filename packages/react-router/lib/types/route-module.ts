@@ -10,6 +10,7 @@ type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
 type RouteModule = {
   meta?: Func;
   links?: Func;
+  headers?: Func;
   loader?: Func;
   clientLoader?: Func;
   action?: Func;
@@ -57,6 +58,13 @@ export type CreateMetaArgs<T extends RouteInfo> = {
   matches: MetaMatches<T["parents"]>;
 };
 export type MetaDescriptors = MetaDescriptor[];
+
+export type HeadersArgs = {
+  loaderHeaders: Headers;
+  parentHeaders: Headers;
+  actionHeaders: Headers;
+  errorHeaders: Headers | undefined;
+};
 
 // prettier-ignore
 type IsHydrate<ClientLoader> =

@@ -10,11 +10,16 @@ When using React Router's framework features, your application is automatically 
 
 Consider this simple route config:
 
-```tsx filename=routes.ts
+```tsx filename=app/routes.ts
+import {
+  type RouteConfig,
+  route,
+} from "@react-router/dev/routes";
+
 export default [
   route("/contact", "./contact.tsx"),
   route("/about", "./about.tsx"),
-];
+] satisfies RouteConfig;
 ```
 
 Instead of bundling all routes into a single giant build, the modules referenced (`contact.tsx` and `about.tsx`) become entry points to the bundler.
