@@ -4,6 +4,7 @@
     "./config.ts",
     "./routes.ts",
     "./vite.ts",
-    "./vite/cloudflare.ts"
+    "./vite/cloudflare.ts",
+    "./config.ts"
   ]
 }
