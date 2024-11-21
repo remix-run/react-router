@@ -841,11 +841,18 @@ function findEntry(
 function isEntryFileDependency(
   moduleGraph: Vite.ModuleGraph,
   entryFilepath: string,
-  filepath: string
+  filepath: string,
+  visited = new Set<string>()
 ): boolean {
   // Ensure normalized paths
   entryFilepath = Path.normalize(entryFilepath);
   filepath = Path.normalize(filepath);
+
+  if (visited.has(filepath)) {
+    return false;
+  }
+
+  visited.add(filepath);
 
   if (filepath === entryFilepath) {
     return true;
@@ -857,8 +864,16 @@ function isEntryFileDependency(
     return false;
   }
 
+  // Recursively check all importers to see if any of them are the entry file
   for (let importer of mod.importers) {
-    if (importer.id === entryFilepath) {
+    if (!importer.id) {
+      continue;
+    }
+
+    if (
+      importer.id === entryFilepath ||
+      isEntryFileDependency(moduleGraph, entryFilepath, importer.id, visited)
+    ) {
       return true;
     }
   }
