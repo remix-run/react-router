@@ -25,7 +25,7 @@ The initial setup requires the most work. However, once complete, you can adopt 
 
 ## Prerequisites
 
-In order to use the Vite plugin, your project needs to be running
+To use the Vite plugin, your project requires:
 
 - Node.js 20+ (if using Node as your runtime)
 - Vite 5+
