@@ -95,6 +95,9 @@ type BuildEndHook = (args: {
   viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
 
+/**
+ * Config to be exported via the default export from `react-router.config.ts`.
+ */
 export type ReactRouterConfig = {
   /**
    * The path to the `app` directory, relative to the root directory. Defaults
