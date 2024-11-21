@@ -1172,6 +1172,11 @@ export function createRoutesFromChildren(
 }
 
 /**
+ * Create route objects from JSX elements instead of arrays of objects
+ */
+export let createRoutesFromElements = createRoutesFromChildren;
+
+/**
  * Renders the result of `matchRoutes()` into a React element.
  *
  * @category Utils
