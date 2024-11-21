@@ -5,9 +5,9 @@ order: 2
 
 # Upgrading from Remix
 
-React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19]) for more information).
+React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19] for more information).
 
-The Remix v2 -> React Router v7 upgrade requires mostly updates to dependencies if you are caught up on all [Remix v2 future flags][v2-future-flags] (step 1).
+If you have enabled all [Remix v2 future flags][v2-future-flags], upgrading from Remix v2 to React Router v7 mainly involves updating dependencies.
 
 <docs-info>
 
@@ -239,7 +239,7 @@ export default defineConfig({
 
 <docs-info>
 
-If you're not using TypeScript, you can skip this step.
+If you are not using TypeScript, you can skip this step.
 
 </docs-info>
 

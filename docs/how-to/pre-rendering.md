@@ -4,7 +4,7 @@ title: Pre-Rendering
 
 # Pre-Rendering
 
-Pre-rendering allows you to render a pages at build time instead of on a server to speed up pages loads for static content.
+Pre-rendering allows you to render pages at build time instead of on a server to speed up pages loads for static content.
 
 ## Configuration
 

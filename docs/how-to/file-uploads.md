@@ -6,11 +6,11 @@ title: File Uploads
 
 Handle file uploads in your React Router applications. This guide uses some packages from the [Remix The Web][remix-the-web] project to make file uploads easier.
 
-_Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) which this doc is based on. You can refer to it for even more examples._
+_Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) on which this doc is based. You can refer to it for even more examples._
 
 ## Basic File Upload
 
-👉 **Setup some routes**
+### 1. Setup some routes
 
 You can setup your routes however you like. This example uses the following structure:
 
@@ -28,7 +28,7 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-👉 **Add the form data parser**
+### 2. Add the form data parser
 
 `form-data-parser` is a wrapper around `request.formData()` that provides streaming support for handling file uploads.
 
@@ -38,7 +38,7 @@ npm i @mjackson/form-data-parser
 
 [See the `form-data-parser` docs for more information][form-data-parser]
 
-👉 **Create a route with an upload action**
+### 3. Create a route with an upload action
 
 The `parseFormData` function takes an `uploadHandler` function as an argument. This function will be called for each file upload in the form.
 
@@ -83,7 +83,7 @@ export default function Component() {
 
 ## Local Storage Implementation
 
-👉 **Add the storage package**
+### 1. Add the storage package
 
 `file-storage` is a key/value interface for storing [File objects][file] in JavaScript. Similar to how `localStorage` allows you to store key/value pairs of strings in the browser, file-storage allows you to store key/value pairs of files on the server.
 
@@ -93,7 +93,7 @@ npm i @mjackson/file-storage
 
 [See the `file-storage` docs for more information][file-storage]
 
-👉 **Create a storage configuration**
+### 2. Create a storage configuration
 
 Create a file that exports a `LocalFileStorage` instance to be used by different routes.
 
@@ -109,7 +109,7 @@ export function getStorageKey(userId: string) {
 }
 ```
 
-👉 **Implement the upload handler**
+### 3. Implement the upload handler
 
 Update the form's `action` to store files in the `fileStorage` instance.
 
@@ -177,7 +177,7 @@ export default function UserPage({
 }
 ```
 
-👉 **Add a route to serve the uploaded file**
+### 4. Add a route to serve the uploaded file
 
 Create a [resource route][resource-route] that streams the file as a response.
 

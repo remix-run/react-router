@@ -39,7 +39,7 @@ export async function loader({ params }: LoaderArgs) {
 
   return data(page, {
     headers: {
-      "Server-Timing': `page;dur=${ms};desc=`Page query"',
+      "Server-Timing": `page;dur=${ms};desc="Page query"`,
     },
   });
 }

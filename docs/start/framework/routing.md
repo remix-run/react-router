@@ -7,7 +7,7 @@ order: 2
 
 ## Configuring Routes
 
-Routes are configured in `app/routes.ts`. Routes have a url pattern to match the URL and a file path to the route module to define its behavior.
+Routes are configured in `app/routes.ts`. Each route has two required parts: a URL pattern to match the URL, and a file path to the route module that defines its behavior.
 
 ```ts filename=app/routes.ts
 import {

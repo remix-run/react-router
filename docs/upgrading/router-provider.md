@@ -29,7 +29,7 @@ The Vite plugin adds:
 - Optional Static pre-rendering
 - Optional Server rendering
 
-The initial setup will require the most work, but once complete, adopting the new features is incremental, you can do one route at a time.
+The initial setup requires the most work. However, once complete, you can adopt new features incrementally, one route at a time.
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ npm install -D @react-router/dev
 
 **👉 Install a runtime adapter**
 
-We will assume you are using Node as your runtime
+We will assume you are using Node as your runtime.
 
 ```shellscript nonumber
 npm install @react-router/node
