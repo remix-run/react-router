@@ -125,7 +125,7 @@ export const resolvedRouteConfigSchema = v.array(routeConfigEntrySchema);
 type ResolvedRouteConfig = v.InferInput<typeof resolvedRouteConfigSchema>;
 
 /**
- * Route config to be exported via the `routes` export within `routes.ts`.
+ * Route config to be exported via the default export from `app/routes.ts`.
  */
 export type RouteConfig = ResolvedRouteConfig | Promise<ResolvedRouteConfig>;
 
