@@ -1,0 +1,64 @@
+name: 🧪 Test (Integration)
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      node_version:
+        required: true
+        # this is limited to string | boolean | number (https://github.community/t/can-action-inputs-be-arrays/16457)
+        # but we want to pass an array (node_version: "[20, 22]"),
+        # so we'll need to manually stringify it for now
+        type: string
+      browser:
+        required: true
+        # this is limited to string | boolean | number (https://github.community/t/can-action-inputs-be-arrays/16457)
+        # but we want to pass an array (browser: "['chromium', 'firefox']"),
+        # so we'll need to manually stringify it for now
+        type: string
+
+env:
+  CI: true
+
+jobs:
+  integration:
+    name: "${{ inputs.os }} / node@${{ matrix.node }} / ${{ matrix.browser }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(inputs.node_version) }}
+        browser: ${{ fromJSON(inputs.browser) }}
+
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "pnpm"
+
+      - uses: google/wireit@setup-github-actions-caching/v2
+
+      - name: Disable GitHub Actions Annotations
+        run: |
+          echo "::remove-matcher owner=tsc::"
+          echo "::remove-matcher owner=eslint-compact::"
+          echo "::remove-matcher owner=eslint-stylish::"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 📥 Install Playwright
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: 👀 Run Integration Tests ${{ matrix.browser }}
+        run: "pnpm test:integration --project=${{ matrix.browser }}"
+        timeout-minutes: 40

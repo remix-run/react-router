@@ -7,10 +7,17 @@
   "commit": false,
   "fixed": [
     [
+      "create-react-router",
       "react-router",
       "react-router-dom",
-      "react-router-dom-v5-compat",
-      "react-router-native"
+      "@react-router/architect",
+      "@react-router/cloudflare",
+      "@react-router/dev",
+      "@react-router/fs-routes",
+      "@react-router/express",
+      "@react-router/node",
+      "@react-router/remix-routes-option-adapter",
+      "@react-router/serve"
     ]
   ],
   "linked": [],
@@ -18,5 +25,8 @@
   "baseBranch": "dev",
   "updateInternalDependencies": "patch",
   "bumpVersionsWithWorkspaceProtocolOnly": true,
-  "ignore": []
+  "ignore": ["integration", "integration-*", "@playground/*"],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  }
 }

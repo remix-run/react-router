@@ -1,4 +1,3 @@
-import type { ErrorResponse } from "@remix-run/router";
 import "@testing-library/jest-dom";
 import {
   fireEvent,
@@ -17,7 +16,6 @@ import {
   Routes,
   createMemoryRouter,
   createRoutesFromElements,
-  defer,
   redirect,
   useActionData,
   useAsyncError,
@@ -30,8 +28,15 @@ import {
   useRouteLoaderData,
 } from "react-router";
 
-import urlDataStrategy from "../../router/__tests__/utils/urlDataStrategy";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+import {
+  useFetcher,
+  useNavigate,
+  useRevalidator,
+  useSubmit,
+  type ErrorResponse,
+} from "../index";
+import urlDataStrategy from "./router/utils/urlDataStrategy";
+import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
 
@@ -307,11 +312,15 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders fallbackElement while first data fetch happens", async () => {
+  it("renders hydrateFallbackElement while first data fetch happens", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
@@ -320,9 +329,7 @@ describe("createMemoryRouter", () => {
         initialEntries: ["/foo"],
       }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       return <p>Loading...</p>;
@@ -357,7 +364,7 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders a null fallbackElement if none is provided", async () => {
+  it("renders a null fallback if none is provided", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
@@ -395,12 +402,16 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("does not render fallbackElement if no data fetch is required", async () => {
+  it("does not render hydrateFallbackElement if no data fetch is required", async () => {
     let fooDefer = createDeferred();
 
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
@@ -409,9 +420,7 @@ describe("createMemoryRouter", () => {
         initialEntries: ["/bar"],
       }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       return <p>Loading...</p>;
@@ -435,19 +444,21 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders fallbackElement within router contexts", async () => {
+  it("renders hydrateFallbackElement within router contexts", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
         </Route>
       ),
       { initialEntries: ["/foo"] }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       let location = useLocation();
@@ -1000,6 +1011,268 @@ describe("createMemoryRouter", () => {
         </h1>
       </div>"
     `);
+  });
+
+  it("exposes promise from useNavigate", async () => {
+    let sequence: string[] = [];
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component() {
+          let navigate = useNavigate();
+          return (
+            <>
+              <h1>Home</h1>
+              <button
+                onClick={async () => {
+                  sequence.push("call navigate");
+                  await navigate("/page");
+                  sequence.push("navigate resolved");
+                }}
+              >
+                Navigate
+              </button>
+            </>
+          );
+        },
+      },
+      {
+        path: "/page",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return null;
+        },
+        Component: () => {
+          sequence.push("render");
+          return <h1>Page</h1>;
+        },
+      },
+    ]);
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toContain("Home");
+    fireEvent.click(screen.getByText("Navigate"));
+    await waitFor(() => screen.getByText("Page"));
+
+    expect(sequence).toEqual([
+      "call navigate",
+      "loader start",
+      "loader end",
+      "navigate resolved",
+      "render",
+    ]);
+  });
+
+  it("exposes promise from useSubmit", async () => {
+    let sequence: string[] = [];
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component() {
+          let submit = useSubmit();
+          return (
+            <>
+              <h1>Home</h1>
+              <button
+                onClick={async () => {
+                  sequence.push("call submit");
+                  await submit({}, { action: "/page" });
+                  sequence.push("submit resolved");
+                }}
+              >
+                Submit
+              </button>
+            </>
+          );
+        },
+      },
+      {
+        path: "/page",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return null;
+        },
+        Component: () => {
+          sequence.push("render");
+          return <h1>Page</h1>;
+        },
+      },
+    ]);
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toContain("Home");
+    fireEvent.click(screen.getByText("Submit"));
+    await waitFor(() => screen.getByText("Page"));
+
+    expect(sequence).toEqual([
+      "call submit",
+      "loader start",
+      "loader end",
+      "submit resolved",
+      "render",
+    ]);
+  });
+
+  it("exposes promise from useRevalidator", async () => {
+    let sequence: string[] = [];
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return ++count;
+        },
+        Component() {
+          let loaderCount = useLoaderData() as number;
+          let revalidator = useRevalidator();
+          sequence.push(`render ${loaderCount}`);
+          return (
+            <button
+              onClick={async () => {
+                sequence.push("call revalidate");
+                await revalidator.revalidate();
+                sequence.push("revalidate resolved");
+              }}
+            >
+              Revalidate ({loaderCount})
+            </button>
+          );
+        },
+      },
+    ]);
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Revalidate (1)"));
+    fireEvent.click(screen.getByText("Revalidate (1)"));
+    await waitFor(() => screen.getByText("Revalidate (2)"));
+
+    expect(sequence).toEqual([
+      "loader start",
+      "loader end",
+      "render 1",
+      "call revalidate",
+      "loader start",
+      "render 1", // revalidator.state === 'loading'
+      "loader end",
+      "revalidate resolved",
+      "render 2",
+    ]);
+  });
+
+  it("exposes promise from useFetcher.load", async () => {
+    let sequence: string[] = [];
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return ++count;
+        },
+        Component() {
+          let loaderCount = useLoaderData();
+          let fetcher = useFetcher();
+          sequence.push(`render ${loaderCount} ${fetcher.data || "empty"}`);
+          return (
+            <button
+              onClick={async () => {
+                sequence.push("call fetcher.load");
+                await fetcher.load("/");
+                sequence.push("fetcher.load resolved");
+              }}
+            >
+              Fetch ({`${loaderCount}, ${fetcher.data || "empty"}`})
+            </button>
+          );
+        },
+      },
+    ]);
+
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Fetch (1, empty)"));
+    fireEvent.click(screen.getByText("Fetch (1, empty)"));
+    await waitFor(() => screen.getByText("Fetch (1, 2)"));
+
+    expect(sequence).toEqual([
+      "loader start",
+      "loader end",
+      "render 1 empty",
+      "call fetcher.load",
+      "loader start",
+      "render 1 empty", // fetcher.state === 'loading'
+      "loader end",
+      "fetcher.load resolved",
+      "render 1 2",
+    ]);
+  });
+
+  it("exposes promise from useFetcher.submit", async () => {
+    let sequence: string[] = [];
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async action() {
+          sequence.push("action start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("action end");
+          return ++count;
+        },
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return ++count;
+        },
+        Component() {
+          let loaderCount = useLoaderData();
+          let fetcher = useFetcher();
+          sequence.push(`render ${loaderCount} ${fetcher.data || "empty"}`);
+          return (
+            <button
+              onClick={async () => {
+                sequence.push("call fetcher.submit");
+                await fetcher.submit({}, { method: "post", action: "/" });
+                sequence.push("fetcher.submit resolved");
+              }}
+            >
+              Fetch ({`${loaderCount}, ${fetcher.data || "empty"}`})
+            </button>
+          );
+        },
+      },
+    ]);
+
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Fetch (1, empty)"));
+    fireEvent.click(screen.getByText("Fetch (1, empty)"));
+    await waitFor(() => screen.getByText("Fetch (3, 2)"));
+
+    expect(sequence).toEqual([
+      "loader start",
+      "loader end",
+      "render 1 empty",
+      "call fetcher.submit",
+      "action start",
+      "render 1 empty", // fetcher.state === 'submitting'
+      "action end",
+      "loader start",
+      "render 1 2", // fetcher.state === 'loading'
+      "loader end",
+      "fetcher.submit resolved",
+      "render 3 2",
+    ]);
   });
 
   describe("errors", () => {
@@ -2034,12 +2307,14 @@ describe("createMemoryRouter", () => {
       expect(getHtml(container)).toMatch("Yes");
     });
 
-    it("handles a `null` render-error from a defer() call", async () => {
+    it("handles a `null` render-error from a promise", async () => {
       let router = createMemoryRouter([
         {
           path: "/",
           loader() {
-            return defer({ lazy: Promise.reject(null) });
+            let promise = Promise.reject(null);
+            promise.catch(() => {});
+            return { lazy: promise };
           },
           Component() {
             let data = useLoaderData() as { lazy: Promise<unknown> };
@@ -2201,181 +2476,6 @@ describe("createMemoryRouter", () => {
         </div>"
       `);
     });
-
-    it("does not allow loaderData usage in self-caught error boundaries", async () => {
-      let errorSpy = jest.spyOn(console, "error");
-
-      let router = createMemoryRouter(
-        createRoutesFromElements(
-          <Route path="/" element={<Layout />}>
-            <Route
-              path="foo"
-              loader={() => Promise.reject(new Error("Kaboom!"))}
-              element={<h1>Foo</h1>}
-              errorElement={<FooError />}
-            />
-          </Route>
-        )
-      );
-      let { container } = render(<RouterProvider router={router} />);
-
-      function Layout() {
-        let navigation = useNavigation();
-        return (
-          <div>
-            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
-            <p>{navigation.state}</p>
-            <Outlet />
-          </div>
-        );
-      }
-
-      function FooError() {
-        let error = useRouteError() as Error;
-        let data = useLoaderData() as { message: string };
-        return (
-          <>
-            <p>
-              Foo Data:{data === undefined ? "undefined" : JSON.stringify(data)}
-            </p>
-            <p>Foo Error:{error.message}</p>
-          </>
-        );
-      }
-
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href="/foo"
-            >
-              Link to Foo
-            </a>
-            <p>
-              idle
-            </p>
-          </div>
-        </div>"
-      `);
-
-      fireEvent.click(screen.getByText("Link to Foo"));
-      await waitFor(() => screen.getByText("Foo Error:Kaboom!"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href="/foo"
-            >
-              Link to Foo
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              Foo Data:
-              undefined
-            </p>
-            <p>
-              Foo Error:
-              Kaboom!
-            </p>
-          </div>
-        </div>"
-      `);
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        "You cannot `useLoaderData` in an errorElement (routeId: 0-0)"
-      );
-      errorSpy.mockRestore();
-    });
-
-    it("does not allow useLoaderData usage in bubbled error boundaries", async () => {
-      let errorSpy = jest.spyOn(console, "error");
-
-      let router = createMemoryRouter(
-        createRoutesFromElements(
-          <Route
-            path="/"
-            element={<Layout />}
-            loader={() => "ROOT"}
-            errorElement={<LayoutError />}
-          >
-            <Route
-              path="foo"
-              loader={() => Promise.reject(new Error("Kaboom!"))}
-              element={<h1>Foo</h1>}
-            />
-          </Route>
-        ),
-        {
-          hydrationData: {
-            loaderData: {
-              "0": "ROOT",
-            },
-          },
-        }
-      );
-      let { container } = render(<RouterProvider router={router} />);
-
-      function Layout() {
-        let navigation = useNavigation();
-        return (
-          <div>
-            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
-            <p>{navigation.state}</p>
-            <Outlet />
-          </div>
-        );
-      }
-      function LayoutError() {
-        let data = useLoaderData() as { message: string };
-        let error = useRouteError() as Error;
-        return (
-          <>
-            <p>
-              Layout Data:
-              {data === undefined ? "undefined" : JSON.stringify(data)}
-            </p>
-            <p>Layout Error:{error.message}</p>
-          </>
-        );
-      }
-
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href="/foo"
-            >
-              Link to Foo
-            </a>
-            <p>
-              idle
-            </p>
-          </div>
-        </div>"
-      `);
-
-      fireEvent.click(screen.getByText("Link to Foo"));
-      await waitFor(() => screen.getByText("Layout Error:Kaboom!"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <p>
-            Layout Data:
-            undefined
-          </p>
-          <p>
-            Layout Error:
-            Kaboom!
-          </p>
-        </div>"
-      `);
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        "You cannot `useLoaderData` in an errorElement (routeId: 0)"
-      );
-      errorSpy.mockRestore();
-    });
   });
 
   describe("defer", () => {
@@ -2507,12 +2607,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2567,12 +2665,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2630,12 +2726,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2694,12 +2788,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2756,12 +2848,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2821,12 +2911,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2884,12 +2972,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2942,12 +3028,10 @@ describe("createMemoryRouter", () => {
       expect(getAwaitRenderCount()).toBe(0);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2984,9 +3068,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      // 2 more renders by now - once for the navigation and once for the
-      // promise abort rejection
-      expect(getAwaitRenderCount()).toBe(3);
+      expect(getAwaitRenderCount()).toBe(2);
 
       // complete /baz navigation
       bazDefer.resolve(null);
@@ -3018,7 +3100,7 @@ describe("createMemoryRouter", () => {
           </h1>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(3);
+      expect(getAwaitRenderCount()).toBe(2);
     });
 
     it("should permit direct access to resolved values", async () => {
@@ -3210,7 +3292,7 @@ describe("createMemoryRouter", () => {
             />
           </Route>
         ),
-        { initialEntries: ["/foo"], unstable_dataStrategy: urlDataStrategy }
+        { initialEntries: ["/foo"], dataStrategy: urlDataStrategy }
       );
       let { container } = render(<RouterProvider router={router} />);
 

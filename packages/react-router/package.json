@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.26.2",
+  "version": "7.0.0",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -18,19 +18,102 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "main": "./dist/main.js",
-  "unpkg": "./dist/umd/react-router.production.min.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/production/index.d.ts",
+  "main": "./dist/production/index.js",
+  "module": "./dist/production/index.mjs",
+  "exports": {
+    ".": {
+      "node": {
+        "types": "./dist/production/index.d.ts",
+        "development": {
+          "module-sync": "./dist/development/index.mjs",
+          "default": "./dist/development/index.js"
+        },
+        "module-sync": "./dist/production/index.mjs",
+        "default": "./dist/production/index.js"
+      },
+      "import": {
+        "types": "./dist/production/index.d.mts",
+        "development": "./dist/development/index.mjs",
+        "default": "./dist/production/index.mjs"
+      },
+      "default": {
+        "types": "./dist/production/index.d.ts",
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      }
+    },
+    "./route-module": {
+      "import": {
+        "types": "./dist/production/lib/types/route-module.d.mts"
+      },
+      "default": {
+        "types": "./dist/production/lib/types/route-module.d.ts"
+      }
+    },
+    "./dom": {
+      "node": {
+        "types": "./dist/production/dom-export.d.ts",
+        "development": {
+          "module-sync": "./dist/development/dom-export.mjs",
+          "default": "./dist/development/dom-export.js"
+        },
+        "module-sync": "./dist/production/dom-export.mjs",
+        "default": "./dist/production/dom-export.js"
+      },
+      "import": {
+        "types": "./dist/production/dom-export.d.mts",
+        "development": "./dist/development/dom-export.mjs",
+        "default": "./dist/production/dom-export.mjs"
+      },
+      "default": {
+        "types": "./dist/production/dom-export.d.ts",
+        "development": "./dist/development/dom-export.js",
+        "default": "./dist/production/dom-export.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "rimraf dist && tsup",
+      "files": [
+        "lib/**",
+        "*.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
+  },
   "dependencies": {
-    "@remix-run/router": "workspace:*"
+    "@types/cookie": "^0.6.0",
+    "cookie": "^1.0.1",
+    "set-cookie-parser": "^2.6.0",
+    "turbo-stream": "2.4.0"
   },
   "devDependencies": {
+    "@types/set-cookie-parser": "^2.4.1",
     "react": "^18.2.0",
-    "react-router-dom": "workspace:*"
+    "react-dom": "^18.2.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
   },
   "peerDependencies": {
-    "react": ">=16.8"
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
   },
   "files": [
     "dist/",
@@ -39,6 +122,6 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.0.0"
   }
 }

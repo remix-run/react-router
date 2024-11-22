@@ -22,13 +22,13 @@ jobs:
           token: ${{ secrets.FORMAT_PAT }}
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
-          cache: pnpm
           node-version-file: ".nvmrc"
+          cache: pnpm
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile

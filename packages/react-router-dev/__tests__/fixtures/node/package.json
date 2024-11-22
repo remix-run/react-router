@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "start": "react-router-serve build/index.js",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "react-router": "*",
+    "@react-router/node": "*",
+    "@react-router/serve": "*",
+    "isbot": "^5.1.11",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "*",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "eslint": "^8.38.0",
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

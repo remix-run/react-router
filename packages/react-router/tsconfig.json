@@ -1,11 +1,11 @@
 {
-  "files": ["index.ts"],
-  "exclude": ["dist/**/*"],
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "node",
+    "module": "Node16",
+    "moduleResolution": "Node16",
 
     "strict": true,
     "jsx": "react",
@@ -15,7 +15,12 @@
 
     "skipLibCheck": true,
 
-    "outDir": ".",
-    "rootDir": "."
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "react-router": ["./index.ts"]
+    }
   }
 }

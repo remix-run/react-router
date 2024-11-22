@@ -1,0 +1,43 @@
+name: PR (Full)
+
+# PRs touching react-router-dev will also run on Windows and OSX
+
+on:
+  pull_request:
+    paths:
+      - "pnpm-lock.yaml"
+      - "integration/**"
+      - "packages/react-router-dev/**"
+      - "!**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-firefox:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: "[22]"
+      browser: '["firefox"]'
+
+  integration-msedge:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "windows-latest"
+      node_version: "[22]"
+      browser: '["msedge"]'
+
+  integration-webkit:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "macos-latest"
+      node_version: "[22]"
+      browser: '["webkit"]'

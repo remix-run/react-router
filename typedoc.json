@@ -1,0 +1,9 @@
+{
+  "name": "React Router API Reference",
+  "entryPoints": ["packages/*"],
+  "entryPointStrategy": "packages",
+  "includeVersion": false,
+  "json": "./public/dev/api.json",
+  "out": "./public/dev",
+  "hostedBaseUrl": "https://api.reactrouter.com/dev/"
+}
