@@ -1,48 +1,6 @@
 # react-router-dom
 
-## 7.0.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.6`
-
-## 7.0.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.5`
-
-## 7.0.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.4`
-
-## 7.0.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.3`
-
-## 7.0.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.2`
-
-## 7.0.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.1`
-
-## 7.0.0-pre.0
+## 7.0.0
 
 ### Major Changes
 
@@ -55,22 +13,34 @@
   - `UNSAFE_DEFERRED_SYMBOL`,
 
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+
 - Remove `future.v7_startTransition` flag ([#11696](https://github.com/remix-run/react-router/pull/11696))
+
 - Remove `future.v7_normalizeFormMethod` future flag ([#11697](https://github.com/remix-run/react-router/pull/11697))
+
 - Allow returning `undefined` from actions and loaders ([#11680](https://github.com/remix-run/react-router/pull/11680))
+
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+
 - Remove `future.v7_prependBasename` from the ionternalized `@remix-run/router` package ([#11726](https://github.com/remix-run/react-router/pull/11726))
+
 - Remove `future.v7_throwAbortReason` from internalized `@remix-run/router` package ([#11728](https://github.com/remix-run/react-router/pull/11728))
+
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+
 - updates the minimum React version to 18 ([#11689](https://github.com/remix-run/react-router/pull/11689))
+
 - - Remove the `future.v7_partialHydration` flag ([#11725](https://github.com/remix-run/react-router/pull/11725))
     - This also removes the `<RouterProvider fallbackElement>` prop
       - To migrate, move the `fallbackElement` to a `hydrateFallbackElement`/`HydrateFallback` on your root route
     - Also worth nothing there is a related breaking changer with this future flag:
       - Without `future.v7_partialHydration` (when using `fallbackElement`), `state.navigation` was populated during the initial load
       - With `future.v7_partialHydration`, `state.navigation` remains in an `"idle"` state during the initial load
+
 - Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
 
 ### Minor Changes
@@ -83,4 +53,4 @@
 
 - Memoize some `RouterProvider` internals to reduce uneccesary re-renders ([#11817](https://github.com/remix-run/react-router/pull/11817))
 - Updated dependencies:
-  - `react-router@7.0.0-pre.0`
+  - `react-router@7.0.0`

@@ -1,84 +1,6 @@
 # `@remix-run/dev`
 
-## 7.0.0-pre.6
-
-### Patch Changes
-
-- chore: warn instead of error for min node version in CLI ([#12270](https://github.com/remix-run/react-router/pull/12270))
-- chore: re-enable development warnings through a `development` exports condition. ([#12269](https://github.com/remix-run/react-router/pull/12269))
-- if we are in SAP mode, always render the `index.html` for hydration ([#12268](https://github.com/remix-run/react-router/pull/12268))
-- fix(react-router): (v7) fix static prerender of non-ascii characters ([#12161](https://github.com/remix-run/react-router/pull/12161))
-- Updated dependencies:
-  - `@react-router/node@7.0.0-pre.6`
-  - `react-router@7.0.0-pre.6`
-  - `@react-router/serve@7.0.0-pre.6`
-
-## 7.0.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.5`
-  - `@react-router/node@7.0.0-pre.5`
-  - `@react-router/serve@7.0.0-pre.5`
-
-## 7.0.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.4`
-  - `@react-router/node@7.0.0-pre.4`
-  - `@react-router/serve@7.0.0-pre.4`
-
-## 7.0.0-pre.3
-
-### Patch Changes
-
-- Enable prerendering for resource routes ([#12200](https://github.com/remix-run/react-router/pull/12200))
-- resolve config directory relative to flat output file structure ([#12187](https://github.com/remix-run/react-router/pull/12187))
-- Updated dependencies:
-  - `react-router@7.0.0-pre.3`
-  - `@react-router/node@7.0.0-pre.3`
-  - `@react-router/serve@7.0.0-pre.3`
-
-## 7.0.0-pre.2
-
-### Major Changes
-
-- - Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
-    - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
-    - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
-      - `Record<string, Route> -> Record<string, Route | undefined>`
-    - Removed `AppData` type in favor of inlining `unknown` in the few locations it was used
-    - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
-- Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
-  - Remove `installGlobals()` as this should no longer be necessary
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.2`
-  - `@react-router/node@7.0.0-pre.2`
-  - `@react-router/serve@7.0.0-pre.2`
-
-## 7.0.0-pre.1
-
-### Minor Changes
-
-- Add `prefix` route config helper to `@react-router/dev/routes` ([#12094](https://github.com/remix-run/react-router/pull/12094))
-
-### Patch Changes
-
-- - Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See https://expressjs.com/en/resources/middleware/serve-static.html ([#12071](https://github.com/remix-run/react-router/pull/12071))
-  - Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
-- Updated dependencies:
-  - `react-router@7.0.0-pre.1`
-  - `@react-router/serve@7.0.0-pre.1`
-  - `@react-router/node@7.0.0-pre.1`
-
-## 7.0.0-pre.0
+## 7.0.0
 
 ### Major Changes
 
@@ -94,35 +16,44 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+
 - For Remix consumers migrating to React Router who used the Vite plugin's `buildEnd` hook, the resolved `reactRouterConfig` object no longer contains a `publicPath` property since this belongs to Vite, not React Router. ([#11575](https://github.com/remix-run/react-router/pull/11575))
+
 - For Remix consumers migrating to React Router, the Vite plugin's `manifest` option has been removed. ([#11573](https://github.com/remix-run/react-router/pull/11573))
 
   The `manifest` option been superseded by the more powerful `buildEnd` hook since it's passed the `buildManifest` argument. You can still write the build manifest to disk if needed, but you'll most likely find it more convenient to write any logic depending on the build manifest within the `buildEnd` hook itself.
 
   If you were using the `manifest` option, you can replace it with a `buildEnd` hook that writes the manifest to disk like this:
 
-  ```js
-  import { reactRouter } from "@react-router/dev/vite";
+  ```ts
+  // react-router.config.ts
+  import type { Config } from "@react-router/dev/config";
   import { writeFile } from "node:fs/promises";
 
   export default {
-    plugins: [
-      reactRouter({
-        async buildEnd({ buildManifest }) {
-          await writeFile(
-            "build/manifest.json",
-            JSON.stringify(buildManifest, null, 2),
-            "utf-8"
-          );
-        },
-      }),
-    ],
-  };
+    async buildEnd({ buildManifest }) {
+      await writeFile(
+        "build/manifest.json",
+        JSON.stringify(buildManifest, null, 2),
+        "utf-8"
+      );
+    },
+  } satisfies Config;
   ```
+
+- - Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
+    - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
+    - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
+      - `Record<string, Route> -> Record<string, Route | undefined>`
+    - Removed `AppData` type in favor of inlining `unknown` in the few locations it was used
+    - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
 
 - Update default `isbot` version to v5 and drop support for `isbot@3` ([#11770](https://github.com/remix-run/react-router/pull/11770))
 
@@ -133,6 +64,10 @@
     - You can upgrade to `isbot@5` independent of the React Router v7 upgrade
   - If you have `isbot@3` in your `package.json` and you do not have your own `entry.server.tsx` file in your repo
     - You are using the internal default entry provided by React Router v7 and you will need to upgrade to `isbot@5` in your `package.json`
+
+- Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
+
+  - Remove `installGlobals()` as this should no longer be necessary
 
 - For Remix consumers migrating to React Router, Vite manifests (i.e. `.vite/manifest.json`) are now written within each build subdirectory, e.g. `build/client/.vite/manifest.json` and `build/server/.vite/manifest.json` instead of `build/.vite/client-manifest.json` and `build/.vite/server-manifest.json`. This means that the build output is now much closer to what you'd expect from a typical Vite project. ([#11573](https://github.com/remix-run/react-router/pull/11573))
 
@@ -150,6 +85,9 @@
   ```
 
 - Remove internal entry.server.spa.tsx implementation ([#11681](https://github.com/remix-run/react-router/pull/11681))
+
+- Add `prefix` route config helper to `@react-router/dev/routes` ([#12094](https://github.com/remix-run/react-router/pull/12094))
+
 - ### Typesafety improvements ([#12019](https://github.com/remix-run/react-router/pull/12019))
 
   React Router now generates types for each of your route modules.
@@ -171,16 +109,6 @@
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
 
-  These types are then used to create types for route export args and props:
-
-  - `LoaderArgs`
-  - `ClientLoaderArgs`
-  - `ActionArgs`
-  - `ClientActionArgs`
-  - `HydrateFallbackProps`
-  - `ComponentProps` (for the `default` export)
-  - `ErrorBoundaryProps`
-
   In the future, we plan to add types for the rest of the route module exports: `meta`, `links`, `headers`, `shouldRevalidate`, etc.
   We also plan to generate types for typesafe `Link`s:
 
@@ -190,120 +118,26 @@
   // typesafe `to` and `params` based on the available routes in your app
   ```
 
-  #### Setup
+  Check out our docs for more:
 
-  React Router will generate types into a `.react-router/` directory at the root of your app.
-  This directory is fully managed by React Router and is derived based on your route config (`routes.ts`).
-
-  👉 **Add `.react-router/` to `.gitignore`**
-
-  ```txt
-  .react-router
-  ```
-
-  You should also ensure that generated types for routes are always present before running typechecking,
-  especially for running typechecking in CI.
-
-  👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
-
-  ```json
-  {
-    "scripts": {
-      "typecheck": "react-router typegen && tsc"
-    }
-  }
-  ```
-
-  To get TypeScript to use those generated types, you'll need to add them to `include` in `tsconfig.json`.
-  And to be able to import them as if they files next to your route modules, you'll also need to configure `rootDirs`.
-
-  👉 **Configure `tsconfig.json` for generated types**
-
-  ```json
-  {
-    "include": [".react-router/types/**/*"],
-    "compilerOptions": {
-      "rootDirs": [".", "./.react-router/types"]
-    }
-  }
-  ```
-
-  #### `typegen` command
-
-  You can manually generate types with the new `typegen` command:
-
-  ```sh
-  react-router typegen
-  ```
-
-  However, manual type generation is tedious and types can get out of sync quickly if you ever forget to run `typegen`.
-  Instead, we recommend that you setup our new TypeScript plugin which will automatically generate fresh types whenever routes change.
-  That way, you'll always have up-to-date types.
-
-  #### TypeScript plugin
-
-  To get automatic type generation, you can use our new TypeScript plugin.
-
-  👉 **Add the TypeScript plugin to `tsconfig.json`**
-
-  ```json
-  {
-    "compilerOptions": {
-      "plugins": [{ "name": "@react-router/dev" }]
-    }
-  }
-  ```
-
-  We plan to add some other goodies to our TypeScript plugin soon, including:
-
-  - Automatic `jsdoc` for route exports that include links to official docs
-  - Autocomplete for route exports
-  - Warnings for non-HMR compliant exports
-
-  ##### VSCode
-
-  TypeScript looks for plugins registered in `tsconfig.json` in the local `node_modules/`,
-  but VSCode ships with its own copy of TypeScript that is installed outside of your project.
-  For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
-  For security reasons, [VSCode won't use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) until you manually opt-in.
-
-  Your project should have a `.vscode/settings.json` with the following settings:
-
-  ```json
-  {
-    "typescript.tsdk": "node_modules/typescript/lib",
-    "typescript.enablePromptUseWorkspaceTsdk": true
-  }
-  ```
-
-  That way [VSCode will ask you](https://code.visualstudio.com/updates/v1_45#_prompt-users-to-switch-to-the-workspace-version-of-typescript) if you want to use the workspace version of TypeScript the first time you open a TS file in that project.
-
-  > [!IMPORTANT]
-  > You'll need to install dependencies first so that the workspace version of TypeScript is available.
-
-  👉 **Select "Allow" when VSCode asks if you want to use the workspace version of TypeScript**
-
-  Otherwise, you can also manually opt-in to the workspace version:
-
-  1. Open up any TypeScript file in your project
-  2. Open up the VSCode Command Palette (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
-  3. Search for `Select TypeScript Version`
-  4. Choose `Use Workspace Version`
-  5. Quit and reopen VSCode
-
-  ##### Troubleshooting
-
-  In VSCode, open up any TypeScript file in your project and then use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to select `Open TS Server log`.
-  There should be a log for `[react-router] setup` that indicates that the plugin was resolved correctly.
-  Then look for any errors in the log.
+  - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
+  - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
 ### Patch Changes
 
+- Enable prerendering for resource routes ([#12200](https://github.com/remix-run/react-router/pull/12200))
+- chore: warn instead of error for min node version in CLI ([#12270](https://github.com/remix-run/react-router/pull/12270))
+- chore: re-enable development warnings through a `development` exports condition. ([#12269](https://github.com/remix-run/react-router/pull/12269))
 - include root "react-dom" module for optimization ([#12060](https://github.com/remix-run/react-router/pull/12060))
+- - \[PRERELEASE] Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See <https://expressjs.com/en/resources/middleware/serve-static.html> ([#12071](https://github.com/remix-run/react-router/pull/12071))
+  - \[PRERELEASE] Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
+- resolve config directory relative to flat output file structure ([#12187](https://github.com/remix-run/react-router/pull/12187))
+- if we are in SAP mode, always render the `index.html` for hydration ([#12268](https://github.com/remix-run/react-router/pull/12268))
+- fix(react-router): (v7) fix static prerender of non-ascii characters ([#12161](https://github.com/remix-run/react-router/pull/12161))
 - Updated dependencies:
-  - `react-router@7.0.0-pre.0`
-  - `@react-router/serve@7.0.0-pre.0`
-  - `@react-router/node@7.0.0-pre.0`
+  - `react-router@7.0.0`
+  - `@react-router/serve@7.0.0`
+  - `@react-router/node@7.0.0`
 
 ## 2.9.0
 

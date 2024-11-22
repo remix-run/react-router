@@ -1,41 +1,13 @@
 # `@remix-run/express`
 
-## 7.0.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@react-router/node@7.0.0-pre.6`
-  - `react-router@7.0.0-pre.6`
-
-## 7.0.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.5`
-  - `@react-router/node@7.0.0-pre.5`
-
-## 7.0.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.4`
-  - `@react-router/node@7.0.0-pre.4`
-
-## 7.0.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.3`
-  - `@react-router/node@7.0.0-pre.3`
-
-## 7.0.0-pre.2
+## 7.0.0
 
 ### Major Changes
 
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
 
   - Remove `installGlobals()` as this should no longer be necessary
@@ -43,31 +15,8 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.0.0-pre.2`
-  - `@react-router/node@7.0.0-pre.2`
-
-## 7.0.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.1`
-  - `@react-router/node@7.0.0-pre.1`
-
-## 7.0.0-pre.0
-
-### Major Changes
-
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
-- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
-- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
-- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.0`
-  - `@react-router/node@7.0.0-pre.0`
+  - `react-router@7.0.0`
+  - `@react-router/node@7.0.0`
 
 ## 2.9.0
 
