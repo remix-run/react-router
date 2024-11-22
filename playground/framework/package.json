@@ -1,5 +1,5 @@
 {
-  "name": "@playground/compiler",
+  "name": "@playground/framework",
   "version": "0.0.0",
   "private": true,
   "sideEffects": false,

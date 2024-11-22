@@ -11,7 +11,17 @@ There are three rendering strategies in React Router:
 - Server Side Rendering
 - Static Pre-rendering
 
-All routes are always client side rendered as the user navigates around the app. However, you can control server rendering and static pre-rendering with the `ssr` and `prerender` config options.
+## Client Side Rendering
+
+Routes are always client side rendered as the user navigates around the app. If you're looking to build a Single Page App, disable server rendering:
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  ssr: false,
+} satisfies Config;
+```
 
 ## Server Side Rendering
 
@@ -23,7 +33,7 @@ export default {
 } satisfies Config;
 ```
 
-Server side rendering requires a deployment that supports it. Though it's a global setting, individual routes can still be statically pre-rendered, and/or use client data loading with `clientLoader` to avoid server rendering/fetching of their portion of the UI.
+Server side rendering requires a deployment that supports it. Though it's a global setting, individual routes can still be statically pre-rendered. Routes can also use client data loading with `clientLoader` to avoid server rendering/fetching for their portion of the UI.
 
 ## Static Pre-rendering
 

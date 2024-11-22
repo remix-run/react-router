@@ -5,9 +5,9 @@ order: 2
 
 # Upgrading from Remix
 
-React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19]) for more information).
+React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19] for more information).
 
-The Remix v2 -> React Router v7 upgrade requires mostly updates to dependencies if you are caught up on all [Remix v2 future flags][v2-future-flags] (step 1).
+If you have enabled all [Remix v2 future flags][v2-future-flags], upgrading from Remix v2 to React Router v7 mainly involves updating dependencies.
 
 <docs-info>
 
@@ -239,7 +239,7 @@ export default defineConfig({
 
 <docs-info>
 
-If you're not using TypeScript, you can skip this step.
+If you are not using TypeScript, you can skip this step.
 
 </docs-info>
 
@@ -313,29 +313,60 @@ If you were using `remix-serve` you can skip this step. This is only applicable 
 
 </docs-info>
 
-If you were using `getLoadContext` in your Remix app, then you'll notice that the `LoaderFunctionArgs`/`ActionFunctionArgs` types now type the `context` parameter incorrectly (optional and typed as `any`). These types accept a generic for the `context` type but even that still leaves the property as optional because it does not exist in React Router SPA apps.
+Since React Router can be used as both a React framework _and_ a stand-alone routing library, the `context` argument for `LoaderFunctionArgs` and `ActionFunctionArgs` is now optional and typed as `any` by default. You can register types for your load context to get type safety for your loaders and actions.
 
-The proper long term fix is to move to the new [`Route.LoaderArgs`][server-loaders]/[`Route.ActionArgs`][server-actions] types from the [new typegen in React Router v7][type-safety].
+👉 **Register types for your load context**
 
-However, the short-term solution to ease the upgrade is to use TypeScript's [module augmentation][ts-module-augmentation] feature to override the built in `LoaderFunctionArgs`/`ActionFunctionArgs` interfaces.
+Before you migrate to the new `Route.LoaderArgs` and `Route.ActionArgs` types, you can temporarily augment `LoaderFunctionArgs` and `ActionFunctionArgs` with your load context type to ease migration.
 
-You can do this with the following code in `react-router.config.ts` (just make sure it gets picked up by your `tsconfig.json`'s `include` paths):
-
-```ts filename=react-router.config.ts
-// Your AppLoadContext used in v2
-interface AppLoadContext {
-  whatever: string;
-}
-
-// Tell v7 the type of the context and that it is non-optional
+```ts filename=app/env.d.ts
 declare module "react-router" {
+  // Your AppLoadContext used in v2
+  interface AppLoadContext {
+    whatever: string;
+  }
+
+  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
   interface LoaderFunctionArgs {
+    context: AppLoadContext;
+  }
+
+  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions
+  interface ActionFunctionArgs {
     context: AppLoadContext;
   }
 }
 ```
 
-This should allow you to upgrade and ship your application on React Router v7, and then you can incrementally migrate routes to the [new typegen approach][type-safety].
+<docs-info>
+
+Using `declare module` to register types is a standard TypeScript technique called [module augmentation][ts-module-augmentation].
+You can do this in any TypeScript file covered by your `tsconfig.json`'s `include` field, but we recommend a dedicated `env.d.ts` within your app directory.
+
+</docs-info>
+
+👉 **Use the new types**
+
+Once you adopt the [new type generation][type-safety], you can remove the `LoaderFunctionArgs`/`ActionFunctionArgs` augmentations and use the `context` argument from [`Route.LoaderArgs`][server-loaders] and [`Route.ActionArgs`][server-actions] instead.
+
+```ts filename=app/env.d.ts
+declare module "react-router" {
+  // Your AppLoadContext used in v2
+  interface AppLoadContext {
+    whatever: string;
+  }
+}
+```
+
+```ts filename=app/routes/my-route.tsx
+import type { Route } from "./+types/my-route";
+
+export function loader({ context }: Route.LoaderArgs) {}
+// { whatever: string }  ^^^^^^^
+
+export function action({ context }: Route.ActionArgs) {}
+// { whatever: string }  ^^^^^^^
+```
 
 Congratulations! You are now on React Router v7. Go ahead and run your application to make sure everything is working as expected.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@playground/compiler-spa",
+  "name": "@playground/framework-spa",
   "version": "0.0.0",
   "private": true,
   "sideEffects": false,

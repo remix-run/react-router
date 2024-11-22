@@ -409,6 +409,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let cssModulesManifest: Record<string, string> = {};
   let viteChildCompiler: Vite.ViteDevServer | null = null;
   let reactRouterConfigLoader: ConfigLoader;
+  let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let logger: Vite.Logger;
   let firstLoad = true;
 
@@ -748,7 +749,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
         if (viteCommand === "serve") {
-          Typegen.watch(rootDirectory, {
+          typegenWatcherPromise = Typegen.watch(rootDirectory, {
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1246,6 +1247,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       async buildEnd() {
         await viteChildCompiler?.close();
         await reactRouterConfigLoader.close();
+
+        let typegenWatcher = await typegenWatcherPromise;
+        await typegenWatcher?.close();
       },
     },
     {

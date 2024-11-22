@@ -37,7 +37,7 @@ ReactDOM.createRoot(root).render(
 );
 ```
 
-[Get Started](./library/installation) with React Router as a library.
+[Get Started](./start/library/installation) with React Router as a library.
 
 ## React Router as a framework
 

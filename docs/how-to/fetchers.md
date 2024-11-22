@@ -80,7 +80,7 @@ export default function Component() {
 
 ### 3. Submit the form
 
-If you submit the form now, the fetcher call the action and revalidate the route data automatically.
+If you submit the form now, the fetcher will call the action and revalidate the route data automatically.
 
 ### 4. Render pending state
 
@@ -299,4 +299,4 @@ Fetchers can be submitted programmatically with `fetcher.submit`:
 </fetcher.Form>
 ```
 
-Note the input event's form is passed as the first argument to `fetcher.submit`. The fetcher will use that form to submit the request, reading it's attributes and serializing the data from its elements.
+Note the input event's form is passed as the first argument to `fetcher.submit`. The fetcher will use that form to submit the request, reading its attributes and serializing the data from its elements.

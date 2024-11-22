@@ -8,7 +8,7 @@ Enable smooth animations between page transitions in your React Router applicati
 
 ## Basic View Transition
 
-👉 **Enable view transitions on navigation**
+### 1. Enable view transitions on navigation
 
 The simplest way to enable view transitions is by adding the `viewTransition` prop to your `Link`, `NavLink`, or `Form` components. This automatically wraps the navigation update in `document.startViewTransition()`.
 
@@ -26,7 +26,7 @@ For more information on using the View Transitions API, please refer to the ["Sm
 
 Let's build an image gallery that demonstrates how to trigger and use view transitions. We'll create a list of images that expand into a detail view with smooth animations.
 
-👉 **Create the image gallery route**
+### 2. Create the image gallery route
 
 ```tsx filename=routes/image-gallery.tsx
 import { NavLink } from "react-router";
@@ -62,7 +62,7 @@ export default function ImageGalleryRoute() {
 }
 ```
 
-👉 **Add transition styles**
+### 3. Add transition styles
 
 Define view transition names and animations for elements that should transition smoothly between routes.
 
@@ -98,7 +98,7 @@ Define view transition names and animations for elements that should transition 
 }
 ```
 
-👉 **Create the image detail route**
+### 4. Create the image detail route
 
 The detail view needs to use the same view transition names to create a seamless animation.
 
@@ -122,7 +122,7 @@ export default function ImageDetailsRoute({
 }
 ```
 
-👉 **Add matching transition styles for the detail view**
+### 5. Add matching transition styles for the detail view
 
 ```css filename=app.css
 /* Match transition names from the list view */
@@ -144,7 +144,7 @@ export default function ImageDetailsRoute({
 
 You can control view transitions more precisely using either render props or the `useViewTransitionState` hook.
 
-👉 **Using render props**
+### 1. Using render props
 
 ```tsx filename=routes/image-gallery.tsx
 <NavLink to={`/image/${idx}`} viewTransition>
@@ -172,7 +172,7 @@ You can control view transitions more precisely using either render props or the
 </NavLink>
 ```
 
-👉 **Using the `useViewTransitionState` hook**
+### 2. Using the `useViewTransitionState` hook
 
 ```tsx filename=routes/image-gallery.tsx
 function NavImage(props: { src: string; idx: number }) {

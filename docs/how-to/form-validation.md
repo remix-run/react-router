@@ -4,7 +4,7 @@ title: Form Validation
 
 # Form Validation
 
-This guide walks you through implementing form validation for a simple signup form. Here, we focus on capturing the fundamentals to help you understand the essential elements of form validation in Remix, including actions, action data, and rendering errors.
+This guide walks through a simple signup form implementation. You will likely want to pair these concepts with third-party validation libraries and error components, but this guide only focuses on the moving pieces for React Router.
 
 ## 1. Setting Up
 
@@ -113,7 +113,3 @@ export default function Signup(_: Route.ComponentProps) {
   );
 }
 ```
-
-## Conclusion
-
-And there you have it! You've successfully set up a basic form validation flow in Remix. The beauty of this approach is that the errors will automatically display based on the `action` data, and they will be updated each time the user re-submits the form. This reduces the amount of boilerplate code you have to write, making your development process more efficient.
