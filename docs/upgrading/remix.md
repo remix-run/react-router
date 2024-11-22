@@ -93,13 +93,13 @@ If you used the codemod you can skip this step as it was automatically completed
 
 <docs-info>
 
-If you used the codemod _and_ Remix v2 `unstable_routeConfig` flag, you can skip this step as it was automatically completed.
+If you used the codemod _and_ Remix v2 `v3_routeConfig` flag, you can skip this step as it was automatically completed.
 
 </docs-info>
 
 In React Router v7 you define your routes using the `app/routes.ts` file. View the [routing documentation][routing] for more information.
 
-**👉 Update dependencies (if using Remix v2 `unstable_routeConfig` flag)**
+**👉 Update dependencies (if using Remix v2 `v3_routeConfig` flag)**
 
 ```diff
 // app/routes.ts
@@ -116,9 +116,7 @@ export default [
 
 ```
 
-<!-- TODO: Remove this section once this flag is stabilized and recommend they make this change in Remix/refer to the routes.ts docs -->
-
-**👉 Add a `routes.ts` file (if _not_ using Remix v2 `unstable_routeConfig` flag)**
+**👉 Add a `routes.ts` file (if _not_ using Remix v2 `v3_routeConfig` flag)**
 
 ```shellscript nonumber
 touch app/routes.ts
