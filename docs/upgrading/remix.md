@@ -26,7 +26,7 @@ Adopt all existing [future flags][v2-future-flags] in your Remix v2 application.
 Most of the "shared" APIs that used to be re-exported through the runtime-specific packages (`@remix-run/node`, `@remix-run/cloudflare`, etc.) have all been collapsed into `react-router` in v7. So instead of importing from `@react-router/node` or `@react-router/cloudflare`, you'll import those directly from `react-router`.
 
 ```diff
--import { redirect } from "@react-router/node";
+-import { redirect } from "@remix-run/node";
 +import { redirect } from "react-router";
 ```
 
@@ -43,12 +43,6 @@ npx codemod remix/2/react-router/upgrade
 **👉 Install the new dependencies**
 
 After the codemod updates your dependencies, you need to install the dependencies to remove Remix packages and add the new React Router packages.
-
-<docs-warning>
-
-While still in prerelease, you need to update your `package.json` to point to the prerelease versions of the `react-router` packages.
-
-</docs-warning>
 
 ```shellscript nonumber
 npm install
