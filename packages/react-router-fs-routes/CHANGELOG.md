@@ -1,6 +1,8 @@
-# @react-router/fs-routes
+# `@react-router/fs-routes`
 
 ## 7.0.0
+
+Initial release.
 
 ### Patch Changes
 

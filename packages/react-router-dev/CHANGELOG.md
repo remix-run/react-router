@@ -1,4 +1,4 @@
-# `@remix-run/dev`
+# `@react-router/dev`
 
 ## 7.0.0
 
@@ -16,7 +16,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 
@@ -48,12 +48,13 @@
   } satisfies Config;
   ```
 
-- - Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
-    - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
-    - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
-      - `Record<string, Route> -> Record<string, Route | undefined>`
-    - Removed `AppData` type in favor of inlining `unknown` in the few locations it was used
-    - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
+- Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
+
+  - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
+  - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
+    - `Record<string, Route> -> Record<string, Route | undefined>`
+  - Removed `AppData` type in favor of inlining `unknown` in the few locations it was used
+  - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
 
 - Update default `isbot` version to v5 and drop support for `isbot@3` ([#11770](https://github.com/remix-run/react-router/pull/11770))
 
@@ -129,8 +130,6 @@
 - chore: warn instead of error for min node version in CLI ([#12270](https://github.com/remix-run/react-router/pull/12270))
 - chore: re-enable development warnings through a `development` exports condition. ([#12269](https://github.com/remix-run/react-router/pull/12269))
 - include root "react-dom" module for optimization ([#12060](https://github.com/remix-run/react-router/pull/12060))
-- - \[PRERELEASE] Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See <https://expressjs.com/en/resources/middleware/serve-static.html> ([#12071](https://github.com/remix-run/react-router/pull/12071))
-  - \[PRERELEASE] Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
 - resolve config directory relative to flat output file structure ([#12187](https://github.com/remix-run/react-router/pull/12187))
 - if we are in SAP mode, always render the `index.html` for hydration ([#12268](https://github.com/remix-run/react-router/pull/12268))
 - fix(react-router): (v7) fix static prerender of non-ascii characters ([#12161](https://github.com/remix-run/react-router/pull/12161))

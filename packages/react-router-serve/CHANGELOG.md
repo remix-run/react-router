@@ -1,18 +1,15 @@
-# `@remix-run/serve`
+# `@react-router/serve`
 
 ## 7.0.0
 
 ### Major Changes
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
 
 ### Patch Changes
-
-- - \[PRERELEASE] Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See <https://expressjs.com/en/resources/middleware/serve-static.html> ([#12071](https://github.com/remix-run/react-router/pull/12071))
-  - \[PRERELEASE] Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
 
 - Update `express.static` configurations to support prerendering ([#11547](https://github.com/remix-run/react-router/pull/11547))
 

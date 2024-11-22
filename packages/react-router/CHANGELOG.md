@@ -17,7 +17,7 @@
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
@@ -176,10 +176,6 @@
   }
   ```
 
-- \[REMOVE] Allow returning undefined from loaders/actions part 2 ([#12057](https://github.com/remix-run/react-router/pull/12057))
-
-  - This is a follow up to #11680 which missed some of the Remix codepaths
-
 - Params, loader data, and action data as props for route component exports ([#11961](https://github.com/remix-run/react-router/pull/11961))
 
   ```tsx
@@ -234,24 +230,15 @@
 
 - No changes ([`506329c4e`](https://github.com/remix-run/react-router/commit/506329c4e2e7aba9837cbfa44df6103b49423745))
 
-- \[REMOVE] Changeset to bump pre.4 release ([#11871](https://github.com/remix-run/react-router/pull/11871))
-
 - chore: re-enable development warnings through a `development` exports condition. ([#12269](https://github.com/remix-run/react-router/pull/12269))
 
 - Remove unstable upload handler. ([#12015](https://github.com/remix-run/react-router/pull/12015))
-
-- \[PRERELEASE] Fix typegen for routes with a client loader but no server loader ([#12117](https://github.com/remix-run/react-router/pull/12117))
 
 - Remove unneeded dependency on @web3-storage/multipart-parser ([#12274](https://github.com/remix-run/react-router/pull/12274))
 
 - Fix redirects returned from loaders/actions using `data()` ([#12021](https://github.com/remix-run/react-router/pull/12021))
 
-- - \[PRERELEASE] Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See <https://expressjs.com/en/resources/middleware/serve-static.html> ([#12071](https://github.com/remix-run/react-router/pull/12071))
-  - \[PRERELEASE] Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
-
 - fix(react-router): (v7) fix static prerender of non-ascii characters ([#12161](https://github.com/remix-run/react-router/pull/12161))
-
-- \[REMOVE] Rename RemixRouter->DataRouter ([#12062](https://github.com/remix-run/react-router/pull/12062))
 
 - Replace `substr` with `substring` ([#12080](https://github.com/remix-run/react-router/pull/12080))
 

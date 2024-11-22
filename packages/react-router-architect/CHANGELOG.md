@@ -1,4 +1,4 @@
-# @react-router/architect
+# `@react-router/architect`
 
 ## 7.0.0
 
