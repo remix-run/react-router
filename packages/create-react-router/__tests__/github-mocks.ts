@@ -55,12 +55,8 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
   invariant(typeof repo === "string", "repo must be a string");
 
   let pathToTarball: string;
-  if (owner === "remix-run" && repo === "react-router") {
-    pathToTarball = path.join(
-      __dirname,
-      "fixtures",
-      "react-router-repo.tar.gz"
-    );
+  if (owner === "remix-run" && repo === "react-router-templates") {
+    pathToTarball = path.join(__dirname, "fixtures", "templates-repo.tar.gz");
   } else if (owner === "fake-react-router-tester" && repo === "nested-dir") {
     pathToTarball = path.join(__dirname, "fixtures", "nested-dir-repo.tar.gz");
   } else {
@@ -76,6 +72,12 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
 };
 
 let githubHandlers: Array<RequestHandler> = [
+  rest.head(
+    `https://github.com/remix-run/react-router-templates/tree/main/:name`,
+    async (_req, res, ctx) => {
+      return res(ctx.status(200));
+    }
+  ),
   rest.head(
     `https://github.com/remix-run/react-router/tree/main/:type/:name`,
     async (_req, res, ctx) => {
@@ -157,6 +159,7 @@ let githubHandlers: Array<RequestHandler> = [
   rest.get(
     `https://api.github.com/repos/:owner/:repo/contents/:path`,
     async (req, res, ctx) => {
+      console.log("req.params", JSON.stringify(req.params));
       let { owner, repo } = req.params;
       if (typeof req.params.path !== "string") {
         throw new Error("req.params.path must be a string");
