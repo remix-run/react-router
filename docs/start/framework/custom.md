@@ -4,7 +4,7 @@ title: Custom Framework
 
 # Custom Framework
 
-Instead of using `@react-router/dev`, you can integrate React Router into your own bundler and server abstractions.
+Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions.
 
 ## Client Rendering
 
