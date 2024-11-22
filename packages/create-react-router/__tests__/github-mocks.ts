@@ -153,7 +153,6 @@ let githubHandlers: Array<RequestHandler> = [
   rest.get(
     `https://api.github.com/repos/:owner/:repo/contents/:path`,
     async (req, res, ctx) => {
-      console.log("req.params", JSON.stringify(req.params));
       let { owner, repo } = req.params;
       if (typeof req.params.path !== "string") {
         throw new Error("req.params.path must be a string");
