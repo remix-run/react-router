@@ -661,9 +661,7 @@ async function fakeGetSlugsFromCms() {
 - [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#700)
 - [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-serve/CHANGELOG.md#700)
 
-# **Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
-
-> > > > > > > release-next
+**Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
 
 ## v6.28.0
 
@@ -684,12 +682,6 @@ Date: 2024-11-06
 - Update JSDoc URLs for new website structure (add /v6/ segment) ([#12141](https://github.com/remix-run/react-router/pull/12141))
 
 **Full Changelog**: [`v6.27.0...v6.28.0`](https://github.com/remix-run/react-router/compare/react-router@6.27.0...react-router@6.28.0)
-
-# <<<<<<< HEAD
-
-> > > > > > > dev
-
-> > > > > > > release-next
 
 ## v6.27.0
 
