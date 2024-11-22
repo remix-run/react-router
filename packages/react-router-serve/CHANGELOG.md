@@ -1,62 +1,6 @@
-# `@remix-run/serve`
+# `@react-router/serve`
 
-## 7.0.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@react-router/node@7.0.0-pre.6`
-  - `react-router@7.0.0-pre.6`
-  - `@react-router/express@7.0.0-pre.6`
-
-## 7.0.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.5`
-  - `@react-router/node@7.0.0-pre.5`
-  - `@react-router/express@7.0.0-pre.5`
-
-## 7.0.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.4`
-  - `@react-router/node@7.0.0-pre.4`
-  - `@react-router/express@7.0.0-pre.4`
-
-## 7.0.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.3`
-  - `@react-router/express@7.0.0-pre.3`
-  - `@react-router/node@7.0.0-pre.3`
-
-## 7.0.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.0.0-pre.2`
-  - `@react-router/express@7.0.0-pre.2`
-  - `@react-router/node@7.0.0-pre.2`
-
-## 7.0.0-pre.1
-
-### Patch Changes
-
-- - Fix `react-router-serve` handling of prerendered HTML files by removing the `redirect: false` option so it now falls back on the default `redirect: true` behavior of redirecting from `/folder` -> `/folder/` which will then pick up `/folder/index.html` from disk. See https://expressjs.com/en/resources/middleware/serve-static.html ([#12071](https://github.com/remix-run/react-router/pull/12071))
-  - Proxy prerendered loader data into prerender pass for HTML files to avoid double-invocations of the loader at build time
-- Updated dependencies:
-  - `react-router@7.0.0-pre.1`
-  - `@react-router/node@7.0.0-pre.1`
-  - `@react-router/express@7.0.0-pre.1`
-
-## 7.0.0-pre.0
+## 7.0.0
 
 ### Major Changes
 
@@ -75,9 +19,9 @@
     - For some reason, when adding this via `express.static`, it seems to also add a `Cache-Control: public, max-age=0` to `.data` files
 
 - Updated dependencies:
-  - `react-router@7.0.0-pre.0`
-  - `@react-router/express@7.0.0-pre.0`
-  - `@react-router/node@7.0.0-pre.0`
+  - `react-router@7.0.0`
+  - `@react-router/express@7.0.0`
+  - `@react-router/node@7.0.0`
 
 ## 2.9.0
 

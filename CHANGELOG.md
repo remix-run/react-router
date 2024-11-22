@@ -36,7 +36,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Changes by Package](#changes-by-package)
-- [**Full Changelog**: `v6.26.2...v7.0.0`](#full-changelog-v6262v700)
+- [**Full Changelog**: `v6.28.0...v7.0.0`](#full-changelog-v6280v700)
   - [v6.28.0](#v6280)
     - [What's Changed](#whats-changed)
     - [Minor Changes](#minor-changes-1)
@@ -252,11 +252,9 @@ Date: YYYY-MM-DD
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
 
-<<<<<<< HEAD
-
 ## v7.0.0
 
-Date: 2024-??-??
+Date: 2024-11-21
 
 ### Breaking Changes
 
@@ -264,7 +262,7 @@ Date: 2024-??-??
 
 - The `react-router-dom`, `@remix-run/react`, `@remix-run/server-runtime`, and `@remix-run/router` have been collapsed into the `react-router` package
   - To ease migration, `react-router-dom` is still published in v7 as a re-export of everything from `react-router`
-- The `@remix-run/cloudflare-pages` and `@remix-run/cloudflare-workers` have been collapsed into `@rewact0-router/cloudflare` package`
+- The `@remix-run/cloudflare-pages` and `@remix-run/cloudflare-workers` have been collapsed into `@react-router/cloudflare` package`
 - The `react-router-dom-v5-compat` and `react-router-native` packages are removed starting with v7
 
 #### Removed Adapter Re-exports
@@ -792,7 +790,7 @@ async function fakeGetSlugsFromCms() {
 - [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#700)
 - [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-serve/CHANGELOG.md#700)
 
-# **Full Changelog**: [`v6.26.2...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.26.2...react-router@7.0.0)
+# **Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
 
 ## v6.28.0
 
