@@ -73,12 +73,6 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
 
 let githubHandlers: Array<RequestHandler> = [
   rest.head(
-    `https://github.com/remix-run/react-router-templates/tree/main/:name`,
-    async (_req, res, ctx) => {
-      return res(ctx.status(200));
-    }
-  ),
-  rest.head(
     `https://github.com/remix-run/react-router/tree/main/:type/:name`,
     async (_req, res, ctx) => {
       return res(ctx.status(200));
