@@ -41,6 +41,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [What's Changed](#whats-changed)
     - [Minor Changes](#minor-changes-1)
     - [Patch Changes](#patch-changes-1)
+- [\<\<\<\<\<\<\< HEAD](#-head)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-1)
       - [Stabilized APIs](#stabilized-apis)
@@ -792,6 +793,8 @@ async function fakeGetSlugsFromCms() {
 
 # **Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
 
+> > > > > > > release-next
+
 ## v6.28.0
 
 Date: 2024-11-06
@@ -812,7 +815,11 @@ Date: 2024-11-06
 
 **Full Changelog**: [`v6.27.0...v6.28.0`](https://github.com/remix-run/react-router/compare/react-router@6.27.0...react-router@6.28.0)
 
+# <<<<<<< HEAD
+
 > > > > > > > dev
+
+> > > > > > > release-next
 
 ## v6.27.0
 
