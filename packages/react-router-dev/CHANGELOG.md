@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.0.1-pre.0
+
+### Patch Changes
+
+- Ensure typegen file watcher is cleaned up when Vite dev server restarts ([#12331](https://github.com/remix-run/react-router/pull/12331))
+- Updated dependencies:
+  - `react-router@7.0.1-pre.0`
+  - `@react-router/node@7.0.1-pre.0`
+  - `@react-router/serve@7.0.1-pre.0`
+
 ## 7.0.0
 
 ### Major Changes
