@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.0.1
+
+### Patch Changes
+
+- Ensure typegen file watcher is cleaned up when Vite dev server restarts ([#12331](https://github.com/remix-run/react-router/pull/12331))
+- Updated dependencies:
+  - `react-router@7.0.1`
+  - `@react-router/node@7.0.1`
+  - `@react-router/serve@7.0.1`
+
 ## 7.0.0
 
 ### Major Changes
@@ -16,7 +26,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 
