@@ -97,10 +97,10 @@ function logBullet(
   colorizeText: <V>(v: V) => V,
   symbol: string,
   prefix: string,
-  text?: string | string[]
+  text?: string | string[] | undefined
 ) {
-  let textParts = Array.isArray(text) ? text : [text || ""].filter(Boolean);
-  let formattedText = textParts
+  const textParts = Array.isArray(text) ? text : [text || ""].filter(Boolean);
+  const formattedText = textParts
     .map((textPart) => colorizeText(textPart))
     .join("");
 
@@ -118,11 +118,11 @@ function logBullet(
   }
 }
 
-export function debug(prefix: string, text?: string | string[]) {
+export function debug(prefix: string, text?: string | string[] | undefined) {
   logBullet(log, color.yellow, color.dim, "●", prefix, text);
 }
 
-export function info(prefix: string, text?: string | string[]) {
+export function info(prefix: string, text?: string | string[] | undefined) {
   logBullet(log, color.cyan, color.dim, "◼", prefix, text);
 }
 
@@ -130,7 +130,7 @@ export function success(text: string) {
   logBullet(log, color.green, color.dim, "✔", text);
 }
 
-export function error(prefix: string, text?: string | string[]) {
+export function error(prefix: string, text?: string | string[] | undefined) {
   log("");
   logBullet(logError, color.red, color.error, "▲", prefix, text);
 }
@@ -164,7 +164,7 @@ export function identity<V>(v: V) {
 }
 
 export function strip(str: string) {
-  let pattern = [
+  const pattern = [
     "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
     "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))",
   ].join("|");
@@ -191,7 +191,7 @@ export async function directoryExists(p: string) {
 
 export async function fileExists(p: string) {
   try {
-    let stat = await fs.promises.stat(p);
+    const stat = await fs.promises.stat(p);
     return stat.isFile();
   } catch {
     return false;
@@ -205,7 +205,7 @@ export async function ensureDirectory(dir: string) {
 }
 
 export function pathContains(path: string, dir: string) {
-  let relative = path.replace(dir, "");
+  const relative = path.replace(dir, "");
   return relative.length < path.length && !relative.startsWith("..");
 }
 
@@ -221,8 +221,8 @@ export function isUrl(value: string | URL) {
 export function clear(prompt: string, perLine: number) {
   if (!perLine) return erase.line + cursor.to(0);
   let rows = 0;
-  let lines = prompt.split(/\r?\n/);
-  for (let line of lines) {
+  const lines = prompt.split(/\r?\n/);
+  for (const line of lines) {
     rows += 1 + Math.floor(Math.max(strip(line).length - 1, 0) / perLine);
   }
 
@@ -230,7 +230,7 @@ export function clear(prompt: string, perLine: number) {
 }
 
 export function lines(msg: string, perLine: number) {
-  let lines = String(strip(msg) || "").split(/\r?\n/);
+  const lines = String(strip(msg) || "").split(/\r?\n/);
   if (!perLine) return lines.length;
   return lines
     .map((l) => Math.ceil(l.length / perLine))
@@ -292,10 +292,10 @@ export function stripDirectoryFromPath(dir: string, filePath: string) {
 export const IGNORED_TEMPLATE_DIRECTORIES = [".git", "node_modules"];
 
 export async function getDirectoryFilesRecursive(dir: string) {
-  let files = await recursiveReaddir(dir, [
+  const files = await recursiveReaddir(dir, [
     (file) => {
-      let strippedFile = stripDirectoryFromPath(dir, file);
-      let parts = strippedFile.split(path.sep);
+      const strippedFile = stripDirectoryFromPath(dir, file);
+      const parts = strippedFile.split(path.sep);
       return (
         parts.length > 1 && IGNORED_TEMPLATE_DIRECTORIES.includes(parts[0])
       );

@@ -20,11 +20,11 @@ import { useRouteError } from "../../hooks";
 import type { DataRouteObject } from "../../context";
 
 export interface Route {
-  index?: boolean;
-  caseSensitive?: boolean;
+  index?: boolean | undefined;
+  caseSensitive?: boolean | undefined;
   id: string;
-  parentId?: string;
-  path?: string;
+  parentId?: string | undefined;
+  path?: string | undefined;
 }
 
 export interface EntryRoute extends Route {
@@ -33,20 +33,20 @@ export interface EntryRoute extends Route {
   hasClientAction: boolean;
   hasClientLoader: boolean;
   hasErrorBoundary: boolean;
-  imports?: string[];
-  css?: string[];
+  imports?: string[] | undefined;
+  css?: string[] | undefined;
   module: string;
-  parentId?: string;
+  parentId?: string | undefined;
 }
 
 // Create a map of routes by parentId to use recursively instead of
 // repeatedly filtering the manifest.
 function groupRoutesByParentId(manifest: RouteManifest<EntryRoute>) {
-  let routes: Record<string, Omit<EntryRoute, "children">[]> = {};
+  const routes: Record<string, Omit<EntryRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
     if (route) {
-      let parentId = route.parentId || "";
+      const parentId = route.parentId || "";
       if (!routes[parentId]) {
         routes[parentId] = [];
       }
@@ -62,15 +62,15 @@ function getRouteComponents(
   routeModule: RouteModule,
   isSpaMode: boolean
 ) {
-  let Component = getRouteModuleComponent(routeModule);
+  const Component = getRouteModuleComponent(routeModule);
   // HydrateFallback can only exist on the root route in SPA Mode
-  let HydrateFallback =
+  const HydrateFallback =
     routeModule.HydrateFallback && (!isSpaMode || route.id === "root")
       ? routeModule.HydrateFallback
       : route.id === "root"
       ? RemixRootDefaultHydrateFallback
       : undefined;
-  let ErrorBoundary = routeModule.ErrorBoundary
+  const ErrorBoundary = routeModule.ErrorBoundary
     ? routeModule.ErrorBoundary
     : route.id === "root"
     ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
@@ -130,7 +130,7 @@ export function createServerRoutes(
       "No `routeModule` available to create server routes"
     );
 
-    let dataRoute: DataRouteObject = {
+    const dataRoute: DataRouteObject = {
       ...getRouteComponents(route, routeModule, isSpaMode),
       caseSensitive: route.caseSensitive,
       id: route.id,
@@ -151,7 +151,7 @@ export function createServerRoutes(
       // for a static render
     };
 
-    let children = createServerRoutes(
+    const children = createServerRoutes(
       manifest,
       routeModules,
       future,
@@ -190,14 +190,14 @@ function preventInvalidServerHandlerCall(
   isSpaMode: boolean
 ) {
   if (isSpaMode) {
-    let fn = type === "action" ? "serverAction()" : "serverLoader()";
-    let msg = `You cannot call ${fn} in SPA Mode (routeId: "${route.id}")`;
+    const fn = type === "action" ? "serverAction()" : "serverLoader()";
+    const msg = `You cannot call ${fn} in SPA Mode (routeId: "${route.id}")`;
     console.error(msg);
     throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
 
-  let fn = type === "action" ? "serverAction()" : "serverLoader()";
-  let msg =
+  const fn = type === "action" ? "serverAction()" : "serverLoader()";
+  const msg =
     `You are trying to call ${fn} on a route that does not have a server ` +
     `${type} (routeId: "${route.id}")`;
   if (
@@ -213,8 +213,8 @@ function noActionDefinedError(
   type: "action" | "clientAction",
   routeId: string
 ) {
-  let article = type === "clientAction" ? "a" : "an";
-  let msg =
+  const article = type === "clientAction" ? "a" : "an";
+  const msg =
     `Route "${routeId}" does not have ${article} ${type}, but you are trying to ` +
     `submit to it. To fix this, please add ${article} \`${type}\` function to the route`;
   console.error(msg);
@@ -231,7 +231,7 @@ export function createClientRoutes(
     string,
     Omit<EntryRoute, "children">[]
   > = groupRoutesByParentId(manifest),
-  needsRevalidation?: Set<string>
+  needsRevalidation?: Set<string> | undefined
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModulesCache[route.id];
@@ -311,7 +311,7 @@ export function createClientRoutes(
 
       dataRoute.loader = async (
         { request, params }: LoaderFunctionArgs,
-        singleFetch?: unknown
+        singleFetch?: unknown | undefined
       ) => {
         try {
           let result = await prefetchStylesAndCallHandler(async () => {
@@ -363,7 +363,7 @@ export function createClientRoutes(
 
       dataRoute.action = (
         { request, params }: ActionFunctionArgs,
-        singleFetch?: unknown
+        singleFetch?: unknown | undefined
       ) => {
         return prefetchStylesAndCallHandler(async () => {
           invariant(
@@ -394,7 +394,7 @@ export function createClientRoutes(
       if (!route.hasClientLoader) {
         dataRoute.loader = (
           { request }: LoaderFunctionArgs,
-          singleFetch?: unknown
+          singleFetch?: unknown | undefined
         ) =>
           prefetchStylesAndCallHandler(() => {
             if (isSpaMode) return Promise.resolve(null);
@@ -404,7 +404,7 @@ export function createClientRoutes(
       if (!route.hasClientAction) {
         dataRoute.action = (
           { request }: ActionFunctionArgs,
-          singleFetch?: unknown
+          singleFetch?: unknown | undefined
         ) =>
           prefetchStylesAndCallHandler(() => {
             if (isSpaMode) {
@@ -426,7 +426,7 @@ export function createClientRoutes(
           let clientLoader = mod.clientLoader;
           lazyRoute.loader = (
             args: LoaderFunctionArgs,
-            singleFetch?: unknown
+            singleFetch?: unknown | undefined
           ) =>
             clientLoader({
               ...args,
@@ -441,7 +441,7 @@ export function createClientRoutes(
           let clientAction = mod.clientAction;
           lazyRoute.action = (
             args: ActionFunctionArgs,
-            singleFetch?: unknown
+            singleFetch?: unknown | undefined
           ) =>
             clientAction({
               ...args,

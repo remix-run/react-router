@@ -10,13 +10,13 @@ export default function MemoryNavigate({
   children,
 }: {
   to: string;
-  formMethod?: HTMLFormMethod;
-  formData?: FormData;
+  formMethod?: HTMLFormMethod | undefined;
+  formData?: FormData | undefined;
   children: React.ReactNode;
 }) {
-  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  const dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
 
-  let onClickHandler = React.useCallback(
+  const onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
       if (formMethod && formData) {
@@ -30,11 +30,13 @@ export default function MemoryNavigate({
 
   // Only prepend the basename to the rendered href, send the non-prefixed `to`
   // value into the router since it will prepend the basename
-  let basename = dataRouterContext?.basename;
-  let href = to;
-  if (basename && basename !== "/") {
-    href = to === "/" ? basename : joinPaths([basename, to]);
-  }
+  const basename = dataRouterContext?.basename;
+  const href =
+    basename && basename !== "/"
+      ? to === "/"
+        ? basename
+        : joinPaths([basename, to])
+      : to;
 
   return formData ? (
     <form onClick={onClickHandler} children={children} />

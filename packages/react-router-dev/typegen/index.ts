@@ -21,7 +21,7 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { logger }: { logger?: vite.Logger } = {}
+  { logger }: { logger?: vite.Logger | undefined } = {}
 ): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, watch: true });
   await writeAll(ctx);

@@ -5,7 +5,7 @@ import { MemoryRouter, useRoutes } from "react-router";
 
 describe("useRoutes", () => {
   it("returns the matching element from a route config", () => {
-    let routes = [
+    const routes = [
       { path: "home", element: <h1>home</h1> },
       { path: "about", element: <h1>about</h1> },
     ];
@@ -28,7 +28,7 @@ describe("useRoutes", () => {
 
   describe("when some routes are missing elements", () => {
     it("defaults to rendering their children", () => {
-      let routes = [
+      const routes = [
         {
           path: "users",
           children: [{ path: ":id", element: <h1>user profile</h1> }],
@@ -54,7 +54,7 @@ describe("useRoutes", () => {
   });
 
   it("Uses the `location` prop instead of context location`", () => {
-    let routes = [
+    const routes = [
       { path: "one", element: <h1>one</h1> },
       { path: "two", element: <h1>two</h1> },
     ];
@@ -104,13 +104,13 @@ describe("useRoutes", () => {
   });
 
   it("returns null when no route matches and a `location` prop is passed", () => {
-    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const spy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
-    let routes = [{ path: "one", element: <h1>one</h1> }];
+    const routes = [{ path: "one", element: <h1>one</h1> }];
 
     const NullRenderer = (props: {
       routes: RouteObject[];
-      location?: Partial<Location> & { pathname: string };
+      location?: (Partial<Location> & { pathname: string }) | undefined;
     }) => {
       const element = useRoutes(props.routes, props.location);
       return element === null ? <div>is null</div> : <div>is not null</div>;
@@ -148,7 +148,7 @@ describe("useRoutes", () => {
     });
 
     it("for no element on leaf route", () => {
-      let routes = [
+      const routes = [
         {
           path: "layout",
           children: [{ path: "two", element: <h1>two</h1> }],
@@ -178,7 +178,7 @@ function RoutesRenderer({
   location,
 }: {
   routes: RouteObject[];
-  location?: Partial<Location> & { pathname: string };
+  location?: (Partial<Location> & { pathname: string }) | undefined;
 }) {
   return useRoutes(routes, location);
 }

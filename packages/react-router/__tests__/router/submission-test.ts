@@ -3,10 +3,14 @@ import { ErrorResponseImpl } from "../../lib/router/utils";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
-function initializeTest(init?: {
-  url?: string;
-  hydrationData?: HydrationState;
-}) {
+function initializeTest(
+  init?:
+    | {
+        url?: string | undefined;
+        hydrationData?: HydrationState | undefined;
+      }
+    | undefined
+) {
   return setup({
     routes: [
       {

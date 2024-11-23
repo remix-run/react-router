@@ -15,7 +15,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react",
-    "importsNotUsedAsValues": "error"
+    "importsNotUsedAsValues": "error",
+    "exactOptionalPropertyTypes": true
   },
   "include": ["./src"]
 }

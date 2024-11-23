@@ -47,7 +47,7 @@ import { ServerMode } from "./mode";
 
 export function sanitizeError<T = unknown>(error: T, serverMode: ServerMode) {
   if (error instanceof Error && serverMode !== ServerMode.Development) {
-    let sanitized = new Error("Unexpected Server Error");
+    const sanitized = new Error("Unexpected Server Error");
     sanitized.stack = undefined;
     return sanitized;
   }
@@ -67,14 +67,14 @@ export function sanitizeErrors(
 // https://github.com/microsoft/TypeScript/issues/15300
 export type SerializedError = {
   message: string;
-  stack?: string;
+  stack?: string | undefined;
 };
 
 export function serializeError(
   error: Error,
   serverMode: ServerMode
 ): SerializedError {
-  let sanitized = sanitizeError(error, serverMode);
+  const sanitized = sanitizeError(error, serverMode);
   return {
     message: sanitized.message,
     stack: sanitized.stack,
@@ -86,15 +86,15 @@ export function serializeErrors(
   serverMode: ServerMode
 ): StaticHandlerContext["errors"] {
   if (!errors) return null;
-  let entries = Object.entries(errors);
-  let serialized: StaticHandlerContext["errors"] = {};
+  const entries = Object.entries(errors);
+  const serialized: StaticHandlerContext["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
     // deserializeErrors in remix-react/errors.ts :)
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
     } else if (val instanceof Error) {
-      let sanitized = sanitizeError(val, serverMode);
+      const sanitized = sanitizeError(val, serverMode);
       serialized[key] = {
         message: sanitized.message,
         stack: sanitized.stack,

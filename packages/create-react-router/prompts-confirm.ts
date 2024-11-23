@@ -10,10 +10,10 @@ import { color, strip, clear, type ActionKey } from "./utils";
 export interface ConfirmPromptOptions extends PromptOptions {
   label: string;
   message: string;
-  initial?: boolean;
-  hint?: string;
-  validate?: (v: any) => boolean;
-  error?: string;
+  initial?: boolean | undefined;
+  hint?: string | undefined;
+  validate?: ((v: any) => boolean) | undefined;
+  error?: string | undefined;
 }
 
 export type ConfirmPromptChoices = [
@@ -26,7 +26,7 @@ export class ConfirmPrompt extends Prompt {
   msg: string;
   value: boolean | undefined;
   initialValue: boolean;
-  hint?: string;
+  hint?: string | undefined;
   choices: ConfirmPromptChoices;
   cursor: number;
   done: boolean | undefined;

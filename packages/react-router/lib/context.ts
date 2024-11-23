@@ -23,49 +23,53 @@ import type {
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
 export interface IndexRouteObject {
-  caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
-  path?: AgnosticIndexRouteObject["path"];
-  id?: AgnosticIndexRouteObject["id"];
-  loader?: AgnosticIndexRouteObject["loader"];
-  action?: AgnosticIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticIndexRouteObject["handle"];
+  caseSensitive?: AgnosticIndexRouteObject["caseSensitive"] | undefined;
+  path?: AgnosticIndexRouteObject["path"] | undefined;
+  id?: AgnosticIndexRouteObject["id"] | undefined;
+  loader?: AgnosticIndexRouteObject["loader"] | undefined;
+  action?: AgnosticIndexRouteObject["action"] | undefined;
+  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"] | undefined;
+  shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"] | undefined;
+  handle?: AgnosticIndexRouteObject["handle"] | undefined;
   index: true;
-  children?: undefined;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  children?: DataRouteObject[] | undefined;
+  element?: React.ReactNode | null | undefined;
+  hydrateFallbackElement?: React.ReactNode | null | undefined;
+  errorElement?: React.ReactNode | null | undefined;
+  Component?: React.ComponentType | null | undefined;
+  HydrateFallback?: React.ComponentType | null | undefined;
+  ErrorBoundary?: React.ComponentType | null | undefined;
+  lazy?: LazyRouteFunction<RouteObject> | undefined;
 }
 
 export interface NonIndexRouteObject {
-  caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
-  path?: AgnosticNonIndexRouteObject["path"];
-  id?: AgnosticNonIndexRouteObject["id"];
-  loader?: AgnosticNonIndexRouteObject["loader"];
-  action?: AgnosticNonIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticNonIndexRouteObject["handle"];
-  index?: false;
-  children?: RouteObject[];
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"] | undefined;
+  path?: AgnosticNonIndexRouteObject["path"] | undefined;
+  id?: AgnosticNonIndexRouteObject["id"] | undefined;
+  loader?: AgnosticNonIndexRouteObject["loader"] | undefined;
+  action?: AgnosticNonIndexRouteObject["action"] | undefined;
+  hasErrorBoundary?:
+    | AgnosticNonIndexRouteObject["hasErrorBoundary"]
+    | undefined;
+  shouldRevalidate?:
+    | AgnosticNonIndexRouteObject["shouldRevalidate"]
+    | undefined;
+  handle?: AgnosticNonIndexRouteObject["handle"] | undefined;
+  index?: false | undefined;
+  children?: RouteObject[] | undefined;
+  element?: React.ReactNode | null | undefined;
+  hydrateFallbackElement?: React.ReactNode | null | undefined;
+  errorElement?: React.ReactNode | null | undefined;
+  Component?: React.ComponentType | null | undefined;
+  HydrateFallback?: React.ComponentType | null | undefined;
+  ErrorBoundary?: React.ComponentType | null | undefined;
+  lazy?: LazyRouteFunction<RouteObject> | undefined;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
 
 export type DataRouteObject = RouteObject & {
-  children?: DataRouteObject[];
+  children?: DataRouteObject[] | undefined;
   id: string;
 };
 
@@ -87,7 +91,7 @@ export interface DataRouterContextObject
   // `NavigationContext` needs future since it doesn't have a `router` in all cases
   extends Omit<NavigationContextObject, "future"> {
   router: Router;
-  staticContext?: StaticHandlerContext;
+  staticContext?: StaticHandlerContext | undefined;
 }
 
 export const DataRouterContext =
@@ -128,12 +132,12 @@ export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 AwaitContext.displayName = "Await";
 
 export interface NavigateOptions {
-  replace?: boolean;
-  state?: any;
-  preventScrollReset?: boolean;
-  relative?: RelativeRoutingType;
-  flushSync?: boolean;
-  viewTransition?: boolean;
+  replace?: boolean | undefined;
+  state?: any | undefined;
+  preventScrollReset?: boolean | undefined;
+  relative?: RelativeRoutingType | undefined;
+  flushSync?: boolean | undefined;
+  viewTransition?: boolean | undefined;
 }
 
 /**
@@ -148,10 +152,18 @@ export interface NavigateOptions {
 export interface Navigator {
   createHref: History["createHref"];
   // Optional for backwards-compat with Router/HistoryRouter usage (edge case)
-  encodeLocation?: History["encodeLocation"];
+  encodeLocation?: History["encodeLocation"] | undefined;
   go: History["go"];
-  push(to: To, state?: any, opts?: NavigateOptions): void;
-  replace(to: To, state?: any, opts?: NavigateOptions): void;
+  push(
+    to: To,
+    state?: any | undefined,
+    opts?: NavigateOptions | undefined
+  ): void;
+  replace(
+    to: To,
+    state?: any | undefined,
+    opts?: NavigateOptions | undefined
+  ): void;
 }
 
 interface NavigationContextObject {
@@ -173,9 +185,8 @@ interface LocationContextObject {
   navigationType: NavigationType;
 }
 
-export const LocationContext = React.createContext<LocationContextObject>(
-  null!
-);
+export const LocationContext =
+  React.createContext<LocationContextObject | null>(null);
 LocationContext.displayName = "Location";
 
 export interface RouteContextObject {

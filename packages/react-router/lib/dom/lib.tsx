@@ -126,12 +126,12 @@ try {
 ////////////////////////////////////////////////////////////////////////////////
 
 interface DOMRouterOpts {
-  basename?: string;
-  future?: Partial<FutureConfig>;
-  hydrationData?: HydrationState;
-  dataStrategy?: DataStrategyFunction;
-  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
-  window?: Window;
+  basename?: string | undefined;
+  future?: Partial<FutureConfig> | undefined;
+  hydrationData?: HydrationState | undefined;
+  dataStrategy?: DataStrategyFunction | undefined;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction | undefined;
+  window?: Window | undefined;
 }
 
 /**
@@ -139,7 +139,7 @@ interface DOMRouterOpts {
  */
 export function createBrowserRouter(
   routes: RouteObject[],
-  opts?: DOMRouterOpts
+  opts?: DOMRouterOpts | undefined
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
@@ -159,7 +159,7 @@ export function createBrowserRouter(
  */
 export function createHashRouter(
   routes: RouteObject[],
-  opts?: DOMRouterOpts
+  opts?: DOMRouterOpts | undefined
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
@@ -189,8 +189,8 @@ function deserializeErrors(
   errors: DataRouter["state"]["errors"]
 ): DataRouter["state"]["errors"] {
   if (!errors) return null;
-  let entries = Object.entries(errors);
-  let serialized: DataRouter["state"]["errors"] = {};
+  const entries = Object.entries(errors);
+  const serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
     // serializeErrors in react-router-dom/server.tsx :)
@@ -204,11 +204,11 @@ function deserializeErrors(
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
       if (val.__subType) {
-        let ErrorConstructor = window[val.__subType];
+        const ErrorConstructor = window[val.__subType];
         if (typeof ErrorConstructor === "function") {
           try {
             // @ts-expect-error
-            let error = new ErrorConstructor(val.message);
+            const error = new ErrorConstructor(val.message);
             // Wipe away the client-side stack trace.  Nothing to fill it in with
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
@@ -220,7 +220,7 @@ function deserializeErrors(
       }
 
       if (serialized[key] == null) {
-        let error = new Error(val.message);
+        const error = new Error(val.message);
         // Wipe away the client-side stack trace.  Nothing to fill it in with
         // because we don't serialize SSR stack traces for security reasons
         error.stack = "";
@@ -243,9 +243,9 @@ function deserializeErrors(
  * @category Types
  */
 export interface BrowserRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  window?: Window;
+  basename?: string | undefined;
+  children?: React.ReactNode | undefined;
+  window?: Window | undefined;
 }
 
 /**
@@ -258,17 +258,17 @@ export function BrowserRouter({
   children,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  const historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
 
-  let history = historyRef.current;
+  const history = historyRef.current;
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
-  let setState = React.useCallback(
+  const setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
@@ -292,9 +292,9 @@ export function BrowserRouter({
  * @category Types
  */
 export interface HashRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  window?: Window;
+  basename?: string | undefined;
+  children?: React.ReactNode | undefined;
+  window?: Window | undefined;
 }
 
 /**
@@ -304,17 +304,17 @@ export interface HashRouterProps {
  * @category Router Components
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  const historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }
 
-  let history = historyRef.current;
+  const history = historyRef.current;
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
-  let setState = React.useCallback(
+  const setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
@@ -338,8 +338,8 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
  * @category Types
  */
 export interface HistoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
+  basename?: string | undefined;
+  children?: React.ReactNode | undefined;
   history: History;
 }
 
@@ -361,7 +361,7 @@ export function HistoryRouter({
     action: history.action,
     location: history.location,
   });
-  let setState = React.useCallback(
+  const setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
@@ -399,7 +399,7 @@ export interface LinkProps
     - **render** - default, discover the route when the link renders
     - **none** - don't eagerly discover, only discover if the link is clicked
   */
-  discover?: DiscoverBehavior;
+  discover?: DiscoverBehavior | undefined;
 
   /**
     Defines the data and module prefetching behavior for the link.
@@ -427,7 +427,7 @@ export interface LinkProps
 
     Because of this, if you are using `nav :last-child` you will need to use `nav :last-of-type` so the styles don't conditionally fall off your last link (and any other similar selectors).
    */
-  prefetch?: PrefetchBehavior;
+  prefetch?: PrefetchBehavior | undefined;
 
   /**
     Will use document navigation instead of client side routing when the link is clicked: the browser will handle the transition normally (as if it were an `<a href>`).
@@ -436,7 +436,7 @@ export interface LinkProps
     <Link to="/logout" reloadDocument />
     ```
    */
-  reloadDocument?: boolean;
+  reloadDocument?: boolean | undefined;
 
   /**
     Replaces the current entry in the history stack instead of pushing a new one onto it.
@@ -456,7 +456,7 @@ export interface LinkProps
     A -> C
     ```
    */
-  replace?: boolean;
+  replace?: boolean | undefined;
 
   /**
     Adds persistent client side routing state to the next location.
@@ -476,7 +476,7 @@ export interface LinkProps
 
     This state is inaccessible on the server as it is implemented on top of [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
    */
-  state?: any;
+  state?: any | undefined;
 
   /**
     Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using {@link ScrollRestoration}. This only prevents new locations reseting scroll to the top, scroll position will be restored for back/forward button navigation.
@@ -485,7 +485,7 @@ export interface LinkProps
     <Link to="?tab=one" preventScrollReset />
     ```
    */
-  preventScrollReset?: boolean;
+  preventScrollReset?: boolean | undefined;
 
   /**
     Defines the relative path behavior for the link.
@@ -501,7 +501,7 @@ export interface LinkProps
     - **route** - default, resolves the link relative to the route pattern. In the example above a relative link of `".."` will remove both `:slug/edit` segments back to "/blog".
     - **path** - relative to the path so `..` will only remove one URL segment up to "/blog/:slug"
    */
-  relative?: RelativeRoutingType;
+  relative?: RelativeRoutingType | undefined;
 
   /**
     Can be a string or a partial {@link Path}:
@@ -531,7 +531,7 @@ export interface LinkProps
 
     To apply specific styles for the transition, see {@link useViewTransitionState}
    */
-  viewTransition?: boolean;
+  viewTransition?: boolean | undefined;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -574,7 +574,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     forwardedRef
   ) {
     let { basename } = React.useContext(NavigationContext);
-    let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
+    const isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
     // Rendered into <a href> for absolute URLs
     let absoluteHref;
@@ -611,13 +611,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     // Rendered into <a href> for relative URLs
-    let href = useHref(to, { relative });
+    const href = useHref(to, { relative });
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,
       rest
     );
 
-    let internalOnClick = useLinkClickHandler(to, {
+    const internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
       target,
@@ -634,7 +634,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
-    let link = (
+    const link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
@@ -728,7 +728,10 @@ export interface NavLinkProps
     </NavLink>
     ```
    */
-  children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
+  children?:
+    | React.ReactNode
+    | ((props: NavLinkRenderProps) => React.ReactNode)
+    | undefined;
 
   /**
     Changes the matching logic to make it case-sensitive:
@@ -738,7 +741,7 @@ export interface NavLinkProps
     | `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | true     |
     | `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/sponge-bob` | false    |
    */
-  caseSensitive?: boolean;
+  caseSensitive?: boolean | undefined;
 
   /**
     Classes are automatically applied to NavLink that correspond to {@link NavLinkRenderProps}.
@@ -751,7 +754,10 @@ export interface NavLinkProps
     }
     ```
    */
-  className?: string | ((props: NavLinkRenderProps) => string | undefined);
+  className?:
+    | string
+    | ((props: NavLinkRenderProps) => string | undefined)
+    | undefined;
 
   /**
     Changes the matching logic for the `active` and `pending` states to only match to the "end" of the {@link NavLinkProps.to}. If the URL is longer, it will no longer be considered active.
@@ -765,11 +771,12 @@ export interface NavLinkProps
 
     `<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the root route.
    */
-  end?: boolean;
+  end?: boolean | undefined;
 
   style?:
     | React.CSSProperties
-    | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
+    | ((props: NavLinkRenderProps) => React.CSSProperties | undefined)
+    | undefined;
 }
 
 /**
@@ -926,7 +933,7 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * Native `<form>` only supports `get` and `post`, avoid the other verbs if
    * you'd like to support progressive enhancement
    */
-  method?: HTMLFormMethod;
+  method?: HTMLFormMethod | undefined;
 
   /**
    * The encoding type to use for the form submission.
@@ -934,31 +941,32 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   encType?:
     | "application/x-www-form-urlencoded"
     | "multipart/form-data"
-    | "text/plain";
+    | "text/plain"
+    | undefined;
 
   /**
    * The URL to submit the form data to.  If `undefined`, this defaults to the closest route in context.
    */
-  action?: string;
+  action?: string | undefined;
 
   /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on /-delimited URL segments
    */
-  relative?: RelativeRoutingType;
+  relative?: RelativeRoutingType | undefined;
 
   /**
    * Prevent the scroll position from resetting to the top of the viewport on
    * completion of the navigation when using the <ScrollRestoration> component
    */
-  preventScrollReset?: boolean;
+  preventScrollReset?: boolean | undefined;
 
   /**
    * A function to call when the form is submitted. If you call
    * `event.preventDefault()` then this form will not do anything.
    */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  onSubmit?: React.FormEventHandler<HTMLFormElement> | undefined;
 }
 
 /**
@@ -972,14 +980,14 @@ export interface FetcherFormProps extends SharedFormProps {}
  * @category Types
  */
 export interface FormProps extends SharedFormProps {
-  discover?: DiscoverBehavior;
+  discover?: DiscoverBehavior | undefined;
 
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
    * can pick up the fetcher's state in a different component in a {@link
    * useFetcher}.
    */
-  fetcherKey?: string;
+  fetcherKey?: string | undefined;
 
   /**
    * Skips the navigation and uses a {@link useFetcher | fetcher} internally
@@ -987,25 +995,25 @@ export interface FormProps extends SharedFormProps {
    * `<fetcher.Form>` where you don't care about the resulting data in this
    * component.
    */
-  navigate?: boolean;
+  navigate?: boolean | undefined;
 
   /**
    * Forces a full document navigation instead of client side routing + data
    * fetch.
    */
-  reloadDocument?: boolean;
+  reloadDocument?: boolean | undefined;
 
   /**
    * Replaces the current entry in the browser history stack when the form
    * navigates. Use this if you don't want the user to be able to click "back"
    * to the page with the form on it.
    */
-  replace?: boolean;
+  replace?: boolean | undefined;
 
   /**
    * State object to add to the history stack entry for this navigation
    */
-  state?: any;
+  state?: any | undefined;
 
   /**
    * Enables a [View
@@ -1013,7 +1021,7 @@ export interface FormProps extends SharedFormProps {
    * for this navigation. To apply specific styles during the transition see
    * {@link useViewTransitionState}.
    */
-  viewTransition?: boolean;
+  viewTransition?: boolean | undefined;
 }
 
 type HTMLSubmitEvent = React.BaseSyntheticEvent<
@@ -1066,22 +1074,22 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     },
     forwardedRef
   ) => {
-    let submit = useSubmit();
-    let formAction = useFormAction(action, { relative });
-    let formMethod: HTMLFormMethod =
+    const submit = useSubmit();
+    const formAction = useFormAction(action, { relative });
+    const formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
-    let isAbsolute =
+    const isAbsolute =
       typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+    const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
       event.preventDefault();
 
-      let submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
+      const submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
         .submitter as HTMLFormSubmitter | null;
 
-      let submitMethod =
+      const submitMethod =
         (submitter?.getAttribute("formmethod") as HTMLFormMethod | undefined) ||
         method;
 
@@ -1126,9 +1134,9 @@ export type ScrollRestorationProps = ScriptsProps & {
     />
     ```
    */
-  getKey?: GetScrollRestorationKeyFunction;
+  getKey?: GetScrollRestorationKeyFunction | undefined;
 
-  storageKey?: string;
+  storageKey?: string | undefined;
 };
 
 /**
@@ -1174,16 +1182,16 @@ export function ScrollRestoration({
   // the client!  So if the user's getKey implementation returns the SSR
   // location key, then let's ignore it and let our inline <script> below pick
   // up the client side history state key
-  let ssrKey = React.useMemo(
+  const ssrKey = React.useMemo(
     () => {
       if (!remixContext || !getKey) return null;
-      let userKey = getScrollRestorationKey(
+      const userKey = getScrollRestorationKey(
         location,
         matches,
         basename,
         getKey
       );
-      return userKey !== location.key ? userKey : null;
+      return userKey === location.key ? null : userKey;
     },
     // Nah, we only need this the first time for the SSR render
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1196,14 +1204,14 @@ export function ScrollRestoration({
     return null;
   }
 
-  let restoreScroll = ((storageKey: string, restoreKey: string) => {
+  const restoreScroll = ((storageKey: string, restoreKey: string) => {
     if (!window.history.state || !window.history.state.key) {
-      let key = Math.random().toString(32).slice(2);
+      const key = Math.random().toString(32).slice(2);
       window.history.replaceState({ key }, "");
     }
     try {
-      let positions = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
-      let storedY = positions[restoreKey || window.history.state.key];
+      const positions = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
+      const storedY = positions[restoreKey || window.history.state.key];
       if (typeof storedY === "number") {
         window.scrollTo(0, storedY);
       }
@@ -1255,13 +1263,13 @@ function getDataRouterConsoleError(
 }
 
 function useDataRouterContext(hookName: DataRouterHook) {
-  let ctx = React.useContext(DataRouterContext);
+  const ctx = React.useContext(DataRouterContext);
   invariant(ctx, getDataRouterConsoleError(hookName));
   return ctx;
 }
 
 function useDataRouterState(hookName: DataRouterStateHook) {
-  let state = React.useContext(DataRouterStateContext);
+  const state = React.useContext(DataRouterStateContext);
   invariant(state, getDataRouterConsoleError(hookName));
   return state;
 }
@@ -1285,17 +1293,17 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     relative,
     viewTransition,
   }: {
-    target?: React.HTMLAttributeAnchorTarget;
-    replace?: boolean;
-    state?: any;
-    preventScrollReset?: boolean;
-    relative?: RelativeRoutingType;
-    viewTransition?: boolean;
+    target?: React.HTMLAttributeAnchorTarget | undefined;
+    replace?: boolean | undefined;
+    state?: any | undefined;
+    preventScrollReset?: boolean | undefined;
+    relative?: RelativeRoutingType | undefined;
+    viewTransition?: boolean | undefined;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
-  let navigate = useNavigate();
-  let location = useLocation();
-  let path = useResolvedPath(to, { relative });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const path = useResolvedPath(to, { relative });
 
   return React.useCallback(
     (event: React.MouseEvent<E, MouseEvent>) => {
@@ -1304,7 +1312,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 
         // If the URL hasn't changed, a regular <a> will do a replace instead of
         // a push, so do the same here unless the replace prop is explicitly set
-        let replace =
+        const replace =
           replaceProp !== undefined
             ? replaceProp
             : createPath(location) === createPath(path);
@@ -1348,7 +1356,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  @category Hooks
  */
 export function useSearchParams(
-  defaultInit?: URLSearchParamsInit
+  defaultInit?: URLSearchParamsInit | undefined
 ): [URLSearchParams, SetURLSearchParams] {
   warning(
     typeof URLSearchParams !== "undefined",
@@ -1420,8 +1428,9 @@ export function useSearchParams(
 export type SetURLSearchParams = (
   nextInit?:
     | URLSearchParamsInit
-    | ((prev: URLSearchParams) => URLSearchParamsInit),
-  navigateOpts?: NavigateOptions
+    | ((prev: URLSearchParams) => URLSearchParamsInit)
+    | undefined,
+  navigateOpts?: NavigateOptions | undefined
 ) => void;
 
 /**
@@ -1471,7 +1480,7 @@ export interface SubmitFunction {
      * Options that override the `<form>`'s own attributes. Required when
      * submitting arbitrary data without a backing `<form>`.
      */
-    options?: SubmitOptions
+    options?: SubmitOptions | undefined
   ): Promise<void>;
 }
 
@@ -1520,12 +1529,12 @@ export interface FetcherSubmitFunction {
     target: SubmitTarget,
 
     // Fetchers cannot replace or set state because they are not navigation events
-    options?: FetcherSubmitOptions
+    options?: FetcherSubmitOptions | undefined
   ): Promise<void>;
 }
 
 let fetcherId = 0;
-let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
+const getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 
 /**
   The imperative version of {@link Form | `<Form>`} that lets you submit a form from code instead of a user interaction.
@@ -1550,7 +1559,7 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
-  let currentRouteId = useRouteId();
+  const currentRouteId = useRouteId();
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
@@ -1560,7 +1569,7 @@ export function useSubmit(): SubmitFunction {
       );
 
       if (options.navigate === false) {
-        let key = options.fetcherKey || getUniqueFetcherId();
+        const key = options.fetcherKey || getUniqueFetcherId();
         await router.fetch(key, currentRouteId, options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
@@ -1613,22 +1622,22 @@ export function useFormAction(
   /**
    * The action to append to the closest route URL.
    */
-  action?: string,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  action?: string | undefined,
+  { relative }: { relative?: RelativeRoutingType | undefined } = {}
 ): string {
   let { basename } = React.useContext(NavigationContext);
-  let routeContext = React.useContext(RouteContext);
+  const routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
   // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
-  let path = { ...useResolvedPath(action ? action : ".", { relative }) };
+  const path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
   // If no action was specified, browsers will persist current search params
   // when determining the path, so match that behavior
   // https://github.com/remix-run/remix/issues/927
-  let location = useLocation();
+  const location = useLocation();
   if (action == null) {
     // Safe to write to this directly here since if action was undefined, we
     // would have called useResolvedPath(".") which will never include a search
@@ -1637,13 +1646,13 @@ export function useFormAction(
     // When grabbing search params from the URL, remove any included ?index param
     // since it might not apply to our contextual route.  We add it back based
     // on match.route.index below
-    let params = new URLSearchParams(path.search);
-    let indexValues = params.getAll("index");
-    let hasNakedIndexParam = indexValues.some((v) => v === "");
+    const params = new URLSearchParams(path.search);
+    const indexValues = params.getAll("index");
+    const hasNakedIndexParam = indexValues.some((v) => v === "");
     if (hasNakedIndexParam) {
       params.delete("index");
       indexValues.filter((v) => v).forEach((v) => params.append("index", v));
-      let qs = params.toString();
+      const qs = params.toString();
       path.search = qs ? `?${qs}` : "";
     }
   }
@@ -1750,15 +1759,17 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
    */
   load: (
     href: string,
-    opts?: {
-      /**
-       * Wraps the initial state update for this `fetcher.load` in a
-       * `ReactDOM.flushSync` call instead of the default `React.startTransition`.
-       * This allows you to perform synchronous DOM actions immediately after the
-       * update is flushed to the DOM.
-       */
-      flushSync?: boolean;
-    }
+    opts?:
+      | {
+          /**
+           * Wraps the initial state update for this `fetcher.load` in a
+           * `ReactDOM.flushSync` call instead of the default `React.startTransition`.
+           * This allows you to perform synchronous DOM actions immediately after the
+           * update is flushed to the DOM.
+           */
+          flushSync?: boolean | undefined;
+        }
+      | undefined
   ) => Promise<void>;
 };
 
@@ -1816,13 +1827,13 @@ export function useFetcher<T = any>({
     }
     ```
    */
-  key?: string;
+  key?: string | undefined;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let state = useDataRouterState(DataRouterStateHook.UseFetcher);
-  let fetcherData = React.useContext(FetchersContext);
-  let route = React.useContext(RouteContext);
-  let routeId = route.matches[route.matches.length - 1]?.route.id;
+  const state = useDataRouterState(DataRouterStateHook.UseFetcher);
+  const fetcherData = React.useContext(FetchersContext);
+  const route = React.useContext(RouteContext);
+  const routeId = route.matches[route.matches.length - 1]?.route.id;
 
   invariant(fetcherData, `useFetcher must be used inside a FetchersContext`);
   invariant(route, `useFetcher must be used inside a RouteContext`);
@@ -1832,7 +1843,7 @@ export function useFetcher<T = any>({
   );
 
   // Fetcher key handling
-  let defaultKey = React.useId();
+  const defaultKey = React.useId();
   let [fetcherKey, setFetcherKey] = React.useState<string>(key || defaultKey);
   if (key && key !== fetcherKey) {
     setFetcherKey(key);
@@ -1845,16 +1856,19 @@ export function useFetcher<T = any>({
   }, [router, fetcherKey]);
 
   // Fetcher additions
-  let load = React.useCallback(
-    async (href: string, opts?: { flushSync?: boolean }) => {
+  const load = React.useCallback(
+    async (
+      href: string,
+      opts?: { flushSync?: boolean | undefined } | undefined
+    ) => {
       invariant(routeId, "No routeId available for fetcher.load()");
       await router.fetch(fetcherKey, routeId, href, opts);
     },
     [fetcherKey, routeId, router]
   );
 
-  let submitImpl = useSubmit();
-  let submit = React.useCallback<FetcherSubmitFunction>(
+  const submitImpl = useSubmit();
+  const submit = React.useCallback<FetcherSubmitFunction>(
     async (target, opts) => {
       await submitImpl(target, {
         ...opts,
@@ -1865,8 +1879,8 @@ export function useFetcher<T = any>({
     [fetcherKey, submitImpl]
   );
 
-  let FetcherForm = React.useMemo(() => {
-    let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
+  const FetcherForm = React.useMemo(() => {
+    const FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
       (props, ref) => {
         return (
           <Form {...props} navigate={false} fetcherKey={fetcherKey} ref={ref} />
@@ -1878,9 +1892,10 @@ export function useFetcher<T = any>({
   }, [fetcherKey]);
 
   // Exposed FetcherWithComponents
-  let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
-  let data = fetcherData.get(fetcherKey);
-  let fetcherWithComponents = React.useMemo(
+  const fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
+  const data = fetcherData.get(fetcherKey);
+
+  return React.useMemo(
     () => ({
       Form: FetcherForm,
       submit,
@@ -1890,8 +1905,6 @@ export function useFetcher<T = any>({
     }),
     [FetcherForm, submit, load, fetcher, data]
   );
-
-  return fetcherWithComponents;
 }
 
 /**
@@ -1911,7 +1924,7 @@ export function useFetcher<T = any>({
   @category Hooks
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
-  let state = useDataRouterState(DataRouterStateHook.UseFetchers);
+  const state = useDataRouterState(DataRouterStateHook.UseFetchers);
   return Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
     ...fetcher,
     key,
@@ -1925,7 +1938,7 @@ function getScrollRestorationKey(
   location: Location,
   matches: UIMatch[],
   basename: string,
-  getKey?: GetScrollRestorationKeyFunction
+  getKey?: GetScrollRestorationKeyFunction | undefined
 ) {
   let key: string | null = null;
   if (getKey) {
@@ -1955,17 +1968,17 @@ export function useScrollRestoration({
   getKey,
   storageKey,
 }: {
-  getKey?: GetScrollRestorationKeyFunction;
-  storageKey?: string;
+  getKey?: GetScrollRestorationKeyFunction | undefined;
+  storageKey?: string | undefined;
 } = {}) {
   let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
     DataRouterStateHook.UseScrollRestoration
   );
   let { basename } = React.useContext(NavigationContext);
-  let location = useLocation();
-  let matches = useMatches();
-  let navigation = useNavigation();
+  const location = useLocation();
+  const matches = useMatches();
+  const navigation = useNavigation();
 
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
@@ -2016,7 +2029,7 @@ export function useScrollRestoration({
     // Enable scroll restoration in the router
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      let disableScrollRestoration = router?.enableScrollRestoration(
+      const disableScrollRestoration = router?.enableScrollRestoration(
         savedScrollPositions,
         () => window.scrollY,
         getKey
@@ -2070,11 +2083,11 @@ export function useScrollRestoration({
  */
 export function useBeforeUnload(
   callback: (event: BeforeUnloadEvent) => any,
-  options?: { capture?: boolean }
+  options?: { capture?: boolean | undefined } | undefined
 ): void {
   let { capture } = options || {};
   React.useEffect(() => {
-    let opts = capture != null ? { capture } : undefined;
+    const opts = capture != null ? { capture } : undefined;
     window.addEventListener("beforeunload", callback, opts);
     return () => {
       window.removeEventListener("beforeunload", callback, opts);
@@ -2092,11 +2105,11 @@ export function useBeforeUnload(
  */
 function usePageHide(
   callback: (event: PageTransitionEvent) => any,
-  options?: { capture?: boolean }
+  options?: { capture?: boolean | undefined } | undefined
 ): void {
   let { capture } = options || {};
   React.useEffect(() => {
-    let opts = capture != null ? { capture } : undefined;
+    const opts = capture != null ? { capture } : undefined;
     window.addEventListener("pagehide", callback, opts);
     return () => {
       window.removeEventListener("pagehide", callback, opts);
@@ -2178,7 +2191,7 @@ export function usePrompt({
  */
 export function useViewTransitionState(
   to: To,
-  opts: { relative?: RelativeRoutingType } = {}
+  opts: { relative?: RelativeRoutingType | undefined } = {}
 ) {
   let vtContext = React.useContext(ViewTransitionContext);
 

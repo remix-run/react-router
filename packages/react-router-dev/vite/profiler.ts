@@ -13,9 +13,11 @@ declare namespace global {
 
 export const getSession = () => global.__reactRouter_profile_session;
 
-export const start = async (callback?: () => void | Promise<void>) => {
-  let inspector = await import("node:inspector").then((r) => r.default);
-  let session = (global.__reactRouter_profile_session =
+export const start = async (
+  callback?: (() => void | Promise<void>) | undefined
+) => {
+  const inspector = await import("node:inspector").then((r) => r.default);
+  const session = (global.__reactRouter_profile_session =
     new inspector.Session());
   session.connect();
   session.post("Profiler.enable", () => {
@@ -26,19 +28,28 @@ export const start = async (callback?: () => void | Promise<void>) => {
 let profileCount = 0;
 
 export const stop = (log: (message: string) => void): void | Promise<void> => {
-  let session = getSession();
+  const session = getSession();
+
   if (!session) return;
+
   return new Promise((res, rej) => {
     session!.post("Profiler.stop", (err, { profile }) => {
       if (err) return rej(err);
-      let outPath = path.resolve(`./react-router-${profileCount++}.cpuprofile`);
+
+      const outPath = path.resolve(
+        `./react-router-${profileCount++}.cpuprofile`
+      );
+
       fs.writeFileSync(outPath, JSON.stringify(profile));
+
       log(
         colors.yellow(
           `CPU profile written to ${colors.white(colors.dim(outPath))}`
         )
       );
+
       global.__reactRouter_profile_session = undefined;
+
       res();
     });
   });

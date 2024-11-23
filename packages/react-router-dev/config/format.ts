@@ -16,24 +16,24 @@ export function formatRoutes(
 
 type JsonFormattedRoute = {
   id: string;
-  index?: boolean;
-  path?: string;
-  caseSensitive?: boolean;
+  index?: boolean | undefined;
+  path?: string | undefined;
+  caseSensitive?: boolean | undefined;
   file: string;
-  children?: JsonFormattedRoute[];
+  children?: JsonFormattedRoute[] | undefined;
 };
 
 export function formatRoutesAsJson(routeManifest: RouteManifest): string {
   function handleRoutesRecursive(
-    parentId?: string
+    parentId?: string | undefined
   ): JsonFormattedRoute[] | undefined {
-    let routes = Object.values(routeManifest).filter(
+    const routes = Object.values(routeManifest).filter(
       (route) => route.parentId === parentId
     );
 
     let children = [];
 
-    for (let route of routes) {
+    for (const route of routes) {
       children.push({
         id: route.id,
         index: route.index,
@@ -56,16 +56,19 @@ export function formatRoutesAsJson(routeManifest: RouteManifest): string {
 export function formatRoutesAsJsx(routeManifest: RouteManifest) {
   let output = "<Routes>";
 
-  function handleRoutesRecursive(parentId?: string, level = 1): boolean {
-    let routes = Object.values(routeManifest).filter(
+  function handleRoutesRecursive(
+    parentId?: string | undefined,
+    level = 1
+  ): boolean {
+    const routes = Object.values(routeManifest).filter(
       (route) => route.parentId === parentId
     );
 
-    let indent = Array(level * 2)
+    const indent = Array(level * 2)
       .fill(" ")
       .join("");
 
-    for (let route of routes) {
+    for (const route of routes) {
       output += "\n" + indent;
       output += `<Route${
         route.path ? ` path=${JSON.stringify(route.path)}` : ""

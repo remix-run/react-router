@@ -135,15 +135,17 @@ export function mapRouteProperties(route: RouteObject) {
  */
 export function createMemoryRouter(
   routes: RouteObject[],
-  opts?: {
-    basename?: string;
-    future?: Partial<FutureConfig>;
-    hydrationData?: HydrationState;
-    initialEntries?: InitialEntry[];
-    initialIndex?: number;
-    dataStrategy?: DataStrategyFunction;
-    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
-  }
+  opts?:
+    | {
+        basename?: string | undefined;
+        future?: Partial<FutureConfig> | undefined;
+        hydrationData?: HydrationState | undefined;
+        initialEntries?: InitialEntry[] | undefined;
+        initialIndex?: number | undefined;
+        dataStrategy?: DataStrategyFunction | undefined;
+        patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction | undefined;
+      }
+    | undefined
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
@@ -166,7 +168,7 @@ class Deferred<T> {
   // @ts-expect-error - no initializer
   resolve: (value: T) => void;
   // @ts-expect-error - no initializer
-  reject: (reason?: unknown) => void;
+  reject: (reason?: unknown | undefined) => void;
   constructor() {
     this.promise = new Promise((resolve, reject) => {
       this.resolve = (value) => {
@@ -188,7 +190,7 @@ class Deferred<T> {
 // Copied from react-dom types
 export interface RouterProviderProps {
   router: DataRouter;
-  flushSync?: (fn: () => unknown) => undefined;
+  flushSync?: ((fn: () => unknown) => undefined) | undefined;
 }
 
 /**
@@ -210,9 +212,9 @@ export function RouterProvider({
     currentLocation: Location;
     nextLocation: Location;
   }>();
-  let fetcherData = React.useRef<Map<string, any>>(new Map());
+  const fetcherData = React.useRef<Map<string, any>>(new Map());
 
-  let setState = React.useCallback<RouterSubscriber>(
+  const setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
       { deletedFetchers, flushSync, viewTransitionOpts }
@@ -234,7 +236,7 @@ export function RouterProvider({
           "`flushSync` option."
       );
 
-      let isViewTransitionAvailable =
+      const isViewTransitionAvailable =
         router.window != null &&
         router.window.document != null &&
         typeof router.window.document.startViewTransition === "function";
@@ -378,7 +380,7 @@ export function RouterProvider({
     }
   }, [vtContext.isTransitioning, interruption]);
 
-  let navigator = React.useMemo((): Navigator => {
+  const navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
       encodeLocation: router.encodeLocation,
@@ -397,9 +399,9 @@ export function RouterProvider({
     };
   }, [router]);
 
-  let basename = router.basename || "/";
+  const basename = router.basename || "/";
 
-  let dataRouterContext = React.useMemo(
+  const dataRouterContext = React.useMemo(
     () => ({
       router,
       navigator,
@@ -461,10 +463,10 @@ function DataRoutes({
  * @category Types
  */
 export interface MemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
+  basename?: string | undefined;
+  children?: React.ReactNode | undefined;
+  initialEntries?: InitialEntry[] | undefined;
+  initialIndex?: number | undefined;
 }
 
 /**
@@ -478,7 +480,7 @@ export function MemoryRouter({
   initialEntries,
   initialIndex,
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
+  const historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({
       initialEntries,
@@ -487,12 +489,12 @@ export function MemoryRouter({
     });
   }
 
-  let history = historyRef.current;
+  const history = historyRef.current;
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
-  let setState = React.useCallback(
+  const setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
@@ -517,9 +519,9 @@ export function MemoryRouter({
  */
 export interface NavigateProps {
   to: To;
-  replace?: boolean;
-  state?: any;
-  relative?: RelativeRoutingType;
+  replace?: boolean | undefined;
+  state?: any | undefined;
+  relative?: RelativeRoutingType | undefined;
 }
 
 /**
@@ -587,7 +589,7 @@ export interface OutletProps {
 
     Access the context with {@link useOutletContext}.
    */
-  context?: unknown;
+  context?: unknown | undefined;
 }
 
 /**
@@ -616,23 +618,23 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
  * @category Types
  */
 export interface PathRouteProps {
-  caseSensitive?: NonIndexRouteObject["caseSensitive"];
-  path?: NonIndexRouteObject["path"];
-  id?: NonIndexRouteObject["id"];
-  lazy?: LazyRouteFunction<NonIndexRouteObject>;
-  loader?: NonIndexRouteObject["loader"];
-  action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
-  handle?: NonIndexRouteObject["handle"];
-  index?: false;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
+  caseSensitive?: NonIndexRouteObject["caseSensitive"] | undefined;
+  path?: NonIndexRouteObject["path"] | undefined;
+  id?: NonIndexRouteObject["id"] | undefined;
+  lazy?: LazyRouteFunction<NonIndexRouteObject> | undefined;
+  loader?: NonIndexRouteObject["loader"] | undefined;
+  action?: NonIndexRouteObject["action"] | undefined;
+  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"] | undefined;
+  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"] | undefined;
+  handle?: NonIndexRouteObject["handle"] | undefined;
+  index?: false | undefined;
+  children?: React.ReactNode | undefined;
+  element?: React.ReactNode | null | undefined;
+  hydrateFallbackElement?: React.ReactNode | null | undefined;
+  errorElement?: React.ReactNode | null | undefined;
+  Component?: React.ComponentType | null | undefined;
+  HydrateFallback?: React.ComponentType | null | undefined;
+  ErrorBoundary?: React.ComponentType | null | undefined;
 }
 
 /**
@@ -644,23 +646,23 @@ export interface LayoutRouteProps extends PathRouteProps {}
  * @category Types
  */
 export interface IndexRouteProps {
-  caseSensitive?: IndexRouteObject["caseSensitive"];
-  path?: IndexRouteObject["path"];
-  id?: IndexRouteObject["id"];
-  lazy?: LazyRouteFunction<IndexRouteObject>;
-  loader?: IndexRouteObject["loader"];
-  action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
-  handle?: IndexRouteObject["handle"];
+  caseSensitive?: IndexRouteObject["caseSensitive"] | undefined;
+  path?: IndexRouteObject["path"] | undefined;
+  id?: IndexRouteObject["id"] | undefined;
+  lazy?: LazyRouteFunction<IndexRouteObject> | undefined;
+  loader?: IndexRouteObject["loader"] | undefined;
+  action?: IndexRouteObject["action"] | undefined;
+  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"] | undefined;
+  shouldRevalidate?: IndexRouteObject["shouldRevalidate"] | undefined;
+  handle?: IndexRouteObject["handle"] | undefined;
   index: true;
-  children?: undefined;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
+  children?: React.ReactNode | undefined;
+  element?: React.ReactNode | null | undefined;
+  hydrateFallbackElement?: React.ReactNode | null | undefined;
+  errorElement?: React.ReactNode | null | undefined;
+  Component?: React.ComponentType | null | undefined;
+  HydrateFallback?: React.ComponentType | null | undefined;
+  ErrorBoundary?: React.ComponentType | null | undefined;
 }
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
@@ -685,12 +687,12 @@ export function Route(_props: RouteProps): React.ReactElement | null {
  * @category Types
  */
 export interface RouterProps {
-  basename?: string;
-  children?: React.ReactNode;
+  basename?: string | undefined;
+  children?: React.ReactNode | undefined;
   location: Partial<Location> | string;
-  navigationType?: NavigationType;
+  navigationType?: NavigationType | undefined;
   navigator: Navigator;
-  static?: boolean;
+  static?: boolean | undefined;
 }
 
 /**
@@ -785,12 +787,12 @@ export interface RoutesProps {
   /**
    * Nested {@link Route} elements
    */
-  children?: React.ReactNode;
+  children?: React.ReactNode | undefined;
 
   /**
    * The location to match against. Defaults to the current location.
    */
-  location?: Partial<Location> | string;
+  location?: Partial<Location> | string | undefined;
 }
 
 /**
@@ -883,7 +885,7 @@ export interface AwaitProps<Resolve> {
   the nearest route-level {@link NonIndexRouteObject#ErrorBoundary | ErrorBoundary} and be accessible
   via {@link useRouteError} hook.
   */
-  errorElement?: React.ReactNode;
+  errorElement?: React.ReactNode | undefined;
 
   /**
   Takes a promise returned from a {@link LoaderFunction | loader} value to be resolved and rendered.
@@ -980,7 +982,7 @@ export function Await<Resolve>({
 }
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
-  errorElement?: React.ReactNode;
+  errorElement?: React.ReactNode | undefined;
   resolve: TrackedPromise | any;
 }>;
 
@@ -1030,7 +1032,7 @@ class AwaitErrorBoundary extends React.Component<
     } else if (this.state.error) {
       // Caught a render error, provide it as a rejected promise
       status = AwaitRenderStatus.error;
-      let renderError = this.state.error;
+      const renderError = this.state.error;
       promise = Promise.reject().catch(() => {}); // Avoid unhandled rejection warnings
       Object.defineProperty(promise, "_tracked", { get: () => true });
       Object.defineProperty(promise, "_error", { get: () => renderError });

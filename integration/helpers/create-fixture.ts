@@ -25,12 +25,12 @@ const root = path.join(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp", "integration");
 
 export interface FixtureInit {
-  buildStdio?: Writable;
-  files?: { [filename: string]: string };
-  useReactRouterServe?: boolean;
-  spaMode?: boolean;
-  prerender?: boolean;
-  port?: number;
+  buildStdio?: Writable | undefined;
+  files?: { [filename: string]: string } | undefined;
+  useReactRouterServe?: boolean | undefined;
+  spaMode?: boolean | undefined;
+  prerender?: boolean | undefined;
+  port?: number | undefined;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -43,7 +43,10 @@ export function json(value: JsonObject) {
   return JSON.stringify(value, null, 2);
 }
 
-export async function createFixture(init: FixtureInit, mode?: ServerMode) {
+export async function createFixture(
+  init: FixtureInit,
+  mode?: ServerMode | undefined
+) {
   let projectDir = await createFixtureProject(init, mode);
   let buildPath = url.pathToFileURL(
     path.join(projectDir, "build/server/index.js")
@@ -132,7 +135,10 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let app: ServerBuild = await import(buildPath);
   let handler = createRequestHandler(app, mode || ServerMode.Production);
 
-  let requestDocument = async (href: string, init?: RequestInit) => {
+  let requestDocument = async (
+    href: string,
+    init?: RequestInit | undefined
+  ) => {
     let url = new URL(href, "test://test");
     let request = new Request(url.toString(), {
       ...init,
@@ -141,7 +147,10 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     return handler(request);
   };
 
-  let requestResource = async (href: string, init?: RequestInit) => {
+  let requestResource = async (
+    href: string,
+    init?: RequestInit | undefined
+  ) => {
     init = init || {};
     init.signal = init.signal || new AbortController().signal;
     let url = new URL(href, "test://test");
@@ -149,7 +158,10 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     return handler(request);
   };
 
-  let requestSingleFetchData = async (href: string, init?: RequestInit) => {
+  let requestSingleFetchData = async (
+    href: string,
+    init?: RequestInit | undefined
+  ) => {
     init = init || {};
     init.signal = init.signal || new AbortController().signal;
     let url = new URL(href, "test://test");
@@ -192,7 +204,10 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   };
 }
 
-export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
+export async function createAppFixture(
+  fixture: Fixture,
+  mode?: ServerMode | undefined
+) {
   let startAppServer = async (): Promise<{
     port: number;
     stop: VoidFunction;
@@ -342,7 +357,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 
 export async function createFixtureProject(
   init: FixtureInit = {},
-  mode?: ServerMode
+  mode?: ServerMode | undefined
 ): Promise<string> {
   let template = "vite-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
@@ -389,7 +404,11 @@ export async function createFixtureProject(
   return projectDir;
 }
 
-function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
+function build(
+  projectDir: string,
+  buildStdio?: Writable | undefined,
+  mode?: ServerMode | undefined
+) {
   // We have a "require" instead of a dynamic import in readConfig gated
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
   // work for ESM configs, those MUST be dynamic imports. So we need to

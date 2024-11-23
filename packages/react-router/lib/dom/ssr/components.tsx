@@ -89,24 +89,24 @@ export type DiscoverBehavior = "render" | "none";
 export type PrefetchBehavior = "intent" | "render" | "none" | "viewport";
 
 interface PrefetchHandlers {
-  onFocus?: FocusEventHandler;
-  onBlur?: FocusEventHandler;
-  onMouseEnter?: MouseEventHandler;
-  onMouseLeave?: MouseEventHandler;
-  onTouchStart?: TouchEventHandler;
+  onFocus?: FocusEventHandler | undefined;
+  onBlur?: FocusEventHandler | undefined;
+  onMouseEnter?: MouseEventHandler | undefined;
+  onMouseLeave?: MouseEventHandler | undefined;
+  onTouchStart?: TouchEventHandler | undefined;
 }
 
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers
 ): [boolean, React.RefObject<T>, PrefetchHandlers] {
-  let frameworkContext = React.useContext(FrameworkContext);
+  const frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
   let { onFocus, onBlur, onMouseEnter, onMouseLeave, onTouchStart } =
     theirElementProps;
 
-  let ref = React.useRef<T>(null);
+  const ref = React.useRef<T>(null);
 
   React.useEffect(() => {
     if (prefetch === "render") {
@@ -114,12 +114,12 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     }
 
     if (prefetch === "viewport") {
-      let callback: IntersectionObserverCallback = (entries) => {
+      const callback: IntersectionObserverCallback = (entries) => {
         entries.forEach((entry) => {
           setShouldPrefetch(entry.isIntersecting);
         });
       };
-      let observer = new IntersectionObserver(callback, { threshold: 0.5 });
+      const observer = new IntersectionObserver(callback, { threshold: 0.5 });
       if (ref.current) observer.observe(ref.current);
 
       return () => {
@@ -130,7 +130,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
 
   React.useEffect(() => {
     if (maybePrefetch) {
-      let id = setTimeout(() => {
+      const id = setTimeout(() => {
         setShouldPrefetch(true);
       }, 100);
       return () => {
@@ -139,11 +139,11 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     }
   }, [maybePrefetch]);
 
-  let setIntent = () => {
+  const setIntent = () => {
     setMaybePrefetch(true);
   };
 
-  let cancelIntent = () => {
+  const cancelIntent = () => {
     setMaybePrefetch(false);
     setShouldPrefetch(false);
   };
@@ -232,9 +232,9 @@ export function Links() {
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
-  let matches = getActiveMatches(routerMatches, errors, isSpaMode);
+  const matches = getActiveMatches(routerMatches, errors, isSpaMode);
 
-  let keyedLinks = React.useMemo(
+  const keyedLinks = React.useMemo(
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
     [matches, routeModules, manifest]
   );

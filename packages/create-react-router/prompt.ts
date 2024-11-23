@@ -138,7 +138,7 @@ interface MultiSelectPromptType<
 interface SelectChoiceType {
   value: unknown;
   label: string;
-  hint?: string;
+  hint?: string | undefined;
 }
 
 type PromptType<
@@ -188,6 +188,6 @@ interface PromptTypeOptions<
     answers: Answers<T>
   ): any;
   onCancel?(question: T | Readonly<T>, answers: Answers<T>): any;
-  stdin?: NodeJS.ReadStream;
-  stdout?: NodeJS.WriteStream;
+  stdin?: NodeJS.ReadStream | undefined;
+  stdout?: NodeJS.WriteStream | undefined;
 }

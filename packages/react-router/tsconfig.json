@@ -11,7 +11,7 @@
     "jsx": "react",
 
     "declaration": true,
-    "emitDeclarationOnly": true,
+    // "emitDeclarationOnly": true,
 
     "skipLibCheck": true,
 
@@ -21,6 +21,7 @@
     "resolveJsonModule": true,
     "paths": {
       "react-router": ["./index.ts"]
-    }
+    },
+    "exactOptionalPropertyTypes": true
   }
 }

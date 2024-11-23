@@ -55,13 +55,13 @@ testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
 function testDomRouter(
   name: string,
   createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
-  getWindow: (initialUrl: string, isHash?: boolean) => Window
+  getWindow: (initialUrl: string, isHash?: boolean | undefined) => Window
 ) {
   // Utility to assert location info based on the type of router
   function assertLocation(
     testWindow: Window,
     pathname: string,
-    search?: string
+    search?: string | undefined
   ) {
     if (name === "<DataHashRouter>") {
       expect(testWindow.location.hash).toEqual("#" + pathname + (search || ""));
@@ -89,7 +89,7 @@ function testDomRouter(
     });
 
     it("renders the first route that matches the URL", () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(<Route path="/" element={<h1>Home</h1>} />)
       );
       let { container } = render(<RouterProvider router={router} />);
@@ -104,7 +104,7 @@ function testDomRouter(
     });
 
     it("renders the first route that matches the URL when wrapped in a root Route", () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/my/base/path">
             <Route element={<Outlet />}>
@@ -128,7 +128,7 @@ function testDomRouter(
     });
 
     it("supports a basename prop", () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="thing" element={<h1>Heyooo</h1>} />
         ),
@@ -149,7 +149,7 @@ function testDomRouter(
     });
 
     it("renders with hydration data", async () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
@@ -171,9 +171,9 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData();
-        let actionData = useActionData();
-        let navigation = useNavigation();
+        const data = useLoaderData();
+        const actionData = useActionData();
+        const navigation = useNavigation();
         return (
           <div>
             <>{data}</>
@@ -209,7 +209,7 @@ function testDomRouter(
           "0-0": "child action",
         },
       };
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
@@ -222,9 +222,9 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData();
-        let actionData = useActionData();
-        let navigation = useNavigation();
+        const data = useLoaderData();
+        const actionData = useActionData();
+        const navigation = useNavigation();
         return (
           <div>
             <>{data}</>
@@ -264,7 +264,7 @@ function testDomRouter(
           },
         },
       };
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
         )
@@ -272,7 +272,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError() as unknown;
+        const error = useRouteError() as unknown;
         return isRouteErrorResponse(error) ? (
           <pre>{JSON.stringify(error)}</pre>
         ) : (
@@ -300,7 +300,7 @@ function testDomRouter(
           },
         },
       };
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
         )
@@ -343,7 +343,7 @@ function testDomRouter(
           },
         },
       };
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
         )
@@ -351,7 +351,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError() as Error;
+        const error = useRouteError() as Error;
         return error instanceof Error ? (
           <>
             <pre>{error.toString()}</pre>
@@ -375,8 +375,8 @@ function testDomRouter(
     });
 
     it("renders hydrateFallbackElement while first data fetch happens", async () => {
-      let fooDefer = createDeferred();
-      let router = createTestRouter(
+      const fooDefer = createDeferred();
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route
             path="/"
@@ -431,8 +431,8 @@ function testDomRouter(
     });
 
     it("renders hydrateFallbackElement while first data fetch and lazy route load happens", async () => {
-      let fooDefer = createDeferred();
-      let router = createTestRouter(
+      const fooDefer = createDeferred();
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route
             path="/"
@@ -491,8 +491,8 @@ function testDomRouter(
     });
 
     it("does not render fallbackElement if no data fetch or lazy loading is required", async () => {
-      let fooDefer = createDeferred();
-      let router = createTestRouter(
+      const fooDefer = createDeferred();
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Outlet />}>
             <Route
@@ -508,7 +508,11 @@ function testDomRouter(
         }
       );
       let { container } = render(
-        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
+        <RouterProvider
+          router={router}
+          // @ts-expect-error
+          fallbackElement={<FallbackElement />}
+        />
       );
 
       function FallbackElement() {
@@ -516,7 +520,7 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        const data = useLoaderData() as { message: string };
         return <h1>Foo:{data.message}</h1>;
       }
 
@@ -534,8 +538,8 @@ function testDomRouter(
     });
 
     it("renders hydrateFallbackElement within router contexts", async () => {
-      let fooDefer = createDeferred();
-      let router = createTestRouter(
+      const fooDefer = createDeferred();
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route
             path="/"
@@ -554,12 +558,12 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function FallbackElement() {
-        let location = useLocation();
+        const location = useLocation();
         return <p>Loading{location.pathname}</p>;
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        const data = useLoaderData() as { message: string };
         return <h1>Foo:{data.message}</h1>;
       }
 
@@ -585,7 +589,7 @@ function testDomRouter(
     });
 
     it("handles link navigations", async () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
@@ -615,8 +619,8 @@ function testDomRouter(
     });
 
     it("handles link navigations when using a basename", async () => {
-      let testWindow = getWindow("/base/name/foo");
-      let router = createTestRouter(
+      const testWindow = getWindow("/base/name/foo");
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
@@ -655,9 +659,9 @@ function testDomRouter(
     });
 
     it("executes route loaders on navigation", async () => {
-      let barDefer = createDeferred();
+      const barDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<Foo />} />
@@ -673,7 +677,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
-        let navigation = useNavigation();
+        const navigation = useNavigation();
         return (
           <div>
             <Link to="/bar">Link to Bar</Link>
@@ -740,9 +744,9 @@ function testDomRouter(
     });
 
     it("executes lazy route loaders on navigation", async () => {
-      let barDefer = createDeferred();
+      const barDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<Foo />} />
@@ -762,7 +766,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
-        let navigation = useNavigation();
+        const navigation = useNavigation();
         return (
           <div>
             <Link to="/bar">Link to Bar</Link>
@@ -778,7 +782,7 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        const data = useLoaderData() as { message: string };
         return <h1>{data.message}</h1>;
       }
 
@@ -829,7 +833,7 @@ function testDomRouter(
     });
 
     it("handles link navigations with preventScrollReset", async () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
@@ -841,7 +845,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
-        let state = React.useContext(DataRouterStateContext);
+        const state = React.useContext(DataRouterStateContext);
         return (
           <div>
             <Link to="/foo" preventScrollReset>
@@ -878,7 +882,7 @@ function testDomRouter(
     });
 
     it("handles link navigations with preventScrollReset={true}", async () => {
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
@@ -890,7 +894,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
-        let state = React.useContext(DataRouterStateContext);
+        const state = React.useContext(DataRouterStateContext);
         return (
           <div>
             <Link to="/foo" preventScrollReset={true}>
@@ -927,10 +931,10 @@ function testDomRouter(
     });
 
     it("executes route actions/loaders on useSubmit navigations", async () => {
-      let loaderDefer = createDeferred();
-      let actionDefer = createDeferred();
+      const loaderDefer = createDeferred();
+      const actionDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route
             path="/"
@@ -947,11 +951,11 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
-        let actionData = useActionData() as string | undefined;
-        let navigation = useNavigation();
-        let submit = useSubmit();
-        let formRef = React.useRef<HTMLFormElement>(null);
+        const data = useLoaderData() as string;
+        const actionData = useActionData() as string | undefined;
+        const navigation = useNavigation();
+        const submit = useSubmit();
+        const formRef = React.useRef<HTMLFormElement>(null);
         return (
           <div>
             <form method="post" action="/" ref={formRef}>
@@ -1036,10 +1040,10 @@ function testDomRouter(
     });
 
     it("executes lazy route actions/loaders on useSubmit navigations", async () => {
-      let loaderDefer = createDeferred();
-      let actionDefer = createDeferred();
+      const loaderDefer = createDeferred();
+      const actionDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Home />}>
             <Route index element={<h1>Home</h1>} />
@@ -1158,17 +1162,17 @@ function testDomRouter(
     });
 
     it("executes route loaders on <Form method=get> navigations", async () => {
-      let loaderDefer = createDeferred();
-      let actionDefer = createDeferred();
+      const loaderDefer = createDeferred();
+      const actionDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route
             path="/"
             action={() => actionDefer.promise}
             loader={async ({ request }) => {
-              let resolvedValue = await loaderDefer.promise;
-              let urlParam = new URL(
+              const resolvedValue = await loaderDefer.promise;
+              const urlParam = new URL(
                 `https://remix.run${request.url}`
               ).searchParams.get("test");
               return `${resolvedValue}:${urlParam}`;
@@ -1184,9 +1188,9 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
-        let actionData = useActionData() as string | undefined;
-        let navigation = useNavigation();
+        const data = useLoaderData() as string;
+        const actionData = useActionData() as string | undefined;
+        const navigation = useNavigation();
         return (
           <div>
             <Form method="get">
@@ -1250,10 +1254,10 @@ function testDomRouter(
     });
 
     it("executes lazy route loaders on <Form method=get> navigations", async () => {
-      let loaderDefer = createDeferred();
-      let actionDefer = createDeferred();
+      const loaderDefer = createDeferred();
+      const actionDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route path="/" element={<Home />}>
             <Route index element={<h1>Home</h1>} />
@@ -1262,15 +1266,15 @@ function testDomRouter(
               lazy={async () => ({
                 action: () => actionDefer.promise,
                 loader: async ({ request }) => {
-                  let resolvedValue = await loaderDefer.promise;
-                  let urlParam = new URL(
+                  const resolvedValue = await loaderDefer.promise;
+                  const urlParam = new URL(
                     `https://remix.run${request.url}`
                   ).searchParams.get("test");
                   return `${resolvedValue}:${urlParam}`;
                 },
                 Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
+                  const data = useLoaderData() as string;
+                  const actionData = useActionData() as string | undefined;
                   return (
                     <>
                       <h1>Path</h1>
@@ -1290,7 +1294,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let navigation = useNavigation();
+        const navigation = useNavigation();
         return (
           <div>
             <Form method="get" action="path">
@@ -1358,16 +1362,16 @@ function testDomRouter(
     });
 
     it("executes route actions/loaders on <Form method=post> navigations", async () => {
-      let loaderDefer = createDeferred();
-      let actionDefer = createDeferred();
+      const loaderDefer = createDeferred();
+      const actionDefer = createDeferred();
 
-      let router = createTestRouter(
+      const router = createTestRouter(
         createRoutesFromElements(
           <Route
             path="/"
             action={async ({ request }) => {
-              let resolvedValue = await actionDefer.promise;
-              let formData = await request.formData();
+              const resolvedValue = await actionDefer.promise;
+              const formData = await request.formData();
               return `${resolvedValue}:${formData.get("test")}`;
             }}
             loader={() => loaderDefer.promise}
@@ -1382,9 +1386,9 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
-        let actionData = useActionData() as string | undefined;
-        let navigation = useNavigation();
+        const data = useLoaderData() as string;
+        const actionData = useActionData() as string | undefined;
+        const navigation = useNavigation();
         return (
           <div>
             <Form method="post">

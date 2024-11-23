@@ -38,19 +38,19 @@ type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray;
 export type RouteHandle = unknown;
 
 export interface EntryRouteModule {
-  clientAction?: ClientActionFunction;
-  clientLoader?: ClientLoaderFunction;
-  ErrorBoundary?: any; // Weakly typed because server-runtime is not React-aware
-  HydrateFallback?: any; // Weakly typed because server-runtime is not React-aware
-  Layout?: any; // Weakly typed because server-runtime is not React-aware
+  clientAction?: ClientActionFunction | undefined;
+  clientLoader?: ClientLoaderFunction | undefined;
+  ErrorBoundary?: any | undefined; // Weakly typed because server-runtime is not React-aware
+  HydrateFallback?: any | undefined; // Weakly typed because server-runtime is not React-aware
+  Layout?: any | undefined; // Weakly typed because server-runtime is not React-aware
   default: any; // Weakly typed because server-runtime is not React-aware
-  handle?: RouteHandle;
-  links?: LinksFunction;
-  meta?: MetaFunction;
+  handle?: RouteHandle | undefined;
+  links?: LinksFunction | undefined;
+  meta?: MetaFunction | undefined;
 }
 
 export interface ServerRouteModule extends EntryRouteModule {
-  action?: ActionFunction;
-  headers?: HeadersFunction | { [name: string]: string };
-  loader?: LoaderFunction;
+  action?: ActionFunction | undefined;
+  headers?: HeadersFunction | { [name: string]: string } | undefined;
+  loader?: LoaderFunction | undefined;
 }

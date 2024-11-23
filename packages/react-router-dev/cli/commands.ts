@@ -18,13 +18,13 @@ import {
 } from "../vite/import-vite-esm-sync";
 
 export async function routes(
-  reactRouterRoot?: string,
+  reactRouterRoot?: string | undefined,
   flags: {
-    config?: string;
-    json?: boolean;
+    config?: string | undefined;
+    json?: boolean | undefined;
   } = {}
 ): Promise<void> {
-  let ctx = await loadPluginContext({
+  const ctx = await loadPluginContext({
     root: reactRouterRoot,
     configFile: flags.config,
   });
@@ -36,12 +36,12 @@ export async function routes(
     process.exit(1);
   }
 
-  let format: RoutesFormat = flags.json ? "json" : "jsx";
+  const format: RoutesFormat = flags.json ? "json" : "jsx";
   console.log(formatRoutes(ctx.reactRouterConfig.routes, format));
 }
 
 export async function build(
-  root?: string,
+  root?: string | undefined,
   options: ViteBuildOptions = {}
 ): Promise<void> {
   if (!root) {
@@ -71,11 +71,19 @@ export async function dev(root: string, options: ViteDevOptions = {}) {
   await new Promise(() => {});
 }
 
-let clientEntries = ["entry.client.tsx", "entry.client.js", "entry.client.jsx"];
-let serverEntries = ["entry.server.tsx", "entry.server.js", "entry.server.jsx"];
-let entries = ["entry.client", "entry.server"];
+const clientEntries = [
+  "entry.client.tsx",
+  "entry.client.js",
+  "entry.client.jsx",
+];
+const serverEntries = [
+  "entry.server.tsx",
+  "entry.server.js",
+  "entry.server.jsx",
+];
+const entries = ["entry.client", "entry.server"];
 
-let conjunctionListFormat = new Intl.ListFormat("en", {
+const conjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "conjunction",
 });
@@ -84,17 +92,17 @@ export async function generateEntry(
   entry: string,
   reactRouterRoot: string,
   flags: {
-    typescript?: boolean;
-    config?: string;
+    typescript?: boolean | undefined;
+    config?: string | undefined;
   } = {}
 ) {
-  let ctx = await loadPluginContext({
+  const ctx = await loadPluginContext({
     root: reactRouterRoot,
     configFile: flags.config,
   });
 
-  let rootDirectory = ctx.rootDirectory;
-  let appDirectory = ctx.reactRouterConfig.appDirectory;
+  const rootDirectory = ctx.rootDirectory;
+  const appDirectory = ctx.reactRouterConfig.appDirectory;
 
   // if no entry passed, attempt to create both
   if (!entry) {
@@ -104,8 +112,8 @@ export async function generateEntry(
   }
 
   if (!entries.includes(entry)) {
-    let entriesArray = Array.from(entries);
-    let list = conjunctionListFormat.format(entriesArray);
+    const entriesArray = Array.from(entries);
+    const list = conjunctionListFormat.format(entriesArray);
 
     console.error(
       colors.red(`Invalid entry file. Valid entry files are ${list}`)
@@ -113,40 +121,43 @@ export async function generateEntry(
     return;
   }
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
+  const pkgJson = await PackageJson.load(rootDirectory);
+  const deps = pkgJson.content.dependencies ?? {};
 
   if (!deps["@react-router/node"]) {
     console.error(colors.red(`No default server entry detected.`));
     return;
   }
 
-  let defaultsDirectory = path.resolve(
+  const defaultsDirectory = path.resolve(
     path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "defaults"
   );
-  let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
+  const defaultEntryClient = path.resolve(
+    defaultsDirectory,
+    "entry.client.tsx"
+  );
 
-  let defaultEntryServer = path.resolve(
+  const defaultEntryServer = path.resolve(
     defaultsDirectory,
     `entry.server.node.tsx`
   );
 
-  let isServerEntry = entry === "entry.server";
+  const isServerEntry = entry === "entry.server";
 
-  let contents = isServerEntry
+  const contents = isServerEntry
     ? await createServerEntry(rootDirectory, appDirectory, defaultEntryServer)
     : await createClientEntry(rootDirectory, appDirectory, defaultEntryClient);
 
-  let useTypeScript = flags.typescript ?? true;
-  let outputExtension = useTypeScript ? "tsx" : "jsx";
-  let outputEntry = `${entry}.${outputExtension}`;
-  let outputFile = path.resolve(appDirectory, outputEntry);
+  const useTypeScript = flags.typescript ?? true;
+  const outputExtension = useTypeScript ? "tsx" : "jsx";
+  const outputEntry = `${entry}.${outputExtension}`;
+  const outputFile = path.resolve(appDirectory, outputEntry);
 
   if (!useTypeScript) {
-    let javascript = convertFileToJS(contents, {
+    const javascript = convertFileToJS(contents, {
       cwd: rootDirectory,
       filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
     });
@@ -170,11 +181,11 @@ async function checkForEntry(
   appDirectory: string,
   entries: string[]
 ) {
-  for (let entry of entries) {
-    let entryPath = path.resolve(appDirectory, entry);
-    let exists = await fse.pathExists(entryPath);
+  for (const entry of entries) {
+    const entryPath = path.resolve(appDirectory, entry);
+    const exists = await fse.pathExists(entryPath);
     if (exists) {
-      let relative = path.relative(rootDirectory, entryPath);
+      const relative = path.relative(rootDirectory, entryPath);
       console.error(colors.red(`Entry file ${relative} already exists.`));
       return process.exit(1);
     }
@@ -187,8 +198,7 @@ async function createServerEntry(
   inputFile: string
 ) {
   await checkForEntry(rootDirectory, appDirectory, serverEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
-  return contents;
+  return await fse.readFile(inputFile, "utf-8");
 }
 
 async function createClientEntry(
@@ -197,8 +207,7 @@ async function createClientEntry(
   inputFile: string
 ) {
   await checkForEntry(rootDirectory, appDirectory, clientEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
-  return contents;
+  return await fse.readFile(inputFile, "utf-8");
 }
 
 export async function typegen(root: string, flags: { watch: boolean }) {

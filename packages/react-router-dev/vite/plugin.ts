@@ -50,13 +50,13 @@ export async function resolveViteConfig({
   mode,
   root,
 }: {
-  configFile?: string;
-  mode?: string;
+  configFile?: string | undefined;
+  mode?: string | undefined;
   root: string;
 }) {
-  let vite = await import("vite");
+  const vite = await import("vite");
 
-  let viteConfig = await vite.resolveConfig(
+  const viteConfig = await vite.resolveConfig(
     { mode, configFile, root },
     "build", // command
     "production", // default mode
@@ -80,8 +80,8 @@ export async function loadPluginContext({
   configFile,
   root,
 }: {
-  configFile?: string;
-  root?: string;
+  configFile?: string | undefined;
+  root?: string | undefined;
 }) {
   if (!root) {
     root = process.env.REACT_ROUTER_ROOT || process.cwd();
@@ -103,8 +103,8 @@ export async function loadPluginContext({
     process.exit(1);
   }
 
-  let viteConfig = await resolveViteConfig({ configFile, root });
-  let ctx = await extractPluginContext(viteConfig);
+  const viteConfig = await resolveViteConfig({ configFile, root });
+  const ctx = await extractPluginContext(viteConfig);
 
   if (!ctx) {
     console.error(
@@ -145,8 +145,8 @@ export type ServerBundleBuildConfig = {
 type ReactRouterPluginSsrBuildContext =
   | {
       isSsrBuild: false;
-      getReactRouterServerManifest?: never;
-      serverBundleBuildConfig?: never;
+      getReactRouterServerManifest?: never | undefined;
+      serverBundleBuildConfig?: never | undefined;
     }
   | {
       isSsrBuild: true;
@@ -163,28 +163,28 @@ export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
   viteManifestEnabled: boolean;
 };
 
-let serverBuildId = VirtualModule.id("server-build");
-let serverManifestId = VirtualModule.id("server-manifest");
-let browserManifestId = VirtualModule.id("browser-manifest");
-let hmrRuntimeId = VirtualModule.id("hmr-runtime");
-let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
+const serverBuildId = VirtualModule.id("server-build");
+const serverManifestId = VirtualModule.id("server-manifest");
+const browserManifestId = VirtualModule.id("browser-manifest");
+const hmrRuntimeId = VirtualModule.id("hmr-runtime");
+const injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
 
 const resolveRelativeRouteFilePath = (
   route: RouteManifestEntry,
   reactRouterConfig: ResolvedReactRouterConfig
 ) => {
-  let vite = importViteEsmSync();
-  let file = route.file;
-  let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
+  const vite = importViteEsmSync();
+  const file = route.file;
+  const fullPath = path.resolve(reactRouterConfig.appDirectory, file);
 
   return vite.normalizePath(fullPath);
 };
 
-let vmods = [serverBuildId, serverManifestId, browserManifestId];
+const vmods = [serverBuildId, serverManifestId, browserManifestId];
 
 const invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
   vmods.forEach((vmod) => {
-    let mod = viteDevServer.moduleGraph.getModuleById(
+    const mod = viteDevServer.moduleGraph.getModuleById(
       VirtualModule.resolve(vmod)
     );
     if (mod) {
@@ -193,8 +193,11 @@ const invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
   });
 };
 
-const getHash = (source: BinaryLike, maxLength?: number): string => {
-  let hash = createHash("sha256").update(source).digest("hex");
+const getHash = (
+  source: BinaryLike,
+  maxLength?: number | undefined
+): string => {
+  const hash = createHash("sha256").update(source).digest("hex");
   return typeof maxLength === "number" ? hash.slice(0, maxLength) : hash;
 };
 
@@ -203,16 +206,16 @@ const resolveChunk = (
   viteManifest: Vite.Manifest,
   absoluteFilePath: string
 ) => {
-  let vite = importViteEsmSync();
-  let rootRelativeFilePath = vite.normalizePath(
+  const vite = importViteEsmSync();
+  const rootRelativeFilePath = vite.normalizePath(
     path.relative(ctx.rootDirectory, absoluteFilePath)
   );
-  let entryChunk =
+  const entryChunk =
     viteManifest[rootRelativeFilePath + ROUTE_ENTRY_QUERY_STRING] ??
     viteManifest[rootRelativeFilePath];
 
   if (!entryChunk) {
-    let knownManifestKeys = Object.keys(viteManifest)
+    const knownManifestKeys = Object.keys(viteManifest)
       .map((key) => '"' + key + '"')
       .join(", ");
     throw new Error(
@@ -229,14 +232,14 @@ const getReactRouterManifestBuildAssets = (
   entryFilePath: string,
   prependedAssetFilePaths: string[] = []
 ): ReactRouterManifest["entry"] & { css: string[] } => {
-  let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
+  const entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
 
   // This is here to support prepending client entry assets to the root route
-  let prependedAssetChunks = prependedAssetFilePaths.map((filePath) =>
+  const prependedAssetChunks = prependedAssetFilePaths.map((filePath) =>
     resolveChunk(ctx, viteManifest, filePath)
   );
 
-  let chunks = resolveDependantChunks(viteManifest, [
+  const chunks = resolveDependantChunks(viteManifest, [
     ...prependedAssetChunks,
     entryChunk,
   ]);
@@ -311,7 +314,7 @@ const getRouteModuleExports = async (
   viteChildCompiler: Vite.ViteDevServer | null,
   ctx: ReactRouterPluginContext,
   routeFile: string,
-  readRouteFile?: () => string | Promise<string>
+  readRouteFile?: (() => string | Promise<string>) | undefined
 ): Promise<string[]> => {
   if (!viteChildCompiler) {
     throw new Error("Vite child compiler not found");
@@ -1056,7 +1059,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         setDevServerHooks({
           // Give the request handler access to the critical CSS in dev to avoid a
           // flash of unstyled content since Vite injects CSS file contents via JS
-          getCriticalCss: async (build, url) => {
+          getCriticalCss: async (
+            build: ServerBuild,
+            url?: string | undefined
+          ) => {
             return getStylesForUrl({
               rootDirectory: ctx.rootDirectory,
               entryClientFilePath: ctx.entryClientFilePath,
@@ -1069,7 +1075,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
           // If an error is caught within the request handler, let Vite fix the
           // stack trace so it maps back to the actual source code
-          processRequestError: (error) => {
+          processRequestError: (error: unknown) => {
             if (error instanceof Error) {
               viteDevServer.ssrFixStacktrace(error);
             }
@@ -1320,7 +1326,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // https://vitejs.dev/config/dep-optimization-options
         let isOptimizeDeps =
           viteCommand === "serve" &&
-          (options as { scan?: boolean })?.scan === true;
+          (options as { scan?: boolean | undefined })?.scan === true;
 
         if (isOptimizeDeps || options?.ssr) return;
 
@@ -1507,20 +1513,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (id.includes("/node_modules/")) return;
 
         let [filepath] = id.split("?");
-        let extensionsRE = /\.(jsx?|tsx?|mdx?)$/;
+        const extensionsRE = /\.(jsx?|tsx?|mdx?)$/;
         if (!extensionsRE.test(filepath)) return;
 
-        let devRuntime = "react/jsx-dev-runtime";
-        let ssr = options?.ssr === true;
-        let isJSX = filepath.endsWith("x");
-        let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
+        const devRuntime = "react/jsx-dev-runtime";
+        const ssr = options?.ssr === true;
+        const isJSX = filepath.endsWith("x");
+        const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
 
         if (isRouteEntry(id)) {
           return { code: addRefreshWrapper(ctx.reactRouterConfig, code, id) };
         }
 
-        let result = await babel.transformAsync(code, {
+        const result = await babel.transformAsync(code, {
           babelrc: false,
           configFile: false,
           filename: id,
@@ -1535,7 +1541,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (result === null) return;
 
         code = result.code!;
-        let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
+        const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
         if (refreshContentRE.test(code)) {
           code = addRefreshWrapper(ctx.reactRouterConfig, code, id);
         }
@@ -1545,19 +1551,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     {
       name: "react-router-hmr-updates",
       async handleHotUpdate({ server, file, modules, read }) {
-        let route = getRoute(ctx.reactRouterConfig, file);
+        const route = getRoute(ctx.reactRouterConfig, file);
 
         type ManifestRoute = ReactRouterManifest["routes"][string];
         type HmrEventData = { route: ManifestRoute | null };
-        let hmrEventData: HmrEventData = { route: null };
+        const hmrEventData: HmrEventData = { route: null };
 
         if (route) {
           // invalidate manifest on route exports change
-          let serverManifest = (await server.ssrLoadModule(serverManifestId))
+          const serverManifest = (await server.ssrLoadModule(serverManifestId))
             .default as ReactRouterManifest;
 
-          let oldRouteMetadata = serverManifest.routes[route.id];
-          let newRouteMetadata = await getRouteMetadata(
+          const oldRouteMetadata = serverManifest.routes[route.id];
+          const newRouteMetadata = await getRouteMetadata(
             ctx,
             viteChildCompiler,
             route,
@@ -1599,9 +1605,9 @@ function findConfig(
   basename: string,
   extensions: string[]
 ): string | undefined {
-  for (let ext of extensions) {
-    let name = basename + ext;
-    let file = path.join(dir, name);
+  for (const ext of extensions) {
+    const name = basename + ext;
+    const file = path.join(dir, name);
     if (fse.existsSync(file)) return file;
   }
 
@@ -1613,8 +1619,8 @@ function addRefreshWrapper(
   code: string,
   id: string
 ): string {
-  let route = getRoute(reactRouterConfig, id);
-  let acceptExports =
+  const route = getRoute(reactRouterConfig, id);
+  const acceptExports =
     route || isRouteEntry(id)
       ? [
           "clientAction",
@@ -1821,14 +1827,14 @@ async function handlePrerender(
   } else {
     routesToPrerender = reactRouterConfig.prerender || ["/"];
   }
-  let headers = {
+  const headers = {
     // Header that can be used in the loader to know if you're running at
     // build time or runtime
     "X-React-Router-Prerender": "yes",
   };
-  for (let path of routesToPrerender) {
-    let matches = matchRoutes(routes, path);
-    let hasLoaders = matches?.some((m) => m.route.loader);
+  for (const path of routesToPrerender) {
+    const matches = matchRoutes(routes, path);
+    const hasLoaders = matches?.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {
       data = await prerenderData(
@@ -1846,9 +1852,9 @@ async function handlePrerender(
     // the loader.  Presumably this is for routes where a file extension is
     // already included, such as `app/routes/items[.json].tsx` that will
     // render into `/items.json`
-    let leafRoute = matches ? matches[matches.length - 1].route : null;
-    let manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
-    let isResourceRoute =
+    const leafRoute = matches ? matches[matches.length - 1].route : null;
+    const manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
+    const isResourceRoute =
       manifestRoute &&
       !manifestRoute.default &&
       !manifestRoute.ErrorBoundary &&
@@ -1896,16 +1902,16 @@ function determineStaticPrerenderRoutes(
   isBooleanUsage = false
 ): string[] {
   // Always start with the root/index route included
-  let paths: string[] = ["/"];
-  let paramRoutes: string[] = [];
+  const paths: string[] = ["/"];
+  const paramRoutes: string[] = [];
 
   // Then recursively add any new path defined by the tree
   function recurse(subtree: typeof routes, prefix = "") {
-    for (let route of subtree) {
-      let newPath = [prefix, route.path].join("/").replace(/\/\/+/g, "/");
+    for (const route of subtree) {
+      const newPath = [prefix, route.path].join("/").replace(/\/\/+/g, "/");
       if (route.path) {
-        let segments = route.path.split("/");
-        if (segments.some((s) => s.startsWith(":") || s === "*")) {
+        const segments = route.path.split("/");
+        if (segments.some((s: string) => s.startsWith(":") || s === "*")) {
           paramRoutes.push(route.path);
         } else {
           paths.push(newPath);
@@ -1940,20 +1946,20 @@ async function prerenderData(
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}${
+  const normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
       ? "/_root.data"
       : `${prerenderPath.replace(/\/$/, "")}.data`
   }`.replace(/\/\/+/g, "/");
-  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
-  let response = await handler(request);
-  let data = await response.text();
+  const request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  const response = await handler(request);
+  const data = await response.text();
 
   validatePrerenderedResponse(response, data, "Prerender", normalizedPath);
 
   // Write out the .data file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  const outdir = path.relative(process.cwd(), clientBuildDirectory);
+  const outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, data);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
@@ -1968,13 +1974,11 @@ async function prerenderRoute(
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
-    /\/\/+/g,
-    "/"
-  );
-  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
-  let response = await handler(request);
-  let html = await response.text();
+  const normalizedPath =
+    `${reactRouterConfig.basename}${prerenderPath}/`.replace(/\/\/+/g, "/");
+  const request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  const response = await handler(request);
+  const html = await response.text();
 
   validatePrerenderedResponse(response, html, "Prerender", normalizedPath);
 
@@ -1983,8 +1987,8 @@ async function prerenderRoute(
   }
 
   // Write out the HTML file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
+  const outdir = path.relative(process.cwd(), clientBuildDirectory);
+  const outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, html);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
@@ -1998,18 +2002,18 @@ async function prerenderResourceRoute(
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
+  const normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
     .replace(/\/\/+/g, "/")
     .replace(/\/$/g, "");
-  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
-  let response = await handler(request);
-  let text = await response.text();
+  const request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  const response = await handler(request);
+  const text = await response.text();
 
   validatePrerenderedResponse(response, text, "Prerender", normalizedPath);
 
   // Write out the resource route file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  const outdir = path.relative(process.cwd(), clientBuildDirectory);
+  const outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, text);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
@@ -2021,14 +2025,14 @@ async function prerenderManifest(
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig
 ) {
-  let normalizedPath = `${reactRouterConfig.basename}/__manifest`.replace(
+  const normalizedPath = `${reactRouterConfig.basename}/__manifest`.replace(
     /\/\/+/g,
     "/"
   );
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  const outdir = path.relative(process.cwd(), clientBuildDirectory);
+  const outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
-  let manifestData = JSON.stringify(build.assets.routes);
+  const manifestData = JSON.stringify(build.assets.routes);
   await fse.outputFile(outfile, manifestData);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
@@ -2066,11 +2070,11 @@ type ServerRoute = ServerBuild["routes"][string] & {
 
 // Note: Duplicated from react-router/lib/server-runtime
 function groupRoutesByParentId(manifest: ServerBuild["routes"]) {
-  let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
+  const routes: Record<string, Omit<ServerRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
     if (route) {
-      let parentId = route.parentId || "";
+      const parentId = route.parentId ?? "";
       if (!routes[parentId]) {
         routes[parentId] = [];
       }

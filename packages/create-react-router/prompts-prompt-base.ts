@@ -94,22 +94,32 @@ export class Prompt extends EventEmitter {
 }
 
 export interface PromptOptions {
-  stdin?: typeof process.stdin;
-  stdout?: typeof process.stdout;
-  onRender?(render: (...text: unknown[]) => string): void;
-  onSubmit?(
-    v: any
-  ): void | undefined | boolean | Promise<void | undefined | boolean>;
-  onCancel?(
-    v: any
-  ): void | undefined | boolean | Promise<void | undefined | boolean>;
-  onAbort?(
-    v: any
-  ): void | undefined | boolean | Promise<void | undefined | boolean>;
-  onExit?(
-    v: any
-  ): void | undefined | boolean | Promise<void | undefined | boolean>;
-  onState?(
-    v: any
-  ): void | undefined | boolean | Promise<void | undefined | boolean>;
+  stdin?: typeof process.stdin | undefined;
+  stdout?: typeof process.stdout | undefined;
+  onRender?: ((render: (...text: unknown[]) => string) => void) | undefined;
+  onSubmit?:
+    | ((
+        v: any
+      ) => void | undefined | boolean | Promise<void | undefined | boolean>)
+    | undefined;
+  onCancel?:
+    | ((
+        v: any
+      ) => void | undefined | boolean | Promise<void | undefined | boolean>)
+    | undefined;
+  onAbort?:
+    | ((
+        v: any
+      ) => void | undefined | boolean | Promise<void | undefined | boolean>)
+    | undefined;
+  onExit?:
+    | ((
+        v: any
+      ) => void | undefined | boolean | Promise<void | undefined | boolean>)
+    | undefined;
+  onState?:
+    | ((
+        v: any
+      ) => void | undefined | boolean | Promise<void | undefined | boolean>)
+    | undefined;
 }

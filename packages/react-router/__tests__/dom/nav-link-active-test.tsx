@@ -1028,8 +1028,8 @@ describe("NavLink under a Routes with a basename", () => {
 });
 
 function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
+  let resolve: (val?: any | undefined) => Promise<void>;
+  let reject: (error?: Error | undefined) => Promise<void>;
   let promise = new Promise((res, rej) => {
     resolve = async (val: any) => {
       res(val);
@@ -1037,7 +1037,7 @@ function createDeferred() {
         await promise;
       } catch (e) {}
     };
-    reject = async (error?: Error) => {
+    reject = async (error?: Error | undefined) => {
       rej(error);
       try {
         await promise;

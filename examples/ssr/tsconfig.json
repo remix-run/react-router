@@ -16,7 +16,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["vite/client"],
-    "importsNotUsedAsValues": "error"
+    "importsNotUsedAsValues": "error",
+    "exactOptionalPropertyTypes": true
   },
   "include": ["./src"]
 }

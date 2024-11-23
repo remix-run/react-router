@@ -92,10 +92,10 @@ Another area that changes is the `useTransition().submission` property was remov
 {
   state: "idle" | "loading" | "submitting";
   location: Location;
-  formMethod?: FormMethod;
-  formAction?: string;
-  formEncType?: FormEncType;
-  formData?: FormData;
+  formMethod?: FormMethod | undefined;
+  formAction?: string | undefined;
+  formEncType?: FormEncType | undefined;
+  formData?: FormData | undefined;
 }
 ```
 
@@ -193,7 +193,7 @@ In addition to `<ScrollRestoration>` handling "restoring" scroll position on pre
 
 ### `useRevalidator()` hook
 
-This has been a long time coming - see https://github.com/remix-run/remix/discussions/1996 🙂
+This has been a long time coming - see <https://github.com/remix-run/remix/discussions/1996> 🙂
 
 ### No distinction between Error and Catch boundaries
 
@@ -217,7 +217,7 @@ We have a few options here. In all cases, Remix v1 will provide an internal `err
 
 1. We could introduce a new `ErrorComponent` in Remix v1 and deprecate `ErrorBoundary`/`CatchBoundary` (and eventually drop them in v2)
    1. Chose this over `ErrorElement` since the thing being exported has not been through `React.createElement`
-2. We could maintain the same behavior of `ErrorBoundary`/`CatchBoundary` in v1 and plan to drop` CatchBoundary` in v2 and send everything to `ErrorBoundary`
+2. We could maintain the same behavior of `ErrorBoundary`/`CatchBoundary` in v1 and plan to drop`CatchBoundary` in v2 and send everything to `ErrorBoundary`
 3. Keep the name `ErrorBoundary` and introduce a flag in `remix.config.js` to opt into the new behavior where all errors go to the `ErrorBoundary` and Remix stops separating them out to the catch boundary
 
 The current favorite is likely option 3, which keeps the most semantic naming for Remix v2 while allowing users to start migrating to the new behavior in v1, thus easing their eventual upgrade to Remix v2.

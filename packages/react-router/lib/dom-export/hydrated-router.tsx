@@ -31,8 +31,8 @@ type SSRInfo = {
   manifest: AssetsManifest;
   stateDecodingPromise:
     | (Promise<void> & {
-        value?: unknown;
-        error?: unknown;
+        value?: unknown | undefined;
+        error?: unknown | undefined;
       })
     | undefined;
   router: DataRouter | undefined;

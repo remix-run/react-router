@@ -43,14 +43,17 @@ export default function App() {
  */
 function useQueryParam<T>(
   key: string
-): [T | undefined, (newQuery: T, options?: NavigateOptions) => void] {
+): [
+  T | undefined,
+  (newQuery: T, options?: NavigateOptions | undefined) => void
+] {
   let [searchParams, setSearchParams] = useSearchParams();
   let paramValue = searchParams.get(key);
 
   let value = React.useMemo(() => JSURL.parse(paramValue), [paramValue]);
 
   let setValue = React.useCallback(
-    (newValue: T, options?: NavigateOptions) => {
+    (newValue: T, options?: NavigateOptions | undefined) => {
       let newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.set(key, JSURL.stringify(newValue));
       setSearchParams(newSearchParams, options);

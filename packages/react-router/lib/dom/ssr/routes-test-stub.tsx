@@ -28,11 +28,11 @@ interface StubIndexRouteObject
     IndexRouteObject,
     "loader" | "action" | "element" | "errorElement" | "children"
   > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
+  loader?: LoaderFunction | undefined;
+  action?: ActionFunction | undefined;
+  children?: StubRouteObject[] | undefined;
+  meta?: MetaFunction | undefined;
+  links?: LinksFunction | undefined;
 }
 
 interface StubNonIndexRouteObject
@@ -40,11 +40,11 @@ interface StubNonIndexRouteObject
     NonIndexRouteObject,
     "loader" | "action" | "element" | "errorElement" | "children"
   > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
+  loader?: LoaderFunction | undefined;
+  action?: ActionFunction | undefined;
+  children?: StubRouteObject[] | undefined;
+  meta?: MetaFunction | undefined;
+  links?: LinksFunction | undefined;
 }
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
@@ -60,7 +60,7 @@ export interface RoutesTestStubProps {
    *  The test will default to the last entry in initialEntries if no initialIndex is provided.
    *  e.g. initialEntries={["/home", "/about", "/contact"]}
    */
-  initialEntries?: InitialEntry[];
+  initialEntries?: InitialEntry[] | undefined;
 
   /**
    * The initial index in the history stack to render. This allows you to start a test at a specific entry.
@@ -69,7 +69,7 @@ export interface RoutesTestStubProps {
    *   initialEntries: ["/", "/events/123"]
    *   initialIndex: 1 // start at "/events/123"
    */
-  initialIndex?: number;
+  initialIndex?: number | undefined;
 
   /**
    *  Used to set the route's initial loader and action data.
@@ -78,12 +78,12 @@ export interface RoutesTestStubProps {
    *   actionData: { "/login": { errors: { email: "invalid email" } }}
    *  }}
    */
-  hydrationData?: HydrationState;
+  hydrationData?: HydrationState | undefined;
 
   /**
    * Future flags mimicking the settings in react-router.config.ts
    */
-  future?: Partial<FutureConfig>;
+  future?: Partial<FutureConfig> | undefined;
 }
 
 /**
@@ -99,8 +99,8 @@ export function createRoutesStub(
     hydrationData,
     future,
   }: RoutesTestStubProps) {
-    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let remixContextRef = React.useRef<FrameworkContextObject>();
+    const routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
+    const remixContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
       remixContextRef.current = {
@@ -144,7 +144,7 @@ function processRoutes(
   context: AppLoadContext,
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  parentId?: string
+  parentId?: string | undefined
 ): DataRouteObject[] {
   return routes.map((route) => {
     if (!route.id) {
@@ -155,7 +155,7 @@ function processRoutes(
 
     // Patch in the Remix context to loaders/actions
     let { loader, action } = route;
-    let newRoute: DataRouteObject = {
+    const newRoute: DataRouteObject = {
       id: route.id,
       path: route.path,
       index: route.index,
@@ -173,7 +173,7 @@ function processRoutes(
     };
 
     // Add the EntryRoute to the manifest
-    let entryRoute: EntryRoute = {
+    const entryRoute: EntryRoute = {
       id: route.id,
       path: route.path,
       index: route.index,

@@ -18,7 +18,7 @@ export interface CookieSignatureOptions {
    * value in the array, but `cookie.parse()` may use any of them so that
    * cookies that were signed with older secrets still work.
    */
-  secrets?: string[];
+  secrets?: string[] | undefined;
 }
 
 export type CookieOptions = ParseOptions &
@@ -52,19 +52,25 @@ export interface Cookie {
    * Note: This is calculated at access time using `maxAge` when no `expires`
    * option is provided to `createCookie()`.
    */
-  readonly expires?: Date;
+  readonly expires?: Date | undefined;
 
   /**
    * Parses a raw `Cookie` header and returns the value of this cookie or
    * `null` if it's not present.
    */
-  parse(cookieHeader: string | null, options?: ParseOptions): Promise<any>;
+  parse(
+    cookieHeader: string | null,
+    options?: ParseOptions | undefined
+  ): Promise<any>;
 
   /**
    * Serializes the given value to a string and returns the `Set-Cookie`
    * header.
    */
-  serialize(value: any, options?: SerializeOptions): Promise<string>;
+  serialize(
+    value: any,
+    options?: SerializeOptions | undefined
+  ): Promise<string>;
 }
 
 /**
@@ -185,10 +191,11 @@ function decodeData(value: string): any {
 
 // See: https://github.com/zloirock/core-js/blob/master/packages/core-js/modules/es.escape.js
 function myEscape(value: string): string {
-  let str = value.toString();
+  const str = value.toString();
   let result = "";
   let index = 0;
-  let chr, code;
+  let chr;
+  let code;
   while (index < str.length) {
     chr = str.charAt(index++);
     if (/[\w*+\-./@]/.exec(chr)) {
@@ -213,10 +220,11 @@ function hex(code: number, length: number): string {
 
 // See: https://github.com/zloirock/core-js/blob/master/packages/core-js/modules/es.unescape.js
 function myUnescape(value: string): string {
-  let str = value.toString();
+  const str = value.toString();
   let result = "";
   let index = 0;
-  let chr, part;
+  let chr;
+  let part;
   while (index < str.length) {
     chr = str.charAt(index++);
     if (chr === "%") {
@@ -241,7 +249,7 @@ function myUnescape(value: string): string {
   return result;
 }
 
-function warnOnceAboutExpiresCookie(name: string, expires?: Date) {
+function warnOnceAboutExpiresCookie(name: string, expires?: Date | undefined) {
   warnOnce(
     !expires,
     `The "${name}" cookie has an "expires" property set. ` +

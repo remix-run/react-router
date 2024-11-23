@@ -16,6 +16,7 @@
 
     // Avoid naming conflicts between history and react-router-dom relying on
     // lib.dom.d.ts Window and this being a WebWorker env.
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "exactOptionalPropertyTypes": true
   }
 }

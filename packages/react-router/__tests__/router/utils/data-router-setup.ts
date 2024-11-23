@@ -36,21 +36,21 @@ export type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
   "id" | "index" | "path" | "shouldRevalidate" | "handle"
 > & {
-  lazy?: boolean;
-  loader?: boolean;
-  action?: boolean;
-  hasErrorBoundary?: boolean;
+  lazy?: boolean | undefined;
+  loader?: boolean | undefined;
+  action?: boolean | undefined;
+  hasErrorBoundary?: boolean | undefined;
 };
 
 export type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
   "id" | "index" | "path" | "shouldRevalidate" | "handle"
 > & {
-  lazy?: boolean;
-  loader?: boolean;
-  action?: boolean;
-  hasErrorBoundary?: boolean;
-  children?: TestRouteObject[];
+  lazy?: boolean | undefined;
+  loader?: boolean | undefined;
+  action?: boolean | undefined;
+  hasErrorBoundary?: boolean | undefined;
+  children?: Array<TestRouteObject> | undefined;
 };
 
 export type TestRouteObject = TestIndexRouteObject | TestNonIndexRouteObject;
@@ -61,7 +61,7 @@ export type InternalHelpers = {
   navigationId: number;
   dfd: ReturnType<typeof createDeferred>;
   stub: jest.Mock;
-  _signal?: AbortSignal;
+  _signal?: AbortSignal | undefined;
 };
 
 export type Helpers = InternalHelpers & {
@@ -70,15 +70,15 @@ export type Helpers = InternalHelpers & {
   reject: (d: any) => Promise<void>;
   redirect: (
     href: string,
-    status?: number,
-    headers?: Record<string, string>,
-    shims?: string[]
+    status?: number | undefined,
+    headers?: Record<string, string> | undefined,
+    shims?: Array<string> | undefined
   ) => Promise<NavigationHelpers>;
   redirectReturn: (
     href: string,
-    status?: number,
-    headers?: Record<string, string>,
-    shims?: string[]
+    status?: number | undefined,
+    headers?: Record<string, string> | undefined,
+    shims?: string[] | undefined
   ) => Promise<NavigationHelpers>;
 };
 
@@ -99,7 +99,7 @@ export type FetcherHelpers = NavigationHelpers & {
 // Router created by setup() - used for automatic cleanup
 let currentRouter: Router | null = null;
 // A set of to-be-garbage-collected Deferred's to clean up at the end of a test
-let gcDfds = new Set<ReturnType<typeof createDeferred>>();
+const gcDfds = new Set<ReturnType<typeof createDeferred>>();
 
 // Reusable routes for a simple tasks app, for test cases that don't want
 // to create their own more complex routes
@@ -139,25 +139,25 @@ export const TASK_ROUTES: TestRouteObject[] = [
 
 type SetupOpts = {
   routes: TestRouteObject[];
-  basename?: string;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  hydrationData?: HydrationState;
-  dataStrategy?: DataStrategyFunction;
+  basename?: string | undefined;
+  initialEntries?: InitialEntry[] | undefined;
+  initialIndex?: number | undefined;
+  hydrationData?: HydrationState | undefined;
+  dataStrategy?: DataStrategyFunction | undefined;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
 // tick() calls to let the router finish updating
 export function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
+  let resolve: (val?: any | undefined) => Promise<void>;
+  let reject: (error?: Error | undefined) => Promise<void>;
   let promise = new Promise((res, rej) => {
     resolve = async (val: any) => {
       res(val);
       await tick();
       await promise;
     };
-    reject = async (error?: Error) => {
+    reject = async (error?: Error | undefined) => {
       rej(error);
       await promise.catch(() => tick());
     };
@@ -494,7 +494,7 @@ export function setup({
     key: string,
     href: string,
     navigationId: number,
-    opts?: RouterNavigateOptions
+    opts?: RouterNavigateOptions | undefined
   ): FetcherHelpers {
     invariant(
       currentRouter?.routes,
@@ -585,13 +585,13 @@ export function setup({
   function navigate(n: number): Promise<NavigationHelpers>;
   function navigate(
     href: string,
-    opts?: RouterNavigateOptions,
-    shims?: string[]
+    opts?: RouterNavigateOptions | undefined,
+    shims?: string[] | undefined
   ): Promise<NavigationHelpers>;
   async function navigate(
     href: number | string,
-    opts?: RouterNavigateOptions,
-    shims?: string[]
+    opts?: RouterNavigateOptions | undefined,
+    shims?: string[] | undefined
   ): Promise<NavigationHelpers> {
     let navigationId = ++guid;
     let helpers: NavigationHelpers;
@@ -647,24 +647,24 @@ export function setup({
   // control/assert loader/actions
   async function fetch(
     href: string,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions | undefined
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions | undefined
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
     routeId: string,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions | undefined
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    keyOrOpts?: string | RouterFetchOptions,
-    routeIdOrOpts?: string | RouterFetchOptions,
-    opts?: RouterFetchOptions
+    keyOrOpts?: string | RouterFetchOptions | undefined,
+    routeIdOrOpts?: string | RouterFetchOptions | undefined,
+    opts?: RouterFetchOptions | undefined
   ): Promise<FetcherHelpers> {
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
@@ -698,7 +698,7 @@ export function setup({
   // control/assert loader/actions
   async function revalidate(
     type: "navigation" | "fetch" = "navigation",
-    shimRouteId?: string
+    shimRouteId?: string | undefined
   ): Promise<NavigationHelpers> {
     invariant(currentRouter, "No currentRouter available");
     let navigationId;
@@ -774,7 +774,7 @@ export function setup({
   };
 }
 
-export function cleanup(_router?: Router) {
+export function cleanup(_router?: Router | undefined) {
   let router = _router || currentRouter;
 
   // Cleanup any routers created using setup()

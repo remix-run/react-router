@@ -15,10 +15,10 @@ process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
 sourceMapSupport.install({
   retrieveSourceMap: function (source) {
-    let match = source.startsWith("file://");
+    const match = source.startsWith("file://");
     if (match) {
-      let filePath = url.fileURLToPath(source);
-      let sourceMapPath = `${filePath}.map`;
+      const filePath = url.fileURLToPath(source);
+      const sourceMapPath = `${filePath}.map`;
       if (fs.existsSync(sourceMapPath)) {
         return {
           url: source,
@@ -32,17 +32,17 @@ sourceMapSupport.install({
 
 run();
 
-function parseNumber(raw?: string) {
+function parseNumber(raw?: string | undefined) {
   if (raw === undefined) return undefined;
-  let maybe = Number(raw);
+  const maybe = Number(raw);
   if (Number.isNaN(maybe)) return undefined;
   return maybe;
 }
 
 async function run() {
-  let port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
+  const port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
 
-  let buildPathArg = process.argv[2];
+  const buildPathArg = process.argv[2];
 
   if (!buildPathArg) {
     console.error(`
@@ -50,12 +50,12 @@ async function run() {
     process.exit(1);
   }
 
-  let buildPath = path.resolve(buildPathArg);
+  const buildPath = path.resolve(buildPathArg);
 
-  let build: ServerBuild = await import(url.pathToFileURL(buildPath).href);
+  const build: ServerBuild = await import(url.pathToFileURL(buildPath).href);
 
-  let onListen = () => {
-    let address =
+  const onListen = () => {
+    const address =
       process.env.HOST ||
       Object.values(os.networkInterfaces())
         .flat()
@@ -71,7 +71,7 @@ async function run() {
     }
   };
 
-  let app = express();
+  const app = express();
   app.disable("x-powered-by");
   app.use(compression());
   app.use(
@@ -93,7 +93,7 @@ async function run() {
     })
   );
 
-  let server = process.env.HOST
+  const server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)
     : app.listen(port, onListen);
 

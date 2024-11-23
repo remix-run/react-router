@@ -33,10 +33,14 @@ expect.extend({
   urlMatch,
 });
 
-function initializeTest(init?: {
-  url?: string;
-  hydrationData?: HydrationState;
-}) {
+function initializeTest(
+  init?:
+    | {
+        url?: string | undefined;
+        hydrationData?: HydrationState | undefined;
+      }
+    | undefined
+) {
   return setup({
     routes: [
       {

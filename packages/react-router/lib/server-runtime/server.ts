@@ -34,23 +34,23 @@ import type { EntryRoute } from "../dom/ssr/routes";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: AppLoadContext
+  loadContext?: AppLoadContext | undefined
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>),
-  mode?: string
+  mode?: string | undefined
 ) => RequestHandler;
 
-function derive(build: ServerBuild, mode?: string) {
-  let routes = createRoutes(build.routes);
-  let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
-  let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
-  let staticHandler = createStaticHandler(dataRoutes, {
+function derive(build: ServerBuild, mode?: string | undefined) {
+  const routes = createRoutes(build.routes);
+  const dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
+  const serverMode = isServerMode(mode) ? mode : ServerMode.Production;
+  const staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
   });
 
-  let errorHandler =
+  const errorHandler =
     build.entry.module.handleError ||
     ((error, { request }) => {
       if (serverMode !== ServerMode.Test && !request.signal.aborted) {
@@ -82,7 +82,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   return async function requestHandler(request, loadContext = {}) {
     _build = typeof build === "function" ? await build() : build;
     if (typeof build === "function") {
-      let derived = derive(_build, mode);
+      const derived = derive(_build, mode);
       routes = derived.routes;
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
@@ -95,9 +95,9 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       errorHandler = derived.errorHandler;
     }
 
-    let url = new URL(request.url);
-    let params: RouteMatch<ServerRoute>["params"] = {};
-    let handleError = (error: unknown) => {
+    const url = new URL(request.url);
+    const params: RouteMatch<ServerRoute>["params"] = {};
+    const handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
         getDevServerHooks()?.processRequestError?.(error);
       }
@@ -110,13 +110,13 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     };
 
     // Manifest request for fog of war
-    let manifestUrl = `${_build.basename ?? "/"}/__manifest`.replace(
+    const manifestUrl = `${_build.basename ?? "/"}/__manifest`.replace(
       /\/+/g,
       "/"
     );
     if (url.pathname === manifestUrl) {
       try {
-        let res = await handleManifestRequest(_build, routes, url);
+        const res = await handleManifestRequest(_build, routes, url);
         return res;
       } catch (e) {
         handleError(e);
@@ -124,19 +124,19 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     }
 
-    let matches = matchServerRoutes(routes, url.pathname, _build.basename);
+    const matches = matchServerRoutes(routes, url.pathname, _build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
 
     let response: Response;
     if (url.pathname.endsWith(".data")) {
-      let handlerUrl = new URL(request.url);
+      const handlerUrl = new URL(request.url);
       handlerUrl.pathname = handlerUrl.pathname
         .replace(/\.data$/, "")
         .replace(/^\/_root$/, "/");
 
-      let singleFetchMatches = matchServerRoutes(
+      const singleFetchMatches = matchServerRoutes(
         routes,
         handlerUrl.pathname,
         _build.basename
@@ -329,7 +329,7 @@ async function handleDocumentRequest(
   request: Request,
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void,
-  criticalCss?: string
+  criticalCss?: string | undefined
 ) {
   let context;
   try {
@@ -345,7 +345,7 @@ async function handleDocumentRequest(
     return context;
   }
 
-  let headers = getDocumentHeaders(build, context);
+  const headers = getDocumentHeaders(build, context);
 
   // 304 responses should not have a body or a content-type
   if (context.statusCode === 304) {
@@ -539,7 +539,10 @@ function errorResponseToJson(
   );
 }
 
-function returnLastResortErrorResponse(error: any, serverMode?: ServerMode) {
+function returnLastResortErrorResponse(
+  error: any,
+  serverMode?: ServerMode | undefined
+) {
   let message = "Unexpected Server Error";
 
   if (serverMode !== ServerMode.Production) {

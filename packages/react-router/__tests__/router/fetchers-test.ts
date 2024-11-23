@@ -17,10 +17,14 @@ import {
 } from "./utils/data-router-setup";
 import { createFormData, sleep, tick } from "./utils/utils";
 
-function initializeTest(init?: {
-  url?: string;
-  hydrationData?: HydrationState;
-}) {
+function initializeTest(
+  init?:
+    | {
+        url?: string | undefined;
+        hydrationData?: HydrationState | undefined;
+      }
+    | undefined
+) {
   return setup({
     routes: [
       {

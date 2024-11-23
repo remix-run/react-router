@@ -1,6 +1,6 @@
 export type Manifest = {
   version: string;
-  url?: string;
+  url?: string | undefined;
   entry: {
     module: string;
     imports: string[];
@@ -8,12 +8,12 @@ export type Manifest = {
   routes: {
     [routeId: string]: {
       id: string;
-      parentId?: string;
-      path?: string;
-      index?: boolean;
-      caseSensitive?: boolean;
+      parentId?: string | undefined;
+      path?: string | undefined;
+      index?: boolean | undefined;
+      caseSensitive?: boolean | undefined;
       module: string;
-      imports?: string[];
+      imports?: string[] | undefined;
       hasAction: boolean;
       hasLoader: boolean;
       hasClientAction: boolean;
@@ -21,8 +21,10 @@ export type Manifest = {
       hasErrorBoundary: boolean;
     };
   };
-  hmr?: {
-    timestamp?: number;
-    runtime: string;
-  };
+  hmr?:
+    | {
+        timestamp?: number | undefined;
+        runtime: string;
+      }
+    | undefined;
 };

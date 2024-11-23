@@ -481,9 +481,9 @@ export function getRouteSegments(routeId: string): [string[], string[]] {
 export function createRoutePath(
   routeSegments: string[],
   rawRouteSegments: string[],
-  isIndex?: boolean
+  isIndex?: boolean | undefined
 ) {
-  let result: string[] = [];
+  const result: string[] = [];
 
   if (isIndex) {
     routeSegments = routeSegments.slice(0, -1);
@@ -491,7 +491,7 @@ export function createRoutePath(
 
   for (let index = 0; index < routeSegments.length; index++) {
     let segment = routeSegments[index];
-    let rawSegment = rawRouteSegments[index];
+    const rawSegment = rawRouteSegments[index];
 
     // skip pathless layout segments
     if (segment.startsWith("_") && rawSegment.startsWith("_")) {

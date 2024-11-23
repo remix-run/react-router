@@ -5,37 +5,37 @@ import { matchRoutes } from "react-router";
 function pickPaths(
   routes: RouteObject[],
   pathname: string,
-  basename?: string
+  basename?: string | undefined
 ): string[] | null {
-  let matches = matchRoutes(routes, pathname, basename);
+  const matches = matchRoutes(routes, pathname, basename);
   return matches && matches.map((match) => match.route.path || "");
 }
 
 describe("matchRoutes", () => {
-  let userEditRoute: RouteObject = {
+  const userEditRoute: RouteObject = {
     path: "edit",
     element: <h1>User Edit</h1>,
   };
-  let userProfileRoute: RouteObject = {
+  const userProfileRoute: RouteObject = {
     path: ":id",
     element: <h1>User Profile</h1>,
     children: [userEditRoute],
   };
-  let usersRoute: RouteObject = {
+  const usersRoute: RouteObject = {
     path: "/users",
     element: <h1>Users</h1>,
     children: [{ index: true, element: <h1>Index</h1> }, userProfileRoute],
   };
-  let indexWithPathRoute: RouteObject = {
+  const indexWithPathRoute: RouteObject = {
     path: "/withpath",
     index: true,
   };
-  let layoutRouteIndex: RouteObject = {
+  const layoutRouteIndex: RouteObject = {
     path: "/layout",
     index: true,
     element: <h1>Layout</h1>,
   };
-  let layoutRoute: RouteObject = {
+  const layoutRoute: RouteObject = {
     path: "/layout",
     children: [
       { path: "item", element: <h1>Item</h1> },
@@ -43,7 +43,7 @@ describe("matchRoutes", () => {
       { path: "*", element: <h1>Not Found</h1> },
     ],
   };
-  let routes: RouteObject[] = [
+  const routes: RouteObject[] = [
     { path: "/", element: <h1>Root Layout</h1> },
     {
       path: "/home",

@@ -28,7 +28,10 @@ export class PlaywrightFixture {
    *  - `false` to wait only until the initial doc to be returned and the document
    *    to start loading (mostly useful for testing deferred responses)
    */
-  async goto(href: string, waitForHydration?: boolean): Promise<Response> {
+  async goto(
+    href: string,
+    waitForHydration?: boolean | undefined
+  ): Promise<Response> {
     let response = await this.page.goto(this.app.serverUrl + href, {
       waitUntil:
         waitForHydration === true
@@ -88,23 +91,25 @@ export class PlaywrightFixture {
    */
   async clickSubmitButton(
     action: string,
-    options: { wait?: boolean; method?: string } = { wait: true }
-  ) {
-    let selector: string;
-    if (options.method) {
-      selector = `button[formAction="${action}"][formMethod="${options.method}"]`;
-    } else {
-      selector = `button[formAction="${action}"]`;
+    options: { wait?: boolean | undefined; method?: string | undefined } = {
+      wait: true,
     }
+  ) {
+    let selector: string =
+      typeof options.method === "string"
+        ? `button[formAction="${action}"][formMethod="${options.method}"]`
+        : `button[formAction="${action}"]`;
 
     let el = await this.page.$(selector);
+
     if (!el) {
-      if (options.method) {
-        selector = `form[action="${action}"] button[type="submit"][formMethod="${options.method}"]`;
-      } else {
-        selector = `form[action="${action}"] button[type="submit"]`;
-      }
+      selector =
+        typeof options.method === "string"
+          ? `form[action="${action}"] button[type="submit"][formMethod="${options.method}"]`
+          : `form[action="${action}"] button[type="submit"]`;
+
       el = await this.page.$(selector);
+
       if (!el) {
         throw new Error(`Can't find button for: ${action}`);
       }
@@ -120,7 +125,8 @@ export class PlaywrightFixture {
    * Clicks any element and waits for the network to be idle.
    */
   async clickElement(selector: string) {
-    let el = await this.page.$(selector);
+    const el = await this.page.$(selector);
+
     if (!el) {
       throw new Error(`Can't find element for: ${selector}`);
     }
@@ -175,7 +181,7 @@ export class PlaywrightFixture {
    * form submission. A filter can be provided to only collect responses
    * that meet a certain criteria.
    */
-  collectResponses(filter?: (url: URL) => boolean) {
+  collectResponses(filter?: ((url: URL) => boolean) | undefined) {
     let responses: Response[] = [];
 
     this.page.on("response", (res) => {
@@ -193,7 +199,7 @@ export class PlaywrightFixture {
    *
    * @param selector CSS Selector for the element's HTML you want
    */
-  getHtml(selector?: string) {
+  getHtml(selector?: string | undefined) {
     return getHtml(this.page, selector);
   }
 
@@ -223,7 +229,7 @@ export class PlaywrightFixture {
   }
 }
 
-export async function getHtml(page: Page, selector?: string) {
+export async function getHtml(page: Page, selector?: string | undefined) {
   let html = await page.content();
   return selector ? selectHtml(html, selector) : prettyHtml(html);
 }

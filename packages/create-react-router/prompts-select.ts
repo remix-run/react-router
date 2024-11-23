@@ -10,18 +10,18 @@ import { color, strip, clear, shouldUseAscii, type ActionKey } from "./utils";
 export interface SelectChoice {
   value: unknown;
   label: string;
-  hint?: string;
+  hint?: string | undefined;
 }
 
 export interface SelectPromptOptions<
   Choices extends Readonly<Readonly<SelectChoice>[]>
 > extends PromptOptions {
-  hint?: string;
+  hint?: string | undefined;
   message: string;
   label: string;
   initial?: Choices[number]["value"] | undefined;
-  validate?: (v: any) => boolean;
-  error?: string;
+  validate?: ((v: any) => boolean) | undefined;
+  error?: string | undefined;
   choices: Choices;
 }
 
@@ -31,7 +31,7 @@ export class SelectPrompt<
   choices: Choices;
   label: string;
   msg: string;
-  hint?: string;
+  hint?: string | undefined;
   value: Choices[number]["value"] | undefined;
   initialValue: Choices[number]["value"];
   search: string | null;
@@ -99,15 +99,16 @@ export class SelectPrompt<
   _(c: string, key: ActionKey) {
     if (this._timeout) clearTimeout(this._timeout);
     if (!Number.isNaN(Number.parseInt(c))) {
-      let n = Number.parseInt(c) - 1;
+      const n = Number.parseInt(c) - 1;
       this.moveCursor(n);
       this.render();
       return this.submit();
     }
     this.search = this.search || "";
     this.search += c.toLowerCase();
-    let choices = !this.search ? this.choices.slice(this.cursor) : this.choices;
-    let n = choices.findIndex((c) =>
+    const choices =
+      this.search === "" ? this.choices.slice(this.cursor) : this.choices;
+    const n = choices.findIndex((c) =>
       c.label.toLowerCase().includes(this.search!)
     );
     if (n > -1) {
@@ -161,7 +162,7 @@ export class SelectPrompt<
 
   highlight(label: string) {
     if (!this.search) return label;
-    let n = label.toLowerCase().indexOf(this.search.toLowerCase());
+    const n = label.toLowerCase().indexOf(this.search.toLowerCase());
     if (n === -1) return label;
     return [
       label.slice(0, n),
@@ -176,7 +177,7 @@ export class SelectPrompt<
     else this.out.write(clear(this.outputText, this.out.columns));
     super.render();
 
-    let outputText = [
+    const outputText = [
       "\n",
       this.label,
       " ",
@@ -190,7 +191,7 @@ export class SelectPrompt<
       "\n",
     ];
 
-    let prefix = " ".repeat(strip(this.label).length);
+    const prefix = " ".repeat(strip(this.label).length);
 
     if (this.done) {
       outputText.push(

@@ -1,10 +1,14 @@
 interface CustomMatchers<R = jest.Expect> {
   URL(url: string);
-  trackedPromise(data?: any, error?: any, aborted?: boolean): R;
+  trackedPromise(
+    data?: any | undefined,
+    error?: any | undefined,
+    aborted?: boolean | undefined
+  ): R;
   deferredData(
     done: boolean,
-    status?: number,
-    headers?: Record<string, string>
+    status?: number | undefined,
+    headers?: Record<string, string> | undefined
   ): R;
 }
 
@@ -17,7 +21,7 @@ declare global {
 }
 
 // Custom matcher for asserting against URLs
-export function urlMatch(received, url) {
+export function urlMatch(received: URL, url: string) {
   return {
     message: () => `expected URL ${received.toString()} to equal URL ${url}`,
     pass: received instanceof URL && received.toString() === url,

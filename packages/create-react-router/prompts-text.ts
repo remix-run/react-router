@@ -17,11 +17,11 @@ import {
 export interface TextPromptOptions extends PromptOptions {
   label: string;
   message: string;
-  initial?: string;
-  style?: string;
-  validate?: (v: any) => v is string;
-  error?: string;
-  hint?: string;
+  initial?: string | undefined;
+  style?: string | undefined;
+  validate?: ((v: any) => v is string) | undefined;
+  error?: string | undefined;
+  hint?: string | undefined;
 }
 
 export class TextPrompt extends Prompt {
@@ -30,7 +30,7 @@ export class TextPrompt extends Prompt {
   scale: number;
   msg: string;
   initial: string;
-  hint?: string;
+  hint?: string | undefined;
   validator: (v: any) => boolean | Promise<boolean>;
   errorMsg: string;
   cursor: number;

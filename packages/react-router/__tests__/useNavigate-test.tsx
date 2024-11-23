@@ -340,7 +340,7 @@ describe("useNavigate", () => {
     }
 
     function Page() {
-      let navigate = useNavigate();
+      const navigate = useNavigate();
       return (
         <>
           <h1>Page</h1>
@@ -2241,8 +2241,8 @@ function UseNavigateButton({
   relative,
 }: {
   to: To;
-  relative?: RelativeRoutingType;
+  relative?: RelativeRoutingType | undefined;
 }) {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   return <button onClick={() => navigate(to, { relative })}>Navigate</button>;
 }

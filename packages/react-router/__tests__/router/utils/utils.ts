@@ -8,12 +8,15 @@ export async function tick() {
   await sleep(0);
 }
 
-export function invariant(value: boolean, message?: string): asserts value;
+export function invariant(
+  value: boolean,
+  message?: string | undefined
+): asserts value;
 export function invariant<T>(
   value: T | null | undefined,
-  message?: string
+  message?: string | undefined
 ): asserts value is T;
-export function invariant(value: any, message?: string) {
+export function invariant(value: any, message?: string | undefined) {
   if (value === false || value === null || typeof value === "undefined") {
     console.warn("Test invariant failed:", message);
     throw new Error(message);
@@ -33,8 +36,8 @@ export function isRedirect(result: any) {
 }
 
 export function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
+  let resolve: (val?: any | undefined) => Promise<void>;
+  let reject: (error?: Error | undefined) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);
@@ -42,7 +45,7 @@ export function createDeferred<T = unknown>() {
         await promise;
       } catch (e) {}
     };
-    reject = async (error?: Error) => {
+    reject = async (error?: Error | undefined) => {
       rej(error);
       try {
         await promise;
@@ -81,12 +84,15 @@ export function findRouteById(
   return foundRoute;
 }
 
-export function createRequest(path: string, opts?: RequestInit) {
+export function createRequest(path: string, opts?: RequestInit | undefined) {
   return new Request(`http://localhost${path}`, opts);
 }
 
-export function createSubmitRequest(path: string, opts?: RequestInit) {
-  let searchParams = new URLSearchParams();
+export function createSubmitRequest(
+  path: string,
+  opts?: RequestInit | undefined
+) {
+  const searchParams = new URLSearchParams();
   searchParams.append("key", "value");
 
   return createRequest(path, {

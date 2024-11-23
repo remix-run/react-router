@@ -1,11 +1,10 @@
 import type { ServerBuild } from "./build";
 
 type DevServerHooks = {
-  getCriticalCss?: (
-    build: ServerBuild,
-    pathname: string
-  ) => Promise<string | undefined>;
-  processRequestError?: (error: unknown) => void;
+  getCriticalCss?:
+    | ((build: ServerBuild, pathname: string) => Promise<string | undefined>)
+    | undefined;
+  processRequestError?: ((error: unknown) => void) | undefined;
 };
 
 const globalDevServerHooksKey = "__reactRouterDevServerHooks";

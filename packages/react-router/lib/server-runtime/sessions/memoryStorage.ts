@@ -11,7 +11,7 @@ interface MemorySessionStorageOptions {
    * The Cookie used to store the session id on the client, or options used
    * to automatically create one.
    */
-  cookie?: SessionIdStorageStrategy["cookie"];
+  cookie?: SessionIdStorageStrategy["cookie"] | undefined;
 }
 
 /**
@@ -28,15 +28,15 @@ export function createMemorySessionStorage<
   Data,
   FlashData
 > {
-  let map = new Map<
+  const map = new Map<
     string,
-    { data: FlashSessionData<Data, FlashData>; expires?: Date }
+    { data: FlashSessionData<Data, FlashData>; expires?: Date | undefined }
   >();
 
   return createSessionStorage({
     cookie,
     async createData(data, expires) {
-      let id = Math.random().toString(36).substring(2, 10);
+      const id = Math.random().toString(36).substring(2, 10);
       map.set(id, { data, expires });
       return id;
     },

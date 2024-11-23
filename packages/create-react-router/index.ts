@@ -171,21 +171,21 @@ interface Context {
   cwd: string;
   interactive: boolean;
   debug: boolean;
-  git?: boolean;
+  git?: boolean | undefined;
   help: boolean;
-  install?: boolean;
+  install?: boolean | undefined;
   showInstallOutput: boolean;
-  noMotion?: boolean;
+  noMotion?: boolean | undefined;
   pkgManager: PackageManager;
-  projectName?: string;
+  projectName?: string | undefined;
   prompt: typeof prompt;
   reactRouterVersion: string;
-  stdin?: typeof process.stdin;
-  stdout?: typeof process.stdout;
-  template?: string;
-  token?: string;
-  versionRequested?: boolean;
-  overwrite?: boolean;
+  stdin?: typeof process.stdin | undefined;
+  stdout?: typeof process.stdout | undefined;
+  template?: string | undefined;
+  token?: string | undefined;
+  versionRequested?: boolean | undefined;
+  overwrite?: boolean | undefined;
 }
 
 async function introStep(ctx: Context) {
@@ -236,10 +236,10 @@ async function projectNameStep(ctx: Context) {
 
   let name = ctx.cwd;
   if (name === "." || name === "./") {
-    let parts = process.cwd().split(path.sep);
+    const parts = process.cwd().split(path.sep);
     name = parts[parts.length - 1];
   } else if (name.startsWith("./") || name.startsWith("../")) {
-    let parts = name.split("/");
+    const parts = name.split("/");
     name = parts[parts.length - 1];
   }
   ctx.projectName = toValidProjectName(name);
@@ -256,7 +256,7 @@ async function copyTemplateToTempDirStep(ctx: Context) {
     ]);
   }
 
-  let template =
+  const template =
     ctx.template ??
     "https://github.com/remix-run/react-router-templates/tree/main/default";
 
@@ -302,16 +302,16 @@ async function copyTemplateToTempDirStep(ctx: Context) {
 async function copyTempDirToAppDirStep(ctx: Context) {
   await ensureDirectory(ctx.cwd);
 
-  let files1 = await getDirectoryFilesRecursive(ctx.tempDir);
-  let files2 = await getDirectoryFilesRecursive(ctx.cwd);
-  let collisions = files1
+  const files1 = await getDirectoryFilesRecursive(ctx.tempDir);
+  const files2 = await getDirectoryFilesRecursive(ctx.cwd);
+  const collisions = files1
     .filter((f) => files2.includes(f))
     .sort((a, b) => a.localeCompare(b));
 
   if (collisions.length > 0) {
-    let getFileList = (prefix: string) => {
-      let moreFiles = collisions.length - 5;
-      let lines = ["", ...collisions.slice(0, 5)];
+    const getFileList = (prefix: string) => {
+      const moreFiles = collisions.length - 5;
+      const lines = ["", ...collisions.slice(0, 5)];
       if (moreFiles > 0) {
         lines.push(`and ${moreFiles} more...`);
       }
@@ -364,8 +364,8 @@ async function copyTempDirToAppDirStep(ctx: Context) {
       // unlikely we want them copied - and because templates are primarily
       // being pulled from git tarballs which won't have .git/ and shouldn't
       // have node_modules/
-      let file = stripDirectoryFromPath(ctx.tempDir, src);
-      let isIgnored = IGNORED_TEMPLATE_DIRECTORIES.includes(file);
+      const file = stripDirectoryFromPath(ctx.tempDir, src);
+      const isIgnored = IGNORED_TEMPLATE_DIRECTORIES.includes(file);
       if (isIgnored) {
         if (ctx.debug) {
           debug(`Skipping copy of ${file} directory from template`);
@@ -469,8 +469,8 @@ async function gitInitStep(ctx: Context) {
     start: "Git initializing...",
     end: "Git initialized",
     while: async () => {
-      let options = { cwd: ctx.cwd, stdio: "ignore" } as const;
-      let commitMsg = "Initial commit from create-react-router";
+      const options = { cwd: ctx.cwd, stdio: "ignore" } as const;
+      const commitMsg = "Initial commit from create-react-router";
       try {
         await execa("git", ["init"], options);
         await execa("git", ["add", "."], options);
@@ -485,20 +485,20 @@ async function gitInitStep(ctx: Context) {
 }
 
 async function doneStep(ctx: Context) {
-  let projectDir = path.relative(process.cwd(), ctx.cwd);
+  const projectDir = path.relative(process.cwd(), ctx.cwd);
 
-  let max = process.stdout.columns;
-  let prefix = max < 80 ? " " : " ".repeat(9);
+  const max = process.stdout.columns;
+  const prefix = max < 80 ? " " : " ".repeat(9);
   await sleep(200);
 
   log(`\n ${color.bgWhite(color.black(" done "))}  That's it!`);
   await sleep(100);
   if (projectDir !== "") {
-    let enter = [
+    const enter = [
       `\n${prefix}Enter your project directory using`,
       color.cyan(`cd .${path.sep}${projectDir}`),
     ];
-    let len = enter[0].length + stripAnsi(enter[1]).length;
+    const len = enter[0].length + stripAnsi(enter[1]).length;
     log(enter.join(len > max ? "\n" + prefix : " "));
   }
   log(
@@ -549,9 +549,9 @@ async function installDependencies({
 }
 
 async function updatePackageJSON(ctx: Context) {
-  let packageJSONPath = path.join(ctx.cwd, "package.json");
+  const packageJSONPath = path.join(ctx.cwd, "package.json");
   if (!fs.existsSync(packageJSONPath)) {
-    let relativePath = path.relative(process.cwd(), ctx.cwd);
+    const relativePath = path.relative(process.cwd(), ctx.cwd);
     error(
       "Oh no!",
       "The provided template must be a React Router project with a `package.json` " +
@@ -560,7 +560,7 @@ async function updatePackageJSON(ctx: Context) {
     throw new Error(`package.json does not exist in ${ctx.cwd}`);
   }
 
-  let contents = await fs.promises.readFile(packageJSONPath, "utf-8");
+  const contents = await fs.promises.readFile(packageJSONPath, "utf-8");
   let packageJSON: any;
   try {
     packageJSON = JSON.parse(contents);
@@ -576,8 +576,8 @@ async function updatePackageJSON(ctx: Context) {
     throw err;
   }
 
-  for (let pkgKey of ["dependencies", "devDependencies"] as const) {
-    let dependencies = packageJSON[pkgKey];
+  for (const pkgKey of ["dependencies", "devDependencies"] as const) {
+    const dependencies = packageJSON[pkgKey];
     if (!dependencies) continue;
 
     if (!isValidJsonObject(dependencies)) {
@@ -589,8 +589,8 @@ async function updatePackageJSON(ctx: Context) {
       throw new Error(`package.json ${pkgKey} are invalid`);
     }
 
-    for (let dependency in dependencies) {
-      let version = dependencies[dependency];
+    for (const dependency in dependencies) {
+      const version = dependencies[dependency];
       if (
         (dependency.startsWith("@react-router/") ||
           dependency === "react-router" ||
@@ -633,7 +633,7 @@ function title(text: string) {
 
 function printHelp(ctx: Context) {
   // prettier-ignore
-  let output = `
+  const output = `
 ${title("create-react-router")}
 
 ${color.heading("Usage")}:
@@ -693,7 +693,7 @@ to that repo.
 }
 
 function align(text: string, dir: "start" | "end" | "center", len: number) {
-  let pad = Math.max(len - strip(text).length, 0);
+  const pad = Math.max(len - strip(text).length, 0);
   switch (dir) {
     case "start":
       return text + " ".repeat(pad);

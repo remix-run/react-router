@@ -15,6 +15,7 @@
     "skipLibCheck": true,
 
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "exactOptionalPropertyTypes": true
   }
 }

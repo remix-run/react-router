@@ -62,18 +62,18 @@ async function configFiles({
   basename,
 }: {
   port: number;
-  base?: string;
-  basename?: string;
+  base?: string | undefined;
+  basename?: string | undefined;
 }) {
   return {
     "react-router.config.ts": reactRouterConfig({
-      basename: basename !== "/" ? basename : undefined,
+      basename: basename === "/" ? undefined : basename,
     }),
     "vite.config.js": js`
     import { reactRouter } from "@react-router/dev/vite";
 
     export default {
-      ${base !== "/" ? 'base: "' + base + '",' : ""}
+      ${base === "/" ? "" : 'base: "' + base + '",'}
       ${await viteConfig.server({ port })}
       plugins: [reactRouter()]
     }
@@ -87,8 +87,8 @@ const customServerFile = ({
   basename,
 }: {
   port: number;
-  base?: string;
-  basename?: string;
+  base?: string | undefined;
+  basename?: string | undefined;
 }) => {
   base = base ?? "/mybase/";
   basename = basename ?? base;
@@ -141,8 +141,8 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
   }: {
     base: string;
     basename: string;
-    startServer?: boolean;
-    files?: Record<string, string>;
+    startServer?: boolean | undefined;
+    files?: Record<string, string> | undefined;
   }) {
     port = await getPort();
     cwd = await createProject({
@@ -264,7 +264,7 @@ test.describe("Vite base / React Router basename / express dev", async () => {
   }: {
     base: string;
     basename: string;
-    startServer?: boolean;
+    startServer?: boolean | undefined;
   }) {
     port = await getPort();
     cwd = await createProject({
@@ -308,8 +308,8 @@ async function workflowDev({
   page: Page;
   cwd: string;
   port: number;
-  base?: string;
-  basename?: string;
+  base?: string | undefined;
+  basename?: string | undefined;
 }) {
   base = base ?? "/mybase/";
   basename = basename ?? base;
@@ -390,7 +390,7 @@ test.describe("Vite base / React Router basename / vite build", () => {
   }: {
     base: string;
     basename: string;
-    startServer?: boolean;
+    startServer?: boolean | undefined;
   }) {
     port = await getPort();
     cwd = await createProject({
@@ -436,7 +436,7 @@ test.describe("Vite base / React Router basename / express build", async () => {
   }: {
     base: string;
     basename: string;
-    startServer?: boolean;
+    startServer?: boolean | undefined;
   }) {
     port = await getPort();
     cwd = await createProject({
@@ -540,8 +540,8 @@ async function workflowBuild({
 }: {
   page: Page;
   port: number;
-  base?: string;
-  basename?: string;
+  base?: string | undefined;
+  basename?: string | undefined;
 }) {
   base = base ?? "/mybase/";
   basename = basename ?? base;

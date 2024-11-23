@@ -8,12 +8,12 @@ interface HtmlLinkProps {
   /**
    * Address of the hyperlink
    */
-  href?: string;
+  href?: string | undefined;
 
   /**
    * How the element handles crossorigin requests
    */
-  crossOrigin?: "anonymous" | "use-credentials";
+  crossOrigin?: "anonymous" | "use-credentials" | undefined;
 
   /**
    * Relationship between the document containing the hyperlink and the destination resource
@@ -38,22 +38,22 @@ interface HtmlLinkProps {
   /**
    * Applicable media: "screen", "print", "(max-width: 764px)"
    */
-  media?: string;
+  media?: string | undefined;
 
   /**
    * Integrity metadata used in Subresource Integrity checks
    */
-  integrity?: string;
+  integrity?: string | undefined;
 
   /**
    * Language of the linked resource
    */
-  hrefLang?: string;
+  hrefLang?: string | undefined;
 
   /**
    * Hint for the type of the referenced resource
    */
-  type?: string;
+  type?: string | undefined;
 
   /**
    * Referrer policy for fetches initiated by the element
@@ -67,66 +67,69 @@ interface HtmlLinkProps {
     | "strict-origin"
     | "origin-when-cross-origin"
     | "strict-origin-when-cross-origin"
-    | "unsafe-url";
+    | "unsafe-url"
+    | undefined;
 
   /**
    * Sizes of the icons (for rel="icon")
    */
-  sizes?: string;
+  sizes?: string | undefined;
 
   /**
    * Potential destination for a preload request (for rel="preload" and rel="modulepreload")
    */
-  as?: LiteralUnion<
-    | "audio"
-    | "audioworklet"
-    | "document"
-    | "embed"
-    | "fetch"
-    | "font"
-    | "frame"
-    | "iframe"
-    | "image"
-    | "manifest"
-    | "object"
-    | "paintworklet"
-    | "report"
-    | "script"
-    | "serviceworker"
-    | "sharedworker"
-    | "style"
-    | "track"
-    | "video"
-    | "worker"
-    | "xslt",
-    string
-  >;
+  as?:
+    | LiteralUnion<
+        | "audio"
+        | "audioworklet"
+        | "document"
+        | "embed"
+        | "fetch"
+        | "font"
+        | "frame"
+        | "iframe"
+        | "image"
+        | "manifest"
+        | "object"
+        | "paintworklet"
+        | "report"
+        | "script"
+        | "serviceworker"
+        | "sharedworker"
+        | "style"
+        | "track"
+        | "video"
+        | "worker"
+        | "xslt",
+        string
+      >
+    | undefined;
 
   /**
    * Color to use when customizing a site's icon (for rel="mask-icon")
    */
-  color?: string;
+  color?: string | undefined;
 
   /**
    * Whether the link is disabled
    */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 
   /**
    * The title attribute has special semantics on this element: Title of the link; CSS style sheet set name.
    */
-  title?: string;
+  title?: string | undefined;
 
   /**
    * Images to use in different situations, e.g., high-resolution displays,
    * small monitors, etc. (for rel="preload")
    */
-  imageSrcSet?: string;
+  imageSrcSet?: string | undefined;
 
   /**
    * Image sizes for different page layouts (for rel="preload")
    */
-  imageSizes?: string;
+  imageSizes?: string | undefined;
 }
 
 interface HtmlLinkPreloadImage extends HtmlLinkProps {
@@ -143,7 +146,7 @@ interface HtmlLinkPreloadImage extends HtmlLinkProps {
   /**
    * Address of the hyperlink
    */
-  href?: string;
+  href?: string | undefined;
 
   /**
    * Images to use in different situations, e.g., high-resolution displays,
@@ -154,7 +157,7 @@ interface HtmlLinkPreloadImage extends HtmlLinkProps {
   /**
    * Image sizes for different page layouts (for rel="preload")
    */
-  imageSizes?: string;
+  imageSizes?: string | undefined;
 }
 
 /**
@@ -168,7 +171,9 @@ export type HtmlLinkDescriptor =
   | (HtmlLinkProps & Pick<Required<HtmlLinkProps>, "href">)
   | (HtmlLinkPreloadImage & Pick<Required<HtmlLinkPreloadImage>, "imageSizes">)
   | (HtmlLinkPreloadImage &
-      Pick<Required<HtmlLinkPreloadImage>, "href"> & { imageSizes?: never });
+      Pick<Required<HtmlLinkPreloadImage>, "href"> & {
+        imageSizes?: never | undefined;
+      });
 
 export interface PageLinkDescriptor
   extends Omit<

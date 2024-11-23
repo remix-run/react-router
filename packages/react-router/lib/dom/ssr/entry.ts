@@ -6,39 +6,45 @@ import type { RouteManifest } from "../../router/utils";
 
 type SerializedError = {
   message: string;
-  stack?: string;
+  stack?: string | undefined;
 };
 
 // Object passed to RemixContext.Provider
 export interface FrameworkContextObject {
   manifest: AssetsManifest;
   routeModules: RouteModules;
-  criticalCss?: string;
-  serverHandoffString?: string;
+  criticalCss?: string | undefined;
+  serverHandoffString?: string | undefined;
   future: FutureConfig;
   isSpaMode: boolean;
-  abortDelay?: number;
-  serializeError?(error: Error): SerializedError;
-  renderMeta?: {
-    didRenderScripts?: boolean;
-    streamCache?: Record<
-      number,
-      Promise<void> & {
-        result?: {
-          done: boolean;
-          value: string;
-        };
-        error?: unknown;
+  abortDelay?: number | undefined;
+  serializeError?: ((error: Error) => SerializedError) | undefined;
+  renderMeta?:
+    | {
+        didRenderScripts?: boolean | undefined;
+        streamCache?:
+          | Record<
+              number,
+              Promise<void> & {
+                result?:
+                  | {
+                      done: boolean;
+                      value: string;
+                    }
+                  | undefined;
+                error?: unknown | undefined;
+              }
+            >
+          | undefined;
       }
-    >;
-  };
+    | undefined;
 }
 
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
 export interface EntryContext extends FrameworkContextObject {
   staticHandlerContext: StaticHandlerContext;
-  serverHandoffStream?: ReadableStream<Uint8Array>;
+  serverHandoffStream?: ReadableStream<Uint8Array> | undefined;
 }
 
 export interface FutureConfig {}
@@ -51,8 +57,10 @@ export interface AssetsManifest {
   routes: RouteManifest<EntryRoute>;
   url: string;
   version: string;
-  hmr?: {
-    timestamp?: number;
-    runtime: string;
-  };
+  hmr?:
+    | {
+        timestamp?: number | undefined;
+        runtime: string;
+      }
+    | undefined;
 }

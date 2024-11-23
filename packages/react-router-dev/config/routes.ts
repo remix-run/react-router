@@ -25,17 +25,17 @@ export interface RouteManifestEntry {
   /**
    * The path this route uses to match on the URL pathname.
    */
-  path?: string;
+  path?: string | undefined;
 
   /**
    * Should be `true` if it is an index route. This disallows child routes.
    */
-  index?: boolean;
+  index?: boolean | undefined;
 
   /**
    * Should be `true` if the `path` is case-sensitive. Defaults to `false`.
    */
-  caseSensitive?: boolean;
+  caseSensitive?: boolean | undefined;
 
   /**
    * The unique id for this route, named like its `file` but without the
@@ -47,7 +47,7 @@ export interface RouteManifestEntry {
   /**
    * The unique `id` for this route's parent route, if there is one.
    */
-  parentId?: string;
+  parentId?: string | undefined;
 
   /**
    * The path to the entry point for this route, relative to
@@ -69,22 +69,22 @@ export interface RouteConfigEntry {
   /**
    * The unique id for this route.
    */
-  id?: string;
+  id?: string | undefined;
 
   /**
    * The path this route uses to match on the URL pathname.
    */
-  path?: string;
+  path?: string | undefined;
 
   /**
    * Should be `true` if it is an index route. This disallows child routes.
    */
-  index?: boolean;
+  index?: boolean | undefined;
 
   /**
    * Should be `true` if the `path` is case-sensitive. Defaults to `false`.
    */
-  caseSensitive?: boolean;
+  caseSensitive?: boolean | undefined;
 
   /**
    * The path to the entry point for this route, relative to
@@ -95,7 +95,7 @@ export interface RouteConfigEntry {
   /**
    * The child routes.
    */
-  children?: RouteConfigEntry[];
+  children?: RouteConfigEntry[] | undefined;
 }
 
 export const routeConfigEntrySchema: v.BaseSchema<
@@ -189,19 +189,19 @@ type CreateRouteOptions = Pick<
 function route(
   path: string | null | undefined,
   file: string,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[] | undefined
 ): RouteConfigEntry;
 function route(
   path: string | null | undefined,
   file: string,
   options: CreateRouteOptions,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[] | undefined
 ): RouteConfigEntry;
 function route(
   path: string | null | undefined,
   file: string,
   optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[] | undefined
 ): RouteConfigEntry {
   let options: CreateRouteOptions = {};
 
@@ -230,7 +230,10 @@ type CreateIndexOptions = Pick<
  * Helper function for creating a route config entry for an index route, for use
  * within `routes.ts`.
  */
-function index(file: string, options?: CreateIndexOptions): RouteConfigEntry {
+function index(
+  file: string,
+  options?: CreateIndexOptions | undefined
+): RouteConfigEntry {
   return {
     file,
     index: true,
@@ -249,16 +252,19 @@ type CreateLayoutOptions = Pick<
  * Helper function for creating a route config entry for a layout route, for use
  * within `routes.ts`.
  */
-function layout(file: string, children?: RouteConfigEntry[]): RouteConfigEntry;
+function layout(
+  file: string,
+  children?: RouteConfigEntry[] | undefined
+): RouteConfigEntry;
 function layout(
   file: string,
   options: CreateLayoutOptions,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[] | undefined
 ): RouteConfigEntry;
 function layout(
   file: string,
   optionsOrChildren: CreateLayoutOptions | RouteConfigEntry[] | undefined,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[] | undefined
 ): RouteConfigEntry {
   let options: CreateLayoutOptions = {};
 
@@ -348,11 +354,11 @@ export function configRoutesToRouteManifest(
   routes: RouteConfigEntry[],
   rootId = "root"
 ): RouteManifest {
-  let routeManifest: RouteManifest = {};
+  const routeManifest: RouteManifest = {};
 
   function walk(route: RouteConfigEntry, parentId: string) {
-    let id = route.id || createRouteId(route.file);
-    let manifestItem: RouteManifestEntry = {
+    const id = route.id || createRouteId(route.file);
+    const manifestItem: RouteManifestEntry = {
       id,
       parentId,
       file: Path.isAbsolute(route.file)
@@ -371,13 +377,13 @@ export function configRoutesToRouteManifest(
     routeManifest[id] = manifestItem;
 
     if (route.children) {
-      for (let child of route.children) {
+      for (const child of route.children) {
         walk(child, id);
       }
     }
   }
 
-  for (let route of routes) {
+  for (const route of routes) {
     walk(route, rootId);
   }
 

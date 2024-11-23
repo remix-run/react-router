@@ -17,19 +17,19 @@ export function mockServerBuild(
   routes: Record<
     string,
     {
-      parentId?: string;
-      index?: true;
-      path?: string;
-      default?: any;
-      ErrorBoundary?: any;
-      action?: ActionFunction;
-      headers?: HeadersFunction;
-      loader?: LoaderFunction;
+      parentId?: string | undefined;
+      index?: true | undefined;
+      path?: string | undefined;
+      default?: any | undefined;
+      ErrorBoundary?: any | undefined;
+      action?: ActionFunction | undefined;
+      headers?: HeadersFunction | undefined;
+      loader?: LoaderFunction | undefined;
     }
   >,
   opts: {
-    future?: Partial<FutureConfig>;
-    handleError?: HandleErrorFunction;
+    future?: Partial<FutureConfig> | undefined;
+    handleError?: HandleErrorFunction | undefined;
   } = {}
 ) {
   return {
@@ -42,7 +42,7 @@ export function mockServerBuild(
         module: "",
       },
       routes: Object.entries(routes).reduce((p, [id, config]) => {
-        let route: EntryRoute = {
+        const route: EntryRoute = {
           hasAction: !!config.action,
           hasErrorBoundary: !!config.ErrorBoundary,
           hasLoader: !!config.loader,

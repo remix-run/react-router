@@ -12,7 +12,7 @@ interface FileSessionStorageOptions {
    * The Cookie used to store the session id on the client, or options used
    * to automatically create one.
    */
-  cookie?: SessionIdStorageStrategy["cookie"];
+  cookie?: SessionIdStorageStrategy["cookie"] | undefined;
 
   /**
    * The directory to use to store session files.
@@ -35,18 +35,18 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   return createSessionStorage({
     cookie,
     async createData(data, expires) {
-      let content = JSON.stringify({ data, expires });
+      const content = JSON.stringify({ data, expires });
 
       while (true) {
-        let randomBytes = crypto.getRandomValues(new Uint8Array(8));
+        const randomBytes = crypto.getRandomValues(new Uint8Array(8));
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume
         // (2^32). However, the larger id space should help to avoid collisions
         // with existing ids when creating new sessions, which speeds things up.
-        let id = Buffer.from(randomBytes).toString("hex");
+        const id = Buffer.from(randomBytes).toString("hex");
 
         try {
-          let file = getFile(dir, id);
+          const file = getFile(dir, id);
           await fsp.mkdir(path.dirname(file), { recursive: true });
           await fsp.writeFile(file, content, { encoding: "utf-8", flag: "wx" });
           return id;
@@ -57,10 +57,10 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
     },
     async readData(id) {
       try {
-        let file = getFile(dir, id);
-        let content = JSON.parse(await fsp.readFile(file, "utf-8"));
-        let data = content.data;
-        let expires =
+        const file = getFile(dir, id);
+        const content = JSON.parse(await fsp.readFile(file, "utf-8"));
+        const data = content.data;
+        const expires =
           typeof content.expires === "string"
             ? new Date(content.expires)
             : null;
@@ -79,8 +79,8 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       }
     },
     async updateData(id, data, expires) {
-      let content = JSON.stringify({ data, expires });
-      let file = getFile(dir, id);
+      const content = JSON.stringify({ data, expires });
+      const file = getFile(dir, id);
       await fsp.mkdir(path.dirname(file), { recursive: true });
       await fsp.writeFile(file, content, "utf-8");
     },

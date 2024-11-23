@@ -1,3 +1,4 @@
+import type { DataRouteObject } from "../context";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -21,8 +22,8 @@ export enum ResultType {
 export interface SuccessResult {
   type: ResultType.data;
   data: unknown;
-  statusCode?: number;
-  headers?: Headers;
+  statusCode?: number | undefined;
+  headers?: Headers | undefined;
 }
 
 /**
@@ -40,8 +41,8 @@ export interface RedirectResult {
 export interface ErrorResult {
   type: ResultType.error;
   error: unknown;
-  statusCode?: number;
-  headers?: Headers;
+  statusCode?: number | undefined;
+  headers?: Headers | undefined;
 }
 
 /**
@@ -118,7 +119,7 @@ export type Submission =
 interface DataFunctionArgs<Context> {
   request: Request;
   params: Params;
-  context?: Context;
+  context?: Context | undefined;
 }
 
 /**
@@ -148,9 +149,9 @@ type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 export type LoaderFunction<Context = any> = {
   (
     args: LoaderFunctionArgs<Context>,
-    handlerCtx?: unknown
+    handlerCtx?: unknown | undefined
   ): DataFunctionReturnValue;
-} & { hydrate?: boolean };
+} & { hydrate?: boolean | undefined };
 
 /**
  * Route action function signature
@@ -158,7 +159,7 @@ export type LoaderFunction<Context = any> = {
 export interface ActionFunction<Context = any> {
   (
     args: ActionFunctionArgs<Context>,
-    handlerCtx?: unknown
+    handlerCtx?: unknown | undefined
   ): DataFunctionReturnValue;
 }
 
@@ -170,14 +171,14 @@ export interface ShouldRevalidateFunctionArgs {
   currentParams: AgnosticDataRouteMatch["params"];
   nextUrl: URL;
   nextParams: AgnosticDataRouteMatch["params"];
-  formMethod?: Submission["formMethod"];
-  formAction?: Submission["formAction"];
-  formEncType?: Submission["formEncType"];
-  text?: Submission["text"];
-  formData?: Submission["formData"];
-  json?: Submission["json"];
-  actionStatus?: number;
-  actionResult?: any;
+  formMethod?: Submission["formMethod"] | undefined;
+  formAction?: Submission["formAction"] | undefined;
+  formEncType?: Submission["formEncType"] | undefined;
+  text?: Submission["text"] | undefined;
+  formData?: Submission["formData"] | undefined;
+  json?: Submission["json"] | undefined;
+  actionStatus?: number | undefined;
+  actionResult?: any | undefined;
   defaultShouldRevalidate: boolean;
 }
 
@@ -196,9 +197,11 @@ export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
   shouldLoad: boolean;
   resolve: (
-    handlerOverride?: (
-      handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => DataFunctionReturnValue
+    handlerOverride?:
+      | ((
+          handler: (ctx?: unknown | undefined) => DataFunctionReturnValue
+        ) => DataFunctionReturnValue)
+      | undefined
   ) => Promise<DataStrategyResult>;
 }
 
@@ -287,22 +290,22 @@ export interface LazyRouteFunction<R extends AgnosticRouteObject> {
  * Base RouteObject with common props shared by all types of routes
  */
 type AgnosticBaseRouteObject = {
-  caseSensitive?: boolean;
-  path?: string;
-  id?: string;
-  loader?: LoaderFunction | boolean;
-  action?: ActionFunction | boolean;
-  hasErrorBoundary?: boolean;
-  shouldRevalidate?: ShouldRevalidateFunction;
-  handle?: any;
-  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
+  caseSensitive?: boolean | undefined;
+  path?: string | undefined;
+  id?: string | undefined;
+  loader?: LoaderFunction | boolean | undefined;
+  action?: ActionFunction | boolean | undefined;
+  hasErrorBoundary?: boolean | undefined;
+  shouldRevalidate?: ShouldRevalidateFunction | undefined;
+  handle?: any | undefined;
+  lazy?: LazyRouteFunction<AgnosticBaseRouteObject> | undefined;
 };
 
 /**
  * Index routes must not have children
  */
 export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
-  children?: undefined;
+  children?: DataRouteObject[] | undefined;
   index: true;
 };
 
@@ -310,8 +313,8 @@ export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
  * Non-index routes may have children, but cannot have index
  */
 export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
-  children?: AgnosticRouteObject[];
-  index?: false;
+  children?: AgnosticRouteObject[] | undefined;
+  index?: false | undefined;
 };
 
 /**
@@ -327,7 +330,7 @@ export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
 };
 
 export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
-  children?: AgnosticDataRouteObject[];
+  children?: AgnosticDataRouteObject[] | undefined;
   id: string;
 };
 
@@ -599,12 +602,12 @@ function flattenRoutes<
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
 ): RouteBranch<RouteObjectType>[] {
-  let flattenRoute = (
+  const flattenRoute = (
     route: RouteObjectType,
     index: number,
-    relativePath?: string
+    relativePath?: string | undefined
   ) => {
-    let meta: RouteMeta<RouteObjectType> = {
+    const meta: RouteMeta<RouteObjectType> = {
       relativePath:
         relativePath === undefined ? route.path || "" : relativePath,
       caseSensitive: route.caseSensitive === true,
@@ -623,16 +626,15 @@ function flattenRoutes<
       meta.relativePath = meta.relativePath.slice(parentPath.length);
     }
 
-    let path = joinPaths([parentPath, meta.relativePath]);
-    let routesMeta = parentsMeta.concat(meta);
+    const path = joinPaths([parentPath, meta.relativePath]);
+    const routesMeta = parentsMeta.concat(meta);
 
     // Add the children before adding this route to the array, so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
-    if (route.children && route.children.length > 0) {
+    if (Array.isArray(route.children) && route.children.length > 0) {
       invariant(
         // Our types know better, but runtime JS may not!
-        // @ts-expect-error
         route.index !== true,
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
@@ -657,7 +659,7 @@ function flattenRoutes<
     if (route.path === "" || !route.path?.includes("?")) {
       flattenRoute(route, index);
     } else {
-      for (let exploded of explodeOptionalSegments(route.path)) {
+      for (const exploded of explodeOptionalSegments(route.path)) {
         flattenRoute(route, index, exploded);
       }
     }
@@ -681,7 +683,7 @@ function flattenRoutes<
  * - `/one/:two/three/:four/:five`
  */
 function explodeOptionalSegments(path: string): string[] {
-  let segments = path.split("/");
+  const segments = path.split("/");
   if (segments.length === 0) return [];
 
   let [first, ...rest] = segments;
@@ -923,11 +925,11 @@ export interface PathPattern<Path extends string = string> {
    * Should be `true` if the static portions of the `path` should be matched in
    * the same case.
    */
-  caseSensitive?: boolean;
+  caseSensitive?: boolean | undefined;
   /**
    * Should be `true` if this pattern should match the entire URL pathname.
    */
-  end?: boolean;
+  end?: boolean | undefined;
 }
 
 /**
@@ -979,13 +981,13 @@ export function matchPath<
     pattern.end
   );
 
-  let match = pathname.match(matcher);
+  const match = pathname.match(matcher);
   if (!match) return null;
 
-  let matchedPathname = match[0];
+  const matchedPathname = match[0];
   let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
-  let captureGroups = match.slice(1);
-  let params: Params = compiledParams.reduce<Mutable<Params>>(
+  const captureGroups = match.slice(1);
+  const params: Params = compiledParams.reduce<Mutable<Params>>(
     (memo, { paramName, isOptional }, index) => {
       // We need to compute the pathnameBase here using the raw splat value
       // instead of using params["*"] later because it will be decoded then
@@ -1015,7 +1017,10 @@ export function matchPath<
   };
 }
 
-type CompiledPathParam = { paramName: string; isOptional?: boolean };
+type CompiledPathParam = {
+  paramName: string;
+  isOptional?: boolean | undefined;
+};
 
 function compilePath(
   path: string,
@@ -1030,7 +1035,7 @@ function compilePath(
       `please change the route path to "${path.replace(/\*$/, "/*")}".`
   );
 
-  let params: CompiledPathParam[] = [];
+  const params: CompiledPathParam[] = [];
   let regexpSource =
     "^" +
     path
@@ -1337,7 +1342,7 @@ export class DataWithResponseInit<D> {
   data: D;
   init: ResponseInit | null;
 
-  constructor(data: D, init?: ResponseInit) {
+  constructor(data: D, init?: ResponseInit | undefined) {
     this.data = data;
     this.init = init || null;
   }
@@ -1349,7 +1354,7 @@ export class DataWithResponseInit<D> {
  *
  * @category Utils
  */
-export function data<D>(data: D, init?: number | ResponseInit) {
+export function data<D>(data: D, init?: number | ResponseInit | undefined) {
   return new DataWithResponseInit(
     data,
     typeof init === "number" ? { status: init } : init
@@ -1359,14 +1364,14 @@ export function data<D>(data: D, init?: number | ResponseInit) {
 // This is now only used by the Await component and will eventually probably
 // go away in favor of the format used by `React.use`
 export interface TrackedPromise extends Promise<any> {
-  _tracked?: boolean;
-  _data?: any;
-  _error?: any;
+  _tracked?: boolean | undefined;
+  _data?: any | undefined;
+  _error?: any | undefined;
 }
 
 export type RedirectFunction = (
   url: string,
-  init?: number | ResponseInit
+  init?: number | ResponseInit | undefined
 ) => Response;
 
 /**
@@ -1383,7 +1388,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
     responseInit.status = 302;
   }
 
-  let headers = new Headers(responseInit.headers);
+  const headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
   return new Response(null, {
@@ -1400,7 +1405,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  * @category Utils
  */
 export const redirectDocument: RedirectFunction = (url, init) => {
-  let response = redirect(url, init);
+  const response = redirect(url, init);
   response.headers.set("X-Remix-Reload-Document", "true");
   return response;
 };
@@ -1414,7 +1419,7 @@ export const redirectDocument: RedirectFunction = (url, init) => {
  * @category Utils
  */
 export const replace: RedirectFunction = (url, init) => {
-  let response = redirect(url, init);
+  const response = redirect(url, init);
   response.headers.set("X-Remix-Replace", "true");
   return response;
 };
@@ -1437,7 +1442,7 @@ export class ErrorResponseImpl implements ErrorResponse {
   status: number;
   statusText: string;
   data: any;
-  private error?: Error;
+  private error?: Error | undefined;
   private internal: boolean;
 
   constructor(

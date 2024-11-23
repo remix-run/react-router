@@ -10,7 +10,7 @@ interface WorkersKVSessionStorageOptions {
    * The Cookie used to store the session id on the client, or options used
    * to automatically create one.
    */
-  cookie?: SessionIdStorageStrategy["cookie"];
+  cookie?: SessionIdStorageStrategy["cookie"] | undefined;
 
   /**
    * The KVNamespace used to store the sessions.
@@ -35,12 +35,12 @@ export function createWorkersKVSessionStorage<
     cookie,
     async createData(data, expires) {
       while (true) {
-        let randomBytes = crypto.getRandomValues(new Uint8Array(8));
+        const randomBytes = crypto.getRandomValues(new Uint8Array(8));
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume
         // (2^32). However, the larger id space should help to avoid collisions
         // with existing ids when creating new sessions, which speeds things up.
-        let id = [...randomBytes]
+        const id = [...randomBytes]
           .map((x) => x.toString(16).padStart(2, "0"))
           .join("");
 

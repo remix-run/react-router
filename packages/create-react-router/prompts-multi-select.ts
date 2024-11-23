@@ -11,12 +11,12 @@ import { color, strip, clear, type ActionKey } from "./utils";
 export interface MultiSelectPromptOptions<
   Choices extends Readonly<Readonly<SelectChoice>[]>
 > extends PromptOptions {
-  hint?: string;
+  hint?: string | undefined;
   message: string;
   label: string;
-  initial?: Choices[number]["value"];
-  validate?: (v: any) => boolean;
-  error?: string;
+  initial?: Choices[number]["value"] | undefined;
+  validate?: ((v: any) => boolean) | undefined;
+  error?: string | undefined;
   choices: Choices;
 }
 
@@ -26,7 +26,7 @@ export class MultiSelectPrompt<
   choices: Readonly<Array<Choices[number] & { selected: boolean }>>;
   label: string;
   msg: string;
-  hint?: string;
+  hint?: string | undefined;
   value: Array<Choices[number]["value"]>;
   initialValue: Choices[number]["value"];
   done: boolean | undefined;

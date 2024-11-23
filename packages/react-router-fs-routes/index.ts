@@ -21,23 +21,23 @@ export async function flatRoutes(
      * An array of [minimatch](https://www.npmjs.com/package/minimatch) globs that match files to ignore.
      * Defaults to `[]`.
      */
-    ignoredRouteFiles?: string[];
+    ignoredRouteFiles?: string[] | undefined;
 
     /**
      * The directory containing file system routes, relative to the app directory.
      * Defaults to `"./routes"`.
      */
-    rootDirectory?: string;
+    rootDirectory?: string | undefined;
   } = {}
 ): Promise<RouteConfigEntry[]> {
   let { ignoredRouteFiles = [], rootDirectory: userRootDirectory = "routes" } =
     options;
-  let appDirectory = getAppDirectory();
-  let rootDirectory = path.resolve(appDirectory, userRootDirectory);
-  let relativeRootDirectory = path.relative(appDirectory, rootDirectory);
-  let prefix = normalizeSlashes(relativeRootDirectory);
+  const appDirectory = getAppDirectory();
+  const rootDirectory = path.resolve(appDirectory, userRootDirectory);
+  const relativeRootDirectory = path.relative(appDirectory, rootDirectory);
+  const prefix = normalizeSlashes(relativeRootDirectory);
 
-  let routes = fs.existsSync(rootDirectory)
+  const routes = fs.existsSync(rootDirectory)
     ? flatRoutesImpl(appDirectory, ignoredRouteFiles, prefix)
     : {};
 

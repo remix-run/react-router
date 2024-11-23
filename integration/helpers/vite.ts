@@ -29,12 +29,12 @@ export const reactRouterConfig = ({
   prerender,
   appDirectory,
 }: {
-  ssr?: boolean;
-  basename?: string;
-  prerender?: boolean | string[];
-  appDirectory?: string;
+  ssr?: boolean | undefined;
+  basename?: string | undefined;
+  prerender?: boolean | string[] | undefined;
+  appDirectory?: string | undefined;
 }) => {
-  let config: Config = {
+  const config: Config = {
     ssr,
     basename,
     prerender,
@@ -49,10 +49,11 @@ export const reactRouterConfig = ({
 };
 
 export const viteConfig = {
-  server: async (args: { port: number; fsAllow?: string[] }) => {
+  server: async (args: { port: number; fsAllow?: string[] | undefined }) => {
     let { port, fsAllow } = args;
-    let hmrPort = await getPort();
-    let text = dedent`
+    const hmrPort = await getPort();
+
+    return dedent`
       server: {
         port: ${port},
         strictPort: true,
@@ -60,9 +61,8 @@ export const viteConfig = {
         fs: { allow: ${fsAllow ? JSON.stringify(fsAllow) : "undefined"} }
       },
     `;
-    return text;
   },
-  basic: async (args: { port: number; fsAllow?: string[] }) => {
+  basic: async (args: { port: number; fsAllow?: string[] | undefined }) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -82,7 +82,7 @@ export const viteConfig = {
 
 export const EXPRESS_SERVER = (args: {
   port: number;
-  loadContext?: Record<string, unknown>;
+  loadContext?: Record<string, unknown> | undefined;
 }) =>
   String.raw`
     import { createRequestHandler } from "@react-router/express";
@@ -129,18 +129,21 @@ export async function createProject(
   files: Record<string, string> = {},
   templateName: TemplateName = "vite-template"
 ) {
-  let projectName = `rr-${Math.random().toString(32).slice(2)}`;
-  let projectDir = path.join(TMP_DIR, projectName);
+  const projectName = `rr-${Math.random().toString(32).slice(2)}`;
+  const projectDir = path.join(TMP_DIR, projectName);
+
   await fse.ensureDir(projectDir);
 
   // base template
-  let templateDir = path.resolve(__dirname, templateName);
+  const templateDir = path.resolve(__dirname, templateName);
+
   await fse.copy(templateDir, projectDir, { errorOnExist: true });
 
   // user-defined files
   await Promise.all(
     Object.entries(files).map(async ([filename, contents]) => {
-      let filepath = path.join(projectDir, filename);
+      const filepath = path.join(projectDir, filename);
+
       await fse.ensureDir(path.dirname(filepath));
       await fse.writeFile(filepath, stripIndent(contents));
     })
@@ -162,9 +165,9 @@ export const build = ({
   env = {},
 }: {
   cwd: string;
-  env?: Record<string, string>;
+  env?: Record<string, string> | undefined;
 }) => {
-  let nodeBin = process.argv[0];
+  const nodeBin = process.argv[0];
 
   return spawnSync(nodeBin, [reactRouterBin, "build"], {
     cwd,
@@ -184,11 +187,12 @@ export const reactRouterServe = async ({
 }: {
   cwd: string;
   port: number;
-  serverBundle?: string;
-  basename?: string;
+  serverBundle?: string | undefined;
+  basename?: string | undefined;
 }) => {
-  let nodeBin = process.argv[0];
-  let serveProc = spawn(
+  const nodeBin = process.argv[0];
+
+  const serveProc = spawn(
     nodeBin,
     [
       "node_modules/@react-router/serve/dist/cli.js",
@@ -211,12 +215,13 @@ export const wranglerPagesDev = async ({
   cwd: string;
   port: number;
 }) => {
-  let nodeBin = process.argv[0];
-  let wranglerBin = require.resolve("wrangler/bin/wrangler.js", {
+  const nodeBin = process.argv[0];
+
+  const wranglerBin = require.resolve("wrangler/bin/wrangler.js", {
     paths: [cwd],
   });
 
-  let proc = spawn(
+  const proc = spawn(
     nodeBin,
     [wranglerBin, "pages", "dev", "./build/client", "--port", String(port)],
     {
@@ -225,6 +230,7 @@ export const wranglerPagesDev = async ({
       env: { NODE_ENV: "production" },
     }
   );
+
   await waitForServer(proc, { port, host: "127.0.0.1" });
   return () => proc.kill();
 };
@@ -232,8 +238,8 @@ export const wranglerPagesDev = async ({
 type ServerArgs = {
   cwd: string;
   port: number;
-  env?: Record<string, string>;
-  basename?: string;
+  env?: Record<string, string> | undefined;
+  basename?: string | undefined;
 };
 
 const createDev =
@@ -268,7 +274,7 @@ type Fixtures = {
   page: Page;
   dev: (
     files: Files,
-    templateName?: TemplateName
+    templateName?: TemplateName | undefined
   ) => Promise<{
     port: number;
     cwd: string;
@@ -297,9 +303,12 @@ export const test = base.extend<Fixtures>({
   dev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {
-      let port = await getPort();
-      let cwd = await createProject(await files({ port }), template);
+      const port = await getPort();
+
+      const cwd = await createProject(await files({ port }), template);
+
       stop = await dev({ cwd, port });
+
       return { port, cwd };
     });
     stop?.();
@@ -308,19 +317,23 @@ export const test = base.extend<Fixtures>({
   customDev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files) => {
-      let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      const port = await getPort();
+
+      const cwd = await createProject(await files({ port }));
+
       stop = await customDev({ cwd, port });
+
       return { port, cwd };
     });
+
     stop?.();
   },
   // eslint-disable-next-line no-empty-pattern
   reactRouterServe: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files) => {
-      let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      const port = await getPort();
+      const cwd = await createProject(await files({ port }));
       let { status } = build({ cwd });
       expect(status).toBe(0);
       stop = await reactRouterServe({ cwd, port });
@@ -332,8 +345,8 @@ export const test = base.extend<Fixtures>({
   wranglerPagesDev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files) => {
-      let port = await getPort();
-      let cwd = await createProject(
+      const port = await getPort();
+      const cwd = await createProject(
         await files({ port }),
         "vite-cloudflare-template"
       );
@@ -348,11 +361,11 @@ export const test = base.extend<Fixtures>({
 
 function node(
   args: string[],
-  options: { cwd: string; env?: Record<string, string> }
+  options: { cwd: string; env?: Record<string, string> | undefined }
 ) {
-  let nodeBin = process.argv[0];
+  const nodeBin = process.argv[0];
 
-  let proc = spawn(nodeBin, args, {
+  return spawn(nodeBin, args, {
     cwd: options.cwd,
     env: {
       ...process.env,
@@ -361,15 +374,18 @@ function node(
     },
     stdio: "pipe",
   });
-  return proc;
 }
 
 async function waitForServer(
   proc: ChildProcess & { stdout: Readable; stderr: Readable },
-  args: { port: number; host?: string; basename?: string }
+  args: {
+    port: number;
+    host?: string | undefined;
+    basename?: string | undefined;
+  }
 ) {
-  let devStdout = bufferize(proc.stdout);
-  let devStderr = bufferize(proc.stderr);
+  const devStdout = bufferize(proc.stdout);
+  const devStderr = bufferize(proc.stderr);
 
   await waitOn({
     resources: [
@@ -377,8 +393,8 @@ async function waitForServer(
     ],
     timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {
-    let stdout = devStdout();
-    let stderr = devStderr();
+    const stdout = devStdout();
+    const stderr = devStderr();
     proc.kill();
     throw new Error(
       [
@@ -400,22 +416,21 @@ function bufferize(stream: Readable): () => string {
 
 export function createEditor(projectDir: string) {
   return async (file: string, transform: (contents: string) => string) => {
-    let filepath = path.join(projectDir, file);
-    let contents = await fs.readFile(filepath, "utf8");
+    const filepath = path.join(projectDir, file);
+    const contents = await fs.readFile(filepath, "utf8");
     await fs.writeFile(filepath, transform(contents), "utf8");
   };
 }
 
 export function grep(cwd: string, pattern: RegExp): string[] {
-  let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
+  const assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
     cwd,
     absolute: true,
   });
 
-  let lines = shell
+  return shell
     .grep("-l", pattern, assetFiles)
     .stdout.trim()
     .split("\n")
     .filter((line) => line.length > 0);
-  return lines;
 }

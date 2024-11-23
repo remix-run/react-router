@@ -18,7 +18,7 @@ const safeStat = (fileOrDir: string): fse.Stats | undefined => {
   try {
     return fse.statSync(fileOrDir);
   } catch (error: unknown) {
-    let systemError = error as { code?: string };
+    const systemError = error as { code?: string | undefined };
     if (!systemError.code) throw error;
     if (systemError.code !== "ENOENT") throw error;
     throw error;
@@ -29,7 +29,7 @@ const safeStat = (fileOrDir: string): fse.Stats | undefined => {
  * Find the latest modified time (`mtime`) across all files (recursively) in a directory.
  */
 const mtimeDir = async (dir: string): Promise<Date> => {
-  let files = await glob(`**/*.{js,jsx,ts,tsx}`, {
+  const files = await glob(`**/*.{js,jsx,ts,tsx}`, {
     cwd: dir,
     ignore: [
       "**/node_modules/**",
@@ -41,9 +41,9 @@ const mtimeDir = async (dir: string): Promise<Date> => {
 
   let maxMtime: Date = new Date(0);
   if (files.length === 0) return maxMtime;
-  for (let file of files) {
-    let filepath = path.resolve(dir, file);
-    let stat = safeStat(filepath);
+  for (const file of files) {
+    const filepath = path.resolve(dir, file);
+    const stat = safeStat(filepath);
     if (stat === undefined) continue;
     if (stat.mtime > maxMtime) {
       maxMtime = stat.mtime;
@@ -56,27 +56,27 @@ export const run = async (args: string[], options: execa.Options = {}) => {
   // // Running build `.js` is ~8x faster than running source `.ts` via `esbuild-register`,
   // // so unless source code changes are not yet reflected in the build, prefer running the built `.js`.
   // // To get speed ups in dev, make sure you build before running tests or are running `pnpm watch`
-  let sourceDir = path.resolve(__dirname, "../..");
-  let sourceTS = path.resolve(sourceDir, "cli/index.ts");
+  const sourceDir = path.resolve(__dirname, "../..");
+  const sourceTS = path.resolve(sourceDir, "cli/index.ts");
   // // when the most recent change happened _anywhere_ within `packages/react-router-dev/`
 
-  let sourceModified = await mtimeDir(sourceDir);
+  const sourceModified = await mtimeDir(sourceDir);
 
-  let buildDir = path.resolve(
+  const buildDir = path.resolve(
     __dirname,
     "../../../../build/node_modules/@react-router/dev"
   );
-  let builtJS = path.resolve(buildDir, "dist/cli/index.js");
-  let buildModified = await mtimeDir(buildDir);
+  const builtJS = path.resolve(buildDir, "dist/cli/index.js");
+  const buildModified = await mtimeDir(buildDir);
 
   // sometimes `pnpm watch` is so fast that the build mtime is reported
   // to be _before_ the mtime for the change in source that _caused_ the build
   // so we only use source if changes there are at least 5ms newer than latest build change
-  let thresholdMs = 5;
-  let isBuildUpToDate =
+  const thresholdMs = 5;
+  const isBuildUpToDate =
     buildModified.valueOf() + thresholdMs >= sourceModified.valueOf();
 
-  let result = await execa(
+  const result = await execa(
     "node",
     [
       ...(isBuildUpToDate
@@ -93,7 +93,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
 };
 
 export const shouldError = async (args: string[]) => {
-  let error = await captureError(async () => {
+  const error = await captureError(async () => {
     await run(args);
   });
   if (!isExecaError(error)) throw error;

@@ -2,7 +2,7 @@
 // to be a standalone module due to how jest requires things (i.e. we can't
 // just do this inline in data-browser-router-legacy-formdata-test.tsx)
 window.FormData = class FormData extends window["FormData"] {
-  constructor(form?: HTMLFormElement) {
+  constructor(form?: HTMLFormElement | undefined) {
     super(form, undefined);
   }
 };

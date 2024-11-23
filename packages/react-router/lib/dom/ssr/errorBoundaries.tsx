@@ -6,8 +6,8 @@ import { isRouteErrorResponse } from "../../router/utils";
 
 type RemixErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
-  isOutsideRemixApp?: boolean;
-  error?: Error;
+  isOutsideRemixApp?: boolean | undefined;
+  error?: Error | undefined;
 }>;
 
 type RemixErrorBoundaryState = {
@@ -74,11 +74,11 @@ export function RemixRootDefaultErrorBoundary({
   isOutsideRemixApp,
 }: {
   error: unknown;
-  isOutsideRemixApp?: boolean;
+  isOutsideRemixApp?: boolean | undefined;
 }) {
   console.error(error);
 
-  let heyDeveloper = (
+  const heyDeveloper = (
     <script
       dangerouslySetInnerHTML={{
         __html: `
@@ -105,7 +105,7 @@ export function RemixRootDefaultErrorBoundary({
   if (error instanceof Error) {
     errorInstance = error;
   } else {
-    let errorString =
+    const errorString =
       error == null
         ? "Unknown Error"
         : typeof error === "object" && "toString" in error
@@ -142,8 +142,8 @@ export function BoundaryShell({
   children,
 }: {
   title: string;
-  renderScripts?: boolean;
-  isOutsideRemixApp?: boolean;
+  renderScripts?: boolean | undefined;
+  isOutsideRemixApp?: boolean | undefined;
   children: React.ReactNode | React.ReactNode[];
 }) {
   let { routeModules } = useFrameworkContext();

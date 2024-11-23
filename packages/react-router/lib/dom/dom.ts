@@ -33,7 +33,7 @@ function isModifiedEvent(event: LimitedMouseEvent) {
 
 export function shouldProcessLinkClick(
   event: LimitedMouseEvent,
-  target?: string
+  target?: string | undefined
 ) {
   return (
     event.button === 0 && // Ignore everything but left clicks
@@ -161,37 +161,37 @@ interface SharedSubmitOptions {
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
    */
-  method?: HTMLFormMethod;
+  method?: HTMLFormMethod | undefined;
 
   /**
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
    */
-  action?: string;
+  action?: string | undefined;
 
   /**
    * The encoding used to submit the form. Overrides `<form encType>`.
    * Defaults to "application/x-www-form-urlencoded".
    */
-  encType?: FormEncType;
+  encType?: FormEncType | undefined;
 
   /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on /-delimited URL segments
    */
-  relative?: RelativeRoutingType;
+  relative?: RelativeRoutingType | undefined;
 
   /**
    * In browser-based environments, prevent resetting scroll after this
    * navigation when using the <ScrollRestoration> component
    */
-  preventScrollReset?: boolean;
+  preventScrollReset?: boolean | undefined;
 
   /**
    * Enable flushSync for this submission's state updates
    */
-  flushSync?: boolean;
+  flushSync?: boolean | undefined;
 }
 
 /**
@@ -208,27 +208,27 @@ export interface SubmitOptions extends FetcherSubmitOptions {
    * instead of creating a new one (i.e. stay on "the same page"). Defaults
    * to `false`.
    */
-  replace?: boolean;
+  replace?: boolean | undefined;
 
   /**
    * State object to add to the history stack entry for this navigation
    */
-  state?: any;
+  state?: any | undefined;
 
   /**
    * Indicate a specific fetcherKey to use when using navigate=false
    */
-  fetcherKey?: string;
+  fetcherKey?: string | undefined;
 
   /**
    * navigate=false will use a fetcher instead of a navigation
    */
-  navigate?: boolean;
+  navigate?: boolean | undefined;
 
   /**
    * Enable view transitions on this submission navigation
    */
-  viewTransition?: boolean;
+  viewTransition?: boolean | undefined;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([
@@ -270,7 +270,7 @@ export function getFormSubmissionInfo(
     // When grabbing the action from the element, it will have had the basename
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
-    let attr = target.getAttribute("action");
+    const attr = target.getAttribute("action");
     action = attr ? stripBasename(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
     encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
@@ -281,7 +281,7 @@ export function getFormSubmissionInfo(
     (isInputElement(target) &&
       (target.type === "submit" || target.type === "image"))
   ) {
-    let form = target.form;
+    const form = target.form;
 
     if (form == null) {
       throw new Error(
@@ -294,7 +294,8 @@ export function getFormSubmissionInfo(
     // When grabbing the action from the element, it will have had the basename
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
-    let attr = target.getAttribute("formaction") || form.getAttribute("action");
+    const attr =
+      target.getAttribute("formaction") || form.getAttribute("action");
     action = attr ? stripBasename(attr, basename) : null;
 
     method =
@@ -316,7 +317,7 @@ export function getFormSubmissionInfo(
     if (!isFormDataSubmitterSupported()) {
       let { name, type, value } = target;
       if (type === "image") {
-        let prefix = name ? `${name}.` : "";
+        const prefix = name ? `${name}.` : "";
         formData.append(`${prefix}x`, "0");
         formData.append(`${prefix}y`, "0");
       } else if (name) {

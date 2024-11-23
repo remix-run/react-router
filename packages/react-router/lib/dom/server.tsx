@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { type ReactNode, type ReactElement } from "react";
 
 import type { Location, Path, To } from "../router/history";
 import {
@@ -37,8 +37,8 @@ import {
 import { useRoutesImpl } from "../hooks";
 
 export interface StaticRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
+  basename?: string | undefined;
+  children?: ReactNode | undefined;
   location: Partial<Location> | string;
 }
 
@@ -82,8 +82,8 @@ export function StaticRouter({
 export interface StaticRouterProviderProps {
   context: StaticHandlerContext;
   router: DataRouter;
-  hydrate?: boolean;
-  nonce?: string;
+  hydrate?: boolean | undefined;
+  nonce?: string | undefined;
 }
 
 /**
@@ -173,7 +173,7 @@ function DataRoutes({
   routes: DataRouteObject[];
   future: DataRouter["future"];
   state: RouterState;
-}): React.ReactElement | null {
+}): ReactElement | null {
   return useRoutesImpl(routes, undefined, state, future);
 }
 
@@ -259,7 +259,7 @@ type CreateStaticHandlerOptions = Omit<
  */
 export function createStaticHandler(
   routes: RouteObject[],
-  opts?: CreateStaticHandlerOptions
+  opts?: CreateStaticHandlerOptions | undefined
 ) {
   return routerCreateStaticHandler(routes, {
     ...opts,
@@ -274,11 +274,11 @@ export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
-    future?: Partial<FutureConfig>;
+    future?: Partial<FutureConfig> | undefined;
   } = {}
 ): DataRouter {
-  let manifest: RouteManifest = {};
-  let dataRoutes = convertRoutesToDataRoutes(
+  const manifest: RouteManifest = {};
+  const dataRoutes = convertRoutesToDataRoutes(
     routes,
     mapRouteProperties,
     undefined,
@@ -288,15 +288,15 @@ export function createStaticRouter(
   // Because our context matches may be from a framework-agnostic set of
   // routes passed to createStaticHandler(), we update them here with our
   // newly created/enhanced data routes
-  let matches = context.matches.map((match) => {
-    let route = manifest[match.route.id] || match.route;
+  const matches = context.matches.map((match) => {
+    const route = manifest[match.route.id] || match.route;
     return {
       ...match,
       route,
     };
   });
 
-  let msg = (method: string) =>
+  const msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 
   return {

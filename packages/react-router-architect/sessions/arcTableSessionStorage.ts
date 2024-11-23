@@ -12,7 +12,7 @@ interface ArcTableSessionStorageOptions {
    * The Cookie used to store the session id on the client, or options used
    * to automatically create one.
    */
-  cookie?: SessionIdStorageStrategy["cookie"];
+  cookie?: SessionIdStorageStrategy["cookie"] | undefined;
 
   /**
    * The table used to store sessions, or its name as it appears in your
@@ -30,7 +30,7 @@ interface ArcTableSessionStorageOptions {
    * The name of the DynamoDB attribute used to store the expiration time.
    * If absent, then no TTL will be stored and session records will not expire.
    */
-  ttl?: string;
+  ttl?: string | undefined;
 }
 
 /**

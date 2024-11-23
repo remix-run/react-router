@@ -23,6 +23,7 @@
       "~/*": ["./app/*"]
     },
     "noEmit": true,
-    "rootDirs": [".", ".react-router/types/"]
+    "rootDirs": [".", ".react-router/types/"],
+    "exactOptionalPropertyTypes": true
   }
 }

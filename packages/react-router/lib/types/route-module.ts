@@ -8,16 +8,16 @@ import type { Equal, Expect, Func, Pretty } from "./utils";
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
 
 type RouteModule = {
-  meta?: Func;
-  links?: Func;
-  headers?: Func;
-  loader?: Func;
-  clientLoader?: Func;
-  action?: Func;
-  clientAction?: Func;
-  HydrateFallback?: unknown;
-  default?: unknown;
-  ErrorBoundary?: unknown;
+  meta?: Func | undefined;
+  links?: Func | undefined;
+  headers?: Func | undefined;
+  loader?: Func | undefined;
+  clientLoader?: Func | undefined;
+  action?: Func | undefined;
+  clientAction?: Func | undefined;
+  HydrateFallback?: unknown | undefined;
+  default?: unknown | undefined;
+  ErrorBoundary?: unknown | undefined;
   [key: string]: unknown; // allow user-defined exports
 };
 
@@ -54,7 +54,7 @@ export type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
   params: T["params"];
   data: T["loaderData"];
-  error?: unknown;
+  error?: unknown | undefined;
   matches: MetaMatches<T["parents"]>;
 };
 export type MetaDescriptors = MetaDescriptor[];
@@ -154,15 +154,15 @@ type Matches<T extends RouteInfo[]> =
 export type CreateComponentProps<T extends RouteInfo> = {
   params: T["params"];
   loaderData: T["loaderData"];
-  actionData?: T["actionData"];
+  actionData?: T["actionData"] | undefined;
   matches: Matches<T["parents"]>;
 };
 
 export type CreateErrorBoundaryProps<T extends RouteInfo> = {
   params: T["params"];
   error: unknown;
-  loaderData?: T["loaderData"];
-  actionData?: T["actionData"];
+  loaderData?: T["loaderData"] | undefined;
+  actionData?: T["actionData"] | undefined;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

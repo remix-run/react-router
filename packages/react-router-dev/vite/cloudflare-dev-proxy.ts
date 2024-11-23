@@ -36,7 +36,7 @@ const PLUGIN_NAME = "react-router-cloudflare-vite-dev-proxy";
  */
 export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
   options: {
-    getLoadContext?: GetLoadContext<Env, Cf>;
+    getLoadContext?: GetLoadContext<Env, Cf> | undefined;
   } & GetPlatformProxyOptions = {}
 ): Plugin => {
   let { getLoadContext, ...restOptions } = options;

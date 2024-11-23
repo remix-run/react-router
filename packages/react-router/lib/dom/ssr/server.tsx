@@ -11,8 +11,8 @@ import { StreamTransfer } from "./single-fetch";
 export interface ServerRouterProps {
   context: EntryContext;
   url: string | URL;
-  abortDelay?: number;
-  nonce?: string;
+  abortDelay?: number | undefined;
+  nonce?: string | undefined;
 }
 
 /**
@@ -33,7 +33,7 @@ export function ServerRouter({
   }
 
   let { manifest, routeModules, criticalCss, serverHandoffString } = context;
-  let routes = createServerRoutes(
+  const routes = createServerRoutes(
     manifest.routes,
     routeModules,
     context.future,
@@ -48,10 +48,10 @@ export function ServerRouter({
   context.staticHandlerContext.loaderData = {
     ...context.staticHandlerContext.loaderData,
   };
-  for (let match of context.staticHandlerContext.matches) {
-    let routeId = match.route.id;
-    let route = routeModules[routeId];
-    let manifestRoute = context.manifest.routes[routeId];
+  for (const match of context.staticHandlerContext.matches) {
+    const routeId = match.route.id;
+    const route = routeModules[routeId];
+    const manifestRoute = context.manifest.routes[routeId];
     // Clear out the loaderData to avoid rendering the route component when the
     // route opted into clientLoader hydration and either:
     // * gave us a HydrateFallback
@@ -66,7 +66,7 @@ export function ServerRouter({
     }
   }
 
-  let router = createStaticRouter(routes, context.staticHandlerContext);
+  const router = createStaticRouter(routes, context.staticHandlerContext);
 
   return (
     <>

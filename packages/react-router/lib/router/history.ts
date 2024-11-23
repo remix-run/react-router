@@ -156,7 +156,7 @@ export interface History {
    * @param to - The new URL
    * @param state - Data to associate with the new location
    */
-  push(to: To, state?: any): void;
+  push(to: To, state?: any | undefined): void;
 
   /**
    * Replaces the current location in the history stack with a new one.  The
@@ -165,7 +165,7 @@ export interface History {
    * @param to - The new URL
    * @param state - Data to associate with the new location
    */
-  replace(to: To, state?: any): void;
+  replace(to: To, state?: any | undefined): void;
 
   /**
    * Navigates `n` entries backward/forward in the history stack relative to the
@@ -187,7 +187,7 @@ export interface History {
 
 type HistoryState = {
   usr: any;
-  key?: string;
+  key?: string | undefined;
   idx: number;
 };
 
@@ -205,9 +205,9 @@ const PopStateEventType = "popstate";
 export type InitialEntry = string | Partial<Location>;
 
 export type MemoryHistoryOptions = {
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  v5Compat?: boolean;
+  initialEntries?: InitialEntry[] | undefined;
+  initialIndex?: number | undefined;
+  v5Compat?: boolean | undefined;
 };
 
 /**
@@ -253,9 +253,9 @@ export function createMemoryHistory(
   function createMemoryLocation(
     to: To,
     state: any = null,
-    key?: string
+    key?: string | undefined
   ): Location {
-    let location = createLocation(
+    const location = createLocation(
       entries ? getCurrentLocation().pathname : "/",
       to,
       state,
@@ -298,8 +298,8 @@ export function createMemoryHistory(
     },
     push(to, state) {
       action = Action.Push;
-      let nextLocation = createMemoryLocation(to, state);
-      index += 1;
+      const nextLocation = createMemoryLocation(to, state);
+      index++;
       entries.splice(index, entries.length, nextLocation);
       if (v5Compat && listener) {
         listener({ action, location: nextLocation, delta: 1 });
@@ -307,7 +307,7 @@ export function createMemoryHistory(
     },
     replace(to, state) {
       action = Action.Replace;
-      let nextLocation = createMemoryLocation(to, state);
+      const nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
       if (v5Compat && listener) {
         listener({ action, location: nextLocation, delta: 0 });
@@ -315,8 +315,8 @@ export function createMemoryHistory(
     },
     go(delta) {
       action = Action.Pop;
-      let nextIndex = clampIndex(index + delta);
-      let nextLocation = entries[nextIndex];
+      const nextIndex = clampIndex(index + delta);
+      const nextLocation = entries[nextIndex];
       index = nextIndex;
       if (listener) {
         listener({ action, location: nextLocation, delta });
@@ -483,12 +483,15 @@ export function createHashHistory(
 /**
  * @private
  */
-export function invariant(value: boolean, message?: string): asserts value;
+export function invariant(
+  value: boolean,
+  message?: string | undefined
+): asserts value;
 export function invariant<T>(
   value: T | null | undefined,
-  message?: string
+  message?: string | undefined
 ): asserts value is T;
-export function invariant(value: any, message?: string) {
+export function invariant(value: any, message?: string | undefined) {
   if (value === false || value === null || typeof value === "undefined") {
     throw new Error(message);
   }
@@ -531,9 +534,9 @@ export function createLocation(
   current: string | Location,
   to: To,
   state: any = null,
-  key?: string
+  key?: string | undefined
 ): Readonly<Location> {
-  let location: Readonly<Location> = {
+  const location: Readonly<Location> = {
     pathname: typeof current === "string" ? current : current.pathname,
     search: "",
     hash: "",
@@ -597,8 +600,8 @@ export function parsePath(path: string): Partial<Path> {
 export interface UrlHistory extends History {}
 
 export type UrlHistoryOptions = {
-  window?: Window;
-  v5Compat?: boolean;
+  window?: Window | undefined;
+  v5Compat?: boolean | undefined;
 };
 
 function getUrlBasedHistory(
@@ -636,14 +639,14 @@ function getUrlBasedHistory(
     }
   }
 
-  function push(to: To, state?: any) {
+  function push(to: To, state?: any | undefined) {
     action = Action.Push;
-    let location = createLocation(history.location, to, state);
+    const location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex() + 1;
-    let historyState = getHistoryState(location, index);
-    let url = history.createHref(location);
+    const historyState = getHistoryState(location, index);
+    const url = history.createHref(location);
 
     // try...catch because iOS limits us to 100 pushState calls :/
     try {
@@ -666,14 +669,14 @@ function getUrlBasedHistory(
     }
   }
 
-  function replace(to: To, state?: any) {
+  function replace(to: To, state?: any | undefined) {
     action = Action.Replace;
-    let location = createLocation(history.location, to, state);
+    const location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
     index = getIndex();
-    let historyState = getHistoryState(location, index);
-    let url = history.createHref(location);
+    const historyState = getHistoryState(location, index);
+    const url = history.createHref(location);
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
@@ -702,7 +705,7 @@ function getUrlBasedHistory(
     return new URL(href, base);
   }
 
-  let history: History = {
+  const history: History = {
     get action() {
       return action;
     },

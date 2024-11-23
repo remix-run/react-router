@@ -5,8 +5,8 @@ export async function writeReadableStreamToWritable(
   stream: ReadableStream,
   writable: Writable
 ) {
-  let reader = stream.getReader();
-  let flushable = writable as { flush?: Function };
+  const reader = stream.getReader();
+  const flushable = writable as { flush?: Function | undefined };
 
   try {
     while (true) {
@@ -45,10 +45,10 @@ export async function writeAsyncIterableToWritable(
 
 export async function readableStreamToString(
   stream: ReadableStream<Uint8Array>,
-  encoding?: BufferEncoding
+  encoding?: BufferEncoding | undefined
 ) {
-  let reader = stream.getReader();
-  let chunks: Uint8Array[] = [];
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
 
   while (true) {
     let { done, value } = await reader.read();
@@ -66,30 +66,29 @@ export async function readableStreamToString(
 export const createReadableStreamFromReadable = (
   source: Readable & { readableHighWaterMark?: number }
 ) => {
-  let pump = new StreamPump(source);
-  let stream = new ReadableStream(pump, pump);
-  return stream;
+  const pump = new StreamPump(source);
+  return new ReadableStream(pump, pump);
 };
 
 class StreamPump {
   public highWaterMark: number;
   public accumalatedSize: number;
   private stream: Stream & {
-    readableHighWaterMark?: number;
-    readable?: boolean;
-    resume?: () => void;
-    pause?: () => void;
-    destroy?: (error?: Error) => void;
+    readableHighWaterMark?: number | undefined;
+    readable?: boolean | undefined;
+    resume?: (() => void) | undefined;
+    pause?: (() => void) | undefined;
+    destroy?: ((error?: Error) => void) | undefined;
   };
-  private controller?: ReadableStreamController<Uint8Array>;
+  private controller?: ReadableStreamController<Uint8Array> | undefined;
 
   constructor(
     stream: Stream & {
-      readableHighWaterMark?: number;
-      readable?: boolean;
-      resume?: () => void;
-      pause?: () => void;
-      destroy?: (error?: Error) => void;
+      readableHighWaterMark?: number | undefined;
+      readable?: boolean | undefined;
+      resume?: (() => void) | undefined;
+      pause?: (() => void) | undefined;
+      destroy?: ((error?: Error) => void) | undefined;
     }
   ) {
     this.highWaterMark =
@@ -118,7 +117,7 @@ class StreamPump {
     this.resume();
   }
 
-  cancel(reason?: Error) {
+  cancel(reason?: Error | undefined) {
     if (this.stream.destroy) {
       this.stream.destroy(reason);
     }
@@ -132,14 +131,14 @@ class StreamPump {
   enqueue(chunk: Uint8Array | string) {
     if (this.controller) {
       try {
-        let bytes = chunk instanceof Uint8Array ? chunk : Buffer.from(chunk);
+        const bytes = chunk instanceof Uint8Array ? chunk : Buffer.from(chunk);
 
-        let available = (this.controller.desiredSize || 0) - bytes.byteLength;
+        const available = (this.controller.desiredSize || 0) - bytes.byteLength;
         this.controller.enqueue(bytes);
         if (available <= 0) {
           this.pause();
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.controller.error(
           new Error(
             "Could not create Buffer, chunk must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object"

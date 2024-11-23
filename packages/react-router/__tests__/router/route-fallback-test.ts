@@ -9,11 +9,15 @@ import { tick } from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   urlMatch(url: string);
-  trackedPromise(data?: any, error?: any, aborted?: boolean): R;
+  trackedPromise(
+    data?: any | undefined,
+    error?: any | undefined,
+    aborted?: boolean | undefined
+  ): R;
   deferredData(
     done: boolean,
-    status?: number,
-    headers?: Record<string, string>
+    status?: number | undefined,
+    headers?: Record<string, string> | undefined
   ): R;
 }
 

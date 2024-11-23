@@ -17,11 +17,16 @@ import "@testing-library/jest-dom/extend-expect";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
 type PrefetchEventHandlerProps = {
-  [Property in `on${Capitalize<(typeof setIntentEvents)[number]>}`]?: Function;
+  [Property in `on${Capitalize<(typeof setIntentEvents)[number]>}`]?:
+    | Function
+    | undefined;
 };
 
 function itPrefetchesPageLinks<
-  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps
+  Props extends {
+    to: any;
+    prefetch?: any | undefined;
+  } & PrefetchEventHandlerProps
 >(Component: React.ComponentType<Props>) {
   describe('prefetch="intent"', () => {
     let context = {

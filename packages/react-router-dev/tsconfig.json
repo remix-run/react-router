@@ -16,6 +16,7 @@
     "rootDir": ".",
     "noEmit": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "exactOptionalPropertyTypes": true
   }
 }

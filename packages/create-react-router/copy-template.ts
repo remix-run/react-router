@@ -73,10 +73,10 @@ export async function copyTemplate(
 }
 
 interface CopyTemplateOptions {
-  debug?: boolean;
-  token?: string;
-  onError(error: unknown): any;
-  log?(message: string): any;
+  debug?: boolean | undefined;
+  token?: string | undefined;
+  onError: (error: unknown) => any;
+  log?: ((message: string) => any) | undefined;
 }
 
 function isLocalFilePath(input: string): boolean {
@@ -173,9 +173,9 @@ async function extractLocalTarball(
 }
 
 interface TarballDownloadOptions {
-  debug?: boolean;
-  filePath?: string | null;
-  token?: string;
+  debug?: boolean | undefined;
+  filePath?: string | null | undefined;
+  token?: string | undefined;
 }
 
 async function downloadAndExtractRepoTarball(
@@ -186,7 +186,8 @@ async function downloadAndExtractRepoTarball(
   // If we have a direct file path we will also have the branch. We can skip the
   // redirect and get the tarball URL directly.
   if (repo.branch && repo.filePath) {
-    let tarballURL = `https://codeload.github.com/${repo.owner}/${repo.name}/tar.gz/${repo.branch}`;
+    const tarballURL = `https://codeload.github.com/${repo.owner}/${repo.name}/tar.gz/${repo.branch}`;
+
     return await downloadAndExtractTarball(destPath, tarballURL, {
       ...options,
       filePath: repo.filePath,
@@ -208,8 +209,8 @@ async function downloadAndExtractRepoTarball(
 }
 
 interface DownloadAndExtractTarballOptions {
-  token?: string;
-  filePath?: string | null;
+  token?: string | undefined;
+  filePath?: string | null | undefined;
 }
 
 async function downloadAndExtractTarball(
@@ -218,23 +219,25 @@ async function downloadAndExtractTarball(
   { token, filePath }: DownloadAndExtractTarballOptions
 ): Promise<void> {
   let resourceUrl = tarballUrl;
-  let headers: HeadersInit = {};
-  let isGithubUrl = new URL(tarballUrl).host.endsWith("github.com");
+  const headers: HeadersInit = {};
+
+  const isGithubUrl = new URL(tarballUrl).host.endsWith("github.com");
+
   if (token && isGithubUrl) {
     headers.Authorization = `token ${token}`;
   }
   if (isGithubReleaseAssetUrl(tarballUrl)) {
     // We can download the asset via the GitHub api, but first we need to look
     // up the asset id
-    let info = getGithubReleaseAssetInfo(tarballUrl);
+    const info = getGithubReleaseAssetInfo(tarballUrl);
     headers.Accept = "application/vnd.github.v3+json";
 
-    let releaseUrl =
+    const releaseUrl =
       info.tag === "latest"
         ? `https://api.github.com/repos/${info.owner}/${info.name}/releases/latest`
         : `https://api.github.com/repos/${info.owner}/${info.name}/releases/tags/${info.tag}`;
 
-    let response = await fetch(releaseUrl, {
+    const response = await fetch(releaseUrl, {
       agent: agent("https://api.github.com"),
       headers,
     });
@@ -246,7 +249,8 @@ async function downloadAndExtractTarball(
       );
     }
 
-    let body = (await response.json()) as { assets: GitHubApiReleaseAsset[] };
+    const body = (await response.json()) as { assets: GitHubApiReleaseAsset[] };
+
     if (
       !body ||
       typeof body !== "object" ||
@@ -259,12 +263,13 @@ async function downloadAndExtractTarball(
       );
     }
 
-    let assetId = body.assets.find((asset) => {
+    const assetId = body.assets.find((asset) => {
       // If the release is "latest", the url won't match the download url
       return info.tag === "latest"
         ? asset?.browser_download_url?.includes(info.asset)
         : asset?.browser_download_url === tarballUrl;
     })?.id;
+
     if (assetId == null) {
       throw new CopyTemplateError(
         "There was a problem fetching the file from GitHub. No asset was " +
@@ -274,7 +279,8 @@ async function downloadAndExtractTarball(
     resourceUrl = `https://api.github.com/repos/${info.owner}/${info.name}/releases/assets/${assetId}`;
     headers.Accept = "application/octet-stream";
   }
-  let response = await fetch(resourceUrl, {
+
+  const response = await fetch(resourceUrl, {
     agent: agent(resourceUrl),
     headers,
   });
@@ -305,7 +311,7 @@ async function downloadAndExtractTarball(
   let filePathHasFiles = false;
 
   try {
-    let input = new stream.PassThrough();
+    const input = new stream.PassThrough();
     // Start reading stream into passthrough, don't await to avoid buffering
     writeReadableStreamToWritable(response.body, input);
     await pipeline(
@@ -313,7 +319,8 @@ async function downloadAndExtractTarball(
       gunzip(),
       tar.extract(downloadPath, {
         map(header) {
-          let originalDirName = header.name.split("/")[0];
+          const originalDirName = header.name.split("/")[0];
+
           header.name = header.name.replace(`${originalDirName}/`, "");
 
           if (filePath) {
@@ -365,8 +372,8 @@ async function writeReadableStreamToWritable(
   stream: ReadableStream,
   writable: stream.Writable
 ) {
-  let reader = stream.getReader();
-  let flushable = writable as { flush?: Function };
+  const reader = stream.getReader();
+  const flushable = writable as { flush?: Function | undefined };
 
   try {
     while (true) {
@@ -504,8 +511,8 @@ export class CopyTemplateError extends Error {
 interface RepoInfo {
   owner: string;
   name: string;
-  branch?: string | null;
-  filePath?: string | null;
+  branch?: string | null | undefined;
+  filePath?: string | null | undefined;
 }
 
 // https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#get-a-release-asset

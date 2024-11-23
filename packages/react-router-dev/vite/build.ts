@@ -46,11 +46,11 @@ function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
 }
 
 function getRouteBranch(routes: RouteManifest, routeId: string) {
-  let branch: RouteManifestEntry[] = [];
+  const branch: RouteManifestEntry[] = [];
   let currentRouteId: string | undefined = routeId;
 
   while (currentRouteId) {
-    let route: RouteManifestEntry = routes[currentRouteId];
+    const route: RouteManifestEntry = routes[currentRouteId];
     invariant(route, `Missing route for ${currentRouteId}`);
     branch.push(route);
     currentRouteId = route.parentId;
@@ -61,12 +61,12 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
 
 type ReactRouterClientBuildArgs = {
   ssr: false;
-  serverBundleBuildConfig?: never;
+  serverBundleBuildConfig?: never | undefined;
 };
 
 type ReactRouterServerBuildArgs = {
   ssr: true;
-  serverBundleBuildConfig?: ServerBundleBuildConfig;
+  serverBundleBuildConfig?: ServerBundleBuildConfig | undefined;
 };
 
 type ReactRouterBuildArgs =
@@ -80,7 +80,7 @@ async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
   let { rootDirectory } = ctx;
   const { routes, serverBuildFile, serverBundles, appDirectory } =
     ctx.reactRouterConfig;
-  let serverBuildDirectory = getServerBuildDirectory(ctx);
+  const serverBuildDirectory = getServerBuildDirectory(ctx);
   if (!serverBundles) {
     return {
       serverBuilds: [{ ssr: true }],
@@ -90,29 +90,32 @@ async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
 
   let { normalizePath } = await import("vite");
 
-  let resolvedAppDirectory = path.resolve(rootDirectory, appDirectory);
-  let rootRelativeRoutes = Object.fromEntries(
+  const resolvedAppDirectory = path.resolve(rootDirectory, appDirectory);
+  const rootRelativeRoutes = Object.fromEntries(
     Object.entries(routes).map(([id, route]) => {
-      let filePath = path.join(resolvedAppDirectory, route.file);
-      let rootRelativeFilePath = normalizePath(
+      const filePath = path.join(resolvedAppDirectory, route.file);
+      const rootRelativeFilePath = normalizePath(
         path.relative(rootDirectory, filePath)
       );
       return [id, { ...route, file: rootRelativeFilePath }];
     })
   );
 
-  let buildManifest: ServerBundlesBuildManifest = {
+  const buildManifest: ServerBundlesBuildManifest = {
     serverBundles: {},
     routeIdToServerBundleId: {},
     routes: rootRelativeRoutes,
   };
 
-  let serverBundleBuildConfigById = new Map<string, ServerBundleBuildConfig>();
+  const serverBundleBuildConfigById = new Map<
+    string,
+    ServerBundleBuildConfig
+  >();
 
   await Promise.all(
     getAddressableRoutes(routes).map(async (route) => {
-      let branch = getRouteBranch(routes, route.id);
-      let serverBundleId = await serverBundles({
+      const branch = getRouteBranch(routes, route.id);
+      const serverBundleId = await serverBundles({
         branch: branch.map((route) =>
           configRouteToBranchRoute({
             ...route,
@@ -131,7 +134,7 @@ async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
       }
       buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
-      let relativeServerBundleDirectory = path.relative(
+      const relativeServerBundleDirectory = path.relative(
         rootDirectory,
         path.join(serverBuildDirectory, serverBundleId)
       );
@@ -155,9 +158,9 @@ async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
     })
   );
 
-  let serverBuilds = Array.from(serverBundleBuildConfigById.values()).map(
+  const serverBuilds = Array.from(serverBundleBuildConfigById.values()).map(
     (serverBundleBuildConfig): ReactRouterServerBuildArgs => {
-      let serverBuild: ReactRouterServerBuildArgs = {
+      const serverBuild: ReactRouterServerBuildArgs = {
         ssr: true,
         serverBundleBuildConfig,
       };
@@ -175,9 +178,9 @@ async function cleanBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
   ctx: ReactRouterPluginContext
 ) {
-  let buildDirectory = ctx.reactRouterConfig.buildDirectory;
-  let isWithinRoot = () => {
-    let relativePath = path.relative(ctx.rootDirectory, buildDirectory);
+  const buildDirectory = ctx.reactRouterConfig.buildDirectory;
+  const isWithinRoot = () => {
+    const relativePath = path.relative(ctx.rootDirectory, buildDirectory);
     return !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
   };
 
@@ -206,17 +209,17 @@ function getViteManifestPaths(
 }
 
 export interface ViteBuildOptions {
-  assetsInlineLimit?: number;
-  clearScreen?: boolean;
-  config?: string;
-  emptyOutDir?: boolean;
-  force?: boolean;
-  logLevel?: Vite.LogLevel;
-  minify?: Vite.BuildOptions["minify"];
-  mode?: string;
-  profile?: boolean;
-  sourcemapClient?: boolean | "inline" | "hidden";
-  sourcemapServer?: boolean | "inline" | "hidden";
+  assetsInlineLimit?: number | undefined;
+  clearScreen?: boolean | undefined;
+  config?: string | undefined;
+  emptyOutDir?: boolean | undefined;
+  force?: boolean | undefined;
+  logLevel?: Vite.LogLevel | undefined;
+  minify?: Vite.BuildOptions["minify"] | undefined;
+  mode?: string | undefined;
+  profile?: boolean | undefined;
+  sourcemapClient?: boolean | "inline" | "hidden" | undefined;
+  sourcemapServer?: boolean | "inline" | "hidden" | undefined;
 }
 
 export async function build(
@@ -251,7 +254,7 @@ export async function build(
 
   let { reactRouterConfig } = ctx;
 
-  let vite = await import("vite");
+  const vite = await import("vite");
 
   async function viteBuild({
     ssr,
@@ -286,10 +289,10 @@ export async function build(
   let { serverBuilds, buildManifest } = await getServerBuilds(ctx);
   await Promise.all(serverBuilds.map(viteBuild));
 
-  let viteManifestPaths = getViteManifestPaths(ctx, serverBuilds);
+  const viteManifestPaths = getViteManifestPaths(ctx, serverBuilds);
   await Promise.all(
     viteManifestPaths.map(async (viteManifestPath) => {
-      let manifestExists = await fse.pathExists(viteManifestPath);
+      const manifestExists = await fse.pathExists(viteManifestPath);
       if (!manifestExists) return;
 
       // Delete original Vite manifest file if consumer doesn't want it
@@ -298,8 +301,8 @@ export async function build(
       }
 
       // Remove .vite dir if it's now empty
-      let viteDir = path.dirname(viteManifestPath);
-      let viteDirFiles = await fse.readdir(viteDir);
+      const viteDir = path.dirname(viteManifestPath);
+      const viteDirFiles = await fse.readdir(viteDir);
       if (viteDirFiles.length === 0) {
         await fse.remove(viteDir);
       }

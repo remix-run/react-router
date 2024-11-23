@@ -16,7 +16,7 @@ export interface ServerBuild {
   };
   routes: ServerRouteManifest;
   assets: AssetsManifest;
-  basename?: string;
+  basename?: string | undefined;
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
@@ -49,7 +49,7 @@ export interface HandleErrorFunction {
  */
 export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
-  handleDataRequest?: HandleDataRequestFunction;
-  handleError?: HandleErrorFunction;
-  streamTimeout?: number;
+  handleDataRequest?: HandleDataRequestFunction | undefined;
+  handleError?: HandleErrorFunction | undefined;
+  streamTimeout?: number | undefined;
 }

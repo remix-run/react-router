@@ -80,8 +80,8 @@ function flash<Key extends string>(name: Key): FlashDataKey<Key> {
 }
 
 export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
-  initialData?: Data,
-  id?: string
+  initialData?: Data | undefined,
+  id?: string | undefined
 ) => Session<Data, FlashData>;
 
 /**
@@ -99,7 +99,7 @@ export const createSession: CreateSessionFunction = <
   initialData: Partial<Data> = {},
   id = ""
 ): Session<Data, FlashData> => {
-  let map = new Map(Object.entries(initialData)) as Map<
+  const map = new Map(Object.entries(initialData)) as Map<
     keyof Data | FlashDataKey<keyof FlashData & string>,
     any
   >;
@@ -120,9 +120,9 @@ export const createSession: CreateSessionFunction = <
     get(name) {
       if (map.has(name as keyof Data)) return map.get(name as keyof Data);
 
-      let flashName = flash(name as keyof FlashData & string);
+      const flashName = flash(name as keyof FlashData & string);
       if (map.has(flashName)) {
-        let value = map.get(flashName);
+        const value = map.get(flashName);
         map.delete(flashName);
         return value;
       }
@@ -175,8 +175,8 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    * return a new Session with no data.
    */
   getSession: (
-    cookieHeader?: string | null,
-    options?: ParseOptions
+    cookieHeader?: string | null | undefined,
+    options?: ParseOptions | undefined
   ) => Promise<Session<Data, FlashData>>;
 
   /**
@@ -185,7 +185,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   commitSession: (
     session: Session<Data, FlashData>,
-    options?: SerializeOptions
+    options?: SerializeOptions | undefined
   ) => Promise<string>;
 
   /**
@@ -194,7 +194,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   destroySession: (
     session: Session<Data, FlashData>,
-    options?: SerializeOptions
+    options?: SerializeOptions | undefined
   ) => Promise<string>;
 }
 
@@ -215,14 +215,14 @@ export interface SessionIdStorageStrategy<
    * The Cookie used to store the session id, or options used to automatically
    * create one.
    */
-  cookie?: Cookie | (CookieOptions & { name?: string });
+  cookie?: Cookie | (CookieOptions & { name?: string | undefined }) | undefined;
 
   /**
    * Creates a new record with the given data and returns the session id.
    */
   createData: (
     data: FlashSessionData<Data, FlashData>,
-    expires?: Date
+    expires?: Date | undefined
   ) => Promise<string>;
 
   /**
@@ -236,7 +236,7 @@ export interface SessionIdStorageStrategy<
   updateData: (
     id: string,
     data: FlashSessionData<Data, FlashData>,
-    expires?: Date
+    expires?: Date | undefined
   ) => Promise<void>;
 
   /**
@@ -258,7 +258,7 @@ export function createSessionStorage<Data = SessionData, FlashData = Data>({
   updateData,
   deleteData,
 }: SessionIdStorageStrategy<Data, FlashData>): SessionStorage<Data, FlashData> {
-  let cookie = isCookie(cookieArg)
+  const cookie = isCookie(cookieArg)
     ? cookieArg
     : createCookie(cookieArg?.name || "__session", cookieArg);
 
@@ -266,13 +266,13 @@ export function createSessionStorage<Data = SessionData, FlashData = Data>({
 
   return {
     async getSession(cookieHeader, options) {
-      let id = cookieHeader && (await cookie.parse(cookieHeader, options));
-      let data = id && (await readData(id));
+      const id = cookieHeader && (await cookie.parse(cookieHeader, options));
+      const data = id && (await readData(id));
       return createSession(data || {}, id || "");
     },
     async commitSession(session, options) {
       let { id, data } = session;
-      let expires =
+      const expires =
         options?.maxAge != null
           ? new Date(Date.now() + options.maxAge * 1000)
           : options?.expires != null

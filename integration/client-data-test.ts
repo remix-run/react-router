@@ -19,10 +19,10 @@ function getFiles({
 }: {
   parentClientLoader: boolean;
   parentClientLoaderHydrate: boolean;
-  parentAdditions?: string;
+  parentAdditions?: string | undefined;
   childClientLoader: boolean;
   childClientLoaderHydrate: boolean;
-  childAdditions?: string;
+  childAdditions?: string | undefined;
 }) {
   return {
     "app/root.tsx": js`

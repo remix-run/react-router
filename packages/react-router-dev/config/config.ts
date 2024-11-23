@@ -17,7 +17,7 @@ import isEqual from "lodash/isEqual";
 import {
   type RouteManifest,
   type RouteManifestEntry,
-  type RouteConfig,
+  // type RouteConfig,
   setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
@@ -34,12 +34,16 @@ type ConfigPreset = Omit<ReactRouterConfig, ExcludedConfigPresetKey>;
 
 export type Preset = {
   name: string;
-  reactRouterConfig?: (args: {
-    reactRouterUserConfig: ReactRouterConfig;
-  }) => ConfigPreset | Promise<ConfigPreset>;
-  reactRouterConfigResolved?: (args: {
-    reactRouterConfig: ResolvedReactRouterConfig;
-  }) => void | Promise<void>;
+  reactRouterConfig?:
+    | ((args: {
+        reactRouterUserConfig: ReactRouterConfig;
+      }) => ConfigPreset | Promise<ConfigPreset>)
+    | undefined;
+  reactRouterConfigResolved?:
+    | ((args: {
+        reactRouterConfig: ResolvedReactRouterConfig;
+      }) => void | Promise<void>)
+    | undefined;
 };
 
 // Only expose a subset of route properties to the "serverBundles" function
@@ -67,8 +71,8 @@ type BaseBuildManifest = {
 };
 
 type DefaultBuildManifest = BaseBuildManifest & {
-  serverBundles?: never;
-  routeIdToServerBundleId?: never;
+  serverBundles?: never | undefined;
+  routeIdToServerBundleId?: never | undefined;
 };
 
 export type ServerBundlesBuildManifest = BaseBuildManifest & {
@@ -103,17 +107,17 @@ export type ReactRouterConfig = {
    * The path to the `app` directory, relative to the root directory. Defaults
    * to `"app"`.
    */
-  appDirectory?: string;
+  appDirectory?: string | undefined;
 
   /**
    * The output format of the server build. Defaults to "esm".
    */
-  serverModuleFormat?: ServerModuleFormat;
+  serverModuleFormat?: ServerModuleFormat | undefined;
 
   /**
    * Enabled future flags
    */
-  future?: [keyof FutureConfig] extends [never]
+  future?: [keyof FutureConfig] extends [never] | undefined
     ? // Partial<FutureConfig> doesn't work when it's empty so just prevent any keys
       { [key: string]: never }
     : Partial<FutureConfig>;
@@ -121,16 +125,16 @@ export type ReactRouterConfig = {
   /**
    * The React Router app basename.  Defaults to `"/"`.
    */
-  basename?: string;
+  basename?: string | undefined;
   /**
    * The path to the build directory, relative to the project. Defaults to
    * `"build"`.
    */
-  buildDirectory?: string;
+  buildDirectory?: string | undefined;
   /**
    * A function that is called after the full React Router build is complete.
    */
-  buildEnd?: BuildEndHook;
+  buildEnd?: BuildEndHook | undefined;
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
@@ -140,31 +144,32 @@ export type ReactRouterConfig = {
     | Array<string>
     | ((args: {
         getStaticPaths: () => string[];
-      }) => Array<string> | Promise<Array<string>>);
+      }) => Array<string> | Promise<Array<string>>)
+    | undefined;
   /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
    */
-  presets?: Array<Preset>;
+  presets?: Array<Preset> | undefined;
   /**
    * The file name of the server build output. This file
    * should end in a `.js` extension and should be deployed to your server.
    * Defaults to `"index.js"`.
    */
-  serverBuildFile?: string;
+  serverBuildFile?: string | undefined;
   /**
    * A function for assigning routes to different server bundles. This
    * function should return a server bundle ID which will be used as the
    * bundle's directory name within the server build directory.
    */
-  serverBundles?: ServerBundlesFunction;
+  serverBundles?: ServerBundlesFunction | undefined;
   /**
    * Enable server-side rendering for your application. Disable to use "SPA
    * Mode", which will request the `/` path at build-time and save it as an
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
    */
-  ssr?: boolean;
+  ssr?: boolean | undefined;
 };
 
 export type ResolvedReactRouterConfig = Readonly<{
@@ -183,7 +188,7 @@ export type ResolvedReactRouterConfig = Readonly<{
   /**
    * A function that is called after the full React Router build is complete.
    */
-  buildEnd?: BuildEndHook;
+  buildEnd?: BuildEndHook | undefined;
   /**
    * Enabled future flags
    */
@@ -208,7 +213,7 @@ export type ResolvedReactRouterConfig = Readonly<{
    * function should return a server bundle ID which will be used as the
    * bundle's directory name within the server build directory.
    */
-  serverBundles?: ServerBundlesFunction;
+  serverBundles?: ServerBundlesFunction | undefined;
   /**
    * The output format of the server build. Defaults to "esm".
    */
@@ -222,14 +227,14 @@ export type ResolvedReactRouterConfig = Readonly<{
   ssr: boolean;
 }>;
 
-let mergeReactRouterConfig = (
+const mergeReactRouterConfig = (
   ...configs: ReactRouterConfig[]
 ): ReactRouterConfig => {
-  let reducer = (
+  const reducer = (
     configA: ReactRouterConfig,
     configB: ReactRouterConfig
   ): ReactRouterConfig => {
-    let mergeRequired = (key: keyof ReactRouterConfig) =>
+    const mergeRequired = (key: keyof ReactRouterConfig) =>
       configA[key] !== undefined && configB[key] !== undefined;
 
     return {
@@ -267,8 +272,8 @@ let mergeReactRouterConfig = (
 // Inlined from https://github.com/jsdf/deep-freeze
 let deepFreeze = (o: any) => {
   Object.freeze(o);
-  let oIsFunction = typeof o === "function";
-  let hasOwnProp = Object.prototype.hasOwnProperty;
+  const oIsFunction = typeof o === "function";
+  const hasOwnProp = Object.prototype.hasOwnProperty;
   Object.getOwnPropertyNames(o).forEach(function (prop) {
     if (
       hasOwnProp.call(o, prop) &&
@@ -312,7 +317,7 @@ async function resolveConfig({
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
-  reactRouterConfigFile?: string;
+  reactRouterConfigFile?: string | undefined;
 }): Promise<Result<ResolvedReactRouterConfig>> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -322,7 +327,7 @@ async function resolveConfig({
         return err(`${reactRouterConfigFile} no longer exists`);
       }
 
-      let configModule = await viteNodeContext.runner.executeFile(
+      const configModule = await viteNodeContext.runner.executeFile(
         reactRouterConfigFile
       );
 
@@ -343,7 +348,7 @@ async function resolveConfig({
   // Prevent mutations to the user config
   reactRouterUserConfig = deepFreeze(cloneDeep(reactRouterUserConfig));
 
-  let presets: ReactRouterConfig[] = (
+  const presets: ReactRouterConfig[] = (
     await Promise.all(
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
         if (!preset.name) {
@@ -356,7 +361,7 @@ async function resolveConfig({
           return null;
         }
 
-        let configPreset: ReactRouterConfig = omit(
+        const configPreset: ReactRouterConfig = omit(
           await preset.reactRouterConfig({ reactRouterUserConfig }),
           excludedConfigPresetKeys
         );
@@ -368,7 +373,7 @@ async function resolveConfig({
     return value !== null;
   });
 
-  let defaults = {
+  const defaults = {
     basename: "/",
     buildDirectory: "build",
     serverBuildFile: "index.js",
@@ -395,7 +400,7 @@ async function resolveConfig({
     serverBundles = undefined;
   }
 
-  let isValidPrerenderConfig =
+  const isValidPrerenderConfig =
     prerender == null ||
     typeof prerender === "boolean" ||
     Array.isArray(prerender) ||
@@ -408,12 +413,12 @@ async function resolveConfig({
     );
   }
 
-  let appDirectory = path.resolve(root, userAppDirectory || "app");
-  let buildDirectory = path.resolve(root, userBuildDirectory);
+  const appDirectory = path.resolve(root, userAppDirectory || "app");
+  const buildDirectory = path.resolve(root, userBuildDirectory);
 
-  let rootRouteFile = findEntry(appDirectory, "root");
+  const rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
-    let rootRouteDisplayPath = path.relative(
+    const rootRouteDisplayPath = path.relative(
       root,
       path.join(appDirectory, "root.tsx")
     );
@@ -426,7 +431,7 @@ async function resolveConfig({
     root: { path: "", id: "root", file: rootRouteFile },
   };
 
-  let routeConfigFile = findEntry(appDirectory, "routes");
+  const routeConfigFile = findEntry(appDirectory, "routes");
 
   try {
     if (!routeConfigFile) {
@@ -438,14 +443,14 @@ async function resolveConfig({
     }
 
     setAppDirectory(appDirectory);
-    let routeConfigExport = (
+    const routeConfigExport = (
       await viteNodeContext.runner.executeFile(
         path.join(appDirectory, routeConfigFile)
       )
     ).default;
-    let routeConfig = await routeConfigExport;
+    const routeConfig = await routeConfigExport;
 
-    let result = validateRouteConfig({
+    const result = validateRouteConfig({
       routeConfigFile,
       routeConfig,
     });
@@ -479,7 +484,7 @@ async function resolveConfig({
     );
   }
 
-  let future: FutureConfig = {
+  const future: FutureConfig = {
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
   };
@@ -498,7 +503,7 @@ async function resolveConfig({
     ssr,
   });
 
-  for (let preset of reactRouterUserConfig.presets ?? []) {
+  for (const preset of reactRouterUserConfig.presets ?? []) {
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
@@ -527,29 +532,29 @@ export async function createConfigLoader({
   watch,
 }: {
   watch: boolean;
-  rootDirectory?: string;
+  rootDirectory?: string | undefined;
 }): Promise<ConfigLoader> {
   root = root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
-  let viteNodeContext = await ViteNode.createContext({
+  const viteNodeContext = await ViteNode.createContext({
     root,
     mode: watch ? "development" : "production",
-    server: !watch ? { watch: null } : {},
+    server: watch ? {} : { watch: null },
     ssr: {
       external: ssrExternals,
     },
   });
 
-  let reactRouterConfigFile = findEntry(root, "react-router.config", {
+  const reactRouterConfigFile = findEntry(root, "react-router.config", {
     absolute: true,
   });
 
-  let getConfig = () =>
+  const getConfig = () =>
     resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
 
   let appDirectory: string;
 
-  let initialConfigResult = await getConfig();
+  const initialConfigResult = await getConfig();
 
   if (!initialConfigResult.ok) {
     throw new Error(initialConfigResult.error);
@@ -584,14 +589,14 @@ export async function createConfigLoader({
 
         fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
           let [event, rawFilepath] = args;
-          let filepath = path.normalize(rawFilepath);
+          const filepath = path.normalize(rawFilepath);
 
-          let appFileAddedOrRemoved =
+          const appFileAddedOrRemoved =
             appDirectory &&
             (event === "add" || event === "unlink") &&
             filepath.startsWith(path.normalize(appDirectory));
 
-          let configCodeUpdated = Boolean(
+          const configCodeUpdated = Boolean(
             viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
           );
 
@@ -601,14 +606,15 @@ export async function createConfigLoader({
           }
 
           if (appFileAddedOrRemoved || configCodeUpdated) {
-            let result = await getConfig();
+            const result = await getConfig();
 
-            let configChanged = result.ok && !isEqual(lastConfig, result.value);
+            const configChanged =
+              result.ok && !isEqual(lastConfig, result.value);
 
-            let routeConfigChanged =
+            const routeConfigChanged =
               result.ok && !isEqual(lastConfig?.routes, result.value.routes);
 
-            for (let handler of changeHandlers) {
+            for (const handler of changeHandlers) {
               handler({
                 result,
                 configCodeUpdated,
@@ -641,11 +647,11 @@ export async function createConfigLoader({
 }
 
 export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
-  let configLoader = await createConfigLoader({
+  const configLoader = await createConfigLoader({
     rootDirectory,
     watch: false,
   });
-  let config = await configLoader.getConfig();
+  const config = await configLoader.getConfig();
   await configLoader.close();
   return config;
 }
@@ -659,21 +665,21 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(
+  const defaultsDirectory = path.resolve(
     path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "defaults"
   );
 
-  let userEntryClientFile = findEntry(appDirectory, "entry.client");
-  let userEntryServerFile = findEntry(appDirectory, "entry.server");
+  const userEntryClientFile = findEntry(appDirectory, "entry.client");
+  const userEntryServerFile = findEntry(appDirectory, "entry.server");
 
   let entryServerFile: string;
-  let entryClientFile = userEntryClientFile || "entry.client.tsx";
+  const entryClientFile = userEntryClientFile || "entry.client.tsx";
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
+  const pkgJson = await PackageJson.load(rootDirectory);
+  const deps = pkgJson.content.dependencies ?? {};
 
   if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
@@ -698,7 +704,7 @@ export async function resolveEntryFiles({
 
       await pkgJson.save();
 
-      let packageManager = detectPackageManager() ?? "npm";
+      const packageManager = detectPackageManager() ?? "npm";
 
       execSync(`${packageManager} install`, {
         cwd: rootDirectory,
@@ -709,11 +715,11 @@ export async function resolveEntryFiles({
     entryServerFile = `entry.server.node.tsx`;
   }
 
-  let entryClientFilePath = userEntryClientFile
+  const entryClientFilePath = userEntryClientFile
     ? path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
     : path.resolve(defaultsDirectory, entryClientFile);
 
-  let entryServerFilePath = userEntryServerFile
+  const entryServerFilePath = userEntryServerFile
     ? path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
     : path.resolve(defaultsDirectory, entryServerFile);
 
@@ -739,10 +745,10 @@ export const ssrExternals = isInReactRouterMonorepo()
 function isInReactRouterMonorepo() {
   // We use '@react-router/node' for this check since it's a
   // dependency of this package and guaranteed to be in node_modules
-  let serverRuntimePath = path.dirname(
+  const serverRuntimePath = path.dirname(
     require.resolve("@react-router/node/package.json")
   );
-  let serverRuntimeParentDir = path.basename(
+  const serverRuntimeParentDir = path.basename(
     path.resolve(serverRuntimePath, "..")
   );
   return serverRuntimeParentDir === "packages";
@@ -753,10 +759,10 @@ const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 function findEntry(
   dir: string,
   basename: string,
-  options?: { absolute?: boolean }
+  options?: { absolute?: boolean | undefined } | undefined
 ): string | undefined {
-  for (let ext of entryExts) {
-    let file = path.resolve(dir, basename + ext);
+  for (const ext of entryExts) {
+    const file = path.resolve(dir, basename + ext);
     if (fs.existsSync(file)) {
       return options?.absolute ?? false ? file : path.relative(dir, file);
     }

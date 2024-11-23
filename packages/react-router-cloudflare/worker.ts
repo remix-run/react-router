@@ -35,8 +35,8 @@ export type RequestHandler<Env = any> = PagesFunction<Env>;
 
 export interface createPagesFunctionHandlerParams<Env = any> {
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>);
-  getLoadContext?: GetLoadContextFunction<Env>;
-  mode?: string;
+  getLoadContext?: GetLoadContextFunction<Env> | undefined;
+  mode?: string | undefined;
 }
 
 export function createRequestHandler<Env = any>({
@@ -50,10 +50,10 @@ export function createRequestHandler<Env = any>({
     },
   }),
 }: createPagesFunctionHandlerParams<Env>): RequestHandler<Env> {
-  let handleRequest = createReactRouterRequestHandler(build, mode);
+  const handleRequest = createReactRouterRequestHandler(build, mode);
 
   return async (cloudflare) => {
-    let loadContext = await getLoadContext({
+    const loadContext = await getLoadContext({
       request: cloudflare.request,
       context: {
         cloudflare: {
@@ -80,13 +80,13 @@ export function createPagesFunctionHandler<Env = any>({
   getLoadContext,
   mode,
 }: createPagesFunctionHandlerParams<Env>) {
-  let handleRequest = createRequestHandler<Env>({
+  const handleRequest = createRequestHandler<Env>({
     build,
     getLoadContext,
     mode,
   });
 
-  let handleFetch = async (context: EventContext<Env, any, any>) => {
+  const handleFetch = async (context: EventContext<Env, any, any>) => {
     let response: Response | undefined;
 
     // https://github.com/cloudflare/wrangler2/issues/117

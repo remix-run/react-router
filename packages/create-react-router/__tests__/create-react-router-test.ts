@@ -1161,13 +1161,13 @@ async function execCreateReactRouter({
   cwd,
 }: {
   args: string[];
-  interactive?: boolean;
-  interactions?: ShellInteractions;
-  env?: Record<string, string>;
-  mockNetwork?: boolean;
-  cwd?: string;
+  interactive?: boolean | undefined;
+  interactions?: ShellInteractions | undefined;
+  env?: Record<string, string> | undefined;
+  mockNetwork?: boolean | undefined;
+  cwd?: string | undefined;
 }) {
-  let proc = spawn(
+  const proc = spawn(
     "node",
     [
       "--require",
@@ -1201,8 +1201,8 @@ interface ShellResult {
 }
 
 type ShellInteractions = Array<
-  | { question: RegExp; type: Array<String>; answer?: never }
-  | { question: RegExp; answer: RegExp; type?: never }
+  | { question: RegExp; type: Array<String>; answer?: never | undefined }
+  | { question: RegExp; answer: RegExp; type?: never | undefined }
 >;
 
 async function interactWithShell(
@@ -1211,7 +1211,7 @@ async function interactWithShell(
 ): Promise<ShellResult> {
   proc.stdin.setDefaultEncoding("utf-8");
 
-  let deferred = defer<ShellResult>();
+  const deferred = defer<ShellResult>();
 
   let stepNumber = 0;
 
@@ -1226,12 +1226,12 @@ async function interactWithShell(
       throw new Error("stdout chunk is not a string");
     }
     stdout += stripAnsi(maskTempDir(chunk));
-    let step = interactions[stepNumber];
+    const step = interactions[stepNumber];
     if (!step) return;
     let { question, answer, type } = step;
     if (question.test(chunk)) {
       if (answer) {
-        let currentSelection = chunk
+        const currentSelection = chunk
           .split("\n")
           .slice(1)
           .find(
@@ -1241,15 +1241,15 @@ async function interactWithShell(
 
         if (currentSelection && answer.test(currentSelection)) {
           proc.stdin.write(ENTER);
-          stepNumber += 1;
+          stepNumber++;
         } else {
           proc.stdin.write(DOWN);
         }
       } else if (type) {
-        for (let command of type) {
+        for (const command of type) {
           proc.stdin.write(command);
         }
-        stepNumber += 1;
+        stepNumber++;
       }
     }
 
@@ -1275,30 +1275,31 @@ async function interactWithShell(
 
   // this ensures that if we do timeout we at least get as much useful
   // output as possible.
-  let timeout = setTimeout(() => {
+  const timeout = setTimeout(() => {
     if (deferred.state.current === "pending") {
       proc.kill();
       deferred.resolve({ status: "timeout", stdout, stderr });
     }
   }, jestTimeout);
 
-  let result = await deferred.promise;
+  const result = await deferred.promise;
   clearTimeout(timeout);
 
   return result;
 }
 
 function defer<Value>() {
-  let resolve: (value: Value) => void, reject: (reason?: any) => void;
-  let state: { current: "pending" | "resolved" | "rejected" } = {
+  let resolve: (value: Value) => void;
+  let reject: (reason?: any | undefined) => void;
+  const state: { current: "pending" | "resolved" | "rejected" } = {
     current: "pending",
   };
-  let promise = new Promise<Value>((res, rej) => {
+  const promise = new Promise<Value>((res, rej) => {
     resolve = (value: Value) => {
       state.current = "resolved";
       return res(value);
     };
-    reject = (reason?: any) => {
+    reject = (reason?: any | undefined) => {
       state.current = "rejected";
       return rej(reason);
     };

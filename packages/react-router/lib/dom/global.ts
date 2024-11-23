@@ -3,19 +3,21 @@ import type { AssetsManifest, FutureConfig } from "./ssr/entry";
 import type { RouteModules } from "./ssr/routeModules";
 
 export type WindowReactRouterContext = {
-  basename?: string;
+  basename?: string | undefined;
   state: HydrationState;
-  criticalCss?: string;
+  criticalCss?: string | undefined;
   future: FutureConfig;
   isSpaMode: boolean;
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;
   // The number of active deferred keys rendered on the server
-  a?: number;
-  dev?: {
-    port?: number;
-    hmrRuntime?: string;
-  };
+  a?: number | undefined;
+  dev?:
+    | {
+        port?: number | undefined;
+        hmrRuntime?: string | undefined;
+      }
+    | undefined;
 };
 
 export interface ViewTransition {

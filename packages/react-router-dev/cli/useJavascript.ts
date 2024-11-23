@@ -8,11 +8,11 @@ import prettier from "prettier";
 export function transpile(
   tsx: string,
   options: {
-    cwd?: string;
-    filename?: string;
+    cwd?: string | undefined;
+    filename?: string | undefined;
   } = {}
 ): string {
-  let mjs = babel.transformSync(tsx, {
+  const mjs = babel.transformSync(tsx, {
     compact: false,
     cwd: options.cwd,
     filename: options.filename,

@@ -3,8 +3,11 @@ import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route, Link } from "../../index";
 
-function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {
-  let event = new MouseEvent("click", {
+function click(
+  anchor: HTMLAnchorElement,
+  eventInit?: MouseEventInit | undefined
+) {
+  const event = new MouseEvent("click", {
     view: window,
     bubbles: true,
     cancelable: true,
@@ -47,16 +50,19 @@ describe("A <Link> click", () => {
       );
     });
 
-    let anchor = node.querySelector("a");
+    const anchor = node.querySelector("a");
     expect(anchor).not.toBeNull();
 
-    let event: MouseEvent;
+    let event: MouseEvent | undefined;
+
     act(() => {
-      event = click(anchor);
+      if (anchor !== null) {
+        event = click(anchor);
+      }
     });
 
-    expect(event.defaultPrevented).toBe(true);
-    let h1 = node.querySelector("h1");
+    expect(event?.defaultPrevented).toBe(true);
+    const h1 = node.querySelector("h1");
     expect(h1).not.toBeNull();
     expect(h1?.textContent).toEqual("About");
   });
@@ -82,15 +88,17 @@ describe("A <Link> click", () => {
       );
     });
 
-    let anchor = node.querySelector("a");
+    const anchor = node.querySelector("a");
     expect(anchor).not.toBeNull();
 
-    let event: MouseEvent;
+    let event: MouseEvent | undefined;
     act(() => {
-      event = click(anchor);
+      if (anchor !== null) {
+        event = click(anchor);
+      }
     });
 
-    expect(event.defaultPrevented).toBe(true);
+    expect(event?.defaultPrevented).toBe(true);
     let h1 = node.querySelector("h1");
     expect(h1).not.toBeNull();
     expect(h1?.textContent).toEqual("About");
@@ -118,15 +126,18 @@ describe("A <Link> click", () => {
         );
       });
 
-      let anchor = node.querySelector("a");
+      const anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
-      let event: MouseEvent;
+      let event: MouseEvent | undefined;
+
       act(() => {
-        event = click(anchor);
+        if (anchor !== null) {
+          event = click(anchor);
+        }
       });
 
-      expect(event.defaultPrevented).toBe(false);
+      expect(event?.defaultPrevented).toBe(false);
     });
 
     it("calls provided listener", () => {
@@ -162,7 +173,11 @@ describe("A <Link> click", () => {
       });
 
       act(() => {
-        click(node.querySelector("a"));
+        const anchor = node.querySelector("a");
+
+        if (anchor !== null) {
+          click(anchor);
+        }
       });
 
       expect(handlerCalled).toBe(true);
@@ -194,12 +209,15 @@ describe("A <Link> click", () => {
       let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
-      let event: MouseEvent;
+      let event: MouseEvent | undefined;
+
       act(() => {
-        event = click(anchor);
+        if (anchor !== null) {
+          event = click(anchor);
+        }
       });
 
-      expect(event.defaultPrevented).toBe(false);
+      expect(event?.defaultPrevented).toBe(false);
     });
 
     it("calls provided listener", () => {
@@ -234,7 +252,11 @@ describe("A <Link> click", () => {
       });
 
       act(() => {
-        click(node.querySelector("a"));
+        const anchor = node.querySelector("a");
+
+        if (anchor !== null) {
+          click(anchor);
+        }
       });
 
       expect(handlerCalled).toBe(true);
@@ -266,14 +288,16 @@ describe("A <Link> click", () => {
         );
       });
 
-      let anchor = node.querySelector("a");
+      const anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       let event: MouseEvent;
       act(() => {
+        // @ts-ignore
         event = click(anchor);
       });
 
+      // @ts-ignore
       expect(event.defaultPrevented).toBe(false);
     });
 
@@ -311,7 +335,11 @@ describe("A <Link> click", () => {
       });
 
       act(() => {
-        click(node.querySelector("a"));
+        const anchor = node.querySelector("a");
+
+        if (anchor !== null) {
+          click(anchor);
+        }
       });
 
       expect(handlerCalled).toBe(true);
@@ -347,14 +375,17 @@ describe("A <Link> click", () => {
         );
       });
 
-      let anchor = node.querySelector("a");
+      const anchor = node.querySelector("a");
+
       expect(anchor).not.toBeNull();
 
       act(() => {
-        click(anchor);
+        if (anchor !== null) {
+          click(anchor);
+        }
       });
 
-      let h1 = node.querySelector("h1");
+      const h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
       expect(h1?.textContent).toEqual("Home");
     });
@@ -425,10 +456,12 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        click(anchor);
+        if (anchor !== null) {
+          click(anchor);
+        }
       });
 
-      let h1 = node.querySelector("h1");
+      const h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
       expect(h1?.textContent).toEqual("Home");
     });

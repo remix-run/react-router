@@ -7,11 +7,13 @@ import { createRequestListener as createRequestListener_ } from "@mjackson/node-
 
 export interface RequestListenerOptions {
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>);
-  getLoadContext?: (
-    request: Request,
-    client: ClientAddress
-  ) => AppLoadContext | Promise<AppLoadContext>;
-  mode?: string;
+  getLoadContext?:
+    | ((
+        request: Request,
+        client: ClientAddress
+      ) => AppLoadContext | Promise<AppLoadContext>)
+    | undefined;
+  mode?: string | undefined;
 }
 
 /**
@@ -23,10 +25,10 @@ export interface RequestListenerOptions {
 export function createRequestListener(
   options: RequestListenerOptions
 ): RequestListener {
-  let handleRequest = createRequestHandler(options.build, options.mode);
+  const handleRequest = createRequestHandler(options.build, options.mode);
 
   return createRequestListener_(async (request, client) => {
-    let loadContext = await options.getLoadContext?.(request, client);
+    const loadContext = await options.getLoadContext?.(request, client);
     return handleRequest(request, loadContext);
   });
 }

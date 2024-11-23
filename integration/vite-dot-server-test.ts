@@ -34,7 +34,8 @@ let tsconfig = (aliases: Record<string, string[]>) => `
       "forceConsistentCasingInFileNames": true,
       "baseUrl": ".",
       "paths": ${JSON.stringify(aliases)},
-      "noEmit": true
+      "noEmit": true,
+      "exactOptionalPropertyTypes": true
     }
   }
 `;

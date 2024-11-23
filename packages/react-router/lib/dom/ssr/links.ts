@@ -293,7 +293,7 @@ type KeyedLinkDescriptor<Descriptor extends LinkDescriptor = LinkDescriptor> = {
 
 function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
   descriptors: Descriptor[],
-  preloads?: string[]
+  preloads?: string[] | undefined
 ): KeyedLinkDescriptor<Descriptor>[] {
   let set = new Set();
   let preloadsSet = new Set(preloads);

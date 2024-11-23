@@ -37,7 +37,7 @@ export type SingleFetchResult =
 
 export type SingleFetchResults = {
   [key: string]: SingleFetchResult;
-  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
+  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult | undefined;
 };
 
 interface StreamTransferProps {
@@ -45,7 +45,7 @@ interface StreamTransferProps {
   identifier: number;
   reader: ReadableStreamDefaultReader<Uint8Array>;
   textDecoder: TextDecoder;
-  nonce?: string;
+  nonce?: string | undefined;
 }
 
 // StreamTransfer recursively renders down chunks of the `serverHandoffStream`
@@ -90,7 +90,7 @@ export function StreamTransfer({
   }
 
   let { done, value } = promise.result;
-  let scriptTag = value ? (
+  const scriptTag = value ? (
     <script
       nonce={nonce}
       dangerouslySetInnerHTML={{
@@ -167,10 +167,10 @@ async function singleFetchActionStrategy(
   let actionMatch = matches.find((m) => m.shouldLoad);
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
-  let result = await actionMatch.resolve(async (handler) => {
-    let result = await handler(async () => {
-      let url = singleFetchUrl(request.url);
-      let init = await createRequestInit(request);
+  const result = await actionMatch.resolve(async (handler) => {
+    const result = await handler(async () => {
+      const url = singleFetchUrl(request.url);
+      const init = await createRequestInit(request);
       let { data, status } = await fetchAndDecode(url, init);
       actionStatus = status;
       return unwrapSingleFetchResult(
@@ -206,7 +206,7 @@ async function singleFetchLoaderNavigationStrategy(
 ) {
   // Track which routes need a server load - in case we need to tack on a
   // `_routes` param
-  let routesParams = new Set<string>();
+  const routesParams = new Set<string>();
 
   // We only add `_routes` when one or more routes opts out of a load via
   // `shouldRevalidate` or `clientLoader`
@@ -215,26 +215,26 @@ async function singleFetchLoaderNavigationStrategy(
   // Deferreds for each route so we can be sure they've all loaded via
   // `match.resolve()`, and a singular promise that can tell us all routes
   // have been resolved
-  let routeDfds = matches.map(() => createDeferred<void>());
-  let routesLoadedPromise = Promise.all(routeDfds.map((d) => d.promise));
+  const routeDfds = matches.map(() => createDeferred<void>());
+  const routesLoadedPromise = Promise.all(routeDfds.map((d) => d.promise));
 
   // Deferred that we'll use for the call to the server that each match can
   // await and parse out it's specific result
-  let singleFetchDfd = createDeferred<SingleFetchResults>();
+  const singleFetchDfd = createDeferred<SingleFetchResults>();
 
   // Base URL and RequestInit for calls to the server
-  let url = stripIndexParam(singleFetchUrl(request.url));
-  let init = await createRequestInit(request);
+  const url = stripIndexParam(singleFetchUrl(request.url));
+  const init = await createRequestInit(request);
 
   // We'll build up this results object as we loop through matches
-  let results: Record<string, DataStrategyResult> = {};
+  const results: Record<string, DataStrategyResult> = {};
 
-  let resolvePromise = Promise.all(
+  const resolvePromise = Promise.all(
     matches.map(async (m, i) =>
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
 
-        let manifestRoute = manifest.routes[m.route.id];
+        const manifestRoute = manifest.routes[m.route.id];
 
         if (!m.shouldLoad) {
           // If we're not yet initialized and this is the initial load, respect
@@ -265,7 +265,7 @@ async function singleFetchLoaderNavigationStrategy(
             foundOptOutRoute = true;
           }
           try {
-            let result = await fetchSingleLoader(
+            const result = await fetchSingleLoader(
               handler,
               url,
               init,
@@ -285,8 +285,8 @@ async function singleFetchLoaderNavigationStrategy(
 
         // Lump this match in with the others on a singular promise
         try {
-          let result = await handler(async () => {
-            let data = await singleFetchDfd.promise;
+          const result = await handler(async () => {
+            const data = await singleFetchDfd.promise;
             return unwrapSingleFetchResults(data, m.route.id);
           });
           results[m.route.id] = {
@@ -333,7 +333,7 @@ async function singleFetchLoaderNavigationStrategy(
         );
       }
 
-      let data = await fetchAndDecode(url, init);
+      const data = await fetchAndDecode(url, init);
       singleFetchDfd.resolve(data.data as SingleFetchResults);
     } catch (e) {
       singleFetchDfd.reject(e as Error);
@@ -350,11 +350,11 @@ async function singleFetchLoaderFetcherStrategy(
   request: Request,
   matches: DataStrategyFunctionArgs["matches"]
 ) {
-  let fetcherMatch = matches.find((m) => m.shouldLoad);
+  const fetcherMatch = matches.find((m) => m.shouldLoad);
   invariant(fetcherMatch, "No fetcher match found");
-  let result = await fetcherMatch.resolve(async (handler) => {
-    let url = stripIndexParam(singleFetchUrl(request.url));
-    let init = await createRequestInit(request);
+  const result = await fetcherMatch.resolve(async (handler) => {
+    const url = stripIndexParam(singleFetchUrl(request.url));
+    const init = await createRequestInit(request);
     return fetchSingleLoader(handler, url, init, fetcherMatch!.route.id);
   });
   return { [fetcherMatch.route.id]: result };
@@ -369,7 +369,7 @@ function fetchSingleLoader(
   routeId: string
 ) {
   return handler(async () => {
-    let singleLoaderUrl = new URL(url);
+    const singleLoaderUrl = new URL(url);
     singleLoaderUrl.searchParams.set("_routes", routeId);
     let { data } = await fetchAndDecode(singleLoaderUrl, init);
     return unwrapSingleFetchResults(data as SingleFetchResults, routeId);
@@ -377,10 +377,10 @@ function fetchSingleLoader(
 }
 
 function stripIndexParam(url: URL) {
-  let indexValues = url.searchParams.getAll("index");
+  const indexValues = url.searchParams.getAll("index");
   url.searchParams.delete("index");
-  let indexValuesToKeep = [];
-  for (let indexValue of indexValues) {
+  const indexValuesToKeep = [];
+  for (const indexValue of indexValues) {
     if (indexValue) {
       indexValuesToKeep.push(indexValue);
     }
@@ -393,7 +393,7 @@ function stripIndexParam(url: URL) {
 }
 
 export function singleFetchUrl(reqUrl: URL | string) {
-  let url =
+  const url =
     typeof reqUrl === "string"
       ? new URL(
           reqUrl,
@@ -415,7 +415,7 @@ export function singleFetchUrl(reqUrl: URL | string) {
 }
 
 async function fetchAndDecode(url: URL, init: RequestInit) {
-  let res = await fetch(url, init);
+  const res = await fetch(url, init);
 
   // If this 404'd without hitting the running server (most likely in a
   // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
@@ -426,7 +426,7 @@ async function fetchAndDecode(url: URL, init: RequestInit) {
   invariant(res.body, "No response body to decode");
 
   try {
-    let decoded = await decodeViaTurboStream(res.body, window);
+    const decoded = await decodeViaTurboStream(res.body, window);
     return { status: res.status, data: decoded.value };
   } catch (e) {
     // Can't clone after consuming the body via turbo-stream so we can't
@@ -498,7 +498,7 @@ function unwrapSingleFetchResults(
   results: SingleFetchResults,
   routeId: string
 ) {
-  let redirect = results[SingleFetchRedirectSymbol];
+  const redirect = results[SingleFetchRedirectSymbol];
   if (redirect) {
     return unwrapSingleFetchResult(redirect, routeId);
   }
@@ -512,7 +512,7 @@ function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
   if ("error" in result) {
     throw result.error;
   } else if ("redirect" in result) {
-    let headers: Record<string, string> = {};
+    const headers: Record<string, string> = {};
     if (result.revalidate) {
       headers["X-Remix-Revalidate"] = "yes";
     }
@@ -531,16 +531,16 @@ function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
 }
 
 function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise<T>((res, rej) => {
+  let resolve: (val?: any | undefined) => Promise<void>;
+  let reject: (error?: Error | undefined) => Promise<void>;
+  const promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);
       try {
         await promise;
       } catch (e) {}
     };
-    reject = async (error?: Error) => {
+    reject = async (error?: Error | undefined) => {
       rej(error);
       try {
         await promise;

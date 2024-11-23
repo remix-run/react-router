@@ -17,8 +17,8 @@ type ValidateShape<T, Shape> =
 export function createServerHandoffString<T>(serverHandoff: {
   // Don't allow StaticHandlerContext to be passed in verbatim, since then
   // we'd end up including duplicate info
-  state?: ValidateShape<T, HydrationState>;
-  criticalCss?: string;
+  state?: ValidateShape<T, HydrationState> | undefined;
+  criticalCss?: string | undefined;
   basename: string | undefined;
   future: FutureConfig;
   isSpaMode: boolean;

@@ -38,8 +38,8 @@ export function getSingleFetchDataStrategy({
   isActionDataRequest,
   loadRouteIds,
 }: {
-  isActionDataRequest?: boolean;
-  loadRouteIds?: string[];
+  isActionDataRequest?: boolean | undefined;
+  loadRouteIds?: string[] | undefined;
 } = {}): DataStrategyFunction {
   return async ({ request, matches }: DataStrategyFunctionArgs) => {
     // Don't call loaders on action data requests
@@ -48,11 +48,11 @@ export function getSingleFetchDataStrategy({
     }
 
     // Only run opt-in loaders when fine-grained revalidation is enabled
-    let matchesToLoad = loadRouteIds
+    const matchesToLoad = loadRouteIds
       ? matches.filter((m) => loadRouteIds.includes(m.route.id))
       : matches;
 
-    let results = await Promise.all(
+    const results = await Promise.all(
       matchesToLoad.map((match) => match.resolve())
     );
     return results.reduce(
@@ -103,8 +103,8 @@ export async function singleFetchAction(
       };
     }
 
-    let context = result;
-    let headers = getDocumentHeaders(build, context);
+    const context = result;
+    const headers = getDocumentHeaders(build, context);
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
       return {
@@ -162,14 +162,14 @@ export async function singleFetchLoaders(
   handleError: (err: unknown) => void
 ): Promise<{ result: SingleFetchResults; headers: Headers; status: number }> {
   try {
-    let handlerRequest = new Request(handlerUrl, {
+    const handlerRequest = new Request(handlerUrl, {
       headers: request.headers,
       signal: request.signal,
     });
-    let loadRouteIds =
+    const loadRouteIds =
       new URL(request.url).searchParams.get("_routes")?.split(",") || undefined;
 
-    let result = await staticHandler.query(handlerRequest, {
+    const result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       dataStrategy: getSingleFetchDataStrategy({
@@ -191,8 +191,8 @@ export async function singleFetchLoaders(
       };
     }
 
-    let context = result;
-    let headers = getDocumentHeaders(build, context);
+    const context = result;
+    const headers = getDocumentHeaders(build, context);
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
       return {
@@ -221,8 +221,8 @@ export async function singleFetchLoaders(
 
     // Aggregate results based on the matches we intended to load since we get
     // `null` values back in `context.loaderData` for routes we didn't load
-    let results: SingleFetchResults = {};
-    let loadedMatches = loadRouteIds
+    const results: SingleFetchResults = {};
+    const loadedMatches = loadRouteIds
       ? context.matches.filter(
           (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
         )
@@ -256,7 +256,7 @@ export async function singleFetchLoaders(
 export function getSingleFetchRedirect(
   status: number,
   headers: Headers,
-  basename: string | undefined
+  basename?: string | undefined
 ): SingleFetchRedirectResult {
   let redirect = headers.get("Location")!;
 
@@ -299,7 +299,10 @@ export type Serializable =
   | Set<Serializable>
   | Promise<Serializable>;
 
-export function data(value: Serializable, init?: number | ResponseInit) {
+export function data(
+  value: Serializable,
+  init?: number | ResponseInit | undefined
+) {
   return routerData(value, init);
 }
 
@@ -311,14 +314,14 @@ export function encodeViaTurboStream(
   streamTimeout: number | undefined,
   serverMode: ServerMode
 ) {
-  let controller = new AbortController();
+  const controller = new AbortController();
   // How long are we willing to wait for all of the promises in `data` to resolve
   // before timing out?  We default this to 50ms shorter than the default value for
   // `ABORT_DELAY` in our built-in `entry.server.tsx` so that once we reject we
   // have time to flush the rejections down through React's rendering stream before `
   // we call abort() on that.  If the user provides their own it's up to them to
   // decouple the aborting of the stream from the aborting of React's renderToPipeableStream
-  let timeoutId = setTimeout(
+  const timeoutId = setTimeout(
     () => controller.abort(new Error("Server Timeout")),
     typeof streamTimeout === "number" ? streamTimeout : 4950
   );

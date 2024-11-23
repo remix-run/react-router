@@ -15,6 +15,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
-    "noEmit": true
+    "noEmit": true,
+    "exactOptionalPropertyTypes": true
   }
 }

@@ -26,7 +26,7 @@ testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
 function testDomRouter(
   name: string,
   createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
-  getWindow: (initialUrl: string, isHash?: boolean) => Window
+  getWindow: (initialUrl: string, isHash?: boolean | undefined) => Window
 ) {
   describe(`Router: ${name} with a legacy FormData implementation`, () => {
     let consoleWarn: jest.SpyInstance;
@@ -45,16 +45,16 @@ function testDomRouter(
 
     describe("useSubmit/Form FormData", () => {
       it("appends basic submitter value(s)", async () => {
-        let actionSpy = jest.fn();
+        const actionSpy = jest.fn();
         actionSpy.mockReturnValue({});
         async function getPayload() {
-          let formData = await actionSpy.mock.calls[
+          const formData = await actionSpy.mock.calls[
             actionSpy.mock.calls.length - 1
           ][0].request.formData();
           return new URLSearchParams(formData.entries()).toString();
         }
 
-        let router = createTestRouter(
+        const router = createTestRouter(
           createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
           ),

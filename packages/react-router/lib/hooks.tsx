@@ -70,7 +70,7 @@ const ENABLE_DEV_WARNINGS = __DEV__;
  */
 export function useHref(
   to: To,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  { relative }: { relative?: RelativeRoutingType | undefined } = {}
 ): string {
   invariant(
     useInRouterContext(),
@@ -179,7 +179,7 @@ export function useMatch<
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (to: To, options?: NavigateOptions): void | Promise<void>;
+  (to: To, options?: NavigateOptions | undefined): void | Promise<void>;
   (delta: number): void | Promise<void>;
 }
 
@@ -317,7 +317,9 @@ export function useOutletContext<Context = unknown>(): Context {
  *
  * @category Hooks
  */
-export function useOutlet(context?: unknown): React.ReactElement | null {
+export function useOutlet(
+  context?: unknown | undefined
+): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
   if (outlet) {
     return (
@@ -372,11 +374,11 @@ export function useParams<
  */
 export function useResolvedPath(
   to: To,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  { relative }: { relative?: RelativeRoutingType | undefined } = {}
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+  const routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   return React.useMemo(
     () =>
@@ -423,7 +425,7 @@ export function useResolvedPath(
  */
 export function useRoutes(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string
+  locationArg?: Partial<Location> | string | undefined
 ): React.ReactElement | null {
   return useRoutesImpl(routes, locationArg);
 }
@@ -436,9 +438,9 @@ export function useRoutes(
  */
 export function useRoutesImpl(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string,
-  dataRouterState?: DataRouter["state"],
-  future?: DataRouter["future"]
+  locationArg?: Partial<Location> | string | undefined,
+  dataRouterState?: DataRouter["state"] | undefined,
+  future?: DataRouter["future"] | undefined
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),

@@ -33,16 +33,16 @@ export function createRequestHandler({
   mode = process.env.NODE_ENV,
 }: {
   build: ServerBuild;
-  getLoadContext?: GetLoadContextFunction;
-  mode?: string;
+  getLoadContext?: GetLoadContextFunction | undefined;
+  mode?: string | undefined;
 }): RequestHandler {
-  let handleRequest = createReactRouterRequestHandler(build, mode);
+  const handleRequest = createReactRouterRequestHandler(build, mode);
 
   return async (event) => {
-    let request = createReactRouterRequest(event);
-    let loadContext = await getLoadContext?.(event);
+    const request = createReactRouterRequest(event);
+    const loadContext = await getLoadContext?.(event);
 
-    let response = await handleRequest(request, loadContext);
+    const response = await handleRequest(request, loadContext);
 
     return sendReactRouterResponse(response);
   };
@@ -51,16 +51,16 @@ export function createRequestHandler({
 export function createReactRouterRequest(
   event: APIGatewayProxyEventV2
 ): Request {
-  let host = event.headers["x-forwarded-host"] || event.headers.host;
-  let search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
-  let scheme = process.env.ARC_SANDBOX ? "http" : "https";
-  let url = new URL(`${scheme}://${host}${event.rawPath}${search}`);
-  let isFormData = event.headers["content-type"]?.includes(
+  const host = event.headers["x-forwarded-host"] || event.headers.host;
+  const search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
+  const scheme = process.env.ARC_SANDBOX ? "http" : "https";
+  const url = new URL(`${scheme}://${host}${event.rawPath}${search}`);
+  const isFormData = event.headers["content-type"]?.includes(
     "multipart/form-data"
   );
   // Note: No current way to abort these for Architect, but our router expects
   // requests to contain a signal, so it can detect aborted requests
-  let controller = new AbortController();
+  const controller = new AbortController();
 
   return new Request(url.href, {
     method: event.requestContext.http.method,
@@ -77,9 +77,9 @@ export function createReactRouterRequest(
 
 export function createReactRouterHeaders(
   requestHeaders: APIGatewayProxyEventHeaders,
-  requestCookies?: string[]
+  requestCookies?: string[] | undefined
 ): Headers {
-  let headers = new Headers();
+  const headers = new Headers();
 
   for (let [header, value] of Object.entries(requestHeaders)) {
     if (value) {
@@ -97,7 +97,7 @@ export function createReactRouterHeaders(
 export async function sendReactRouterResponse(
   nodeResponse: Response
 ): Promise<APIGatewayProxyStructuredResultV2> {
-  let cookies: string[] = [];
+  const cookies: string[] = [];
 
   // Arc/AWS API Gateway will send back set-cookies outside of response headers.
   for (let [key, value] of nodeResponse.headers.entries()) {
@@ -110,8 +110,8 @@ export async function sendReactRouterResponse(
     nodeResponse.headers.delete("Set-Cookie");
   }
 
-  let contentType = nodeResponse.headers.get("Content-Type");
-  let isBase64Encoded = isBinaryType(contentType);
+  const contentType = nodeResponse.headers.get("Content-Type");
+  const isBase64Encoded = isBinaryType(contentType);
   let body: string | undefined;
 
   if (nodeResponse.body) {

@@ -5,17 +5,17 @@ import { preloadViteEsm } from "./import-vite-esm-sync";
 import * as profiler from "./profiler";
 
 export interface ViteDevOptions {
-  clearScreen?: boolean;
-  config?: string;
-  cors?: boolean;
-  force?: boolean;
-  host?: boolean | string;
-  logLevel?: Vite.LogLevel;
-  mode?: string;
-  open?: boolean | string;
-  port?: number;
-  strictPort?: boolean;
-  profile?: boolean;
+  clearScreen?: boolean | undefined;
+  config?: string | undefined;
+  cors?: boolean | undefined;
+  force?: boolean | undefined;
+  host?: boolean | string | undefined;
+  logLevel?: Vite.LogLevel | undefined;
+  mode?: string | undefined;
+  open?: boolean | string | undefined;
+  port?: number | undefined;
+  strictPort?: boolean | undefined;
+  profile?: boolean | undefined;
 }
 
 export async function dev(
@@ -37,8 +37,8 @@ export async function dev(
   // so it can be accessed synchronously via `importViteEsmSync`
   await preloadViteEsm();
 
-  let vite = await import("vite");
-  let server = await vite.createServer({
+  const vite = await import("vite");
+  const server = await vite.createServer({
     root,
     mode,
     configFile,

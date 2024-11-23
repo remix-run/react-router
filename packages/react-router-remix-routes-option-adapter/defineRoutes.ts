@@ -10,18 +10,18 @@ interface DefineRouteOptions {
    * Should be `true` if the route `path` is case-sensitive. Defaults to
    * `false`.
    */
-  caseSensitive?: boolean;
+  caseSensitive?: boolean | undefined;
 
   /**
    * Should be `true` if this is an index route that does not allow child routes.
    */
-  index?: boolean;
+  index?: boolean | undefined;
 
   /**
    * An optional unique id string for this route. Use this if you need to aggregate
    * two or more routes with the same route file.
    */
-  id?: string;
+  id?: string | undefined;
 }
 
 interface DefineRouteChildren {
@@ -44,12 +44,12 @@ interface DefineRouteFunction {
     /**
      * Options for defining routes, or a function for defining child routes.
      */
-    optionsOrChildren?: DefineRouteOptions | DefineRouteChildren,
+    optionsOrChildren?: DefineRouteOptions | DefineRouteChildren | undefined,
 
     /**
      * A function for defining child routes.
      */
-    children?: DefineRouteChildren
+    children?: DefineRouteChildren | undefined
   ): void;
 }
 
@@ -58,11 +58,11 @@ interface DefineRouteFunction {
  * filesystem convention.
  */
 export const defineRoutes: DefineRoutesFunction = (callback) => {
-  let routes: RouteManifest = Object.create(null);
-  let parentRoutes: RouteManifestEntry[] = [];
+  const routes: RouteManifest = Object.create(null);
+  const parentRoutes: RouteManifestEntry[] = [];
   let alreadyReturned = false;
 
-  let defineRoute: DefineRouteFunction = (
+  const defineRoute: DefineRouteFunction = (
     path,
     file,
     optionsOrChildren,
@@ -87,7 +87,7 @@ export const defineRoutes: DefineRoutesFunction = (callback) => {
       options = optionsOrChildren || {};
     }
 
-    let route: RouteManifestEntry = {
+    const route: RouteManifestEntry = {
       path: path ? path : undefined,
       index: options.index ? true : undefined,
       caseSensitive: options.caseSensitive ? true : undefined,

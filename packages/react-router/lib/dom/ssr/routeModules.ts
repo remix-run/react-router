@@ -19,16 +19,16 @@ export interface RouteModules {
 }
 
 export interface RouteModule {
-  clientAction?: ClientActionFunction;
-  clientLoader?: ClientLoaderFunction;
-  ErrorBoundary?: ErrorBoundaryComponent;
-  HydrateFallback?: HydrateFallbackComponent;
-  Layout?: LayoutComponent;
+  clientAction?: ClientActionFunction | undefined;
+  clientLoader?: ClientLoaderFunction | undefined;
+  ErrorBoundary?: ErrorBoundaryComponent | undefined;
+  HydrateFallback?: HydrateFallbackComponent | undefined;
+  Layout?: LayoutComponent | undefined;
   default: RouteComponent;
-  handle?: RouteHandle;
-  links?: LinksFunction;
-  meta?: MetaFunction;
-  shouldRevalidate?: ShouldRevalidateFunction;
+  handle?: RouteHandle | undefined;
+  links?: LinksFunction | undefined;
+  meta?: MetaFunction | undefined;
+  shouldRevalidate?: ShouldRevalidateFunction | undefined;
 }
 
 /**
@@ -51,7 +51,7 @@ export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
 export type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs
 ) => ReturnType<LoaderFunction>) & {
-  hydrate?: boolean;
+  hydrate?: boolean | undefined;
 };
 
 /**
@@ -103,10 +103,10 @@ export interface MetaMatch<
   data: Loader extends LoaderFunction | ClientLoaderFunction
     ? SerializeFrom<Loader>
     : unknown;
-  handle?: RouteHandle;
+  handle?: RouteHandle | undefined;
   params: DataRouteMatch["params"];
   meta: MetaDescriptor[];
-  error?: unknown;
+  error?: unknown | undefined;
 }
 
 export type MetaMatches<
@@ -138,7 +138,7 @@ export interface MetaArgs<
   params: Params;
   location: Location;
   matches: MetaMatches<MatchLoaders>;
-  error?: unknown;
+  error?: unknown | undefined;
 }
 
 /**

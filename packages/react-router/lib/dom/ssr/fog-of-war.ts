@@ -10,7 +10,7 @@ import { createClientRoutes } from "./routes";
 
 declare global {
   interface Navigator {
-    connection?: { saveData: boolean };
+    connection?: { saveData: boolean } | undefined;
   }
 }
 

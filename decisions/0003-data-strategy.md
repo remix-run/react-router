@@ -25,7 +25,7 @@ interface DataStrategyFunctionArgs<Context = any>
 interface DataFunctionArgs<Context> {
   request: Request;
   params: Params;
-  context?: Context;
+  context?: Context | undefined;
 }
 ```
 
@@ -38,7 +38,7 @@ There's a [comment][responsibilities-comment] here from Jacob which does a good 
 
 ### Inputs
 
-The primary input is `matches`, since the user needs to know what routes match and eed to have loaders executed. We also wanted to provide a way for the user to call the "default" internal behavior so they could easily change from parallel to sequential without having to re-invent the wheel and manually call loaders, decode responses, etc. The first idea for this API was to pass a `defaultStrategy(match)` parameter so they could call that per-match:
+The primary input is `matches`, since the user needs to know what routes match and need to have loaders executed. We also wanted to provide a way for the user to call the "default" internal behavior so they could easily change from parallel to sequential without having to re-invent the wheel and manually call loaders, decode responses, etc. The first idea for this API was to pass a `defaultStrategy(match)` parameter so they could call that per-match:
 
 ```js
 function dataStrategy({ matches }) {
@@ -96,14 +96,14 @@ using `route.lazy`, we may need to load the route before we can execute the `loa
 
 (1) has a pretty glaring perf issue in that it blocks _any_ loaders from running until _all_ `route.lazy`'s have resolved. So if route A is super small but has a slow loader, and route B is large but has a fast loader:
 
-```
+```sh
 |-- route a lazy  -->                      |-- route a loader --------------->|
 |-- route b lazy  ------------------------>|-- route b loader -->             |
 ```
 
 This is no bueno. Instead, we want option (2) where the users can run these sequentially per-route - and "loading the route" is just part of the "loading the data" step
 
-```
+```sh
 |-- route a lazy  -->|-- route a loader --------------->         |
 |-- route b lazy  ------------------------>|-- route b loader -->|
 ```
@@ -141,7 +141,7 @@ We considered how to handle `shouldRevalidate` behavior. There's sort of 2 basic
 
 I _think_ (1) is preferred to keep the API at a minimum and avoid leaking into _other_ ways to opt-out of revalidation. We already have an API for that so let's lean into it.
 
-Additionally, another big con of (2) is that if we want to let them make revalidation decisions inside `dataStrategy` - we need to expose all of the informaiton required for that (`currentUrl`, `currentParams`, `nextUrl`, `nextParams`, `submission` info, `actionResult`, etc.) - the API becomes a mess.
+Additionally, another big con of (2) is that if we want to let them make revalidation decisions inside `dataStrategy` - we need to expose all of the information required for that (`currentUrl`, `currentParams`, `nextUrl`, `nextParams`, `submission` info, `actionResult`, etc.) - the API becomes a mess.
 
 Therefore we are aiming to stick with one and let `shouldRevalidate` be the only way to opt-out of revalidation.
 

@@ -1,11 +1,11 @@
 import type { RouteConfigEntry } from "@react-router/dev/routes";
 
 export interface RouteManifestEntry {
-  path?: string;
-  index?: boolean;
-  caseSensitive?: boolean;
+  path?: string | undefined;
+  index?: boolean | undefined;
+  caseSensitive?: boolean | undefined;
   id: string;
-  parentId?: string;
+  parentId?: string | undefined;
   file: string;
 }
 
@@ -17,13 +17,13 @@ export function routeManifestToRouteConfig(
   routeManifest: RouteManifest,
   rootId = "root"
 ): RouteConfigEntry[] {
-  let routeConfigById: {
+  const routeConfigById: {
     [id: string]: Omit<RouteConfigEntry, "id"> &
       Required<Pick<RouteConfigEntry, "id">>;
   } = {};
 
-  for (let id in routeManifest) {
-    let route = routeManifest[id];
+  for (const id in routeManifest) {
+    const route = routeManifest[id];
     routeConfigById[id] = {
       id: route.id,
       file: route.file,
@@ -33,15 +33,15 @@ export function routeManifestToRouteConfig(
     };
   }
 
-  let routeConfig: RouteConfigEntry[] = [];
+  const routeConfig: RouteConfigEntry[] = [];
 
-  for (let id in routeConfigById) {
-    let route = routeConfigById[id];
-    let parentId = routeManifest[route.id].parentId;
+  for (const id in routeConfigById) {
+    const route = routeConfigById[id];
+    const parentId = routeManifest[route.id].parentId;
     if (parentId === rootId) {
       routeConfig.push(route);
     } else {
-      let parentRoute = parentId && routeConfigById[parentId];
+      const parentRoute = parentId && routeConfigById[parentId];
       if (parentRoute) {
         parentRoute.children = parentRoute.children || [];
         parentRoute.children.push(route);

@@ -38,10 +38,10 @@ export function createRequestHandler({
   mode = process.env.NODE_ENV,
 }: {
   build: ServerBuild | (() => Promise<ServerBuild>);
-  getLoadContext?: GetLoadContextFunction;
-  mode?: string;
+  getLoadContext?: GetLoadContextFunction | undefined;
+  mode?: string | undefined;
 }): RequestHandler {
-  let handleRequest = createRemixRequestHandler(build, mode);
+  const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (
     req: express.Request,
@@ -49,10 +49,10 @@ export function createRequestHandler({
     next: express.NextFunction
   ) => {
     try {
-      let request = createRemixRequest(req, res);
-      let loadContext = await getLoadContext?.(req, res);
+      const request = createRemixRequest(req, res);
+      const loadContext = await getLoadContext?.(req, res);
 
-      let response = await handleRequest(request, loadContext);
+      const response = await handleRequest(request, loadContext);
 
       await sendRemixResponse(res, response);
     } catch (error: unknown) {
@@ -66,12 +66,12 @@ export function createRequestHandler({
 export function createRemixHeaders(
   requestHeaders: express.Request["headers"]
 ): Headers {
-  let headers = new Headers();
+  const headers = new Headers();
 
   for (let [key, values] of Object.entries(requestHeaders)) {
     if (values) {
       if (Array.isArray(values)) {
-        for (let value of values) {
+        for (const value of values) {
           headers.append(key, value);
         }
       } else {
@@ -91,15 +91,15 @@ export function createRemixRequest(
   // `X-Forwarded-Host` or `Host`
   let [, hostnamePort] = req.get("X-Forwarded-Host")?.split(":") ?? [];
   let [, hostPort] = req.get("host")?.split(":") ?? [];
-  let port = hostnamePort || hostPort;
+  const port = hostnamePort || hostPort;
   // Use req.hostname here as it respects the "trust proxy" setting
-  let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
+  const resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
   // Use `req.originalUrl` so Remix is aware of the full path
-  let url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
+  const url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
 
   // Abort action/loaders once we can no longer write a response
   let controller: AbortController | null = new AbortController();
-  let init: RequestInit = {
+  const init: RequestInit = {
     method: req.method,
     headers: createRemixHeaders(req.headers),
     signal: controller.signal,

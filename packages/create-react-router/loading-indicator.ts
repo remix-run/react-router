@@ -65,15 +65,15 @@ export async function renderLoadingIndicator({
   start: string;
   end: string;
   while: (...args: any) => Promise<any>;
-  noMotion?: boolean;
-  stdin?: NodeJS.ReadStream & { fd: 0 };
-  stdout?: NodeJS.WriteStream & { fd: 1 };
+  noMotion?: boolean | undefined;
+  stdin?: (NodeJS.ReadStream & { fd: 0 }) | undefined;
+  stdout?: (NodeJS.WriteStream & { fd: 1 }) | undefined;
 }) {
-  let act = update();
-  let tooSlow = Object.create(null);
-  let result = await Promise.race([sleep(500).then(() => tooSlow), act]);
+  const act = update();
+  const tooSlow = Object.create(null);
+  const result = await Promise.race([sleep(500).then(() => tooSlow), act]);
   if (result === tooSlow) {
-    let loading = await gradient(color.green(start), {
+    const loading = await gradient(color.green(start), {
       stdin,
       stdout,
       noMotion,
@@ -85,9 +85,9 @@ export async function renderLoadingIndicator({
 }
 
 function loadingIndicatorFrame(offset = 0) {
-  let frames = INDICATOR_FULL_FRAMES.slice(offset, offset + (MAX_FRAMES - 2));
+  const frames = INDICATOR_FULL_FRAMES.slice(offset, offset + (MAX_FRAMES - 2));
   if (frames.length < MAX_FRAMES - 2) {
-    let filled = new Array(MAX_FRAMES - frames.length - 2).fill(
+    const filled = new Array(MAX_FRAMES - frames.length - 2).fill(
       GRADIENT_COLORS[0]
     );
     frames.push(...filled);
@@ -106,11 +106,11 @@ async function gradient(
   { stdin = process.stdin, stdout = process.stdout, noMotion = false } = {}
 ) {
   let { createLogUpdate } = await import("log-update");
-  let logUpdate = createLogUpdate(stdout);
+  const logUpdate = createLogUpdate(stdout);
   let frameIndex = 0;
-  let frames = getGradientAnimationFrames();
+  const frames = getGradientAnimationFrames();
   let interval: NodeJS.Timeout;
-  let rl = readline.createInterface({ input: stdin, escapeCodeTimeout: 50 });
+  const rl = readline.createInterface({ input: stdin, escapeCodeTimeout: 50 });
   readline.emitKeypressEvents(stdin, rl);
 
   if (stdin.isTTY) stdin.setRawMode(true);
@@ -124,7 +124,7 @@ async function gradient(
   }
 
   let done = false;
-  let loadingIndicator = {
+  const loadingIndicator = {
     start() {
       stdout.write(cursor.hide);
       stdin.on("keypress", keypress);
