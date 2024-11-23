@@ -54,8 +54,8 @@ When server rendering, requests to paths that have not been pre-rendered will be
 
 The rendered result will be written out to your `build/client` directory. You'll notice two files for each path:
 
-- an HTML file for initial document requests
-- `[url].data` files for client side navigation browser requests
+- `[url].html` HTML file for initial document requests
+- `[url].data` file for client side navigation browser requests
 
 The output of your build will indicate what files were pre-rendered:
 
