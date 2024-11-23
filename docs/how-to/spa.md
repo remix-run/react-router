@@ -31,7 +31,7 @@ With server rendering disabled, you can still use `clientLoader` and `clientActi
 import { Route } from "./+types/some-route";
 
 export async function clientLoader({
-  params
+  params,
 }: Route.ClientLoaderArgs) {
   let data = await fetch(`/some/api/stuff/${params.id}`);
   return data;
