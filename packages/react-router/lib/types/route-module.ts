@@ -72,11 +72,14 @@ type IsHydrate<ClientLoader> =
   ClientLoader extends { hydrate: false } ? false :
   false
 
-export type CreateLoaderData<T extends RouteModule> = _CreateLoaderData<
-  ServerDataFrom<T["loader"]>,
-  ClientDataFrom<T["clientLoader"]>,
-  IsHydrate<T["clientLoader"]>,
-  T extends { HydrateFallback: Func } ? true : false
+export type CreateLoaderData<T extends RouteModule> = Exclude<
+  _CreateLoaderData<
+    ServerDataFrom<T["loader"]>,
+    ClientDataFrom<T["clientLoader"]>,
+    IsHydrate<T["clientLoader"]>,
+    T extends { HydrateFallback: Func } ? true : false
+  >,
+  Response
 >;
 
 // prettier-ignore
@@ -95,9 +98,12 @@ type _CreateLoaderData<
   IsDefined<ServerLoaderData> extends true ? ServerLoaderData :
   undefined
 
-export type CreateActionData<T extends RouteModule> = _CreateActionData<
-  ServerDataFrom<T["action"]>,
-  ClientDataFrom<T["clientAction"]>
+export type CreateActionData<T extends RouteModule> = Exclude<
+  _CreateActionData<
+    ServerDataFrom<T["action"]>,
+    ClientDataFrom<T["clientAction"]>
+  >,
+  Response
 >;
 
 // prettier-ignore
