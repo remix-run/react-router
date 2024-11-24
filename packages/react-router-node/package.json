@@ -1,6 +1,6 @@
 {
   "name": "@react-router/node",
-  "version": "7.0.1",
+  "version": "0.0.0-nightly-aed1b458e-20241124",
   "description": "Node.js platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
