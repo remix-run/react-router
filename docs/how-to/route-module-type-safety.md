@@ -19,9 +19,9 @@ React Router generates types into a `.react-router/` directory at the root of yo
 
 ## 2. Include the generated types in tsconfig
 
-Edit your tsconfig to get TypeScript to use the generated types. Additionally, `rootDirs` needs to be configured so the types can be imported as relative siblings to route modules.
+Edit tsconfig.app.json to get TypeScript to use the generated types. Additionally, `rootDirs` needs to be configured so the types can be imported as relative siblings to route modules.
 
-```json filename=tsconfig.json
+```json filename=tsconfig.app.json
 {
   "include": [".react-router/types/**/*"],
   "compilerOptions": {
