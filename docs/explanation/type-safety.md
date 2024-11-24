@@ -6,7 +6,7 @@ title: Type Safety
 
 If you haven't done so already, check out our guide for [setting up type safety][route-module-type-safety] in a new project.
 
-React Router generates types for each route in your app that provide type safety for the route module exports.
+React Router generates types for each route in your app to provide type safety for the route module exports.
 
 For example, let's say you have a `products/:id` route configured:
 
