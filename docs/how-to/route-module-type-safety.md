@@ -30,6 +30,9 @@ Edit your tsconfig to get TypeScript to use the generated types. Additionally, `
 }
 ```
 
+If you are using multiple `tsconfig` files for your app, you'll need to make these changes in whichever one `include`s your app directory.
+For example, the [`node-custom-server` template](https://github.com/remix-run/react-router-templates/tree/390fcec476dd336c810280479688fe893da38713/node-custom-server) contains `tsconfig.json`, `tsconfig.node.json`, and `tsconfig.vite.json`. Since `tsconfig.vite.json` is the one that [includes the app directory](https://github.com/remix-run/react-router-templates/blob/390fcec476dd336c810280479688fe893da38713/node-custom-server/tsconfig.vite.json#L4-L6), that's the one that sets up `.react-router/types` for route module type safety.
+
 ## 3. Generate types before type checking
 
 If you want to run type checking as its own command — for example, as part of your Continuous Integration pipeline — you'll need to make sure to generate types _before_ running typechecking:
