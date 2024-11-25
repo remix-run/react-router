@@ -311,7 +311,7 @@ Since React Router can be used as both a React framework _and_ a stand-alone rou
 
 Before you migrate to the new `Route.LoaderArgs` and `Route.ActionArgs` types, you can temporarily augment `LoaderFunctionArgs` and `ActionFunctionArgs` with your load context type to ease migration.
 
-```ts filename=app/env.d.ts
+```ts filename=app/env.ts
 declare module "react-router" {
   // Your AppLoadContext used in v2
   interface AppLoadContext {
@@ -328,12 +328,14 @@ declare module "react-router" {
     context: AppLoadContext;
   }
 }
+
+export {}; // necessary for TS to treat this as a module
 ```
 
 <docs-info>
 
 Using `declare module` to register types is a standard TypeScript technique called [module augmentation][ts-module-augmentation].
-You can do this in any TypeScript file covered by your `tsconfig.json`'s `include` field, but we recommend a dedicated `env.d.ts` within your app directory.
+You can do this in any TypeScript file covered by your `tsconfig.json`'s `include` field, but we recommend a dedicated `env.ts` within your app directory.
 
 </docs-info>
 
@@ -341,13 +343,15 @@ You can do this in any TypeScript file covered by your `tsconfig.json`'s `includ
 
 Once you adopt the [new type generation][type-safety], you can remove the `LoaderFunctionArgs`/`ActionFunctionArgs` augmentations and use the `context` argument from [`Route.LoaderArgs`][server-loaders] and [`Route.ActionArgs`][server-actions] instead.
 
-```ts filename=app/env.d.ts
+```ts filename=app/env.ts
 declare module "react-router" {
   // Your AppLoadContext used in v2
   interface AppLoadContext {
     whatever: string;
   }
 }
+
+export {}; // necessary for TS to treat this as a module
 ```
 
 ```ts filename=app/routes/my-route.tsx
