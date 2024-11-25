@@ -32,6 +32,8 @@ body:
       options:
         - library
         - framework
+    validations:
+      required: true
   - type: textarea
     id: reproduction
     attributes:
