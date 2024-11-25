@@ -30,33 +30,37 @@ const viteConfig = tsx`
   };
 `;
 
-const assertType = tsx`
-  export function assertType<T>(t: T) {}
+const expectType = tsx`
+  export type Expect<T extends true> = T
+
+  export type Equal<X, Y> =
+    (<T>() => T extends X ? 1 : 2) extends
+    (<T>() => T extends Y ? 1 : 2) ? true : false
 `;
 
 test.describe("typegen", () => {
   test("basic", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
-      "app/assertType.ts": assertType,
+      "app/expect-type.ts": expectType,
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           route("products/:id", "routes/product.tsx")
-        ]
+        ] satisfies RouteConfig;
       `,
       "app/routes/product.tsx": tsx`
-        import { assertType } from "../assertType"
-        import type { Route } from "./+types.product"
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/product"
 
         export function loader({ params }: Route.LoaderArgs) {
-          assertType<string>(params.id)
+          type Test = Expect<Equal<typeof params.id, string>>
           return { planet: "world" }
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          assertType<string>(loaderData.planet)
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
           return <h1>Hello, {loaderData.planet}!</h1>
         }
       `,
@@ -72,20 +76,21 @@ test.describe("typegen", () => {
     test("repeated", async () => {
       const cwd = await createProject({
         "vite.config.ts": viteConfig,
-        "app/assertType.ts": assertType,
+        "app/expect-type.ts": expectType,
         "app/routes.ts": tsx`
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export const routes: RouteConfig = [
+          export default [
             route("repeated-params/:id/:id?/:id", "routes/repeated-params.tsx")
-          ]
+          ] satisfies RouteConfig;
         `,
         "app/routes/repeated-params.tsx": tsx`
-          import { assertType } from "../assertType"
-          import type { Route } from "./+types.repeated-params"
+          import { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/repeated-params"
 
           export function loader({ params }: Route.LoaderArgs) {
-            assertType<[string, string | undefined, string]>(params.id)
+            type Expected = [string, string | undefined, string]
+            type Test = Expect<Equal<typeof params.id, Expected>>
             return null
           }
         `,
@@ -99,20 +104,20 @@ test.describe("typegen", () => {
     test("splat", async () => {
       const cwd = await createProject({
         "vite.config.ts": viteConfig,
-        "app/assertType.ts": assertType,
+        "app/expect-type.ts": expectType,
         "app/routes.ts": tsx`
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export const routes: RouteConfig = [
+          export default [
             route("splat/*", "routes/splat.tsx")
-          ]
+          ] satisfies RouteConfig;
         `,
         "app/routes/splat.tsx": tsx`
-          import { assertType } from "../assertType"
-          import type { Route } from "./+types.splat"
+          import { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/splat"
 
           export function loader({ params }: Route.LoaderArgs) {
-            assertType<string>(params["*"])
+            type Test = Expect<Equal<typeof params["*"], string>>
             return null
           }
         `,
@@ -126,30 +131,30 @@ test.describe("typegen", () => {
     test("with extension", async () => {
       const cwd = await createProject({
         "vite.config.ts": viteConfig,
-        "app/assertType.ts": assertType,
+        "app/expect-type.ts": expectType,
         "app/routes.ts": tsx`
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
-          export const routes: RouteConfig = [
+          export default [
             route(":lang.xml", "routes/param-with-ext.tsx"),
             route(":user?.pdf", "routes/optional-param-with-ext.tsx"),
-          ]
+          ] satisfies RouteConfig;
         `,
         "app/routes/param-with-ext.tsx": tsx`
-          import { assertType } from "../assertType"
-          import type { Route } from "./+types.param-with-ext"
+          import { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
-            assertType<string>(params["lang"])
+            type Test = Expect<Equal<typeof params["lang"], string>>
             return null
           }
         `,
         "app/routes/optional-param-with-ext.tsx": tsx`
-          import { assertType } from "../assertType"
-          import type { Route } from "./+types.optional-param-with-ext"
+          import { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/optional-param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
-            assertType<string | undefined>(params["user"])
+            type Test = Expect<Equal<typeof params["user"], string | undefined>>
             return null
           }
         `,
@@ -164,10 +169,10 @@ test.describe("typegen", () => {
   test("clientLoader.hydrate = true", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
-      "app/assertType.ts": assertType,
+      "app/expect-type.ts": expectType,
       "app/routes/_index.tsx": tsx`
-        import { assertType } from "../assertType"
-        import type { Route } from "./+types._index"
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/_index"
 
         export function loader() {
           return { server: "server" }
@@ -183,7 +188,7 @@ test.describe("typegen", () => {
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          assertType<{ client: string }>(loaderData)
+          type Test = Expect<Equal<typeof loaderData, { client: string }>>
           return <h1>Hello from {loaderData.client}!</h1>
         }
       `,
@@ -196,30 +201,137 @@ test.describe("typegen", () => {
 
   test("custom app dir", async () => {
     const cwd = await createProject({
-      "vite.config.ts": tsx`
-        import { reactRouter } from "@react-router/dev/vite";
-
+      "react-router.config.ts": tsx`
         export default {
-          plugins: [reactRouter({ appDirectory: "src/myapp" })],
-        };
+          appDirectory: "src/myapp",
+        }
       `,
-      "app/assertType.ts": assertType,
+      "app/expect-type.ts": expectType,
       "app/routes/products.$id.tsx": tsx`
-        import { assertType } from "../assertType"
-        import type { Route } from "./+types.products.$id"
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/products.$id"
 
         export function loader({ params }: Route.LoaderArgs) {
-          assertType<string>(params.id)
+          type Test = Expect<Equal<typeof params.id, string>>
           return { planet: "world" }
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          assertType<string>(loaderData.planet)
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
           return <h1>Hello, {loaderData.planet}!</h1>
         }
       `,
     });
     fse.moveSync(path.join(cwd, "app"), path.join(cwd, "src/myapp"));
+
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
+
+  test("matches", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("parent1/:parent1", "routes/parent1.tsx", [
+            route("parent2/:parent2", "routes/parent2.tsx", [
+              route("current", "routes/current.tsx")
+            ])
+          ])
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/parent1.tsx": tsx`
+        import { Outlet } from "react-router"
+
+        export function loader() {
+          return { parent1: 1 }
+        }
+
+        export default function Component() {
+          return (
+            <section>
+              <h1>Parent1</h1>
+              <Outlet />
+            </section>
+          )
+        }
+      `,
+      "app/routes/parent2.tsx": tsx`
+        import { Outlet } from "react-router"
+
+        export function loader() {
+          return { parent2: 2 }
+        }
+
+        export default function Component() {
+          return (
+            <section>
+              <h2>Parent2</h2>
+              <Outlet />
+            </section>
+          )
+        }
+      `,
+      "app/routes/current.tsx": tsx`
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/current"
+
+        export function meta({ matches }: Route.MetaArgs) {
+          const parent1 = matches[1]
+          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+
+          const parent2 = matches[2]
+          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+          return []
+        }
+
+        export default function Component({ matches }: Route.ComponentProps) {
+          const parent1 = matches[1]
+          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
+
+          const parent2 = matches[2]
+          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+        }
+      `,
+    });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
+
+  test("route files with absolute paths", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import path from "node:path";
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("absolute/:id", path.resolve(__dirname, "routes/absolute.tsx")),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/absolute.tsx": tsx`
+        import { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/absolute"
+
+        export function loader({ params }: Route.LoaderArgs) {
+          type Test = Expect<Equal<typeof params.id, string>>
+          return { planet: "world" }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          return <h1>Hello, {loaderData.planet}!</h1>
+        }
+      `,
+    });
 
     const proc = typecheck(cwd);
     expect(proc.stdout.toString()).toBe("");

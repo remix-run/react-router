@@ -10,6 +10,7 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import { reactRouterConfig } from "./helpers/vite.js";
 
 const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
@@ -1378,17 +1379,9 @@ test.describe("single-fetch", () => {
     let fixture = await createFixture({
       files: {
         ...files,
-        "vite.config.ts": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-          export default defineConfig({
-            plugins: [
-              reactRouter({
-                basename: '/base',
-              }),
-            ],
-          });
-        `,
+        "react-router.config.ts": reactRouterConfig({
+          basename: "/base",
+        }),
         "app/routes/data.tsx": js`
           import { redirect } from 'react-router';
           export function loader() {

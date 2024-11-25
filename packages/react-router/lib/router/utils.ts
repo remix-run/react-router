@@ -1,4 +1,4 @@
-import type { Equal, Expect } from "../test-types";
+import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 

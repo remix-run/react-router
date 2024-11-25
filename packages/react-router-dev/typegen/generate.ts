@@ -1,65 +1,77 @@
-import dedent from "dedent";
+import ts from "dedent";
+import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
 
 import { type RouteManifest, type RouteManifestEntry } from "../config/routes";
+import { type Context } from "./context";
+import { getTypesPath } from "./paths";
 
-export function generate(
-  routes: RouteManifest,
-  route: RouteManifestEntry
-): string {
-  return dedent`
+export function generate(ctx: Context, route: RouteManifestEntry): string {
+  const lineage = getRouteLineage(ctx.config.routes, route);
+  const urlpath = lineage.map((route) => route.path).join("/");
+  const typesPath = getTypesPath(ctx, route);
+
+  const parents = lineage.slice(0, -1);
+  const parentTypeImports = parents
+    .map((parent, i) => {
+      const rel = Path.relative(
+        Path.dirname(typesPath),
+        getTypesPath(ctx, parent)
+      );
+
+      const indent = i === 0 ? "" : "  ".repeat(2);
+      let source = noExtension(rel);
+      if (!source.startsWith("../")) source = "./" + source;
+      return `${indent}import type { Info as Parent${i} } from "${source}"`;
+    })
+    .join("\n");
+
+  return ts`
     // React Router generated types for route:
     // ${route.file}
 
-    import * as T from "react-router/types"
+    import type * as T from "react-router/route-module"
 
-    export type Params = {${formatParamProperties(routes, route)}}
+    ${parentTypeImports}
 
-    type RouteModule = typeof import("./${Pathe.filename(route.file)}")
+    type Module = typeof import("../${Pathe.filename(route.file)}")
+
+    export type Info = {
+      parents: [${parents.map((_, i) => `Parent${i}`).join(", ")}],
+      id: "${route.id}"
+      file: "${route.file}"
+      path: "${route.path}"
+      params: {${formatParamProperties(urlpath)}}
+      module: Module
+      loaderData: T.CreateLoaderData<Module>
+      actionData: T.CreateActionData<Module>
+    }
 
     export namespace Route {
-      export type LoaderData = T.CreateLoaderData<RouteModule>
-      export type ActionData = T.CreateActionData<RouteModule>
+      export type LinkDescriptors = T.LinkDescriptors
+      export type LinksFunction = () => LinkDescriptors
 
-      export type LoaderArgs = T.CreateServerLoaderArgs<Params>
-      export type ClientLoaderArgs = T.CreateClientLoaderArgs<Params, RouteModule>
-      export type ActionArgs = T.CreateServerActionArgs<Params>
-      export type ClientActionArgs = T.CreateClientActionArgs<Params, RouteModule>
+      export type MetaArgs = T.CreateMetaArgs<Info>
+      export type MetaDescriptors = T.MetaDescriptors
+      export type MetaFunction = (args: MetaArgs) => MetaDescriptors
 
-      export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Params>
-      export type ComponentProps = T.CreateComponentProps<Params, LoaderData, ActionData>
-      export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Params, LoaderData, ActionData>
+      export type HeadersArgs = T.HeadersArgs
+      export type HeadersFunction = (args: HeadersArgs) => Headers | HeadersInit
+
+      export type LoaderArgs = T.CreateServerLoaderArgs<Info>
+      export type ClientLoaderArgs = T.CreateClientLoaderArgs<Info>
+      export type ActionArgs = T.CreateServerActionArgs<Info>
+      export type ClientActionArgs = T.CreateClientActionArgs<Info>
+
+      export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Info>
+      export type ComponentProps = T.CreateComponentProps<Info>
+      export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Info>
     }
   `;
 }
 
-function formatParamProperties(
-  routes: RouteManifest,
-  route: RouteManifestEntry
-) {
-  const urlpath = getRouteLineage(routes, route)
-    .map((route) => route.path)
-    .join("/");
-  const params = parseParams(urlpath);
-  const indent = "  ".repeat(3);
-  const properties = Object.entries(params).map(([name, values]) => {
-    if (values.length === 1) {
-      const isOptional = values[0];
-      return indent + (isOptional ? `"${name}"?: string` : `"${name}": string`);
-    }
-    const items = values.map((isOptional) =>
-      isOptional ? "string | undefined" : "string"
-    );
-    return indent + `"${name}": [${items.join(", ")}]`;
-  });
-
-  // prettier-ignore
-  const body =
-    properties.length === 0 ? "" :
-    "\n" + properties.join("\n") + "\n";
-
-  return body;
-}
+const noExtension = (path: string) =>
+  Path.join(Path.dirname(path), Pathe.filename(path));
 
 function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
   const result: RouteManifestEntry[] = [];
@@ -70,6 +82,21 @@ function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
   }
   result.reverse();
   return result;
+}
+
+function formatParamProperties(urlpath: string) {
+  const params = parseParams(urlpath);
+  const properties = Object.entries(params).map(([name, values]) => {
+    if (values.length === 1) {
+      const isOptional = values[0];
+      return isOptional ? `"${name}"?: string` : `"${name}": string`;
+    }
+    const items = values.map((isOptional) =>
+      isOptional ? "string | undefined" : "string"
+    );
+    return `"${name}": [${items.join(", ")}]`;
+  });
+  return properties.join("; ");
 }
 
 function parseParams(urlpath: string) {

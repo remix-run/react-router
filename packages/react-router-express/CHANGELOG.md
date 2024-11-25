@@ -1,4 +1,30 @@
-# `@remix-run/express`
+# `@react-router/express`
+
+## 7.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.0.1`
+  - `@react-router/node@7.0.1`
+
+## 7.0.0
+
+### Major Changes
+
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+- Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
+
+  - Remove `installGlobals()` as this should no longer be necessary
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.0.0`
+  - `@react-router/node@7.0.0`
 
 ## 2.9.0
 

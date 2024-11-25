@@ -541,18 +541,12 @@ importers:
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
-      '@web3-storage/multipart-parser':
-        specifier: ^1.0.0
-        version: 1.0.0
       cookie:
         specifier: ^1.0.1
         version: 1.0.1
       set-cookie-parser:
         specifier: ^2.6.0
         version: 2.6.0
-      source-map:
-        specifier: ^0.7.3
-        version: 0.7.4
       turbo-stream:
         specifier: 2.4.0
         version: 2.4.0
@@ -892,9 +886,9 @@ importers:
 
   packages/react-router-node:
     dependencies:
-      '@web3-storage/multipart-parser':
-        specifier: ^1.0.0
-        version: 1.0.0
+      '@mjackson/node-fetch-server':
+        specifier: ^0.2.0
+        version: 0.2.0
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -985,7 +979,7 @@ importers:
         specifier: 0.14.9
         version: 0.14.9
 
-  playground/compiler:
+  playground/framework:
     dependencies:
       '@react-router/node':
         specifier: workspace:*
@@ -1025,7 +1019,7 @@ importers:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@20.11.30)(terser@5.15.0))
 
-  playground/compiler-express:
+  playground/framework-express:
     dependencies:
       '@react-router/express':
         specifier: workspace:*
@@ -1086,7 +1080,7 @@ importers:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.4.5)(vite@5.1.3(@types/node@20.11.30)(terser@5.15.0))
 
-  playground/compiler-spa:
+  playground/framework-spa:
     dependencies:
       '@react-router/node':
         specifier: workspace:*
@@ -2764,6 +2758,9 @@ packages:
     resolution: {integrity: sha512-j0II91OCm4ld+l5QVgXXMQGxVVcAWIQJakYWi1dv5pefDHASJyCYER2TsdH7Alf958GoFSM7ugukWyvDq/UY4A==}
     peerDependencies:
       rollup: '>=2'
+
+  '@mjackson/node-fetch-server@0.2.0':
+    resolution: {integrity: sha512-EMlH1e30yzmTpGLQjlFmaDAjyOeZhng1/XCd7DExR8PNAnG/G1tyruZxEoUe11ClnwGhGrtsdnyyUx1frSzjng==}
 
   '@mswjs/cookies@0.2.2':
     resolution: {integrity: sha512-mlN83YSrcFgk7Dm1Mys40DLssI1KdJji2CMKN8eOlBqsTADYzj2+jWzsANsUTFbxDMWPD5e9bfA1RGqBpS3O1g==}
@@ -10628,6 +10625,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@mjackson/node-fetch-server@0.2.0': {}
+
   '@mswjs/cookies@0.2.2':
     dependencies:
       '@types/set-cookie-parser': 2.4.7
@@ -15959,7 +15958,7 @@ snapshots:
   postcss@8.4.38:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.0.0
+      picocolors: 1.1.1
       source-map-js: 1.2.0
 
   preferred-pm@3.0.3:

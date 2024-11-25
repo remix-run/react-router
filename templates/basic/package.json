@@ -6,19 +6,18 @@
     "dev": "react-router dev",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc",
-    "typegen:watch": "react-router typegen --watch"
+    "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@react-router/node": "7.0.0-pre.5",
-    "@react-router/serve": "7.0.0-pre.5",
+    "@react-router/node": "7.0.0-pre.6",
+    "@react-router/serve": "7.0.0-pre.6",
     "isbot": "^5.1.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "7.0.0-pre.5"
+    "react-router": "7.0.0-pre.6"
   },
   "devDependencies": {
-    "@react-router/dev": "7.0.0-pre.5",
+    "@react-router/dev": "7.0.0-pre.6",
     "@types/react": "^18.3.9",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",

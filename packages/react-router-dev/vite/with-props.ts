@@ -19,7 +19,7 @@ export const plugin: Plugin = {
     if (id !== VirtualModule.resolve(vmodId)) return;
     return dedent`
       import { createElement as h } from "react";
-      import { useActionData, useLoaderData, useParams } from "react-router";
+      import { useActionData, useLoaderData, useMatches, useParams, useRouteError } from "react-router";
 
       export function withComponentProps(Component) {
         return function Wrapped() {
@@ -27,6 +27,7 @@ export const plugin: Plugin = {
             params: useParams(),
             loaderData: useLoaderData(),
             actionData: useActionData(),
+            matches: useMatches(),
           };
           return h(Component, props);
         };
@@ -47,6 +48,7 @@ export const plugin: Plugin = {
             params: useParams(),
             loaderData: useLoaderData(),
             actionData: useActionData(),
+            error: useRouteError(),
           };
           return h(ErrorBoundary, props);
         };

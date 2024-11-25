@@ -59,9 +59,9 @@ test.describe("route config", () => {
       "app/routes.ts": js`
         import { type RouteConfig, index } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           index("test-route-1.tsx"),
-        ];
+        ] satisfies RouteConfig;
       `,
       "app/test-route-1.tsx": `
         export default () => <div data-test-route>Test route 1</div>
@@ -109,14 +109,14 @@ test.describe("route config", () => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
-        export { routes } from "./actual-routes";
+        export { default } from "./actual-routes";
       `,
       "app/actual-routes.ts": js`
         import { type RouteConfig, index } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           index("test-route-1.tsx"),
-        ];
+        ] satisfies RouteConfig;
       `,
       "app/test-route-1.tsx": `
         export default () => <div data-test-route>Test route 1</div>
@@ -163,9 +163,9 @@ test.describe("route config", () => {
       "app/routes.ts": js`
         import { type RouteConfig, index } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           index("test-route-1.tsx"),
-        ];
+        ] satisfies RouteConfig;
       `,
       "app/test-route-1.tsx": `
         export default () => <div data-test-route>Test route 1</div>
@@ -224,9 +224,9 @@ test.describe("route config", () => {
         import path from "node:path";
         import { type RouteConfig, index } from "@react-router/dev/routes";
 
-        export const routes: RouteConfig = [
+        export default [
           index(path.resolve(import.meta.dirname, "test-route.tsx")),
-        ];
+        ] satisfies RouteConfig;
       `,
       "app/test-route.tsx": `
         export default () => <div data-test-route>Test route</div>

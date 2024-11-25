@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "6.26.2",
+  "version": "7.0.1",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -13,6 +13,10 @@
   },
   "license": "MIT",
   "exports": {
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
     "./routes": {
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"
@@ -31,7 +35,8 @@
     "react-router": "bin.js"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {

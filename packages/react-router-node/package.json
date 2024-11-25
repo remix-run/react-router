@@ -1,6 +1,6 @@
 {
   "name": "@react-router/node",
-  "version": "6.26.2",
+  "version": "7.0.1",
   "description": "Node.js platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -68,7 +68,7 @@
     }
   },
   "dependencies": {
-    "@web3-storage/multipart-parser": "^1.0.0",
+    "@mjackson/node-fetch-server": "^0.2.0",
     "source-map-support": "^0.5.21",
     "stream-slice": "^0.1.2",
     "undici": "^6.19.2"

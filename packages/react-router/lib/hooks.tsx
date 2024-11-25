@@ -48,11 +48,11 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types";
+import type { SerializeFrom } from "./types/route-data";
 
-// TODO: Let's get this back to using an import map and development/production
-// condition once we get the rollup build replaced
-const ENABLE_DEV_WARNINGS = true;
+// Provided by the build system
+declare const __DEV__: boolean;
+const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
   Resolves a URL against the current location.
@@ -479,7 +479,7 @@ export function useRoutesImpl(
     let parentPath = (parentRoute && parentRoute.path) || "";
     warningOnce(
       parentPathname,
-      !parentRoute || parentPath.endsWith("*"),
+      !parentRoute || parentPath.endsWith("*") || parentPath.endsWith("*?"),
       `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +

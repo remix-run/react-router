@@ -1,9 +1,7 @@
 ---
 title: Route Matching
+hidden: true
+# want to explain how the matching algorithm works with any potential gotchas
 ---
 
 # Route Matching
-
-<docs-warning>
-  This document is a work in progress. There's not much to see here (yet).
-</docs-warning>

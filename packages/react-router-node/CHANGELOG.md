@@ -1,4 +1,51 @@
-# `@remix-run/node`
+# `@react-router/node`
+
+## 7.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.0.1`
+
+## 7.0.0
+
+### Major Changes
+
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+
+- For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs. This means that the following APIs are provided from `react-router` rather than platform-specific packages: ([#11837](https://github.com/remix-run/react-router/pull/11837))
+
+  - `createCookie`
+  - `createCookieSessionStorage`
+  - `createMemorySessionStorage`
+  - `createSessionStorage`
+
+  For consumers running older versions of Node, the `installGlobals` function from `@remix-run/node` has been updated to define `globalThis.crypto`, using [Node's `require('node:crypto').webcrypto` implementation.](https://nodejs.org/api/webcrypto.html)
+
+  Since platform-specific packages no longer need to implement this API, the following low-level APIs have been removed:
+
+  - `createCookieFactory`
+  - `createSessionStorageFactory`
+  - `createCookieSessionStorageFactory`
+  - `createMemorySessionStorageFactory`
+
+- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+
+- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+
+- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+
+- Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
+
+  - Remove `installGlobals()` as this should no longer be necessary
+
+### Patch Changes
+
+- Add createRequestListener to @react-router/node ([#12319](https://github.com/remix-run/react-router/pull/12319))
+- Remove unstable upload handler. ([#12015](https://github.com/remix-run/react-router/pull/12015))
+- Remove unneeded dependency on @web3-storage/multipart-parser ([#12274](https://github.com/remix-run/react-router/pull/12274))
+- Updated dependencies:
+  - `react-router@7.0.0`
 
 ## 2.9.0
 
