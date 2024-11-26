@@ -1,7 +1,7 @@
 import type { ParseOptions, SerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
-import { sign, unsign } from "./crypto";
+import { decrypt, encrypt, sign, unsign } from "./crypto";
 import { warnOnce } from "./warnings";
 
 export type {
@@ -19,6 +19,9 @@ export interface CookieSignatureOptions {
    * cookies that were signed with older secrets still work.
    */
   secrets?: string[];
+
+  // TODO: Add description
+  encrypt?: boolean;
 }
 
 export type CookieOptions = ParseOptions &
@@ -74,7 +77,11 @@ export const createCookie = (
   name: string,
   cookieOptions: CookieOptions = {}
 ): Cookie => {
-  let { secrets = [], ...options } = {
+  let {
+    secrets = [],
+    encrypt,
+    ...options
+  } = {
     path: "/",
     sameSite: "lax" as const,
     ...cookieOptions,
@@ -101,7 +108,7 @@ export const createCookie = (
       if (name in cookies) {
         let value = cookies[name];
         if (typeof value === "string" && value !== "") {
-          let decoded = await decodeCookieValue(value, secrets);
+          let decoded = await decodeCookieValue(value, secrets, encrypt);
           return decoded;
         } else {
           return "";
@@ -113,7 +120,7 @@ export const createCookie = (
     async serialize(value, serializeOptions) {
       return serialize(
         name,
-        value === "" ? "" : await encodeCookieValue(value, secrets),
+        value === "" ? "" : await encodeCookieValue(value, secrets, encrypt),
         {
           ...options,
           ...serializeOptions,
@@ -142,12 +149,17 @@ export const isCookie: IsCookieFunction = (object): object is Cookie => {
 
 async function encodeCookieValue(
   value: any,
-  secrets: string[]
+  secrets: string[],
+  encryptValue?: boolean
 ): Promise<string> {
   let encoded = encodeData(value);
 
   if (secrets.length > 0) {
-    encoded = await sign(encoded, secrets[0]);
+    if (encryptValue) {
+      encoded = await encrypt(encoded, secrets[0]);
+    } else {
+      encoded = await sign(encoded, secrets[0]);
+    }
   }
 
   return encoded;
@@ -155,11 +167,17 @@ async function encodeCookieValue(
 
 async function decodeCookieValue(
   value: string,
-  secrets: string[]
+  secrets: string[],
+  encryptValue?: boolean
 ): Promise<any> {
   if (secrets.length > 0) {
     for (let secret of secrets) {
-      let unsignedValue = await unsign(value, secret);
+      let unsignedValue;
+      if (encryptValue) {
+        unsignedValue = await decrypt(value, secret);
+      } else {
+        unsignedValue = await unsign(value, secret);
+      }
       if (unsignedValue !== false) {
         return decodeData(unsignedValue);
       }

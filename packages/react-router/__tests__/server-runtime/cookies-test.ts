@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 
+import { parse } from "cookie";
 import { createCookie, isCookie } from "../../lib/server-runtime/cookies";
 
 function getCookieFromSetCookie(setCookie: string): string {
@@ -89,6 +90,49 @@ describe("cookies", () => {
         "hello": "mjackson",
       }
     `);
+  });
+
+  it("parses/serializes encrypted object values", async () => {
+    let encryptedCookie = createCookie("my-cookie", {
+      secrets: ["12345678901234567890123456789012"],
+      encrypt: true,
+    });
+    let setCookie2 = await encryptedCookie.serialize({ hello: "mjackson" });
+    let value = await encryptedCookie.parse(getCookieFromSetCookie(setCookie2));
+
+    expect(value).toMatchInlineSnapshot(`
+      {
+        "hello": "mjackson",
+      }
+    `);
+  });
+
+  it("serializes with encryption to prevent exposure of cookie data", async () => {
+    // signed cookies allow cookie contents to be easily exfiltrated
+    const exfiltrateCookieData = (cookie: string) => {
+      let parsedCookie = parse(cookie);
+      let signedCookieValue = parsedCookie["my-cookie"];
+      let cookieValue = signedCookieValue?.split(".")[0];
+      let decodedCookieValue = atob(cookieValue || "");
+
+      return decodedCookieValue;
+    };
+
+    let cookie = createCookie("my-cookie", {
+      secrets: ["secret1"],
+    });
+    let setCookie = await cookie.serialize({ hello: "mjackson" });
+
+    expect(exfiltrateCookieData(setCookie)).toContain("mjackson");
+
+    let encryptedCookie = createCookie("my-cookie", {
+      // Must be 32 bytes (256 bits) long
+      secrets: ["12345678901234567890123456789012"],
+      encrypt: true,
+    });
+    let setCookie2 = await encryptedCookie.serialize({ hello: "mjackson" });
+
+    expect(exfiltrateCookieData(setCookie2)).not.toContain("mjackson");
   });
 
   it("fails to parse signed object values with invalid signature", async () => {
