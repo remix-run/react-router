@@ -41,7 +41,9 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
       id: "${route.id}"
       file: "${route.file}"
       path: "${route.path}"
-      params: {${formatParamProperties(urlpath)}}
+      params: {${formatParamProperties(
+        urlpath
+      )}} & { [key: string]: string | undefined }
       module: Module
       loaderData: T.CreateLoaderData<Module>
       actionData: T.CreateActionData<Module>
