@@ -89,7 +89,7 @@ export function flatRoutes(
     );
   }
 
-  if (!fs.existsSync(rootRoute)) {
+  if (!fs.existsSync(routesDir)) {
     throw new Error(
       `Could not find the routes directory: ${routesDir}. Did you forget to create it?`
     );
