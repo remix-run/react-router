@@ -15,12 +15,12 @@ React Router is a multi-strategy router for React bridging the gap from React 18
 
 ## Packages
 
-- [react-router](./modules/react_router)
-- [@react-router/dev](./modules/_react_router_dev)
-- [@react-router/node](./modules/_react_router_node)
-- [@react-router/cloudflare](./modules/_react_router_cloudflare)
-- [@react-router/serve](./modules/_react_router_serve)
-- [@react-router/fs-routes](./modules/_react_router_fs_routes)
+- [`react-router`](./packages/react-router)
+- [`@react-router/dev`](./packages/react-router-dev)
+- [`@react-router/node`](./packages/react-router-node)
+- [`@react-router/cloudflare`](./packages/react-router-cloudflare)
+- [`@react-router/serve`](./packages/react-router-serve)
+- [`@react-router/fs-routes`](./packages/react-router-fs-routes)
 
 ## Previous Versions
 
