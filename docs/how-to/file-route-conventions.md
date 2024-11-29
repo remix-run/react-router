@@ -362,13 +362,13 @@ app/routes/app._index.tsx
 app/routes/app._index/route.tsx
 ```
 
-[route-config-file]: ../start/routing#route-config-file
-[loaders]: ../start/data-loading
-[actions]: ../start/actions
-[routing_guide]: ../start/routing
-[root_route]: ../start/route-module#root-route
-[index_route]: ../start/routing#index-routes
-[nested_routing]: ../start/routing#nested-routes
+[route-config-file]: ../start/framework/routing#configuring-routes
+[loaders]: ../start/framework/data-loading
+[actions]: ../start/framework/actions
+[routing_guide]: ../start/framework/routing
+[root_route]: ../start/framework/route-module
+[index_route]: ../start/framework/routing#index-routes
+[nested_routing]: ../start/framework/routing#nested-routes
 [nested_routes]: #nested-routes
 [dot_delimiters]: #dot-delimiters
 [dynamic_segments]: #dynamic-segments
