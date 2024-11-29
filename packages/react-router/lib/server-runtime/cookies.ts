@@ -20,6 +20,11 @@ export interface CookieSignatureOptions {
    */
   secrets?: string[];
 
+  /**
+   * Enables encryption of the cookie contents using "AES-GCM".
+   *
+   * Encryption keys should be provided in the `secrets` array and are able to be rotated in the same way as with signing. When using encryption, unlike signing, secrets must be 32 bytes long.
+   */
   encrypt?: false;
 }
 
