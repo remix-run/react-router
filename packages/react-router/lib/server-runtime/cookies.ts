@@ -20,13 +20,19 @@ export interface CookieSignatureOptions {
    */
   secrets?: string[];
 
+  encrypt?: false;
+}
+
+interface CookieEncryptionOptions {
+  secrets: Required<CookieSignatureOptions>["secrets"];
+
   // TODO: Add description
-  encrypt?: boolean;
+  encrypt: true;
 }
 
 export type CookieOptions = ParseOptions &
   SerializeOptions &
-  CookieSignatureOptions;
+  (CookieSignatureOptions | CookieEncryptionOptions);
 
 /**
  * A HTTP cookie.
@@ -86,6 +92,12 @@ export const createCookie = (
     sameSite: "lax" as const,
     ...cookieOptions,
   };
+
+  if (encrypt && secrets?.length === 0) {
+    throw new Error(
+      `Cannot encrypt cookie "${name}" without providing a secret.`
+    );
+  }
 
   warnOnceAboutExpiresCookie(name, options.expires);
 
