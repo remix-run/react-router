@@ -102,7 +102,7 @@ Usually your URLs aren't static but data-driven. Dynamic segments allow you to m
 | `/concerts/salt-lake-city` | `app/routes/concerts.$city.tsx`    |
 | `/concerts/san-diego`      | `app/routes/concerts.$city.tsx`    |
 
-The value will be parsed from the URL and pass it to various APIs. We call these values "URL Parameters". The most useful places to access the URL params are in [loaders] and [actions].
+The value will be parsed from the URL and passed to various APIs. We call these values "URL Parameters". The most useful places to access the URL params are in [loaders] and [actions].
 
 ```tsx
 export async function serverLoader({ params }) {
