@@ -9,7 +9,7 @@ import { dev as viteDev } from "../vite/dev";
 import invariant from "../invariant";
 
 export type DevScriptArgs = {
-  root?: string;
+  root: string;
   viteDevOptions: ViteDevOptions;
 };
 
@@ -22,7 +22,7 @@ async function dev(root: string, options: ViteDevOptions = {}) {
 }
 
 (async () => {
-  let args = JSON.parse(process.argv[2]);
+  let args = JSON.parse(process.argv[2]) as DevScriptArgs;
 
   // Minimal check to ensure this script is being invoked correctly, otherwise
   // the DevScriptArgs type should handle the rest
