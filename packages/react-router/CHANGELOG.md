@@ -1,5 +1,16 @@
 # `react-router`
 
+## 7.0.2-pre.0
+
+### Patch Changes
+
+- temporarily only use one build in export map so packages can have a peer dependency on react router ([#12437](https://github.com/remix-run/react-router/pull/12437))
+- Generate wide `matches` and `params` types for child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
+
+  At runtime, `matches` includes child route matches and `params` include child route path parameters.
+  But previously, we only generated types for parent routes and the current route in `matches` and `params`.
+  To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
+
 ## 7.0.1
 
 ## 7.0.0
