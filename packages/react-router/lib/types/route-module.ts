@@ -48,14 +48,14 @@ type MetaMatch<T extends RouteInfo> = Pretty<
 type MetaMatches<T extends RouteInfo[]> =
   T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
     ? [MetaMatch<F>, ...MetaMatches<R>]
-    : MetaMatch<RouteInfo>[];
+    : Array<MetaMatch<RouteInfo> | undefined>;
 
 export type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
   params: T["params"];
   data: T["loaderData"];
   error?: unknown;
-  matches: MetaMatches<T["parents"]>;
+  matches: MetaMatches<[...T["parents"], T]>;
 };
 export type MetaDescriptors = MetaDescriptor[];
 
@@ -149,13 +149,13 @@ type Match<T extends RouteInfo> = Pretty<
 type Matches<T extends RouteInfo[]> =
   T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
     ? [Match<F>, ...Matches<R>]
-    : Match<RouteInfo>[];
+    : Array<Match<RouteInfo> | undefined>;
 
 export type CreateComponentProps<T extends RouteInfo> = {
   params: T["params"];
   loaderData: T["loaderData"];
   actionData?: T["actionData"];
-  matches: Matches<T["parents"]>;
+  matches: Matches<[...T["parents"], T]>;
 };
 
 export type CreateErrorBoundaryProps<T extends RouteInfo> = {
