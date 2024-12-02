@@ -1,12 +1,10 @@
 ---
-title: Bring Your Own Bundler
+title: Custom Framework
 ---
 
-<docs-warning>This document is not complete and may contain errors</docs-warning>
+# Custom Framework
 
-# Bring Your Own Bundler
-
-The framework features are enabled by runtime features of React React. Instead of using React Router's Vite plugin, you can bring your own bundler and server abstractions.
+Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions.
 
 ## Client Rendering
 
@@ -76,6 +74,8 @@ createBrowserRouter([
 ## Server Rendering
 
 To server render a custom setup, there are a few server APIs available for rendering an data loading.
+
+This guide simply gives you some ideas about how it works. For deeper understanding, please see the [Custom Framework Example Repo](https://github.com/remix-run/custom-react-router-framework-example)
 
 ### 1. Define Your Routes
 
@@ -171,4 +171,23 @@ export async function handler(request: Request) {
 
 ### 4. Hydrate in the browser
 
-This section is incomplete and will be updated, please refer to `HydratedRouter` source to see how React Router does this with the React Router Vite plugin.
+Hydration data is embedded onto `window.__staticRouterHydrationData`, use that to initialize your client side router and render a `<RouterProvider>`.
+
+```tsx
+import { StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { RouterProvider } from "react-router/dom";
+import routes from "./app/routes.js";
+import { createBrowserRouter } from "react-router";
+
+let router = createBrowserRouter(routes, {
+  hydrationData: window.__staticRouterHydrationData,
+});
+
+hydrateRoot(
+  document,
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>
+);
+```

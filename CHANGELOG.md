@@ -25,11 +25,6 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Other Notable Changes](#other-notable-changes)
       - [`routes.ts`](#routests)
       - [Typesafety improvements](#typesafety-improvements)
-        - [Setup](#setup)
-        - [`typegen` command](#typegen-command)
-        - [TypeScript plugin](#typescript-plugin)
-          - [VSCode](#vscode)
-          - [Troubleshooting](#troubleshooting)
       - [Prerendering](#prerendering)
     - [Major Changes (`react-router`)](#major-changes-react-router)
     - [Major Changes (`@react-router/*`)](#major-changes-react-router-1)
@@ -334,29 +329,26 @@ For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareD
 +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
 ```
 
-**Removed Vite Plugin `manifest` option**
+**Removed `manifest` option**
 
 For Remix consumers migrating to React Router, the Vite plugin's `manifest` option has been removed. The `manifest` option been superseded by the more powerful `buildEnd` hook since it's passed the `buildManifest` argument. You can still write the build manifest to disk if needed, but you'll most likely find it more convenient to write any logic depending on the build manifest within the `buildEnd` hook itself. ([#11573](https://github.com/remix-run/react-router/pull/11573))
 
 If you were using the `manifest` option, you can replace it with a `buildEnd` hook that writes the manifest to disk like this:
 
 ```js
-import { reactRouter } from "@react-router/dev/vite";
+// react-router.config.ts
+import { type Config } from "@react-router/dev/config";
 import { writeFile } from "node:fs/promises";
 
 export default {
-  plugins: [
-    reactRouter({
-      async buildEnd({ buildManifest }) {
-        await writeFile(
-          "build/manifest.json",
-          JSON.stringify(buildManifest, null, 2),
-          "utf-8"
-        );
-      },
-    }),
-  ],
-};
+  async buildEnd({ buildManifest }) {
+    await writeFile(
+      "build/manifest.json",
+      JSON.stringify(buildManifest, null, 2),
+      "utf-8"
+    );
+  },
+} satisfies Config;
 ```
 
 #### Exposed Router Promises
@@ -470,131 +462,9 @@ Also note that, if you were using Remix's `routes` option to define config-based
 
 #### Typesafety improvements
 
-React Router now generates types for each of your route modules and passes typed props to route module component exports ([#11961](https://github.com/remix-run/react-router/pull/11961), [#12019](https://github.com/remix-run/react-router/pull/12019)). You can access those types by importing them from `./+types.<route filename without extension>`.
+React Router now generates types for each of your route modules and passes typed props to route module component exports ([#11961](https://github.com/remix-run/react-router/pull/11961), [#12019](https://github.com/remix-run/react-router/pull/12019)). You can access those types by importing them from `./+types/<route filename without extension>`.
 
-For example:
-
-```ts
-// app/routes/product.tsx
-import type * as Route from "./+types.product";
-
-export function loader({ params }: Route.LoaderArgs) {}
-
-export default function Component({ loaderData }: Route.ComponentProps) {}
-```
-
-This initial implementation targets type inference for:
-
-- `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
-- `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
-- `ActionData` : Action data from `action` and/or `clientAction` within your route module
-
-These types are then used to create types for route export args and props:
-
-- `LoaderArgs`
-- `ClientLoaderArgs`
-- `ActionArgs`
-- `ClientActionArgs`
-- `HydrateFallbackProps`
-- `ComponentProps` (for the `default` export)
-- `ErrorBoundaryProps`
-
-In the future, we plan to add types for the rest of the route module exports: `meta`, `links`, `headers`, `shouldRevalidate`, etc.
-
-We also plan to generate types for typesafe `Link`s:
-
-```tsx
-<Link to="/products/:id" params={{ id: 1 }} />
-//        ^^^^^^^^^^^^^          ^^^^^^^^^
-// typesafe `to` and `params` based on the available routes in your app
-```
-
-##### Setup
-
-React Router will generate types into a `.react-router/` directory at the root of your app. This directory is fully managed by React Router and is derived based on your route config (`routes.ts`).
-
-👉 **Add `.react-router/` to `.gitignore`**
-
-```txt
-.react-router
-```
-
-You should also ensure that generated types for routes are always present before running typechecking, especially for running typechecking in CI.
-
-👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
-
-```json
-{
-  "scripts": {
-    "typecheck": "react-router typegen && tsc"
-  }
-}
-```
-
-To get TypeScript to use those generated types, you'll need to add them to `include` in `tsconfig.json`. And to be able to import them as if they files next to your route modules, you'll also need to configure `rootDirs`.
-
-👉 **Configure `tsconfig.json` for generated types**
-
-```json
-{
-  "include": [".react-router/types/**/*"],
-  "compilerOptions": {
-    "rootDirs": [".", "./.react-router/types"]
-  }
-}
-```
-
-##### `typegen` command
-
-You can manually generate types with the new `typegen` command:
-
-```sh
-react-router typegen
-```
-
-However, manual type generation is tedious and types can get out of sync quickly if you ever forget to run `typegen`. Instead, we recommend that you setup our new TypeScript plugin which will automatically generate fresh types whenever routes change. That way, you'll always have up-to-date types.
-
-##### TypeScript plugin
-
-To get automatic type generation, you can use our new TypeScript plugin.
-
-👉 **Add the TypeScript plugin to `tsconfig.json`**
-
-```json
-{
-  "compilerOptions": {
-    "plugins": [{ "name": "@react-router/dev" }]
-  }
-}
-```
-
-We plan to add some other goodies to our TypeScript plugin soon, including:
-
-- Automatic `jsdoc` for route exports that include links to official docs
-- Autocomplete for route exports
-- Warnings for non-HMR compliant exports
-
-###### VSCode
-
-TypeScript looks for plugins registered in `tsconfig.json` in the local `node_modules/`,
-but VSCode ships with its own copy of TypeScript that is installed outside of your project.
-For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
-
-👉 **Ensure that VSCode is using the workspace version of TypeScript**
-
-This should already be set up for you by a `.vscode/settings.json`:
-
-```json
-{
-  "typescript.tsdk": "node_modules/typescript/lib"
-}
-```
-
-Alternatively, you can open up any TypeScript file and use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to find `Select TypeScript Version` and then select `Use Workspace Version`. You may need to quit VSCode and reopen it for this setting to take effect.
-
-###### Troubleshooting
-
-In VSCode, open up any TypeScript file in your project and then use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to select `Open TS Server log`. There should be a log for `[react-router] setup` that indicates that the plugin was resolved correctly. Then look for any errors in the log.
+See [_How To > Route Module Type Safety_](https://reactrouter.com/dev/how-to/route-module-type-safety) and [_Explanations > Type Safety_](https://reactrouter.com/dev/explanation/type-safety) for more details.
 
 #### Prerendering
 
@@ -791,9 +661,7 @@ async function fakeGetSlugsFromCms() {
 - [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#700)
 - [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-serve/CHANGELOG.md#700)
 
-# **Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
-
-> > > > > > > release-next
+**Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
 
 ## v6.28.0
 
@@ -814,12 +682,6 @@ Date: 2024-11-06
 - Update JSDoc URLs for new website structure (add /v6/ segment) ([#12141](https://github.com/remix-run/react-router/pull/12141))
 
 **Full Changelog**: [`v6.27.0...v6.28.0`](https://github.com/remix-run/react-router/compare/react-router@6.27.0...react-router@6.28.0)
-
-# <<<<<<< HEAD
-
-> > > > > > > dev
-
-> > > > > > > release-next
 
 ## v6.27.0
 

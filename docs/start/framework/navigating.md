@@ -122,7 +122,7 @@ If the user enters "journey" into the input and submits it, they will navigate t
 /search?q=journey
 ```
 
-Forms with `<Form method="post" />` will also navigate to the action prop but will submit the data as `FormData` instead of `URLSearchParams`. However, it is more common to `useFetcher()` to POST form data. See [Using Fetchers](../how-to/fetchers).
+Forms with `<Form method="post" />` will also navigate to the action prop but will submit the data as `FormData` instead of `URLSearchParams`. However, it is more common to `useFetcher()` to POST form data. See [Using Fetchers](../../how-to/fetchers).
 
 ## redirect
 

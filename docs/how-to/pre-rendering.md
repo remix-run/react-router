@@ -52,7 +52,10 @@ When server rendering, requests to paths that have not been pre-rendered will be
 
 ## Static File Output
 
-The rendered result will be written out to your `build/client` directory. You'll notice two files for each path: an HTML file for initial document requests `[name].data` files for client side navigation.
+The rendered result will be written out to your `build/client` directory. You'll notice two files for each path:
+
+- `[url].html` HTML file for initial document requests
+- `[url].data` file for client side navigation browser requests
 
 The output of your build will indicate what files were pre-rendered:
 

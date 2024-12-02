@@ -55,7 +55,7 @@ test("LoginForm renders error messages", async () => {
           },
         };
       },
-    }),
+    },
   ]);
 
   // render the app stub at "/login"

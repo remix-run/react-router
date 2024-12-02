@@ -20,7 +20,7 @@ export default {
 } satisfies Config;
 ```
 
-See the [config API](https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html) for more information.
+See the details on [react-router config API][react-router-config] for more information.
 
 ## root.tsx
 
