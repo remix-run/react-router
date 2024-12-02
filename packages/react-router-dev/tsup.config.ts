@@ -9,6 +9,7 @@ import pkg from "./package.json";
 
 const entry = [
   "cli/index.ts",
+  "cli/dev.ts",
   "config.ts",
   "routes.ts",
   "vite.ts",
