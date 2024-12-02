@@ -297,7 +297,10 @@ test.describe("typegen", () => {
           type Test3 = Expect<Equal<typeof current.data, { current: number }>>
 
           const child1 = matches[4]
-          type Test4 = Expect<Equal<typeof child1.data, unknown>>
+          type Test4a = Expect<undefined extends typeof child1 ? true : false>
+          if (child1) {
+            type Test4b = Expect<Equal<typeof child1.data, unknown>>
+          }
           return []
         }
 
@@ -312,7 +315,10 @@ test.describe("typegen", () => {
           type Test3 = Expect<Equal<typeof current.data, { current: number }>>
 
           const child1 = matches[4]
-          type Test4 = Expect<Equal<typeof child1.data, unknown>>
+          type Test4a = Expect<undefined extends typeof child1 ? true : false>
+          if (child1) {
+            type Test4b = Expect<Equal<typeof child1.data, unknown>>
+          }
         }
       `,
     });
