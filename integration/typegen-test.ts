@@ -55,7 +55,8 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/product"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test = Expect<Equal<typeof params.id, string>>
+          type Test1 = Expect<Equal<typeof params.id, string>>
+          type Test2 = Expect<Equal<typeof params.asdf, string | undefined>>
           return { planet: "world" }
         }
 
@@ -287,6 +288,9 @@ test.describe("typegen", () => {
 
           const parent2 = matches[2]
           type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+
+          const child1 = matches[4]
+          type Test3 = Expect<Equal<typeof child1.data, unknown>>
           return []
         }
 
@@ -296,6 +300,9 @@ test.describe("typegen", () => {
 
           const parent2 = matches[2]
           type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
+
+          const child1 = matches[4]
+          type Test3 = Expect<Equal<typeof child1.data, unknown>>
         }
       `,
     });
