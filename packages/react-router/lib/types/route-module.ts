@@ -55,7 +55,7 @@ export type CreateMetaArgs<T extends RouteInfo> = {
   params: T["params"];
   data: T["loaderData"];
   error?: unknown;
-  matches: MetaMatches<T["parents"]>;
+  matches: MetaMatches<[...T["parents"], T]>;
 };
 export type MetaDescriptors = MetaDescriptor[];
 
@@ -155,7 +155,7 @@ export type CreateComponentProps<T extends RouteInfo> = {
   params: T["params"];
   loaderData: T["loaderData"];
   actionData?: T["actionData"];
-  matches: Matches<T["parents"]>;
+  matches: Matches<[...T["parents"], T]>;
 };
 
 export type CreateErrorBoundaryProps<T extends RouteInfo> = {

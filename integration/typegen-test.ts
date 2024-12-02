@@ -282,6 +282,10 @@ test.describe("typegen", () => {
         import { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/current"
 
+        export function loader() {
+          return { current: 3 }
+        }
+
         export function meta({ matches }: Route.MetaArgs) {
           const parent1 = matches[1]
           type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
@@ -289,8 +293,11 @@ test.describe("typegen", () => {
           const parent2 = matches[2]
           type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
 
+          const current = matches[3]
+          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
+
           const child1 = matches[4]
-          type Test3 = Expect<Equal<typeof child1.data, unknown>>
+          type Test4 = Expect<Equal<typeof child1.data, unknown>>
           return []
         }
 
@@ -301,8 +308,11 @@ test.describe("typegen", () => {
           const parent2 = matches[2]
           type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
 
+          const current = matches[3]
+          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
+
           const child1 = matches[4]
-          type Test3 = Expect<Equal<typeof child1.data, unknown>>
+          type Test4 = Expect<Equal<typeof child1.data, unknown>>
         }
       `,
     });
