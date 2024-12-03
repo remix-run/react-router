@@ -1,11 +1,11 @@
 # react-router-dom
 
-## 7.0.2-pre.0
+## 7.0.2
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.0.2-pre.0`
+  - `react-router@7.0.2`
 
 ## 7.0.1
 
@@ -28,7 +28,7 @@
 
 - Use `createRemixRouter`/`RouterProvider` in `entry.client` instead of `RemixBrowser` ([#11469](https://github.com/remix-run/react-router/pull/11469))
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Remove `future.v7_startTransition` flag ([#11696](https://github.com/remix-run/react-router/pull/11696))
 
