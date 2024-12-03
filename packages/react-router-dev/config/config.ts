@@ -646,7 +646,7 @@ export async function createConfigLoader({
 
           let configCodeChanged =
             configFileAddedOrRemoved ||
-            (typeof reactRouterConfigFile === "string" &&
+            (reactRouterConfigFile !== undefined &&
               isEntryFileDependency(
                 viteNodeContext.devServer.moduleGraph,
                 reactRouterConfigFile,
