@@ -1,20 +1,21 @@
 # `@react-router/dev`
 
-## 7.0.2-pre.0
+## 7.0.2
 
 ### Patch Changes
 
 - Support `moduleResolution` `Node16` and `NodeNext` ([#12440](https://github.com/remix-run/react-router/pull/12440))
-- Generate wide `matches` and `params` types for child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
+
+- Generate wide `matches` and `params` types for current route and child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
 
   At runtime, `matches` includes child route matches and `params` include child route path parameters.
-  But previously, we only generated types for parent routes and the current route in `matches` and `params`.
+  But previously, we only generated types for parent routes in `matches`; for `params`, we only considered the parent routes and the current route.
   To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
 
 - Updated dependencies:
-  - `react-router@7.0.2-pre.0`
-  - `@react-router/node@7.0.2-pre.0`
-  - `@react-router/serve@7.0.2-pre.0`
+  - `react-router@7.0.2`
+  - `@react-router/node@7.0.2`
+  - `@react-router/serve@7.0.2`
 
 ## 7.0.1
 
@@ -43,7 +44,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 
