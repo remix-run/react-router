@@ -192,6 +192,13 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   };
 }
 
+/**
+ * @deprecated Use `integration/helpers/vite.ts`'s `test` instead
+ *
+ * This implementation sometimes runs a request handler in memory, forcing tests to manually manage stdout/stderr
+ * which has caused many integration tests to leak noisy logs for expected errors.
+ * It also means that sometimes the CLI is skipped over in those tests, missing out on code paths that should be tested.
+ */
 export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
   let startAppServer = async (): Promise<{
     port: number;
