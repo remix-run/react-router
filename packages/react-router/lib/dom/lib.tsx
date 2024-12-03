@@ -1826,7 +1826,7 @@ export function useFetcher<T = any>({
    *   // ...
    * }
    * ```
-   * The example above will submit to `/login` when the form is submitted either via `fetcher.submit` or `fetcher.Form`.
+   * The example above will submit to `/login` when the form is submitted either via `fetcher.submit` or `fetcher.Form`. or fetch from `/login/ when load is called
    */
   action?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
