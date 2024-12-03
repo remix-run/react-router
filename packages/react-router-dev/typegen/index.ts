@@ -15,10 +15,14 @@ export async function run(rootDirectory: string) {
   await writeAll(ctx);
 }
 
+export type Watcher = {
+  close: () => Promise<void>;
+};
+
 export async function watch(
   rootDirectory: string,
   { logger }: { logger?: vite.Logger } = {}
-) {
+): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, watch: true });
   await writeAll(ctx);
   logger?.info(pc.green("generated types"), { timestamp: true, clear: true });
@@ -38,6 +42,10 @@ export async function watch(
       });
     }
   });
+
+  return {
+    close: async () => await ctx.configLoader.close(),
+  };
 }
 
 async function createContext({

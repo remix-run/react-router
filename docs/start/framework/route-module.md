@@ -186,7 +186,7 @@ export function ErrorBoundary() {
 
 ## `HydrateFallback`
 
-On initial pages loads, the route component renders only after the client loader is finished. If exported, a `HydrateFallback` can render immediately in place of the route component.
+On initial page load, the route component renders only after the client loader is finished. If exported, a `HydrateFallback` can render immediately in place of the route component.
 
 ```tsx filename=routes/client-only-route.tsx
 export async function clientLoader() {
@@ -316,10 +316,10 @@ export default function Root() {
 By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
 
 ```tsx
-import type { Route } from "./+types/my-route";
+import type { ShouldRevalidateFunctionArgs } from "react-router";
 
 export function shouldRevalidate(
-  arg: Route.ShouldRevalidateArg
+  arg: ShouldRevalidateFunctionArgs
 ) {
   return true;
 }

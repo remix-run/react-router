@@ -1,8 +1,7 @@
 import "@testing-library/jest-dom";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
-import type { LoaderFunction } from "react-router";
-import {} from "react-router";
+import type { LoaderFunction } from "../../index";
 import {
   Outlet,
   RouterProvider as ReactRouter_RouterProvider,
@@ -94,31 +93,31 @@ describe("Partial Hydration Behavior", () => {
 
       parentDfd.resolve("PARENT DATA");
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <h1>
-                Root
-              </h1>
-              <p>
-                Parent Loading...
-              </p>
-            </div>"
-          `);
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <p>
+            Parent Loading...
+          </p>
+        </div>"
+      `);
 
       childDfd.resolve("CHILD DATA");
       await waitFor(() => screen.getByText(/CHILD DATA/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <h1>
-                Root
-              </h1>
-              <h2>
-                Parent - PARENT DATA
-              </h2>
-              <h3>
-                Child - CHILD DATA
-              </h3>
-            </div>"
-          `);
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Parent - PARENT DATA
+          </h2>
+          <h3>
+            Child - CHILD DATA
+          </h3>
+        </div>"
+      `);
     });
 
     it("supports partial hydration w/patchRoutesOnNavigation (root fallback)", async () => {
@@ -183,28 +182,28 @@ describe("Partial Hydration Behavior", () => {
 
       parentDfd.resolve("PARENT DATA");
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <p>
-                Root Loading...
-              </p>
-            </div>"
-          `);
+        "<div>
+          <p>
+            Root Loading...
+          </p>
+        </div>"
+      `);
 
       childDfd.resolve("CHILD DATA");
       await waitFor(() => screen.getByText(/CHILD DATA/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <h1>
-                Root
-              </h1>
-              <h2>
-                Parent - PARENT DATA
-              </h2>
-              <h3>
-                Child - CHILD DATA
-              </h3>
-            </div>"
-          `);
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Parent - PARENT DATA
+          </h2>
+          <h3>
+            Child - CHILD DATA
+          </h3>
+        </div>"
+      `);
     });
   });
 });

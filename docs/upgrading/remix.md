@@ -5,9 +5,9 @@ order: 2
 
 # Upgrading from Remix
 
-React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19]) for more information).
+React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19] for more information).
 
-The Remix v2 -> React Router v7 upgrade requires mostly updates to dependencies if you are caught up on all [Remix v2 future flags][v2-future-flags] (step 1).
+If you have enabled all [Remix v2 future flags][v2-future-flags], upgrading from Remix v2 to React Router v7 mainly involves updating dependencies.
 
 <docs-info>
 
@@ -26,7 +26,7 @@ Adopt all existing [future flags][v2-future-flags] in your Remix v2 application.
 Most of the "shared" APIs that used to be re-exported through the runtime-specific packages (`@remix-run/node`, `@remix-run/cloudflare`, etc.) have all been collapsed into `react-router` in v7. So instead of importing from `@react-router/node` or `@react-router/cloudflare`, you'll import those directly from `react-router`.
 
 ```diff
--import { redirect } from "@react-router/node";
+-import { redirect } from "@remix-run/node";
 +import { redirect } from "react-router";
 ```
 
@@ -43,12 +43,6 @@ npx codemod remix/2/react-router/upgrade
 **👉 Install the new dependencies**
 
 After the codemod updates your dependencies, you need to install the dependencies to remove Remix packages and add the new React Router packages.
-
-<docs-warning>
-
-While still in prerelease, you need to update your `package.json` to point to the prerelease versions of the `react-router` packages.
-
-</docs-warning>
 
 ```shellscript nonumber
 npm install
@@ -99,13 +93,13 @@ If you used the codemod you can skip this step as it was automatically completed
 
 <docs-info>
 
-If you used the codemod _and_ Remix v2 `unstable_routeConfig` flag, you can skip this step as it was automatically completed.
+If you used the codemod _and_ Remix v2 `v3_routeConfig` flag, you can skip this step as it was automatically completed.
 
 </docs-info>
 
 In React Router v7 you define your routes using the `app/routes.ts` file. View the [routing documentation][routing] for more information.
 
-**👉 Update dependencies (if using Remix v2 `unstable_routeConfig` flag)**
+**👉 Update dependencies (if using Remix v2 `v3_routeConfig` flag)**
 
 ```diff
 // app/routes.ts
@@ -122,9 +116,7 @@ export default [
 
 ```
 
-<!-- TODO: Remove this section once this flag is stabilized and recommend they make this change in Remix/refer to the routes.ts docs -->
-
-**👉 Add a `routes.ts` file (if _not_ using Remix v2 `unstable_routeConfig` flag)**
+**👉 Add a `routes.ts` file (if _not_ using Remix v2 `v3_routeConfig` flag)**
 
 ```shellscript nonumber
 touch app/routes.ts
@@ -239,7 +231,7 @@ export default defineConfig({
 
 <docs-info>
 
-If you're not using TypeScript, you can skip this step.
+If you are not using TypeScript, you can skip this step.
 
 </docs-info>
 
@@ -319,7 +311,7 @@ Since React Router can be used as both a React framework _and_ a stand-alone rou
 
 Before you migrate to the new `Route.LoaderArgs` and `Route.ActionArgs` types, you can temporarily augment `LoaderFunctionArgs` and `ActionFunctionArgs` with your load context type to ease migration.
 
-```ts filename=app/env.d.ts
+```ts filename=app/env.ts
 declare module "react-router" {
   // Your AppLoadContext used in v2
   interface AppLoadContext {
@@ -336,12 +328,14 @@ declare module "react-router" {
     context: AppLoadContext;
   }
 }
+
+export {}; // necessary for TS to treat this as a module
 ```
 
 <docs-info>
 
 Using `declare module` to register types is a standard TypeScript technique called [module augmentation][ts-module-augmentation].
-You can do this in any TypeScript file covered by your `tsconfig.json`'s `include` field, but we recommend a dedicated `env.d.ts` within your app directory.
+You can do this in any TypeScript file covered by your `tsconfig.json`'s `include` field, but we recommend a dedicated `env.ts` within your app directory.
 
 </docs-info>
 
@@ -349,13 +343,15 @@ You can do this in any TypeScript file covered by your `tsconfig.json`'s `includ
 
 Once you adopt the [new type generation][type-safety], you can remove the `LoaderFunctionArgs`/`ActionFunctionArgs` augmentations and use the `context` argument from [`Route.LoaderArgs`][server-loaders] and [`Route.ActionArgs`][server-actions] instead.
 
-```ts filename=app/env.d.ts
+```ts filename=app/env.ts
 declare module "react-router" {
   // Your AppLoadContext used in v2
   interface AppLoadContext {
     whatever: string;
   }
 }
+
+export {}; // necessary for TS to treat this as a module
 ```
 
 ```ts filename=app/routes/my-route.tsx

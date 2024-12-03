@@ -134,4 +134,4 @@ function Task({ task }) {
 
 Next: [Testing](./testing)
 
-[use_fetcher]: ../hooks/use-fetcher
+[use_fetcher]: https://api.reactrouter.com/v7/functions/react_router.useFetcher.html

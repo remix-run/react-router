@@ -13,9 +13,9 @@ React Router's handling of network concurrency is heavily inspired by the behavi
 Consider clicking a link to a new document, and then clicking a different link before the new page has finished loading. The browser will:
 
 1. cancel the first request
-2. immediately processes the new navigation
+2. immediately process the new navigation
 
-This behavior includes form submissions. When a pending form submission is interrupted by a new one, the first is canceled and the new submission is immediately processed.
+The same behavior applies to form submissions. When a pending form submission is interrupted by a new one, the first is canceled and the new submission is immediately processed.
 
 ## React Router Behavior
 

@@ -251,13 +251,14 @@ async function copyTemplateToTempDirStep(ctx: Context) {
     info("Template:", ["Using ", color.reset(ctx.template), "..."]);
   } else {
     log("");
-    info("Using basic template"); // TODO: (v7) Add link to templates
+    info("Using default template", [
+      "See https://github.com/remix-run/react-router-templates for more",
+    ]);
   }
 
   let template =
     ctx.template ??
-    // TODO: (v7) Update to main branch
-    "https://github.com/remix-run/react-router/tree/dev/templates/basic";
+    "https://github.com/remix-run/react-router-templates/tree/main/default";
 
   await loadingIndicator({
     start: "Template copying...",

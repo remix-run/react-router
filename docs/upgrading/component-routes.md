@@ -21,11 +21,11 @@ The Vite plugin adds:
 - Optional Static pre-rendering
 - Optional Server rendering
 
-The initial setup will require the most work, but once complete, adopting the new features is incremental, you can do one route at a time.
+The initial setup requires the most work. However, once complete, you can adopt new features incrementally, one route at a time.
 
 ## Prerequisites
 
-In order to use the Vite plugin, your project needs to be running
+To use the Vite plugin, your project requires:
 
 - Node.js 20+ (if using Node as your runtime)
 - Vite 5+
@@ -40,7 +40,7 @@ npm install -D @react-router/dev
 
 **👉 Install a runtime adapter**
 
-We will assume you are using Node as your runtime
+We will assume you are using Node as your runtime.
 
 ```shellscript nonumber
 npm install @react-router/node
@@ -337,7 +337,7 @@ The first few routes you migrate are the hardest because you often have to acces
 
 If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying][deploying] for more information.
 
-```ts filename=vite.config.ts
+```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
 export default {
