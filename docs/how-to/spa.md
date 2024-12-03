@@ -30,10 +30,10 @@ With server rendering disabled, you can still use `clientLoader` and `clientActi
 ```tsx filename=some-route.tsx
 import { Route } from "./+types/some-route";
 
-export async function clientLoader(
-  _: Route.ClientLoaderArgs
-) {
-  let data = await fetch("/some/api/stuff");
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  let data = await fetch(`/some/api/stuff/${params.id}`);
   return data;
 }
 
