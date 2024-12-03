@@ -12,6 +12,8 @@ import {
 
 let fixture: Fixture;
 let appFixture: AppFixture;
+let originalConsoleError: typeof console.error;
+let originalConsoleWarn: typeof console.warn;
 
 test.describe("fs-routes", () => {
   test.beforeAll(async () => {
@@ -138,10 +140,16 @@ test.describe("fs-routes", () => {
     });
 
     appFixture = await createAppFixture(fixture);
+    originalConsoleError = console.error;
+    console.error = () => {};
+    originalConsoleWarn = console.warn;
+    console.warn = () => {};
   });
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   test.describe("without JavaScript", () => {
