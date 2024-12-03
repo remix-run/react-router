@@ -1860,7 +1860,7 @@ export function useFetcher<T = any>({
   let load = React.useCallback(
     async (href: string, opts?: { flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      await router.fetch(fetcherKey, routeId, action??href, opts);
+      await router.fetch(fetcherKey, routeId, action ? action : href, opts);
     },
     [fetcherKey, routeId, router, action]
   );
@@ -1868,7 +1868,7 @@ export function useFetcher<T = any>({
   let submitImpl = useSubmit();
   let submit = React.useCallback<FetcherSubmitFunction>(
     async (target, opts) => {
-      await submitImpl(action??target, {
+      await submitImpl(action ? action : target, {
         ...opts,
         navigate: false,
         fetcherKey,
