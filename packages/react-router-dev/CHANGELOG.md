@@ -20,6 +20,7 @@
 
 ### Patch Changes
 
+- Pass route error to ErrorBoundary as a prop ([#12338](https://github.com/remix-run/react-router/pull/12338))
 - Ensure typegen file watcher is cleaned up when Vite dev server restarts ([#12331](https://github.com/remix-run/react-router/pull/12331))
 - Updated dependencies:
   - `react-router@7.0.1`
