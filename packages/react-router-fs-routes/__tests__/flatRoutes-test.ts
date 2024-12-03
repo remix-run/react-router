@@ -1,8 +1,10 @@
 import path from "node:path";
+import { mkdirSync, rmdirSync, createFileSync, rmSync } from "fs-extra";
 
 import type { RouteManifestEntry } from "../manifest";
 
 import {
+  flatRoutes,
   flatRoutesUniversal,
   getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
@@ -875,6 +877,30 @@ describe("flatRoutes", () => {
         ])
       );
       expect(routes).toHaveLength(3);
+    });
+  });
+
+  describe("throw correct error", () => {
+    beforeEach(() => {
+      mkdirSync(APP_DIR, { recursive: true });
+    });
+    afterEach(() => {
+      rmdirSync(APP_DIR);
+    });
+
+    test("root route is not found", () => {
+      expect(() => flatRoutes(APP_DIR)).toThrow(
+        `Could not find a root route module in the app directory: test/root/app`
+      );
+    });
+
+    test("routes dir is not found", () => {
+      const rootRoute = path.join(APP_DIR, "root.tsx");
+      createFileSync(rootRoute);
+      expect(() => flatRoutes(APP_DIR)).toThrow(
+        `Could not find the routes directory: test/root/app/routes. Did you forget to create it?`
+      );
+      rmSync(rootRoute);
     });
   });
 });
