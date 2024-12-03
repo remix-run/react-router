@@ -22,7 +22,7 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
       const indent = i === 0 ? "" : "  ".repeat(2);
       let source = noExtension(rel);
       if (!source.startsWith("../")) source = "./" + source;
-      return `${indent}import type { Info as Parent${i} } from "${source}"`;
+      return `${indent}import type { Info as Parent${i} } from "${source}.js"`;
     })
     .join("\n");
 
@@ -34,14 +34,16 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
 
     ${parentTypeImports}
 
-    type Module = typeof import("../${Pathe.filename(route.file)}")
+    type Module = typeof import("../${Pathe.filename(route.file)}.js")
 
     export type Info = {
       parents: [${parents.map((_, i) => `Parent${i}`).join(", ")}],
       id: "${route.id}"
       file: "${route.file}"
       path: "${route.path}"
-      params: {${formatParamProperties(urlpath)}}
+      params: {${formatParamProperties(
+        urlpath
+      )}} & { [key: string]: string | undefined }
       module: Module
       loaderData: T.CreateLoaderData<Module>
       actionData: T.CreateActionData<Module>

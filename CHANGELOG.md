@@ -31,12 +31,10 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Changes by Package](#changes-by-package)
-- [**Full Changelog**: `v6.28.0...v7.0.0`](#full-changelog-v6280v700)
   - [v6.28.0](#v6280)
     - [What's Changed](#whats-changed)
     - [Minor Changes](#minor-changes-1)
     - [Patch Changes](#patch-changes-1)
-- [\<\<\<\<\<\<\< HEAD](#-head)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-1)
       - [Stabilized APIs](#stabilized-apis)
@@ -247,6 +245,57 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
+
+## v7.0.2
+
+Date: 2024-12-02
+
+### Patch Changes
+
+- Temporarily only use one build in export map so packages can have a peer dependency on react router ([#12437](https://github.com/remix-run/react-router/pull/12437))
+- Support `moduleResolution` `Node16` and `NodeNext` ([#12440](https://github.com/remix-run/react-router/pull/12440))
+- Generate wide `matches` and `params` types for child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
+
+  At runtime, `matches` includes child route matches and `params` include child route path parameters.
+  But previously, we only generated types for parent routes and the current route in `matches` and `params`.
+  To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
+
+### Changes by Package
+
+- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router/CHANGELOG.md#702)
+- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-architect/CHANGELOG.md#702)
+- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-cloudflare/CHANGELOG.md#702)
+- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-dev/CHANGELOG.md#702)
+- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-express/CHANGELOG.md#702)
+- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-fs-routes/CHANGELOG.md#702)
+- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-node/CHANGELOG.md#702)
+- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#702)
+- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.0.2/packages/react-router-serve/CHANGELOG.md#702)
+
+**Full Changelog**: [`v7.0.1...v7.0.2`](https://github.com/remix-run/react-router/compare/react-router@7.0.1...react-router@7.0.2)
+
+## v7.0.1
+
+Date: 2024-12-02
+
+### Patch Changes
+
+- Ensure typegen file watcher is cleaned up when Vite dev server restarts ([#12331](https://github.com/remix-run/react-router/pull/12331))
+- Pass route error to ErrorBoundary as a prop ([#12338](https://github.com/remix-run/react-router/pull/12338))
+
+### Changes by Package
+
+- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router/CHANGELOG.md#701)
+- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-architect/CHANGELOG.md#701)
+- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-cloudflare/CHANGELOG.md#701)
+- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-dev/CHANGELOG.md#701)
+- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-express/CHANGELOG.md#701)
+- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-fs-routes/CHANGELOG.md#701)
+- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-node/CHANGELOG.md#701)
+- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#701)
+- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.0.1/packages/react-router-serve/CHANGELOG.md#701)
+
+**Full Changelog**: [`v7.0.0...v7.0.1`](https://github.com/remix-run/react-router/compare/react-router@7.0.0...react-router@7.0.1)
 
 ## v7.0.0
 
