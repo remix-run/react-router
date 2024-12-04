@@ -1,13 +1,15 @@
-import { expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { expect } from "@playwright/test";
+import dedent from "dedent";
+
 import { test, type Files } from "./helpers/vite.js";
 
-const js = String.raw;
+const tsx = dedent;
 
 const files: Files = async ({ port }) => ({
-  "vite.config.ts": js`
+  "vite.config.ts": tsx`
     import { defineConfig } from "vite";
     import { reactRouter } from "@react-router/dev/vite";
     import mdx from "@mdx-js/rollup";
@@ -23,7 +25,7 @@ const files: Files = async ({ port }) => ({
       ],
     });
   `,
-  "app/root.tsx": js`
+  "app/root.tsx": tsx`
     import { Links, Meta, Outlet, Scripts } from "react-router";
 
     export default function Root() {
@@ -44,7 +46,7 @@ const files: Files = async ({ port }) => ({
       );
     }
   `,
-  "app/routes/_index.tsx": js`
+  "app/routes/_index.tsx": tsx`
     import { Suspense } from "react";
     import { Await, useLoaderData } from "react-router";
 
@@ -70,8 +72,8 @@ const files: Files = async ({ port }) => ({
       );
     }
   `,
-  "app/routes/set-cookies.tsx": js`
-    import { LoaderFunction } from "react-router";
+  "app/routes/set-cookies.tsx": tsx`
+    import type { LoaderFunction } from "react-router";
 
     export const loader: LoaderFunction = () => {
       const headers = new Headers();
@@ -101,9 +103,8 @@ const files: Files = async ({ port }) => ({
       return response;
     };
   `,
-  "app/routes/get-cookies.tsx": js`
-    import type { LoaderFunctionArgs } from "react-router";
-    import { useLoaderData } from "react-router"
+  "app/routes/get-cookies.tsx": tsx`
+    import { useLoaderData, type LoaderFunctionArgs } from "react-router";
 
     export const loader = ({ request }: LoaderFunctionArgs) => ({
       cookies: request.headers.get("Cookie")
@@ -120,7 +121,7 @@ const files: Files = async ({ port }) => ({
       );
     }
   `,
-  "app/routes/jsx.jsx": js`
+  "app/routes/jsx.jsx": tsx`
     export default function JsxRoute() {
       return (
         <div id="jsx">
@@ -129,7 +130,7 @@ const files: Files = async ({ port }) => ({
       );
     }
   `,
-  "app/routes/mdx.mdx": js`
+  "app/routes/mdx.mdx": tsx`
     import { useLoaderData } from "react-router";
 
     export const loader = () => {
@@ -150,7 +151,7 @@ const files: Files = async ({ port }) => ({
   ".env": `
     ENV_VAR_FROM_DOTENV_FILE=Content from .env file
   `,
-  "app/routes/dotenv.tsx": js`
+  "app/routes/dotenv.tsx": tsx`
     import { useState, useEffect } from "react";
     import { useLoaderData } from "react-router";
 
@@ -178,9 +179,8 @@ const files: Files = async ({ port }) => ({
       </>
     }
   `,
-  "app/routes/error-stacktrace.tsx": js`
-    import type { LoaderFunction, MetaFunction } from "react-router";
-    import { Link, useLocation } from "react-router";
+  "app/routes/error-stacktrace.tsx": tsx`
+    import { Link, useLocation, type LoaderFunction, type MetaFunction } from "react-router";
 
     export const loader: LoaderFunction = ({ request }) => {
       if (request.url.includes("crash-loader")) {
@@ -211,7 +211,7 @@ const files: Files = async ({ port }) => ({
       );
     }
   `,
-  "app/routes/known-route-exports.tsx": js`
+  "app/routes/known-route-exports.tsx": tsx`
     import { useMatches } from "react-router";
 
     export const meta = () => [{
@@ -371,13 +371,13 @@ test.describe("Vite dev", () => {
       "Error: crash-server-render"
     );
     await expect(page.locator("main")).toContainText(
-      "error-stacktrace.tsx:16:11"
+      "error-stacktrace.tsx:14:11"
     );
 
     await page.goto(`http://localhost:${port}/error-stacktrace?crash-loader`);
     await expect(page.locator("main")).toContainText("Error: crash-loader");
     await expect(page.locator("main")).toContainText(
-      "error-stacktrace.tsx:7:11"
+      "error-stacktrace.tsx:5:11"
     );
   });
 
