@@ -53,37 +53,24 @@ When auto-importing the `Route` type helper, TypeScript will generate:
 import { Route } from "./+types/my-route";
 ```
 
-This will work, but you may want the `type` modifier for the import added automatically as well.
+But if you enable [verbatimModuleSyntax](https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax):
+
+```json filename=tsconfig.json
+{
+  "compilerOptions": {
+    "verbatimModuleSyntax": true
+  }
+}
+```
+
+Then, you will get the `type` modifier for the import automatically as well:
 
 ```ts filename=app/routes/my-route.tsx
 import type { Route } from "./+types/my-route";
 //     ^^^^
 ```
 
-For example, this helps tools like bundlers to detect type-only module that can be safely excluded from the bundle.
-
-### VSCode
-
-In VSCode, you can get this behavior automatically by selecting `TypeScript › Preferences: Prefer Type Only Auto Imports` from the command palette or by manually setting `preferTypeOnlyAutoImports`:
-
-```json filename=.vscode/settings.json
-{
-  "typescript.preferences.preferTypeOnlyAutoImports": true
-}
-```
-
-### eslint
-
-In eslint, you can get this behavior by setting `prefer: "type-imports"` for the `consistent-type-imports` rule:
-
-```json
-{
-  "@typescript-eslint/consistent-type-imports": [
-    "warn",
-    { "prefer": "type-imports" }
-  ]
-}
-```
+This helps tools like bundlers to detect type-only module that can be safely excluded from the bundle.
 
 ## Conclusion
 
