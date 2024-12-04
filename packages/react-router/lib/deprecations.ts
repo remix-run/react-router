@@ -22,7 +22,7 @@ export function logV6DeprecationWarnings(
   renderFuture: Partial<RenderFutureConfig> | undefined,
   routerFuture?: Omit<RouterFutureConfig, "v7_prependBasename">
 ) {
-  if (!renderFuture?.v7_startTransition) {
+  if (renderFuture?.v7_startTransition === undefined) {
     logDeprecation(
       "v7_startTransition",
       "React Router will begin wrapping state updates in `React.startTransition` in v7",
@@ -31,7 +31,7 @@ export function logV6DeprecationWarnings(
   }
 
   if (
-    !renderFuture?.v7_relativeSplatPath &&
+    renderFuture?.v7_relativeSplatPath === undefined &&
     (!routerFuture || !routerFuture.v7_relativeSplatPath)
   ) {
     logDeprecation(
@@ -42,7 +42,7 @@ export function logV6DeprecationWarnings(
   }
 
   if (routerFuture) {
-    if (!routerFuture.v7_fetcherPersist) {
+    if (routerFuture.v7_fetcherPersist === undefined) {
       logDeprecation(
         "v7_fetcherPersist",
         "The persistence behavior of fetchers is changing in v7",
@@ -50,7 +50,7 @@ export function logV6DeprecationWarnings(
       );
     }
 
-    if (!routerFuture.v7_normalizeFormMethod) {
+    if (routerFuture.v7_normalizeFormMethod === undefined) {
       logDeprecation(
         "v7_normalizeFormMethod",
         "Casing of `formMethod` fields is being normalized to uppercase in v7",
@@ -58,7 +58,7 @@ export function logV6DeprecationWarnings(
       );
     }
 
-    if (!routerFuture.v7_partialHydration) {
+    if (routerFuture.v7_partialHydration === undefined) {
       logDeprecation(
         "v7_partialHydration",
         "`RouterProvider` hydration behavior is changing in v7",
@@ -66,7 +66,7 @@ export function logV6DeprecationWarnings(
       );
     }
 
-    if (!routerFuture.v7_skipActionErrorRevalidation) {
+    if (routerFuture.v7_skipActionErrorRevalidation === undefined) {
       logDeprecation(
         "v7_skipActionErrorRevalidation",
         "The revalidation behavior after 4xx/5xx `action` responses is changing in v7",
