@@ -22,7 +22,7 @@ let tsconfig = (aliases: Record<string, string[]>) => `
     "include": ["env.d.ts", "**/*.ts", "**/*.tsx"],
     "compilerOptions": {
       "lib": ["DOM", "DOM.Iterable", "ES2022"],
-      "isolatedModules": true,
+      "verbatimModuleSyntax": true,
       "esModuleInterop": true,
       "jsx": "react-jsx",
       "module": "ESNext",
