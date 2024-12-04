@@ -31,7 +31,6 @@ let tsconfig = (aliases: Record<string, string[]>) => `
       "target": "ES2022",
       "strict": true,
       "allowJs": true,
-      "forceConsistentCasingInFileNames": true,
       "baseUrl": ".",
       "paths": ${JSON.stringify(aliases)},
       "noEmit": true
