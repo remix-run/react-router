@@ -351,7 +351,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = "vite-template";
+  let template = "vite-5-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);

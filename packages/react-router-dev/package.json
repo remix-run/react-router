@@ -113,7 +113,6 @@
     "tiny-invariant": "^1.2.0",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
-    "vite": "^5.1.0",
     "wireit": "0.14.9",
     "wrangler": "^3.28.2"
   },
@@ -121,7 +120,7 @@
     "@react-router/serve": "workspace:^",
     "react-router": "workspace:^",
     "typescript": "^5.1.0",
-    "vite": "^5.1.0",
+    "vite": "^5.1.0 || ^6.0.0",
     "wrangler": "^3.28.2"
   },
   "peerDependenciesMeta": {

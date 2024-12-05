@@ -2,8 +2,10 @@ import * as path from "node:path";
 import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
+import semver from "semver";
 
 import type { ResolvedReactRouterConfig } from "../config/config";
+import { importViteEsmSync } from "./import-vite-esm-sync";
 import { resolveFileUrl } from "./resolve-file-url";
 
 type ServerRouteManifest = ServerBuild["routes"];
@@ -103,7 +105,14 @@ const getStylesForFiles = async ({
       try {
         let css = isCssModulesFile(dep.file)
           ? cssModulesManifest[dep.file]
-          : (await viteDevServer.ssrLoadModule(dep.url)).default;
+          : // Vite 5 support
+            (await viteDevServer.ssrLoadModule(dep.url)).default ||
+            // Vite 6+ support
+            (
+              await viteDevServer.ssrLoadModule(
+                `${dep.url}${dep.url.includes("?") ? "&" : "?"}inline`
+              )
+            ).default;
 
         if (css === undefined) {
           throw new Error();
