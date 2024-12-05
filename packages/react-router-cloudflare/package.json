@@ -1,6 +1,6 @@
 {
   "name": "@react-router/cloudflare",
-  "version": "7.0.2",
+  "version": "0.0.0-nightly-9a3d9fc19-20241205",
   "description": "Cloudflare platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
