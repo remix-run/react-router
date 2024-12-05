@@ -17,7 +17,6 @@ export interface FrameworkContextObject {
   serverHandoffString?: string;
   future: FutureConfig;
   isSpaMode: boolean;
-  abortDelay?: number;
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
