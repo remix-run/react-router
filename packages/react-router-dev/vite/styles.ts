@@ -103,7 +103,14 @@ const getStylesForFiles = async ({
       try {
         let css = isCssModulesFile(dep.file)
           ? cssModulesManifest[dep.file]
-          : (await viteDevServer.ssrLoadModule(dep.url)).default;
+          : // Vite 5 support
+            (await viteDevServer.ssrLoadModule(dep.url)).default ||
+            // Vite 6+ support
+            (
+              await viteDevServer.ssrLoadModule(
+                `${dep.url}${dep.url.includes("?") ? "&" : "?"}inline`
+              )
+            ).default;
 
         if (css === undefined) {
           throw new Error();
