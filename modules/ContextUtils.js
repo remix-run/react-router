@@ -2,7 +2,7 @@ import React from 'react'
 
 const RouterSubscriberContext = React.createContext()
 
-export function ContextProvider() {
+export function ContextProvider(props) {
   const contextRef = React.useRef()
   if (!contextRef.current) {
     contextRef.current = {
@@ -28,7 +28,7 @@ export function ContextProvider() {
 
   return (
     <RouterSubscriberContext.Provider value={contextRef.current}>
-      {this.props.children}
+      {props.children}
     </RouterSubscriberContext.Provider>
   )
 }
