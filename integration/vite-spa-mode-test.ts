@@ -296,8 +296,6 @@ test.describe("SPA Mode", () => {
             import { ServerRouter } from "react-router";
             import { renderToPipeableStream } from "react-dom/server";
 
-            const ABORT_DELAY = 5_000;
-
             export default function handleRequest(
               request: Request,
               responseStatusCode: number,
@@ -322,11 +320,7 @@ test.describe("SPA Mode", () => {
               const html = await new Promise((resolve, reject) => {
                 let shellRendered = false;
                 const { pipe, abort } = renderToPipeableStream(
-                  <ServerRouter
-                    context={remixContext}
-                    url={request.url}
-                    abortDelay={ABORT_DELAY}
-                  />,
+                  <ServerRouter context={remixContext} url={request.url} />,
                   {
                     onAllReady() {
                       shellRendered = true;
@@ -359,7 +353,7 @@ test.describe("SPA Mode", () => {
                   }
                 );
 
-                setTimeout(abort, ABORT_DELAY);
+                setTimeout(abort, 5000);
               });
 
               const shellHtml = fs

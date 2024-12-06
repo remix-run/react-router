@@ -14,8 +14,6 @@ const files: Files = async ({ port }) => ({
     import { ServerRouter } from "react-router";
     import { renderToPipeableStream } from "react-dom/server";
 
-    const ABORT_DELAY = 5_000;
-
     export default function handleRequest(
       request: Request,
       responseStatusCode: number,
@@ -25,11 +23,7 @@ const files: Files = async ({ port }) => ({
       return new Promise((resolve, reject) => {
         let shellRendered = false;
         const { pipe, abort } = renderToPipeableStream(
-          <ServerRouter
-            context={remixContext}
-            url={request.url}
-            abortDelay={ABORT_DELAY}
-          />,
+          <ServerRouter context={remixContext} url={request.url} />,
           {
             onShellReady() {
               shellRendered = true;
@@ -65,7 +59,7 @@ const files: Files = async ({ port }) => ({
           }
         );
 
-        setTimeout(abort, ABORT_DELAY);
+        setTimeout(abort, 5000);
       });
     }
   `,
