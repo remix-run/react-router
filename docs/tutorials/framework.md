@@ -205,11 +205,9 @@ You can also use [file-based routing if you prefer][file-route-conventions].
 
 We need to tell React Router about our new route. `routes.ts` is a special file where we can configure all our routes.
 
-```tsx filename=routes.ts lines=[3,7]
-import {
-  type RouteConfig,
-  route,
-} from "@react-router/dev/routes";
+```tsx filename=routes.ts lines=[2,5]
+import type { RouteConfig } from "@react-router/dev/routes";
+import { route } from "@react-router/dev/routes";
 
 export default [
   route("contacts/:contactId", "pages/contact.tsx"),
@@ -482,7 +480,7 @@ That's it! React Router will now automatically keep that data in sync with your 
 
 <!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/06.webp" /> -->
 
-You may be wondering why we're "client" loading data instead of loading the data on the server so we can do server-side rendering (SSR). Right now our contacts site is a [Single Page App][spa], so there's no server-side rendering. This makes it really easy to deploy to any static hosting provider, but we'll talk more about how to enable SSR later if you want to take advantage of deploying to a server.
+You may be wondering why we're "client" loading data instead of loading the data on the server so we can do server-side rendering (SSR). Right now our contacts site is a [Single Page App][spa], so there's no server-side rendering. This makes it really easy to deploy to any static hosting provider, but we'll talk more about how to enable SSR in a bit so you can learn about all the different [rendering strategies][rendering-strategies] React Router offers.
 
 ## Type Safety
 
@@ -522,13 +520,11 @@ export default {
 } satisfies Config;
 ```
 
-We'll explore more [rendering strategies][rendering-strategies] later, but a simple SPA is good enough for now.
-
-However, you might have started noticing that whenever your refresh the page you get a flash of white before the app loads.
+You might have started noticing that whenever your refresh the page you get a flash of white before the app loads. Since we're only rendering on the client, there's nothing to show the user while the app is loading.
 
 👉 **Add a `HydrateFallback` export**
 
-We can provide a fallback that will show up while the app is hydrated (rendering on the client for the first time) with a [`HydrateFallback`][hydrate-fallback] export.
+We can provide a fallback that will show up before the app is hydrated (rendering on the client for the first time) with a [`HydrateFallback`][hydrate-fallback] export.
 
 ```tsx filename=app/root.tsx lines=[3-10]
 // existing imports & exports
@@ -542,6 +538,341 @@ export function HydrateFallback() {
   );
 }
 ```
+
+Now if you refresh the page, you'll briefly see the loading splash before the app is hydrated.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/07.webp" /> -->
+
+## Adding an about page
+
+Before we move on to working dynamic data that the user can interact with, let's add a static page with content that we expect to rarely change. An about page will be perfect for this.
+
+👉 **Create the about route**
+
+```shellscript nonumber
+touch app/pages/about.tsx
+```
+
+Don't forget to add the route to `app/routes.ts`:
+
+```tsx filename=app/routes.ts lines=[3]
+export default [
+  route("contacts/:contactId", "pages/contact.tsx"),
+  route("about", "pages/about.tsx"),
+] satisfies RouteConfig;
+```
+
+👉 **Add the about page UI**
+
+Nothing too special here, just copy and paste:
+
+```tsx filename=app/pages/about.tsx
+import { Link } from "react-router";
+
+export default function About() {
+  return (
+    <div id="about">
+      <Link to="/">← Go to demo</Link>
+      <h1>About React Router Contacts</h1>
+
+      <div>
+        <p>
+          This is a demo application showing off some of the
+          powerful features of React Router, including
+          dynamic routing, nested routes, loaders, actions,
+          and more.
+        </p>
+
+        <h2>Features</h2>
+        <p>
+          Explore the demo to see how React Router handles:
+        </p>
+        <ul>
+          <li>
+            Data loading and mutations with loaders and
+            actions
+          </li>
+          <li>
+            Nested routing with parent/child relationships
+          </li>
+          <li>URL-based routing with dynamic segments</li>
+          <li>Pending and optimistic UI</li>
+        </ul>
+
+        <h2>Learn More</h2>
+        <p>
+          Check out the official documentation at{" "}
+          <a href="https://reactrouter.com">
+            reactrouter.com
+          </a>{" "}
+          to learn more about building great web
+          applications with React Router.
+        </p>
+      </div>
+    </div>
+  );
+}
+```
+
+👉 **Add a link to the about page in the sidebar**
+
+```tsx filename=app/root.tsx lines=[5-7]
+export default function App() {
+  return (
+    <>
+      <div id="sidebar">
+        <h1>
+          <Link to="about">React Router Contacts</Link>
+        </h1>
+        {/* other elements */}
+      </div>
+      {/* other elements */}
+    </>
+  );
+}
+```
+
+Now navigate to the [about page][about-page] and it should look like this:
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/08.webp" /> -->
+
+## Index Routes
+
+When we load up the app and we're not on the about page, you'll notice a big blank page on the right side of our list.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/09.webp" /> -->
+
+When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of [index routes][index-route] as the default child route to fill in that space.
+
+👉 **Create an index route for the root route**
+
+```shellscript nonumber
+touch app/pages/home.tsx
+```
+
+```ts filename=app/routes.ts lines=[1,4]
+import { index, route } from "@react-router/dev/routes";
+
+export default [
+  index("pages/home.tsx"),
+  route("contacts/:contactId", "pages/contact.tsx"),
+  route("about", "pages/about.tsx"),
+] satisfies RouteConfig;
+```
+
+👉 **Fill in the index component's elements**
+
+Feel free to copy/paste, nothing special here.
+
+```tsx filename=app/pages/home.tsx
+export default function Home() {
+  return (
+    <p id="index-page">
+      This is a demo for React Router.
+      <br />
+      Check out{" "}
+      <a href="https://reactrouter.com">
+        the docs at reactrouter.com
+      </a>
+      .
+    </p>
+  );
+}
+```
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/10.webp" /> -->
+
+Voilà! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
+
+## Layout Routes
+
+We don't actually want the about page to be nested inside of the sidebar layout. Let's move the sidebar to a layout and apply it to the about page. Additionally, we want to avoid loading all the contacts data on the about page.
+
+👉 **Create a layout route for the sidebar**
+
+You can name and put this layout route wherever you want, but putting it inside of a `layouts` directory will help keep things organized for our simple app.
+
+```shellscript nonumber
+mkdir app/layouts
+touch app/layouts/sidebar.tsx
+```
+
+For now just return an [`<Outlet>`][outlet-component].
+
+```tsx filename=app/layouts/sidebar.tsx
+import { Outlet } from "react-router";
+
+export default function SidebarLayout() {
+  return <Outlet />;
+}
+```
+
+👉 **Move route definitions under the sidebar layout**
+
+We can define a `layout` route to automatically render the sidebar for all matched routes within in. This is basically what our `root` was, but now we can scope it to specific routes.
+
+```ts filename=app/routes.ts lines=[4,9,12]
+import type { RouteConfig } from "@react-router/dev/routes";
+import {
+  index,
+  layout,
+  route,
+} from "@react-router/dev/routes";
+
+export default [
+  layout("layouts/sidebar.tsx", [
+    index("pages/home.tsx"),
+    route("contacts/:contactId", "pages/contact.tsx"),
+  ]),
+  route("about", "pages/about.tsx"),
+] satisfies RouteConfig;
+```
+
+👉 **Move the layout and data fetching to the sidebar layout**
+
+We want to move the `clientLoader` and everything inside the `App` component to the sidebar layout. It should look like this:
+
+```tsx filename=app/layouts/sidebar.tsx
+import { Form, Link, Outlet } from "react-router";
+import { getContacts } from "../data";
+import type { Route } from "./+types/sidebar";
+
+export async function clientLoader() {
+  const contacts = await getContacts();
+  return { contacts };
+}
+
+export default function App({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts } = loaderData;
+
+  return (
+    <>
+      <div id="sidebar">
+        <h1>
+          <Link to="about">React Router Contacts</Link>
+        </h1>
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              aria-label="Search contacts"
+              id="q"
+              name="q"
+              placeholder="Search"
+              type="search"
+            />
+            <div
+              aria-hidden
+              hidden={true}
+              id="search-spinner"
+            />
+          </Form>
+          <Form method="post">
+            <button type="submit">New</button>
+          </Form>
+        </div>
+        <nav>
+          {contacts.length ? (
+            <ul>
+              {contacts.map((contact) => (
+                <li key={contact.id}>
+                  <Link to={`contacts/${contact.id}`}>
+                    {contact.first || contact.last ? (
+                      <>
+                        {contact.first} {contact.last}
+                      </>
+                    ) : (
+                      <i>No Name</i>
+                    )}{" "}
+                    {contact.favorite ? (
+                      <span>★</span>
+                    ) : null}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              <i>No contacts</i>
+            </p>
+          )}
+        </nav>
+      </div>
+      <div id="detail">
+        <Outlet />
+      </div>
+    </>
+  );
+}
+```
+
+And inside `app/root.tsx`, `App` should just return an [`<Outlet>`][outlet-component], and all unused imports can be removed.
+
+```tsx filename=app/root.tsx lines=[3-10]
+// existing imports and exports
+
+export default function App() {
+  return <Outlet />;
+}
+```
+
+Now with that shuffling around done, our about page no longer loads contacts data nor is it nested inside of the sidebar layout:
+
+## Pre-rendering a static page
+
+If you refresh the about page, you still see the loading spinner for just a split second before the page render on the client. This is really not a good experience, plus the page is just static information, we should be able to pre-render it as static HTML at build time.
+
+👉 **Pre-render the about page**
+
+Inside of `react-router.config.ts`, we can add a [`prerender`][pre-rendering] array to the config to tell React Router to pre-render certain urls at build time. In this case we just want to pre-render the about page.
+
+```ts filename=app/react-router.config.ts lines=[5]
+import { type Config } from "@react-router/dev/config";
+
+export default {
+  ssr: true,
+  prerender: ["about"],
+} satisfies Config;
+```
+
+Now if you go to the [about page][about-page] and refresh, you won't see the loading spinner!
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/11.webp" /> -->
+
+## Server-Side Rendering
+
+React Router is a great framework for building [Single Page Apps][spa]. Many applications are served well by only client-side rendering, and _maybe_ statically pre-rendering a few pages at build time.
+
+If you ever do want to introduce server-side rendering into your React Router application, it's incredibly easy (remember that `ssr: false` boolean from earlier?).
+
+👉 **Enable server-side rendering**
+
+```ts filename=app/react-router.config.ts lines=[2]
+export default {
+  ssr: true,
+  prerender: ["about"],
+} satisfies Config;
+```
+
+And now... nothing is different? We're still getting our spinner for a split second before the page renders on the client? Plus, aren't we using `clientLoader`, so our data is still being fetched on the client?
+
+That's right! With React Router you can still use `clientLoader` (and `clientAction`) to do client-side data fetching where you see fit. React Router gives you a lot of flexibility to use the right tool for the job.
+
+Let's switch to using [`loader`][loader], which (you guessed it) is used to fetch data on the server.
+
+👉 **Switch to using `loader` to fetch data**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[3]
+// existing imports
+
+export async function loader() {
+  const contacts = await getContacts();
+  return { contacts };
+}
+```
+
+Whether you set `ssr` to `true` or `false` depends on you and your users needs. Both strategies are perfectly valid. For the remainder of this tutorial we're going to use server-side rendering, but know that all rendering strategies are first class citizens in React Router.
 
 ## URL Params in Loaders
 
@@ -557,18 +888,16 @@ These `params` are passed to the loader with keys that match the dynamic segment
 
 These params are most often used to find a record by ID. Let's try it out.
 
-👉 **Add a `clientLoader` function to the contact page and access data with `loaderData`**
+👉 **Add a `loader` function to the contact page and access data with `loaderData`**
 
 <docs-info>The following code has type errors in it, we'll fix them in the next section</docs-info>
 
-```tsx filename=app/pages/contact.tsx lines=[2-3,5-10,12-15]
+```tsx filename=app/pages/contact.tsx lines=[2-3,5-8,10-13]
 // existing imports
 import { getContact } from "../data";
 import type { Route } from "./+types/contact";
 
-export async function clientLoader({
-  params,
-}: Route.ClientLoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const contact = await getContact(params.contactId);
   return { contact };
 }
@@ -592,12 +921,10 @@ You'll notice that the type of `loaderData.contact` is `ContactRecord | null`. B
 
 We could account for the possibility of the contact being not found in component code, but the webby thing to do is send a proper 404. We can do that in the loader and solve all of our problems at once.
 
-```tsx filename=app/routes/contacts.$contactId.tsx lines=[7-9]
+```tsx filename=app/routes/contacts.$contactId.tsx lines=[5-7]
 // existing imports
 
-export async function clientLoader({
-  params,
-}: Route.ClientLoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const contact = await getContact(params.contactId);
   if (!contact) {
     throw new Response("Not Found", { status: 404 });
@@ -618,26 +945,26 @@ React Router emulates HTML Form navigation as the data mutation primitive, which
 
 While unfamiliar to some web developers, HTML `form`s actually cause a navigation in the browser, just like clicking a link. The only difference is in the request: links can only change the URL while `form`s can also change the request method (`GET` vs. `POST`) and the request body (`POST` form data).
 
-Without client side routing, the browser will serialize the `form`'s data automatically and send it to the server as the request body for `POST`, and as [`URLSearchParams`][url-search-params] for `GET`. React Router does the same thing, except instead of sending the request to the server, it uses client side routing and sends it to the route's [`clientAction`][client-action] function ([`action`][action] if we use server-side-rendering).
+Without client side routing, the browser will serialize the `form`'s data automatically and send it to the server as the request body for `POST`, and as [`URLSearchParams`][url-search-params] for `GET`. React Router does the same thing, except instead of sending the request to the server, it uses client side routing and sends it to the route's [`action`][action] function.
 
 We can test this out by clicking the "New" button in our app.
 
 <!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/09.webp" /> -->
 
-React Router throws an error because there is no `clientAction` to handle it. If we were using a server, React Router would send a 405 because there is no code on the _server_ to handle this form navigation.
+React Router sends a 405 because there is no code on the server to handle this form navigation.
 
 ## Creating Contacts
 
-We'll create new contacts by exporting a `clientAction` function in our root route. When the user clicks the "new" button, the form will `POST` to the root route action.
+We'll create new contacts by exporting an `action` function in our root route. When the user clicks the "new" button, the form will `POST` to the root route action.
 
-👉 **Export an `clientAction` function from `app/root.tsx`**
+👉 **Export an `action` function from `app/root.tsx`**
 
 ```tsx filename=app/root.tsx lines=[3,5-8]
 // existing imports
 
-import { createEmptyContact, getContacts } from "./data";
+import { createEmptyContact } from "./data";
 
-export async function clientAction() {
+export async function action() {
   const contact = await createEmptyContact();
   return { contact };
 }
@@ -653,9 +980,13 @@ The `createEmptyContact` method just creates an empty contact with no name or da
 
 > 🧐 Wait a sec ... How did the sidebar update? Where did we call the `action` function? Where's the code to re-fetch the data? Where are `useState`, `onSubmit` and `useEffect`?!
 
-This is where the "old school web" programming model shows up. [`<Form>`][form-component] prevents the browser from sending the request to the server and sends it to your route's `action`/`clientAction` function instead with [`fetch`][fetch].
+This is where the "old school web" programming model shows up. [`<Form>`][form-component] prevents the browser from sending the request to the server and sends it to your route's `action` function instead with [`fetch`][fetch].
 
-In web semantics, a `POST` usually means some data is changing. By convention, React Router uses this as a hint to automatically revalidate the data on the page after the `action` and/or `clientAction` finishes.
+In web semantics, a `POST` usually means some data is changing. By convention, React Router uses this as a hint to automatically revalidate the data on the page after the `action` finishes.
+
+In fact, since it's all just HTML and HTTP, you could disable JavaScript and the whole thing will still work. Instead of React Router serializing the form and making a [`fetch`][fetch] request to your server, the browser will serialize the form and make a document request. From there React Router will render the page server side and send it down. It's the same UI in the end either way.
+
+We'll keep JavaScript around though because we're going to make a better user experience than spinning favicons and static documents.
 
 ## Updating Data
 
@@ -671,13 +1002,17 @@ touch app/pages/edit-contact.tsx
 
 Don't forget to add the route to `app/routes.ts`:
 
-```tsx filename=app/routes.ts lines=[3-6]
+```tsx filename=app/routes.ts lines=[5-8]
 export default [
-  route("contacts/:contactId", "pages/contact.tsx"),
-  route(
-    "contacts/:contactId/edit",
-    "pages/edit-contact.tsx"
-  ),
+  layout("layouts/sidebar.tsx", [
+    index("pages/home.tsx"),
+    route("contacts/:contactId", "pages/contact.tsx"),
+    route(
+      "contacts/:contactId/edit",
+      "pages/edit-contact.tsx"
+    ),
+  ]),
+  route("about", "pages/about.tsx"),
 ] satisfies RouteConfig;
 ```
 
@@ -686,14 +1021,12 @@ export default [
 Nothing we haven't seen before, feel free to copy/paste:
 
 ```tsx filename=app/pages/edit-contact.tsx
-import { Form, useLoaderData } from "react-router";
+import { Form } from "react-router";
 import type { Route } from "./+types/edit-contact";
 
 import { getContact } from "../data";
 
-export async function clientLoader({
-  params,
-}: Route.ClientLoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const contact = await getContact(params.contactId);
   if (!contact) {
     throw new Response("Not Found", { status: 404 });
@@ -795,15 +1128,6 @@ Now click on your new record, then click the "Edit" button. We should see the ne
 
 ## Optimistic UI
 
-## Adding an about page
-
-- move root stuff to a layout
-- add an about page
-
-## Pre-rendering a static page
-
-## Server Side Rendering
-
 ---
 
 That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do, so make sure to check out all the [APIs][react-router-apis] 😀
@@ -821,9 +1145,13 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [type-safety]: ../explanation/type-safety
 [react-router-config]: ../explanation/special-files#react-routerconfigts
 [rendering-strategies]: ../start/framework/rendering
+[index-route]: ../start/framework/routing#index-routes
+[layout-route]: ../start/framework/routing#layout-routes
 [hydrate-fallback]: ../start/framework/route-module#hydratefallback
+[about-page]: http://localhost:5173/about
+[pre-rendering]: ../how-to/pre-rendering
 [url-search-params]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-[client-action]: ../start/framework/route-module#clientaction
+[loader]: ../start/framework/route-module#loader
 [action]: ../start/framework/route-module#action
 [form-component]: https://api.reactrouter.com/v7/functions/react_router.Form
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
