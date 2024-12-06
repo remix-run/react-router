@@ -185,7 +185,7 @@ You can explicit specify `router` as a prop to the wrapper component to override
 
 #### Options
 
-##### `withRef`
+##### ~`withRef`~ Removed in this fork
 If `true`, the wrapper component attaches a ref to the wrapped component, which can then be accessed via `getWrappedInstance`.
 
 ```js

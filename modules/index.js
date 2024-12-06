@@ -13,7 +13,6 @@ export Route from './Route'
 /* utils */
 export { createRoutes } from './RouteUtils'
 export RouterContext from './RouterContext'
-export { locationShape, routerShape } from './PropTypes'
 export match from './match'
 export useRouterHistory from './useRouterHistory'
 export { formatPattern } from './PatternUtils'

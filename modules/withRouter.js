@@ -1,6 +1,4 @@
-import invariant from 'invariant'
 import React from 'react'
-import createReactClass from 'create-react-class'
 import hoistStatics from 'hoist-non-react-statics'
 import { routerContext } from './RouterContext'
 
@@ -8,42 +6,21 @@ function getDisplayName(WrappedComponent) {
   return WrappedComponent.displayName || WrappedComponent.name || 'Component'
 }
 
-export default function withRouter(WrappedComponent, options) {
-  const withRef = options && options.withRef
+export default function withRouter(WrappedComponent) {
+  function WithRouter(props) {
+    const routerFromContext = React.useContext(routerContext)
 
-  const WithRouter = createReactClass({
-    displayName: 'WithRouter',
-
-    // mixins: [ ContextSubscriber('router') ],
-
-    getWrappedInstance() {
-      invariant(
-        withRef,
-        'To access the wrapped instance, you need to specify ' +
-        '`{ withRef: true }` as the second argument of the withRouter() call.'
-      )
-
-      return this.wrappedInstance
-    },
-
-    render() {
-      const router = this.props.router || this.context.router
-      if (!router) {
-        return <WrappedComponent {...this.props} />
-      }
-
-      const { params, location, routes } = router
-      const props = { ...this.props, router, params, location, routes }
-
-      if (withRef) {
-        props.ref = (c) => { this.wrappedInstance = c }
-      }
-
+    const router = props.router || routerFromContext
+    if (!router) {
       return <WrappedComponent {...props} />
     }
-  })
 
-  WithRouter.contextType = routerContext
+    const { params, location, routes } = router
+    const propsWithRouter = { ...props, router, params, location, routes }
+
+    return <WrappedComponent {...propsWithRouter} />
+  }
+
   WithRouter.displayName = `withRouter(${getDisplayName(WrappedComponent)})`
   WithRouter.WrappedComponent = WrappedComponent
 
