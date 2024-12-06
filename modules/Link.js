@@ -1,8 +1,8 @@
 import React from 'react'
 import createReactClass from 'create-react-class'
-import { bool, object, string, func, oneOfType, shape, elementType } from 'prop-types'
 import invariant from 'invariant'
-import { routerShape } from './PropTypes'
+
+import { routerContext } from './RouterContext'
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -42,24 +42,6 @@ const Link = createReactClass({
   displayName: 'Link',
   
   // mixins: [ ContextSubscriber('router') ],
-
-  contextTypes: {
-    router: routerShape
-  },
-
-  propTypes: {
-    to: oneOfType([ string, object, func ]),
-    activeStyle: object,
-    activeClassName: string,
-    onlyActiveOnIndex: bool.isRequired,
-    onClick: func,
-    target: string,
-    innerRef: oneOfType([
-      string,
-      func,
-      shape({ current: elementType })
-    ])
-  },
 
   getDefaultProps() {
     return {
@@ -127,5 +109,7 @@ const Link = createReactClass({
   }
 
 })
+
+Link.contextType = routerContext
 
 export default Link

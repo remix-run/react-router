@@ -2,11 +2,12 @@ import invariant from 'invariant'
 import React from 'react'
 import { isValidElementType } from 'react-is'
 import createReactClass from 'create-react-class'
-import { array, func, object } from 'prop-types'
 
 import getRouteParams from './getRouteParams'
 import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
+
+export const routerContext = React.createContext()
 
 /**
  * A <RouterContext> renders the component tree for a given router state
@@ -15,33 +16,16 @@ import { isReactChildren } from './RouteUtils'
 const RouterContext = createReactClass({
   displayName: 'RouterContext',
 
-  propTypes: {
-    router: object.isRequired,
-    location: object.isRequired,
-    routes: array.isRequired,
-    params: object.isRequired,
-    components: array.isRequired,
-    createElement: func.isRequired
-  },
-
   getDefaultProps() {
     return {
       createElement: React.createElement
     }
   },
 
-  childContextTypes: {
-    router: object.isRequired
-  },
-
-  getChildContext() {
-    return {
-      router: this.props.router
-    }
-  },
-
   createElement(component, props) {
-    return component == null ? null : this.props.createElement(component, props)
+    return component == null
+      ? null
+      : this.props.createElement(component, props)
   },
 
   renderChildren() {
@@ -50,8 +34,7 @@ const RouterContext = createReactClass({
 
     if (components) {
       element = components.reduceRight((element, components, index) => {
-        if (components == null)
-          return element // Don't create new children; use the grandchildren.
+        if (components == null) return element // Don't create new children; use the grandchildren.
 
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
@@ -83,7 +66,8 @@ const RouterContext = createReactClass({
               // custom createElement functions to know which named component
               // they're rendering, for e.g. matching up to fetched data.
               elements[key] = this.createElement(components[key], {
-                key, ...props
+                key,
+                ...props
               })
             }
           }
@@ -104,7 +88,11 @@ const RouterContext = createReactClass({
   },
 
   render() {
-    return <ContextProvider>{this.renderChildren()}</ContextProvider>
+    return (
+      <routerContext.Provider value={this.props.router}>
+        <ContextProvider>{this.renderChildren()}</ContextProvider>
+      </routerContext.Provider>
+    )
   }
 })
 
