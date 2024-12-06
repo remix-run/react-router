@@ -4,8 +4,8 @@ import Link from './Link'
 /**
  * An <IndexLink> is used to link to an <IndexRoute>.
  */
-function IndexLink() {
-  return <Link {...this.props} onlyActiveOnIndex={true} />
+function IndexLink(props) {
+  return <Link {...props} onlyActiveOnIndex={true} />
 }
 
 export default IndexLink
