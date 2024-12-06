@@ -28,6 +28,7 @@ node_modules/
 .wireit
 .eslintcache
 .tmp
+tsup.config.bundled_*.mjs
 /.env
 /NOTES.md
 
