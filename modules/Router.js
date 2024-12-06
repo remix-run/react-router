@@ -36,7 +36,10 @@ class Router extends React.Component {
       params: null,
       components: null
     }
+  }
 
+  // For SSR, the state has to be the correct one before the 1st render. But we can't move this to constructor as `this.setState()` doesn't work when called in constructor. And the 1st state of `this.transitionManager.listen` is called synchronously.
+  UNSAFE_componentWillMount() {
     this.transitionManager = this.createTransitionManager()
     this.router = this.createRouterObject(this.state)
 
