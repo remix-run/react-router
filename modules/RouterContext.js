@@ -15,8 +15,6 @@ import { isReactChildren } from './RouteUtils'
 const RouterContext = createReactClass({
   displayName: 'RouterContext',
 
-  mixins: [ ContextProvider('router') ],
-
   propTypes: {
     router: object.isRequired,
     location: object.isRequired,
@@ -46,7 +44,7 @@ const RouterContext = createReactClass({
     return component == null ? null : this.props.createElement(component, props)
   },
 
-  render() {
+  renderChildren() {
     const { location, routes, params, components, router } = this.props
     let element = null
 
@@ -103,8 +101,11 @@ const RouterContext = createReactClass({
     )
 
     return element
-  }
+  },
 
+  render() {
+    return <ContextProvider>{this.renderChildren()}</ContextProvider>
+  }
 })
 
 export default RouterContext

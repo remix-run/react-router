@@ -1,141 +1,77 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 
-// Works around issues with context updates failing to propagate.
-// Caveat: the context value is expected to never change its identity.
-// https://github.com/facebook/react/issues/2517
-// https://github.com/reactjs/react-router/issues/470
+const RouterSubscriberContext = React.createContext()
 
-const contextProviderShape = PropTypes.shape({
-  subscribe: PropTypes.func.isRequired,
-  eventIndex: PropTypes.number.isRequired
-})
-
-function makeContextName(name) {
-  return `@@contextSubscriber/${name}`
-}
-
-const prefixUnsafeLifecycleMethods = typeof React.forwardRef !== 'undefined'
-
-export function ContextProvider(name) {
-  const contextName = makeContextName(name)
-  const listenersKey = `${contextName}/listeners`
-  const eventIndexKey = `${contextName}/eventIndex`
-  const subscribeKey = `${contextName}/subscribe`
-
-  const config = {
-    childContextTypes: {
-      [contextName]: contextProviderShape.isRequired
-    },
-
-    getChildContext() {
-      return {
-        [contextName]: {
-          eventIndex: this[eventIndexKey],
-          subscribe: this[subscribeKey]
+export function ContextProvider() {
+  const contextRef = React.useRef()
+  if (!contextRef.current) {
+    contextRef.current = {
+      eventIndex: 0,
+      listener: [],
+      subscribe(listener) {
+        contextRef.current.listeners.push(listener)
+        return () => {
+          contextRef.current.listeners = contextRef.current.listeners.filter(
+            (item) => item !== listener
+          )
         }
       }
-    },
-
-    // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
-    componentWillMount() {
-      this[listenersKey] = []
-      this[eventIndexKey] = 0
-    },
-
-    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
-    componentWillReceiveProps() {
-      this[eventIndexKey]++
-    },
-
-    componentDidUpdate() {
-      this[listenersKey].forEach(listener =>
-        listener(this[eventIndexKey])
-      )
-    },
-
-    [subscribeKey](listener) {
-      // No need to immediately call listener here.
-      this[listenersKey].push(listener)
-
-      return () => {
-        this[listenersKey] = this[listenersKey].filter(item =>
-          item !== listener
-        )
-      }
     }
   }
 
-  if (prefixUnsafeLifecycleMethods) {
-    config.UNSAFE_componentWillMount = config.componentWillMount
-    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
-    delete config.componentWillMount
-    delete config.componentWillReceiveProps
-  }
-  return config
+  React.useEffect(() => {
+    contextRef.current.eventIndex++
+    contextRef.current.listeners.forEach((listener) =>
+      listener(contextRef.current.eventIndex)
+    )
+  }, [])
+
+  return (
+    <RouterSubscriberContext.Provider value={contextRef.current}>
+      {this.props.children}
+    </RouterSubscriberContext.Provider>
+  )
 }
 
-export function ContextSubscriber(name) {
-  const contextName = makeContextName(name)
-  const lastRenderedEventIndexKey = `${contextName}/lastRenderedEventIndex`
-  const handleContextUpdateKey = `${contextName}/handleContextUpdate`
-  const unsubscribeKey = `${contextName}/unsubscribe`
+export function useContextSubscriber() {
+  const context = React.useContext(RouterSubscriberContext)
 
-  const config = {
-    contextTypes: {
-      [contextName]: contextProviderShape
-    },
-
-    getInitialState() {
-      if (!this.context[contextName]) {
-        return {}
+  const [ lastRenderedEventIndex, setLastRenderedEventIndex ] = React.useState(
+    () => {
+      if (!context) {
+        return undefined
       }
-
-      return {
-        [lastRenderedEventIndexKey]: this.context[contextName].eventIndex
-      }
-    },
-
-    componentDidMount() {
-      if (!this.context[contextName]) {
-        return
-      }
-
-      this[unsubscribeKey] = this.context[contextName].subscribe(
-        this[handleContextUpdateKey]
-      )
-    },
-
-    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
-    componentWillReceiveProps() {
-      if (!this.context[contextName]) {
-        return
-      }
-
-      this.setState({
-        [lastRenderedEventIndexKey]: this.context[contextName].eventIndex
-      })
-    },
-
-    componentWillUnmount() {
-      if (!this[unsubscribeKey]) {
-        return
-      }
-
-      this[unsubscribeKey]()
-      this[unsubscribeKey] = null
-    },
-
-    [handleContextUpdateKey](eventIndex) {
-      if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
-        this.setState({ [lastRenderedEventIndexKey]: eventIndex })
-      }
+      return context.eventIndex
     }
-  }
+  )
 
-  if (prefixUnsafeLifecycleMethods) {
-    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
-    delete config.componentWillReceiveProps
-  }
-  return config
+  React.useEffect(() => {
+    if (!context) {
+      return
+    }
+
+    const handleContextUpdate = (eventIndex) => {
+      setLastRenderedEventIndex((currentLastRenderedEventIndex) => {
+        if (eventIndex !== currentLastRenderedEventIndex) {
+          return eventIndex
+        } else {
+          return currentLastRenderedEventIndex
+        }
+      })
+    }
+    const unsubscribe = context.subscribe(handleContextUpdate)
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (!context) {
+      return
+    }
+
+    setLastRenderedEventIndex(context.eventIndex)
+  }, [ context ])
+
+  return lastRenderedEventIndex
 }
