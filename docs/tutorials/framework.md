@@ -227,7 +227,6 @@ It's just a bunch of elements, feel free to copy/paste.
 
 ```tsx filename=app/pages/contact.tsx
 import { Form } from "react-router";
-import type { FunctionComponent } from "react";
 
 import type { ContactRecord } from "../data";
 
@@ -300,9 +299,11 @@ export default function Contact() {
   );
 }
 
-const Favorite: FunctionComponent<{
+function Favorite({
+  contact,
+}: {
   contact: Pick<ContactRecord, "favorite">;
-}> = ({ contact }) => {
+}) {
   const favorite = contact.favorite;
 
   return (
@@ -320,7 +321,7 @@ const Favorite: FunctionComponent<{
       </button>
     </Form>
   );
-};
+}
 ```
 
 Now if we click one of the links or visit [`/contacts/1`][contacts-1] we get ... nothing new?
@@ -544,13 +545,225 @@ export function HydrateFallback() {
 
 ## URL Params in Loaders
 
-## Validating Params and Throwing Responses
+👉 **Click on one of the sidebar links**
+
+We should be seeing our old static contact page again, with one difference: the URL now has a real ID for the record.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/07.webp" /> -->
+
+Remember the `:contactId` part of the route definition in `app/routes.ts`? These dynamic segments will match dynamic (changing) values in that position of the URL. We call these values in the URL "URL Params", or just "params" for short.
+
+These `params` are passed to the loader with keys that match the dynamic segment. For example, our segment is named `:contactId` so the value will be passed as `params.contactId`.
+
+These params are most often used to find a record by ID. Let's try it out.
+
+👉 **Add a `clientLoader` function to the contact page and access data with `loaderData`**
+
+<docs-info>The following code has type errors in it, we'll fix them in the next section</docs-info>
+
+```tsx filename=app/pages/contact.tsx lines=[2-3,5-10,12-15]
+// existing imports
+import { getContact } from "../data";
+import type { Route } from "./+types/contact";
+
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  const contact = await getContact(params.contactId);
+  return { contact };
+}
+
+export default function Contact({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contact } = loaderData;
+
+  // existing code
+}
+
+// existing code
+```
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/08.webp" /> -->
+
+## Throwing Responses
+
+You'll notice that the type of `loaderData.contact` is `ContactRecord | null`. Based on our automatic type safety, TypeScript already knows that `params.contactId` is a string, but we haven't done anything to make sure it's a valid ID. Since the contact might not exist, `getContact` could return `null`, which is why we have type errors.
+
+We could account for the possibility of the contact being not found in component code, but the webby thing to do is send a proper 404. We can do that in the loader and solve all of our problems at once.
+
+```tsx filename=app/routes/contacts.$contactId.tsx lines=[7-9]
+// existing imports
+
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  const contact = await getContact(params.contactId);
+  if (!contact) {
+    throw new Response("Not Found", { status: 404 });
+  }
+  return { contact };
+}
+
+// existing code
+```
+
+Now, if the user isn't found, code execution down this path stops and React Router renders the error path instead. Components in React Router can focus only on the happy path 😁
 
 ## Data Mutations
 
+We'll create our first contact in a second, but first let's talk about HTML.
+
+React Router emulates HTML Form navigation as the data mutation primitive, which used to be the only way prior to the JavaScript cambrian explosion. Don't be fooled by the simplicity! Forms in React Router give you the UX capabilities of client rendered apps with the simplicity of the "old school" web model.
+
+While unfamiliar to some web developers, HTML `form`s actually cause a navigation in the browser, just like clicking a link. The only difference is in the request: links can only change the URL while `form`s can also change the request method (`GET` vs. `POST`) and the request body (`POST` form data).
+
+Without client side routing, the browser will serialize the `form`'s data automatically and send it to the server as the request body for `POST`, and as [`URLSearchParams`][url-search-params] for `GET`. React Router does the same thing, except instead of sending the request to the server, it uses client side routing and sends it to the route's [`clientAction`][client-action] function ([`action`][action] if we use server-side-rendering).
+
+We can test this out by clicking the "New" button in our app.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/09.webp" /> -->
+
+React Router throws an error because there is no `clientAction` to handle it. If we were using a server, React Router would send a 405 because there is no code on the _server_ to handle this form navigation.
+
 ## Creating Contacts
 
+We'll create new contacts by exporting a `clientAction` function in our root route. When the user clicks the "new" button, the form will `POST` to the root route action.
+
+👉 **Export an `clientAction` function from `app/root.tsx`**
+
+```tsx filename=app/root.tsx lines=[3,5-8]
+// existing imports
+
+import { createEmptyContact, getContacts } from "./data";
+
+export async function clientAction() {
+  const contact = await createEmptyContact();
+  return { contact };
+}
+
+// existing code
+```
+
+That's it! Go ahead and click the "New" button, and you should see a new record pop into the list 🥳
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/10.webp" /> -->
+
+The `createEmptyContact` method just creates an empty contact with no name or data or anything. But it does still create a record, promise!
+
+> 🧐 Wait a sec ... How did the sidebar update? Where did we call the `action` function? Where's the code to re-fetch the data? Where are `useState`, `onSubmit` and `useEffect`?!
+
+This is where the "old school web" programming model shows up. [`<Form>`][form-component] prevents the browser from sending the request to the server and sends it to your route's `action`/`clientAction` function instead with [`fetch`][fetch].
+
+In web semantics, a `POST` usually means some data is changing. By convention, React Router uses this as a hint to automatically revalidate the data on the page after the `action` and/or `clientAction` finishes.
+
 ## Updating Data
+
+Let's add a way to fill the information for our new record.
+
+Just like creating data, you update data with [`<Form>`][form-component]. Let's make a new route module inside `app/pages/edit-contact.tsx`.
+
+👉 **Create the edit contact route**
+
+```shellscript nonumber
+touch app/pages/edit-contact.tsx
+```
+
+Don't forget to add the route to `app/routes.ts`:
+
+```tsx filename=app/routes.ts lines=[3-6]
+export default [
+  route("contacts/:contactId", "pages/contact.tsx"),
+  route(
+    "contacts/:contactId/edit",
+    "pages/edit-contact.tsx"
+  ),
+] satisfies RouteConfig;
+```
+
+👉 **Add the edit page UI**
+
+Nothing we haven't seen before, feel free to copy/paste:
+
+```tsx filename=app/pages/edit-contact.tsx
+import { Form, useLoaderData } from "react-router";
+import type { Route } from "./+types/edit-contact";
+
+import { getContact } from "../data";
+
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  const contact = await getContact(params.contactId);
+  if (!contact) {
+    throw new Response("Not Found", { status: 404 });
+  }
+  return { contact };
+}
+
+export default function EditContact({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contact } = loaderData;
+
+  return (
+    <Form key={contact.id} id="contact-form" method="post">
+      <p>
+        <span>Name</span>
+        <input
+          aria-label="First name"
+          defaultValue={contact.first}
+          name="first"
+          placeholder="First"
+          type="text"
+        />
+        <input
+          aria-label="Last name"
+          defaultValue={contact.last}
+          name="last"
+          placeholder="Last"
+          type="text"
+        />
+      </p>
+      <label>
+        <span>Twitter</span>
+        <input
+          defaultValue={contact.twitter}
+          name="twitter"
+          placeholder="@jack"
+          type="text"
+        />
+      </label>
+      <label>
+        <span>Avatar URL</span>
+        <input
+          aria-label="Avatar URL"
+          defaultValue={contact.avatar}
+          name="avatar"
+          placeholder="https://example.com/avatar.jpg"
+          type="text"
+        />
+      </label>
+      <label>
+        <span>Notes</span>
+        <textarea
+          defaultValue={contact.notes}
+          name="notes"
+          rows={6}
+        />
+      </label>
+      <p>
+        <button type="submit">Save</button>
+        <button type="button">Cancel</button>
+      </p>
+    </Form>
+  );
+}
+```
+
+Now click on your new record, then click the "Edit" button. We should see the new route.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/12.webp" /> -->
 
 ## Updating Contacts with `FormData`
 
@@ -609,4 +822,9 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [react-router-config]: ../explanation/special-files#react-routerconfigts
 [rendering-strategies]: ../start/framework/rendering
 [hydrate-fallback]: ../start/framework/route-module#hydratefallback
+[url-search-params]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+[client-action]: ../start/framework/route-module#clientaction
+[action]: ../start/framework/route-module#action
+[form-component]: https://api.reactrouter.com/v7/functions/react_router.Form
+[fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
 [react-router-apis]: https://api.reactrouter.com/v7/modules/react_router
