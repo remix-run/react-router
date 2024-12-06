@@ -163,6 +163,8 @@ export function ErrorBoundary({
 
 ## Adding Stylesheets with `links`
 
+<!-- Probably just want to remove this section and make it default with React 19 stylesheets -->
+
 While there are multiple ways to style your React Router app, we're going to use a plain stylesheet that's already been written to keep things focused on React Router.
 
 👉 **Import the app styles**
@@ -256,7 +258,7 @@ export default function Contact() {
             </>
           ) : (
             <i>No Name</i>
-          )}{" "}
+          )}
           <Favorite contact={contact} />
         </h1>
 
@@ -380,7 +382,8 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "@remix-run/react";
+  isRouteErrorResponse,
+} from "react-router";
 
 // existing imports & exports
 
@@ -455,7 +458,7 @@ export default function App({ loaderData }) {
                       </>
                     ) : (
                       <i>No Name</i>
-                    )}{" "}
+                    )}
                     {contact.favorite ? (
                       <span>★</span>
                     ) : null}
@@ -742,7 +745,7 @@ export async function clientLoader() {
   return { contacts };
 }
 
-export default function App({
+export default function SidebarLayout({
   loaderData,
 }: Route.ComponentProps) {
   const { contacts } = loaderData;
@@ -784,7 +787,7 @@ export default function App({
                       </>
                     ) : (
                       <i>No Name</i>
-                    )}{" "}
+                    )}
                     {contact.favorite ? (
                       <span>★</span>
                     ) : null}
@@ -1100,11 +1103,173 @@ Now click on your new record, then click the "Edit" button. We should see the ne
 
 ## Updating Contacts with `FormData`
 
+The edit route we just created already renders a `form`. All we need to do is add the `action` function. React Router will serialize the `form`, `POST` it with [`fetch`][fetch], and automatically revalidate all the data.
+
+👉 **Add an `action` function to the edit route**
+
+```tsx filename=app/pages/edit-contact.tsx lines=[1,4,8,6-15]
+import { Form, redirect } from "react-router";
+// existing imports
+
+import { getContact, updateContact } from "../data";
+
+export async function action({
+  params,
+  request,
+}: Route.ActionArgs) {
+  const formData = await request.formData();
+  const updates = Object.fromEntries(formData);
+  await updateContact(params.contactId, updates);
+  return redirect(`/contacts/${params.contactId}`);
+}
+
+// existing code
+```
+
+Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe less hairy.)</small>
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/13.webp" /> -->
+
 ## Mutation Discussion
+
+> 😑 It worked, but I have no idea what is going on here...
+
+Let's dig in a bit...
+
+Open up `app/pages/edit-contact.tsx` and look at the `form` elements. Notice how they each have a name:
+
+```tsx filename=app/pages/edit-contact.tsx lines=[4]
+<input
+  aria-label="First name"
+  defaultValue={contact.first}
+  name="first"
+  placeholder="First"
+  type="text"
+/>
+```
+
+Without JavaScript, when a form is submitted, the browser will create [`FormData`][form-data] and set it as the body of the request when it sends it to the server. As mentioned before, React Router prevents that and emulates the browser by sending the request to your `action` function with [`fetch`][fetch] instead, including the [`FormData`][form-data].
+
+Each field in the `form` is accessible with `formData.get(name)`. For example, given the input field from above, you could access the first and last names like this:
+
+```tsx filename=app/routes/contacts.$contactId_.edit.tsx lines=[6,7] nocopy
+export const action = async ({
+  params,
+  request,
+}: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const firstName = formData.get("first");
+  const lastName = formData.get("last");
+  // ...
+};
+```
+
+Since we have a handful of form fields, we used [`Object.fromEntries`][object-from-entries] to collect them all into an object, which is exactly what our `updateContact` function wants.
+
+```tsx filename=app/routes/contacts.$contactId_.edit.tsx nocopy
+const updates = Object.fromEntries(formData);
+updates.first; // "Some"
+updates.last; // "Name"
+```
+
+Aside from the `action` function, none of these APIs we're discussing are provided by React Router: [`request`][request], [`request.formData`][request-form-data], [`Object.fromEntries`][object-from-entries] are all provided by the web platform.
+
+After we finished the `action`, note the [`redirect`][redirect] at the end:
+
+```tsx filename=app/routes/contacts.$contactId_.edit.tsx lines=[9]
+export async function action({
+  params,
+  request,
+}: Route.ActionArgs) {
+  invariant(params.contactId, "Missing contactId param");
+  const formData = await request.formData();
+  const updates = Object.fromEntries(formData);
+  await updateContact(params.contactId, updates);
+  return redirect(`/contacts/${params.contactId}`);
+}
+```
+
+`action` and `loader` functions can both return a `Response` (makes sense, since they received a [`Request`][request]!). The [`redirect`][redirect] helper just makes it easier to return a [`Response`][response] that tells the app to change locations.
+
+Without client side routing, if a server redirected after a `POST` request, the new page would fetch the latest data and render. As we learned before, React Router emulates this model and automatically revalidates the data on the page after the `action` call. That's why the sidebar automatically updates when we save the form. The extra revalidation code doesn't exist without client side routing, so it doesn't need to exist with client side routing in React Router either!
+
+One last thing. Without JavaScript, the [`redirect`][redirect] would be a normal redirect. However, with JavaScript it's a client-side redirect, so the user doesn't lose client state like scroll positions or component state.
 
 ## Redirecting new records to the edit page
 
+Now that we know how to redirect, let's update the action that creates new contacts to redirect to the edit page:
+
+👉 **Redirect to the new record's edit page**
+
+```tsx filename=app/root.tsx lines=[4,10]
+// existing imports
+import {
+  // existing imports
+  redirect,
+} from "react-router";
+// existing imports
+
+export async function action() {
+  const contact = await createEmptyContact();
+  return redirect(`/contacts/${contact.id}/edit`);
+}
+
+// existing code
+```
+
+Now when we click "New", we should end up on the edit page:
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/14.webp" /> -->
+
 ## Active Link Styling
+
+Now that we have a bunch of records, it's not clear which one we're looking at in the sidebar. We can use [`NavLink`][nav-link] to fix this.
+
+👉 **Replace `<Link>` with `<NavLink>` in the sidebar**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[1,17-28]
+import { Form, Link, NavLink, Outlet } from "react-router";
+
+// existing imports and exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts } = loaderData;
+
+  return (
+    <>
+      <div id="sidebar">
+        {/* existing elements */}
+        <ul>
+          {contacts.map((contact) => (
+            <li key={contact.id}>
+              <NavLink
+                className={({ isActive, isPending }) =>
+                  isActive
+                    ? "active"
+                    : isPending
+                    ? "pending"
+                    : ""
+                }
+                to={`contacts/${contact.id}`}
+              >
+                {/* existing elements */}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+        {/* existing elements */}
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+Note that we are passing a function to `className`. When the user is at the URL that matches `<NavLink to>`, then `isActive` will be true. When it's _about_ to be active (the data is still loading) then `isPending` will be true. This allows us to easily indicate where the user is and also provide immediate feedback when links are clicked but data needs to be loaded.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/15.webp"/> -->
 
 ## Global Pending UI
 
@@ -1155,4 +1320,10 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [action]: ../start/framework/route-module#action
 [form-component]: https://api.reactrouter.com/v7/functions/react_router.Form
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
+[form-data]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
+[object-from-entries]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
+[request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
+[redirect]: https://api.reactrouter.com/v7/functions/react_router.redirect
+[response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
+[nav-link]: https://api.reactrouter.com/v7/functions/react_router.NavLink
 [react-router-apis]: https://api.reactrouter.com/v7/modules/react_router
