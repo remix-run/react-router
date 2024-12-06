@@ -3,7 +3,6 @@ import React from 'react'
 import { isValidElementType } from 'react-is'
 
 import getRouteParams from './getRouteParams'
-import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
 
 export const routerContext = React.createContext()
@@ -83,9 +82,7 @@ function RouterContext({
   }
 
   return (
-    <routerContext.Provider value={router}>
-      <ContextProvider>{renderChildren()}</ContextProvider>
-    </routerContext.Provider>
+    <routerContext.Provider value={router}>{renderChildren()}</routerContext.Provider>
   )
 }
 
