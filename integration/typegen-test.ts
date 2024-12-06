@@ -202,6 +202,7 @@ test.describe("typegen", () => {
 
   test("custom app dir", async () => {
     const cwd = await createProject({
+      "vite.config.ts": viteConfig,
       "react-router.config.ts": tsx`
         export default {
           appDirectory: "src/myapp",
