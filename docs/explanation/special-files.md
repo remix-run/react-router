@@ -231,11 +231,11 @@ This module should render the markup for the current page using a `<ServerRouter
 
 ### `streamTimeout`
 
-If you are [streaming] responses, you can export an optional `streamTimeout` value (in milliseconds) that will control the amount of time the server will wait for streamed promises to resolve before rejecting them and closing the stream.
+If you are [streaming] responses, you can export an optional `streamTimeout` value (in milliseconds) that will control the amount of time the server will wait for streamed promises to settle before rejecting outstanding promises them and closing the stream.
 
-It's recommended to decouple this value from the timeout in which you abort the React renderer - and you should always set the React timeout to a higher value so it has time to stream down the underlying rejections from your streamTimeout.
+It's recommended to decouple this value from the timeout in which you abort the React renderer. You should always set the React rendering timeout to a higher value so it has time to stream down the underlying rejections from your `streamTimeout`.
 
-```tsx
+```tsx lines=[1-2,13-15]
 // Reject all pending promises from handler functions after 10 seconds
 export const streamTimeout = 10000;
 
