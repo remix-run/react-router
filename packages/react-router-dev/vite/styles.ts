@@ -2,10 +2,8 @@ import * as path from "node:path";
 import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
-import semver from "semver";
 
 import type { ResolvedReactRouterConfig } from "../config/config";
-import { importViteEsmSync } from "./import-vite-esm-sync";
 import { resolveFileUrl } from "./resolve-file-url";
 
 type ServerRouteManifest = ServerBuild["routes"];
