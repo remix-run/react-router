@@ -85,7 +85,7 @@ function Link({
     }
 
     const toLocation = resolveToLocation(to, router)
-    props.href = router.createHref(toLocation)
+    propsToDrill.href = router.createHref(toLocation)
 
     if (
       activeClassName ||
@@ -93,14 +93,14 @@ function Link({
     ) {
       if (router.isActive(toLocation, onlyActiveOnIndex)) {
         if (activeClassName) {
-          if (props.className) {
-            props.className += ` ${activeClassName}`
+          if (propsToDrill.className) {
+            propsToDrill.className += ` ${activeClassName}`
           } else {
-            props.className = activeClassName
+            propsToDrill.className = activeClassName
           }
         }
 
-        if (activeStyle) props.style = { ...props.style, ...activeStyle }
+        if (activeStyle) propsToDrill.style = { ...propsToDrill.style, ...activeStyle }
       }
     }
   }
