@@ -25,4 +25,3 @@ jobs:
       - name: Run tests
         run: |
           yarn test
-        working-directory: ./packages/tests
