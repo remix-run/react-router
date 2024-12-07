@@ -1,14 +1,51 @@
 {
-  "extends": ["rackt", "plugin:react/recommended"],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "env": {
+    "es2021": true
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "globalReturn": true,
+      "generators": false,
+      "objectLiteralDuplicateProperties": false,
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+
   "globals": {
     "__DEV__": false
   },
+  "extends": ["plugin:react/recommended"],
+
+  "plugins": ["react"],
   "rules": {
-    "react/display-name": 0,
-    "react/prop-types": 0,
-    "react/jsx-wrap-multilines": 2
-  },
-  "plugins": [
-    "react"
-  ]
+    "react/display-name": "off",
+    "react/prop-types": "off",
+    "react/jsx-key": "off",
+    "react/no-deprecated": "off",
+    "react/jsx-wrap-multilines": "error",
+    "array-bracket-spacing": ["error", "always"],
+    "comma-dangle": ["error", "never"],
+    "eol-last": "error",
+    "indent": "error",
+    "jsx-quotes": ["error", "prefer-double"],
+    "no-multiple-empty-lines": "error",
+    "no-unused-vars": "error",
+    "no-var": "error",
+    "object-curly-spacing": ["error", "always"],
+    "quotes": ["error", "single", "avoid-escape"],
+    "semi": ["error", "never"],
+    "strict": "off",
+    "space-before-blocks": ["error", "always"],
+    "space-before-function-paren": [
+      "error",
+      { "anonymous": "always", "named": "never" }
+    ]
+  }
 }

@@ -1,15 +1,9 @@
 {
-  "presets": [
-    "./tools/es2015Preset",
-    "stage-1",
-    "react"
-  ],
+  "presets": ["@babel/preset-env", "@babel/preset-react"],
   "plugins": ["dev-expression"],
 
   "env": {
-    "cjs": {
-      "plugins": ["add-module-exports"]
-    },
+    "cjs": {},
     "test": {
       "plugins": ["istanbul"]
     }
