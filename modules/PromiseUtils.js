@@ -1,3 +1,3 @@
 export function isPromise(obj) {
-    return obj && typeof obj.then === 'function'
+  return obj && typeof obj.then === 'function'
 }

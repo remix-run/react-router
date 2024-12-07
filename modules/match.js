@@ -16,42 +16,42 @@ import { createRouterObject } from './RouterUtils'
  * server-side rendering with async routes.
  */
 function match({ history, routes, location, ...options }, callback) {
-    invariant(
-        history || location,
-        'match needs a history or a location'
-    )
+  invariant(
+    history || location,
+    'match needs a history or a location'
+  )
 
-    history = history ? history : createMemoryHistory(options)
-    const transitionManager = createTransitionManager(
-        history,
-        createRoutes(routes)
-    )
+  history = history ? history : createMemoryHistory(options)
+  const transitionManager = createTransitionManager(
+    history,
+    createRoutes(routes)
+  )
 
-    if (location) {
+  if (location) {
     // Allow match({ location: '/the/path', ... })
-        location = history.createLocation(location)
-    } else {
-        location = history.getCurrentLocation()
+    location = history.createLocation(location)
+  } else {
+    location = history.getCurrentLocation()
+  }
+
+  transitionManager.match(location, (error, redirectLocation, nextState) => {
+    let renderProps
+
+    if (nextState) {
+      const router = createRouterObject(history, transitionManager, nextState)
+      renderProps = {
+        ...nextState,
+        router,
+        matchContext: { transitionManager, router }
+      }
     }
 
-    transitionManager.match(location, (error, redirectLocation, nextState) => {
-        let renderProps
-
-        if (nextState) {
-            const router = createRouterObject(history, transitionManager, nextState)
-            renderProps = {
-                ...nextState,
-                router,
-                matchContext: { transitionManager, router }
-            }
-        }
-
-        callback(
-            error,
-            redirectLocation && history.createLocation(redirectLocation, REPLACE),
-            renderProps
-        )
-    })
+    callback(
+      error,
+      redirectLocation && history.createLocation(redirectLocation, REPLACE),
+      renderProps
+    )
+  })
 }
 
 export default match

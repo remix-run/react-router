@@ -8,23 +8,23 @@ import { createRouteFromReactElement } from './RouteUtils'
  */
 /* eslint-disable react/require-render-return */
 function IndexRoute() {
-    /* istanbul ignore next: sanity check */
-    invariant(
-        false,
-        '<IndexRoute> elements are for router configuration only and should not be rendered'
-    )
+  /* istanbul ignore next: sanity check */
+  invariant(
+    false,
+    '<IndexRoute> elements are for router configuration only and should not be rendered'
+  )
 }
 
 IndexRoute.createRouteFromReactElement = (element, parentRoute) => {
-    /* istanbul ignore else: sanity check */
-    if (parentRoute) {
-        parentRoute.indexRoute = createRouteFromReactElement(element)
-    } else {
-        warning(
-            false,
-            'An <IndexRoute> does not make sense at the root of your route config'
-        )
-    }
+  /* istanbul ignore else: sanity check */
+  if (parentRoute) {
+    parentRoute.indexRoute = createRouteFromReactElement(element)
+  } else {
+    warning(
+      false,
+      'An <IndexRoute> does not make sense at the root of your route config'
+    )
+  }
 }
 
 export default IndexRoute

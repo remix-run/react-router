@@ -1,14 +1,14 @@
 import { getParamNames } from './PatternUtils'
 
 function routeParamsChanged(route, prevState, nextState) {
-    if (!route.path)
-        return false
+  if (!route.path)
+    return false
 
-    const paramNames = getParamNames(route.path)
+  const paramNames = getParamNames(route.path)
 
-    return paramNames.some(function (paramName) {
-        return prevState.params[paramName] !== nextState.params[paramName]
-    })
+  return paramNames.some(function (paramName) {
+    return prevState.params[paramName] !== nextState.params[paramName]
+  })
 }
 
 /**
@@ -25,50 +25,50 @@ function routeParamsChanged(route, prevState, nextState) {
  * the transition.
  */
 function computeChangedRoutes(prevState, nextState) {
-    const prevRoutes = prevState && prevState.routes
-    const nextRoutes = nextState.routes
+  const prevRoutes = prevState && prevState.routes
+  const nextRoutes = nextState.routes
 
-    let leaveRoutes, changeRoutes, enterRoutes
-    if (prevRoutes) {
-        let parentIsLeaving = false
-        leaveRoutes = prevRoutes.filter(function (route) {
-            if (parentIsLeaving) {
-                return true
-            } else {
-                const isLeaving = nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)
-                if (isLeaving)
-                    parentIsLeaving = true
-                return isLeaving
-            }
-        })
+  let leaveRoutes, changeRoutes, enterRoutes
+  if (prevRoutes) {
+    let parentIsLeaving = false
+    leaveRoutes = prevRoutes.filter(function (route) {
+      if (parentIsLeaving) {
+        return true
+      } else {
+        const isLeaving = nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)
+        if (isLeaving)
+          parentIsLeaving = true
+        return isLeaving
+      }
+    })
 
-        // onLeave hooks start at the leaf route.
-        leaveRoutes.reverse()
+    // onLeave hooks start at the leaf route.
+    leaveRoutes.reverse()
 
-        enterRoutes = []
-        changeRoutes = []
+    enterRoutes = []
+    changeRoutes = []
 
-        nextRoutes.forEach(function (route) {
-            const isNew = prevRoutes.indexOf(route) === -1
-            const paramsChanged = leaveRoutes.indexOf(route) !== -1
+    nextRoutes.forEach(function (route) {
+      const isNew = prevRoutes.indexOf(route) === -1
+      const paramsChanged = leaveRoutes.indexOf(route) !== -1
 
-            if (isNew || paramsChanged)
-                enterRoutes.push(route)
-            else
-                changeRoutes.push(route)
-        })
+      if (isNew || paramsChanged)
+        enterRoutes.push(route)
+      else
+        changeRoutes.push(route)
+    })
 
-    } else {
-        leaveRoutes = []
-        changeRoutes = []
-        enterRoutes = nextRoutes
-    }
+  } else {
+    leaveRoutes = []
+    changeRoutes = []
+    enterRoutes = nextRoutes
+  }
 
-    return {
-        leaveRoutes,
-        changeRoutes,
-        enterRoutes
-    }
+  return {
+    leaveRoutes,
+    changeRoutes,
+    enterRoutes
+  }
 }
 
 export default computeChangedRoutes
