@@ -3,8 +3,6 @@
 import '@babel/polyfill'
 import expect from 'expect'
 
-import '@testing-library/react'
-
 import { _resetWarned } from './modules/routerWarning'
 
 beforeEach(() => {
