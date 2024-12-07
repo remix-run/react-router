@@ -59,6 +59,7 @@
     "babel-plugin-dev-expression": "^0.2.3",
     "babel-plugin-istanbul": "^7.0.0",
     "babel-preset-react": "^6.24.1",
+    "buffer": "^6.0.3",
     "bundle-loader": "^0.5.4",
     "codecov": "^3.0.0",
     "create-react-class": "^15.7.0",
