@@ -299,8 +299,8 @@ describe('When a router enters a branch', function () {
 
       render(
         <Router history={history}
-                routes={routes}
-                onUpdate={execNextStep}
+          routes={routes}
+          onUpdate={execNextStep}
         />, node, execNextStep)
     })
   })
@@ -336,8 +336,8 @@ describe('When a router enters a branch', function () {
 
       render(
         <Router history={history}
-                routes={routes}
-                onUpdate={execNextStep}
+          routes={routes}
+          onUpdate={execNextStep}
         />, node, execNextStep)
     })
   })
@@ -368,8 +368,8 @@ describe('When a router enters a branch', function () {
 
       render(
         <Router history={history}
-                routes={routes}
-                onUpdate={execNextStep}
+          routes={routes}
+          onUpdate={execNextStep}
         />, node, execNextStep)
     })
   })
