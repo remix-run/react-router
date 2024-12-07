@@ -6,7 +6,6 @@ React Router is a complete routing library for [React](https://facebook.github.i
 
 React Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code loading, dynamic route matching, and location transition handling built right in. Make the URL your first thought, not an after-thought.
 
-[![Codecov][codecov-badge]][codecov]
 [![Discord][discord-badge]][discord]
 
 ### 4.0 is here!
@@ -45,12 +44,12 @@ Then with a module bundler like [webpack](https://webpack.github.io/) that suppo
 
 ```js
 // using an ES6 transpiler, like babel
-import { Router, Route, Link } from 'react-router'
+import { Router, Route, Link } from "react-router";
 
 // not using an ES6 transpiler
-var Router = require('react-router').Router
-var Route = require('react-router').Route
-var Link = require('react-router').Link
+var Router = require("react-router").Router;
+var Route = require("react-router").Route;
+var Link = require("react-router").Link;
 ```
 
 The UMD build is also available on [unpkg](https://unpkg.com):
@@ -64,13 +63,19 @@ You can find the library on `window.ReactRouter`.
 ### What's it look like?
 
 ```js
-import React from 'react'
-import { render } from 'react-dom'
-import { Router, Route, Link, browserHistory } from 'react-router'
+import React from "react";
+import { render } from "react-dom";
+import { Router, Route, Link, browserHistory } from "react-router";
 
-const App = React.createClass({/*...*/})
-const About = React.createClass({/*...*/})
-const NoMatch = React.createClass({/*...*/})
+const App = React.createClass({
+  /*...*/
+});
+const About = React.createClass({
+  /*...*/
+});
+const NoMatch = React.createClass({
+  /*...*/
+});
 
 const Users = React.createClass({
   render() {
@@ -80,25 +85,25 @@ const Users = React.createClass({
         <div className="master">
           <ul>
             {/* use Link to route around the app */}
-            {this.state.users.map(user => (
-              <li key={user.id}><Link to={`/user/${user.id}`}>{user.name}</Link></li>
+            {this.state.users.map((user) => (
+              <li key={user.id}>
+                <Link to={`/user/${user.id}`}>{user.name}</Link>
+              </li>
             ))}
           </ul>
         </div>
-        <div className="detail">
-          {this.props.children}
-        </div>
+        <div className="detail">{this.props.children}</div>
       </div>
-    )
-  }
-})
+    );
+  },
+});
 
 const User = React.createClass({
   componentDidMount() {
     this.setState({
       // route components are rendered with useful information, like URL params
-      user: findUserById(this.props.params.userId)
-    })
+      user: findUserById(this.props.params.userId),
+    });
   },
 
   render() {
@@ -107,24 +112,25 @@ const User = React.createClass({
         <h2>{this.state.user.name}</h2>
         {/* etc. */}
       </div>
-    )
-  }
-})
+    );
+  },
+});
 
 // Declarative route configuration (could also load this config lazily
 // instead, all you really need is a single root route, you don't need to
 // colocate the entire config).
-render((
+render(
   <Router history={browserHistory}>
     <Route path="/" component={App}>
-      <Route path="about" component={About}/>
+      <Route path="about" component={About} />
       <Route path="users" component={Users}>
-        <Route path="/user/:userId" component={User}/>
+        <Route path="/user/:userId" component={User} />
       </Route>
-      <Route path="*" component={NoMatch}/>
+      <Route path="*" component={NoMatch} />
     </Route>
-  </Router>
-), document.getElementById('root'))
+  </Router>,
+  document.getElementById("root")
+);
 ```
 
 See more in the [Introduction](/docs/Introduction.md), [Guides](/docs/guides/README.md), and [Examples](/examples).
@@ -144,12 +150,7 @@ Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the 
 
 [build-badge]: https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square
 [build]: https://travis-ci.org/ReactTraining/react-router
-
 [npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/react-router
-
-[codecov-badge]: https://img.shields.io/codecov/c/github/ReactTraining/react-router/master.svg?style=flat-square
-[codecov]: https://codecov.io/gh/ReactTraining/react-router
-
 [discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
 [discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
