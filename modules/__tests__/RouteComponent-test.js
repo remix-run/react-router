@@ -1,43 +1,34 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import { render, cleanup } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Router from '../Router'
 
 describe('a Route Component', function () {
+    afterEach(function () {
+        cleanup()
+    })
 
-  let node
-  beforeEach(function () {
-    node = document.createElement('div')
-  })
+    it('injects the right props', function () {
+        class Parent extends Component {
+            componentDidMount() {
+                expect(this.props.route).toEqual(parent)
+                expect(this.props.routes).toEqual([ parent, child ])
+            }
+            render() {
+                return null
+            }
+        }
 
-  afterEach(function () {
-    unmountComponentAtNode(node)
-  })
+        class Child extends Component {
+            render() {
+                return null
+            }
+        }
 
-  it('injects the right props', function (done) {
-    class Parent extends Component {
-      componentDidMount() {
-        expect(this.props.route).toEqual(parent)
-        expect(this.props.routes).toEqual([ parent, child ])
-      }
-      render() {
-        return null
-      }
-    }
+        const child = { path: 'child', component: Child }
+        const parent = { path: '/', component: Parent, childRoutes: [ child ] }
 
-    class Child extends Component {
-      render() {
-        return null
-      }
-    }
-
-    const child = { path: 'child', component: Child }
-    const parent = { path: '/', component: Parent, childRoutes: [ child ] }
-
-    render((
-      <Router history={createHistory('/child')} routes={parent}/>
-    ), node, done)
-  })
-
+        render(<Router history={createHistory('/child')} routes={parent} />)
+    })
 })

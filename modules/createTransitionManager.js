@@ -6,175 +6,175 @@ import getComponents from './getComponents'
 import matchRoutes from './matchRoutes'
 
 function hasAnyProperties(object) {
-  for (const p in object)
-    if (Object.prototype.hasOwnProperty.call(object, p))
-      return true
+    for (const p in object)
+        if (Object.prototype.hasOwnProperty.call(object, p))
+            return true
 
-  return false
+    return false
 }
 
 export default function createTransitionManager(history, routes) {
-  let state = {}
+    let state = {}
 
-  const { runEnterHooks, runChangeHooks, runLeaveHooks } = getTransitionUtils()
+    const { runEnterHooks, runChangeHooks, runLeaveHooks } = getTransitionUtils()
 
-  // Signature should be (location, indexOnly), but needs to support (path,
-  // query, indexOnly)
-  function isActive(location, indexOnly) {
-    location = history.createLocation(location)
+    // Signature should be (location, indexOnly), but needs to support (path,
+    // query, indexOnly)
+    function isActive(location, indexOnly) {
+        location = history.createLocation(location)
 
-    return _isActive(
-      location, indexOnly, state.location, state.routes, state.params
-    )
-  }
+        return _isActive(
+            location, indexOnly, state.location, state.routes, state.params
+        )
+    }
 
-  let partialNextState
+    let partialNextState
 
-  function match(location, callback) {
-    if (partialNextState && partialNextState.location === location) {
-      // Continue from where we left off.
-      finishMatch(partialNextState, callback)
-    } else {
-      matchRoutes(routes, location, function (error, nextState) {
-        if (error) {
-          callback(error)
-        } else if (nextState) {
-          finishMatch({ ...nextState, location }, callback)
+    function match(location, callback) {
+        if (partialNextState && partialNextState.location === location) {
+            // Continue from where we left off.
+            finishMatch(partialNextState, callback)
         } else {
-          callback()
+            matchRoutes(routes, location, function (error, nextState) {
+                if (error) {
+                    callback(error)
+                } else if (nextState) {
+                    finishMatch({ ...nextState, location }, callback)
+                } else {
+                    callback()
+                }
+            })
         }
-      })
     }
-  }
 
-  function finishMatch(nextState, callback) {
-    const { leaveRoutes, changeRoutes, enterRoutes } = computeChangedRoutes(state, nextState)
+    function finishMatch(nextState, callback) {
+        const { leaveRoutes, changeRoutes, enterRoutes } = computeChangedRoutes(state, nextState)
 
-    runLeaveHooks(leaveRoutes, state)
+        runLeaveHooks(leaveRoutes, state)
 
-    // Tear down confirmation hooks for left routes
-    leaveRoutes
-      .filter(route => enterRoutes.indexOf(route) === -1)
-      .forEach(removeListenBeforeHooksForRoute)
+        // Tear down confirmation hooks for left routes
+        leaveRoutes
+            .filter(route => enterRoutes.indexOf(route) === -1)
+            .forEach(removeListenBeforeHooksForRoute)
 
-    // change and enter hooks are run in series
-    runChangeHooks(changeRoutes, state, nextState, (error, redirectInfo) => {
-      if (error || redirectInfo)
-        return handleErrorOrRedirect(error, redirectInfo)
+        // change and enter hooks are run in series
+        runChangeHooks(changeRoutes, state, nextState, (error, redirectInfo) => {
+            if (error || redirectInfo)
+                return handleErrorOrRedirect(error, redirectInfo)
 
-      runEnterHooks(enterRoutes, nextState, finishEnterHooks)
-    })
+            runEnterHooks(enterRoutes, nextState, finishEnterHooks)
+        })
 
-    function finishEnterHooks(error, redirectInfo) {
-      if (error || redirectInfo)
-        return handleErrorOrRedirect(error, redirectInfo)
+        function finishEnterHooks(error, redirectInfo) {
+            if (error || redirectInfo)
+                return handleErrorOrRedirect(error, redirectInfo)
 
-      // TODO: Fetch components after state is updated.
-      getComponents(nextState, function (error, components) {
-        if (error) {
-          callback(error)
-        } else {
-          // TODO: Make match a pure function and have some other API
-          // for "match and update state".
-          callback(null, null, (
-            state = { ...nextState, components })
-          )
+            // TODO: Fetch components after state is updated.
+            getComponents(nextState, function (error, components) {
+                if (error) {
+                    callback(error)
+                } else {
+                    // TODO: Make match a pure function and have some other API
+                    // for "match and update state".
+                    callback(null, null, (
+                        state = { ...nextState, components })
+                    )
+                }
+            })
         }
-      })
+
+        function handleErrorOrRedirect(error, redirectInfo) {
+            if (error) callback(error)
+            else callback(null, redirectInfo)
+        }
     }
 
-    function handleErrorOrRedirect(error, redirectInfo) {
-      if (error) callback(error)
-      else callback(null, redirectInfo)
+    let RouteGuid = 1
+
+    function getRouteID(route, create = false) {
+        return route.__id__ || create && (route.__id__ = RouteGuid++)
     }
-  }
 
-  let RouteGuid = 1
+    const RouteHooks = Object.create(null)
 
-  function getRouteID(route, create = false) {
-    return route.__id__ || create && (route.__id__ = RouteGuid++)
-  }
+    function getRouteHooksForRoutes(routes) {
+        return routes
+            .map(route => RouteHooks[getRouteID(route)])
+            .filter(hook => hook)
+    }
 
-  const RouteHooks = Object.create(null)
+    function transitionHook(location, callback) {
+        matchRoutes(routes, location, function (error, nextState) {
+            if (nextState == null) {
+                // TODO: We didn't actually match anything, but hang
+                // onto error/nextState so we don't have to matchRoutes
+                // again in the listen callback.
+                callback()
+                return
+            }
 
-  function getRouteHooksForRoutes(routes) {
-    return routes
-      .map(route => RouteHooks[getRouteID(route)])
-      .filter(hook => hook)
-  }
+            // Cache some state here so we don't have to
+            // matchRoutes() again in the listen callback.
+            partialNextState = { ...nextState, location }
 
-  function transitionHook(location, callback) {
-    matchRoutes(routes, location, function (error, nextState) {
-      if (nextState == null) {
-        // TODO: We didn't actually match anything, but hang
-        // onto error/nextState so we don't have to matchRoutes
-        // again in the listen callback.
-        callback()
-        return
-      }
+            const hooks = getRouteHooksForRoutes(
+                computeChangedRoutes(state, partialNextState).leaveRoutes
+            )
 
-      // Cache some state here so we don't have to
-      // matchRoutes() again in the listen callback.
-      partialNextState = { ...nextState, location }
+            let result
+            for (let i = 0, len = hooks.length; result == null && i < len; ++i) {
+                // Passing the location arg here indicates to
+                // the user that this is a transition hook.
+                result = hooks[i](location)
+            }
 
-      const hooks = getRouteHooksForRoutes(
-        computeChangedRoutes(state, partialNextState).leaveRoutes
-      )
+            callback(result)
+        })
+    }
 
-      let result
-      for (let i = 0, len = hooks.length; result == null && i < len; ++i) {
-        // Passing the location arg here indicates to
-        // the user that this is a transition hook.
-        result = hooks[i](location)
-      }
-
-      callback(result)
-    })
-  }
-
-  /* istanbul ignore next: untestable with Karma */
-  function beforeUnloadHook() {
+    /* istanbul ignore next: untestable with Karma */
+    function beforeUnloadHook() {
     // Synchronously check to see if any route hooks want
     // to prevent the current window/tab from closing.
-    if (state.routes) {
-      const hooks = getRouteHooksForRoutes(state.routes)
+        if (state.routes) {
+            const hooks = getRouteHooksForRoutes(state.routes)
 
-      let message
-      for (let i = 0, len = hooks.length; typeof message !== 'string' && i < len; ++i) {
-        // Passing no args indicates to the user that this is a
-        // beforeunload hook. We don't know the next location.
-        message = hooks[i]()
-      }
+            let message
+            for (let i = 0, len = hooks.length; typeof message !== 'string' && i < len; ++i) {
+                // Passing no args indicates to the user that this is a
+                // beforeunload hook. We don't know the next location.
+                message = hooks[i]()
+            }
 
-      return message
-    }
-  }
-
-  let unlistenBefore, unlistenBeforeUnload
-
-  function removeListenBeforeHooksForRoute(route) {
-    const routeID = getRouteID(route)
-    if (!routeID) {
-      return
+            return message
+        }
     }
 
-    delete RouteHooks[routeID]
+    let unlistenBefore, unlistenBeforeUnload
 
-    if (!hasAnyProperties(RouteHooks)) {
-      // teardown transition & beforeunload hooks
-      if (unlistenBefore) {
-        unlistenBefore()
-        unlistenBefore = null
-      }
+    function removeListenBeforeHooksForRoute(route) {
+        const routeID = getRouteID(route)
+        if (!routeID) {
+            return
+        }
 
-      if (unlistenBeforeUnload) {
-        unlistenBeforeUnload()
-        unlistenBeforeUnload = null
-      }
+        delete RouteHooks[routeID]
+
+        if (!hasAnyProperties(RouteHooks)) {
+            // teardown transition & beforeunload hooks
+            if (unlistenBefore) {
+                unlistenBefore()
+                unlistenBefore = null
+            }
+
+            if (unlistenBeforeUnload) {
+                unlistenBeforeUnload()
+                unlistenBeforeUnload = null
+            }
+        }
     }
-  }
 
-  /**
+    /**
    * Registers the given hook function to run before leaving the given route.
    *
    * During a normal transition, the hook function receives the next location
@@ -187,73 +187,73 @@ export default function createTransitionManager(history, routes) {
    *
    * Returns a function that may be used to unbind the listener.
    */
-  function listenBeforeLeavingRoute(route, hook) {
-    const thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
-    const routeID = getRouteID(route, true)
+    function listenBeforeLeavingRoute(route, hook) {
+        const thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
+        const routeID = getRouteID(route, true)
 
-    RouteHooks[routeID] = hook
+        RouteHooks[routeID] = hook
 
-    if (thereWereNoRouteHooks) {
-      // setup transition & beforeunload hooks
-      unlistenBefore = history.listenBefore(transitionHook)
+        if (thereWereNoRouteHooks) {
+            // setup transition & beforeunload hooks
+            unlistenBefore = history.listenBefore(transitionHook)
 
-      if (history.listenBeforeUnload)
-        unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
+            if (history.listenBeforeUnload)
+                unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
+        }
+
+        return function () {
+            removeListenBeforeHooksForRoute(route)
+        }
     }
 
-    return function () {
-      removeListenBeforeHooksForRoute(route)
-    }
-  }
-
-  /**
+    /**
    * This is the API for stateful environments. As the location
    * changes, we update state and call the listener. We can also
    * gracefully handle errors and redirects.
    */
-  function listen(listener) {
-    function historyListener(location) {
-      if (state.location === location) {
-        listener(null, state)
-      } else {
-        match(location, function (error, redirectLocation, nextState) {
-          if (error) {
-            listener(error)
-          } else if (redirectLocation) {
-            history.replace(redirectLocation)
-          } else if (nextState) {
-            listener(null, nextState)
-          } else {
-            warning(
-              false,
-              'Location "%s" did not match any routes',
-              location.pathname + location.search + location.hash
-            )
-          }
-        })
-      }
+    function listen(listener) {
+        function historyListener(location) {
+            if (state.location === location) {
+                listener(null, state)
+            } else {
+                match(location, function (error, redirectLocation, nextState) {
+                    if (error) {
+                        listener(error)
+                    } else if (redirectLocation) {
+                        history.replace(redirectLocation)
+                    } else if (nextState) {
+                        listener(null, nextState)
+                    } else {
+                        warning(
+                            false,
+                            'Location "%s" did not match any routes',
+                            location.pathname + location.search + location.hash
+                        )
+                    }
+                })
+            }
+        }
+
+        // TODO: Only use a single history listener. Otherwise we'll end up with
+        // multiple concurrent calls to match.
+
+        // Set up the history listener first in case the initial match redirects.
+        const unsubscribe = history.listen(historyListener)
+
+        if (state.location) {
+            // Picking up on a matchContext.
+            listener(null, state)
+        } else {
+            historyListener(history.getCurrentLocation())
+        }
+
+        return unsubscribe
     }
 
-    // TODO: Only use a single history listener. Otherwise we'll end up with
-    // multiple concurrent calls to match.
-
-    // Set up the history listener first in case the initial match redirects.
-    const unsubscribe = history.listen(historyListener)
-
-    if (state.location) {
-      // Picking up on a matchContext.
-      listener(null, state)
-    } else {
-      historyListener(history.getCurrentLocation())
+    return {
+        isActive,
+        match,
+        listenBeforeLeavingRoute,
+        listen
     }
-
-    return unsubscribe
-  }
-
-  return {
-    isActive,
-    match,
-    listenBeforeLeavingRoute,
-    listen
-  }
 }

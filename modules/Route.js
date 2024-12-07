@@ -13,11 +13,11 @@ import { createRouteFromReactElement } from './RouteUtils'
  */
 /* eslint-disable react/require-render-return */
 function Route() {
-  /* istanbul ignore next: sanity check */
-  invariant(
-    false,
-    '<Route> elements are for router configuration only and should not be rendered'
-  )
+    /* istanbul ignore next: sanity check */
+    invariant(
+        false,
+        '<Route> elements are for router configuration only and should not be rendered'
+    )
 }
 
 Route.createRouteFromReactElement = createRouteFromReactElement

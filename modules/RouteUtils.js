@@ -1,31 +1,31 @@
 import React from 'react'
 
 function isValidChild(object) {
-  return object == null || React.isValidElement(object)
+    return object == null || React.isValidElement(object)
 }
 
 export function isReactChildren(object) {
-  return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild))
+    return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild))
 }
 
 function createRoute(defaultProps, props) {
-  return { ...defaultProps, ...props }
+    return { ...defaultProps, ...props }
 }
 
 export function createRouteFromReactElement(element) {
-  const type = element.type
-  const route = createRoute(type.defaultProps, element.props)
+    const type = element.type
+    const route = createRoute(type.defaultProps, element.props)
 
-  if (route.children) {
-    const childRoutes = createRoutesFromReactChildren(route.children, route)
+    if (route.children) {
+        const childRoutes = createRoutesFromReactChildren(route.children, route)
 
-    if (childRoutes.length)
-      route.childRoutes = childRoutes
+        if (childRoutes.length)
+            route.childRoutes = childRoutes
 
-    delete route.children
-  }
+        delete route.children
+    }
 
-  return route
+    return route
 }
 
 /**
@@ -46,23 +46,23 @@ export function createRouteFromReactElement(element) {
  * to a <Router> component.
  */
 export function createRoutesFromReactChildren(children, parentRoute) {
-  const routes = []
+    const routes = []
 
-  React.Children.forEach(children, function (element) {
-    if (React.isValidElement(element)) {
-      // Component classes may have a static create* method.
-      if (element.type.createRouteFromReactElement) {
-        const route = element.type.createRouteFromReactElement(element, parentRoute)
+    React.Children.forEach(children, function (element) {
+        if (React.isValidElement(element)) {
+            // Component classes may have a static create* method.
+            if (element.type.createRouteFromReactElement) {
+                const route = element.type.createRouteFromReactElement(element, parentRoute)
 
-        if (route)
-          routes.push(route)
-      } else {
-        routes.push(createRouteFromReactElement(element))
-      }
-    }
-  })
+                if (route)
+                    routes.push(route)
+            } else {
+                routes.push(createRouteFromReactElement(element))
+            }
+        }
+    })
 
-  return routes
+    return routes
 }
 
 /**
@@ -70,11 +70,11 @@ export function createRoutesFromReactChildren(children, parentRoute) {
  * may be a JSX route, a plain object route, or an array of either.
  */
 export function createRoutes(routes) {
-  if (isReactChildren(routes)) {
-    routes = createRoutesFromReactChildren(routes)
-  } else if (routes && !Array.isArray(routes)) {
-    routes = [ routes ]
-  }
+    if (isReactChildren(routes)) {
+        routes = createRoutesFromReactChildren(routes)
+    } else if (routes && !Array.isArray(routes)) {
+        routes = [ routes ]
+    }
 
-  return routes
+    return routes
 }
