@@ -1,25 +1,25 @@
 /* components */
-export Router from './Router'
-export Link from './Link'
-export IndexLink from './IndexLink'
-export withRouter from './withRouter'
+export { default as Router } from './Router'
+export { default as Link } from './Link'
+export { default as IndexLink } from './IndexLink'
+export { default as withRouter } from './withRouter'
 
 /* components (configuration) */
-export IndexRedirect from './IndexRedirect'
-export IndexRoute from './IndexRoute'
-export Redirect from './Redirect'
-export Route from './Route'
+export { default as IndexRedirect } from './IndexRedirect'
+export { default as IndexRoute } from './IndexRoute'
+export { default as Redirect } from './Redirect'
+export { default as Route } from './Route'
 
 /* utils */
 export { createRoutes } from './RouteUtils'
-export RouterContext from './RouterContext'
+export { default as RouterContext } from './RouterContext'
 export { locationShape, routerShape } from './PropTypes'
-export match from './match'
-export useRouterHistory from './useRouterHistory'
+export { default as match } from './match'
+export { default as useRouterHistory } from './useRouterHistory'
 export { formatPattern } from './PatternUtils'
-export applyRouterMiddleware from './applyRouterMiddleware'
+export { default as applyRouterMiddleware } from './applyRouterMiddleware'
 
 /* histories */
-export browserHistory from './browserHistory'
-export hashHistory from './hashHistory'
-export createMemoryHistory from './createMemoryHistory'
+export { default as browserHistory } from './browserHistory'
+export { default as hashHistory } from './hashHistory'
+export { default as createMemoryHistory } from './createMemoryHistory'
