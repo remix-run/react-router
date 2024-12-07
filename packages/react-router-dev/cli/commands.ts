@@ -1,11 +1,13 @@
 import * as path from "node:path";
 import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
-import exitHook from "exit-hook";
 import colors from "picocolors";
+import execa from "execa";
 
+import invariant from "../invariant";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
+import type { DevScriptArgs } from "./dev";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
 import { loadPluginContext } from "../vite/plugin";
@@ -59,13 +61,27 @@ export async function build(
   }
 }
 
-export async function dev(root: string, options: ViteDevOptions = {}) {
-  let { dev } = await import("../vite/dev");
-  if (options.profile) {
-    await profiler.start();
+export async function dev(root: string, viteDevOptions: ViteDevOptions = {}) {
+  let devScriptPath = path.resolve(__dirname, "./dev.js");
+
+  invariant(
+    fse.existsSync(devScriptPath),
+    `dev script not found at ${devScriptPath}`
+  );
+
+  let args: DevScriptArgs = { root, viteDevOptions };
+
+  let { NODE_OPTIONS } = process.env;
+  if (!NODE_OPTIONS?.includes("--conditions")) {
+    NODE_OPTIONS = `${NODE_OPTIONS ?? ""} --conditions=development`.trim();
   }
-  exitHook(() => profiler.stop(console.info));
-  await dev(root, options);
+
+  execa(process.execPath, [devScriptPath, JSON.stringify(args)], {
+    env: { ...process.env, NODE_OPTIONS },
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
 
   // keep `react-router dev` alive by waiting indefinitely
   await new Promise(() => {});
