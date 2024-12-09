@@ -281,14 +281,6 @@ For an example, please refer to the default [`entry.server.tsx`][node-streaming-
 
 Note that this does not handle thrown `Response` instances from your `loader`/`action` functions. The intention of this handler is to find bugs in your code which result in unexpected thrown errors. If you are detecting a scenario and throwing a 401/404/etc. `Response` in your `loader`/`action` then it's an expected flow that is handled by your code. If you also wish to log, or send those to an external service, that should be done at the time you throw the response.
 
-[react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
-[route-module]: ../start/framework/route-module
-[routing]: ../start/framework/routing
-[server-entry]: #entryservertsx
-[client-entry]: #entryclienttsx
-[rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
-[rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
-[node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
 
 ## `.server` modules
 
@@ -309,3 +301,35 @@ app
 `.server` modules must be within your app directory.
 
 Refer to the Route Module section in the sidebar for more information.
+
+# `.client` modules
+
+While uncommon, you may have a file or dependency that uses module side effects in the browser. You can use `*.client.ts` on file names or nest files within `.client` directories to force them out of server bundles.
+
+```ts filename=feature-check.client.ts
+// this would break the server
+export const supportsVibrationAPI =
+  "vibrate" in window.navigator;
+```
+
+Note that values exported from this module will all be `undefined` on the server, so the only places to use them are in [`useEffect`][use_effect] and user events like click handlers.
+
+```ts
+import { supportsVibrationAPI } from "./feature-check.client.ts";
+
+console.log(supportsVibrationAPI);
+// server: undefined
+// client: true | false
+```
+
+Refer to the Route Module section in the sidebar for more information.
+
+[react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
+[route-module]: ../start/framework/route-module
+[routing]: ../start/framework/routing
+[server-entry]: #entryservertsx
+[client-entry]: #entryclienttsx
+[rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
+[rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
+[node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
+[use_effect]: https://react.dev/reference/react/useEffect
