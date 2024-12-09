@@ -281,7 +281,6 @@ For an example, please refer to the default [`entry.server.tsx`][node-streaming-
 
 Note that this does not handle thrown `Response` instances from your `loader`/`action` functions. The intention of this handler is to find bugs in your code which result in unexpected thrown errors. If you are detecting a scenario and throwing a 401/404/etc. `Response` in your `loader`/`action` then it's an expected flow that is handled by your code. If you also wish to log, or send those to an external service, that should be done at the time you throw the response.
 
-
 ## `.server` modules
 
 While not strictly necessary, `.server` modules are a good way to explicitly mark entire modules as server-only.
