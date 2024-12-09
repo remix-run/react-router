@@ -13,7 +13,6 @@ export { default as Route } from './Route'
 /* utils */
 export { createRoutes } from './RouteUtils'
 export { default as RouterContext } from './RouterContext'
-export { locationShape, routerShape } from './PropTypes'
 export { default as match } from './match'
 export { default as useRouterHistory } from './useRouterHistory'
 export { formatPattern } from './PatternUtils'

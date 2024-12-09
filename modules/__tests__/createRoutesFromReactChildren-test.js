@@ -88,6 +88,7 @@ describe('createRoutesFromReactChildren', function () {
 
   it('works with comments', function () {
     const routes = createRoutesFromReactChildren(
+      // eslint-disable-next-line react/jsx-no-comment-textnodes
       <Route path="/one" component={Parent}>
         // This is a comment.
         <Route path="/two" component={Hello} />

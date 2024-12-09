@@ -1,17 +1,11 @@
 import React from 'react'
-import createReactClass from 'create-react-class'
 import Link from './Link'
 
 /**
  * An <IndexLink> is used to link to an <IndexRoute>.
  */
-const IndexLink = createReactClass({
-  displayName: 'IndexLink',
-
-  render() {
-    return <Link {...this.props} onlyActiveOnIndex={true} />
-  }
-
-})
+function IndexLink(props) {
+  return <Link {...props} onlyActiveOnIndex={true} />
+}
 
 export default IndexLink

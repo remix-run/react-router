@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import IndexLink from '../IndexLink'
@@ -92,92 +92,73 @@ describe('An <IndexLink>', function () {
     </Route>
   )
 
-  let node
-  beforeEach(function () {
-    node = document.createElement('div')
-  })
-
-  afterEach(function () {
-    unmountComponentAtNode(node)
-  })
-
   describe('when linking to the root', function () {
-    it('is active and other routes are not', function (done) {
+    it('is active and other routes are not', function () {
       render((
         <Router history={createHistory('/')} routes={routes} />
-      ), node, function () {
-        expect(node.querySelector('#rootLink').className).toEqual('active')
-        expect(node.querySelector('#overviewLink').className).toEqual('')
-        expect(node.querySelector('#contactLink').className).toEqual('')
-        expect(node.querySelector('#productsLink').className).toEqual('')
-        expect(node.querySelector('#productsIndexLink').className).toEqual('')
-        expect(node.querySelector('#specificProductLink').className).toEqual('')
-        done()
-      })
+      ))
+      expect(document.querySelector('#rootLink').className).toEqual('active')
+      expect(document.querySelector('#overviewLink').className).toEqual('')
+      expect(document.querySelector('#contactLink').className).toEqual('')
+      expect(document.querySelector('#productsLink').className).toEqual('')
+      expect(document.querySelector('#productsIndexLink').className).toEqual('')
+      expect(document.querySelector('#specificProductLink').className).toEqual('')
     })
   })
 
   describe('when linking to the overview', function () {
-    it('is active and other routes are not', function (done) {
+    it('is active and other routes are not', function () {
       render((
         <Router history={createHistory('/website')} routes={routes} />
-      ), node, function () {
-        expect(node.querySelector('#rootLink').className).toEqual('')
-        expect(node.querySelector('#overviewLink').className).toEqual('active')
-        expect(node.querySelector('#contactLink').className).toEqual('')
-        expect(node.querySelector('#productsLink').className).toEqual('')
-        expect(node.querySelector('#productsIndexLink').className).toEqual('')
-        expect(node.querySelector('#specificProductLink').className).toEqual('')
-        done()
-      })
+      ))
+      expect(document.querySelector('#rootLink').className).toEqual('')
+      expect(document.querySelector('#overviewLink').className).toEqual('active')
+      expect(document.querySelector('#contactLink').className).toEqual('')
+      expect(document.querySelector('#productsLink').className).toEqual('')
+      expect(document.querySelector('#productsIndexLink').className).toEqual('')
+      expect(document.querySelector('#specificProductLink').className).toEqual('')
     })
   })
 
   describe('when linking to the contact', function () {
-    it('is active and other routes are not', function (done) {
+    it('is active and other routes are not', function () {
       render((
         <Router history={createHistory('/website/contact')} routes={routes} />
-      ), node, function () {
-        expect(node.querySelector('#rootLink').className).toEqual('')
-        expect(node.querySelector('#overviewLink').className).toEqual('')
-        expect(node.querySelector('#contactLink').className).toEqual('active')
-        expect(node.querySelector('#productsLink').className).toEqual('')
-        expect(node.querySelector('#productsIndexLink').className).toEqual('')
-        expect(node.querySelector('#specificProductLink').className).toEqual('')
-        done()
-      })
+      ))
+      expect(document.querySelector('#rootLink').className).toEqual('')
+      expect(document.querySelector('#overviewLink').className).toEqual('')
+      expect(document.querySelector('#contactLink').className).toEqual('active')
+      expect(document.querySelector('#productsLink').className).toEqual('')
+      expect(document.querySelector('#productsIndexLink').className).toEqual('')
+      expect(document.querySelector('#specificProductLink').className).toEqual('')
     })
   })
 
   describe('when linking to the products', function () {
-    it('is active and other routes are not', function (done) {
+    it('is active and other routes are not', function () {
       render((
         <Router history={createHistory('/website/products')} routes={routes} />
-      ), node, function () {
-        expect(node.querySelector('#rootLink').className).toEqual('')
-        expect(node.querySelector('#overviewLink').className).toEqual('')
-        expect(node.querySelector('#contactLink').className).toEqual('')
-        expect(node.querySelector('#productsLink').className).toEqual('active')
-        expect(node.querySelector('#productsIndexLink').className).toEqual('active')
-        expect(node.querySelector('#specificProductLink').className).toEqual('')
-        done()
-      })
+      ))
+      expect(document.querySelector('#rootLink').className).toEqual('')
+      expect(document.querySelector('#overviewLink').className).toEqual('')
+      expect(document.querySelector('#contactLink').className).toEqual('')
+      expect(document.querySelector('#productsLink').className).toEqual('active')
+      expect(document.querySelector('#productsIndexLink').className).toEqual('active')
+      expect(document.querySelector('#specificProductLink').className).toEqual('')
     })
   })
 
   describe('when linking to a specific product', function () {
-    it("is active and it's parent is also active", function (done) {
+    it("is active and it's parent is also active", function () {
       render((
         <Router history={createHistory('/website/products/15')} routes={routes} />
-      ), node, function () {
-        expect(node.querySelector('#rootLink').className).toEqual('')
-        expect(node.querySelector('#overviewLink').className).toEqual('')
-        expect(node.querySelector('#contactLink').className).toEqual('')
-        expect(node.querySelector('#productsLink').className).toEqual('active')
-        expect(node.querySelector('#productsIndexLink').className).toEqual('')
-        expect(node.querySelector('#specificProductLink').className).toEqual('active')
-        done()
-      })
+      ))
+      expect(document.querySelector('#rootLink').className).toEqual('')
+      expect(document.querySelector('#overviewLink').className).toEqual('')
+      expect(document.querySelector('#contactLink').className).toEqual('')
+      expect(document.querySelector('#productsLink').className).toEqual('active')
+      expect(document.querySelector('#productsIndexLink').className).toEqual('')
+      expect(document.querySelector('#specificProductLink').className).toEqual('active')
     })
   })
 

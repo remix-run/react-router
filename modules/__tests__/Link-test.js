@@ -1,7 +1,6 @@
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
-import { Simulate } from 'react-dom/test-utils'
-import { render } from 'react-dom'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import hashHistory from '../hashHistory'
 import Router from '../Router'
@@ -9,62 +8,52 @@ import Route from '../Route'
 import Link from '../Link'
 import execSteps from './execSteps'
 
-const { click } = Simulate
-
 describe('A <Link>', () => {
+  const Hello = ({ params }) => <div>Hello {params.name}!</div>
 
-  const Hello = ({ params }) => (
-    <div>Hello {params.name}!</div>
-  )
-
-  const Goodbye = () => (
-    <div>Goodbye</div>
-  )
-
-  let node
-  beforeEach(() => {
-    node = document.createElement('div')
-  })
+  const Goodbye = () => <div>Goodbye</div>
 
   it('should not render unnecessary class=""', () => {
-    render((
-      <Link to="/something" />
-    ), node, () => {
-      const a = node.querySelector('a')
-      expect(a.hasAttribute('class')).toBe(false)
-    })
+    render(<Link to="/something" />)
+    const a = document.querySelector('a')
+    expect(a.hasAttribute('class')).toBe(false)
   })
 
   it('knows how to make its href', () => {
     const LinkWrapper = () => (
-      <Link to={{
-        pathname: '/hello/michael',
-        query: { the: 'query' },
-        hash: '#the-hash'
-      }}>
+      <Link
+        to={{
+          pathname: '/hello/michael',
+          query: { the: 'query' },
+          hash: '#the-hash'
+        }}
+      >
         Link
       </Link>
     )
 
-    render((
+    render(
       <Router history={createHistory('/')}>
         <Route path="/" component={LinkWrapper} />
       </Router>
-    ), node, () => {
-      const a = node.querySelector('a')
-      expect(a.getAttribute('href')).toEqual('/hello/michael?the=query#the-hash')
-    })
+    )
+    const a = document.querySelector('a')
+    expect(a.getAttribute('href')).toEqual('/hello/michael?the=query#the-hash')
   })
 
   it('exposes its ref via an innerRef prop', function (done) {
-    const refCallback = n => {
+    const refCallback = (n) => {
+      if (!n) {
+        return
+      }
       expect(n.tagName).toEqual('A')
       done()
     }
 
     render(
-      <Link to="/something" innerRef={refCallback}>Link</Link>,
-      node
+      <Link to="/something" innerRef={refCallback}>
+        Link
+      </Link>
     )
   })
 
@@ -76,24 +65,20 @@ describe('A <Link>', () => {
         </Link>
       )
 
-      render((
+      render(
         <Router history={hashHistory}>
           <Route path="/" component={LinkWrapper} />
         </Router>
-      ), node, () => {
-        const a = node.querySelector('a')
-        expect(a.getAttribute('href')).toEqual('#/hello/michael?the=query')
-      })
+      )
+      const a = document.querySelector('a')
+      expect(a.getAttribute('href')).toEqual('#/hello/michael?the=query')
     })
   })
 
   describe('with params', () => {
     const App = () => (
       <div>
-        <Link
-          to="/hello/michael"
-          activeClassName="active"
-        >
+        <Link to="/hello/michael" activeClassName="active">
           Michael
         </Link>
         <Link
@@ -105,65 +90,57 @@ describe('A <Link>', () => {
       </div>
     )
 
-    it('is active when its params match', done => {
-      render((
+    it('is active when its params match', () => {
+      render(
         <Router history={createHistory('/hello/michael')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
           </Route>
         </Router>
-      ), node, () => {
-        const a = node.querySelectorAll('a')[0]
-        expect(a.className.trim()).toEqual('active')
-        done()
-      })
+      )
+      const a = document.querySelectorAll('a')[0]
+      expect(a.className.trim()).toEqual('active')
     })
 
-    it('is not active when its params do not match', done => {
-      render((
+    it('is not active when its params do not match', () => {
+      render(
         <Router history={createHistory('/hello/michael')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
           </Route>
         </Router>
-      ), node, () => {
-        const a = node.querySelectorAll('a')[1]
-        expect(a.className.trim()).toEqual('')
-        done()
-      })
+      )
+      const a = document.querySelectorAll('a')[1]
+      expect(a.className.trim()).toEqual('')
     })
 
-    it('is active when its params and query match', done => {
-      render((
+    it('is active when its params and query match', () => {
+      render(
         <Router history={createHistory('/hello/ryan?the=query')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
           </Route>
         </Router>
-      ), node, () => {
-        const a = node.querySelectorAll('a')[1]
-        expect(a.className.trim()).toEqual('active')
-        done()
-      })
+      )
+      const a = document.querySelectorAll('a')[1]
+      expect(a.className.trim()).toEqual('active')
     })
 
-    it('is not active when its query does not match', done => {
-      render((
+    it('is not active when its query does not match', () => {
+      render(
         <Router history={createHistory('/hello/ryan?the=other+query')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
           </Route>
         </Router>
-      ), node, () => {
-        const a = node.querySelectorAll('a')[1]
-        expect(a.className.trim()).toEqual('')
-        done()
-      })
+      )
+      const a = document.querySelectorAll('a')[1]
+      expect(a.className.trim()).toEqual('')
     })
   })
 
   describe('when its route is active and className is empty', () => {
-    it("it shouldn't have an active class", done => {
+    it("it shouldn't have an active class", (done) => {
       const LinkWrapper = ({ children }) => (
         <div>
           <Link to="/hello" className="dontKillMe" activeClassName="">
@@ -178,7 +155,7 @@ describe('A <Link>', () => {
       let a
       const steps = [
         () => {
-          a = node.querySelector('a')
+          a = document.querySelector('a')
           expect(a.className).toEqual('dontKillMe')
           history.push('/hello')
         },
@@ -189,19 +166,19 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      )
     })
   })
 
   describe('when its route is active', () => {
-    it('has its activeClassName', done => {
+    it('has its activeClassName', (done) => {
       const LinkWrapper = ({ children }) => (
         <div>
           <Link to="/hello" className="dontKillMe" activeClassName="highlight">
@@ -215,7 +192,7 @@ describe('A <Link>', () => {
       const history = createHistory('/goodbye')
       const steps = [
         () => {
-          a = node.querySelector('a')
+          a = document.querySelector('a')
           expect(a.className).toEqual('dontKillMe')
           history.push('/hello')
         },
@@ -226,17 +203,17 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node)
+      )
     })
 
-    it('has its activeStyle', done => {
+    it('has its activeStyle', (done) => {
       const LinkWrapper = ({ children }) => (
         <div>
           <Link
@@ -254,7 +231,7 @@ describe('A <Link>', () => {
       const history = createHistory('/goodbye')
       const steps = [
         () => {
-          a = node.querySelector('a')
+          a = document.querySelector('a')
           expect(a.style.color).toEqual('white')
           history.push('/hello')
         },
@@ -265,22 +242,24 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="hello" component={Hello} />
             <Route path="goodbye" component={Goodbye} />
           </Route>
         </Router>
-      ), node)
+      )
     })
   })
 
   describe('when route changes', () => {
-    it('changes active state', done => {
+    it('changes active state', (done) => {
       const LinkWrapper = ({ children }) => (
         <div>
-          <Link to="/hello" activeClassName="active">Link</Link>
+          <Link to="/hello" activeClassName="active">
+            Link
+          </Link>
           {children}
         </div>
       )
@@ -289,7 +268,7 @@ describe('A <Link>', () => {
       const history = createHistory('/goodbye')
       const steps = [
         () => {
-          a = node.querySelector('a')
+          a = document.querySelector('a')
           expect(a.className).toEqual('')
           history.push('/hello')
         },
@@ -300,17 +279,17 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node)
+      )
     })
 
-    it('changes active state inside static containers', done => {
+    it('changes active state inside static containers', (done) => {
       class LinkWrapper extends Component {
         shouldComponentUpdate() {
           return false
@@ -319,7 +298,9 @@ describe('A <Link>', () => {
         render() {
           return (
             <div>
-              <Link to="/hello" activeClassName="active">Link</Link>
+              <Link to="/hello" activeClassName="active">
+                Link
+              </Link>
               {this.props.children}
             </div>
           )
@@ -330,67 +311,66 @@ describe('A <Link>', () => {
       const history = createHistory('/goodbye')
       const steps = [
         () => {
-          a = node.querySelector('a')
+          a = document.querySelector('a')
           expect(a.className).toEqual('')
           history.push('/hello')
         },
         () => {
-          // React 16 has slightly different update timing so we'll just sorta
-          // punt a bit with a setTimeout.
-          setTimeout(() => {
-            expect(a.className).toEqual('active')
-          }, 10)
+          expect(a.className).toEqual('active')
         }
       ]
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      )
     })
   })
 
   describe('when clicked', () => {
-    it('calls a user defined click handler', done => {
+    it('calls a user defined click handler', (done) => {
       class LinkWrapper extends Component {
         handleClick() {
           done()
         }
 
         render() {
-          return <Link to="/hello" onClick={this.handleClick}>Link</Link>
+          return (
+            <Link to="/hello" onClick={this.handleClick}>
+              Link
+            </Link>
+          )
         }
       }
 
-      render((
+      render(
         <Router history={createHistory('/')}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
         </Router>
-      ), node, () => {
-        click(node.querySelector('a'))
-      })
+      )
+      document.querySelector('a').click()
     })
 
-    it('transitions to the correct route for string', done => {
-      const LinkWrapper = () => (
-        <Link to="/hello?the=query#hash">
-          Link
-        </Link>
-      )
+    it('transitions to the correct route for string', (done) => {
+      const LinkWrapper = () => <Link to="/hello?the=query#hash">Link</Link>
 
       const history = createHistory('/')
       const spy = spyOn(history, 'push').andCallThrough()
 
+      const node = document.createElement('div')
+
       const steps = [
         () => {
-          click(node.querySelector('a'), { button: 0 })
+          const anchor = node.querySelector('a')
+          console.log('anchor', anchor)
+          anchor.click()
         },
         ({ location }) => {
           expect(node.innerHTML).toMatch(/Hello/)
@@ -404,15 +384,16 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
-        </Router>
-      ), node)
+        </Router>,
+        { container: node }
+      )
     })
 
-    it('transitions to the correct route for object', done => {
+    it('transitions to the correct route for object', (done) => {
       const LinkWrapper = () => (
         <Link
           to={{
@@ -429,9 +410,11 @@ describe('A <Link>', () => {
       const history = createHistory('/')
       const spy = spyOn(history, 'push').andCallThrough()
 
+      const node = document.createElement('div')
+
       const steps = [
         () => {
-          click(node.querySelector('a'), { button: 0 })
+          node.querySelector('a').click()
         },
         ({ location }) => {
           expect(node.innerHTML).toMatch(/Hello/)
@@ -446,31 +429,38 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
-        </Router>
-      ), node)
+        </Router>,
+        { container: node }
+      )
     })
 
-    it('does not transition when onClick prevents default', done => {
+    it('does not transition when onClick prevents default', (done) => {
       class LinkWrapper extends Component {
         handleClick(event) {
           event.preventDefault()
         }
 
         render() {
-          return <Link to="/hello" onClick={this.handleClick}>Link</Link>
+          return (
+            <Link to="/hello" onClick={this.handleClick}>
+              Link
+            </Link>
+          )
         }
       }
 
       const history = createHistory('/')
       const spy = spyOn(history, 'push').andCallThrough()
 
+      const node = document.createElement('div')
+
       const steps = [
         () => {
-          click(node.querySelector('a'), { button: 0 })
+          node.querySelector('a').click()
         },
         () => {
           expect(node.innerHTML).toMatch(/Link/)
@@ -480,19 +470,21 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
-        </Router>
-      ), node, execNextStep)
+        </Router>,
+        { container: node }
+      )
+      execNextStep()
     })
   })
 
   describe('with function to', () => {
     const LinkWrapper = () => (
       <Link
-        to={location => ({ ...location, hash: '#hash' })}
+        to={(location) => ({ ...location, hash: '#hash' })}
         activeClassName="active"
       >
         Link
@@ -500,21 +492,20 @@ describe('A <Link>', () => {
     )
 
     it('should have the correct href and active state', () => {
-      render((
+      render(
         <Router history={createHistory('/hello')}>
           <Route path="/hello" component={LinkWrapper} />
         </Router>
-      ), node, () => {
-        const a = node.querySelector('a')
-        expect(a.getAttribute('href')).toEqual('/hello#hash')
-        expect(a.className.trim()).toEqual('active')
-      })
+      )
+      const a = document.querySelector('a')
+      expect(a.getAttribute('href')).toEqual('/hello#hash')
+      expect(a.className.trim()).toEqual('active')
     })
 
-    it('should transition correctly on click', done => {
+    it('should transition correctly on click', (done) => {
       const steps = [
         () => {
-          click(node.querySelector('a'), { button: 0 })
+          document.querySelector('a').click()
         },
         ({ location }) => {
           expect(location.pathname).toEqual('/hello')
@@ -524,11 +515,11 @@ describe('A <Link>', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={createHistory('/hello')} onUpdate={execNextStep}>
           <Route path="/hello" component={LinkWrapper} />
         </Router>
-      ), node, execSteps)
+      )
     })
   })
 
@@ -538,57 +529,53 @@ describe('A <Link>', () => {
         return (
           <div>
             <Link>Blank Link</Link>
-            <Link/>
+            <Link />
             <Link className="kitten-link">Kittens</Link>
           </div>
         )
       }
     }
 
-    it('returns an anchor tag without an href', function (done) {
-      render((
+    it('returns an anchor tag without an href', function () {
+      render(
         <Router history={createHistory('/')}>
           <Route path="/" component={App} />
         </Router>
-      ), node, function () {
-        const link1 = node.querySelectorAll('a')[0]
-        const link2 = node.querySelectorAll('a')[1]
-        const link3 = node.querySelectorAll('a')[2]
-        expect(link1.href).toEqual('')
-        expect(link2.href).toEqual('')
-        expect(link3.href).toEqual('')
-        done()
-      })
+      )
+      const link1 = document.querySelectorAll('a')[0]
+      const link2 = document.querySelectorAll('a')[1]
+      const link3 = document.querySelectorAll('a')[2]
+      expect(link1.href).toEqual('')
+      expect(link2.href).toEqual('')
+      expect(link3.href).toEqual('')
     })
 
     it('exposes its ref via an innerRef prop', function (done) {
-      const refCallback = n => {
+      const refCallback = (n) => {
+        if (!n) {
+          return
+        }
         expect(n.tagName).toEqual('A')
         done()
       }
 
-      const LinkWrapper = () => (
-        <Link innerRef={refCallback}>Link</Link>
-      )
+      const LinkWrapper = () => <Link innerRef={refCallback}>Link</Link>
 
       render(
         <Router history={createHistory('/')}>
           <Route path="/" component={LinkWrapper} />
-        </Router>,
-        node
+        </Router>
       )
     })
 
-    it('passes down other props', function (done) {
-      render((
+    it('passes down other props', function () {
+      render(
         <Router history={createHistory('/')}>
           <Route path="/" component={App} />
         </Router>
-      ), node, function () {
-        const link3 = node.querySelectorAll('a')[2]
-        expect(link3.className).toEqual('kitten-link')
-        done()
-      })
+      )
+      const link3 = document.querySelectorAll('a')[2]
+      expect(link3.className).toEqual('kitten-link')
     })
   })
 })

@@ -1,56 +1,60 @@
 import invariant from 'invariant'
 import React from 'react'
-import createReactClass from 'create-react-class'
-import { func, object } from 'prop-types'
 
 import createTransitionManager from './createTransitionManager'
-import { routes } from './InternalPropTypes'
 import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
 import { createRouterObject, assignRouterState } from './RouterUtils'
 import warning from './routerWarning'
 
-const propTypes = {
-  history: object,
-  children: routes,
-  routes, // alias for children
-  render: func,
-  createElement: func,
-  onError: func,
-  onUpdate: func,
+const PROPS_TO_REMOVE = [
+  'history',
+  'children',
+  'routes',
+  'render',
+  'createElement',
+  'onError',
+  'onUpdate'
+]
 
-  // PRIVATE: For client-side rehydration of server match.
-  matchContext: object
+function defaultRender(props) {
+  return <RouterContext {...props} />
 }
-
-const prefixUnsafeLifecycleMethods = typeof React.forwardRef !== 'undefined'
 
 /**
  * A <Router> is a high-level API for automatically setting up
  * a router that renders a <RouterContext> with all the props
  * it needs each time the URL changes.
  */
-const Router = createReactClass({
-  displayName: 'Router',
+class Router extends React.Component {
+  constructor(props) {
+    super(props)
 
-  propTypes,
-
-  getDefaultProps() {
-    return {
-      render(props) {
-        return <RouterContext {...props} />
-      }
-    }
-  },
-
-  getInitialState() {
-    return {
+    this.state = {
       location: null,
       routes: null,
       params: null,
       components: null
     }
-  },
+  }
+
+  // For SSR, the state has to be the correct one before the 1st render. But we can't move this to constructor as `this.setState()` doesn't work when called in constructor. And the 1st state of `this.transitionManager.listen` is called synchronously.
+  UNSAFE_componentWillMount() {
+    this.transitionManager = this.createTransitionManager()
+    this.router = this.createRouterObject(this.state)
+
+    this._unlisten = this.transitionManager.listen((error, state) => {
+      if (error) {
+        this.handleError(error)
+      } else {
+        // Need to clone to create a new object for the context to work
+        const newRouter = { ...this.router }
+        assignRouterState(newRouter, state)
+        this.router = newRouter
+        this.setState(state, this.props.onUpdate)
+      }
+    })
+  }
 
   handleError(error) {
     if (this.props.onError) {
@@ -59,7 +63,7 @@ const Router = createReactClass({
       // Throw errors by default so we don't silently swallow them!
       throw error // This error probably occurred in getChildRoutes or getComponents.
     }
-  },
+  }
 
   createRouterObject(state) {
     const { matchContext } = this.props
@@ -69,7 +73,7 @@ const Router = createReactClass({
 
     const { history } = this.props
     return createRouterObject(history, this.transitionManager, state)
-  },
+  }
 
   createTransitionManager() {
     const { matchContext } = this.props
@@ -87,59 +91,35 @@ const Router = createReactClass({
         'history objects. Please change to history v3.x.'
     )
 
-    return createTransitionManager(
-      history,
-      createRoutes(routes || children)
-    )
-  },
+    return createTransitionManager(history, createRoutes(routes || children))
+  }
 
-  // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
-  componentWillMount() {
-    this.transitionManager = this.createTransitionManager()
-    this.router = this.createRouterObject(this.state)
-
-    this._unlisten = this.transitionManager.listen((error, state) => {
-      if (error) {
-        this.handleError(error)
-      } else {
-        // Keep the identity of this.router because of a caveat in ContextUtils:
-        // they only work if the object identity is preserved.
-        assignRouterState(this.router, state)
-        this.setState(state, this.props.onUpdate)
-      }
-    })
-  },
-
-  // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
-  /* istanbul ignore next: sanity check */
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      nextProps.history === this.props.history,
+      prevProps.history === this.props.history,
       'You cannot change <Router history>; it will be ignored'
     )
 
     warning(
-      (nextProps.routes || nextProps.children) ===
+      (prevProps.routes || prevProps.children) ===
         (this.props.routes || this.props.children),
       'You cannot change <Router routes>; it will be ignored'
     )
-  },
+  }
 
   componentWillUnmount() {
-    if (this._unlisten)
-      this._unlisten()
-  },
+    if (this._unlisten) this._unlisten()
+  }
 
   render() {
     const { location, routes, params, components } = this.state
-    const { createElement, render, ...props } = this.props
+    const { createElement, render = defaultRender, ...props } = this.props
 
-    if (location == null)
-      return null // Async match
+    if (location == null) return null // Async match
 
     // Only forward non-Router-specific props to routing context, as those are
     // the only ones that might be custom routing context props.
-    Object.keys(propTypes).forEach(propType => delete props[propType])
+    PROPS_TO_REMOVE.forEach((propType) => delete props[propType])
 
     return render({
       ...props,
@@ -151,14 +131,6 @@ const Router = createReactClass({
       createElement
     })
   }
-
-})
-
-if (prefixUnsafeLifecycleMethods) {
-  Router.prototype.UNSAFE_componentWillReceiveProps = Router.prototype.componentWillReceiveProps
-  Router.prototype.UNSAFE_componentWillMount = Router.prototype.componentWillMount
-  delete Router.prototype.componentWillReceiveProps
-  delete Router.prototype.componentWillMount
 }
 
 export default Router

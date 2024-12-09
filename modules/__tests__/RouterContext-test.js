@@ -1,22 +1,19 @@
 import expect from 'expect'
 import React from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import { render } from '@testing-library/react'
 
 import match from '../match'
-import { routerShape } from '../PropTypes'
-import RouterContext from '../RouterContext'
+import RouterContext, { routerContext } from '../RouterContext'
 import { createRouterObject } from '../RouterUtils'
 
-describe('RouterContext', () => {
-  let node, routes, context, history, transitionManager, router
+describe('RouterContext', function () {
+  let context, history, transitionManager, router
   let listenBeforeLeavingRouteSentinel, isActiveSentinel, createHrefSentinel
 
-  beforeEach(() => {
+  beforeEach(function () {
     listenBeforeLeavingRouteSentinel = {}
     isActiveSentinel = {}
     createHrefSentinel = {}
-
-    node = document.createElement('div')
 
     history = {
       push: expect.createSpy(),
@@ -27,32 +24,30 @@ describe('RouterContext', () => {
       goForward: expect.createSpy()
     }
     transitionManager = {
-      listenBeforeLeavingRoute: expect.createSpy().andReturn(listenBeforeLeavingRouteSentinel),
+      listenBeforeLeavingRoute: expect
+        .createSpy()
+        .andReturn(listenBeforeLeavingRouteSentinel),
       isActive: expect.createSpy().andReturn(isActiveSentinel)
     }
 
     router = createRouterObject(history, transitionManager, {})
-
-    class Component extends React.Component {
-      constructor(props, ctx) {
-        super(props, ctx)
-        context = ctx
-      }
-      render() { return null }
-    }
-
-    Component.contextTypes = {
-      router: routerShape.isRequired
-    }
-
-    routes = { path: '/', component: Component }
   })
 
-  afterEach(() => unmountComponentAtNode(node))
-
   function renderTest(done) {
+    class Component extends React.Component {
+      static contextType = routerContext
+
+      render() {
+        context = { router: this.context }
+        return null
+      }
+    }
+    const routes = { path: '/', component: Component }
+
     match({ location: '/', routes }, (err, redirect, renderProps) => {
-      render(<RouterContext {...renderProps} history={history} router={router} />, node)
+      render(
+        <RouterContext {...renderProps} history={history} router={router} />
+      )
       done()
     })
   }
@@ -72,9 +67,15 @@ describe('RouterContext', () => {
       }
     }
 
-    match({ location: '/', routes: { path: '/', component: RoutedComponent } }, (err, redirect, renderProps) => {
-      render(<RouterContext {...renderProps} history={history} router={router}  />, node, done)
-    })
+    match(
+      { location: '/', routes: { path: '/', component: RoutedComponent } },
+      (err, redirect, renderProps) => {
+        render(
+          <RouterContext {...renderProps} history={history} router={router} />
+        )
+        done()
+      }
+    )
   })
 
   describe('some weird tests that test implementation and should probably go away', () => {
@@ -100,7 +101,9 @@ describe('RouterContext', () => {
       const args = [ 1, 2, 3 ]
       renderTest(() => {
         const remove = context.router.setRouteLeaveHook(...args)
-        expect(transitionManager.listenBeforeLeavingRoute).toHaveBeenCalledWith(...args)
+        expect(transitionManager.listenBeforeLeavingRoute).toHaveBeenCalledWith(
+          ...args
+        )
         expect(remove).toBe(listenBeforeLeavingRouteSentinel)
         done()
       })
@@ -153,5 +156,4 @@ describe('RouterContext', () => {
       })
     })
   })
-
 })

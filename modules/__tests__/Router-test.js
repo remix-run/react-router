@@ -1,12 +1,11 @@
 import expect from 'expect'
 import React, { Component, Fragment, forwardRef, memo } from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
 
 describe('Router', function () {
-
   class Parent extends Component {
     render() {
       return <div>parent {this.props.children}</div>
@@ -19,69 +18,60 @@ describe('Router', function () {
     }
   }
 
-  let node
-  beforeEach(function () {
-    node = document.createElement('div')
-  })
-
-  afterEach(function () {
-    unmountComponentAtNode(node)
-  })
-
-  it('renders routes', function (done) {
-    render((
+  it('renders routes', function () {
+    const node = document.createElement('div')
+    render(
       <Router history={createHistory('/')}>
         <Route path="/" component={Parent} />
-      </Router>
-    ), node, function () {
-      expect(node.textContent).toEqual('parent ')
-      done()
-    })
+      </Router>,
+      { container: node }
+    )
+    expect(node.textContent).toEqual('parent ')
   })
 
-  it('renders child routes when the parent does not have a path', function (done) {
-    render((
+  it('renders child routes when the parent does not have a path', function () {
+    const node = document.createElement('div')
+    render(
       <Router history={createHistory('/')}>
         <Route component={Parent}>
           <Route component={Parent}>
             <Route path="/" component={Child} />
           </Route>
         </Route>
-      </Router>
-    ), node, function () {
-      expect(node.textContent).toEqual('parent parent child')
-      done()
-    })
+      </Router>,
+      { container: node }
+    )
+    expect(node.textContent).toEqual('parent parent child')
   })
 
-  it('renders nested children correctly', function (done) {
-    render((
+  it('renders nested children correctly', function () {
+    const node = document.createElement('div')
+    render(
       <Router history={createHistory('/hello')}>
         <Route component={Parent}>
           <Route path="hello" component={Child} />
         </Route>
-      </Router>
-    ), node, function () {
-      expect(node.textContent).toMatch(/parent/)
-      expect(node.textContent).toMatch(/child/)
-      done()
-    })
+      </Router>,
+      { container: node }
+    )
+    expect(node.textContent).toMatch(/parent/)
+    expect(node.textContent).toMatch(/child/)
   })
 
-  it("renders the child's component when it has no component", function (done) {
-    render((
+  it("renders the child's component when it has no component", function () {
+    const node = document.createElement('div')
+    render(
       <Router history={createHistory('/hello')}>
         <Route>
           <Route path="hello" component={Child} />
         </Route>
-      </Router>
-    ), node, function () {
-      expect(node.textContent).toMatch(/child/)
-      done()
-    })
+      </Router>,
+      { container: node }
+    )
+    expect(node.textContent).toMatch(/child/)
   })
 
-  it('renders with a custom "createElement" prop', function (done) {
+  it('renders with a custom "createElement" prop', function () {
     class Wrapper extends Component {
       render() {
         return <this.props.component fromWrapper="wrapped" />
@@ -94,48 +84,68 @@ describe('Router', function () {
       }
     }
 
-    render((
-      <Router history={createHistory('/')} createElement={x => <Wrapper component={x} />}>
-        <Route path="/" component={Child}/>
-      </Router>
-    ), node, function () {
-      expect(node.textContent).toEqual('wrapped')
-      done()
-    })
+    const node = document.createElement('div')
+    render(
+      <Router
+        history={createHistory('/')}
+        createElement={(x) => <Wrapper component={x} />}
+      >
+        <Route path="/" component={Child} />
+      </Router>,
+      { container: node }
+    )
+    expect(node.textContent).toEqual('wrapped')
   })
 
   describe('components for React 16', function () {
-    it('renders routes for React.memo', function (done) {
-      render((
+    it('renders routes for React.memo', function () {
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/')}>
-          <Route path="/" component={memo(() => <div>memo</div>)} />
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('memo')
-        done()
-      })
+          <Route
+            path="/"
+            component={memo(() => (
+              <div>memo</div>
+            ))}
+          />
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('memo')
     })
 
-    it('renders routes for React.forwardRef', function (done) {
-      render((
+    it('renders routes for React.forwardRef', function () {
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/')}>
-          <Route path="/" component={forwardRef(() => <div>forwardRef</div>)} />
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('forwardRef')
-        done()
-      })
+          <Route
+            path="/"
+            component={forwardRef(() => (
+              <div>forwardRef</div>
+            ))}
+          />
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('forwardRef')
     })
 
-    it('renders routes for React.Fragment', function (done) {
-      render((
+    it('renders routes for React.Fragment', function () {
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/')}>
-          <Route path="/" component={() => <Fragment><div>Fragment</div></Fragment>} />
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('Fragment')
-        done()
-      })
+          <Route
+            path="/"
+            component={() => (
+              <Fragment>
+                <div>Fragment</div>
+              </Fragment>
+            )}
+          />
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('Fragment')
     })
   })
 
@@ -143,7 +153,9 @@ describe('Router', function () {
     class Parent extends Component {
       render() {
         return (
-          <div>{this.props.sidebar}-{this.props.content}</div>
+          <div>
+            {this.props.sidebar}-{this.props.content}
+          </div>
         )
       }
     }
@@ -170,16 +182,15 @@ describe('Router', function () {
       )
     })
 
-    it('receives those components as props', function (done) {
-      render((
-        <Router history={createHistory('/')} routes={routes} />
-      ), node, function () {
-        expect(node.textContent).toEqual('sidebar-content')
-        done()
+    it('receives those components as props', function () {
+      const node = document.createElement('div')
+      render(<Router history={createHistory('/')} routes={routes} />, {
+        container: node
       })
+      expect(node.textContent).toEqual('sidebar-content')
     })
 
-    it('sets the key on those components', function (done) {
+    it('sets the key on those components', function () {
       const components = {}
       function createElementSpy(Component, props) {
         if (props.key) {
@@ -189,21 +200,20 @@ describe('Router', function () {
         return null
       }
 
-      render((
+      render(
         <Router
-          history={createHistory('/')} routes={routes}
+          history={createHistory('/')}
+          routes={routes}
           createElement={createElementSpy}
         />
-      ), node, function () {
-        expect(components.sidebar).toBe(Sidebar)
-        expect(components.content).toBe(Content)
-        done()
-      })
+      )
+      expect(components.sidebar).toBe(Sidebar)
+      expect(components.content).toBe(Content)
     })
   })
 
   describe('at a route with special characters', function () {
-    it('does not double escape', function (done) {
+    it('does not double escape', function () {
       // https://github.com/reactjs/react-router/issues/1574
       class MyComponent extends Component {
         render() {
@@ -211,17 +221,17 @@ describe('Router', function () {
         }
       }
 
-      render((
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/point/aaa%2Bbbb')}>
           <Route path="point/:someToken" component={MyComponent} />
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('aaa+bbb')
-        done()
-      })
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('aaa+bbb')
     })
 
-    it('does not double escape when nested', function (done) {
+    it('does not double escape when nested', function () {
       // https://github.com/reactjs/react-router/issues/1574
       class MyWrapperComponent extends Component {
         render() {
@@ -235,19 +245,19 @@ describe('Router', function () {
         }
       }
 
-      render((
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/point/aaa%2Bbbb')}>
           <Route component={MyWrapperComponent}>
             <Route path="point/:someToken" component={MyComponent} />
           </Route>
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('aaa+bbb')
-        done()
-      })
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('aaa+bbb')
     })
 
-    it('is happy to have colons in parameter values', function (done) {
+    it('is happy to have colons in parameter values', function () {
       // https://github.com/reactjs/react-router/issues/1759
       class MyComponent extends Component {
         render() {
@@ -255,17 +265,17 @@ describe('Router', function () {
         }
       }
 
-      render((
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/ns/aaa:bbb/bar')}>
           <Route path="ns/:foo/bar" component={MyComponent} />
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('aaa:bbb')
-        done()
-      })
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('aaa:bbb')
     })
 
-    it('handles % in parameters', function (done) {
+    it('handles % in parameters', function () {
       // https://github.com/reactjs/react-router/issues/1766
       class MyComponent extends Component {
         render() {
@@ -273,17 +283,23 @@ describe('Router', function () {
         }
       }
 
-      render((
-        <Router history={createHistory('/company/CADENCE%20DESIGN%20SYSTEM%20INC%20NOTE%202.625%25%2060')}>
+      const node = document.createElement('div')
+      render(
+        <Router
+          history={createHistory(
+            '/company/CADENCE%20DESIGN%20SYSTEM%20INC%20NOTE%202.625%25%2060'
+          )}
+        >
           <Route path="/company/:name" component={MyComponent} />
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('CADENCE DESIGN SYSTEM INC NOTE 2.625% 60')
-        done()
-      })
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual(
+        'CADENCE DESIGN SYSTEM INC NOTE 2.625% 60'
+      )
     })
 
-    it('handles forward slashes', function (done) {
+    it('handles forward slashes', function () {
       // https://github.com/reactjs/react-router/issues/1865
       class Parent extends Component {
         render() {
@@ -297,45 +313,42 @@ describe('Router', function () {
         }
       }
 
-      render((
+      const node = document.createElement('div')
+      render(
         <Router history={createHistory('/apple%2Fbanana')}>
           <Route component={Parent}>
             <Route path="/:name" component={Child} />
           </Route>
-        </Router>
-      ), node, function () {
-        expect(node.textContent).toEqual('apple/banana')
-        done()
-      })
+        </Router>,
+        { container: node }
+      )
+      expect(node.textContent).toEqual('apple/banana')
     })
 
-    it('handles error that are not valid URI character', function (done) {
+    it('handles error that are not valid URI character', function () {
       const errorSpy = expect.createSpy()
 
-      render((
+      render(
         <Router history={createHistory('/%')} onError={errorSpy}>
           <Route path="*" />
         </Router>
-      ), node, function () {
-        expect(errorSpy).toHaveBeenCalled()
-        done()
-      })
+      )
+      expect(errorSpy).toHaveBeenCalled()
     })
-
   })
 
   describe('render prop', function () {
-    it('renders with the render prop', function (done) {
-      render((
+    it('renders with the render prop', function () {
+      const node = document.createElement('div')
+      render(
         <Router
           history={createHistory('/')}
           render={() => <div>test</div>}
           routes={{ path: '/', component: Parent }}
-        />
-      ), node, function () {
-        expect(node.textContent).toBe('test')
-        done()
-      })
+        />,
+        { container: node }
+      )
+      expect(node.textContent).toBe('test')
     })
 
     it('passes router props to render prop', function (done) {
@@ -354,19 +367,18 @@ describe('Router', function () {
         expect(props.foo).toBe('bar')
         expect(props.render).toNotExist()
         done()
-        return <div/>
+        return <div />
       }
 
-      render((
+      render(
         <Router
           history={createHistory('/')}
           routes={route}
           render={assertProps}
           foo="bar"
         />
-      ), node)
+      )
     })
-
   })
 
   describe('async components', function () {
@@ -391,11 +403,12 @@ describe('Router', function () {
         setTimeout(() => callback(null, Component))
       }
 
-      render((
+      render(
         <Router history={createHistory('/')} render={renderSpy}>
           <Route path="/" getComponent={getComponent} />
         </Router>
-      ), node, function () {
+      )
+      setTimeout(function () {
         setTimeout(function () {
           expect(componentSpy).toHaveBeenCalledWith([ Component ])
           done()
@@ -414,11 +427,12 @@ describe('Router', function () {
         setTimeout(() => callback(null, { foo, bar }))
       }
 
-      render((
+      render(
         <Router history={createHistory('/')} render={renderSpy}>
           <Route path="/" getComponents={getComponents} />
         </Router>
-      ), node, function () {
+      )
+      setTimeout(function () {
         setTimeout(function () {
           expect(componentSpy).toHaveBeenCalledWith([ { foo, bar } ])
           done()
@@ -429,20 +443,18 @@ describe('Router', function () {
     it('should support getComponent returning a Promise', function (done) {
       const Component = () => <div />
 
-      const getComponent = () => new Promise(resolve => resolve(Component))
+      const getComponent = () => new Promise((resolve) => resolve(Component))
 
-      render((
+      render(
         <Router history={createHistory('/')} render={renderSpy}>
           <Route path="/" getComponent={getComponent} />
         </Router>
-      ), node, function () {
-        setTimeout(function () {
-          expect(componentSpy).toHaveBeenCalledWith([ Component ])
-          done()
-        })
+      )
+      setTimeout(function () {
+        expect(componentSpy).toHaveBeenCalledWith([ Component ])
+        done()
       })
     })
-
   })
 
   describe('error handling', function () {
@@ -453,26 +465,25 @@ describe('Router', function () {
       getComponent = (_, callback) => callback(error)
     })
 
-    it('should work with onError', function (done) {
+    it('should work with onError', function () {
       const errorSpy = expect.createSpy()
 
-      render((
+      render(
         <Router history={createHistory('/')} onError={errorSpy}>
           <Route path="/" getComponent={getComponent} />
         </Router>
-      ), node, function () {
-        expect(errorSpy).toHaveBeenCalledWith(error)
-        done()
-      })
+      )
+      expect(errorSpy).toHaveBeenCalledWith(error)
     })
 
-    it('should throw without onError', function (done) {
-      const callback = expect(() => { done() }).toThrow('error fixture')
-      render((
-        <Router history={createHistory('/')}>
-          <Route path="/" getComponent={getComponent} />
-        </Router>
-      ), node, callback)
+    it('should throw without onError', function () {
+      expect(() =>
+        render(
+          <Router history={createHistory('/')}>
+            <Route path="/" getComponent={getComponent} />
+          </Router>
+        )
+      ).toThrow('error fixture')
     })
   })
 })

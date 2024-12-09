@@ -1,59 +1,34 @@
 import invariant from 'invariant'
 import React from 'react'
 import { isValidElementType } from 'react-is'
-import createReactClass from 'create-react-class'
-import { array, func, object } from 'prop-types'
 
 import getRouteParams from './getRouteParams'
-import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
+
+export const routerContext = React.createContext()
 
 /**
  * A <RouterContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-const RouterContext = createReactClass({
-  displayName: 'RouterContext',
+function RouterContext({
+  createElement: createElementProp = React.createElement,
+  location,
+  routes,
+  params,
+  components,
+  router
+}) {
+  const createElement = (component, props) => {
+    return component == null ? null : createElementProp(component, props)
+  }
 
-  mixins: [ ContextProvider('router') ],
-
-  propTypes: {
-    router: object.isRequired,
-    location: object.isRequired,
-    routes: array.isRequired,
-    params: object.isRequired,
-    components: array.isRequired,
-    createElement: func.isRequired
-  },
-
-  getDefaultProps() {
-    return {
-      createElement: React.createElement
-    }
-  },
-
-  childContextTypes: {
-    router: object.isRequired
-  },
-
-  getChildContext() {
-    return {
-      router: this.props.router
-    }
-  },
-
-  createElement(component, props) {
-    return component == null ? null : this.props.createElement(component, props)
-  },
-
-  render() {
-    const { location, routes, params, components, router } = this.props
+  const renderChildren = () => {
     let element = null
 
     if (components) {
       element = components.reduceRight((element, components, index) => {
-        if (components == null)
-          return element // Don't create new children; use the grandchildren.
+        if (components == null) return element // Don't create new children; use the grandchildren.
 
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
@@ -84,8 +59,9 @@ const RouterContext = createReactClass({
               // Pass through the key as a prop to createElement to allow
               // custom createElement functions to know which named component
               // they're rendering, for e.g. matching up to fetched data.
-              elements[key] = this.createElement(components[key], {
-                key, ...props
+              elements[key] = createElement(components[key], {
+                key,
+                ...props
               })
             }
           }
@@ -93,7 +69,7 @@ const RouterContext = createReactClass({
           return elements
         }
 
-        return this.createElement(components, props)
+        return createElement(components, props)
       }, element)
     }
 
@@ -105,6 +81,9 @@ const RouterContext = createReactClass({
     return element
   }
 
-})
+  return (
+    <routerContext.Provider value={router}>{renderChildren()}</routerContext.Provider>
+  )
+}
 
 export default RouterContext

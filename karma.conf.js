@@ -1,5 +1,4 @@
 const webpack = require('webpack')
-const projectName = require('./package').name
 
 module.exports = (config) => {
   if (process.env.RELEASE) config.singleRun = true
@@ -7,7 +6,7 @@ module.exports = (config) => {
   config.set({
     browsers: [ 'ChromeHeadless' ],
     frameworks: [ 'mocha' ],
-    reporters: [ 'mocha', 'coverage' ],
+    reporters: [ 'mocha' ],
 
     files: [ 'tests.webpack.js' ],
 
@@ -50,26 +49,12 @@ module.exports = (config) => {
     }
   })
 
-  if (process.env.USE_CLOUD) {
-    config.browsers = Object.keys(customLaunchers)
-    config.reporters[0] = 'dots'
+  if (process.env.CI) {
+    config.singleRun = true
+
     config.concurrency = 2
 
     config.browserDisconnectTimeout = 10000
     config.browserDisconnectTolerance = 3
-
-    if (process.env.TRAVIS) {
-      config.browserStack = {
-        project: projectName,
-        build: process.env.TRAVIS_BUILD_NUMBER,
-        name: process.env.TRAVIS_JOB_NUMBER
-      }
-
-      config.singleRun = true
-    } else {
-      config.browserStack = {
-        project: projectName
-      }
-    }
   }
 }

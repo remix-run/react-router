@@ -1,21 +1,11 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Router from '../Router'
 
 describe('a Route Component', function () {
-
-  let node
-  beforeEach(function () {
-    node = document.createElement('div')
-  })
-
-  afterEach(function () {
-    unmountComponentAtNode(node)
-  })
-
-  it('injects the right props', function (done) {
+  it('injects the right props', function () {
     class Parent extends Component {
       componentDidMount() {
         expect(this.props.route).toEqual(parent)
@@ -35,9 +25,6 @@ describe('a Route Component', function () {
     const child = { path: 'child', component: Child }
     const parent = { path: '/', component: Parent, childRoutes: [ child ] }
 
-    render((
-      <Router history={createHistory('/child')} routes={parent}/>
-    ), node, done)
+    render(<Router history={createHistory('/child')} routes={parent} />)
   })
-
 })

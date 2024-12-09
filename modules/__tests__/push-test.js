@@ -1,32 +1,18 @@
 import expect from 'expect'
 import React from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import execSteps from './execSteps'
 import Router from '../Router'
 import Route from '../Route'
 
 describe('push', () => {
+  const Index = () => <h1>Index</h1>
 
-  const Index = () => (
-    <h1>Index</h1>
-  )
-
-  const Home = () => (
-    <h1>Home</h1>
-  )
-
-  let node
-  beforeEach(() => {
-    node = document.createElement('div')
-  })
-
-  afterEach(() => {
-    unmountComponentAtNode(node)
-  })
+  const Home = () => <h1>Home</h1>
 
   describe('when the target path contains a colon', () => {
-    it('works', done => {
+    it('works', (done) => {
       const history = createHistory('/')
       const steps = [
         ({ location }) => {
@@ -40,13 +26,12 @@ describe('push', () => {
 
       const execNextStep = execSteps(steps, done)
 
-      render((
+      render(
         <Router history={history} onUpdate={execNextStep}>
-          <Route path="/" component={Index}/>
-          <Route path="/home/hi:there" component={Home}/>
+          <Route path="/" component={Index} />
+          <Route path="/home/hi:there" component={Home} />
         </Router>
-      ), node)
+      )
     })
   })
-
 })
