@@ -293,8 +293,7 @@ app
 │   └── db.ts
 ├── cms.server.ts 👈 marks this file as server-only
 ├── root.tsx
-└── routes
-    └── _index.tsx
+└── routes.ts
 ```
 
 `.server` modules must be within your app directory.
@@ -320,8 +319,6 @@ console.log(supportsVibrationAPI);
 // server: undefined
 // client: true | false
 ```
-
-Refer to the Route Module section in the sidebar for more information.
 
 [react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
 [route-module]: ../start/framework/route-module
