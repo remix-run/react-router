@@ -75,7 +75,7 @@ export function Layout({
         <Meta />
         <Links />
       </head>
-      <body>
+      <>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -1273,25 +1273,686 @@ Note that we are passing a function to `className`. When the user is at the URL 
 
 ## Global Pending UI
 
+As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app feels a little unresponsive as you click between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
+
+React Router is managing all the state behind the scenes and reveals the pieces you need to build dynamic web apps. In this case, we'll use the [`useNavigation`][use-navigation] hook.
+
+👉 **Use `useNavigation` to add global pending UI**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[6,13,19-21]
+import {
+  Form,
+  Link,
+  NavLink,
+  Outlet,
+  useNavigation,
+} from "react-router";
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts } = loaderData;
+  const navigation = useNavigation();
+
+  return (
+    <>
+      {/* existing elements */}
+      <div
+        className={
+          navigation.state === "loading" ? "loading" : ""
+        }
+        id="detail"
+      >
+        <Outlet />
+      </div>
+    </>
+  );
+}
+```
+
+[`useNavigation`][use-navigation] returns the current navigation state: it can be one of `"idle"`, `"loading"` or `"submitting"`.
+
+In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
+
+<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/16.webp"/> -->
+
 ## Deleting Records
 
-## Index Routes
+If we review code in the contact route, we can find the delete button looks like this:
+
+```tsx filename=app/pages/contact.tsx lines=[2]
+<Form
+  action="destroy"
+  method="post"
+  onSubmit={(event) => {
+    const response = confirm(
+      "Please confirm you want to delete this record."
+    );
+    if (!response) {
+      event.preventDefault();
+    }
+  }}
+>
+  <button type="submit">Delete</button>
+</Form>
+```
+
+Note the `action` points to `"destroy"`. Like `<Link to>`, `<Form action>` can take a _relative_ value. Since the form is rendered in the route `contacts/:contactId`, then a relative action with `destroy` will submit the form to `contacts/:contactId/destroy` when clicked.
+
+At this point you should know everything you need to know to make the delete button work. Maybe give it a shot before moving on? You'll need:
+
+1. A new route
+2. An `action` at that route
+3. `deleteContact` from `app/data.ts`
+4. `redirect` to somewhere after
+
+👉 **Configure the "destroy" route module**
+
+```shellscript nonumber
+touch app/pages/destroy-contact.tsx
+```
+
+```tsx filename=app/routes.ts lines=[3-6]
+export default [
+  // existing routes
+  route(
+    "contacts/:contactId/destroy",
+    "pages/destroy-contact.tsx"
+  ),
+  // existing routes
+] satisfies RouteConfig;
+```
+
+👉 **Add the destroy action**
+
+```tsx filename=app/pages/destroy-contact.tsx
+import { redirect } from "react-router";
+import type { Route } from "./+types/destroy-contact";
+
+import { deleteContact } from "../data";
+
+export async function action({ params }: Route.ActionArgs) {
+  await deleteContact(params.contactId);
+  return redirect("/");
+}
+```
+
+Alright, navigate to a record and click the "Delete" button. It works!
+
+> 😅 I'm still confused why this all works
+
+When the user clicks the submit button:
+
+1. `<Form>` prevents the default browser behavior of sending a new document `POST` request to the server, but instead emulates the browser by creating a `POST` request with client side routing and [`fetch`][fetch]
+2. The `<Form action="destroy">` matches the new route at `contacts/:contactId/destroy` and sends it the request
+3. After the `action` redirects, React Router calls all the `loader`s for the data on the page to get the latest values (this is "revalidation"). `loaderData` in `pages/contact.tsx` now has new values and causes the components to update!
+
+Add a `Form`, add an `action`, React Router does the rest.
 
 ## Cancel Button
 
+On the edit page we've got a cancel button that doesn't do anything yet. We'd like it to do the same thing as the browser's back button.
+
+We'll need a click handler on the button as well as [`useNavigate`][use-navigate].
+
+👉 **Add the cancel button click handler with `useNavigate`**
+
+```tsx filename=app/pages/edit-contact.tsx lines=[4,12,19]
+import {
+  Form,
+  useLoaderData,
+  useNavigate,
+} from "react-router";
+// existing imports & exports
+
+export default function EditContact({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contact } = loaderData;
+  const navigate = useNavigate();
+
+  return (
+    <Form key={contact.id} id="contact-form" method="post">
+      {/* existing elements */}
+      <p>
+        <button type="submit">Save</button>
+        <button onClick={() => navigate(-1)} type="button">
+          Cancel
+        </button>
+      </p>
+    </Form>
+  );
+}
+```
+
+Now when the user clicks "Cancel", they'll be sent back one entry in the browser's history.
+
+> 🧐 Why is there no `event.preventDefault()` on the button?
+
+A `<button type="button">`, while seemingly redundant, is the HTML way of preventing a button from submitting its form.
+
+Two more features to go. We're on the home stretch!
+
 ## `URLSearchParams` and `GET` Submissions
+
+All of our interactive UI so far have been either links that change the URL or `form`s that post data to `action` functions. The search field is interesting because it's a mix of both: it's a `form`, but it only changes the URL, it doesn't change data.
+
+Let's see what happens when we submit the search form:
+
+👉 **Type a name into the search field and hit the enter key**
+
+Note the browser's URL now contains your query in the URL as [`URLSearchParams`][url-search-params]:
+
+```
+http://localhost:5173/?q=ryan
+```
+
+Since it's not `<Form method="post">`, React Router emulates the browser by serializing the [`FormData`][form-data] into the [`URLSearchParams`][url-search-params] instead of the request body.
+
+`loader` functions have access to the search params from the `request`. Let's use it to filter the list:
+
+👉 **Filter the list if there are `URLSearchParams`**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[3-8]
+// existing imports & exports
+
+export async function loader({
+  request,
+}: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts };
+}
+
+// existing code
+```
+
+<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/19.webp" /> -->
+
+Because this is a `GET`, not a `POST`, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
+
+This also means it's a normal page navigation. You can click the back button to get back to where you were.
 
 ## Synchronizing URLs to Form State
 
+There are a couple of UX issues here that we can take care of quickly.
+
+1. If you click back after a search, the form field still has the value you entered even though the list is no longer filtered.
+2. If you refresh the page after searching, the form field no longer has the value in it, even though the list is filtered
+
+In other words, the URL and our input's state are out of sync.
+
+Let's solve (2) first and start the input with the value from the URL.
+
+👉 **Return `q` from your `loader`, set it as the input's default value**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[9,15,26]
+// existing imports & exports
+
+export async function loader({
+  request,
+}: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts, q };
+}
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts, q } = loaderData;
+  const navigation = useNavigation();
+
+  return (
+    <>
+      <div id="sidebar">
+        {/* existing elements */}
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              aria-label="Search contacts"
+              defaultValue={q || ""}
+              id="q"
+              name="q"
+              placeholder="Search"
+              type="search"
+            />
+            {/* existing elements */}
+          </Form>
+          {/* existing elements */}
+        </div>
+        {/* existing elements */}
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+The input field will show the query if you refresh the page after a search now.
+
+Now for problem (1), clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the input's value in the DOM directly.
+
+👉 **Synchronize input value with the `URLSearchParams`**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[2,10-15]
+// existing imports
+import { useEffect } from "react";
+
+// existing imports & exports
+
+export default function App() {
+  const { contacts, q } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const searchField = document.getElementById("q");
+    if (searchField instanceof HTMLInputElement) {
+      searchField.value = q || "";
+    }
+  }, [q]);
+
+  useEffect(() => {
+    const searchField = document.getElementById("q");
+    if (searchField instanceof HTMLInputElement) {
+      searchField.value = q || "";
+    }
+  }, [q]);
+
+  // existing code
+}
+```
+
+> 🤔 Shouldn't you use a controlled component and React State for this?
+
+You could certainly do this as a controlled component. You will have more synchronization points, but it's up to you.
+
+<details>
+
+<summary>Expand this to see what it would look like</summary>
+
+```tsx filename=app/root.tsx lines=[2,11-12,14-18,30-33,36-37]
+// existing imports
+import { useEffect, useState } from "react";
+
+// existing imports & exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts, q } = loaderData;
+  const navigation = useNavigation();
+  // the query now needs to be kept in state
+  const [query, setQuery] = useState(q || "");
+
+  // we still have a `useEffect` to synchronize the query
+  // to the component state on back/forward button clicks
+  useEffect(() => {
+    setQuery(q || "");
+  }, [q]);
+
+  return (
+    <>
+      <div id="sidebar">
+        {/* existing elements */}
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              aria-label="Search contacts"
+              id="q"
+              name="q"
+              // synchronize user's input to component state
+              onChange={(event) =>
+                setQuery(event.currentTarget.value)
+              }
+              placeholder="Search"
+              type="search"
+              // switched to `value` from `defaultValue`
+              value={query}
+            />
+            {/* existing elements */}
+          </Form>
+          {/* existing elements */}
+        </div>
+        {/* existing elements */}
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+</details>
+
+Alright, you should now be able to click the back/forward/refresh buttons and the input's value should be in sync with the URL and results.
+
 ## Submitting `Form`'s `onChange`
+
+We've got a product decision to make here. Sometimes you want the user to submit the `form` to filter some results, other times you want to filter as the user types. We've already implemented the first, so let's see what it's like for the second.
+
+We've seen `useNavigate` already, we'll use its cousin, [`useSubmit`][use-submit], for this.
+
+```tsx filename=app/layouts/sidebar.tsx lines=[7,16,27-29]
+import {
+  Form,
+  Link,
+  NavLink,
+  Outlet,
+  useNavigation,
+  useSubmit,
+} from "react-router";
+// existing imports & exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts, q } = loaderData;
+  const navigation = useNavigation();
+  const submit = useSubmit();
+
+  // existing code
+
+  return (
+    <>
+      <div id="sidebar">
+        {/* existing elements */}
+        <div>
+          <Form
+            id="search-form"
+            onChange={(event) =>
+              submit(event.currentTarget)
+            }
+            role="search"
+          >
+            {/* existing elements */}
+          </Form>
+          {/* existing elements */}
+        </div>
+        {/* existing elements */}
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+As you type, the `form` is automatically submitted now!
+
+Note the argument to [`submit`][use-submit]. The `submit` function will serialize and submit any form you pass to it. We're passing in `event.currentTarget`. The `currentTarget` is the DOM node the event is attached to (the `form`).
 
 ## Adding Search Spinner
 
+In a production app, it's likely this search will be looking for records in a database that is too large to send all at once and filter client side. That's why this demo has some faked network latency.
+
+Without any loading indicator, the search feels kinda sluggish. Even if we could make our database faster, we'll always have the user's network latency in the way and out of our control.
+
+For a better user experience, let's add some immediate UI feedback for the search. We'll use [`useNavigation`][use-navigation] again.
+
+👉 **Add a variable to know if we're searching**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[9-13]
+// existing imports & exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts, q } = loaderData;
+  const navigation = useNavigation();
+  const submit = useSubmit();
+  const searching =
+    navigation.location &&
+    new URLSearchParams(navigation.location.search).has(
+      "q"
+    );
+
+  // existing code
+}
+```
+
+When nothing is happening, `navigation.location` will be `undefined`, but when the user navigates it will be populated with the next location while data loads. Then we check if they're searching with `location.search`.
+
+👉 **Add classes to search form elements using the new `searching` state**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[22,31]
+// existing imports & exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  // existing code
+
+  return (
+    <>
+      <div id="sidebar">
+        {/* existing elements */}
+        <div>
+          <Form
+            id="search-form"
+            onChange={(event) =>
+              submit(event.currentTarget)
+            }
+            role="search"
+          >
+            <input
+              aria-label="Search contacts"
+              className={searching ? "loading" : ""}
+              defaultValue={q || ""}
+              id="q"
+              name="q"
+              placeholder="Search"
+              type="search"
+            />
+            <div
+              aria-hidden
+              hidden={!searching}
+              id="search-spinner"
+            />
+          </Form>
+          {/* existing elements */}
+        </div>
+        {/* existing elements */}
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+Bonus points, avoid fading out the main screen when searching:
+
+```tsx filename=app/layouts/sidebar.tsx lines=[13]
+// existing imports & exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  // existing code
+
+  return (
+    <>
+      {/* existing elements */}
+      <div
+        className={
+          navigation.state === "loading" && !searching
+            ? "loading"
+            : ""
+        }
+        id="detail"
+      >
+        <Outlet />
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+You should now have a nice spinner on the left side of the search input.
+
+<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/20.webp" /> -->
+
 ## Managing the History Stack
+
+Since the form is submitted for every keystroke, typing the characters "alex" and then deleting them with backspace results in a huge history stack 😂. We definitely don't want this:
+
+<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/21.webp" /> -->
+
+We can avoid this by _replacing_ the current entry in the history stack with the next page, instead of pushing into it.
+
+👉 **Use `replace` in `submit`**
+
+```tsx filename=app/layouts/sidebar.tsx lines=[16-19]
+// existing imports & exports
+
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  // existing code
+
+  return (
+    <>
+      <div id="sidebar">
+        {/* existing elements */}
+        <div>
+          <Form
+            id="search-form"
+            onChange={(event) => {
+              const isFirstSearch = q === null;
+              submit(event.currentTarget, {
+                replace: !isFirstSearch,
+              });
+            }}
+            role="search"
+          >
+            {/* existing elements */}
+          </Form>
+          {/* existing elements */}
+        </div>
+        {/* existing elements */}
+      </div>
+      {/* existing elements */}
+    </>
+  );
+}
+```
+
+After a quick check if this is the first search or not, we decide to replace. Now the first search will add a new entry, but every keystroke after that will replace the current entry. Instead of clicking back 7 times to remove the search, users only have to click back once.
 
 ## `Form`s Without Navigation
 
+So far all of our forms have changed the URL. While these user flows are common, it's equally common to want to submit a form _without_ causing a navigation.
+
+For these cases, we have [`useFetcher`][use-fetcher]. It allows us to communicate with `action`s and `loader`s without causing a navigation.
+
+The ★ button on the contact page makes sense for this. We aren't creating or deleting a new record, and we don't want to change pages. We simply want to change the data on the page we're looking at.
+
+👉 **Change the `<Favorite>` form to a fetcher form**
+
+```tsx filename=app/pages/contact.tsx lines=[1,10,14,26]
+import { Form, useFetcher } from "react-router";
+
+// existing imports & exports
+
+function Favorite({
+  contact,
+}: {
+  contact: Pick<ContactRecord, "favorite">;
+}) {
+  const fetcher = useFetcher();
+  const favorite = contact.favorite;
+
+  return (
+    <fetcher.Form method="post">
+      <button
+        aria-label={
+          favorite
+            ? "Remove from favorites"
+            : "Add to favorites"
+        }
+        name="favorite"
+        value={favorite ? "false" : "true"}
+      >
+        {favorite ? "★" : "☆"}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
+
+This form will no longer cause a navigation, but simply fetch to the `action`. Speaking of which ... this won't work until we create the `action`.
+
+👉 **Create the `action`**
+
+```tsx filename=app/pages/contact.tsx lines=[2,5-13]
+// existing imports
+import { getContact, updateContact } from "../data";
+// existing imports
+
+export async function action({
+  params,
+  request,
+}: Route.ActionProps) {
+  const formData = await request.formData();
+  return updateContact(params.contactId, {
+    favorite: formData.get("favorite") === "true",
+  });
+}
+
+// existing code
+```
+
+Alright, we're ready to click the star next to the user's name!
+
+<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/22.webp" /> -->
+
+Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like the `<Form>` we've been using: it calls the action and then all data is revalidated automatically — even your errors will be caught the same way.
+
+There is one key difference though, it's not a navigation, so the URL doesn't change and the history stack is unaffected.
+
 ## Optimistic UI
+
+You probably noticed the app felt kind of unresponsive when we clicked the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world.
+
+To give the user some feedback, we could put the star into a loading state with `fetcher.state` (a lot like `navigation.state` from before), but we can do something even better this time. We can use a strategy called "Optimistic UI".
+
+The fetcher knows the [`FormData`][form-data] being submitted to the `action`, so it's available to you on `fetcher.formData`. We'll use that to immediately update the star's state, even though the network hasn't finished. If the update eventually fails, the UI will revert to the real data.
+
+👉 **Read the optimistic value from `fetcher.formData`**
+
+```tsx filename=app/pages/contact.tsx lines=[9-11]
+// existing code
+
+function Favorite({
+  contact,
+}: {
+  contact: Pick<ContactRecord, "favorite">;
+}) {
+  const fetcher = useFetcher();
+  const favorite = fetcher.formData
+    ? fetcher.formData.get("favorite") === "true"
+    : contact.favorite;
+
+  return (
+    <fetcher.Form method="post">
+      <button
+        aria-label={
+          favorite
+            ? "Remove from favorites"
+            : "Add to favorites"
+        }
+        name="favorite"
+        value={favorite ? "false" : "true"}
+      >
+        {favorite ? "★" : "☆"}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
+
+Now the star _immediately_ changes to the new state when you click it.
 
 ---
 
@@ -1326,4 +1987,8 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [redirect]: https://api.reactrouter.com/v7/functions/react_router.redirect
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [nav-link]: https://api.reactrouter.com/v7/functions/react_router.NavLink
+[use-navigation]: https://api.reactrouter.com/v7/functions/react_router.useNavigation
+[use-navigate]: https://api.reactrouter.com/v7/functions/react_router.useNavigate
+[use-submit]: https://api.reactrouter.com/v7/functions/react_router.useSubmit
+[use-fetcher]: https://api.reactrouter.com/v7/functions/react_router.useFetcher
 [react-router-apis]: https://api.reactrouter.com/v7/modules/react_router
