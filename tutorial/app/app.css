@@ -422,7 +422,7 @@ i {
   align-items: center;
 }
 
-#loading-splash > div {
+#loading-splash-spinner {
   width: 3rem;
   height: 3rem;
   border: 0.5rem solid #e3e3e3;
