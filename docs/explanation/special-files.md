@@ -300,7 +300,7 @@ app
 
 Refer to the Route Module section in the sidebar for more information.
 
-# `.client` modules
+## `.client` modules
 
 While uncommon, you may have a file or dependency that uses module side effects in the browser. You can use `*.client.ts` on file names or nest files within `.client` directories to force them out of server bundles.
 
