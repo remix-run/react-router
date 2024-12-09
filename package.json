@@ -11,9 +11,9 @@
   "main": "lib/index",
   "module": "es/index",
   "jsnext:main": "es/index",
-  "repository": "ReactTraining/react-router",
-  "homepage": "https://github.com/ReactTraining/react-router#readme",
-  "bugs": "https://github.com/ReactTraining/react-router/issues",
+  "repository": "https://github.com/Ayc0/react-router-v3",
+  "homepage": "https://github.com/Ayc0/react-router-v3#readme",
+  "bugs": "https://github.com/Ayc0/react-router-v3/issues",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es",
     "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore __tests__",
@@ -28,7 +28,8 @@
   },
   "authors": [
     "Ryan Florence",
-    "Michael Jackson"
+    "Michael Jackson",
+    "Ayc0"
   ],
   "license": "MIT",
   "resolutions": {
