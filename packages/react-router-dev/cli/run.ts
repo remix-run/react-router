@@ -1,5 +1,3 @@
-import arg from "arg";
-import semver from "semver";
 import colors from "picocolors";
 
 import * as commands from "./commands";
@@ -81,76 +79,7 @@ ${colors.blueBright("react-router")}
  * Programmatic interface for running the react-router CLI with the given command line
  * arguments.
  */
-export async function run(argv: string[] = process.argv.slice(2)) {
-  // Check the node version
-  let versions = process.versions;
-  let MINIMUM_NODE_VERSION = 20;
-  if (
-    versions &&
-    versions.node &&
-    semver.major(versions.node) < MINIMUM_NODE_VERSION
-  ) {
-    console.warn(
-      `️⚠️ Oops, Node v${versions.node} detected. react-router requires ` +
-        `a Node version greater than ${MINIMUM_NODE_VERSION}.`
-    );
-  }
-
-  let isBooleanFlag = (arg: string) => {
-    let index = argv.indexOf(arg);
-    let nextArg = argv[index + 1];
-    return !nextArg || nextArg.startsWith("-");
-  };
-
-  let args = arg(
-    {
-      "--force": Boolean,
-      "--help": Boolean,
-      "-h": "--help",
-      "--json": Boolean,
-      "--token": String,
-      "--typescript": Boolean,
-      "--no-typescript": Boolean,
-      "--version": Boolean,
-      "-v": "--version",
-      "--port": Number,
-      "-p": "--port",
-      "--config": String,
-      "-c": "--config",
-      "--assetsInlineLimit": Number,
-      "--clearScreen": Boolean,
-      "--cors": Boolean,
-      "--emptyOutDir": Boolean,
-      "--host": isBooleanFlag("--host") ? Boolean : String,
-      "--logLevel": String,
-      "-l": "--logLevel",
-      "--minify": String,
-      "--mode": String,
-      "-m": "--mode",
-      "--open": isBooleanFlag("--open") ? Boolean : String,
-      "--strictPort": Boolean,
-      "--profile": Boolean,
-      "--sourcemapClient": isBooleanFlag("--sourcemapClient")
-        ? Boolean
-        : String,
-      "--sourcemapServer": isBooleanFlag("--sourcemapServer")
-        ? Boolean
-        : String,
-      "--watch": Boolean,
-    },
-    {
-      argv,
-    }
-  );
-
-  let input = args._;
-
-  let flags: any = Object.entries(args).reduce((acc, [key, value]) => {
-    key = key.replace(/^--/, "");
-    acc[key] = value;
-    return acc;
-  }, {} as any);
-
+export async function run(input: string[], flags: any, command: string) {
   if (flags.help) {
     console.log(helpText);
     return;
@@ -160,13 +89,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     console.log(version);
     return;
   }
-
-  flags.interactive = flags.interactive ?? require.main === module;
-  if (args["--no-typescript"]) {
-    flags.typescript = false;
-  }
-
-  let command = input[0];
 
   // Note: Keep each case in this switch statement small.
   switch (command) {
