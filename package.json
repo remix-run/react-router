@@ -4,7 +4,6 @@
   "description": "A complete routing library for React",
   "files": [
     "*.md",
-    "docs",
     "es",
     "lib",
     "umd"
