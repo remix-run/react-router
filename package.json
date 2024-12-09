@@ -31,6 +31,18 @@
     "Michael Jackson",
     "Ayc0"
   ],
+  "tags": [
+    "react",
+    "router"
+  ],
+  "keywords": [
+    "react",
+    "react-component",
+    "routing",
+    "route",
+    "routes",
+    "router"
+  ],
   "license": "MIT",
   "resolutions": {
     "react-is": "^19.0.0"
@@ -87,22 +99,5 @@
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4",
     "webpack-dev-middleware": "^7.4.2"
-  },
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
-  },
-  "tags": [
-    "react",
-    "router"
-  ],
-  "keywords": [
-    "react",
-    "react-component",
-    "routing",
-    "route",
-    "routes",
-    "router"
-  ]
+  }
 }
