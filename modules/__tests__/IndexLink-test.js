@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import IndexLink from '../IndexLink'
@@ -91,10 +91,6 @@ describe('An <IndexLink>', function () {
       </Route>
     </Route>
   )
-
-  afterEach(function () {
-    cleanup()
-  })
 
   describe('when linking to the root', function () {
     it('is active and other routes are not', function () {

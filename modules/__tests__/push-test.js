@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import execSteps from './execSteps'
 import Router from '../Router'
@@ -10,10 +10,6 @@ describe('push', () => {
   const Index = () => <h1>Index</h1>
 
   const Home = () => <h1>Home</h1>
-
-  afterEach(() => {
-    cleanup()
-  })
 
   describe('when the target path contains a colon', () => {
     it('works', (done) => {

@@ -1,14 +1,10 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Router from '../Router'
 
 describe('a Route Component', function () {
-  afterEach(function () {
-    cleanup()
-  })
-
   it('injects the right props', function () {
     class Parent extends Component {
       componentDidMount() {

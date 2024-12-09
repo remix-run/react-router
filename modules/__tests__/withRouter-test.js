@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
@@ -17,10 +17,6 @@ describe('withRouter', function () {
     setRouteLeaveHook() {},
     isActive() {}
   }
-
-  afterEach(function () {
-    cleanup()
-  })
 
   it('should put router on props', function (done) {
     const MyComponent = withRouter(({ router }) => {

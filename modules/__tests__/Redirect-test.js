@@ -1,16 +1,12 @@
 import expect from 'expect'
 import React from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Redirect from '../Redirect'
 import Router from '../Router'
 import Route from '../Route'
 
 describe('A <Redirect>', function () {
-  afterEach(function () {
-    cleanup()
-  })
-
   it('works', function () {
     const history = createHistory('/notes/5')
     render(

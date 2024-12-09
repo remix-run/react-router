@@ -1,21 +1,19 @@
 import expect from 'expect'
 import React from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 
 import match from '../match'
 import RouterContext, { routerContext } from '../RouterContext'
 import { createRouterObject } from '../RouterUtils'
 
-describe('RouterContext', () => {
-  let routes, context, history, transitionManager, router
+describe('RouterContext', function () {
+  let context, history, transitionManager, router
   let listenBeforeLeavingRouteSentinel, isActiveSentinel, createHrefSentinel
 
-  beforeEach(() => {
+  beforeEach(function () {
     listenBeforeLeavingRouteSentinel = {}
     isActiveSentinel = {}
     createHrefSentinel = {}
-
-    node = document.createElement('div')
 
     history = {
       push: expect.createSpy(),
@@ -33,7 +31,9 @@ describe('RouterContext', () => {
     }
 
     router = createRouterObject(history, transitionManager, {})
+  })
 
+  function renderTest(done) {
     class Component extends React.Component {
       static contextType = routerContext
 
@@ -42,24 +42,13 @@ describe('RouterContext', () => {
         return null
       }
     }
+    const routes = { path: '/', component: Component }
 
-    routes = { path: '/', component: Component }
-  })
-
-  afterEach(() => cleanup())
-
-  function renderTest(done) {
     match({ location: '/', routes }, (err, redirect, renderProps) => {
       render(
-        <div
-          ref={(node) => {
-            if (!node) return
-            done()
-          }}
-        >
-          <RouterContext {...renderProps} history={history} router={router} />
-        </div>
+        <RouterContext {...renderProps} history={history} router={router} />
       )
+      done()
     })
   }
 

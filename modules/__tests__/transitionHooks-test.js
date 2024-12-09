@@ -1,6 +1,6 @@
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import execSteps from './execSteps'
 import Router from '../Router'
@@ -22,7 +22,6 @@ describe('When a router enters a branch', function () {
     routes
 
   beforeEach(function () {
-    node = document.createElement('div')
     newsLeaveHookSpy = expect.createSpy()
     userLeaveHookSpy = expect.createSpy()
 
@@ -201,10 +200,6 @@ describe('When a router enters a branch', function () {
     }
 
     routes = [ DashboardRoute ]
-  })
-
-  afterEach(function () {
-    cleanup()
   })
 
   it('calls the onEnter hooks of all routes in that branch', function () {
@@ -478,7 +473,7 @@ describe('When a router enters a branch', function () {
 })
 
 describe('Changing location', () => {
-  let node, onEnterSpy, onChangeSpy
+  let onEnterSpy, onChangeSpy
 
   const Text = (text) => () => <p>{text}</p>
   const noop = () => {}
@@ -523,7 +518,6 @@ describe('Changing location', () => {
   ]
 
   beforeEach(() => {
-    node = document.createElement('div')
     onEnterSpy = expect.createSpy()
     onChangeSpy = expect.createSpy()
   })
@@ -532,6 +526,7 @@ describe('Changing location', () => {
     const history = createHistory('/')
     const routes = createRoutes({ enter: true })
 
+    const node = document.createElement('div')
     render(<Router history={history} routes={routes} />, { container: node })
 
     history.push('/foo')
@@ -548,6 +543,7 @@ describe('Changing location', () => {
     const history = createHistory('/')
     const routes = createRoutes({ change: true })
 
+    const node = document.createElement('div')
     render(<Router history={history} routes={routes} />, { container: node })
 
     history.push('/child1')

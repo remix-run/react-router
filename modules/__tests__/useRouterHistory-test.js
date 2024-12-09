@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import useRouterHistory from '../useRouterHistory'
 import createHistory from 'history/lib/createMemoryHistory'
 import Redirect from '../Redirect'
@@ -20,10 +20,6 @@ describe('useRouterHistory', () => {
   })
 
   describe('when using basename', () => {
-    afterEach(() => {
-      cleanup()
-    })
-
     it('should regard basename', () => {
       const history = useRouterHistory(createHistory)({
         entries: '/foo/notes/5',

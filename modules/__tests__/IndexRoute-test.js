@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React, { Component } from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
@@ -18,10 +18,6 @@ describe('An <IndexRoute>', function () {
       return <div>child</div>
     }
   }
-
-  afterEach(function () {
-    cleanup()
-  })
 
   it("renders when its parent's URL matches exactly", function () {
     const node = document.createElement('div')

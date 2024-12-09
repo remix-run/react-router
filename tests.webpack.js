@@ -2,6 +2,7 @@
 
 import '@babel/polyfill'
 import expect from 'expect'
+import { cleanup } from '@testing-library/react'
 
 import { _resetWarned } from './modules/routerWarning'
 
@@ -33,7 +34,6 @@ beforeEach(() => {
 afterEach(() => {
   /* eslint-disable no-console */
   const { threw, expected, warned } = console.error
-  console.error.restore()
 
   if (!threw) {
     expected.forEach(about => {
@@ -43,6 +43,8 @@ afterEach(() => {
   /* eslint-enable no-console */
 
   _resetWarned()
+
+  cleanup()
 })
 
 const context = require.context('./modules', true, /-test\.js$/)
