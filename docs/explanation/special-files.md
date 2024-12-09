@@ -289,3 +289,24 @@ Note that this does not handle thrown `Response` instances from your `loader`/`a
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
 [node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
+
+
+## `.server` modules
+
+While not strictly necessary, `.server` modules are a good way to explicitly mark entire modules as server-only.
+The build will fail if any code in a `.server` file or `.server` directory accidentally ends up in the client module graph.
+
+```txt
+app
+├── .server 👈 marks all files in this directory as server-only
+│   ├── auth.ts
+│   └── db.ts
+├── cms.server.ts 👈 marks this file as server-only
+├── root.tsx
+└── routes
+    └── _index.tsx
+```
+
+`.server` modules must be within your app directory.
+
+Refer to the Route Module section in the sidebar for more information.
