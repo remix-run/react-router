@@ -7,7 +7,7 @@ module.exports = (config) => {
   config.set({
     browsers: [ 'ChromeHeadless' ],
     frameworks: [ 'mocha' ],
-    reporters: [ 'mocha', 'coverage' ],
+    reporters: [ 'mocha' ],
 
     files: [ 'tests.webpack.js' ],
 
