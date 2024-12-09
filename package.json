@@ -19,8 +19,8 @@
     "build": "npm run build-cjs && npm run build-es",
     "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore __tests__",
     "build-es": "rimraf es && cross-env BABEL_ENV=es babel ./modules -d es --ignore __tests__",
-    "build-umd": "cross-env NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
-    "build-min": "cross-env NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
+    "build-umd": "cross-env NODE_ENV=development webpack --mode development ./modules/index.js -o umd",
+    "build-min": "cross-env NODE_ENV=production webpack --mode production ./modules/index.js -o umd",
     "lint": "eslint modules scripts *.js",
     "prepublishOnly": "node ./scripts/build.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
@@ -85,6 +85,7 @@
     "rimraf": "^2.5.4",
     "style-loader": "^4.0.0",
     "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4",
     "webpack-dev-middleware": "^7.4.2"
   },
   "browserify": {

@@ -1,9 +1,11 @@
-const webpack = require('webpack')
-
 module.exports = {
   output: {
     library: 'ReactRouter',
-    libraryTarget: 'umd'
+    libraryTarget: 'umd',
+    filename:
+      process.env.NODE_ENV === 'production'
+        ? 'ReactRouter.min.js'
+        : 'ReactRouter.js'
   },
 
   externals: {
@@ -16,23 +18,6 @@ module.exports = {
   },
 
   module: {
-    loaders: [ { test: /\.js$/, exclude: /node_modules/, loader: 'babel' } ]
-  },
-
-  node: {
-    Buffer: false
-  },
-
-  resolve: {
-    fallback: {
-      assert: false
-    }
-  },
-
-  plugins: [
-    new webpack.EnvironmentPlugin({
-      NODE_ENV: process.env.NODE_ENV,
-      NODE_DEBUG: false
-    })
-  ]
+    rules: [ { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' } ]
+  }
 }
