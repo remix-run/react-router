@@ -66,8 +66,6 @@ export function parseArgs(argv: string[] = process.argv.slice(2)) {
     }
   );
 
-  let input = args._;
-
   let flags: any = Object.entries(args).reduce((acc, [key, value]) => {
     key = key.replace(/^--/, "");
     acc[key] = value;
@@ -79,7 +77,9 @@ export function parseArgs(argv: string[] = process.argv.slice(2)) {
     flags.typescript = false;
   }
 
-  let command = input[0];
-
-  return { input, flags, command };
+  return {
+    input: args._,
+    command: args._[0],
+    flags,
+  };
 }
