@@ -1,6 +1,6 @@
 import expect from 'expect'
 import React, { Component, Fragment, forwardRef, memo } from 'react'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
@@ -17,10 +17,6 @@ describe('Router', function () {
       return <div>child</div>
     }
   }
-
-  afterEach(function () {
-    cleanup()
-  })
 
   it('renders routes', function () {
     const node = document.createElement('div')
@@ -397,7 +393,7 @@ describe('Router', function () {
       }
     })
 
-    it('should support getComponent', async function (done) {
+    it('should support getComponent', function (done) {
       const Component = () => <div />
 
       function getComponent(nextState, callback) {

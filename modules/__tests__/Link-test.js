@@ -1,14 +1,12 @@
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
-import { render, fireEvent } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import createHistory from '../createMemoryHistory'
 import hashHistory from '../hashHistory'
 import Router from '../Router'
 import Route from '../Route'
 import Link from '../Link'
 import execSteps from './execSteps'
-
-const { click } = fireEvent
 
 describe('A <Link>', () => {
   const Hello = ({ params }) => <div>Hello {params.name}!</div>
@@ -176,7 +174,6 @@ describe('A <Link>', () => {
           </Route>
         </Router>
       )
-      execNextStep()
     })
   })
 
@@ -319,11 +316,7 @@ describe('A <Link>', () => {
           history.push('/hello')
         },
         () => {
-          // React 16 has slightly different update timing so we'll just sorta
-          // punt a bit with a setTimeout.
-          setTimeout(() => {
-            expect(a.className).toEqual('active')
-          }, 10)
+          expect(a.className).toEqual('active')
         }
       ]
 
@@ -337,7 +330,6 @@ describe('A <Link>', () => {
           </Route>
         </Router>
       )
-      execNextStep()
     })
   })
 
@@ -363,7 +355,7 @@ describe('A <Link>', () => {
           <Route path="/hello" component={Hello} />
         </Router>
       )
-      click(document.querySelector('a'))
+      document.querySelector('a').click()
     })
 
     it('transitions to the correct route for string', (done) => {
@@ -376,8 +368,9 @@ describe('A <Link>', () => {
 
       const steps = [
         () => {
-          const anchor = document.querySelector('a')
-          click(anchor)
+          const anchor = node.querySelector('a')
+          console.log('anchor', anchor)
+          anchor.click()
         },
         ({ location }) => {
           expect(node.innerHTML).toMatch(/Hello/)
@@ -421,7 +414,7 @@ describe('A <Link>', () => {
 
       const steps = [
         () => {
-          click(document.querySelector('a'))
+          node.querySelector('a').click()
         },
         ({ location }) => {
           expect(node.innerHTML).toMatch(/Hello/)
@@ -467,7 +460,7 @@ describe('A <Link>', () => {
 
       const steps = [
         () => {
-          click(document.querySelector('a'))
+          node.querySelector('a').click()
         },
         () => {
           expect(node.innerHTML).toMatch(/Link/)
@@ -512,7 +505,7 @@ describe('A <Link>', () => {
     it('should transition correctly on click', (done) => {
       const steps = [
         () => {
-          click(document.querySelector('a'))
+          document.querySelector('a').click()
         },
         ({ location }) => {
           expect(location.pathname).toEqual('/hello')
@@ -527,7 +520,6 @@ describe('A <Link>', () => {
           <Route path="/hello" component={LinkWrapper} />
         </Router>
       )
-      execSteps()
     })
   })
 

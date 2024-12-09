@@ -47,9 +47,10 @@ class Router extends React.Component {
       if (error) {
         this.handleError(error)
       } else {
-        // Keep the identity of this.router because of a caveat in ContextUtils:
-        // they only work if the object identity is preserved.
-        assignRouterState(this.router, state)
+        // Need to clone to create a new object for the context to work
+        const newRouter = { ...this.router }
+        assignRouterState(newRouter, state)
+        this.router = newRouter
         this.setState(state, this.props.onUpdate)
       }
     })

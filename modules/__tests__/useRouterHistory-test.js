@@ -33,7 +33,7 @@ describe('useRouterHistory', () => {
       pathnames.push(currentLocation.pathname)
       basenames.push(currentLocation.basename)
 
-      history.listen((location) => {
+      const unsubscribe = history.listen((location) => {
         pathnames.push(location.pathname)
         basenames.push(location.basename)
       })
@@ -49,6 +49,8 @@ describe('useRouterHistory', () => {
       expect(basenames).toEqual([ '/foo', '/foo' ])
       expect(history.getCurrentLocation().pathname).toEqual('/messages/5')
       expect(history.getCurrentLocation().basename).toEqual('/foo')
+
+      unsubscribe()
     })
   })
 })
