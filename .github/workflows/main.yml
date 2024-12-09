@@ -19,9 +19,9 @@ jobs:
       - name: Install packages
         run: |
           yarn install
-      - name: Build package
-        run: |
-          yarn build
       - name: Run tests
         run: |
           yarn test
+      - name: Build package
+        run: |
+          node ./scripts/build.js
