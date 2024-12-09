@@ -7,7 +7,7 @@ order: 1
 
 We'll be building a small, but feature-rich app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take about 30m if you're following along, otherwise it's a quick read.
 
-<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/01.webp" /> -->
+TODO: add screenshot
 
 👉 **Every time you see this it means you need to do something in the app!**
 
@@ -38,7 +38,7 @@ npm run dev
 
 You should be able to open up [http://localhost:5173][http-localhost-5173] and see an unstyled screen that looks like this:
 
-<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/02.webp" /> -->
+<!-- img elements will look will be in the form: <!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/n.webp" /> -->
 
 ## The Root Route
 
@@ -51,13 +51,13 @@ Note the file at `app/root.tsx`. This is what we call the ["Root Route"][root-ro
 ```tsx filename=app/root.tsx
 import {
   Form,
-  Links,
-  Meta,
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
 } from "react-router";
 import type { Route } from "./+types/root";
+
+import appStylesHref from "./app.css?url";
 
 export function Layout({
   children,
@@ -72,10 +72,9 @@ export function Layout({
           name="viewport"
           content="width=device-width, initial-scale=1"
         />
-        <Meta />
-        <Links />
+        <link rel="stylesheet" href={appStylesHref} />
       </head>
-      <>
+      <body>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -160,33 +159,6 @@ export function ErrorBoundary({
 ```
 
 </details>
-
-## Adding Stylesheets with `links`
-
-<!-- Probably just want to remove this section and make it default with React 19 stylesheets -->
-
-While there are multiple ways to style your React Router app, we're going to use a plain stylesheet that's already been written to keep things focused on React Router.
-
-👉 **Import the app styles**
-
-```tsx filename=app/root.tsx lines=[1,4,6-8]
-import type { LinksFunction } from "react-router";
-// existing imports
-
-import appStylesHref from "./app.css?url";
-
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: appStylesHref },
-];
-```
-
-Every route can export a [`links`][links] function. They will be collected and rendered into the `<Links />` component we rendered in `app/root.tsx`.
-
-If you prefer, you can also import CSS files directly into JavaScript modules. Vite will fingerprint the asset, save it to your build's client directory, and provide your module with the publicly accessible href.
-
-The app should look something like this now:
-
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/03.webp" /> -->
 
 ## The Contact Route UI
 
@@ -326,7 +298,7 @@ function Favorite({
 
 Now if we click one of the links or visit [`/contacts/1`][contacts-1] we get ... nothing new?
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/04.webp" /> -->
+TODO: add screenshot
 
 ## Nested Routes and Outlets
 
@@ -334,12 +306,9 @@ React Router supports nested routing. In order for child routes to render inside
 
 👉 **Render an [`<Outlet />`][outlet-component]**
 
-```tsx filename=app/root.tsx lines=[6,18-20]
-// existing imports
+```tsx filename=app/root.tsx lines=[3,15-17]
 import {
   Form,
-  Links,
-  Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -362,7 +331,7 @@ export default function App() {
 
 Now the child route should be rendering through the outlet.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/05.webp" /> -->
+TODO: add screenshot
 
 ## Client Side Routing
 
@@ -372,13 +341,10 @@ Client side routing allows our app to update the URL without requesting another 
 
 👉 **Change the sidebar `<a href>` to `<Link to>`**
 
-```tsx filename=app/root.tsx lines=[4,22,25]
-// existing imports
+```tsx filename=app/root.tsx lines=[3,20,23]
 import {
   Form,
   Link,
-  Links,
-  Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -481,7 +447,7 @@ export default function App({ loaderData }) {
 
 That's it! React Router will now automatically keep that data in sync with your UI. The sidebar should now look like this:
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/06.webp" /> -->
+TODO: add screenshot
 
 You may be wondering why we're "client" loading data instead of loading the data on the server so we can do server-side rendering (SSR). Right now our contacts site is a [Single Page App][spa], so there's no server-side rendering. This makes it really easy to deploy to any static hosting provider, but we'll talk more about how to enable SSR in a bit so you can learn about all the different [rendering strategies][rendering-strategies] React Router offers.
 
@@ -535,7 +501,7 @@ We can provide a fallback that will show up before the app is hydrated (renderin
 export function HydrateFallback() {
   return (
     <div id="loading-splash">
-      <div></div>
+      <div id="loading-splash-spinner" />
       <p>Loading, please wait...</p>
     </div>
   );
@@ -544,7 +510,7 @@ export function HydrateFallback() {
 
 Now if you refresh the page, you'll briefly see the loading splash before the app is hydrated.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/07.webp" /> -->
+TODO: add screenshot
 
 ## Adding an about page
 
@@ -637,13 +603,13 @@ export default function App() {
 
 Now navigate to the [about page][about-page] and it should look like this:
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/08.webp" /> -->
+TODO: add screenshot
 
 ## Index Routes
 
 When we load up the app and we're not on the about page, you'll notice a big blank page on the right side of our list.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/09.webp" /> -->
+TODO: add screenshot
 
 When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of [index routes][index-route] as the default child route to fill in that space.
 
@@ -653,7 +619,8 @@ When a route has children, and you're at the parent route's path, the `<Outlet>`
 touch app/pages/home.tsx
 ```
 
-```ts filename=app/routes.ts lines=[1,4]
+```ts filename=app/routes.ts lines=[2,5]
+import type { RouteConfig } from "@react-router/dev/routes";
 import { index, route } from "@react-router/dev/routes";
 
 export default [
@@ -683,7 +650,7 @@ export default function Home() {
 }
 ```
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/10.webp" /> -->
+TODO: add screenshot
 
 Voilà! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
 
@@ -810,7 +777,7 @@ export default function SidebarLayout({
 }
 ```
 
-And inside `app/root.tsx`, `App` should just return an [`<Outlet>`][outlet-component], and all unused imports can be removed.
+And inside `app/root.tsx`, `App` should just return an [`<Outlet>`][outlet-component], and all unused imports can be removed. Make sure there is no `clientLoader` in `root.tsx`.
 
 ```tsx filename=app/root.tsx lines=[3-10]
 // existing imports and exports
@@ -835,13 +802,13 @@ import { type Config } from "@react-router/dev/config";
 
 export default {
   ssr: true,
-  prerender: ["about"],
+  prerender: ["/about"],
 } satisfies Config;
 ```
 
 Now if you go to the [about page][about-page] and refresh, you won't see the loading spinner!
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/11.webp" /> -->
+TODO: add screenshot
 
 ## Server-Side Rendering
 
@@ -854,7 +821,7 @@ If you ever do want to introduce server-side rendering into your React Router ap
 ```ts filename=app/react-router.config.ts lines=[2]
 export default {
   ssr: true,
-  prerender: ["about"],
+  prerender: ["/about"],
 } satisfies Config;
 ```
 
@@ -883,7 +850,7 @@ Whether you set `ssr` to `true` or `false` depends on you and your users needs. 
 
 We should be seeing our old static contact page again, with one difference: the URL now has a real ID for the record.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/07.webp" /> -->
+TODO: add screenshot
 
 Remember the `:contactId` part of the route definition in `app/routes.ts`? These dynamic segments will match dynamic (changing) values in that position of the URL. We call these values in the URL "URL Params", or just "params" for short.
 
@@ -916,7 +883,7 @@ export default function Contact({
 // existing code
 ```
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/08.webp" /> -->
+TODO: add screenshot
 
 ## Throwing Responses
 
@@ -952,7 +919,7 @@ Without client side routing, the browser will serialize the `form`'s data automa
 
 We can test this out by clicking the "New" button in our app.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/09.webp" /> -->
+TODO: add screenshot
 
 React Router sends a 405 because there is no code on the server to handle this form navigation.
 
@@ -977,7 +944,7 @@ export async function action() {
 
 That's it! Go ahead and click the "New" button, and you should see a new record pop into the list 🥳
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/10.webp" /> -->
+TODO: add screenshot
 
 The `createEmptyContact` method just creates an empty contact with no name or data or anything. But it does still create a record, promise!
 
@@ -1099,7 +1066,7 @@ export default function EditContact({
 
 Now click on your new record, then click the "Edit" button. We should see the new route.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/12.webp" /> -->
+TODO: add screenshot
 
 ## Updating Contacts with `FormData`
 
@@ -1128,7 +1095,7 @@ export async function action({
 
 Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe less hairy.)</small>
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/13.webp" /> -->
+TODO: add screenshot
 
 ## Mutation Discussion
 
@@ -1201,10 +1168,12 @@ Now that we know how to redirect, let's update the action that creates new conta
 
 👉 **Redirect to the new record's edit page**
 
-```tsx filename=app/root.tsx lines=[4,10]
-// existing imports
+```tsx filename=app/root.tsx lines=[6,12]
 import {
-  // existing imports
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  isRouteErrorResponse,
   redirect,
 } from "react-router";
 // existing imports
@@ -1219,7 +1188,7 @@ export async function action() {
 
 Now when we click "New", we should end up on the edit page:
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/14.webp" /> -->
+TODO: add screenshot
 
 ## Active Link Styling
 
@@ -1227,7 +1196,7 @@ Now that we have a bunch of records, it's not clear which one we're looking at i
 
 👉 **Replace `<Link>` with `<NavLink>` in the sidebar**
 
-```tsx filename=app/layouts/sidebar.tsx lines=[1,17-28]
+```tsx filename=app/layouts/sidebar.tsx lines=[1,17-26,28]
 import { Form, Link, NavLink, Outlet } from "react-router";
 
 // existing imports and exports
@@ -1269,7 +1238,7 @@ export default function SidebarLayout({
 
 Note that we are passing a function to `className`. When the user is at the URL that matches `<NavLink to>`, then `isActive` will be true. When it's _about_ to be active (the data is still loading) then `isPending` will be true. This allows us to easily indicate where the user is and also provide immediate feedback when links are clicked but data needs to be loaded.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/15.webp"/> -->
+TODO: add screenshot
 
 ## Global Pending UI
 
@@ -1314,7 +1283,7 @@ export default function SidebarLayout({
 
 In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
-<!-- <img class="tutorial" loading="lazy" src="/_docs/v7_framework_tutorial/16.webp"/> -->
+TODO: add screenshot
 
 ## Deleting Records
 
@@ -1397,12 +1366,8 @@ We'll need a click handler on the button as well as [`useNavigate`][use-navigate
 
 👉 **Add the cancel button click handler with `useNavigate`**
 
-```tsx filename=app/pages/edit-contact.tsx lines=[4,12,19]
-import {
-  Form,
-  useLoaderData,
-  useNavigate,
-} from "react-router";
+```tsx filename=app/pages/edit-contact.tsx lines=[1,8,15]
+import { Form, redirect, useNavigate } from "react-router";
 // existing imports & exports
 
 export default function EditContact({
@@ -1468,7 +1433,7 @@ export async function loader({
 // existing code
 ```
 
-<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/19.webp" /> -->
+TODO: add screenshot
 
 Because this is a `GET`, not a `POST`, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
 
@@ -1791,13 +1756,13 @@ export default function SidebarLayout({
 
 You should now have a nice spinner on the left side of the search input.
 
-<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/20.webp" /> -->
+TODO: add screenshot
 
 ## Managing the History Stack
 
 Since the form is submitted for every keystroke, typing the characters "alex" and then deleting them with backspace results in a huge history stack 😂. We definitely don't want this:
 
-<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/21.webp" /> -->
+TODO: add screenshot
 
 We can avoid this by _replacing_ the current entry in the history stack with the next page, instead of pushing into it.
 
@@ -1893,7 +1858,7 @@ import { getContact, updateContact } from "../data";
 export async function action({
   params,
   request,
-}: Route.ActionProps) {
+}: Route.ActionArgs) {
   const formData = await request.formData();
   return updateContact(params.contactId, {
     favorite: formData.get("favorite") === "true",
@@ -1905,7 +1870,7 @@ export async function action({
 
 Alright, we're ready to click the star next to the user's name!
 
-<!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/22.webp" /> -->
+TODO: add screenshot
 
 Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like the `<Form>` we've been using: it calls the action and then all data is revalidated automatically — even your errors will be caught the same way.
 
@@ -1983,6 +1948,7 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/fetch
 [form-data]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [object-from-entries]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
+[request-form-data]: https://developer.mozilla.org/en-US/docs/Web/API/Request/formData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [redirect]: https://api.reactrouter.com/v7/functions/react_router.redirect
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response

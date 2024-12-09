@@ -1,30 +1,12 @@
 import {
   Form,
-  Links,
-  Meta,
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
 } from "react-router";
 import type { Route } from "./+types/root";
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
+import appStylesHref from "./app.css?url";
 
 export default function App() {
   return (
@@ -58,6 +40,23 @@ export default function App() {
         </nav>
       </div>
     </>
+  );
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href={appStylesHref} />
+      </head>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
   );
 }
 
