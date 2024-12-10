@@ -1,6 +1,6 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter } from "../../lib/router/router";
-import { DataStrategyResult } from "../../lib/router/utils";
+import type { DataStrategyResult } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
