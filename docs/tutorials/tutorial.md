@@ -191,7 +191,7 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-In React Router, `:` makes a segment dynamic. We just made the following urls match the `pages/contact.tsx` route module:
+In React Router, `:` makes a segment dynamic. We just made the following urls match the `routes/contact.tsx` route module:
 
 - `/contacts/123`
 - `/contacts/abc`
@@ -301,7 +301,7 @@ function Favorite({
 
 Now if we click one of the links or visit [`/contacts/1`][contacts-1] we get ... nothing new?
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/02.webp" />
 
 ## Nested Routes and Outlets
 
@@ -334,7 +334,7 @@ export default function App() {
 
 Now the child route should be rendering through the outlet.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/03.webp" />
 
 ## Client Side Routing
 
@@ -450,7 +450,7 @@ export default function App({ loaderData }) {
 
 That's it! React Router will now automatically keep that data in sync with your UI. The sidebar should now look like this:
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/04.webp" />
 
 You may be wondering why we're "client" loading data instead of loading the data on the server so we can do server-side rendering (SSR). Right now our contacts site is a [Single Page App][spa], so there's no server-side rendering. This makes it really easy to deploy to any static hosting provider, but we'll talk more about how to enable SSR in a bit so you can learn about all the different [rendering strategies][rendering-strategies] React Router offers.
 
@@ -513,13 +513,13 @@ export function HydrateFallback() {
 
 Now if you refresh the page, you'll briefly see the loading splash before the app is hydrated.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/05.webp" />
 
 ## Index Routes
 
 When you load the app and aren't yet on a contact page, you'll notice a big blank page on the right side of the list.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/06.webp" />
 
 When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of [index routes][index-route] as the default child route to fill in that space.
 
@@ -559,11 +559,11 @@ export default function Home() {
 }
 ```
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/07.webp" />
 
 Voilà! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
 
-## Adding an about page
+## Adding an About Route
 
 Before we move on to working with dynamic data that the user can interact with, let's add a page with static content we expect to rarely change. An about page will be perfect for this.
 
@@ -655,7 +655,7 @@ export default function App() {
 
 Now navigate to the [about page][about-page] and it should look like this:
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/08.webp" />
 
 ## Layout Routes
 
@@ -792,7 +792,9 @@ export default function App() {
 
 Now with that shuffling around done, our about page no longer loads contacts data nor is it nested inside of the sidebar layout:
 
-## Pre-rendering a static page
+<img class="tutorial" src="/_docs/v7_tutorial/09.webp" />
+
+## Pre-rendering a Static Route
 
 If you refresh the about page, you still see the loading spinner for just a split second before the page render on the client. This is really not a good experience, plus the page is just static information, we should be able to pre-render it as static HTML at build time.
 
@@ -810,8 +812,6 @@ export default {
 ```
 
 Now if you go to the [about page][about-page] and refresh, you won't see the loading spinner!
-
-TODO: add screenshot
 
 ## Server-Side Rendering
 
@@ -853,7 +853,7 @@ Whether you set `ssr` to `true` or `false` depends on you and your users needs. 
 
 We should be seeing our old static contact page again, with one difference: the URL now has a real ID for the record.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/10.webp" />
 
 Remember the `:contactId` part of the route definition in `app/routes.ts`? These dynamic segments will match dynamic (changing) values in that position of the URL. We call these values in the URL "URL Params", or just "params" for short.
 
@@ -886,7 +886,7 @@ export default function Contact({
 // existing code
 ```
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/11.webp" />
 
 ## Throwing Responses
 
@@ -922,7 +922,7 @@ Without client side routing, the browser will serialize the `form`'s data automa
 
 We can test this out by clicking the "New" button in our app.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/12.webp" />
 
 React Router sends a 405 because there is no code on the server to handle this form navigation.
 
@@ -947,7 +947,7 @@ export async function action() {
 
 That's it! Go ahead and click the "New" button, and you should see a new record pop into the list 🥳
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/13.webp" />
 
 The `createEmptyContact` method just creates an empty contact with no name or data or anything. But it does still create a record, promise!
 
@@ -1069,7 +1069,7 @@ export default function EditContact({
 
 Now click on your new record, then click the "Edit" button. We should see the new route.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/14.webp" />
 
 ## Updating Contacts with `FormData`
 
@@ -1096,9 +1096,9 @@ export async function action({
 // existing code
 ```
 
-Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe less hairy.)</small>
+Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe with the patience to cut watermelon.)</small>
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/15.webp" />
 
 ## Mutation Discussion
 
@@ -1122,7 +1122,7 @@ Without JavaScript, when a form is submitted, the browser will create [`FormData
 
 Each field in the `form` is accessible with `formData.get(name)`. For example, given the input field from above, you could access the first and last names like this:
 
-```tsx filename=app/routes/contacts.$contactId_.edit.tsx lines=[6,7] nocopy
+```tsx filename=app/routes/edit-contact.tsx  lines=[6,7] nocopy
 export const action = async ({
   params,
   request,
@@ -1136,7 +1136,7 @@ export const action = async ({
 
 Since we have a handful of form fields, we used [`Object.fromEntries`][object-from-entries] to collect them all into an object, which is exactly what our `updateContact` function wants.
 
-```tsx filename=app/routes/contacts.$contactId_.edit.tsx nocopy
+```tsx filename=app/routes/edit-contact.tsx nocopy
 const updates = Object.fromEntries(formData);
 updates.first; // "Some"
 updates.last; // "Name"
@@ -1146,7 +1146,7 @@ Aside from the `action` function, none of these APIs we're discussing are provid
 
 After we finished the `action`, note the [`redirect`][redirect] at the end:
 
-```tsx filename=app/routes/contacts.$contactId_.edit.tsx lines=[9]
+```tsx filename=app/routes/edit-contact.tsx lines=[9]
 export async function action({
   params,
   request,
@@ -1191,7 +1191,7 @@ export async function action() {
 
 Now when we click "New", we should end up on the edit page:
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/16.webp" />
 
 ## Active Link Styling
 
@@ -1241,7 +1241,7 @@ export default function SidebarLayout({
 
 Note that we are passing a function to `className`. When the user is at the URL that matches `<NavLink to>`, then `isActive` will be true. When it's _about_ to be active (the data is still loading) then `isPending` will be true. This allows us to easily indicate where the user is and also provide immediate feedback when links are clicked but data needs to be loaded.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/17.webp" />
 
 ## Global Pending UI
 
@@ -1286,7 +1286,7 @@ export default function SidebarLayout({
 
 In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/18.webp" />
 
 ## Deleting Records
 
@@ -1436,7 +1436,7 @@ export async function loader({
 // existing code
 ```
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/19.webp" />
 
 Because this is a `GET`, not a `POST`, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
 
@@ -1505,14 +1505,16 @@ Now for problem (1), clicking the back button and updating the input. We can bri
 
 👉 **Synchronize input value with the `URLSearchParams`**
 
-```tsx filename=app/layouts/sidebar.tsx lines=[2,10-15]
+```tsx filename=app/layouts/sidebar.tsx lines=[2,12-17]
 // existing imports
 import { useEffect } from "react";
 
 // existing imports & exports
 
-export default function App() {
-  const { contacts, q } = useLoaderData<typeof loader>();
+export default function SidebarLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { contacts, q } = loaderData;
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -1752,13 +1754,13 @@ export default function SidebarLayout({
 
 You should now have a nice spinner on the left side of the search input.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/20.webp" />
 
 ## Managing the History Stack
 
 Since the form is submitted for every keystroke, typing the characters "alex" and then deleting them with backspace results in a huge history stack 😂. We definitely don't want this:
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/21.webp" />
 
 We can avoid this by _replacing_ the current entry in the history stack with the next page, instead of pushing into it.
 
@@ -1866,7 +1868,7 @@ export async function action({
 
 Alright, we're ready to click the star next to the user's name!
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/22.webp" />
 
 Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like the `<Form>` we've been using: it calls the action and then all data is revalidated automatically — even your errors will be caught the same way.
 
