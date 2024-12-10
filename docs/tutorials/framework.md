@@ -188,7 +188,7 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-In the React Router `:` makes a segment dynamic. We just made the following urls match the `pages/contact.tsx` route module:
+In React Router, `:` makes a segment dynamic. We just made the following urls match the `pages/contact.tsx` route module:
 
 - `/contacts/123`
 - `/contacts/abc`
