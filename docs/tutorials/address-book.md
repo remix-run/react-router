@@ -7,7 +7,7 @@ order: 1
 
 We'll be building a small, but feature-rich address book app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take about 30m if you're following along, otherwise it's a quick read.
 
-<img class="tutorial" src="/_docs/v7_tutorial/01.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/01.webp" />
 
 👉 **Every time you see this it means you need to do something in the app!**
 
@@ -18,7 +18,7 @@ The rest is just there for your information and deeper understanding. Let's get 
 👉 **Generate a basic template**
 
 ```shellscript nonumber
-npx create-react-router@latest --template remix-run/react-router/tutorial
+npx create-react-router@latest --template remix-run/react-router/tutorials/address-book
 ```
 
 This uses a pretty bare-bones template but includes our css and data model, so we can focus on React Router.
@@ -301,7 +301,7 @@ function Favorite({
 
 Now if we click one of the links or visit [`/contacts/1`][contacts-1] we get ... nothing new?
 
-<img class="tutorial" src="/_docs/v7_tutorial/02.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/02.webp" />
 
 ## Nested Routes and Outlets
 
@@ -334,7 +334,7 @@ export default function App() {
 
 Now the child route should be rendering through the outlet.
 
-<img class="tutorial" src="/_docs/v7_tutorial/03.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/03.webp" />
 
 ## Client Side Routing
 
@@ -450,7 +450,7 @@ export default function App({ loaderData }) {
 
 That's it! React Router will now automatically keep that data in sync with your UI. The sidebar should now look like this:
 
-<img class="tutorial" src="/_docs/v7_tutorial/04.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/04.webp" />
 
 You may be wondering why we're "client" loading data instead of loading the data on the server so we can do server-side rendering (SSR). Right now our contacts site is a [Single Page App][spa], so there's no server-side rendering. This makes it really easy to deploy to any static hosting provider, but we'll talk more about how to enable SSR in a bit so you can learn about all the different [rendering strategies][rendering-strategies] React Router offers.
 
@@ -513,13 +513,13 @@ export function HydrateFallback() {
 
 Now if you refresh the page, you'll briefly see the loading splash before the app is hydrated.
 
-<img class="tutorial" src="/_docs/v7_tutorial/05.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/05.webp" />
 
 ## Index Routes
 
 When you load the app and aren't yet on a contact page, you'll notice a big blank page on the right side of the list.
 
-<img class="tutorial" src="/_docs/v7_tutorial/06.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/06.webp" />
 
 When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of [index routes][index-route] as the default child route to fill in that space.
 
@@ -559,7 +559,7 @@ export default function Home() {
 }
 ```
 
-<img class="tutorial" src="/_docs/v7_tutorial/07.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/07.webp" />
 
 Voilà! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
 
@@ -655,7 +655,7 @@ export default function App() {
 
 Now navigate to the [about page][about-page] and it should look like this:
 
-<img class="tutorial" src="/_docs/v7_tutorial/08.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/08.webp" />
 
 ## Layout Routes
 
@@ -792,7 +792,7 @@ export default function App() {
 
 Now with that shuffling around done, our about page no longer loads contacts data nor is it nested inside of the sidebar layout:
 
-<img class="tutorial" src="/_docs/v7_tutorial/09.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/09.webp" />
 
 ## Pre-rendering a Static Route
 
@@ -853,7 +853,7 @@ Whether you set `ssr` to `true` or `false` depends on you and your users needs. 
 
 We should be seeing our old static contact page again, with one difference: the URL now has a real ID for the record.
 
-<img class="tutorial" src="/_docs/v7_tutorial/10.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/10.webp" />
 
 Remember the `:contactId` part of the route definition in `app/routes.ts`? These dynamic segments will match dynamic (changing) values in that position of the URL. We call these values in the URL "URL Params", or just "params" for short.
 
@@ -886,7 +886,7 @@ export default function Contact({
 // existing code
 ```
 
-<img class="tutorial" src="/_docs/v7_tutorial/11.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/11.webp" />
 
 ## Throwing Responses
 
@@ -922,7 +922,7 @@ Without client side routing, the browser will serialize the `form`'s data automa
 
 We can test this out by clicking the "New" button in our app.
 
-<img class="tutorial" src="/_docs/v7_tutorial/12.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/12.webp" />
 
 React Router sends a 405 because there is no code on the server to handle this form navigation.
 
@@ -947,7 +947,7 @@ export async function action() {
 
 That's it! Go ahead and click the "New" button, and you should see a new record pop into the list 🥳
 
-<img class="tutorial" src="/_docs/v7_tutorial/13.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/13.webp" />
 
 The `createEmptyContact` method just creates an empty contact with no name or data or anything. But it does still create a record, promise!
 
@@ -1069,7 +1069,7 @@ export default function EditContact({
 
 Now click on your new record, then click the "Edit" button. We should see the new route.
 
-<img class="tutorial" src="/_docs/v7_tutorial/14.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/14.webp" />
 
 ## Updating Contacts with `FormData`
 
@@ -1098,7 +1098,7 @@ export async function action({
 
 Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe with the patience to cut watermelon.)</small>
 
-<img class="tutorial" src="/_docs/v7_tutorial/15.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/15.webp" />
 
 ## Mutation Discussion
 
@@ -1191,7 +1191,7 @@ export async function action() {
 
 Now when we click "New", we should end up on the edit page:
 
-<img class="tutorial" src="/_docs/v7_tutorial/16.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/16.webp" />
 
 ## Active Link Styling
 
@@ -1241,7 +1241,7 @@ export default function SidebarLayout({
 
 Note that we are passing a function to `className`. When the user is at the URL that matches `<NavLink to>`, then `isActive` will be true. When it's _about_ to be active (the data is still loading) then `isPending` will be true. This allows us to easily indicate where the user is and also provide immediate feedback when links are clicked but data needs to be loaded.
 
-<img class="tutorial" src="/_docs/v7_tutorial/17.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/17.webp" />
 
 ## Global Pending UI
 
@@ -1286,7 +1286,7 @@ export default function SidebarLayout({
 
 In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
-<img class="tutorial" src="/_docs/v7_tutorial/18.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/18.webp" />
 
 ## Deleting Records
 
@@ -1436,7 +1436,7 @@ export async function loader({
 // existing code
 ```
 
-<img class="tutorial" src="/_docs/v7_tutorial/19.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/19.webp" />
 
 Because this is a `GET`, not a `POST`, React Router _does not_ call the `action` function. Submitting a `GET` `form` is the same as clicking a link: only the URL changes.
 
@@ -1754,13 +1754,13 @@ export default function SidebarLayout({
 
 You should now have a nice spinner on the left side of the search input.
 
-<img class="tutorial" src="/_docs/v7_tutorial/20.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/20.webp" />
 
 ## Managing the History Stack
 
 Since the form is submitted for every keystroke, typing the characters "alex" and then deleting them with backspace results in a huge history stack 😂. We definitely don't want this:
 
-<img class="tutorial" src="/_docs/v7_tutorial/21.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/21.webp" />
 
 We can avoid this by _replacing_ the current entry in the history stack with the next page, instead of pushing into it.
 
@@ -1868,7 +1868,7 @@ export async function action({
 
 Alright, we're ready to click the star next to the user's name!
 
-<img class="tutorial" src="/_docs/v7_tutorial/22.webp" />
+<img class="tutorial" src="/_docs/v7_address_book_tutorial/22.webp" />
 
 Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like the `<Form>` we've been using: it calls the action and then all data is revalidated automatically — even your errors will be caught the same way.
 
