@@ -37,6 +37,7 @@ We can test this component with `createRoutesStub`. It takes an array of objects
 ```tsx
 import { createRoutesStub } from "react-router";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from '@testing-library/user-event';
 import { LoginForm } from "./LoginForm";
 
 test("LoginForm renders error messages", async () => {
@@ -62,7 +63,7 @@ test("LoginForm renders error messages", async () => {
   render(<Stub initialEntries={["/login"]} />);
 
   // simulate interactions
-  screen.getByText("Login").click();
+  userEvent.click(screen.getByText("Login"));
   await waitFor(() => screen.findByText(USER_MESSAGE));
   await waitFor(() =>
     screen.findByText(PASSWORD_MESSAGE)
