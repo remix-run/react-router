@@ -1,13 +1,13 @@
 ---
-title: Framework Tutorial
+title: Tutorial
 order: 1
 ---
 
-# Framework Tutorial
+# Tutorial
 
 We'll be building a small, but feature-rich app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take about 30m if you're following along, otherwise it's a quick read.
 
-TODO: add screenshot
+<img class="tutorial" src="/_docs/v7_tutorial/01.webp" />
 
 👉 **Every time you see this it means you need to do something in the app!**
 
@@ -37,8 +37,6 @@ npm run dev
 ```
 
 You should be able to open up [http://localhost:5173][http-localhost-5173] and see an unstyled screen that looks like this:
-
-<!-- img elements will look will be in the form: <!-- <img class="tutorial" src="/_docs/v7_framework_tutorial/n.webp" /> -->
 
 ## The Root Route
 
