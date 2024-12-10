@@ -59,30 +59,6 @@ import type { Route } from "./+types/root";
 
 import appStylesHref from "./app.css?url";
 
-export function Layout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1"
-        />
-        <link rel="stylesheet" href={appStylesHref} />
-      </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 export default function App() {
   return (
     <>
@@ -122,6 +98,35 @@ export default function App() {
   );
 }
 
+// The Layout component is a special export for the root route.
+// It acts as your document's "app shell" for all route components, HydrateFallback, and ErrorBoundary
+// For more information, see https://reactrouter.com/explanation/special-files#layout-export
+export function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+        />
+        <link rel="stylesheet" href={appStylesHref} />
+      </head>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+// The top most error boundary for the app, rendered when your app throws an error
+// For more information, see https://reactrouter.com/start/framework/route-module#errorboundary
 export function ErrorBoundary({
   error,
 }: Route.ErrorBoundaryProps) {
@@ -167,11 +172,11 @@ If you click on one of the sidebar items you'll get the default 404 page. Let's 
 👉 **Create a contact route module**
 
 ```shellscript nonumber
-mkdir app/pages
-touch app/pages/contact.tsx
+mkdir app/routes
+touch app/routes/contact.tsx
 ```
 
-We could put this file anywhere we want, but to make things a bit more organized, we'll put all our routes inside the `app/pages` directory.
+We could put this file anywhere we want, but to make things a bit more organized, we'll put all our routes inside the `app/routes` directory.
 
 You can also use [file-based routing if you prefer][file-route-conventions].
 
@@ -184,7 +189,7 @@ import type { RouteConfig } from "@react-router/dev/routes";
 import { route } from "@react-router/dev/routes";
 
 export default [
-  route("contacts/:contactId", "pages/contact.tsx"),
+  route("contacts/:contactId", "routes/contact.tsx"),
 ] satisfies RouteConfig;
 ```
 
@@ -197,7 +202,7 @@ In React Router, `:` makes a segment dynamic. We just made the following urls ma
 
 It's just a bunch of elements, feel free to copy/paste.
 
-```tsx filename=app/pages/contact.tsx
+```tsx filename=app/routes/contact.tsx
 import { Form } from "react-router";
 
 import type { ContactRecord } from "../data";
@@ -519,15 +524,15 @@ Before we move on to working dynamic data that the user can interact with, let's
 👉 **Create the about route**
 
 ```shellscript nonumber
-touch app/pages/about.tsx
+touch app/routes/about.tsx
 ```
 
 Don't forget to add the route to `app/routes.ts`:
 
 ```tsx filename=app/routes.ts lines=[3]
 export default [
-  route("contacts/:contactId", "pages/contact.tsx"),
-  route("about", "pages/about.tsx"),
+  route("contacts/:contactId", "routes/contact.tsx"),
+  route("about", "routes/about.tsx"),
 ] satisfies RouteConfig;
 ```
 
@@ -535,7 +540,7 @@ export default [
 
 Nothing too special here, just copy and paste:
 
-```tsx filename=app/pages/about.tsx
+```tsx filename=app/routes/about.tsx
 import { Link } from "react-router";
 
 export default function About() {
@@ -616,7 +621,7 @@ When a route has children, and you're at the parent route's path, the `<Outlet>`
 👉 **Create an index route for the root route**
 
 ```shellscript nonumber
-touch app/pages/home.tsx
+touch app/routes/home.tsx
 ```
 
 ```ts filename=app/routes.ts lines=[2,5]
@@ -624,9 +629,9 @@ import type { RouteConfig } from "@react-router/dev/routes";
 import { index, route } from "@react-router/dev/routes";
 
 export default [
-  index("pages/home.tsx"),
-  route("contacts/:contactId", "pages/contact.tsx"),
-  route("about", "pages/about.tsx"),
+  index("routes/home.tsx"),
+  route("contacts/:contactId", "routes/contact.tsx"),
+  route("about", "routes/about.tsx"),
 ] satisfies RouteConfig;
 ```
 
@@ -634,7 +639,7 @@ export default [
 
 Feel free to copy/paste, nothing special here.
 
-```tsx filename=app/pages/home.tsx
+```tsx filename=app/routes/home.tsx
 export default function Home() {
   return (
     <p id="index-page">
@@ -691,10 +696,10 @@ import {
 
 export default [
   layout("layouts/sidebar.tsx", [
-    index("pages/home.tsx"),
-    route("contacts/:contactId", "pages/contact.tsx"),
+    index("routes/home.tsx"),
+    route("contacts/:contactId", "routes/contact.tsx"),
   ]),
-  route("about", "pages/about.tsx"),
+  route("about", "routes/about.tsx"),
 ] satisfies RouteConfig;
 ```
 
@@ -801,7 +806,7 @@ Inside of `react-router.config.ts`, we can add a [`prerender`][pre-rendering] ar
 import { type Config } from "@react-router/dev/config";
 
 export default {
-  ssr: true,
+  ssr: false,
   prerender: ["/about"],
 } satisfies Config;
 ```
@@ -862,7 +867,7 @@ These params are most often used to find a record by ID. Let's try it out.
 
 <docs-info>The following code has type errors in it, we'll fix them in the next section</docs-info>
 
-```tsx filename=app/pages/contact.tsx lines=[2-3,5-8,10-13]
+```tsx filename=app/routes/contact.tsx lines=[2-3,5-8,10-13]
 // existing imports
 import { getContact } from "../data";
 import type { Route } from "./+types/contact";
@@ -962,12 +967,12 @@ We'll keep JavaScript around though because we're going to make a better user ex
 
 Let's add a way to fill the information for our new record.
 
-Just like creating data, you update data with [`<Form>`][form-component]. Let's make a new route module inside `app/pages/edit-contact.tsx`.
+Just like creating data, you update data with [`<Form>`][form-component]. Let's make a new route module inside `app/routes/edit-contact.tsx`.
 
 👉 **Create the edit contact route**
 
 ```shellscript nonumber
-touch app/pages/edit-contact.tsx
+touch app/routes/edit-contact.tsx
 ```
 
 Don't forget to add the route to `app/routes.ts`:
@@ -975,14 +980,14 @@ Don't forget to add the route to `app/routes.ts`:
 ```tsx filename=app/routes.ts lines=[5-8]
 export default [
   layout("layouts/sidebar.tsx", [
-    index("pages/home.tsx"),
-    route("contacts/:contactId", "pages/contact.tsx"),
+    index("routes/home.tsx"),
+    route("contacts/:contactId", "routes/contact.tsx"),
     route(
       "contacts/:contactId/edit",
-      "pages/edit-contact.tsx"
+      "routes/edit-contact.tsx"
     ),
   ]),
-  route("about", "pages/about.tsx"),
+  route("about", "routes/about.tsx"),
 ] satisfies RouteConfig;
 ```
 
@@ -990,7 +995,7 @@ export default [
 
 Nothing we haven't seen before, feel free to copy/paste:
 
-```tsx filename=app/pages/edit-contact.tsx
+```tsx filename=app/routes/edit-contact.tsx
 import { Form } from "react-router";
 import type { Route } from "./+types/edit-contact";
 
@@ -1074,7 +1079,7 @@ The edit route we just created already renders a `form`. All we need to do is ad
 
 👉 **Add an `action` function to the edit route**
 
-```tsx filename=app/pages/edit-contact.tsx lines=[1,4,8,6-15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,4,8,6-15]
 import { Form, redirect } from "react-router";
 // existing imports
 
@@ -1103,9 +1108,9 @@ TODO: add screenshot
 
 Let's dig in a bit...
 
-Open up `app/pages/edit-contact.tsx` and look at the `form` elements. Notice how they each have a name:
+Open up `app/routes/edit-contact.tsx` and look at the `form` elements. Notice how they each have a name:
 
-```tsx filename=app/pages/edit-contact.tsx lines=[4]
+```tsx filename=app/routes/edit-contact.tsx lines=[4]
 <input
   aria-label="First name"
   defaultValue={contact.first}
@@ -1289,7 +1294,7 @@ TODO: add screenshot
 
 If we review code in the contact route, we can find the delete button looks like this:
 
-```tsx filename=app/pages/contact.tsx lines=[2]
+```tsx filename=app/routes/contact.tsx lines=[2]
 <Form
   action="destroy"
   method="post"
@@ -1318,7 +1323,7 @@ At this point you should know everything you need to know to make the delete but
 👉 **Configure the "destroy" route module**
 
 ```shellscript nonumber
-touch app/pages/destroy-contact.tsx
+touch app/routes/destroy-contact.tsx
 ```
 
 ```tsx filename=app/routes.ts lines=[3-6]
@@ -1326,7 +1331,7 @@ export default [
   // existing routes
   route(
     "contacts/:contactId/destroy",
-    "pages/destroy-contact.tsx"
+    "routes/destroy-contact.tsx"
   ),
   // existing routes
 ] satisfies RouteConfig;
@@ -1334,7 +1339,7 @@ export default [
 
 👉 **Add the destroy action**
 
-```tsx filename=app/pages/destroy-contact.tsx
+```tsx filename=app/routes/destroy-contact.tsx
 import { redirect } from "react-router";
 import type { Route } from "./+types/destroy-contact";
 
@@ -1354,7 +1359,7 @@ When the user clicks the submit button:
 
 1. `<Form>` prevents the default browser behavior of sending a new document `POST` request to the server, but instead emulates the browser by creating a `POST` request with client side routing and [`fetch`][fetch]
 2. The `<Form action="destroy">` matches the new route at `contacts/:contactId/destroy` and sends it the request
-3. After the `action` redirects, React Router calls all the `loader`s for the data on the page to get the latest values (this is "revalidation"). `loaderData` in `pages/contact.tsx` now has new values and causes the components to update!
+3. After the `action` redirects, React Router calls all the `loader`s for the data on the page to get the latest values (this is "revalidation"). `loaderData` in `routes/contact.tsx` now has new values and causes the components to update!
 
 Add a `Form`, add an `action`, React Router does the rest.
 
@@ -1366,7 +1371,7 @@ We'll need a click handler on the button as well as [`useNavigate`][use-navigate
 
 👉 **Add the cancel button click handler with `useNavigate`**
 
-```tsx filename=app/pages/edit-contact.tsx lines=[1,8,15]
+```tsx filename=app/routes/edit-contact.tsx lines=[1,8,15]
 import { Form, redirect, useNavigate } from "react-router";
 // existing imports & exports
 
@@ -1511,13 +1516,6 @@ import { useEffect } from "react";
 export default function App() {
   const { contacts, q } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
-
-  useEffect(() => {
-    const searchField = document.getElementById("q");
-    if (searchField instanceof HTMLInputElement) {
-      searchField.value = q || "";
-    }
-  }, [q]);
 
   useEffect(() => {
     const searchField = document.getElementById("q");
@@ -1815,7 +1813,7 @@ The ★ button on the contact page makes sense for this. We aren't creating or d
 
 👉 **Change the `<Favorite>` form to a fetcher form**
 
-```tsx filename=app/pages/contact.tsx lines=[1,10,14,26]
+```tsx filename=app/routes/contact.tsx lines=[1,10,14,26]
 import { Form, useFetcher } from "react-router";
 
 // existing imports & exports
@@ -1850,7 +1848,7 @@ This form will no longer cause a navigation, but simply fetch to the `action`. S
 
 👉 **Create the `action`**
 
-```tsx filename=app/pages/contact.tsx lines=[2,5-13]
+```tsx filename=app/routes/contact.tsx lines=[2,5-13]
 // existing imports
 import { getContact, updateContact } from "../data";
 // existing imports
@@ -1886,7 +1884,7 @@ The fetcher knows the [`FormData`][form-data] being submitted to the `action`, s
 
 👉 **Read the optimistic value from `fetcher.formData`**
 
-```tsx filename=app/pages/contact.tsx lines=[9-11]
+```tsx filename=app/routes/contact.tsx lines=[9-11]
 // existing code
 
 function Favorite({
