@@ -515,9 +515,57 @@ Now if you refresh the page, you'll briefly see the loading splash before the ap
 
 TODO: add screenshot
 
+## Index Routes
+
+When you load the app and aren't yet on a contact page, you'll notice a big blank page on the right side of the list.
+
+TODO: add screenshot
+
+When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of [index routes][index-route] as the default child route to fill in that space.
+
+👉 **Create an index route for the root route**
+
+```shellscript nonumber
+touch app/routes/home.tsx
+```
+
+```ts filename=app/routes.ts lines=[2,5]
+import type { RouteConfig } from "@react-router/dev/routes";
+import { index, route } from "@react-router/dev/routes";
+
+export default [
+  index("routes/home.tsx"),
+  route("contacts/:contactId", "routes/contact.tsx"),
+] satisfies RouteConfig;
+```
+
+👉 **Fill in the index component's elements**
+
+Feel free to copy/paste, nothing special here.
+
+```tsx filename=app/routes/home.tsx
+export default function Home() {
+  return (
+    <p id="index-page">
+      This is a demo for React Router.
+      <br />
+      Check out{" "}
+      <a href="https://reactrouter.com">
+        the docs at reactrouter.com
+      </a>
+      .
+    </p>
+  );
+}
+```
+
+TODO: add screenshot
+
+Voilà! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
+
 ## Adding an about page
 
-Before we move on to working dynamic data that the user can interact with, let's add a static page with content that we expect to rarely change. An about page will be perfect for this.
+Before we move on to working with dynamic data that the user can interact with, let's add a page with static content we expect to rarely change. An about page will be perfect for this.
 
 👉 **Create the about route**
 
@@ -527,8 +575,9 @@ touch app/routes/about.tsx
 
 Don't forget to add the route to `app/routes.ts`:
 
-```tsx filename=app/routes.ts lines=[3]
+```tsx filename=app/routes.ts lines=[4]
 export default [
+  index("routes/home.tsx"),
   route("contacts/:contactId", "routes/contact.tsx"),
   route("about", "routes/about.tsx"),
 ] satisfies RouteConfig;
@@ -608,58 +657,9 @@ Now navigate to the [about page][about-page] and it should look like this:
 
 TODO: add screenshot
 
-## Index Routes
-
-When we load up the app and we're not on the about page, you'll notice a big blank page on the right side of our list.
-
-TODO: add screenshot
-
-When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of [index routes][index-route] as the default child route to fill in that space.
-
-👉 **Create an index route for the root route**
-
-```shellscript nonumber
-touch app/routes/home.tsx
-```
-
-```ts filename=app/routes.ts lines=[2,5]
-import type { RouteConfig } from "@react-router/dev/routes";
-import { index, route } from "@react-router/dev/routes";
-
-export default [
-  index("routes/home.tsx"),
-  route("contacts/:contactId", "routes/contact.tsx"),
-  route("about", "routes/about.tsx"),
-] satisfies RouteConfig;
-```
-
-👉 **Fill in the index component's elements**
-
-Feel free to copy/paste, nothing special here.
-
-```tsx filename=app/routes/home.tsx
-export default function Home() {
-  return (
-    <p id="index-page">
-      This is a demo for React Router.
-      <br />
-      Check out{" "}
-      <a href="https://reactrouter.com">
-        the docs at reactrouter.com
-      </a>
-      .
-    </p>
-  );
-}
-```
-
-TODO: add screenshot
-
-Voilà! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
-
 ## Layout Routes
 
-We don't actually want the about page to be nested inside of the sidebar layout. Let's move the sidebar to a layout and apply it to the about page. Additionally, we want to avoid loading all the contacts data on the about page.
+We don't actually want the about page to be nested inside of the sidebar layout. Let's move the sidebar to a layout so we can avoid rendering it on the about page. Additionally, we want to avoid loading all the contacts data on the about page.
 
 👉 **Create a layout route for the sidebar**
 
