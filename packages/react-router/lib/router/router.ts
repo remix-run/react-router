@@ -814,8 +814,7 @@ export function createRouter(init: RouterInit): Router {
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
-  let routerContext =
-    typeof init.context !== "undefined" ? init.context : undefined;
+  let routerContext = typeof init.context !== "undefined" ? init.context : {};
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategy;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
 
