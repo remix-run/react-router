@@ -18,3 +18,6 @@ console.log(
     gzipSize.sync(readFileSync('umd/ReactRouter.min.js'))
   )
 )
+
+exec('cp types/index.d.ts lib/')
+exec('cp types/lib/* lib/')
