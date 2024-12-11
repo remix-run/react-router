@@ -522,7 +522,7 @@ function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
     if (result.replace) {
       headers["X-Remix-Replace"] = "yes";
     }
-    return redirect(result.redirect, { status: result.status, headers });
+    throw redirect(result.redirect, { status: result.status, headers });
   } else if ("data" in result) {
     return result.data;
   } else {
