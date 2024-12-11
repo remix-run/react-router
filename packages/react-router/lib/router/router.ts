@@ -33,6 +33,9 @@ import type {
   AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
   DefaultRouterContext,
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
+  MiddlewareFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -4600,15 +4603,112 @@ async function loadLazyRouteModule(
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
 async function defaultDataStrategy({
+  request,
+  params,
+  context,
   matches,
 }: DataStrategyFunctionArgs): ReturnType<DataStrategyFunction> {
   let matchesToLoad = matches.filter((m) => m.shouldLoad);
-  let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
-  return results.reduce(
-    (acc, result, i) =>
-      Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
-    {}
-  );
+  let runLoaders = async () => {
+    let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
+    results.forEach((result, i) => {
+      keyedResults[matchesToLoad[i].route.id] = result;
+    });
+  };
+
+  // run middleware
+  let keyedResults: Record<string, DataStrategyResult> = {};
+  try {
+    await callRouteMiddleware(
+      matches.flatMap((m) =>
+        m.route.middleware
+          ? m.route.middleware.map((fn) => [m.route.id, fn])
+          : []
+      ) as [string, MiddlewareFunction][],
+      0,
+      { request, params, context },
+      runLoaders,
+      { value: keyedResults }
+    );
+    return keyedResults;
+  } catch (e) {
+    if (!(e instanceof MiddlewareError)) {
+      throw e;
+    }
+    // we caught an error running the middleware
+    let trimmedResults: typeof keyedResults = {};
+    for (let match of matches) {
+      if (match.route.id === e.routeId) {
+        trimmedResults[e.routeId] = { type: "error", result: e.error };
+        break;
+      } else {
+        trimmedResults[match.route.id] = keyedResults[match.route.id];
+      }
+    }
+    return trimmedResults;
+  }
+}
+
+class MiddlewareError {
+  routeId: string;
+  error: unknown;
+  constructor(routeId: string, error: unknown) {
+    this.routeId = routeId;
+    this.error = error;
+  }
+}
+
+async function callRouteMiddleware(
+  middlewares: [string, MiddlewareFunction][],
+  idx: number,
+  args: LoaderFunctionArgs | ActionFunctionArgs,
+  handler: () => void,
+  keyedResultsRef: { value: Record<string, DataStrategyResult> }
+): Promise<void> {
+  let { request } = args;
+  if (request.signal.aborted) {
+    if (request.signal.reason) {
+      throw request.signal.reason;
+    }
+    throw new Error(
+      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`
+    );
+  }
+
+  let tuple = middlewares[idx];
+  if (!tuple) {
+    // We reached the end of our middlewares, call the handler
+    await handler();
+    return;
+  }
+
+  let [routeId, middleware] = middlewares[idx];
+  let nextCalled = false;
+  let next: Parameters<MiddlewareFunction>[1] = async () => {
+    if (nextCalled) {
+      throw new Error("You may only call `next()` once per middleware");
+    }
+    nextCalled = true;
+    await callRouteMiddleware(
+      middlewares,
+      idx + 1,
+      args,
+      handler,
+      keyedResultsRef
+    );
+  };
+
+  try {
+    await middleware(args, next);
+    if (!nextCalled) {
+      await next();
+    }
+  } catch (e) {
+    if (e instanceof MiddlewareError) {
+      throw e;
+    }
+    throw new MiddlewareError(routeId, e);
+  }
 }
 
 async function callDataStrategyImpl(
