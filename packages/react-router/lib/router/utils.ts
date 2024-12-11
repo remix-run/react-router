@@ -129,6 +129,13 @@ interface DataFunctionArgs<Context> {
 }
 
 /**
+ * Route loader function signature
+ */
+export type MiddlewareFunction<Context = DefaultRouterContext> = {
+  (args: DataFunctionArgs<Context>, next: () => Promise<void>): void;
+};
+
+/**
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<Context = DefaultRouterContext>
@@ -297,6 +304,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  middleware?: MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
