@@ -1,4 +1,4 @@
-# React Router [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
+# React Router [![npm package][npm-badge]][npm]
 
 <img src="/logo/vertical@2x.png" height="150"/>
 
@@ -148,9 +148,5 @@ React Router was initially inspired by Ember's fantastic router. Many thanks to 
 
 Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.
 
-[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square
-[build]: https://travis-ci.org/ReactTraining/react-router
-[npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
-[npm]: https://www.npmjs.org/package/react-router
-[discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
-[discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
+[npm-badge]: https://img.shields.io/npm/v/@ayc0/react-router-v3.svg?style=flat-square
+[npm]: https://www.npmjs.org/package/@ayc0/react-router-v3
