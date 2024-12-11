@@ -22,6 +22,7 @@
     "__DEV__": false
   },
   "extends": ["plugin:react/recommended"],
+  "parser": "@typescript-eslint/parser",
 
   "plugins": ["react"],
   "rules": {
@@ -48,5 +49,13 @@
       "error",
       { "anonymous": "always", "named": "never" }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
+  ]
 }

@@ -8,6 +8,7 @@
     "lib",
     "umd"
   ],
+  "types": "types/index.d.ts",
   "main": "lib/index",
   "module": "es/index",
   "jsnext:main": "es/index",
@@ -20,7 +21,7 @@
     "build-es": "rimraf es && cross-env BABEL_ENV=es babel ./modules -d es --ignore __tests__",
     "build-umd": "cross-env NODE_ENV=development webpack --mode development ./modules/index.js -o umd",
     "build-min": "cross-env NODE_ENV=production webpack --mode production ./modules/index.js -o umd",
-    "lint": "eslint modules scripts *.js",
+    "lint": "eslint modules types scripts *.js --ext .js --ext .ts",
     "prepublishOnly": "node ./scripts/build.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "cross-env NODE_ENV=test karma start",
@@ -56,7 +57,13 @@
     "warning": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0"
+    "react": "^18.0.0",
+    "@types/react": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",
@@ -67,6 +74,7 @@
     "@babel/register": "^7.25.9",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.1.0",
+    "@typescript-eslint/parser": "^8.18.0",
     "babel-loader": "^9.2.1",
     "babel-plugin-dev-expression": "^0.2.3",
     "babel-plugin-istanbul": "^7.0.0",
@@ -96,6 +104,7 @@
     "react-dom": "^18.3.1",
     "rimraf": "^2.5.4",
     "style-loader": "^4.0.0",
+    "typescript": "^5.7.2",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4",
     "webpack-dev-middleware": "^7.4.2"
