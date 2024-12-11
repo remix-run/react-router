@@ -6,7 +6,8 @@
     "*.md",
     "es",
     "lib",
-    "umd"
+    "umd",
+    "types"
   ],
   "types": "types/index.d.ts",
   "main": "lib/index",
