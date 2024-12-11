@@ -129,6 +129,13 @@ interface DataFunctionArgs<Context> {
 }
 
 /**
+ * Route loader function signature
+ */
+export type MiddlewareFunction<Context = DefaultRouterContext> = {
+  (args: DataFunctionArgs<Context>, next: () => Promise<void>): void;
+};
+
+/**
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<Context = DefaultRouterContext>
@@ -141,11 +148,9 @@ export interface ActionFunctionArgs<Context = DefaultRouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
 type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 
@@ -297,6 +302,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  middleware?: MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
