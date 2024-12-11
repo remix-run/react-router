@@ -49,6 +49,7 @@
     "react-is": "^18.3.1"
   },
   "dependencies": {
+    "@types/history": "3.2.5",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^3.3.2",
     "invariant": "^2.2.1",
@@ -57,8 +58,8 @@
     "warning": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0",
-    "@types/react": "^18.0.0"
+    "@types/react": "^18.0.0",
+    "react": "^18.0.0"
   },
   "peerDependenciesMeta": {
     "@types/react": {
