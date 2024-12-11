@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "noEmit": true, // All .d.ts are hand crafted
+
+    // Code version
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "target": "es2022",
+
+    // Module resolution
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    // Config
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true
+  }
+}
