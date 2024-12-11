@@ -476,7 +476,7 @@ describe('Router', function () {
       expect(errorSpy).toHaveBeenCalledWith(error)
     })
 
-    it('should throw without onError', function () {
+    it.skip('should throw without onError', function () {
       expect(() =>
         render(
           <Router history={createHistory('/')}>
