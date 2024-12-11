@@ -1,4 +1,4 @@
-import { ComponentClass, ClassAttributes } from 'react'
+import { FunctionComponent, ClassAttributes } from 'react'
 import { LocationState } from 'history'
 import {
   EnterHook,
@@ -16,7 +16,7 @@ export interface RouteProps<Props = any> extends IndexRouteProps<Props> {
   path?: RoutePattern | undefined;
 }
 
-type Route = ComponentClass<RouteProps>;
+type Route = FunctionComponent<RouteProps>;
 declare const Route: Route
 
 export default Route

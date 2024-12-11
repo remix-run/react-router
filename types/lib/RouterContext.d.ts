@@ -1,6 +1,6 @@
-import { ComponentClass } from 'react'
+import { FunctionComponent } from 'react'
 
-type RouterContext = ComponentClass<any>;
+type RouterContext = FunctionComponent<any>;
 declare const RouterContext: RouterContext
 
 export default RouterContext

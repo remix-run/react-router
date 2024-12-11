@@ -1,4 +1,4 @@
-import { ComponentClass, ClassAttributes } from 'react'
+import { FunctionComponent, ClassAttributes } from 'react'
 import { LocationState } from 'history'
 import {
   EnterHook,
@@ -23,7 +23,7 @@ export interface IndexRouteProps<Props = any> {
   onLeave?: LeaveHook | undefined;
 }
 
-type IndexRoute = ComponentClass<IndexRouteProps>;
+type IndexRoute = FunctionComponent<IndexRouteProps>;
 declare const IndexRoute: IndexRoute
 
 export default IndexRoute

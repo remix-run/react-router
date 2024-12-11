@@ -1,17 +1,14 @@
 import {
-  Component,
   ComponentClass,
   ClassAttributes,
   ReactNode,
-  FunctionComponent
+  ComponentType
 } from 'react'
 import {
-  Action,
   History,
   Href,
   Location,
   LocationDescriptor,
-  LocationKey,
   LocationState,
   Path,
   Pathname,
@@ -26,7 +23,7 @@ export interface Params {
 }
 
 export type RoutePattern = string;
-export type RouteComponent = ComponentClass<any> | FunctionComponent<any>;
+export type RouteComponent = ComponentType<any>;
 export interface RouteComponents {
   [name: string]: RouteComponent;
 }
