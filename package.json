@@ -45,18 +45,18 @@
   ],
   "license": "MIT",
   "resolutions": {
-    "react-is": "^19.0.0"
+    "react-is": "^18.3.1"
   },
   "dependencies": {
     "history": "^3.0.0",
     "hoist-non-react-statics": "^3.3.2",
     "invariant": "^2.2.1",
     "loose-envify": "^1.2.0",
-    "react-is": "^19.0.0",
+    "react-is": "^18.3.1",
     "warning": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "react": "^18.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",
@@ -92,8 +92,8 @@
     "mocha": "^5.0.4",
     "pretty-bytes": "^4.0.2",
     "qs": "^6.2.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "rimraf": "^2.5.4",
     "style-loader": "^4.0.0",
     "webpack": "^5.97.1",
