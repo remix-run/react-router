@@ -6,7 +6,8 @@
     "*.md",
     "es",
     "lib",
-    "umd"
+    "umd",
+    "types"
   ],
   "types": "types/index.d.ts",
   "main": "lib/index",
@@ -75,6 +76,7 @@
     "@babel/register": "^7.25.9",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.1.0",
+    "@types/react": "^18.0.0",
     "@typescript-eslint/parser": "^8.18.0",
     "babel-loader": "^9.2.1",
     "babel-plugin-dev-expression": "^0.2.3",
