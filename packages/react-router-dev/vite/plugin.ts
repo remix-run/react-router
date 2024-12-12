@@ -1012,8 +1012,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   plugin !== null &&
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
-                  plugin.name !== "react-router-route-exports" &&
-                  plugin.name !== "react-router-hmr-updates"
+                  plugin.name !== "react-router:route-exports" &&
+                  plugin.name !== "react-router:hmr-updates"
               ),
           ],
         });
@@ -1253,7 +1253,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-route-entry",
+      name: "react-router:route-entry",
       enforce: "pre",
       async transform(_code, id, options) {
         if (!isRouteEntry(id)) return;
@@ -1279,7 +1279,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-virtual-modules",
+      name: "react-router:virtual-modules",
       enforce: "pre",
       resolveId(id) {
         if (vmods.includes(id)) return VirtualModule.resolve(id);
@@ -1314,7 +1314,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-dot-server",
+      name: "react-router:dot-server",
       enforce: "pre",
       async resolveId(id, importer, options) {
         // https://vitejs.dev/config/dep-optimization-options
@@ -1324,9 +1324,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (isOptimizeDeps || options?.ssr) return;
 
-        let isResolving = options?.custom?.["react-router-dot-server"] ?? false;
+        let isResolving = options?.custom?.["react-router:dot-server"] ?? false;
         if (isResolving) return;
-        options.custom = { ...options.custom, "react-router-dot-server": true };
+        options.custom = { ...options.custom, "react-router:dot-server": true };
         let resolved = await this.resolve(id, importer, options);
         if (!resolved) return;
 
@@ -1384,7 +1384,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-dot-client",
+      name: "react-router:dot-client",
       async transform(code, id, options) {
         if (!options?.ssr) return;
         let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
@@ -1406,7 +1406,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     WithProps.plugin,
     {
-      name: "react-router-route-exports",
+      name: "react-router:route-exports",
       async transform(code, id, options) {
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
@@ -1454,7 +1454,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-inject-hmr-runtime",
+      name: "react-router:inject-hmr-runtime",
       enforce: "pre",
       resolveId(id) {
         if (id === injectHmrRuntimeId)
@@ -1473,7 +1473,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-hmr-runtime",
+      name: "react-router:hmr-runtime",
       enforce: "pre",
       resolveId(id) {
         if (id === hmrRuntimeId) return VirtualModule.resolve(hmrRuntimeId);
@@ -1501,7 +1501,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-react-refresh-babel",
+      name: "react-router:react-refresh-babel",
       async transform(code, id, options) {
         if (viteCommand !== "serve") return;
         if (id.includes("/node_modules/")) return;
@@ -1543,7 +1543,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-hmr-updates",
+      name: "react-router:hmr-updates",
       async handleHotUpdate({ server, file, modules, read }) {
         let route = getRoute(ctx.reactRouterConfig, file);
 
