@@ -492,7 +492,7 @@ export default {
 } satisfies Config;
 ```
 
-You might have started noticing that whenever your refresh the page you get a flash of white before the app loads. Since we're only rendering on the client, there's nothing to show the user while the app is loading.
+You might have started noticing that whenever you refresh the page you get a flash of white before the app loads. Since we're only rendering on the client, there's nothing to show the user while the app is loading.
 
 👉 **Add a `HydrateFallback` export**
 
