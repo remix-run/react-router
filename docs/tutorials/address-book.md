@@ -813,6 +813,12 @@ export default {
 
 Now if you go to the [about page][about-page] and refresh, you won't see the loading spinner!
 
+<docs-warning>
+
+If you're still seeing a spinner when you refresh, make sure you deleted the `clientLoader` in `root.tsx`.
+
+</docs-warning>
+
 ## Server-Side Rendering
 
 React Router is a great framework for building [Single Page Apps][spa]. Many applications are served well by only client-side rendering, and _maybe_ statically pre-rendering a few pages at build time.
