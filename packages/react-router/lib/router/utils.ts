@@ -128,12 +128,21 @@ interface DataFunctionArgs<Context> {
   context: Context;
 }
 
-/**
- * Route loader function signature
- */
-export type MiddlewareFunction<Context = DefaultRouterContext> = {
-  (args: DataFunctionArgs<Context>, next: () => Promise<void>): void;
+type BaseMiddlewareFunction<Result, Context> = {
+  (args: DataFunctionArgs<Context>, next: () => Promise<Result>): Result;
 };
+
+/**
+ * Server-side route middleware function signature
+ */
+export type MiddlewareFunction<Context = DefaultRouterContext> =
+  BaseMiddlewareFunction<Response, Context>;
+
+/**
+ * Client-side route middleware function signature
+ */
+export type ClientMiddlewareFunction<Context = DefaultRouterContext> =
+  BaseMiddlewareFunction<undefined, Context>;
 
 /**
  * Arguments passed to loader functions
@@ -302,7 +311,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  middleware?: MiddlewareFunction[];
+  middleware?: ClientMiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;

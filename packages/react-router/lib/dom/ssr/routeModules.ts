@@ -3,8 +3,10 @@ import type { Location } from "../../router/history";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  ClientMiddlewareFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
 } from "../../router/utils";
@@ -24,6 +26,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: ClientMiddlewareFunction[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -41,6 +44,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
+  middleware?: MiddlewareFunction[];
 }
 
 /**

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
-import { isResponse } from "../../router/router";
+import { isResponse, runMiddlewarePipeline } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -136,7 +136,8 @@ export function getSingleFetchDataStrategy(
   routeModules: RouteModules,
   getRouter: () => DataRouter
 ): DataStrategyFunction {
-  return async ({ request, matches, fetcherKey }) => {
+  return async (args) => {
+    let { request, matches, fetcherKey } = args;
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
       return singleFetchActionStrategy(request, matches);
@@ -148,12 +149,20 @@ export function getSingleFetchDataStrategy(
     }
 
     // Navigational loads are more complex...
-    return singleFetchLoaderNavigationStrategy(
-      manifest,
-      routeModules,
-      getRouter(),
-      request,
-      matches
+    await getRouter().__temporary__loadMiddlewareRouteImplementations(matches);
+    return runMiddlewarePipeline(
+      args,
+      async (keyedResults: Record<string, DataStrategyResult>) => {
+        let results = await singleFetchLoaderNavigationStrategy(
+          manifest,
+          routeModules,
+          getRouter(),
+          request,
+          matches
+        );
+        Object.assign(keyedResults, results);
+        return keyedResults;
+      }
     );
   };
 }
