@@ -21,9 +21,9 @@ The same behavior applies to form submissions. When a pending form submission is
 
 Like the browser, interrupted navigations with links and form submissions will cancel in flight data requests and immediately process the new event.
 
-Fetchers are a bit more nuanced since they are not singleton events like navigation. Fetchers can't interrupt a other fetcher instances, but they can interrupt themselves and the behavior is the same as everything else: cancel the interrupted request and immediately process the new one.
+Fetchers are a bit more nuanced since they are not singleton events like navigation. Fetchers can't interrupt other fetcher instances, but they can interrupt themselves and the behavior is the same as everything else: cancel the interrupted request and immediately process the new one.
 
-Fetchers do, however, interact with each when it comes to revalidation. After a fetcher's action request returns to the browser, a revalidation for all page data is sent. This means multiple revalidation requests can be in-flight at the same time. React Router will commit all "fresh" revalidation responses and cancel any stale requests. A stale request is any request that started _earlier_ than one that has returned.
+Fetchers do, however, interact with each other when it comes to revalidation. After a fetcher's action request returns to the browser, a revalidation for all page data is sent. This means multiple revalidation requests can be in-flight at the same time. React Router will commit all "fresh" revalidation responses and cancel any stale requests. A stale request is any request that started _earlier_ than one that has returned.
 
 This management of the network prevents the most common UI bugs caused by network race conditions.
 
