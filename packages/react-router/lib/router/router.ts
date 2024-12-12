@@ -36,6 +36,7 @@ import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
   MiddlewareFunction,
+  ClientMiddlewareFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -254,6 +255,14 @@ export interface Router {
    * @param children The additional children routes
    */
   patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
+
+  /**
+   * @private
+   * PRIVATE DO NOT USE
+   */
+  __temporary__loadMiddlewareRouteImplementations(
+    matches: AgnosticDataRouteMatch[]
+  ): Promise<void>;
 
   /**
    * @private
@@ -3261,6 +3270,25 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  async function loadMiddlewareRoutes(matches: AgnosticDataRouteMatch[]) {
+    await Promise.all(
+      matches.map((m) =>
+        loadLazyRouteModule(m.route, mapRouteProperties, manifest)
+      )
+    );
+
+    // If we are not in the middle of an HMR revalidation and we changed the
+    // routes, provide a new identity and trigger a reflow via `updateState`
+    // to re-run memoized `router.routes` dependencies.
+    // HMR will already update the identity and reflow when it lands
+    // `inFlightDataRoutes` in `completeNavigation`
+    let isNonHMR = inFlightDataRoutes == null;
+    if (isNonHMR) {
+      dataRoutes = [...dataRoutes];
+      updateState({});
+    }
+  }
+
   router = {
     get basename() {
       return basename;
@@ -3293,6 +3321,7 @@ export function createRouter(init: RouterInit): Router {
     getBlocker,
     deleteBlocker,
     patchRoutes,
+    __temporary__loadMiddlewareRouteImplementations: loadMiddlewareRoutes,
     _internalFetchControllers: fetchControllers,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
@@ -4601,22 +4630,33 @@ async function loadLazyRouteModule(
   });
 }
 
-// Default implementation of `dataStrategy` which fetches all loaders in parallel
-async function defaultDataStrategy({
-  request,
-  params,
-  context,
-  matches,
-}: DataStrategyFunctionArgs): ReturnType<DataStrategyFunction> {
-  let matchesToLoad = matches.filter((m) => m.shouldLoad);
-  let runLoaders = async () => {
-    let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
-    results.forEach((result, i) => {
-      keyedResults[matchesToLoad[i].route.id] = result;
-    });
-  };
+// Default implementation of `dataStrategy` which calls middleware and fetches
+// all loaders in parallel
+async function defaultDataStrategy(
+  args: DataStrategyFunctionArgs
+): ReturnType<DataStrategyFunction> {
+  let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
+  let results = await runMiddlewarePipeline(
+    args,
+    async (keyedResults: Record<string, DataStrategyResult>) => {
+      let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
+      results.forEach((result, i) => {
+        keyedResults[matchesToLoad[i].route.id] = result;
+      });
+    }
+  );
+  return results;
+}
 
-  // run middleware
+export async function runMiddlewarePipeline(
+  {
+    request,
+    params,
+    context,
+    matches,
+  }: Omit<DataStrategyFunctionArgs, "fetcherKey">,
+  handler: (r: Record<string, DataStrategyResult>) => unknown
+): Promise<Record<string, DataStrategyResult>> {
   let keyedResults: Record<string, DataStrategyResult> = {};
   try {
     await callRouteMiddleware(
@@ -4624,11 +4664,11 @@ async function defaultDataStrategy({
         m.route.middleware
           ? m.route.middleware.map((fn) => [m.route.id, fn])
           : []
-      ) as [string, MiddlewareFunction][],
+      ) as [string, ClientMiddlewareFunction][],
       0,
       { request, params, context },
-      runLoaders,
-      { value: keyedResults }
+      keyedResults,
+      handler
     );
     return keyedResults;
   } catch (e) {
@@ -4659,11 +4699,11 @@ class MiddlewareError {
 }
 
 async function callRouteMiddleware(
-  middlewares: [string, MiddlewareFunction][],
+  middlewares: [string, ClientMiddlewareFunction][],
   idx: number,
   args: LoaderFunctionArgs | ActionFunctionArgs,
-  handler: () => void,
-  keyedResultsRef: { value: Record<string, DataStrategyResult> }
+  keyedResults: Record<string, DataStrategyResult>,
+  handler: (r: Record<string, DataStrategyResult>) => void
 ): Promise<void> {
   let { request } = args;
   if (request.signal.aborted) {
@@ -4678,13 +4718,13 @@ async function callRouteMiddleware(
   let tuple = middlewares[idx];
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
-    await handler();
+    await handler(keyedResults);
     return;
   }
 
   let [routeId, middleware] = middlewares[idx];
   let nextCalled = false;
-  let next: Parameters<MiddlewareFunction>[1] = async () => {
+  let next: Parameters<ClientMiddlewareFunction>[1] = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
@@ -4693,8 +4733,8 @@ async function callRouteMiddleware(
       middlewares,
       idx + 1,
       args,
-      handler,
-      keyedResultsRef
+      keyedResults,
+      handler
     );
   };
 

@@ -1,4 +1,9 @@
-import type { ActionFunction, LoaderFunction } from "../router/utils";
+import type {
+  ActionFunction,
+  ClientMiddlewareFunction,
+  LoaderFunction,
+  MiddlewareFunction,
+} from "../router/utils";
 import type {
   ClientActionFunction,
   ClientLoaderFunction,
@@ -40,6 +45,7 @@ export type RouteHandle = unknown;
 export interface EntryRouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: ClientMiddlewareFunction[];
   ErrorBoundary?: any; // Weakly typed because server-runtime is not React-aware
   HydrateFallback?: any; // Weakly typed because server-runtime is not React-aware
   Layout?: any; // Weakly typed because server-runtime is not React-aware
@@ -53,4 +59,5 @@ export interface ServerRouteModule extends EntryRouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
+  middleware?: MiddlewareFunction[];
 }

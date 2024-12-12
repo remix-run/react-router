@@ -23,6 +23,7 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  ClientMiddlewareFunction,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
@@ -35,6 +36,7 @@ export type {
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  MiddlewareFunction,
   ParamParseKey,
   Params,
   PathMatch,

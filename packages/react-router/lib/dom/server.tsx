@@ -369,6 +369,9 @@ export function createStaticRouter(
     patchRoutes() {
       throw msg("patchRoutes");
     },
+    __temporary__loadMiddlewareRouteImplementations() {
+      throw msg("__temporary__loadMiddlewareRouteImplementations");
+    },
     _internalFetchControllers: new Map(),
     _internalSetRoutes() {
       throw msg("_internalSetRoutes");

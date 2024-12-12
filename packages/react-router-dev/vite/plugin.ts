@@ -116,10 +116,11 @@ export async function loadPluginContext({
   return ctx;
 }
 
-const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
+const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "middleware", "headers"];
 const CLIENT_ROUTE_EXPORTS = [
   "clientAction",
   "clientLoader",
+  "clientMiddleware",
   "default",
   "ErrorBoundary",
   "handle",
@@ -1619,6 +1620,7 @@ function addRefreshWrapper(
       ? [
           "clientAction",
           "clientLoader",
+          "clientMiddleware",
           "handle",
           "meta",
           "links",
@@ -2100,6 +2102,8 @@ function createPrerenderRoutes(
       loader: route.module.loader ? () => null : undefined,
       action: undefined,
       handle: route.module.handle,
+      // middleware is not necessary here since we just need to know which
+      // routes have loaders so we know what paths to prerender
     };
 
     return route.index
