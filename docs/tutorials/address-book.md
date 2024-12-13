@@ -900,7 +900,7 @@ You'll notice that the type of `loaderData.contact` is `ContactRecord | null`. B
 
 We could account for the possibility of the contact being not found in component code, but the webby thing to do is send a proper 404. We can do that in the loader and solve all of our problems at once.
 
-```tsx filename=app/routes/contacts.$contactId.tsx lines=[5-7]
+```tsx filename=app/routes/contact.tsx lines=[5-7]
 // existing imports
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -1542,7 +1542,7 @@ You could certainly do this as a controlled component. You will have more synchr
 
 <summary>Expand this to see what it would look like</summary>
 
-```tsx filename=app/root.tsx lines=[2,11-12,14-18,30-33,36-37]
+```tsx filename=app/layouts/sidebar.tsx lines=[2,11-12,14-18,30-33,36-37]
 // existing imports
 import { useEffect, useState } from "react";
 
