@@ -129,7 +129,9 @@ interface DataFunctionArgs<Context> {
 }
 
 type BaseMiddlewareFunction<Result, Context> = {
-  (args: DataFunctionArgs<Context>, next: () => Promise<Result>): Result;
+  (args: DataFunctionArgs<Context>, next: () => Promise<Result>):
+    | Result
+    | Promise<Result>;
 };
 
 /**
