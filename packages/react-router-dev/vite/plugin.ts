@@ -130,12 +130,11 @@ const CLIENT_ROUTE_EXPORTS = [
   "shouldRevalidate",
 ];
 
-// Each route gets its own virtual module marked with an entry query string
-const ROUTE_ENTRY_QUERY_STRING = "?route-entry=1";
-
-const isRouteEntry = (id: string): boolean => {
-  return id.endsWith(ROUTE_ENTRY_QUERY_STRING);
-};
+/** This is used to manage a build optimization to remove unused route exports
+from the client build output. This is important in cases where custom route
+exports are only ever used on the server. Without this optimization we can't
+tree-shake any unused custom exports because routes are entry points. */
+const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
 export type ServerBundleBuildConfig = {
   routes: RouteManifest;
@@ -207,7 +206,7 @@ const resolveChunk = (
     path.relative(ctx.rootDirectory, absoluteFilePath)
   );
   let entryChunk =
-    viteManifest[rootRelativeFilePath + ROUTE_ENTRY_QUERY_STRING] ??
+    viteManifest[rootRelativeFilePath + BUILD_CLIENT_ROUTE_QUERY_STRING] ??
     viteManifest[rootRelativeFilePath];
 
   if (!entryChunk) {
@@ -508,7 +507,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          ) + ROUTE_ENTRY_QUERY_STRING
+          )
         )};`;
       })
       .join("\n")}
@@ -694,10 +693,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         caseSensitive: route.caseSensitive,
         module: combineURLs(
           ctx.publicPath,
-          `${resolveFileUrl(
+          resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          )}${ROUTE_ENTRY_QUERY_STRING}`
+          )
         ),
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
@@ -886,7 +885,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                                 `${path.resolve(
                                   ctx.reactRouterConfig.appDirectory,
                                   route.file
-                                )}${ROUTE_ENTRY_QUERY_STRING}`
+                                )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
                             ),
                           ],
                         },
@@ -1251,11 +1250,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router:route-entry",
+      name: "react-router:build-client-route",
       enforce: "pre",
       async transform(_code, id, options) {
-        if (!isRouteEntry(id)) return;
-        let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
+        if (!id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) return;
+        let routeModuleId = id.replace(BUILD_CLIENT_ROUTE_QUERY_STRING, "");
 
         let routeFileName = path.basename(routeModuleId);
 
@@ -1516,10 +1515,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
 
-        if (isRouteEntry(id)) {
-          return { code: addRefreshWrapper(ctx.reactRouterConfig, code, id) };
-        }
-
         let result = await babel.transformAsync(code, {
           babelrc: false,
           configFile: false,
@@ -1615,17 +1610,16 @@ function addRefreshWrapper(
   id: string
 ): string {
   let route = getRoute(reactRouterConfig, id);
-  let acceptExports =
-    route || isRouteEntry(id)
-      ? [
-          "clientAction",
-          "clientLoader",
-          "handle",
-          "meta",
-          "links",
-          "shouldRevalidate",
-        ]
-      : [];
+  let acceptExports = route
+    ? [
+        "clientAction",
+        "clientLoader",
+        "handle",
+        "meta",
+        "links",
+        "shouldRevalidate",
+      ]
+    : [];
   return (
     "\n\n" +
     withCommentBoundaries(
