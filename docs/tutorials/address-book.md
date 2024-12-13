@@ -5,7 +5,13 @@ order: 1
 
 # Address Book
 
-We'll be building a small, but feature-rich address book app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take about 30m if you're following along, otherwise it's a quick read.
+We'll be building a small, but feature-rich address book app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take 30-45m if you're following along, otherwise it's a quick read.
+
+<docs-info>
+
+You can also watch our [walkthrough of the React Router Tutorial](https://www.youtube.com/watch?v=pw8FAg07kdo) if you prefer 🎥
+
+</docs-info>
 
 <img class="tutorial" src="/_docs/v7_address_book_tutorial/01.webp" />
 
