@@ -1771,6 +1771,17 @@ export function createRouter(init: RouterInit): Router {
       );
       result = results[actionMatch.route.id];
 
+      if (!result) {
+        // If this error came from a parent middleware before the action ran,
+        // then it won't be tired to the action route
+        for (let match of matches) {
+          if (results[match.route.id]) {
+            result = results[match.route.id];
+            break;
+          }
+        }
+      }
+
       if (request.signal.aborted) {
         return { shortCircuited: true };
       }
@@ -4645,8 +4656,21 @@ async function defaultDataStrategy(
   args: DataStrategyFunctionArgs
 ): ReturnType<DataStrategyFunction> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
+
+  // Determine how far down we'll be loading so we only run middleware to that
+  // point.  This prevents us from calling middleware below an action error
+  // boundary below which we don't run loaders
+  let lastIndex = args.matches.length - 1;
+  for (let i = lastIndex; i >= 0; i--) {
+    if (args.matches[i].shouldLoad) {
+      lastIndex = i;
+      break;
+    }
+  }
+
   let results = await runMiddlewarePipeline(
     args,
+    lastIndex,
     async (keyedResults: Record<string, DataStrategyResult>) => {
       let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
       results.forEach((result, i) => {
@@ -4664,16 +4688,19 @@ export async function runMiddlewarePipeline(
     context,
     matches,
   }: Omit<DataStrategyFunctionArgs, "fetcherKey">,
+  lastIndex: number,
   handler: (r: Record<string, DataStrategyResult>) => unknown
 ): Promise<Record<string, DataStrategyResult>> {
   let keyedResults: Record<string, DataStrategyResult> = {};
   try {
     await callRouteMiddleware(
-      matches.flatMap((m) =>
-        m.route.middleware
-          ? m.route.middleware.map((fn) => [m.route.id, fn])
-          : []
-      ) as [string, ClientMiddlewareFunction][],
+      matches
+        .slice(0, lastIndex + 1)
+        .flatMap((m) =>
+          m.route.middleware
+            ? m.route.middleware.map((fn) => [m.route.id, fn])
+            : []
+        ) as [string, ClientMiddlewareFunction][],
       0,
       { request, params, context },
       keyedResults,
@@ -4684,17 +4711,12 @@ export async function runMiddlewarePipeline(
     if (!(e instanceof MiddlewareError)) {
       throw e;
     }
-    // we caught an error running the middleware
-    let trimmedResults: typeof keyedResults = {};
-    for (let match of matches) {
-      if (match.route.id === e.routeId) {
-        trimmedResults[e.routeId] = { type: "error", result: e.error };
-        break;
-      } else {
-        trimmedResults[match.route.id] = keyedResults[match.route.id];
-      }
-    }
-    return trimmedResults;
+    // we caught an error running the middleware, copy that overtop any
+    // non-error result for the route
+    return {
+      ...keyedResults,
+      [e.routeId]: { type: "error", result: e.error },
+    };
   }
 }
 
@@ -4731,7 +4753,7 @@ async function callRouteMiddleware(
     return;
   }
 
-  let [routeId, middleware] = middlewares[idx];
+  let [routeId, middleware] = tuple;
   let nextCalled = false;
   let next: Parameters<ClientMiddlewareFunction>[1] = async () => {
     if (nextCalled) {
