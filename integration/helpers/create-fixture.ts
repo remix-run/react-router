@@ -217,6 +217,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           ],
           {
             env: {
+              ...process.env,
               NODE_ENV: mode || "production",
               PORT: port.toFixed(0),
             },
