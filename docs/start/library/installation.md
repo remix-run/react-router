@@ -5,6 +5,16 @@ order: 1
 
 # Installation
 
+<docs-info>
+
+React Router v7 requires the following minimum versions:
+
+- `node@20`
+- `react@18`
+- `react-dom@18`
+
+</docs-info>
+
 You can start with a React template from Vite and choose "React", otherwise bootstrap your application however you prefer.
 
 ```shellscript nonumber
