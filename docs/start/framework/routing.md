@@ -325,4 +325,4 @@ Note that these routes do not participate in data loading, actions, code splitti
 Next: [Route Module](./route-module)
 
 [file-route-conventions]: ../../how-to/file-route-conventions
-[outlet]: ../../api/react-router/Outlet
+[outlet]: https://api.reactrouter.com/v7/functions/react_router.Outlet.html
