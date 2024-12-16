@@ -3,6 +3,16 @@ title: Installation
 order: 1
 ---
 
+# Prerequisites
+
+React Router v7 requires the following minimum versions:
+
+> node@20
+
+React Router no longer provides an `installGlobals` method to polyfill the fetch API
+
+> react@18, react-dom@18
+
 # Installation
 
 You can start with a React template from Vite and choose "React", otherwise bootstrap your application however you prefer.
