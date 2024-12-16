@@ -112,10 +112,12 @@ const getStylesForFiles = async ({
           ? cssModulesManifest[dep.file]
           : (
               await viteDevServer.ssrLoadModule(
-                // Vite v6 does not expose default export for CSS in server
-                // environment to align with non-SSR environment. Keep using the
-                // URL without inline query for v5 as the HMR code was relying
-                // on the implicit SSR-client module graph relationship.
+                // We need the ?inline query in Vite v6 when loading CSS in SSR
+                // since it does not expose the default export for CSS in a
+                // server environment. This is to align with non-SSR
+                // environments. For backwards compatibility with v5 we keep
+                // using the URL without ?inline query because the HMR code was
+                // relying on the implicit SSR-client module graph relationship.
                 viteMajor >= 6 ? injectQuery(dep.url, "inline") : dep.url
               )
             ).default;
