@@ -3,6 +3,16 @@ title: Installation
 order: 1
 ---
 
+# Prerequisites
+
+React Router v7 requires the following minimum versions:
+
+> node@20
+
+React Router no longer provides an `installGlobals` method to polyfill the fetch API
+
+> react@18, react-dom@18
+
 # Installation
 
 Most projects start with a template. Let's use a basic template maintained by React Router:
