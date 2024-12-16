@@ -18,17 +18,82 @@ export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
 }
 
+/**
+ * The shape of a route module shipped to the client
+ */
 export interface RouteModule {
+  /**
+   * Action function called only in the browser.  Route client loaders provide
+   * data to route components in addition to, or in place of, route loaders.
+   */
   clientAction?: ClientActionFunction;
+  /**
+   * Like route actions but only called in the browser.
+   */
   clientLoader?: ClientLoaderFunction;
+  /**
+   * When other route module APIs throw, the route module `ErrorBoundary` will
+   * render instead of the route component.
+   */
   ErrorBoundary?: ErrorBoundaryComponent;
+  /**
+   * On initial page load, the route component renders only after the client
+   * loader is finished. If exported, a `HydrateFallback` can render
+   * immediately in place of the route component.
+   */
   HydrateFallback?: HydrateFallbackComponent;
+  /**
+   * The `Layout` export is only applicable to the root route.  Because the root
+   * route manages the document for all routes, it supports an additional optional
+   * `Layout` export that will be wrapped around the rendered UI, which may come
+   * from the default `Component` export, the `ErrorBoundary`, or the `HydrateFallback`
+   */
   Layout?: LayoutComponent;
+  /**
+   * Defines the component that will render when the route matches.
+   */
   default: RouteComponent;
+  /**
+   * Route handle allows apps to add anything to a route match in `useMatches`
+   * to create abstractions (like breadcrumbs, etc.).
+   */
   handle?: RouteHandle;
+  /**
+   * Route links define [`<link>` element][link-element]s to be rendered in the
+   * document `<head>`.
+   */
   links?: LinksFunction;
+  /**
+   * Route meta defines meta tags to be rendered in the `<head>` of the document.
+   */
   meta?: MetaFunction;
+  /**
+   * By default, all routes are revalidated after actions. This function allows
+   * a route to opt-out of revalidation for actions that don't affect its data.
+   */
   shouldRevalidate?: ShouldRevalidateFunction;
+}
+
+/**
+ * The shape of a route module file for your application
+ */
+export interface ServerRouteModule extends RouteModule {
+  /**
+   * Route actions allow server-side data mutations with automatic revalidation
+   * of all loader data on the page when called from `<Form>`, `useFetcher`,
+   * and `useSubmit`.
+   * */
+  action?: ActionFunction;
+  /**
+   * Route headers define HTTP headers to be sent with the response when server rendering.
+   */
+  headers?: HeadersFunction | { [name: string]: string };
+  /**
+   * Route loaders provide data to route components before they are rendered.
+   * They are only called on the server when server rendering or during the
+   * build with pre-rendering.
+   */
+  loader?: LoaderFunction;
 }
 
 /**
@@ -65,6 +130,24 @@ export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
  * ErrorBoundary to display for this route
  */
 export type ErrorBoundaryComponent = ComponentType;
+
+/**
+ * Parameters passed to the [`headers`]{@link HeadersFunction} function
+ */
+export type HeadersArgs = {
+  loaderHeaders: Headers;
+  parentHeaders: Headers;
+  actionHeaders: Headers;
+  errorHeaders: Headers | undefined;
+};
+
+/**
+ * A function that returns HTTP headers to be used for a route. These headers
+ * will be merged with (and take precedence over) headers from parent routes.
+ */
+export interface HeadersFunction {
+  (args: HeadersArgs): Headers | HeadersInit;
+}
 
 /**
  * `<Route HydrateFallback>` component to render on initial loads
