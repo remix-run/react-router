@@ -1591,8 +1591,65 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return modules;
       },
     },
+    {
+      name: "react-router-server-change-trigger-client-hmr",
+      // This hook is only available in Vite v6+ so this is a no-op in v5.
+      // Previously the server and client modules were shared in a single module
+      // graph. This meant that changes to server code automatically resulted in
+      // client HMR updates. In Vite v6+ these module graphs are separate from
+      // each other so we need to manually trigger client HMR updates if server
+      // code has changed.
+      hotUpdate(this, { server, modules }) {
+        if (this.environment.name !== "ssr" && modules.length <= 0) {
+          return;
+        }
+
+        let clientModules = uniqueNodes(
+          modules.flatMap((mod) =>
+            getParentClientNodes(server.environments.client.moduleGraph, mod)
+          )
+        );
+
+        for (let clientModule of clientModules) {
+          server.environments.client.reloadModule(clientModule);
+        }
+      },
+    },
   ];
 };
+
+function getParentClientNodes(
+  clientModuleGraph: Vite.EnvironmentModuleGraph,
+  module: Vite.EnvironmentModuleNode
+): Vite.EnvironmentModuleNode[] {
+  if (!module.id) {
+    return [];
+  }
+
+  let clientModule = clientModuleGraph.getModuleById(module.id);
+  if (clientModule) {
+    return [clientModule];
+  }
+
+  return [...module.importers].flatMap((importer) =>
+    getParentClientNodes(clientModuleGraph, importer)
+  );
+}
+
+function uniqueNodes(
+  nodes: Vite.EnvironmentModuleNode[]
+): Vite.EnvironmentModuleNode[] {
+  let nodeUrls = new Set<string>();
+  let unique: Vite.EnvironmentModuleNode[] = [];
+  for (let node of nodes) {
+    if (nodeUrls.has(node.url)) {
+      continue;
+    }
+    nodeUrls.add(node.url);
+    unique.push(node);
+  }
+  return unique;
+}
 
 function findConfig(
   dir: string,
