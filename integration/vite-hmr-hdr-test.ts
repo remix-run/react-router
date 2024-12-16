@@ -64,33 +64,33 @@ test.describe("Vite HMR & HDR", () => {
       test("mdx", async ({ page, dev }) => {
         let files: Files = async ({ port }) => ({
           "vite.config.ts": `
-      import { defineConfig } from "vite";
-      import { reactRouter } from "@react-router/dev/vite";
-      import mdx from "@mdx-js/rollup";
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+            import mdx from "@mdx-js/rollup";
 
-      export default defineConfig({
-        ${await viteConfig.server({ port })}
-        plugins: [
-          mdx(),
-          reactRouter(),
-        ],
-      });
-    `,
+            export default defineConfig({
+              ${await viteConfig.server({ port })}
+              plugins: [
+                mdx(),
+                reactRouter(),
+              ],
+            });
+          `,
           "app/component.tsx": `
-      import {useState} from "react";
+            import {useState} from "react";
 
-      export const Counter = () => {
-        const [count, setCount] = useState(0);
-        return <button onClick={() => setCount(count => count + 1)}>Count: {count}</button>
-      }
-    `,
+            export const Counter = () => {
+              const [count, setCount] = useState(0);
+              return <button onClick={() => setCount(count => count + 1)}>Count: {count}</button>
+            }
+          `,
           "app/routes/mdx.mdx": `
-      import { Counter } from "../component";
+            import { Counter } from "../component";
 
-      # MDX Title (HMR: 0)
+            # MDX Title (HMR: 0)
 
-      <Counter />
-    `,
+            <Counter />
+          `,
         });
 
         let { port, cwd } = await dev(files, templateName);
