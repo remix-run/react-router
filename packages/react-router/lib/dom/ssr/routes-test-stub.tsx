@@ -121,8 +121,8 @@ export function createRoutesStub(
         // @ts-expect-error loader/action context types don't match :/
         convertRoutesToDataRoutes(routes, (r) => r),
         context,
-        reactRouterContextRef.current.manifest,
-        reactRouterContextRef.current.routeModules
+        frameworkContextRef.current.manifest,
+        frameworkContextRef.current.routeModules
       );
       routerRef.current = createMemoryRouter(patched, {
         initialEntries,
