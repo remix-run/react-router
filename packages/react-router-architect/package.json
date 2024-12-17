@@ -55,7 +55,7 @@
   "devDependencies": {
     "@react-router/node": "workspace:*",
     "@types/lambda-tester": "^3.6.1",
-    "@types/node": "^18.17.1",
+    "@types/node": "^20.0.0",
     "lambda-tester": "^4.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
