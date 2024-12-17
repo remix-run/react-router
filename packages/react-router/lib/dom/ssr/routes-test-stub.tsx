@@ -103,7 +103,7 @@ export function createRoutesStub(
     let frameworkContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
-      reactRouterContextRef.current = {
+      frameworkContextRef.current = {
         future: {},
         manifest: {
           routes: {},
