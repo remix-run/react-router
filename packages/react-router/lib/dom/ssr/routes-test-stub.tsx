@@ -132,7 +132,7 @@ export function createRoutesStub(
     }
 
     return (
-      <FrameworkContext.Provider value={reactRouterContextRef.current}>
+      <FrameworkContext.Provider value={frameworkContextRef.current}>
         <RouterProvider router={routerRef.current} />
       </FrameworkContext.Provider>
     );
