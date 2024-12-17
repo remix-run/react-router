@@ -100,7 +100,7 @@ export function createRoutesStub(
     future,
   }: RoutesTestStubProps) {
     let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let reactRouterContextRef = React.useRef<FrameworkContextObject>();
+    let frameworkContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
       reactRouterContextRef.current = {
