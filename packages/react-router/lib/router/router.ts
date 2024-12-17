@@ -35,7 +35,6 @@ import type {
   DefaultRouterContext,
   LoaderFunctionArgs,
   ActionFunctionArgs,
-  MiddlewareFunction,
   ClientMiddlewareFunction,
 } from "./utils";
 import {
@@ -255,14 +254,6 @@ export interface Router {
    * @param children The additional children routes
    */
   patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
-
-  /**
-   * @private
-   * PRIVATE DO NOT USE
-   */
-  __temporary__loadMiddlewareRouteImplementations(
-    matches: AgnosticDataRouteMatch[]
-  ): Promise<void>;
 
   /**
    * @private
@@ -3281,25 +3272,6 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  async function loadMiddlewareRoutes(matches: AgnosticDataRouteMatch[]) {
-    await Promise.all(
-      matches.map((m) =>
-        loadLazyRouteModule(m.route, mapRouteProperties, manifest)
-      )
-    );
-
-    // If we are not in the middle of an HMR revalidation and we changed the
-    // routes, provide a new identity and trigger a reflow via `updateState`
-    // to re-run memoized `router.routes` dependencies.
-    // HMR will already update the identity and reflow when it lands
-    // `inFlightDataRoutes` in `completeNavigation`
-    let isNonHMR = inFlightDataRoutes == null;
-    if (isNonHMR) {
-      dataRoutes = [...dataRoutes];
-      updateState({});
-    }
-  }
-
   router = {
     get basename() {
       return basename;
@@ -3332,7 +3304,6 @@ export function createRouter(init: RouterInit): Router {
     getBlocker,
     deleteBlocker,
     patchRoutes,
-    __temporary__loadMiddlewareRouteImplementations: loadMiddlewareRoutes,
     _internalFetchControllers: fetchControllers,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
@@ -4790,6 +4761,17 @@ async function callDataStrategyImpl(
       : undefined
   );
 
+  // If any routes has a `lazy` implementation and no statically defined `middleware`,
+  // then we have to resolve those `lazy` implementations before we can call
+  // `dataStrategy` so the middlewares will be available
+  await Promise.all(
+    matches.map((m, i) => {
+      if ("lazy" in m.route && !("middleware" in m.route)) {
+        return loadRouteDefinitionsPromises[i];
+      }
+    })
+  );
+
   let dsMatches = matches.map((match, i) => {
     let loadRoutePromise = loadRouteDefinitionsPromises[i];
     let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
@@ -4835,7 +4817,7 @@ async function callDataStrategyImpl(
     context: routerContext,
   });
 
-  // Wait for all routes to load here but 'swallow the error since we want
+  // Wait for all routes to load here but swallow the error since we want
   // it to bubble up from the `await loadRoutePromise` in `callLoaderOrAction` -
   // called from `match.resolve()`
   try {
