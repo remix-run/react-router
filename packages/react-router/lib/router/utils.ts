@@ -193,9 +193,7 @@ export interface ShouldRevalidateFunction {
   (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
-export interface LayoutComponentProps {
-  children: ReactNode
-}
+export type LayoutComponentProps = PropsWithChildren;
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
