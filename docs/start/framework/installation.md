@@ -11,7 +11,7 @@ Most projects start with a template. Let's use a basic template maintained by Re
 npx create-react-router@latest my-react-router-app
 ```
 
-You can also create a project using one of the many available deployment templates, which will configure your project for the hosting provider.
+You can also create a project using one of the many available [deployment templates](https://github.com/remix-run/react-router-templates), which will configure your project for the hosting provider.
 
 ```shellscript nonumber
 npx create-react-router@latest my-node-custom-server-react-router-app --template remix-run/react-router-templates/node-custom-server
