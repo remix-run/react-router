@@ -24,7 +24,7 @@ import jsesc from "jsesc";
 import colors from "picocolors";
 
 import * as Typegen from "../typegen";
-import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
+import { type RouteManifestEntry } from "../config/routes";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
 import { generate, parse } from "./babel";
@@ -44,77 +44,11 @@ import {
   ssrExternals,
 } from "../config/config";
 import * as WithProps from "./with-props";
-
-export async function resolveViteConfig({
-  configFile,
-  mode,
-  root,
-}: {
-  configFile?: string;
-  mode?: string;
-  root: string;
-}) {
-  let vite = await import("vite");
-
-  let viteConfig = await vite.resolveConfig(
-    { mode, configFile, root },
-    "build", // command
-    "production", // default mode
-    "production" // default NODE_ENV
-  );
-
-  if (typeof viteConfig.build.manifest === "string") {
-    throw new Error("Custom Vite manifest paths are not supported");
-  }
-
-  return viteConfig;
-}
-
-export async function extractPluginContext(viteConfig: Vite.ResolvedConfig) {
-  return viteConfig["__reactRouterPluginContext" as keyof typeof viteConfig] as
-    | ReactRouterPluginContext
-    | undefined;
-}
-
-export async function loadPluginContext({
-  configFile,
-  root,
-}: {
-  configFile?: string;
-  root?: string;
-}) {
-  if (!root) {
-    root = process.env.REACT_ROUTER_ROOT || process.cwd();
-  }
-
-  configFile =
-    configFile ??
-    findConfig(root, "vite.config", [
-      ".ts",
-      ".cts",
-      ".mts",
-      ".js",
-      ".cjs",
-      ".mjs",
-    ]);
-
-  if (!configFile) {
-    console.error(colors.red("Vite config file not found"));
-    process.exit(1);
-  }
-
-  let viteConfig = await resolveViteConfig({ configFile, root });
-  let ctx = await extractPluginContext(viteConfig);
-
-  if (!ctx) {
-    console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
-    );
-    process.exit(1);
-  }
-
-  return ctx;
-}
+import type {
+  ReactRouterPluginContext,
+  ReactRouterPluginSsrBuildContext,
+  ServerBundleBuildConfig,
+} from "./plugin-context";
 
 const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
 const CLIENT_ROUTE_EXPORTS = [
@@ -135,32 +69,6 @@ const ROUTE_ENTRY_QUERY_STRING = "?route-entry=1";
 
 const isRouteEntry = (id: string): boolean => {
   return id.endsWith(ROUTE_ENTRY_QUERY_STRING);
-};
-
-export type ServerBundleBuildConfig = {
-  routes: RouteManifest;
-  serverBundleId: string;
-};
-
-type ReactRouterPluginSsrBuildContext =
-  | {
-      isSsrBuild: false;
-      getReactRouterServerManifest?: never;
-      serverBundleBuildConfig?: never;
-    }
-  | {
-      isSsrBuild: true;
-      getReactRouterServerManifest: () => Promise<ReactRouterManifest>;
-      serverBundleBuildConfig: ServerBundleBuildConfig | null;
-    };
-
-export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
-  rootDirectory: string;
-  entryClientFilePath: string;
-  entryServerFilePath: string;
-  publicPath: string;
-  reactRouterConfig: ResolvedReactRouterConfig;
-  viteManifestEnabled: boolean;
 };
 
 let serverBuildId = VirtualModule.id("server-build");
@@ -1593,20 +1501,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
   ];
 };
-
-function findConfig(
-  dir: string,
-  basename: string,
-  extensions: string[]
-): string | undefined {
-  for (let ext of extensions) {
-    let name = basename + ext;
-    let file = path.join(dir, name);
-    if (fse.existsSync(file)) return file;
-  }
-
-  return undefined;
-}
 
 function addRefreshWrapper(
   reactRouterConfig: ResolvedReactRouterConfig,

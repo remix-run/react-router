@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { run } from "./run";
 import { parseArgs } from "./parse";
 
 let { input, flags, command } = parseArgs();
@@ -12,14 +13,12 @@ if (command === "dev") {
   process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 }
 
-import("./run").then(({ run }) => {
-  run(input, flags, command).then(
-    () => {
-      process.exit(0);
-    },
-    (error: unknown) => {
-      if (error) console.error(error);
-      process.exit(1);
-    }
-  );
-});
+run(input, flags, command).then(
+  () => {
+    process.exit(0);
+  },
+  (error: unknown) => {
+    if (error) console.error(error);
+    process.exit(1);
+  }
+);

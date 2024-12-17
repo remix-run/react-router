@@ -8,8 +8,8 @@ import {
   type ServerBundleBuildConfig,
   resolveViteConfig,
   extractPluginContext,
-  getServerBuildDirectory,
-} from "./plugin";
+} from "./plugin-context";
+import { getServerBuildDirectory } from "./plugin";
 import {
   type BuildManifest,
   type ServerBundlesBuildManifest,

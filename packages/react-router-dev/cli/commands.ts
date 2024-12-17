@@ -8,7 +8,7 @@ import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
-import { loadPluginContext } from "../vite/plugin";
+import { loadPluginContext } from "../vite/plugin-context";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
