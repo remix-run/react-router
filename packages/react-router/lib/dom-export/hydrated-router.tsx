@@ -174,11 +174,13 @@ function createHydratedRouter({
     context,
     hydrationData,
     mapRouteProperties,
-    dataStrategy: getSingleFetchDataStrategy(
-      ssrInfo.manifest,
-      ssrInfo.routeModules,
-      () => router
-    ),
+    dataStrategy: ssrInfo.context.isSpaMode
+      ? undefined
+      : getSingleFetchDataStrategy(
+          ssrInfo.manifest,
+          ssrInfo.routeModules,
+          () => router
+        ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,
