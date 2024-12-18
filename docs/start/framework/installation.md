@@ -23,7 +23,7 @@ You can now open your browser to `http://localhost:5173`
 
 You can [view the template on GitHub][default-template] to see how to manually set up your project.
 
-There are a number of [official templates][react-router-templates] available for you to get started with:
+We also have a number of [ready to deploy templates][react-router-templates] available for you to get started with:
 
 ```shellscript nonumber
 npx create-react-router@latest --template remix-run/react-router-templates/<template-name>
