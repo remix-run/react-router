@@ -288,8 +288,7 @@ Date: 2024-12-19
 - [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#710)
 - [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-serve/CHANGELOG.md#710)
 
-**Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
--->
+**Full Changelog**: [`v7.0.2...v7.1.0`](https://github.com/remix-run/react-router/compare/react-router@7.0.2...react-router@7.1.0)
 
 ## v7.0.2
 
