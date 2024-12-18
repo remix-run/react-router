@@ -65,6 +65,10 @@ All commits that fix bugs or add features need a test.
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
 
+Documentation is located in the `docs` directory. Once changes make their way into the `main` branch, they will automatically be published to the docs site.
+
+If you want to preview how the changes will look on the docs site, clone the [`react-router-website` repository](https://github.com/remix-run/react-router-website) and follow the instructions in `README.md` to view your changes locally.
+
 ## Development
 
 ### Packages
@@ -177,38 +181,3 @@ git checkout dev
 git merge main
 git push origin dev
 ```
-
-# Contributing to the [React Router docs](https://reactrouter.com/home)
-
-To get started contributing to the React Router docs, clone both the [`react-router` repository](https://github.com/remix-run/react-router) and the [`react-router-website` repository](https://github.com/remix-run/react-router-website), preferably into the same parent directory.
-
-```bash
-git clone https://github.com/remix-run/react-router.git
-git clone https://github.com/remix-run/react-router-website.git
-```
-
-## Editing the documentation
-
-To set up the `react-router` repository to be ready for documentation edits, run the following commands. 
-
-```bash
-cd react-router
-
-pnpm install && pnpm build && pnpm test
-```
-
-Once the project has been set up, you can make edits to documentation in the `/docs` directory.
-
-After making changes to the `/docs` repository, run the following command:
-
-```bash
-pnpm run docs
-```
-
-This will build the docs into the typedocs that are needed.
-
-## Previewing the documentation
-
-Navigate to the `react-router-website` repository. Follow the `react-router-website/README.md` instructions to get a local preview of the developer docs. 
-
-After configuring the `.env` file as specified in `react-router-website/README.md`, run `npm run dev`. You'll be able to access `http://localhost:3000/home`. From the React Router version tab in the navigation bar, select `local` to view the changes in your local directory. 
