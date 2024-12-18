@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## 8.0.0-pre.0
+
+### Patch Changes
+
+- Fix missing `fs-extra` dependency ([#12556](https://github.com/remix-run/react-router/pull/12556))
+
 ## 7.0.2
 
 ## 7.0.1

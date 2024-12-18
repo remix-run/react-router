@@ -1,5 +1,12 @@
 # `@react-router/node`
 
+## 8.0.0-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@8.0.0-pre.0`
+
 ## 7.0.2
 
 ### Patch Changes

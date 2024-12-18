@@ -1,5 +1,23 @@
 # `@react-router/dev`
 
+## 8.0.0-pre.0
+
+### Minor Changes
+
+- Add support for Vite v6 ([#12469](https://github.com/remix-run/react-router/pull/12469))
+
+### Patch Changes
+
+- Remove the leftover/unused `abortDelay` prop from `ServerRouter` and update the default `entry.server.tsx` to use the new `streamTimeout` value for Single Fetch ([#12478](https://github.com/remix-run/react-router/pull/12478))
+
+  - The `abortDelay` functionality was removed in v7 as it was coupled to the `defer` implementation from Remix v2, but this removal of this prop was missed
+  - If you were still using this prop in your `entry.server` file, it's likely your app is not aborting streams as you would expect and you will need to adopt the new [`streamTimeout`](https://reactrouter.com/explanation/special-files#streamtimeout) value introduced with Single Fetch
+
+- Updated dependencies:
+  - `react-router@8.0.0-pre.0`
+  - `@react-router/node@8.0.0-pre.0`
+  - `@react-router/serve@8.0.0-pre.0`
+
 ## 7.0.2
 
 ### Patch Changes
