@@ -216,6 +216,16 @@ Date: YYYY-MM-DD
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 -->
 
+## v6.28.1
+
+Date: 2024-12-19
+
+### Patch Changes
+
+- Allow users to opt out of v7 deprecation warnings by setting flags to `false` ([#12441](https://github.com/remix-run/react-router/pull/12441))
+
+**Full Changelog**: [`v6.28.0...v6.28.1`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@6.28.1)
+
 ## v6.28.0
 
 Date: 2024-11-06
