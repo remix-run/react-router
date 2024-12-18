@@ -65,6 +65,10 @@ All commits that fix bugs or add features need a test.
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
 
+Documentation is located in the `docs` directory. Once changes make their way into the `main` branch, they will automatically be published to the docs site.
+
+If you want to preview how the changes will look on the docs site, clone the [`react-router-website` repository](https://github.com/remix-run/react-router-website) and follow the instructions in `README.md` to view your changes locally.
+
 ## Development
 
 ### Packages
