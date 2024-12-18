@@ -1290,7 +1290,7 @@ export function createRouter(init: RouterInit): Router {
         initialized: true,
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
-        restoreScrollPosition: getSavedScrollPosition(
+        restoreScrollPosition: state.revalidation !== 'idle' ? false : getSavedScrollPosition(
           location,
           newState.matches || state.matches
         ),
