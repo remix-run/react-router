@@ -394,7 +394,37 @@ export default [
 
 [View our guide on configuring routes][configuring-routes] to learn more about the `routes.ts` file and helper functions to further simplify the route definitions.
 
-## 7. Boot the app
+### 7. Configure Typegen
+
+To improve developer experience React Router automatically generates route module type definitions based on `routes.ts` file. There are a couple of places needs to be updated to address it
+
+**👉 Add typegen dir to `.gitignore`**
+
+```ignore filename=.gitignore
+.react-router/
+```
+
+**👉 Include typegen as part of `tsconfig.app.json`**
+
+```json5 filename=tsconfig.json
+{
+  "compilerOptions": {
+    "rootDirs": [".", "./.react-router/types"],
+    // ...other options
+  },
+  "src": ["src", ".react-router/types/**/*"],
+}
+```
+
+**👉 Automate execution of typegen on project initialization**
+
+```json filename=package.json
+"scripts": {
+  "prepare": "react-router typegen"
+}
+```
+
+## 8. Boot the app
 
 At this point you should be fully migrated to the React Router Vite plugin. Go ahead and update your `dev` script and run the app to make sure everything is working.
 

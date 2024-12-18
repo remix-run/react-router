@@ -245,7 +245,37 @@ export default function Component() {
 
 [View our guide on configuring routes][configuring-routes] to learn more about the `routes.ts` file.
 
-## 7. Boot the app
+### 7. Configure Typegen
+
+To improve developer experience React Router automatically generates route module type definitions based on `routes.ts` file. There are a couple of places needs to be updated to address it
+
+**👉 Add typegen dir to `.gitignore`**
+
+```ignore filename=.gitignore
+.react-router/
+```
+
+**👉 Include typegen as part of `tsconfig.app.json`**
+
+```json5 filename=tsconfig.json
+{
+  "compilerOptions": {
+    "rootDirs": [".", "./.react-router/types"],
+    // ...other options
+  },
+  "src": ["src", ".react-router/types/**/*"],
+}
+```
+
+**👉 Automate execution of typegen on project initialization**
+
+```json filename=package.json
+"scripts": {
+  "prepare": "react-router typegen"
+}
+```
+
+## 8. Boot the app
 
 At this point you should be able to to boot the app and see the root layout.
 
@@ -263,7 +293,7 @@ Now make sure you can boot your app at this point before moving on:
 npm run dev
 ```
 
-## 8. Render your app
+## 9. Render your app
 
 To get back to rendering your app, we'll update the "catchall" route we setup earlier that matches all URLs so that your existing `<Routes>` get a chance to render.
 
@@ -279,7 +309,7 @@ export default function Component() {
 
 Your app should be back on the screen and working as usual!
 
-## 9. Migrate a route to a Route Module
+## 10. Migrate a route to a Route Module
 
 You can now incrementally migrate your routes to route modules.
 
