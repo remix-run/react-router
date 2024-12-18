@@ -290,7 +290,7 @@ If you want one of the special characters used for these route conventions to ac
 | `app/routes/weird-url.[_index].tsx` | `/weird-url/_index` |
 | `app/routes/dolla-bills-[$].tsx`    | `/dolla-bills-$`    |
 | `app/routes/[[so-weird]].tsx`       | `/[so-weird]`       |
-| `app/routes/reports.$id[.pdf].ts    | `/reports/123.pdf   |
+| `app/routes/reports.$id[.pdf].ts`   | `/reports/123.pdf`  |
 
 ## Folders for Organization
 
