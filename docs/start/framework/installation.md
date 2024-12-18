@@ -11,12 +11,6 @@ Most projects start with a template. Let's use a basic template maintained by Re
 npx create-react-router@latest my-react-router-app
 ```
 
-You can also create a project using one of the many available [deployment templates](https://github.com/remix-run/react-router-templates), which will configure your project for the hosting provider.
-
-```shellscript nonumber
-npx create-react-router@latest my-node-default-react-router-app --template remix-run/react-router-templates/default
-```
-
 Now change into the new directory and start the app
 
 ```shellscript nonumber
