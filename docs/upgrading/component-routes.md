@@ -245,7 +245,7 @@ export default function Component() {
 
 [View our guide on configuring routes][configuring-routes] to learn more about the `routes.ts` file.
 
-### 7. Configure Typegen
+## 7. Enable type safety
 
 To improve developer experience React Router automatically generates route module type definitions based on `routes.ts` file. There are a couple of places needs to be updated to address it
 
