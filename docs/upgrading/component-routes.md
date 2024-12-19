@@ -257,6 +257,8 @@ At this point you should be able to to boot the app and see the root layout.
 }
 ```
 
+> Note: Make sure to add `/.react-router/` to your `.gitignore` file to avoid tracking unnecessary files in your repository.
+
 Now make sure you can boot your app at this point before moving on:
 
 ```shellscript
