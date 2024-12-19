@@ -78,7 +78,7 @@ See the [Session API][session-api] for more all the methods available on the ses
 
 A login form might look something like this:
 
-```tsx filename=app/routes/login.tsx lines=[4-7,12-14,16,21,25,33-35,46,51,56,61]
+```tsx filename=app/routes/login.tsx lines=[4-7,12-14,16,22,25,33-35,46,51,56,61]
 import { data, redirect } from "react-router";
 import type { Route } from "./+types/login";
 
@@ -99,13 +99,14 @@ export async function loader({
     return redirect("/");
   }
 
-  const data = { error: session.get("error") };
-
-  return data(data, {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
+  return data(
+    { error: session.get("error") },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
 }
 
 export async function action({
