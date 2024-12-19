@@ -16,7 +16,6 @@ React Router v7 requires the following minimum versions:
 </docs-info>
 
 Most projects start with a template. Let's use a basic template maintained by React Router:
-Most projects start with a template. Let's use a basic template maintained by React Router:
 
 ```shellscript nonumber
 npx create-react-router@latest my-react-router-app
