@@ -11,7 +11,6 @@ import { StreamTransfer } from "./single-fetch";
 export interface ServerRouterProps {
   context: EntryContext;
   url: string | URL;
-  abortDelay?: number;
   nonce?: string;
 }
 
@@ -25,7 +24,6 @@ export interface ServerRouterProps {
 export function ServerRouter({
   context,
   url,
-  abortDelay,
   nonce,
 }: ServerRouterProps): ReactElement {
   if (typeof url === "string") {
@@ -79,7 +77,6 @@ export function ServerRouter({
           future: context.future,
           isSpaMode: context.isSpaMode,
           serializeError: context.serializeError,
-          abortDelay,
           renderMeta: context.renderMeta,
         }}
       >

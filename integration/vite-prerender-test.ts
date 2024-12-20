@@ -150,9 +150,20 @@ function listAllFiles(_dir: string) {
 test.describe("Prerendering", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
+  let _consoleError: typeof console.error;
+  let _consoleWarn: typeof console.warn;
+
+  test.beforeAll(() => {
+    _consoleError = console.error;
+    console.error = () => {};
+    _consoleWarn = console.warn;
+    console.warn = () => {};
+  });
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = _consoleError;
+    console.warn = _consoleWarn;
   });
 
   test("Prerenders known static routes when true is specified", async () => {

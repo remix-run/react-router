@@ -1,5 +1,13 @@
 # `react-router`
 
+## 7.1.0
+
+### Patch Changes
+
+- Throw unwrapped single fetch redirect to align with pre-single fetch behavior ([#12506](https://github.com/remix-run/react-router/pull/12506))
+- Ignore redirects when inferring loader data types ([#12527](https://github.com/remix-run/react-router/pull/12527))
+- Remove `<Link prefetch>` warning which suffers from false positives in a lazy route discovery world ([#12485](https://github.com/remix-run/react-router/pull/12485))
+
 ## 7.0.2
 
 ### Patch Changes
@@ -30,7 +38,7 @@
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 

@@ -166,7 +166,7 @@ test.describe("root route", () => {
         files: {
           "app/root.tsx": js`
             import * as React from "react";
-            import { Await, Scripts, useRouteError, useRouteLoaderData } from "react-router";
+            import { Scripts, useRouteError, useRouteLoaderData } from "react-router";
             export function Layout({ children }) {
               let data = useRouteLoaderData("root");
               return (
@@ -297,8 +297,7 @@ test.describe("root route", () => {
         files: {
           "app/root.tsx": js`
             import * as React from "react";
-            import { defer } from "@react-router/node";
-            import { Await, Scripts, useRouteError, useRouteLoaderData } from "react-router";
+            import { Scripts, useRouteLoaderData } from "react-router";
             export function Layout({ children }) {
               let data = useRouteLoaderData("root");
               return (

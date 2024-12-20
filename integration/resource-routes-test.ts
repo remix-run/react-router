@@ -13,12 +13,15 @@ test.describe("loader in an app", async () => {
   let appFixture: AppFixture;
   let fixture: Fixture;
   let _consoleError: typeof console.error;
+  let _consoleWarn: typeof console.warn;
 
   let SVG_CONTENTS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#000" stroke-width="4" aria-label="Chicken"><path d="M48.1 34C22.1 32 1.4 51 2.5 67.2c1.2 16.1 19.8 17 29 17.8H89c15.7-6.6 6.3-18.9.3-20.5A28 28 0 0073 41.7c-.5-7.2 3.4-11.6 6.9-15.3 8.5 2.6 8-8 .8-7.2.6-6.5-12.3-5.9-6.7 2.7l-3.7 5c-6.9 5.4-10.9 5.1-22.2 7zM48.1 34c-38 31.9 29.8 58.4 25 7.7M70.3 26.9l5.4 4.2"/></svg>`;
 
   test.beforeAll(async () => {
     _consoleError = console.error;
     console.error = () => {};
+    _consoleWarn = console.warn;
+    console.warn = () => {};
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
@@ -131,6 +134,7 @@ test.describe("loader in an app", async () => {
   test.afterAll(() => {
     appFixture.close();
     console.error = _consoleError;
+    console.warn = _consoleWarn;
   });
 
   test.describe("with JavaScript", () => {

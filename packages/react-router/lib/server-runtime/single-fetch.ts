@@ -313,11 +313,12 @@ export function encodeViaTurboStream(
 ) {
   let controller = new AbortController();
   // How long are we willing to wait for all of the promises in `data` to resolve
-  // before timing out?  We default this to 50ms shorter than the default value for
-  // `ABORT_DELAY` in our built-in `entry.server.tsx` so that once we reject we
-  // have time to flush the rejections down through React's rendering stream before `
-  // we call abort() on that.  If the user provides their own it's up to them to
-  // decouple the aborting of the stream from the aborting of React's renderToPipeableStream
+  // before timing out?  We default this to 50ms shorter than the default value
+  // of 5000ms we had in `ABORT_DELAY` in Remix v2 that folks may still be using
+  // in RR v7 so that once we reject we have time to flush the rejections down
+  // through React's rendering stream before we call `abort()` on that.  If the
+  // user provides their own it's up to them to decouple the aborting of the
+  // stream from the aborting of React's `renderToPipeableStream`
   let timeoutId = setTimeout(
     () => controller.abort(new Error("Server Timeout")),
     typeof streamTimeout === "number" ? streamTimeout : 4950
