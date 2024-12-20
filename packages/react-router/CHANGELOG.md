@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.28.1
+
+### Patch Changes
+
+- Allow users to opt out of deprecation warnings by setting flags to false ([#12441](https://github.com/remix-run/react-router/pull/12441))
+
 ## 6.28.0
 
 ### Minor Changes
