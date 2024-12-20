@@ -394,11 +394,23 @@ export interface StaticHandlerContext {
   _deepestRenderedBoundaryId?: string | null;
 }
 
+type StaticRenderFunction = (
+  context: StaticHandlerContext
+) => Promise<Response>;
+
 /**
  * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
 export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
+  respond(
+    request: Request,
+    render: StaticRenderFunction,
+    opts?: {
+      requestContext?: unknown;
+      dataStrategy?: DataStrategyFunction;
+    }
+  ): Promise<Response>;
   query(
     request: Request,
     opts?: {
@@ -817,6 +829,8 @@ export function createRouter(init: RouterInit): Router {
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
+
+  // TODO: Should this be a singleton or fresh per request?
   let routerContext = typeof init.context !== "undefined" ? init.context : {};
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategy;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
@@ -3345,6 +3359,46 @@ export function createStaticHandler(
     manifest
   );
 
+  async function respond(
+    request: Request,
+    render: StaticRenderFunction,
+    {
+      requestContext,
+      dataStrategy,
+    }: Parameters<StaticHandler["respond"]>[2] = {}
+  ) {
+    let url = new URL(request.url);
+    let location = createLocation("", createPath(url), null, "default");
+    let matches = matchRoutes(dataRoutes, location, basename);
+
+    if (!matches) {
+      throw new Error("404");
+    }
+
+    let response = await runMiddlewarePipeline(
+      {
+        request,
+        matches,
+        params: matches[0].params,
+        context: requestContext,
+      },
+      matches.length - 1,
+      async () => {
+        let context = await query(request, {
+          requestContext,
+          dataStrategy: dataStrategy || defaultDataStrategyWithoutMiddleware,
+        });
+        return new Response(JSON.stringify(context), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+      true
+    );
+
+    // FIXME: clean this up
+    return response as unknown as Response;
+  }
+
   /**
    * The query() method is intended for document requests, in which we want to
    * call an optional action and potentially multiple loaders for all nested
@@ -3894,6 +3948,7 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
+    respond,
     query,
     queryRoute,
   };
@@ -4614,6 +4669,20 @@ async function loadLazyRouteModule(
 
 // Default implementation of `dataStrategy` which calls middleware and fetches
 // all loaders in parallel
+async function defaultDataStrategyWithoutMiddleware(
+  args: DataStrategyFunctionArgs
+): ReturnType<DataStrategyFunction> {
+  let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
+  let keyedResults: Record<string, DataStrategyResult> = {};
+  let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
+  results.forEach((result, i) => {
+    keyedResults[matchesToLoad[i].route.id] = result;
+  });
+  return keyedResults;
+}
+
+// Default implementation of `dataStrategy` which calls middleware and fetches
+// all loaders in parallel
 async function defaultDataStrategy(
   args: DataStrategyFunctionArgs
 ): ReturnType<DataStrategyFunction> {
@@ -4649,13 +4718,16 @@ export async function runMiddlewarePipeline(
     params,
     context,
     matches,
-  }: Omit<DataStrategyFunctionArgs, "fetcherKey">,
+  }: (LoaderFunctionArgs | ActionFunctionArgs) & {
+    matches: AgnosticDataRouteMatch[];
+  },
   lastIndex: number,
-  handler: (r: Record<string, DataStrategyResult>) => unknown
+  handler: (r: Record<string, DataStrategyResult>) => unknown,
+  returnHandlerResult = false
 ): Promise<Record<string, DataStrategyResult>> {
   let keyedResults: Record<string, DataStrategyResult> = {};
   try {
-    await callRouteMiddleware(
+    let result = await callRouteMiddleware(
       matches
         .slice(0, lastIndex + 1)
         .flatMap((m) =>
@@ -4666,9 +4738,12 @@ export async function runMiddlewarePipeline(
       0,
       { request, params, context },
       keyedResults,
-      handler
+      handler,
+      returnHandlerResult
     );
-    return keyedResults;
+    // TODO: Clean this up
+    // @ts-expect-error Unsure the best way to handle this for now
+    return returnHandlerResult ? result : keyedResults;
   } catch (e) {
     if (!(e instanceof MiddlewareError)) {
       throw e;
@@ -4696,8 +4771,9 @@ async function callRouteMiddleware(
   idx: number,
   args: LoaderFunctionArgs | ActionFunctionArgs,
   keyedResults: Record<string, DataStrategyResult>,
-  handler: (r: Record<string, DataStrategyResult>) => void
-): Promise<void> {
+  handler: (r: Record<string, DataStrategyResult>) => void,
+  returnHandlerResult = false
+): Promise<unknown> {
   let { request } = args;
   if (request.signal.aborted) {
     if (request.signal.reason) {
@@ -4711,8 +4787,8 @@ async function callRouteMiddleware(
   let tuple = middlewares[idx];
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
-    await handler(keyedResults);
-    return;
+    let result = await handler(keyedResults);
+    return returnHandlerResult ? result : undefined;
   }
 
   let [routeId, middleware] = tuple;
@@ -4722,20 +4798,23 @@ async function callRouteMiddleware(
       throw new Error("You may only call `next()` once per middleware");
     }
     nextCalled = true;
-    await callRouteMiddleware(
+    let result = await callRouteMiddleware(
       middlewares,
       idx + 1,
       args,
       keyedResults,
-      handler
+      handler,
+      returnHandlerResult
     );
+    return returnHandlerResult ? result : undefined;
   };
 
   try {
-    await middleware(args, next);
+    let result = await middleware(args, next);
     if (!nextCalled) {
-      await next();
+      result = await next();
     }
+    return returnHandlerResult ? result : undefined;
   } catch (e) {
     if (e instanceof MiddlewareError) {
       throw e;
