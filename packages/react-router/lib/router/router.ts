@@ -271,7 +271,7 @@ export interface Router {
 
 /**
  * State maintained internally by the router.  During a navigation, all states
- * reflect the the "old" location unless otherwise noted.
+ * reflect the "old" location unless otherwise noted.
  */
 export interface RouterState {
   // TODO: (v7) should we consider renaming this `navigationType` to align with
