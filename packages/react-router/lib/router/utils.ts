@@ -138,13 +138,15 @@ type BaseMiddlewareFunction<Result, Context> = {
  * Server-side route middleware function signature
  */
 export type MiddlewareFunction<Context = DefaultRouterContext> =
-  BaseMiddlewareFunction<Response, Context>;
+  // TODO: Change this from unknown to Response
+  BaseMiddlewareFunction<unknown, Context>;
 
 /**
  * Client-side route middleware function signature
  */
 export type ClientMiddlewareFunction<Context = DefaultRouterContext> =
-  BaseMiddlewareFunction<undefined, Context>;
+  // TODO: Change this from unknown to undefined
+  BaseMiddlewareFunction<unknown, Context>;
 
 /**
  * Arguments passed to loader functions
