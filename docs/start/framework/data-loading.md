@@ -9,6 +9,8 @@ Data is provided to the route component from `loader` and `clientLoader`.
 
 Loader data is automatically serialized from loaders and deserialized in components. In addition to primitive values like strings and numbers, loaders can return promises, maps, sets, dates and more.
 
+The type for the `loaderData` prop is [automatically generated][type-safety].
+
 ## Client Data Loading
 
 `clientLoader` is used to fetch data on the client. This is useful for pages or full projects that you'd prefer to fetch data from the browser only.
@@ -124,10 +126,57 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function clientLoader({
+  serverLoader,
   params,
 }: Route.ClientLoaderArgs) {
   const res = await fetch(`/api/products/${params.pid}`);
-  return res.json();
+  return { ...serverData, ...res.json() };
+}
+
+export default function Product({
+  loaderData,
+}: Route.ComponentProps) {
+  const { name, description } = loaderData;
+
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>{description}</p>
+    </div>
+  );
+}
+```
+
+You can also force the client loader to run during hydration and before the page renders by setting the `hydrate` property on the function. In this situation you will want to render a `HydrateFallback` component to show a fallback UI while the client loader runs.
+
+```tsx filename=app/product.tsx
+// route("products/:pid", "./product.tsx");
+import type { Route } from "./+types/product";
+import { fakeDb } from "../db";
+
+export async function loader({ params }: Route.LoaderArgs) {
+  return fakeDb.getProduct(params.pid);
+}
+
+export async function clientLoader({
+  serverLoader,
+  params,
+}: Route.ClientLoader) {
+  const serverData = await serverLoader();
+  const res = await fetch(`/api/products/${params.pid}`);
+  return { ...serverData, ...res.json() };
+}
+
+// Note: if there is no `loader`, this is implied
+clientLoader.hydrate = true as const;
+
+export function HydrateFallback() {
+  return (
+    <div>
+      <h1>Product Loading...</h1>
+      <p>Description loading...</p>
+    </div>
+  );
 }
 
 export default function Product({
@@ -154,3 +203,4 @@ See also:
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching
 [data]: ../../api/react-router/data
+[type-safety]: ../../explanation/type-safety
