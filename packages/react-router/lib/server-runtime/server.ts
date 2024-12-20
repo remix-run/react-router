@@ -1,4 +1,4 @@
-import type { StaticHandler } from "../router/router";
+import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
 import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
 import {
@@ -342,111 +342,39 @@ async function handleDocumentRequest(
   handleError: (err: unknown) => void,
   criticalCss?: string
 ) {
-  let context;
   try {
-    context = await staticHandler.query(request, {
+    let response = await staticHandler.respond(request, renderHtml, {
       requestContext: loadContext,
     });
+    return response;
   } catch (error: unknown) {
     handleError(error);
     return new Response(null, { status: 500 });
   }
 
-  if (isResponse(context)) {
-    return context;
-  }
-
-  let headers = getDocumentHeaders(build, context);
-
-  // Skip response body for unsupported status codes
-  if (NO_BODY_STATUS_CODES.has(context.statusCode)) {
-    return new Response(null, { status: context.statusCode, headers });
-  }
-
-  // Sanitize errors outside of development environments
-  if (context.errors) {
-    Object.values(context.errors).forEach((err) => {
-      // @ts-expect-error This is "private" from users but intended for internal use
-      if (!isRouteErrorResponse(err) || err.error) {
-        handleError(err);
-      }
-    });
-    context.errors = sanitizeErrors(context.errors, serverMode);
-  }
-
-  // Server UI state to send to the client.
-  // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
-  // - Otherwise it's stringified into `serverHandoffString`
-  let state = {
-    loaderData: context.loaderData,
-    actionData: context.actionData,
-    errors: serializeErrors(context.errors, serverMode),
-  };
-  let entryContext: EntryContext = {
-    manifest: build.assets,
-    routeModules: createEntryRouteModules(build.routes),
-    staticHandlerContext: context,
-    criticalCss,
-    serverHandoffString: createServerHandoffString({
-      basename: build.basename,
-      criticalCss,
-      future: build.future,
-      isSpaMode: build.isSpaMode,
-    }),
-    serverHandoffStream: encodeViaTurboStream(
-      state,
-      request.signal,
-      build.entry.module.streamTimeout,
-      serverMode
-    ),
-    renderMeta: {},
-    future: build.future,
-    isSpaMode: build.isSpaMode,
-    serializeError: (err) => serializeError(err, serverMode),
-  };
-
-  let handleDocumentRequestFunction = build.entry.module.default;
-  try {
-    return await handleDocumentRequestFunction(
-      request,
-      context.statusCode,
-      headers,
-      entryContext,
-      loadContext
-    );
-  } catch (error: unknown) {
-    handleError(error);
-
-    let errorForSecondRender = error;
-
-    // If they threw a response, unwrap it into an ErrorResponse like we would
-    // have for a loader/action
-    if (isResponse(error)) {
-      try {
-        let data = await unwrapResponse(error);
-        errorForSecondRender = new ErrorResponseImpl(
-          error.status,
-          error.statusText,
-          data
-        );
-      } catch (e) {
-        // If we can't unwrap the response - just leave it as-is
-      }
+  async function renderHtml(context: StaticHandlerContext) {
+    if (isResponse(context)) {
+      return context;
     }
 
-    // Get a new StaticHandlerContext that contains the error at the right boundary
-    context = getStaticContextFromError(
-      staticHandler.dataRoutes,
-      context,
-      errorForSecondRender
-    );
+    let headers = getDocumentHeaders(build, context);
+
+    // Skip response body for unsupported status codes
+    if (NO_BODY_STATUS_CODES.has(context.statusCode)) {
+      return new Response(null, { status: context.statusCode, headers });
+    }
 
     // Sanitize errors outside of development environments
     if (context.errors) {
+      Object.values(context.errors).forEach((err) => {
+        // @ts-expect-error This is "private" from users but intended for internal use
+        if (!isRouteErrorResponse(err) || err.error) {
+          handleError(err);
+        }
+      });
       context.errors = sanitizeErrors(context.errors, serverMode);
     }
 
-    // Get a new entryContext for the second render pass
     // Server UI state to send to the client.
     // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
     // - Otherwise it's stringified into `serverHandoffString`
@@ -455,11 +383,14 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: serializeErrors(context.errors, serverMode),
     };
-    entryContext = {
-      ...entryContext,
+    let entryContext: EntryContext = {
+      manifest: build.assets,
+      routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
+      criticalCss,
       serverHandoffString: createServerHandoffString({
         basename: build.basename,
+        criticalCss,
         future: build.future,
         isSpaMode: build.isSpaMode,
       }),
@@ -470,8 +401,12 @@ async function handleDocumentRequest(
         serverMode
       ),
       renderMeta: {},
+      future: build.future,
+      isSpaMode: build.isSpaMode,
+      serializeError: (err) => serializeError(err, serverMode),
     };
 
+    let handleDocumentRequestFunction = build.entry.module.default;
     try {
       return await handleDocumentRequestFunction(
         request,
@@ -480,9 +415,76 @@ async function handleDocumentRequest(
         entryContext,
         loadContext
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleError(error);
-      return returnLastResortErrorResponse(error, serverMode);
+
+      let errorForSecondRender = error;
+
+      // If they threw a response, unwrap it into an ErrorResponse like we would
+      // have for a loader/action
+      if (isResponse(error)) {
+        try {
+          let data = await unwrapResponse(error);
+          errorForSecondRender = new ErrorResponseImpl(
+            error.status,
+            error.statusText,
+            data
+          );
+        } catch (e) {
+          // If we can't unwrap the response - just leave it as-is
+        }
+      }
+
+      // Get a new StaticHandlerContext that contains the error at the right boundary
+      context = getStaticContextFromError(
+        staticHandler.dataRoutes,
+        context,
+        errorForSecondRender
+      );
+
+      // Sanitize errors outside of development environments
+      if (context.errors) {
+        context.errors = sanitizeErrors(context.errors, serverMode);
+      }
+
+      // Get a new entryContext for the second render pass
+      // Server UI state to send to the client.
+      // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
+      // - Otherwise it's stringified into `serverHandoffString`
+      let state = {
+        loaderData: context.loaderData,
+        actionData: context.actionData,
+        errors: serializeErrors(context.errors, serverMode),
+      };
+      entryContext = {
+        ...entryContext,
+        staticHandlerContext: context,
+        serverHandoffString: createServerHandoffString({
+          basename: build.basename,
+          future: build.future,
+          isSpaMode: build.isSpaMode,
+        }),
+        serverHandoffStream: encodeViaTurboStream(
+          state,
+          request.signal,
+          build.entry.module.streamTimeout,
+          serverMode
+        ),
+        renderMeta: {},
+      };
+
+      try {
+        return await handleDocumentRequestFunction(
+          request,
+          context.statusCode,
+          headers,
+          entryContext,
+          loadContext
+        );
+      } catch (error: any) {
+        handleError(error);
+        return returnLastResortErrorResponse(error, serverMode);
+      }
     }
   }
 }
