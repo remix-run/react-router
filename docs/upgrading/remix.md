@@ -5,6 +5,16 @@ order: 2
 
 # Upgrading from Remix
 
+<docs-info>
+
+React Router v7 requires the following minimum versions:
+
+- `node@20`
+- `react@18`
+- `react-dom@18`
+
+</docs-info>
+
 React Router v7 is the next major version of Remix after v2 (see our ["Incremental Path to React 19" blog post][incremental-path-to-react-19] for more information).
 
 If you have enabled all [Remix v2 future flags][v2-future-flags], upgrading from Remix v2 to React Router v7 mainly involves updating dependencies.
