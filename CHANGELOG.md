@@ -223,6 +223,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-61)
   - [v6.0.0](#v600)
 
+</details>
+
 <!-- To add a new release, copy from this template:
 
 ## v7.X.Y
