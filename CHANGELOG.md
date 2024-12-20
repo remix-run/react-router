@@ -257,7 +257,7 @@ Date: YYYY-MM-DD
 
 ## v7.1.0
 
-Date: 2024-12-19
+Date: 2024-12-20
 
 ### Minor Changes
 
