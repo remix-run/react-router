@@ -124,7 +124,7 @@ type ServerDataFunctionArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
 export type CreateServerMiddlewareArgs<T extends RouteInfo> =
   ServerDataFunctionArgs<T>;
 
-export type ServerMiddlewareNextFunction = MiddlewareFunction;
+export type ServerMiddlewareNextFunction = Parameters<MiddlewareFunction>[1];
 
 export type CreateClientMiddlewareArgs<T extends RouteInfo> =
   Parameters<ClientMiddlewareFunction>[0];

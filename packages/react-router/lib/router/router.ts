@@ -3388,9 +3388,11 @@ export function createStaticHandler(
           requestContext,
           dataStrategy: dataStrategy || defaultDataStrategyWithoutMiddleware,
         });
-        return new Response(JSON.stringify(context), {
-          headers: { "Content-Type": "application/json" },
-        });
+        if (isResponse(context)) {
+          return context;
+        }
+        let res = await render(context);
+        return res;
       },
       true
     );
