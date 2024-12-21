@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.1.1-pre.0
+
+### Patch Changes
+
+- Fix for a crash when optional args are passed to the CLI ([`5c8ffd805`](https://github.com/remix-run/react-router/commit/5c8ffd80584bc1b931a663d56d511755b69ce5b5))
+- Updated dependencies:
+  - `react-router@7.1.1-pre.0`
+  - `@react-router/node@7.1.1-pre.0`
+  - `@react-router/serve@7.1.1-pre.0`
+
 ## 7.1.0
 
 ### Minor Changes
