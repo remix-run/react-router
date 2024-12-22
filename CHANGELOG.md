@@ -13,6 +13,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.1.1](#v711)
+    - [Patch Changes](#patch-changes-711)
   - [v7.1.0](#v710)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
@@ -291,6 +293,16 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
+
+## v7.1.1
+
+Date: 2024-12-22
+
+### Patch Changes
+
+- `@react-router/dev` - Fix for a crash when optional args are passed to the CLI ([#12609](https://github.com/remix-run/react-router/pull/12609))
+
+**Full Changelog**: [`v7.1.0...v7.1.1`](https://github.com/remix-run/react-router/compare/react-router@7.1.0...react-router@7.1.1)
 
 ## v7.1.0
 
