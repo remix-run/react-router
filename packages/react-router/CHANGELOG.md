@@ -40,7 +40,7 @@
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
