@@ -108,18 +108,8 @@ Hotfix releases follow the same process as standard releases above, but the `rel
 - Once the stable release is out:
   - Merge `release-v6` back to `v6` with a **Normal Merge**
   - **Do not** merge `release-v6` to `main`
-  - Copy the updated root `CHANGELOG.md` entries for the `6.X.Y` release to `main` and `dev`
-    - `git checkout main`
-    - `git diff react-router@6.X.Y...react-router@6.X.Y -- "***CHANGELOG.md" > ./docs.patch`
-    - `git apply ./docs.patch`
-    - `git checkout dev`
-    - `git apply ./docs.patch`
-    - `rm ./docs.patch`
-  - Copy the docs changes to `main` so they show up on the live docs site for v6
-    - `git checkout main`
-    - `git diff react-router@6.X.Y...react-router@6.X.Y docs/ > ./docs.patch`
-    - `git apply ./docs.patch`
-    - `rm ./docs.patch`
+  - Manually copy the new root `CHANGELOG.md` entry to `main` and `dev`
+    - We don't worry about backporting individual `packages/*/CHANGELOG.md` updates to `main` for subsequent v6 releases
   - The _code_ changes should already be in the `dev` branch
     - This should have happened at the time the v6 change was made (except for changes such as deprecation warnings)
     - Confirm that the commits in this release are all included in `dev` already, and if not you can manually bring them over by cherry-picking the commit or re-doing the work
