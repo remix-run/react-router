@@ -1,14 +1,14 @@
 # `@react-router/dev`
 
-## 7.1.1-pre.0
+## 7.1.1
 
 ### Patch Changes
 
 - Fix for a crash when optional args are passed to the CLI ([`5b1ca202f`](https://github.com/remix-run/react-router/commit/5b1ca202f77ef342db0109c6b791d33188077cd0))
 - Updated dependencies:
-  - `react-router@7.1.1-pre.0`
-  - `@react-router/node@7.1.1-pre.0`
-  - `@react-router/serve@7.1.1-pre.0`
+  - `react-router@7.1.1`
+  - `@react-router/node@7.1.1`
+  - `@react-router/serve@7.1.1`
 
 ## 7.1.0
 
@@ -74,7 +74,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 
