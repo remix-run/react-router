@@ -738,6 +738,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
 
+        let viteClientConditions: string[] =
+          viteUserConfig.resolve?.conditions ??
+          "defaultClientConditions" in vite
+            ? Array.from(vite.defaultClientConditions)
+            : [];
+        let viteServerConditions: string[] =
+          viteUserConfig.ssr?.resolve?.conditions ??
+          "defaultServerConditions" in vite
+            ? Array.from(vite.defaultServerConditions)
+            : [];
+
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
         });
@@ -804,9 +815,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ssr: {
             external: ssrExternals,
             resolve: {
-              conditions: viteCommand === "build" ? [] : ["development"],
+              conditions:
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
               externalConditions:
-                viteCommand === "build" ? [] : ["development"],
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
             },
           },
           optimizeDeps: {
@@ -853,7 +869,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router/dom",
               "react-router-dom",
             ],
-            conditions: viteCommand === "build" ? [] : ["development"],
+            conditions:
+              viteCommand === "build"
+                ? viteClientConditions
+                : ["development", ...viteClientConditions],
           },
           base: viteUserConfig.base,
 

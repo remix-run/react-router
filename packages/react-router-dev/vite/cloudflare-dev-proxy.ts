@@ -4,6 +4,7 @@ import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
+import { preloadViteEsm, importViteEsmSync } from "./import-vite-esm-sync";
 
 let serverBuildId = "virtual:react-router/server-build";
 
@@ -43,13 +44,23 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
   return {
     name: PLUGIN_NAME,
-    config: () => ({
-      ssr: {
-        resolve: {
-          externalConditions: ["workerd", "worker"],
+    config: async (userConfig) => {
+      await preloadViteEsm();
+      const vite = importViteEsmSync();
+      const serverConditions =
+        userConfig.ssr?.resolve?.externalConditions ??
+        "defaultServerConditions" in vite
+          ? vite.defaultServerConditions
+          : [];
+
+      return {
+        ssr: {
+          resolve: {
+            externalConditions: ["workerd", "worker", ...serverConditions],
+          },
         },
-      },
-    }),
+      };
+    },
     configResolved: (viteConfig) => {
       let pluginIndex = (name: string) =>
         viteConfig.plugins.findIndex((plugin) => plugin.name === name);
