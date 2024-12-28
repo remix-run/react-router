@@ -167,6 +167,10 @@ export type ReactRouterConfig = {
   ssr?: boolean;
 };
 
+export function defineConfig(config: ReactRouterConfig): ReactRouterConfig {
+  return config;
+}
+
 export type ResolvedReactRouterConfig = Readonly<{
   /**
    * The absolute path to the application source directory.
