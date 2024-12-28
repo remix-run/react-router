@@ -53,7 +53,6 @@ export default function MyComponent({
         <Await resolve={nonCriticalData}>
           {(value) => <h3>Non critical value: {value}</h3>}
         </Await>
-        <NonCriticalUI p={nonCriticalData} />
       </React.Suspense>
     </div>
   );
