@@ -354,6 +354,43 @@ describe("fetchers", () => {
       expect(t.router.state.fetchers.size).toBe(0);
     });
 
+    it("fetchers removed from data layer upon unmount", async () => {
+      let t = initializeTest();
+
+      let subscriber = jest.fn();
+      t.router.subscribe(subscriber);
+
+      let key = "key";
+      t.router.getFetcher(key); // mount
+      expect(t.router.state.fetchers.size).toBe(0);
+
+      let A = await t.fetch("/foo", key);
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+      expect(subscriber.mock.calls.length).toBe(1);
+      expect(subscriber.mock.calls[0][0].fetchers.get("key").state).toBe(
+        "loading"
+      );
+      subscriber.mockReset();
+
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(subscriber.mock.calls.length).toBe(1);
+      // Fetcher removed from router state upon return to idle
+      expect(subscriber.mock.calls[0][0].fetchers.size).toBe(0);
+      // But still mounted so not deleted from data layer yet
+      expect(subscriber.mock.calls[0][1].deletedFetchers.length).toBe(0);
+      subscriber.mockReset();
+
+      t.router.deleteFetcher(key); // unmount
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(subscriber.mock.calls.length).toBe(1);
+      expect(subscriber.mock.calls[0][0].fetchers.size).toBe(0);
+      // Unmounted so can be deleted from data layer
+      expect(subscriber.mock.calls[0][1].deletedFetchers).toEqual(["key"]);
+      subscriber.mockReset();
+    });
+
     it("submitting fetchers persist until completion when removed during submitting phase", async () => {
       let t = initializeTest();
 
