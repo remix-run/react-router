@@ -1160,6 +1160,14 @@ export function createRouter(init: RouterInit): Router {
           }
         }
       });
+      deletedFetchers.forEach((key) => {
+        if (!state.fetchers.has(key)) {
+          // This fetcher returned to idle previously and was removed from
+          // `state.fetchers`.  It's now been unmounted so we can clean up the
+          // data from the react layer
+          deletedFetchersKeys.push(key);
+        }
+      });
     }
 
     // Iterate over a local copy so that if flushSync is used and we end up
