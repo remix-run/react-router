@@ -525,12 +525,12 @@ export function RouterProvider({
         viewTransitionOpts: viewTransitionOpts,
       }
     ) => {
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
           fetcherData.current.set(key, fetcher.data);
         }
       });
+      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
 
       let isViewTransitionUnavailable =
         router.window == null ||
