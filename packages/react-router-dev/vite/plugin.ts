@@ -1879,7 +1879,8 @@ async function handlePrerender(
     "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
-    let matches = matchRoutes(routes, path);
+    // Ensure we have a leading slash for matching
+    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
     let hasLoaders = matches?.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {
