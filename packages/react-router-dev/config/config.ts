@@ -23,6 +23,7 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
+import { isReactRouterRepo } from "./is-react-router-repo";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -720,7 +721,7 @@ export async function resolveEntryFiles({
   return { entryClientFilePath, entryServerFilePath };
 }
 
-export const ssrExternals = isInReactRouterMonorepo()
+export const ssrExternals = isReactRouterRepo()
   ? [
       // This is only needed within this repo because these packages
       // are linked to a directory outside of node_modules so Vite
@@ -735,18 +736,6 @@ export const ssrExternals = isInReactRouterMonorepo()
       "@react-router/serve",
     ]
   : undefined;
-
-function isInReactRouterMonorepo() {
-  // We use '@react-router/node' for this check since it's a
-  // dependency of this package and guaranteed to be in node_modules
-  let serverRuntimePath = path.dirname(
-    require.resolve("@react-router/node/package.json")
-  );
-  let serverRuntimeParentDir = path.basename(
-    path.resolve(serverRuntimePath, "..")
-  );
-  return serverRuntimeParentDir === "packages";
-}
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 

@@ -136,29 +136,6 @@ export const viteMajorTemplates = [
   templateDisplayName: string;
 }>;
 
-function resolveDevPackageDir(root: string) {
-  return path.join(root, "node_modules", "@react-router", "dev");
-}
-
-function resolveDevPackageNodeModulesDir(root: string) {
-  return path.join(resolveDevPackageDir(root), "node_modules");
-}
-
-async function copyDirContents(
-  srcDir: string,
-  destDir: string,
-  filter?: (file: string) => boolean
-) {
-  for (const file of await fse.readdir(srcDir)) {
-    if (filter && !filter(path.normalize(file))) {
-      continue;
-    }
-    const srcFile = path.join(srcDir, file);
-    const destFile = path.join(destDir, file);
-    await fse.copy(srcFile, destFile, { errorOnExist: true });
-  }
-}
-
 export async function createProject(
   files: Record<string, string> = {},
   templateName: TemplateName = "vite-5-template"
@@ -169,27 +146,7 @@ export async function createProject(
 
   // base template
   let templateDir = path.resolve(__dirname, templateName);
-
-  // When we copy the template, we need to filter out the version of Vite
-  // installed locally within @react-router/dev. If we don't do this, the dev
-  // package doesn't use the version of Vite defined within the test template
-  // which means we can't run integration tests across different versions of
-  // Vite. Since pnpm uses symlinks for dependencies, we need to perform the
-  // copy in multiple steps so that we can filter at each level.
-  await fse.copy(templateDir, projectDir, {
-    errorOnExist: true,
-    filter: (src) => !path.normalize(src).endsWith("/@react-router/dev"),
-  });
-  await copyDirContents(
-    resolveDevPackageDir(templateDir),
-    resolveDevPackageDir(projectDir),
-    (file) => file !== "node_modules"
-  );
-  await copyDirContents(
-    resolveDevPackageNodeModulesDir(templateDir),
-    resolveDevPackageNodeModulesDir(projectDir),
-    (file) => file !== "vite"
-  );
+  await fse.copy(templateDir, projectDir, { errorOnExist: true });
 
   // user-defined files
   await Promise.all(

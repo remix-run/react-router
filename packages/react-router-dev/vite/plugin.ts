@@ -35,7 +35,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
-import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type ConfigLoader,
@@ -54,7 +54,7 @@ export async function resolveViteConfig({
   mode?: string;
   root: string;
 }) {
-  let vite = await import("vite");
+  let vite = getVite();
 
   let viteConfig = await vite.resolveConfig(
     { mode, configFile, root },
@@ -169,7 +169,7 @@ const resolveRelativeRouteFilePath = (
   route: RouteManifestEntry,
   reactRouterConfig: ResolvedReactRouterConfig
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let file = route.file;
   let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
 
@@ -201,7 +201,7 @@ const resolveChunk = (
   viteManifest: Vite.Manifest,
   absoluteFilePath: string
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let rootRelativeFilePath = vite.normalizePath(
     path.relative(ctx.rootDirectory, absoluteFilePath)
   );
@@ -729,10 +729,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       name: "react-router",
       config: async (_viteUserConfig, _viteConfigEnv) => {
         // Preload Vite's ESM build up-front as soon as we're in an async context
-        await preloadViteEsm();
+        await preloadVite();
 
         // Ensure sync import of Vite works after async preload
-        let vite = importViteEsmSync();
+        let vite = getVite();
 
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
@@ -948,7 +948,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           );
         }
 
-        let vite = importViteEsmSync();
+        let vite = getVite();
 
         let childCompilerConfigFile = await vite.loadConfigFromFile(
           {
@@ -1342,7 +1342,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return;
         }
 
-        let vite = importViteEsmSync();
+        let vite = getVite();
         let importerShort = vite.normalizePath(
           path.relative(ctx.rootDirectory, importer)
         );
@@ -1745,7 +1745,7 @@ function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
   file: string
 ): RouteManifestEntry | undefined {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file)
   );
