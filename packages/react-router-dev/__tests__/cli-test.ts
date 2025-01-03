@@ -1,5 +1,4 @@
 import childProcess from "node:child_process";
-import os from "node:os";
 import path from "node:path";
 import util from "node:util";
 import fse from "fs-extra";
@@ -8,7 +7,7 @@ import semver from "semver";
 let execFile = util.promisify(childProcess.execFile);
 
 const TEMP_DIR = path.join(
-  fse.realpathSync(os.tmpdir()),
+  path.join(__dirname, ".tmp"),
   `remix-tests-${Math.random().toString(32).slice(2)}`
 );
 

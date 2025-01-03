@@ -5,7 +5,7 @@ import type { ModuleNode, ViteDevServer } from "vite";
 
 import type { ResolvedReactRouterConfig } from "../config/config";
 import { resolveFileUrl } from "./resolve-file-url";
-import { importViteEsmSync } from "./import-vite-esm-sync";
+import { getVite } from "./vite";
 
 type ServerRouteManifest = ServerBuild["routes"];
 type ServerRoute = ServerRouteManifest[string];
@@ -63,7 +63,7 @@ const getStylesForFiles = async ({
   cssModulesManifest: Record<string, string>;
   files: string[];
 }): Promise<string | undefined> => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let viteMajor = parseInt(vite.version.split(".")[0], 10);
 
   let styles: Record<string, string> = {};

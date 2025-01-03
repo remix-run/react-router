@@ -1,12 +1,12 @@
 import * as path from "node:path";
 
-import { importViteEsmSync } from "./import-vite-esm-sync";
+import { getVite } from "./vite";
 
 export const resolveFileUrl = (
   { rootDirectory }: { rootDirectory: string },
   filePath: string
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let relativePath = path.relative(rootDirectory, filePath);
   let isWithinRoot =
     !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
