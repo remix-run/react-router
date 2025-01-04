@@ -47,6 +47,10 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
     config: async (userConfig) => {
       await preloadViteEsm();
       const vite = importViteEsmSync();
+      // a compatibility layer from Vite v6+ and below because
+      // Vite v6 overrides the default resolve.conditions, so we have to import them
+      // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
+      // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
       const serverConditions =
         userConfig.ssr?.resolve?.externalConditions ??
         "defaultServerConditions" in vite
