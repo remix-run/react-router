@@ -27,7 +27,7 @@ import * as Typegen from "../typegen";
 import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
-import { Babel, generate, parse, ParseResult, traverse } from "./babel";
+import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
@@ -1527,25 +1527,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           plugins: [[require("react-refresh/babel"), { skipEnvCheck: true }]],
           sourceMaps: true,
         });
-        return result === null
-          ? undefined
-          : { code: result.code!, map: result.map };
-      },
-    },
-    {
-      name: "react-router:react-refresh-wrapper",
-      transform(code, id) {
-        let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
-        if (!refreshContentRE.test(code)) return;
+        if (result === null) return;
 
-        let [filepath] = id.split("?");
-        let ast = parse(code, { sourceType: "module" });
-        addRefreshWrapper(ctx.reactRouterConfig, ast, id);
-        return generate(ast, {
-          sourceMaps: true,
-          filename: id,
-          sourceFileName: filepath,
-        });
+        code = result.code!;
+        let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
+        if (refreshContentRE.test(code)) {
+          code = addRefreshWrapper(ctx.reactRouterConfig, code, id);
+        }
+        return { code, map: result.map };
       },
     },
     {
@@ -1674,9 +1663,9 @@ function findConfig(
 
 function addRefreshWrapper(
   reactRouterConfig: ResolvedReactRouterConfig,
-  ast: ParseResult<Babel.File>,
+  code: string,
   id: string
-): void {
+): string {
   let route = getRoute(reactRouterConfig, id);
   let acceptExports = route
     ? [
@@ -1688,59 +1677,31 @@ function addRefreshWrapper(
         "shouldRevalidate",
       ]
     : [];
-
-  traverse(ast, {
-    Program(path) {
-      let header = parseWithoutSourceMaps(
-        "\n\n" +
-          beginCommentBoundary("REACT REFRESH HEADER") +
-          REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
-          endCommentBoundary("REACT REFRESH HEADER") +
-          "\n\n" +
-          beginCommentBoundary("REACT REFRESH BODY")
-      );
-
-      let footer = parseWithoutSourceMaps(
-        endCommentBoundary("REACT REFRESH BODY") +
-          "\n\n" +
-          beginCommentBoundary("REACT REFRESH FOOTER") +
-          REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
-            .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
-            .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id)) +
-          endCommentBoundary("REACT REFRESH FOOTER") +
-          "\n"
-      );
-
-      path.unshiftContainer("body", header.program.body);
-      path.pushContainer("body", footer.program.body);
-    },
-  });
+  return (
+    "\n\n" +
+    withCommentBoundaries(
+      "REACT REFRESH HEADER",
+      REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id))
+    ) +
+    "\n\n" +
+    withCommentBoundaries("REACT REFRESH BODY", code) +
+    "\n\n" +
+    withCommentBoundaries(
+      "REACT REFRESH FOOTER",
+      REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+        .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+        .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
+    ) +
+    "\n"
+  );
 }
 
-function parseWithoutSourceMaps(code: string) {
-  let ast = parse(code, { sourceType: "module" });
-  delete ast.loc;
-  ast.comments?.forEach((c) => {
-    delete c.loc;
-  });
-  traverse(ast, {
-    enter: (path) => {
-      delete path.node.loc;
-    },
-  });
-  return ast;
-}
-
-function beginCommentBoundary(label: string) {
+function withCommentBoundaries(label: string, text: string) {
   let begin = `// [BEGIN] ${label} `;
   begin += "-".repeat(80 - begin.length);
-  return `${begin}\n`;
-}
-
-function endCommentBoundary(label: string) {
   let end = `// [END] ${label} `;
   end += "-".repeat(80 - end.length);
-  return `\n${end}`;
+  return `${begin}\n${text}\n${end}`;
 }
 
 const REACT_REFRESH_HEADER = `
