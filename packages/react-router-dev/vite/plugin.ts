@@ -743,12 +743,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
         // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
         let viteClientConditions: string[] =
-          viteUserConfig.resolve?.conditions ??
           "defaultClientConditions" in vite
             ? Array.from(vite.defaultClientConditions)
             : [];
         let viteServerConditions: string[] =
-          viteUserConfig.ssr?.resolve?.conditions ??
           "defaultServerConditions" in vite
             ? Array.from(vite.defaultServerConditions)
             : [];

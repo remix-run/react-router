@@ -52,10 +52,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
       // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
       const serverConditions =
-        userConfig.ssr?.resolve?.externalConditions ??
-        "defaultServerConditions" in vite
-          ? vite.defaultServerConditions
-          : [];
+        "defaultServerConditions" in vite ? vite.defaultServerConditions : [];
 
       return {
         ssr: {
