@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.26.2",
+  "version": "7.1.1",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -18,42 +18,46 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "types": "./dist/index.d.ts",
-  "main": "./dist/index.js",
-  "unpkg": "./dist/umd/react-router.production.min.js",
-  "module": "./dist/index.mjs",
+  "types": "./dist/development/index.d.ts",
+  "main": "./dist/development/index.js",
+  "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
       "node": {
-        "types": "./dist/index.d.ts",
-        "module-sync": "./dist/index.mjs",
-        "default": "./dist/index.js"
+        "types": "./dist/development/index.d.ts",
+        "module-sync": "./dist/development/index.mjs",
+        "default": "./dist/development/index.js"
       },
       "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "default": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./dist/development/index.d.ts",
+        "default": "./dist/development/index.js"
       }
     },
-    "./types": {
-      "types": "./dist/lib/types.d.ts"
+    "./route-module": {
+      "import": {
+        "types": "./dist/development/lib/types/route-module.d.mts"
+      },
+      "default": {
+        "types": "./dist/development/lib/types/route-module.d.ts"
+      }
     },
     "./dom": {
       "node": {
-        "types": "./dist/dom-export.d.ts",
-        "module-sync": "./dist/dom-export.mjs",
-        "default": "./dist/dom-export.js"
+        "types": "./dist/development/dom-export.d.ts",
+        "module-sync": "./dist/development/dom-export.mjs",
+        "default": "./dist/development/dom-export.js"
       },
       "import": {
-        "types": "./dist/dom-export.d.mts",
-        "default": "./dist/dom-export.mjs"
+        "types": "./dist/development/dom-export.d.mts",
+        "default": "./dist/development/dom-export.mjs"
       },
       "default": {
-        "types": "./dist/dom-export.d.ts",
-        "default": "./dist/dom-export.js"
+        "types": "./dist/development/dom-export.d.ts",
+        "default": "./dist/development/dom-export.js"
       }
     },
     "./package.json": "./package.json"
@@ -77,10 +81,8 @@
   },
   "dependencies": {
     "@types/cookie": "^0.6.0",
-    "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^1.0.1",
     "set-cookie-parser": "^2.6.0",
-    "source-map": "^0.7.3",
     "turbo-stream": "2.4.0"
   },
   "devDependencies": {

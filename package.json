@@ -21,6 +21,9 @@
     "test:integration": "pnpm build && pnpm test:integration:run",
     "posttest:integration:run": "pnpm clean:integration",
     "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
+    "vite-ecosystem-ci:build": "pnpm build",
+    "vite-ecosystem-ci:before-test": "pnpm playwright install",
+    "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration",
     "changeset": "changeset",
     "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
@@ -103,12 +106,12 @@
     "semver": "^7.5.4",
     "tslib": "^2.6.2",
     "type-fest": "^2.19.0",
-    "typedoc": "^0.25.13",
+    "typedoc": "^0.26.11",
     "typescript": "^5.4.5",
     "undici": "^6.10.1",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
-    "vite": "^5.1.0",
+    "vite": "^6.0.0",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2"
   },
@@ -118,7 +121,7 @@
   "pnpm": {
     "patchedDependencies": {
       "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch",
-      "@changesets/assemble-release-plan@5.2.4": "patches/@changesets__assemble-release-plan@5.2.4.patch"
+      "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
     },
     "overrides": {
       "workerd": "1.20240614.0"

@@ -1,4 +1,3 @@
-import type { ErrorResponse, Fetcher, RouterState } from "react-router";
 import "@testing-library/jest-dom";
 import {
   act,
@@ -9,7 +8,12 @@ import {
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import type { RouteObject } from "../../index";
+import type {
+  RouteObject,
+  ErrorResponse,
+  Fetcher,
+  RouterState,
+} from "../../index";
 import {
   Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
@@ -5763,6 +5767,74 @@ function testDomRouter(
             // `:rt:`, or `:rp:` depending on `DataBrowserRouter`/`DataHashRouter`
             expect(container.innerHTML).toMatch(/(:r[0-9]?[a-z]:),my-key/)
           );
+        });
+
+        it("cleans up keyed fetcher data on unmount", async () => {
+          let count = 0;
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                loader() {
+                  return ++count;
+                },
+                Component() {
+                  let [shown, setShown] = React.useState(false);
+                  return (
+                    <div>
+                      <button onClick={() => setShown(!shown)}>
+                        {shown ? "Unmount" : "Mount"}
+                      </button>
+                      {shown ? <FetcherComponent /> : null}
+                    </div>
+                  );
+                },
+                ErrorBoundary() {
+                  let error = useRouteError();
+                  return <pre>{JSON.stringify(error)}</pre>;
+                },
+              },
+            ],
+            {
+              window: getWindow("/"),
+            }
+          );
+
+          render(<RouterProvider router={router} />);
+
+          function FetcherComponent() {
+            let fetcher = useFetcher({ key: "shared" });
+            return (
+              <div>
+                <p>{`Fetcher state:${fetcher.state}`}</p>
+                {fetcher.data != null ? (
+                  <p data-testid="value">{fetcher.data}</p>
+                ) : null}
+                <button onClick={() => fetcher.load(".")}>Fetch</button>
+              </div>
+            );
+          }
+
+          await waitFor(() => screen.getByText("Mount"));
+
+          fireEvent.click(screen.getByText("Mount"));
+          await waitFor(() => screen.getByText("Fetcher state:idle"));
+
+          fireEvent.click(screen.getByText("Fetch"));
+          await waitFor(() => screen.getByTestId("value"));
+          let value = screen.getByTestId("value").innerHTML;
+
+          fireEvent.click(screen.getByText("Unmount"));
+          await waitFor(() => screen.getByText("Mount"));
+
+          fireEvent.click(screen.getByText("Mount"));
+          await waitFor(() => screen.getByText("Fetcher state:idle"));
+          expect(screen.queryByTestId("value")).toBe(null);
+
+          fireEvent.click(screen.getByText("Fetch"));
+          await waitFor(() => screen.getByTestId("value"));
+          let value2 = screen.getByTestId("value").innerHTML;
+          expect(value2).not.toBe(value);
         });
       });
 

@@ -22,9 +22,13 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
+# v7 build files
+.react-router
+
 .wireit
 .eslintcache
 .tmp
+tsup.config.bundled_*.mjs
 /.env
 /NOTES.md
 

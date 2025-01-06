@@ -1,8 +1,11 @@
+import os from "node:os";
 import path from "node:path";
+import fse from "fs-extra";
 
 import type { RouteManifestEntry } from "../manifest";
 
 import {
+  flatRoutes,
   flatRoutesUniversal,
   getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
@@ -875,6 +878,38 @@ describe("flatRoutes", () => {
         ])
       );
       expect(routes).toHaveLength(3);
+    });
+  });
+
+  describe("throws expected errors", () => {
+    let tempDir = path.join(
+      os.tmpdir(),
+      "react-router-fs-routes-test",
+      Math.random().toString(36).substring(2, 15)
+    );
+
+    beforeEach(() => {
+      fse.mkdirSync(tempDir, { recursive: true });
+    });
+    afterEach(() => {
+      fse.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    test("root route is not found", () => {
+      expect(() => flatRoutes(tempDir)).toThrow(
+        `Could not find a root route module in the app directory: ${tempDir}`
+      );
+    });
+
+    test("routes dir is not found", () => {
+      const rootRoute = path.join(tempDir, "root.tsx");
+      fse.createFileSync(rootRoute);
+      expect(() => flatRoutes(tempDir)).toThrow(
+        `Could not find the routes directory: ${path.join(
+          tempDir,
+          "routes"
+        )}. Did you forget to create it?`
+      );
     });
   });
 });

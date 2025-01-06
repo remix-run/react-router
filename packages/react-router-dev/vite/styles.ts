@@ -3,8 +3,9 @@ import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
-import type { ResolvedReactRouterConfig } from "./config";
+import type { ResolvedReactRouterConfig } from "../config/config";
 import { resolveFileUrl } from "./resolve-file-url";
+import { getVite } from "./vite";
 
 type ServerRouteManifest = ServerBuild["routes"];
 type ServerRoute = ServerRouteManifest[string];
@@ -48,6 +49,9 @@ export const isCssUrlWithoutSideEffects = (url: string) => {
   return false;
 };
 
+const injectQuery = (url: string, query: string) =>
+  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
+
 const getStylesForFiles = async ({
   viteDevServer,
   rootDirectory,
@@ -59,6 +63,9 @@ const getStylesForFiles = async ({
   cssModulesManifest: Record<string, string>;
   files: string[];
 }): Promise<string | undefined> => {
+  let vite = getVite();
+  let viteMajor = parseInt(vite.version.split(".")[0], 10);
+
   let styles: Record<string, string> = {};
   let deps = new Set<ModuleNode>();
 
@@ -103,7 +110,17 @@ const getStylesForFiles = async ({
       try {
         let css = isCssModulesFile(dep.file)
           ? cssModulesManifest[dep.file]
-          : (await viteDevServer.ssrLoadModule(dep.url)).default;
+          : (
+              await viteDevServer.ssrLoadModule(
+                // We need the ?inline query in Vite v6 when loading CSS in SSR
+                // since it does not expose the default export for CSS in a
+                // server environment. This is to align with non-SSR
+                // environments. For backwards compatibility with v5 we keep
+                // using the URL without ?inline query because the HMR code was
+                // relying on the implicit SSR-client module graph relationship.
+                viteMajor >= 6 ? injectQuery(dep.url, "inline") : dep.url
+              )
+            ).default;
 
         if (css === undefined) {
           throw new Error();

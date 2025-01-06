@@ -46,7 +46,6 @@ ${colors.blueBright("react-router")}
     --config, -c        Use specified Vite config file (string)
     --no-typescript     Generate plain JavaScript files
   \`typegen\` Options:
-    --config, -c        Use specified Vite config file (string)
     --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
   ${colors.underline("Build your project")}:
@@ -76,7 +75,6 @@ ${colors.blueBright("react-router")}
 
    $ react-router typegen
    $ react-router typegen --watch
-   $ react-router typegen --config vite.react-router.config.ts
 `;
 
 /**
@@ -92,8 +90,8 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     versions.node &&
     semver.major(versions.node) < MINIMUM_NODE_VERSION
   ) {
-    throw new Error(
-      `️🚨 Oops, Node v${versions.node} detected. react-router requires ` +
+    console.warn(
+      `️⚠️ Oops, Node v${versions.node} detected. react-router requires ` +
         `a Node version greater than ${MINIMUM_NODE_VERSION}.`
     );
   }

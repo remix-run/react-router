@@ -1,5 +1,4 @@
 import childProcess from "node:child_process";
-import os from "node:os";
 import path from "node:path";
 import util from "node:util";
 import fse from "fs-extra";
@@ -8,7 +7,7 @@ import semver from "semver";
 let execFile = util.promisify(childProcess.execFile);
 
 const TEMP_DIR = path.join(
-  fse.realpathSync(os.tmpdir()),
+  path.join(__dirname, ".tmp"),
   `remix-tests-${Math.random().toString(32).slice(2)}`
 );
 
@@ -121,7 +120,6 @@ describe("remix CLI", () => {
             --config, -c        Use specified Vite config file (string)
             --no-typescript     Generate plain JavaScript files
           \`typegen\` Options:
-            --config, -c        Use specified Vite config file (string)
             --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
           Build your project:
@@ -150,8 +148,7 @@ describe("remix CLI", () => {
           Generate types for route modules:
 
            $ react-router typegen
-           $ react-router typegen --watch
-           $ react-router typegen --config vite.react-router.config.ts"
+           $ react-router typegen --watch"
       `);
     });
   });

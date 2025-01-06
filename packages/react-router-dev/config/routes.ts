@@ -1,6 +1,7 @@
-import { resolve, win32 } from "node:path";
+import * as Path from "pathe";
 import * as v from "valibot";
 import pick from "lodash/pick";
+
 import invariant from "../invariant";
 
 declare global {
@@ -124,7 +125,7 @@ export const resolvedRouteConfigSchema = v.array(routeConfigEntrySchema);
 type ResolvedRouteConfig = v.InferInput<typeof resolvedRouteConfigSchema>;
 
 /**
- * Route config to be exported via the `routes` export within `routes.ts`.
+ * Route config to be exported via the default export from `app/routes.ts`.
  */
 export type RouteConfig = ResolvedRouteConfig | Promise<ResolvedRouteConfig>;
 
@@ -138,7 +139,7 @@ export function validateRouteConfig({
   if (!routeConfig) {
     return {
       valid: false,
-      message: `No "routes" export defined in "${routeConfigFile}.`,
+      message: `Route config must be the default export in "${routeConfigFile}".`,
     };
   }
 
@@ -315,7 +316,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     route: (path, file, ...rest) => {
-      return route(path, resolve(directory, file), ...(rest as any));
+      return route(path, Path.resolve(directory, file), ...(rest as any));
     },
     /**
      * Helper function for creating a route config entry for an index route, for
@@ -324,7 +325,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     index: (file, ...rest) => {
-      return index(resolve(directory, file), ...(rest as any));
+      return index(Path.resolve(directory, file), ...(rest as any));
     },
     /**
      * Helper function for creating a route config entry for a layout route, for
@@ -333,7 +334,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     layout: (file, ...rest) => {
-      return layout(resolve(directory, file), ...(rest as any));
+      return layout(Path.resolve(directory, file), ...(rest as any));
     },
 
     // Passthrough of helper functions that don't need relative scoping so that
@@ -343,6 +344,7 @@ export function relative(directory: string): typeof helpers {
 }
 
 export function configRoutesToRouteManifest(
+  appDirectory: string,
   routes: RouteConfigEntry[],
   rootId = "root"
 ): RouteManifest {
@@ -353,7 +355,9 @@ export function configRoutesToRouteManifest(
     let manifestItem: RouteManifestEntry = {
       id,
       parentId,
-      file: route.file,
+      file: Path.isAbsolute(route.file)
+        ? Path.relative(appDirectory, route.file)
+        : route.file,
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
@@ -381,11 +385,7 @@ export function configRoutesToRouteManifest(
 }
 
 function createRouteId(file: string) {
-  return normalizeSlashes(stripFileExtension(file));
-}
-
-function normalizeSlashes(file: string) {
-  return file.split(win32.sep).join("/");
+  return Path.normalize(stripFileExtension(file));
 }
 
 function stripFileExtension(file: string) {

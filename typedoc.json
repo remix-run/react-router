@@ -3,6 +3,7 @@
   "entryPoints": ["packages/*"],
   "entryPointStrategy": "packages",
   "includeVersion": false,
-  "json": "./public/api.json",
-  "out": "./public"
+  "json": "./public/dev/api.json",
+  "out": "./public/dev",
+  "hostedBaseUrl": "https://api.reactrouter.com/dev/"
 }

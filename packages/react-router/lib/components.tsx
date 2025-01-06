@@ -62,9 +62,9 @@ import {
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 
-// TODO: Let's get this back to using an import map and development/production
-// condition once we get the rollup build replaced
-const ENABLE_DEV_WARNINGS = true;
+// Provided by the build system
+declare const __DEV__: boolean;
+const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
  * @private
@@ -217,12 +217,12 @@ export function RouterProvider({
       newState: RouterState,
       { deletedFetchers, flushSync, viewTransitionOpts }
     ) => {
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
           fetcherData.current.set(key, fetcher.data);
         }
       });
+      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
@@ -848,7 +848,7 @@ export interface AwaitProps<Resolve> {
   }
   ```
   */
-  children: React.ReactNode | AwaitResolveRenderFunction;
+  children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
   The error element renders instead of the children when the promise rejects.
@@ -1170,6 +1170,11 @@ export function createRoutesFromChildren(
 
   return routes;
 }
+
+/**
+ * Create route objects from JSX elements instead of arrays of objects
+ */
+export let createRoutesFromElements = createRoutesFromChildren;
 
 /**
  * Renders the result of `matchRoutes()` into a React element.

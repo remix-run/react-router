@@ -55,12 +55,8 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
   invariant(typeof repo === "string", "repo must be a string");
 
   let pathToTarball: string;
-  if (owner === "remix-run" && repo === "react-router") {
-    pathToTarball = path.join(
-      __dirname,
-      "fixtures",
-      "react-router-repo.tar.gz"
-    );
+  if (owner === "remix-run" && repo === "react-router-templates") {
+    pathToTarball = path.join(__dirname, "fixtures", "templates-repo.tar.gz");
   } else if (owner === "fake-react-router-tester" && repo === "nested-dir") {
     pathToTarball = path.join(__dirname, "fixtures", "nested-dir-repo.tar.gz");
   } else {

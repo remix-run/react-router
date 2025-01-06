@@ -12,6 +12,7 @@ import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
+import { preloadVite, getVite } from "../vite/vite";
 
 export async function routes(
   reactRouterRoot?: string,
@@ -197,22 +198,17 @@ async function createClientEntry(
   return contents;
 }
 
-export async function typegen(
-  root: string,
-  flags: { watch: boolean; config?: string }
-) {
+export async function typegen(root: string, flags: { watch: boolean }) {
   root ??= process.cwd();
 
   if (flags.watch) {
-    await Typegen.watch(root, { configFile: flags.config });
+    await preloadVite();
+    const vite = getVite();
+    const logger = vite.createLogger("info", { prefix: "[react-router]" });
+
+    await Typegen.watch(root, { logger });
     await new Promise(() => {}); // keep alive
     return;
   }
-
-  let ctx = await loadPluginContext({ root, configFile: flags.config });
-  await Typegen.writeAll({
-    rootDirectory: root,
-    appDirectory: ctx.reactRouterConfig.appDirectory,
-    routes: ctx.reactRouterConfig.routes,
-  });
+  await Typegen.run(root);
 }

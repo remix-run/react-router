@@ -81,7 +81,7 @@ export interface RoutesTestStubProps {
   hydrationData?: HydrationState;
 
   /**
-   * Future flags mimicking the settings in remix.config.js
+   * Future flags mimicking the settings in react-router.config.ts
    */
   future?: Partial<FutureConfig>;
 }

@@ -12,6 +12,8 @@ import {
 
 let fixture: Fixture;
 let appFixture: AppFixture;
+let originalConsoleError: typeof console.error;
+let originalConsoleWarn: typeof console.warn;
 
 test.describe("fs-routes", () => {
   test.beforeAll(async () => {
@@ -30,7 +32,7 @@ test.describe("fs-routes", () => {
           import { flatRoutes } from "@react-router/fs-routes";
           import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
 
-          export const routes: RouteConfig = [
+          export default [
             ...await flatRoutes({
               ignoredRouteFiles: ["**/ignored-route.*"],
             }),
@@ -42,7 +44,7 @@ test.describe("fs-routes", () => {
                 route("/remix/config/route", "remix-config-route.tsx")
               });
             })
-          ];
+          ] satisfies RouteConfig;
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -138,10 +140,16 @@ test.describe("fs-routes", () => {
     });
 
     appFixture = await createAppFixture(fixture);
+    originalConsoleError = console.error;
+    console.error = () => {};
+    originalConsoleWarn = console.warn;
+    console.warn = () => {};
   });
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   test.describe("without JavaScript", () => {

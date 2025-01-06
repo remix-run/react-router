@@ -106,7 +106,7 @@ export {
   Routes,
   createMemoryRouter,
   createRoutesFromChildren,
-  createRoutesFromChildren as createRoutesFromElements,
+  createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
 export {

@@ -4,6 +4,7 @@ import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
+import { preloadVite, getVite } from "./vite";
 
 let serverBuildId = "virtual:react-router/server-build";
 
@@ -43,13 +44,29 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
   return {
     name: PLUGIN_NAME,
-    config: () => ({
-      ssr: {
-        resolve: {
-          externalConditions: ["workerd", "worker"],
+    config: async () => {
+      await preloadVite();
+      const vite = getVite();
+      // This is a compatibility layer for Vite 5. Default conditions were
+      // automatically added to any custom conditions in Vite 5, but Vite 6
+      // removed this behavior. Instead, the default conditions are overridden
+      // by any custom conditions. If we wish to retain the default
+      // conditions, we need to manually merge them using the provided default
+      // conditions arrays exported from Vite. In Vite 5, these default
+      // conditions arrays do not exist.
+      // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+      const serverConditions: string[] = [
+        ...(vite.defaultServerConditions ?? []),
+      ];
+
+      return {
+        ssr: {
+          resolve: {
+            externalConditions: ["workerd", "worker", ...serverConditions],
+          },
         },
-      },
-    }),
+      };
+    },
     configResolved: (viteConfig) => {
       let pluginIndex = (name: string) =>
         viteConfig.plugins.findIndex((plugin) => plugin.name === name);

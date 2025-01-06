@@ -9,6 +9,7 @@ import {
   reactRouterServe,
   viteConfig,
   createEditor,
+  reactRouterConfig,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -117,7 +118,8 @@ test.describe("Route chunks", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "vite.config.js": await viteConfig.basic({ port, routeChunks }),
+        "react-router.config.ts": reactRouterConfig({ routeChunks }),
+        "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });
       build({ cwd });
@@ -140,7 +142,8 @@ test.describe("Route chunks", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "vite.config.js": await viteConfig.basic({ port, routeChunks }),
+        "react-router.config.ts": reactRouterConfig({ routeChunks }),
+        "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });
       build({ cwd });
@@ -164,7 +167,8 @@ test.describe("Route chunks", async () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "vite.config.js": await viteConfig.basic({ port, routeChunks }),
+          "react-router.config.ts": reactRouterConfig({ routeChunks }),
+          "vite.config.js": await viteConfig.basic({ port }),
           ...files,
           "app/routes/unchunkable.tsx": files["app/routes/chunkable.tsx"],
         });
@@ -180,7 +184,8 @@ test.describe("Route chunks", async () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "vite.config.js": await viteConfig.basic({ port, routeChunks }),
+          "react-router.config.ts": reactRouterConfig({ routeChunks }),
+          "vite.config.js": await viteConfig.basic({ port }),
           ...files,
         });
       });

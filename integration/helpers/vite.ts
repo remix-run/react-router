@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import path from "node:path";
+import path from "pathe";
 import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
@@ -14,7 +14,7 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import type { ReactRouterConfig } from "@react-router/dev/vite";
+import type { Config } from "@react-router/dev/config";
 
 const require = createRequire(import.meta.url);
 
@@ -22,6 +22,38 @@ const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
+
+export const reactRouterConfig = ({
+  ssr,
+  basename,
+  prerender,
+  appDirectory,
+  routeChunks,
+}: {
+  ssr?: boolean;
+  basename?: string;
+  prerender?: boolean | string[];
+  appDirectory?: string;
+  routeChunks?: NonNullable<
+    ReactRouterConfig["future"]
+  >["unstable_routeChunks"];
+}) => {
+  let config: Config = {
+    ssr,
+    basename,
+    prerender,
+    appDirectory,
+    future: {
+      unstable_routeChunks: routeChunks,
+    },
+  };
+
+  return dedent`
+    import type { Config } from "@react-router/dev/config";
+
+    export default ${JSON.stringify(config)} satisfies Config;
+  `;
+};
 
 export const viteConfig = {
   server: async (args: { port: number; fsAllow?: string[] }) => {
@@ -37,21 +69,7 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: {
-    port: number;
-    fsAllow?: string[];
-    spaMode?: boolean;
-    routeChunks?: NonNullable<
-      ReactRouterConfig["future"]
-    >["unstable_routeChunks"];
-  }) => {
-    let config: ReactRouterConfig = {
-      ssr: !args.spaMode,
-      future: {
-        unstable_routeChunks: args.routeChunks,
-      },
-    };
-
+  basic: async (args: { port: number; fsAllow?: string[] }) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -60,7 +78,7 @@ export const viteConfig = {
       export default {
         ${await viteConfig.server(args)}
         plugins: [
-          reactRouter(${JSON.stringify(config)}),
+          reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
         ],
@@ -112,11 +130,22 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName = "vite-template" | "vite-cloudflare-template";
+type TemplateName =
+  | "vite-5-template"
+  | "vite-6-template"
+  | "vite-cloudflare-template";
+
+export const viteMajorTemplates = [
+  { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
+  { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+] as const satisfies Array<{
+  templateName: TemplateName;
+  templateDisplayName: string;
+}>;
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-template"
+  templateName: TemplateName = "vite-5-template"
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -262,7 +291,10 @@ type Fixtures = {
     port: number;
     cwd: string;
   }>;
-  customDev: (files: Files) => Promise<{
+  customDev: (
+    files: Files,
+    templateName?: TemplateName
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -296,9 +328,9 @@ export const test = base.extend<Fixtures>({
   // eslint-disable-next-line no-empty-pattern
   customDev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
-    await use(async (files) => {
+    await use(async (files, template) => {
       let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      let cwd = await createProject(await files({ port }), template);
       stop = await customDev({ cwd, port });
       return { port, cwd };
     });
