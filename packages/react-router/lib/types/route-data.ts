@@ -2,7 +2,7 @@ import type {
   ClientLoaderFunctionArgs,
   ClientActionFunctionArgs,
 } from "../dom/ssr/routeModules";
-import type { DataWithResponseInit, Redirect } from "../router/utils";
+import type { DataWithResponseInit } from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
 import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
 
@@ -44,13 +44,13 @@ type DataFrom<T> =
 
 // prettier-ignore
 type ClientData<T> =
-  T extends Redirect ? never :
+  T extends Response ? never :
   T extends DataWithResponseInit<infer U> ? U :
   T
 
 // prettier-ignore
 type ServerData<T> =
-  T extends Redirect ? never :
+  T extends Response ? never :
   T extends DataWithResponseInit<infer U> ? Serialize<U> :
   Serialize<T>
 
@@ -86,7 +86,7 @@ type __tests = [
       | { data: string; b: Date; c: undefined }
     >
   >,
-  Expect<Equal<ServerDataFrom<() => { a: string } | Redirect>, { a: string }>>,
+  Expect<Equal<ServerDataFrom<() => { a: string } | Response>, { a: string }>>,
 
   // ClientDataFrom
   Expect<Equal<ClientDataFrom<any>, undefined>>,
@@ -109,5 +109,5 @@ type __tests = [
       | { data: string; b: Date; c: () => boolean }
     >
   >,
-  Expect<Equal<ClientDataFrom<() => { a: string } | Redirect>, { a: string }>>
+  Expect<Equal<ClientDataFrom<() => { a: string } | Response>, { a: string }>>
 ];
