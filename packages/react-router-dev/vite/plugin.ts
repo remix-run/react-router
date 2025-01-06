@@ -742,14 +742,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // Vite v6 overrides the default resolve.conditions, so we have to import them
         // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
         // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
-        let viteClientConditions: string[] =
-          "defaultClientConditions" in vite
-            ? [...vite.defaultClientConditions]
-            : [];
-        let viteServerConditions: string[] =
-          "defaultServerConditions" in vite
-            ? [...vite.defaultServerConditions]
-            : [];
+        let viteClientConditions: string[] = [
+          ...(vite.defaultClientConditions ?? []),
+        ];
+        let viteServerConditions: string[] = [
+          ...(vite.defaultServerConditions ?? []),
+        ];
 
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
