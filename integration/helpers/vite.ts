@@ -34,9 +34,7 @@ export const reactRouterConfig = ({
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
-  routeChunks?: NonNullable<
-    ReactRouterConfig["future"]
-  >["unstable_routeChunks"];
+  routeChunks?: NonNullable<Config["future"]>["unstable_routeChunks"];
 }) => {
   let config: Config = {
     ssr,
