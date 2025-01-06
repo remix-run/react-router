@@ -738,9 +738,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
 
-        // a compatibility layer from Vite v6+ and below because
-        // Vite v6 overrides the default resolve.conditions, so we have to import them
-        // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
+        // This is a compatibility layer for Vite 5. Default conditions were
+        // automatically added to any custom conditions in Vite 5, but Vite 6
+        // removed this behavior. Instead, the default conditions are overridden
+        // by any custom conditions. If we wish to retain the default
+        // conditions, we need to manually merge them using the provided default
+        // conditions arrays exported from Vite. In Vite 5, these default
+        // conditions arrays do not exist.
         // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
         let viteClientConditions: string[] = [
           ...(vite.defaultClientConditions ?? []),
