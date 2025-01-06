@@ -17,38 +17,29 @@ const enqueueUpdate = debounce(async () => {
 
     for (let route of routeUpdates.values()) {
       manifest.routes[route.id] = route;
-      let previousModule = window.__reactRouterRouteModules[route.id];
-      let mainModule = window.__reactRouterRouteModuleUpdates.get(route.id);
-      let clientActionModule =
-        window.__reactRouterClientActionModuleUpdates.get(route.id);
-      let clientLoaderModule =
-        window.__reactRouterClientLoaderModuleUpdates.get(route.id);
-
-      if (!mainModule && !clientActionModule && !clientLoaderModule) {
+      let imported = window.__reactRouterRouteModuleUpdates.get(route.id);
+      if (!imported) {
         throw Error(
           `[react-router:hmr] No module update found for route ${route.id}`
         );
       }
 
-      // If the main chunk is not updated, meaning only an action/loader chunk was
-      // modified, we should use the previous module as the base for the new module.
-      mainModule = mainModule ?? previousModule;
-
       let routeModule = {
-        ...mainModule,
-        ...clientActionModule,
-        ...clientLoaderModule,
+        ...imported,
         // react-refresh takes care of updating these in-place,
         // if we don't preserve existing values we'll loose state.
-        default: mainModule.default
-          ? previousModule?.default ?? mainModule.default
-          : mainModule.default,
-        ErrorBoundary: mainModule.ErrorBoundary
-          ? previousModule?.ErrorBoundary ?? mainModule.ErrorBoundary
-          : mainModule.ErrorBoundary,
-        HydrateFallback: mainModule.HydrateFallback
-          ? previousModule?.HydrateFallback ?? mainModule.HydrateFallback
-          : mainModule.HydrateFallback,
+        default: imported.default
+          ? window.__reactRouterRouteModules[route.id]?.default ??
+            imported.default
+          : imported.default,
+        ErrorBoundary: imported.ErrorBoundary
+          ? window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
+            imported.ErrorBoundary
+          : imported.ErrorBoundary,
+        HydrateFallback: imported.HydrateFallback
+          ? window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
+            imported.HydrateFallback
+          : imported.HydrateFallback,
       };
       window.__reactRouterRouteModules[route.id] = routeModule;
     }
@@ -69,8 +60,6 @@ const enqueueUpdate = debounce(async () => {
     __reactRouterDataRouter._internalSetRoutes(routes);
     routeUpdates.clear();
     window.__reactRouterRouteModuleUpdates.clear();
-    window.__reactRouterClientActionModuleUpdates.clear();
-    window.__reactRouterClientLoaderModuleUpdates.clear();
   }
 
   try {
@@ -163,8 +152,6 @@ function __hmr_import(module) {
 
 const routeUpdates = new Map();
 window.__reactRouterRouteModuleUpdates = new Map();
-window.__reactRouterClientActionModuleUpdates = new Map();
-window.__reactRouterClientLoaderModuleUpdates = new Map();
 
 import.meta.hot.on("react-router:hmr", async ({ route }) => {
   window.__reactRouterClearCriticalCss();

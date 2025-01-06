@@ -819,13 +819,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         )}`
       );
 
-      let { hasClientActionChunk, hasClientLoaderChunk } =
-        await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
-          routeFile,
-          viteChildCompiler,
-        });
-
       if (enforceRouteChunks) {
+        let { hasClientActionChunk, hasClientLoaderChunk } =
+          await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
+            routeFile,
+            viteChildCompiler,
+          });
+
         validateRouteChunks({
           ctx,
           id: route.file,
@@ -843,12 +843,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         index: route.index,
         caseSensitive: route.caseSensitive,
         module: routeModulePath,
-        clientActionModule: hasClientActionChunk
-          ? `${routeModulePath}${CLIENT_ACTION_CHUNK_QUERY_STRING}`
-          : undefined,
-        clientLoaderModule: hasClientLoaderChunk
-          ? `${routeModulePath}${CLIENT_LOADER_CHUNK_QUERY_STRING}`
-          : undefined,
+        // Route chunks are a build-time optimization
+        clientActionModule: undefined,
+        clientLoaderModule: undefined,
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
         hasClientAction,
@@ -1454,7 +1451,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-route-index",
+      name: "react-router:route-chunks-index",
       // This plugin provides the route module "index" since route modules can
       // be chunked and may be made up of multiple smaller modules. This plugin
       // primarily ensures code is never duplicated across a route module and
@@ -1467,6 +1464,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       // ensuring that any explicit imports of a route module resolve to a
       // module that simply re-exports from its underlying chunks, if present.
       async transform(code, id, options) {
+        // Routes are only chunked in build mode
+        if (viteCommand !== "build") return;
+
         // Routes aren't chunked on the server
         if (options?.ssr) {
           return;
@@ -1558,7 +1558,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-route-chunks",
+      name: "react-router:route-chunks",
       async transform(code, id, options) {
         // Routes aren't chunked on the server
         if (options?.ssr) return;
@@ -1999,20 +1999,7 @@ function addRefreshWrapper(
   code: string,
   id: string
 ): string {
-  let route = getRoute(reactRouterConfig, id.split("?")[0]);
-  if (isClientActionChunk(id) || isClientLoaderChunk(id)) {
-    let moduleUpdatesGlobal = isClientActionChunk(id)
-      ? "window.__reactRouterClientActionModuleUpdates"
-      : "window.__reactRouterClientLoaderModuleUpdates";
-    return (
-      code +
-      REACT_REFRESH_ROUTE_CHUNK_FOOTER.replaceAll(
-        "__MODULE_UPDATES_GLOBAL__",
-        moduleUpdatesGlobal
-      ).replaceAll("__OWNER_ROUTE_ID__", JSON.stringify(route?.id))
-    );
-  }
-
+  let route = getRoute(reactRouterConfig, id);
   let acceptExports = route
     ? [
         "clientAction",
@@ -2037,10 +2024,6 @@ function addRefreshWrapper(
       REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
         .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
         .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
-        .replaceAll(
-          "__ROUTE_CHUNKS_ENABLED__",
-          JSON.stringify(reactRouterConfig.future.unstable_routeChunks)
-        )
     ) +
     "\n"
   );
@@ -2076,25 +2059,10 @@ if (import.meta.hot && !inWebWorker) {
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
 }`.trim();
 
-const IMPORT_CLIENT_ACTION_CHUNK_QUERY_STRING =
-  "?import&" + CLIENT_ACTION_CHUNK_QUERY_STRING.replace("?", "");
-const IMPORT_CLIENT_LOADER_CHUNK_QUERY_STRING =
-  "?import&" + CLIENT_LOADER_CHUNK_QUERY_STRING.replace("?", "");
-
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
-  ${
-    // Ensure all route chunk modules are in memory to support HMR. This is to
-    // handle cases where route chunks don't exist on initial load but are
-    // subsequently created while editing the route module.
-    ""
-  }if (__ROUTE_ID__ && __ROUTE_CHUNKS_ENABLED__) {
-    const routeBase = import.meta.url.split("?")[0];
-    RefreshRuntime.__hmr_import(routeBase + "${IMPORT_CLIENT_ACTION_CHUNK_QUERY_STRING}");
-    RefreshRuntime.__hmr_import(routeBase + "${IMPORT_CLIENT_LOADER_CHUNK_QUERY_STRING}");
-  }
   RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
     import.meta.hot.accept((nextExports) => {
@@ -2105,19 +2073,6 @@ if (import.meta.hot && !inWebWorker) {
     });
   });
 }`.trim();
-
-const REACT_REFRESH_ROUTE_CHUNK_FOOTER = `
-import RefreshRuntime from "${virtualHmrRuntime.id}";
-const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
-if (import.meta.hot && !inWebWorker) {
-  import.meta.hot.accept((nextExports) => {
-    if (!nextExports) return;
-    if (Object.keys(nextExports).length) {
-      __MODULE_UPDATES_GLOBAL__.set(__OWNER_ROUTE_ID__, nextExports);
-    }
-    RefreshRuntime.enqueueUpdate();
-  });
-}`;
 
 function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
@@ -2618,19 +2573,6 @@ async function detectRouteChunksIfEnabled(
   let cacheKey =
     normalizeRelativeFilePath(id, ctx.reactRouterConfig) +
     (typeof input === "string" ? "" : "?read");
-
-  try {
-    detectRouteChunks(code, cache, cacheKey);
-  } catch (err) {
-    console.log("error id", id);
-    console.log("error code", code);
-    return {
-      chunkedExports: [],
-      hasClientActionChunk: false,
-      hasClientLoaderChunk: false,
-      hasRouteChunks: false,
-    };
-  }
 
   return detectRouteChunks(code, cache, cacheKey);
 }
