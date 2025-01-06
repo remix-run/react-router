@@ -51,8 +51,10 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       // Vite v6 overrides the default resolve.conditions, so we have to import them
       // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
       // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
-      const serverConditions =
-        "defaultServerConditions" in vite ? vite.defaultServerConditions : [];
+      const serverConditions: string[] =
+        "defaultServerConditions" in vite
+          ? [...vite.defaultServerConditions]
+          : [];
 
       return {
         ssr: {

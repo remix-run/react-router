@@ -744,11 +744,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
         let viteClientConditions: string[] =
           "defaultClientConditions" in vite
-            ? Array.from(vite.defaultClientConditions)
+            ? [...vite.defaultClientConditions]
             : [];
         let viteServerConditions: string[] =
           "defaultServerConditions" in vite
-            ? Array.from(vite.defaultServerConditions)
+            ? [...vite.defaultServerConditions]
             : [];
 
         logger = vite.createLogger(viteUserConfig.logLevel, {
