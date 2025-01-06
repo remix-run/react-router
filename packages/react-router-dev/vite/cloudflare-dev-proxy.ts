@@ -4,7 +4,7 @@ import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
-import { preloadViteEsm, importViteEsmSync } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
 
 let serverBuildId = "virtual:react-router/server-build";
 
@@ -44,9 +44,9 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
   return {
     name: PLUGIN_NAME,
-    config: async (userConfig) => {
-      await preloadViteEsm();
-      const vite = importViteEsmSync();
+    config: async () => {
+      await preloadVite();
+      const vite = getVite();
       // a compatibility layer from Vite v6+ and below because
       // Vite v6 overrides the default resolve.conditions, so we have to import them
       // and if the export doesn't exist, it means that we're in Vite v5, so an empty array should be used
