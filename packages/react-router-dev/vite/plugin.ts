@@ -738,6 +738,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
 
+        // This is a compatibility layer for Vite 5. Default conditions were
+        // automatically added to any custom conditions in Vite 5, but Vite 6
+        // removed this behavior. Instead, the default conditions are overridden
+        // by any custom conditions. If we wish to retain the default
+        // conditions, we need to manually merge them using the provided default
+        // conditions arrays exported from Vite. In Vite 5, these default
+        // conditions arrays do not exist.
+        // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+        let viteClientConditions: string[] = [
+          ...(vite.defaultClientConditions ?? []),
+        ];
+        let viteServerConditions: string[] = [
+          ...(vite.defaultServerConditions ?? []),
+        ];
+
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
         });
@@ -804,9 +819,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ssr: {
             external: ssrExternals,
             resolve: {
-              conditions: viteCommand === "build" ? [] : ["development"],
+              conditions:
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
               externalConditions:
-                viteCommand === "build" ? [] : ["development"],
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
             },
           },
           optimizeDeps: {
@@ -853,7 +873,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router/dom",
               "react-router-dom",
             ],
-            conditions: viteCommand === "build" ? [] : ["development"],
+            conditions:
+              viteCommand === "build"
+                ? viteClientConditions
+                : ["development", ...viteClientConditions],
           },
           base: viteUserConfig.base,
 
