@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Fixes react-refresh source maps
+Fix react-refresh source maps
