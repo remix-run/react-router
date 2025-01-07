@@ -33,8 +33,9 @@ const files = {
   "app/routes/chunkable.tsx": js`
     import { useLoaderData, useActionData, Form } from "react-router";
 
-    // Variable name is globally unique to prevent name mangling, e.g.
-    // inChunkableMainChunk$1. The use of console.log prevents dead code
+    // Usage of this exported function forces any consuming code into the main
+    // chunk. The variable name is globally unique to prevent name mangling,
+    // e.g. inChunkableMainChunk$1. The use of console.log prevents dead code
     // elimination in the build by introducing a side effect
     export const inChunkableMainChunk = () => console.log() || true;
 
@@ -43,6 +44,7 @@ const files = {
       return "clientLoader in main chunk: " + eval("typeof inChunkableMainChunk === 'function'");
     };
 
+    // Export is wrapped in an IIFE so we can detect when it's downloaded
     export const clientAction = (function() {
       (globalThis as any).chunkableClientActionDownloaded = true;
       // eval is used here to avoid a chunking de-opt:
@@ -69,8 +71,9 @@ const files = {
   "app/routes/unchunkable.tsx": js`
     import { useLoaderData, useActionData, Form } from "react-router";
 
-    // Variable name is globally unique to prevent name mangling, e.g.
-    // inUnchunkableMainChunk$1. The use of console.log prevents dead code
+    // Usage of this exported function forces any consuming code into the main
+    // chunk. The variable name is globally unique to prevent name mangling,
+    // e.g. inUnchunkableMainChunk$1. The use of console.log prevents dead code
     // elimination in the build by introducing a side effect
     export const inUnchunkableMainChunk = () => console.log() || true;
 
@@ -80,6 +83,7 @@ const files = {
       return "clientLoader in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
     };
 
+    // Export is wrapped in an IIFE so we can detect when it's downloaded
     export const clientAction = (function() {
       inUnchunkableMainChunk();
       (globalThis as any).unchunkableClientActionDownloaded = true;
@@ -105,11 +109,24 @@ const files = {
   `,
 };
 
+async function chunkableClientActionDownloaded(page: Page) {
+  return await page.evaluate(() =>
+    Boolean((globalThis as any).chunkableClientActionDownloaded)
+  );
+}
+
+async function unchunkableClientActionDownloaded(page: Page) {
+  return await page.evaluate(() =>
+    Boolean((globalThis as any).unchunkableClientActionDownloaded)
+  );
+}
+
 test.describe("Route chunks", async () => {
   test.describe("enabled", () => {
     let routeChunks = true;
     let port: number;
     let cwd: string;
+    let stop: Awaited<ReturnType<typeof reactRouterServe>>;
 
     test.beforeAll(async () => {
       port = await getPort();
@@ -119,10 +136,56 @@ test.describe("Route chunks", async () => {
         ...files,
       });
       build({ cwd });
+      stop = await reactRouterServe({ cwd, port });
+    });
+
+    test.afterAll(() => {
+      stop();
     });
 
     test("supports route chunks", async ({ page }) => {
-      await workflow({ cwd, page, port, routeChunks });
+      let pageErrors: Error[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error));
+
+      await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
+      expect(pageErrors).toEqual([]);
+
+      // Ensure chunkable client loader and action are not in main chunk
+      await page.getByRole("link", { name: "/chunkable" }).click();
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        `loaderData = "clientLoader in main chunk: false"`
+      );
+      expect(await chunkableClientActionDownloaded(page)).toBe(false);
+      await page.getByRole("button").click();
+      await expect(page.locator("[data-action-data]")).toHaveText(
+        'actionData = "clientAction in main chunk: false"'
+      );
+      expect(await chunkableClientActionDownloaded(page)).toBe(true);
+
+      await page.goBack();
+
+      // Ensure unchunkable client loader and action are not in main chunk
+      await page.getByRole("link", { name: "/unchunkable" }).click();
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        'loaderData = "clientLoader in main chunk: true"'
+      );
+      expect(await unchunkableClientActionDownloaded(page)).toBe(true);
+      await page.getByRole("button").click();
+      await expect(page.locator("[data-action-data]")).toHaveText(
+        'actionData = "clientAction in main chunk: true"'
+      );
+
+      // Ensure chunkable client loader works during SSR
+      await page.goto(`http://localhost:${port}/chunkable`);
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        `loaderData = "clientLoader in main chunk: false"`
+      );
+
+      // Ensure unchunkable client loader works during SSR
+      await page.goto(`http://localhost:${port}/unchunkable`);
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        `loaderData = "clientLoader in main chunk: true"`
+      );
     });
   });
 
@@ -130,6 +193,7 @@ test.describe("Route chunks", async () => {
     let routeChunks = false;
     let port: number;
     let cwd: string;
+    let stop: Awaited<ReturnType<typeof reactRouterServe>>;
 
     test.beforeAll(async () => {
       port = await getPort();
@@ -139,10 +203,55 @@ test.describe("Route chunks", async () => {
         ...files,
       });
       build({ cwd });
+      stop = await reactRouterServe({ cwd, port });
     });
 
-    test("build", async ({ page }) => {
-      await workflow({ cwd, page, port, routeChunks });
+    test.afterAll(() => {
+      stop();
+    });
+
+    test("keeps exports in main chunk", async ({ page }) => {
+      let pageErrors: Error[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error));
+
+      await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
+      expect(pageErrors).toEqual([]);
+
+      // Ensure chunkable client loader and action are kept in main chunk
+      await page.getByRole("link", { name: "/chunkable" }).click();
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        `loaderData = "clientLoader in main chunk: true"`
+      );
+      expect(await chunkableClientActionDownloaded(page)).toBe(true);
+      await page.getByRole("button").click();
+      await expect(page.locator("[data-action-data]")).toHaveText(
+        'actionData = "clientAction in main chunk: true"'
+      );
+
+      await page.goBack();
+
+      // Ensure unchunkable client loader and action are kept in main chunk
+      await page.getByRole("link", { name: "/unchunkable" }).click();
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        'loaderData = "clientLoader in main chunk: true"'
+      );
+      expect(await unchunkableClientActionDownloaded(page)).toBe(true);
+      await page.getByRole("button").click();
+      await expect(page.locator("[data-action-data]")).toHaveText(
+        'actionData = "clientAction in main chunk: true"'
+      );
+
+      // Ensure chunkable client loader works during SSR
+      await page.goto(`http://localhost:${port}/chunkable`);
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        `loaderData = "clientLoader in main chunk: true"`
+      );
+
+      // Ensure unchunkable client loader works during SSR
+      await page.goto(`http://localhost:${port}/unchunkable`);
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        `loaderData = "clientLoader in main chunk: true"`
+      );
     });
   });
 
@@ -197,86 +306,3 @@ test.describe("Route chunks", async () => {
     });
   });
 });
-
-async function workflow({
-  cwd,
-  page,
-  port,
-  routeChunks,
-}: {
-  cwd: string;
-  page: Page;
-  port: number;
-  routeChunks: boolean;
-}) {
-  let stopServer = await reactRouterServe({ cwd, port });
-
-  let pageErrors: Error[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error));
-
-  await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
-  expect(pageErrors).toEqual([]);
-
-  async function hasChunkableClientActionDownloaded() {
-    return await page.evaluate(() =>
-      Boolean((globalThis as any).chunkableClientActionDownloaded)
-    );
-  }
-
-  async function hasUnchunkableClientActionDownloaded() {
-    return await page.evaluate(() =>
-      Boolean((globalThis as any).unchunkableClientActionDownloaded)
-    );
-  }
-
-  await page.getByRole("link", { name: "/chunkable" }).click();
-  await expect(page.locator("[data-loader-data]")).toHaveText(
-    `loaderData = "clientLoader in main chunk: ${
-      routeChunks ? "false" : "true"
-    }"`
-  );
-  if (routeChunks) {
-    // Ensure chunkable client action hasn't downloaded yet
-    expect(await hasChunkableClientActionDownloaded()).toBe(false);
-
-    // Ensure chunkable client action is not in main chunk
-    await page.getByRole("button").click();
-    await expect(page.locator("[data-action-data]")).toHaveText(
-      'actionData = "clientAction in main chunk: false"'
-    );
-
-    // Ensure the previous `hasChunkableClientActionDownloaded` check is valid
-    expect(await hasChunkableClientActionDownloaded()).toBe(true);
-  }
-
-  await page.goBack();
-  await page.getByRole("link", { name: "/unchunkable" }).click();
-  await expect(page.locator("[data-loader-data]")).toHaveText(
-    'loaderData = "clientLoader in main chunk: true"'
-  );
-
-  // Ensure unchunkable client action downloads at the same time as the rest of
-  // the route module
-  expect(await hasUnchunkableClientActionDownloaded()).toBe(true);
-
-  await page.getByRole("button").click();
-  await expect(page.locator("[data-action-data]")).toHaveText(
-    'actionData = "clientAction in main chunk: true"'
-  );
-
-  // Ensure chunkable client loader works during SSR
-  await page.goto(`http://localhost:${port}/chunkable`);
-  await expect(page.locator("[data-loader-data]")).toHaveText(
-    `loaderData = "clientLoader in main chunk: ${
-      routeChunks ? "false" : "true"
-    }"`
-  );
-
-  // Ensure unchunkable client loader works during SSR
-  await page.goto(`http://localhost:${port}/unchunkable`);
-  await expect(page.locator("[data-loader-data]")).toHaveText(
-    `loaderData = "clientLoader in main chunk: true"`
-  );
-
-  stopServer();
-}
