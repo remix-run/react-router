@@ -58,6 +58,8 @@ export function headers({
 }
 ```
 
+One notable exception is `Set-Cookie` headers, which are automatically preserved from `headers`, `loader`, and `action` in parent routes, even without exporting `headers` from the child route.
+
 ## Merging with parent headers
 
 Consider these nested routes
