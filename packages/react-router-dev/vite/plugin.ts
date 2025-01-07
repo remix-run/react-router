@@ -2015,30 +2015,12 @@ function addRefreshWrapper(
       ]
     : [];
   return (
-    "\n\n" +
-    withCommentBoundaries(
-      "REACT REFRESH HEADER",
-      REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id))
-    ) +
-    "\n\n" +
-    withCommentBoundaries("REACT REFRESH BODY", code) +
-    "\n\n" +
-    withCommentBoundaries(
-      "REACT REFRESH FOOTER",
-      REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
-        .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
-        .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
-    ) +
-    "\n"
+    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
+    code +
+    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+      .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
   );
-}
-
-function withCommentBoundaries(label: string, text: string) {
-  let begin = `// [BEGIN] ${label} `;
-  begin += "-".repeat(80 - begin.length);
-  let end = `// [END] ${label} `;
-  end += "-".repeat(80 - end.length);
-  return `${begin}\n${text}\n${end}`;
 }
 
 const REACT_REFRESH_HEADER = `
@@ -2061,7 +2043,7 @@ if (import.meta.hot && !inWebWorker) {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
-}`.trim();
+}`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
 
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
@@ -2076,7 +2058,7 @@ if (import.meta.hot && !inWebWorker) {
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
     });
   });
-}`.trim();
+}`;
 
 function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
@@ -2240,7 +2222,8 @@ async function handlePrerender(
     "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
-    let matches = matchRoutes(routes, path);
+    // Ensure we have a leading slash for matching
+    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
     let hasLoaders = matches?.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {
