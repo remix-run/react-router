@@ -41,7 +41,6 @@ import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import {
   type RouteChunkName,
-  chunkedExportNames,
   detectRouteChunks,
   isRouteChunkName,
   getRouteChunk,
