@@ -1580,8 +1580,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           code
         );
 
+        let preventEmptyChunkSnippet = ({ reason }: { reason: string }) =>
+          `Math.random()<0&&console.log(${JSON.stringify(reason)});`;
+
         if (chunk === null) {
-          return "// Route chunks disabled";
+          return preventEmptyChunkSnippet({ reason: "Route chunks disabled" });
         }
 
         let enforceRouteChunks =
@@ -1600,7 +1603,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           });
         }
 
-        return chunk ?? `// No ${chunkName} chunk`;
+        return (
+          chunk ?? preventEmptyChunkSnippet({ reason: `No ${chunkName} chunk` })
+        );
       },
     },
     {
