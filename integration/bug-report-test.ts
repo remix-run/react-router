@@ -77,9 +77,22 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+        import { redirectToRoot } from "../../.server/redirectUtil";
+
+        export function loader() {
+          return redirectToRoot();
         }
+      `,
+      ".server/redirectUtil.ts": js`
+        import { redirect } from "react-router";
+        
+        function redirectMod(path: string) {
+          return () => redirect(path);
+          }
+
+        export const redirectToRoot = redirectMod("/");
+        
+        export { redirectToRoot };
       `,
     },
   });
@@ -106,7 +119,6 @@ test("[description of what you expect it to do]", async ({ page }) => {
   // If you need to test interactivity use the `app`
   await app.goto("/");
   await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
 
   // If you're not sure what's going on, you can "poke" the app, it'll
   // automatically open up in your browser for 20 seconds, so be quick!

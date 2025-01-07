@@ -1371,7 +1371,7 @@ export type RedirectFunction = (
 
 // use a `unique symbol` to create a branded type
 // https://egghead.io/blog/using-branded-types-in-typescript
-declare const redirectSymbol: unique symbol;
+export declare const redirectSymbol: unique symbol;
 export type Redirect = Response & { [redirectSymbol]: never };
 
 /**

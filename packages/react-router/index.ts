@@ -40,6 +40,7 @@ export type {
   PathMatch,
   PathParam,
   PathPattern,
+  redirectSymbol,
   RedirectFunction,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
