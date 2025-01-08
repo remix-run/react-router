@@ -7,6 +7,7 @@ export type ManifestRoute = {
   module: string;
   clientLoaderModule: string | undefined;
   clientActionModule: string | undefined;
+  hydrateFallbackModule: string | undefined;
   imports?: string[];
   hasAction: boolean;
   hasLoader: boolean;

@@ -246,6 +246,8 @@ export function getModuleLinkHrefs(
         if (route.clientLoaderModule) {
           hrefs = hrefs.concat(route.clientLoaderModule);
         }
+        // Note: route.hydrateFallbackModule is not included in because it's only
+        // needed on the initial page load.
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
         }

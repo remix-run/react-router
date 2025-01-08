@@ -1,5 +1,5 @@
 {
-  "name": "@playground/compiler",
+  "name": "@playground/route-chunks",
   "version": "0.0.0",
   "private": true,
   "sideEffects": false,

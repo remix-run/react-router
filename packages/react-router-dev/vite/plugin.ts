@@ -42,8 +42,10 @@ import { removeExports } from "./remove-exports";
 import {
   type RouteChunkName,
   detectRouteChunks,
-  isRouteChunkName,
-  getRouteChunk,
+  getRouteChunkCode,
+  isRouteChunkModuleId,
+  getRouteChunkModuleId,
+  getRouteChunkNameFromModuleId,
 } from "./route-chunks";
 import { preloadVite, getVite } from "./vite";
 import {
@@ -140,44 +142,18 @@ const CLIENT_ROUTE_EXPORTS = [
   "shouldRevalidate",
 ];
 
-type RouteChunkQueryString =
-  `${typeof ROUTE_CHUNK_QUERY_STRING}${RouteChunkName}`;
-const ROUTE_CHUNK_QUERY_STRING = "?route-chunk=";
-const MAIN_ROUTE_CHUNK_QUERY_STRING =
-  `${ROUTE_CHUNK_QUERY_STRING}main` satisfies RouteChunkQueryString;
-const CLIENT_ACTION_CHUNK_QUERY_STRING =
-  `${ROUTE_CHUNK_QUERY_STRING}clientAction` satisfies RouteChunkQueryString;
-const CLIENT_LOADER_CHUNK_QUERY_STRING =
-  `${ROUTE_CHUNK_QUERY_STRING}clientLoader` satisfies RouteChunkQueryString;
 /** This is used to manage a build optimization to remove unused route exports
 from the client build output. This is important in cases where custom route
 exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-const isRouteEntry = (id: string): boolean => {
+const isRouteEntryModuleId = (id: string): boolean => {
   return id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING);
 };
 
-const isMainRouteChunk = (id: string): boolean => {
-  return id.endsWith(MAIN_ROUTE_CHUNK_QUERY_STRING);
-};
-
-const isClientActionChunk = (id: string): boolean => {
-  return id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING);
-};
-
-const isClientLoaderChunk = (id: string): boolean => {
-  return id.endsWith(CLIENT_LOADER_CHUNK_QUERY_STRING);
-};
-
 const isRouteVirtualModule = (id: string): boolean => {
-  return (
-    isRouteEntry(id) ||
-    isMainRouteChunk(id) ||
-    isClientActionChunk(id) ||
-    isClientLoaderChunk(id)
-  );
+  return isRouteEntryModuleId(id) || isRouteChunkModuleId(id);
 };
 
 export type ServerBundleBuildConfig = {
@@ -688,25 +664,36 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let isRootRoute = route.parentId === undefined;
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
+      let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
-      let { hasClientActionChunk, hasClientLoaderChunk } =
-        await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
-          routeFile,
-          viteChildCompiler,
-        });
+      let {
+        hasClientActionChunk,
+        hasClientLoaderChunk,
+        hasHydrateFallbackChunk,
+      } = await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
+        routeFile,
+        viteChildCompiler,
+      });
 
       let clientActionAssets = hasClientActionChunk
         ? getReactRouterManifestBuildAssets(
             ctx,
             viteManifest,
-            routeFile + CLIENT_ACTION_CHUNK_QUERY_STRING
+            getRouteChunkModuleId(routeFile, "clientAction")
           )
         : null;
       let clientLoaderAssets = hasClientLoaderChunk
         ? getReactRouterManifestBuildAssets(
             ctx,
             viteManifest,
-            routeFile + CLIENT_LOADER_CHUNK_QUERY_STRING
+            getRouteChunkModuleId(routeFile, "clientLoader")
+          )
+        : null;
+      let hydrateFallbackAssets = hasHydrateFallbackChunk
+        ? getReactRouterManifestBuildAssets(
+            ctx,
+            viteManifest,
+            getRouteChunkModuleId(routeFile, "HydrateFallback")
           )
         : null;
 
@@ -717,6 +704,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           valid: {
             clientAction: !hasClientAction || hasClientActionChunk,
             clientLoader: !hasClientLoader || hasClientLoaderChunk,
+            HydrateFallback: !hasHydrateFallback || hasHydrateFallbackChunk,
           },
         });
       }
@@ -746,6 +734,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           : undefined,
         clientLoaderModule: clientLoaderAssets
           ? clientLoaderAssets.module
+          : undefined,
+        hydrateFallbackModule: hydrateFallbackAssets
+          ? hydrateFallbackAssets.module
           : undefined,
       };
 
@@ -810,6 +801,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
+      let hasHydrateFallback = sourceExports.includes("HydrateFallback");
       let routeModulePath = combineURLs(
         ctx.publicPath,
         `${resolveFileUrl(
@@ -819,11 +811,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       );
 
       if (enforceRouteChunks) {
-        let { hasClientActionChunk, hasClientLoaderChunk } =
-          await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
-            routeFile,
-            viteChildCompiler,
-          });
+        let {
+          hasClientActionChunk,
+          hasClientLoaderChunk,
+          hasHydrateFallbackChunk,
+        } = await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
+          routeFile,
+          viteChildCompiler,
+        });
 
         validateRouteChunks({
           ctx,
@@ -831,6 +826,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           valid: {
             clientAction: !hasClientAction || hasClientActionChunk,
             clientLoader: !hasClientLoader || hasClientLoaderChunk,
+            HydrateFallback: !hasHydrateFallback || hasHydrateFallbackChunk,
           },
         });
       }
@@ -845,6 +841,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // Route chunks are a build-time optimization
         clientActionModule: undefined,
         clientLoaderModule: undefined,
+        hydrateFallbackModule: undefined,
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
         hasClientAction,
@@ -1063,29 +1060,27 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                                 "utf-8"
                               );
 
-                              // If these keywords are present in the route
-                              // module, we need to include their relevant route
-                              // module chunks as entry points just in case
-                              // they're needed. If they're not, they'll resolve
-                              // to empty modules in the final build.
-                              let possiblyHasClientActionChunk =
-                                code.includes("clientAction");
-                              let possiblyHasClientLoaderChunk =
-                                code.includes("clientLoader");
-
                               return [
                                 `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-                                ...(possiblyHasClientActionChunk
-                                  ? [
-                                      `${routeFilePath}${CLIENT_ACTION_CHUNK_QUERY_STRING}`,
-                                    ]
-                                  : []),
-                                ...(possiblyHasClientLoaderChunk
-                                  ? [
-                                      `${routeFilePath}${CLIENT_LOADER_CHUNK_QUERY_STRING}`,
-                                    ]
-                                  : []),
-                              ];
+                                code.includes("clientAction")
+                                  ? getRouteChunkModuleId(
+                                      routeFilePath,
+                                      "clientAction"
+                                    )
+                                  : null,
+                                code.includes("clientLoader")
+                                  ? getRouteChunkModuleId(
+                                      routeFilePath,
+                                      "clientLoader"
+                                    )
+                                  : null,
+                                code.includes("HydrateFallback")
+                                  ? getRouteChunkModuleId(
+                                      routeFilePath,
+                                      "HydrateFallback"
+                                    )
+                                  : null,
+                              ].filter(isNonNullable);
                             }),
                           ],
                         },
@@ -1510,11 +1505,22 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let chunkBasePath = `./${path.basename(id)}`;
 
         return [
-          `export { ${mainChunkReexports} } from "${chunkBasePath}${MAIN_ROUTE_CHUNK_QUERY_STRING}";`,
+          `export { ${mainChunkReexports} } from "${getRouteChunkModuleId(
+            chunkBasePath,
+            "main"
+          )}";`,
           hasClientActionChunk &&
-            `export { clientAction } from "${chunkBasePath}${CLIENT_ACTION_CHUNK_QUERY_STRING}";`,
+            `export { clientAction } from "${getRouteChunkModuleId(
+              chunkBasePath,
+              "clientAction"
+            )}";`,
           hasClientLoaderChunk &&
-            `export { clientLoader } from "${chunkBasePath}${CLIENT_LOADER_CHUNK_QUERY_STRING}";`,
+            `export { clientLoader } from "${getRouteChunkModuleId(
+              chunkBasePath,
+              "clientLoader"
+            )}";`,
+          // Note: HydrateFallback is not included here because it's only needed
+          // on the initial page load. It's only ever requested as an import in the HTML from the server
         ]
           .filter(Boolean)
           .join("\n");
@@ -1563,11 +1569,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (options?.ssr) return;
 
         // Ignore anything that isn't marked as a route chunk
-        if (!id.includes(ROUTE_CHUNK_QUERY_STRING)) return;
+        if (!isRouteChunkModuleId(id)) return;
 
-        let chunkName = id.split(ROUTE_CHUNK_QUERY_STRING)[1].split("&")[0];
+        let chunkName = getRouteChunkNameFromModuleId(id);
 
-        if (!isRouteChunkName(chunkName)) {
+        if (!chunkName) {
           throw new Error(`Invalid route chunk name "${chunkName}" in "${id}"`);
         }
 
@@ -1598,6 +1604,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             valid: {
               clientAction: !exportNames.includes("clientAction"),
               clientLoader: !exportNames.includes("clientLoader"),
+              HydrateFallback: !exportNames.includes("HydrateFallback"),
             },
           });
         }
@@ -1908,6 +1915,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 "hasClientAction",
                 "clientActionModule",
                 "hasErrorBoundary",
+                "hydrateFallbackModule",
               ] as const
             ).some((key) => oldRouteMetadata[key] !== newRouteMetadata[key])
           ) {
@@ -2096,7 +2104,7 @@ async function getRouteMetadata(
     readRouteFile
   );
 
-  let { hasClientActionChunk, hasClientLoaderChunk } =
+  let { hasClientActionChunk, hasClientLoaderChunk, hasHydrateFallbackChunk } =
     await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
       routeFile,
       readRouteFile,
@@ -2127,10 +2135,13 @@ async function getRouteMetadata(
     ),
     module: `${moduleUrl}?import`, // Ensure the Vite dev server responds with a JS module
     clientActionModule: hasClientActionChunk
-      ? `${moduleUrl}${CLIENT_ACTION_CHUNK_QUERY_STRING}`
+      ? `${getRouteChunkModuleId(moduleUrl, "clientAction")}`
       : undefined,
     clientLoaderModule: hasClientLoaderChunk
-      ? `${moduleUrl}${CLIENT_LOADER_CHUNK_QUERY_STRING}`
+      ? `${getRouteChunkModuleId(moduleUrl, "clientLoader")}`
+      : undefined,
+    hydrateFallbackModule: hasHydrateFallbackChunk
+      ? `${getRouteChunkModuleId(moduleUrl, "HydrateFallback")}`
       : undefined,
     hasAction: sourceExports.includes("action"),
     hasClientAction: sourceExports.includes("clientAction"),
@@ -2543,6 +2554,7 @@ async function detectRouteChunksIfEnabled(
       chunkedExports: [],
       hasClientActionChunk: false,
       hasClientLoaderChunk: false,
+      hasHydrateFallbackChunk: false,
       hasRouteChunks: false,
     };
   }
@@ -2553,6 +2565,7 @@ async function detectRouteChunksIfEnabled(
       chunkedExports: [],
       hasClientActionChunk: false,
       hasClientLoaderChunk: false,
+      hasHydrateFallbackChunk: false,
       hasRouteChunks: false,
     };
   }
@@ -2570,7 +2583,7 @@ async function getRouteChunkIfEnabled(
   id: string,
   chunkName: RouteChunkName,
   input: ResolveRouteFileCodeInput
-): Promise<ReturnType<typeof getRouteChunk> | null> {
+): Promise<ReturnType<typeof getRouteChunkCode> | null> {
   if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
     return null;
   }
@@ -2581,7 +2594,7 @@ async function getRouteChunkIfEnabled(
     normalizeRelativeFilePath(id, ctx.reactRouterConfig) +
     (typeof input === "string" ? "" : "?read");
 
-  return getRouteChunk(code, chunkName, cache, cacheKey);
+  return getRouteChunkCode(code, chunkName, cache, cacheKey);
 }
 
 function validateRouteChunks({
@@ -2625,4 +2638,8 @@ function validateRouteChunks({
       } and other exports, you should extract the shared code into a separate module.`,
     ].join("\n\n")
   );
+}
+
+function isNonNullable<T>(x: T): x is NonNullable<T> {
+  return x != null;
 }

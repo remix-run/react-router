@@ -680,7 +680,12 @@ ${matches
     let routeVarName = `route${routeIndex}`;
     let manifestEntry = manifest.routes[match.route.id];
     invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
-    let { clientActionModule, clientLoaderModule, module } = manifestEntry;
+    let {
+      clientActionModule,
+      clientLoaderModule,
+      hydrateFallbackModule,
+      module,
+    } = manifestEntry;
 
     // Ordered lowest to highest priority in terms of merging chunks
     let chunks: Array<{ module: string; varName: string }> = [
@@ -689,6 +694,9 @@ ${matches
         : []),
       ...(clientLoaderModule
         ? [{ module: clientLoaderModule, varName: `${routeVarName}_l` }]
+        : []),
+      ...(hydrateFallbackModule
+        ? [{ module: hydrateFallbackModule, varName: `${routeVarName}_h` }]
         : []),
       { module, varName: `${routeVarName}_m` },
     ];

@@ -903,6 +903,7 @@ export function detectRouteChunks(
 ): {
   hasClientActionChunk: boolean;
   hasClientLoaderChunk: boolean;
+  hasHydrateFallbackChunk: boolean;
   hasRouteChunks: boolean;
   chunkedExports: RouteChunkName[];
 } {
@@ -922,22 +923,23 @@ export function detectRouteChunks(
   return {
     hasClientActionChunk: chunkStatus.clientAction,
     hasClientLoaderChunk: chunkStatus.clientLoader,
+    hasHydrateFallbackChunk: chunkStatus.HydrateFallback,
     hasRouteChunks,
     chunkedExports,
   };
 }
 
 const mainChunkName = "main" as const;
-const chunkedExportNames = ["clientAction", "clientLoader"] as const;
+const chunkedExportNames = [
+  "clientAction",
+  "clientLoader",
+  "HydrateFallback",
+] as const;
 export type RouteChunkName =
   | typeof mainChunkName
   | (typeof chunkedExportNames)[number];
 
-export function isRouteChunkName(name: string): name is RouteChunkName {
-  return name === mainChunkName || chunkedExportNames.includes(name as any);
-}
-
-export function getRouteChunk(
+export function getRouteChunkCode(
   code: string,
   chunkName: RouteChunkName,
   cache: Cache,
@@ -948,4 +950,48 @@ export function getRouteChunk(
   }
 
   return getChunkedExport(code, chunkName, {}, cache, cacheKey);
+}
+
+const routeChunkQueryStringPrefix = "?route-chunk=";
+type RouteChunkQueryString =
+  `${typeof routeChunkQueryStringPrefix}${RouteChunkName}`;
+
+const routeChunkQueryStrings: Record<RouteChunkName, RouteChunkQueryString> = {
+  main: `${routeChunkQueryStringPrefix}main`,
+  clientAction: `${routeChunkQueryStringPrefix}clientAction`,
+  clientLoader: `${routeChunkQueryStringPrefix}clientLoader`,
+  HydrateFallback: `${routeChunkQueryStringPrefix}HydrateFallback`,
+};
+
+export function getRouteChunkModuleId(
+  filePath: string,
+  chunkName: RouteChunkName
+): string {
+  return `${filePath}${routeChunkQueryStrings[chunkName]}`;
+}
+
+export function isRouteChunkModuleId(id: string): boolean {
+  return Object.values(routeChunkQueryStrings).some((queryString) =>
+    id.endsWith(queryString)
+  );
+}
+
+function isRouteChunkName(name: string): name is RouteChunkName {
+  return name === mainChunkName || chunkedExportNames.includes(name as any);
+}
+
+export function getRouteChunkNameFromModuleId(
+  id: string
+): RouteChunkName | null {
+  if (!isRouteChunkModuleId(id)) {
+    return null;
+  }
+
+  let chunkName = id.split(routeChunkQueryStringPrefix)[1].split("&")[0];
+
+  if (!isRouteChunkName(chunkName)) {
+    return null;
+  }
+
+  return chunkName;
 }

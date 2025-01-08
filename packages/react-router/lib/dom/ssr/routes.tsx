@@ -38,6 +38,7 @@ export interface EntryRoute extends Route {
   module: string;
   clientActionModule: string | undefined;
   clientLoaderModule: string | undefined;
+  hydrateFallbackModule: string | undefined;
   parentId?: string;
 }
 

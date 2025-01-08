@@ -190,6 +190,7 @@ function processRoutes(
       module: "build/stub-path-to-module.js",
       clientActionModule: undefined,
       clientLoaderModule: undefined,
+      hydrateFallbackModule: undefined,
     };
     manifest.routes[newRoute.id] = entryRoute;
 
