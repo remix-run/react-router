@@ -417,6 +417,7 @@ export interface StaticHandler {
       requestContext?: unknown;
       skipLoaderErrorBubbling?: boolean;
       dataStrategy?: DataStrategyFunction;
+      respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
     }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -425,6 +426,7 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction;
+      respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
     }
   ): Promise<any>;
 }
@@ -3433,10 +3435,12 @@ export function createStaticHandler(
       requestContext,
       skipLoaderErrorBubbling,
       dataStrategy,
+      respond,
     }: {
       requestContext?: unknown;
       skipLoaderErrorBubbling?: boolean;
       dataStrategy?: DataStrategyFunction;
+      respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
     } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3445,11 +3449,13 @@ export function createStaticHandler(
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
+    let staticContext: StaticHandlerContext;
+
     if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
-      return {
+      staticContext = {
         basename,
         location,
         matches: methodNotAllowedMatches,
@@ -3466,7 +3472,7 @@ export function createStaticHandler(
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
-      return {
+      staticContext = {
         basename,
         location,
         matches: notFoundMatches,
@@ -3479,25 +3485,77 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
+    } else if (respond) {
+      let response = await runMiddlewarePipeline(
+        {
+          request,
+          matches,
+          params: matches[0].params,
+          context: requestContext,
+        },
+        matches.length - 1,
+        async () => {
+          let result = await callQueryHandlers(
+            request,
+            location,
+            matches!,
+            requestContext,
+            dataStrategy || defaultDataStrategyWithoutMiddleware,
+            skipLoaderErrorBubbling === true,
+            null
+          );
+
+          if (isResponse(result)) {
+            return result;
+          }
+
+          // When returning StaticHandlerContext, we patch back in the location here
+          // since we need it for React Context.  But this helps keep our submit and
+          // loadRouteData operating on a Request instead of a Location
+          let res = await respond({
+            location,
+            basename,
+            ...result,
+          });
+
+          return res;
+        },
+        true
+      );
+
+      invariant(isResponse(response), "Expected a response in query()");
+      return response;
+    } else {
+      let result = await callQueryHandlers(
+        request,
+        location,
+        matches!,
+        requestContext,
+        dataStrategy || null,
+        skipLoaderErrorBubbling === true,
+        null
+      );
+
+      if (isResponse(result)) {
+        return result;
+      }
+
+      // When returning StaticHandlerContext, we patch back in the location here
+      // since we need it for React Context.  But this helps keep our submit and
+      // loadRouteData operating on a Request instead of a Location
+      staticContext = {
+        location,
+        basename,
+        ...result,
+      };
     }
 
-    let result = await queryImpl(
-      request,
-      location,
-      matches,
-      requestContext,
-      dataStrategy || null,
-      skipLoaderErrorBubbling === true,
-      null
-    );
-    if (isResponse(result)) {
-      return result;
+    if (respond) {
+      let res = await respond(staticContext);
+      return res;
     }
 
-    // When returning StaticHandlerContext, we patch back in the location here
-    // since we need it for React Context.  But this helps keep our submit and
-    // loadRouteData operating on a Request instead of a Location
-    return { location, basename, ...result };
+    return staticContext;
   }
 
   /**
@@ -3532,10 +3590,12 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
+      respond,
     }: {
       requestContext?: unknown;
       routeId?: string;
       dataStrategy?: DataStrategyFunction;
+      respond?: (context: StaticHandlerContext) => Promise<Response>;
     } = {}
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3564,42 +3624,84 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    let result = await queryImpl(
-      request,
-      location,
-      matches,
-      requestContext,
-      dataStrategy || null,
-      false,
-      match
-    );
+    if (respond) {
+      let response = await runMiddlewarePipeline(
+        {
+          request,
+          matches,
+          params: matches[0].params,
+          context: requestContext,
+        },
+        matches.length - 1,
+        async () => {
+          let result = await callQueryHandlers(
+            request,
+            location,
+            matches!,
+            requestContext,
+            dataStrategy || defaultDataStrategyWithoutMiddleware,
+            false,
+            match!
+          );
 
-    if (isResponse(result)) {
-      return result;
+          if (isResponse(result)) {
+            return result;
+          }
+
+          let error = result.errors
+            ? Object.values(result.errors)[0]
+            : undefined;
+
+          if (error !== undefined) {
+            // If we got back result.errors, that means the loader/action threw
+            // _something_ that wasn't a Response, but it's not guaranteed/required
+            // to be an `instanceof Error` either, so we have to use throw here to
+            // preserve the "error" state outside of queryImpl.
+            throw error;
+          }
+
+          throw new Error("Expected a response from queryRoute");
+        }
+      );
+      return response;
+    } else {
+      let result = await callQueryHandlers(
+        request,
+        location,
+        matches,
+        requestContext,
+        dataStrategy || null,
+        false,
+        match
+      );
+
+      if (isResponse(result)) {
+        return result;
+      }
+
+      let error = result.errors ? Object.values(result.errors)[0] : undefined;
+      if (error !== undefined) {
+        // If we got back result.errors, that means the loader/action threw
+        // _something_ that wasn't a Response, but it's not guaranteed/required
+        // to be an `instanceof Error` either, so we have to use throw here to
+        // preserve the "error" state outside of queryImpl.
+        throw error;
+      }
+
+      // Pick off the right state value to return
+      if (result.actionData) {
+        return Object.values(result.actionData)[0];
+      }
+
+      if (result.loaderData) {
+        return Object.values(result.loaderData)[0];
+      }
+
+      return undefined;
     }
-
-    let error = result.errors ? Object.values(result.errors)[0] : undefined;
-    if (error !== undefined) {
-      // If we got back result.errors, that means the loader/action threw
-      // _something_ that wasn't a Response, but it's not guaranteed/required
-      // to be an `instanceof Error` either, so we have to use throw here to
-      // preserve the "error" state outside of queryImpl.
-      throw error;
-    }
-
-    // Pick off the right state value to return
-    if (result.actionData) {
-      return Object.values(result.actionData)[0];
-    }
-
-    if (result.loaderData) {
-      return Object.values(result.loaderData)[0];
-    }
-
-    return undefined;
   }
 
-  async function queryImpl(
+  async function callQueryHandlers(
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
@@ -4729,7 +4831,7 @@ export async function runMiddlewarePipeline(
 ): Promise<Record<string, DataStrategyResult>> {
   let keyedResults: Record<string, DataStrategyResult> = {};
   try {
-    let result = await callRouteMiddleware(
+    let { propagate, result } = await callRouteMiddleware(
       matches
         .slice(0, lastIndex + 1)
         .flatMap((m) =>
@@ -4740,12 +4842,11 @@ export async function runMiddlewarePipeline(
       0,
       { request, params, context },
       keyedResults,
-      handler,
-      returnHandlerResult
+      handler
     );
     // TODO: Clean this up
     // @ts-expect-error Unsure the best way to handle this for now
-    return returnHandlerResult ? result : keyedResults;
+    return propagate ? result : keyedResults;
   } catch (e) {
     if (!(e instanceof MiddlewareError)) {
       throw e;
@@ -4773,9 +4874,8 @@ async function callRouteMiddleware(
   idx: number,
   args: LoaderFunctionArgs | ActionFunctionArgs,
   keyedResults: Record<string, DataStrategyResult>,
-  handler: (r: Record<string, DataStrategyResult>) => void,
-  returnHandlerResult = false
-): Promise<unknown> {
+  handler: (r: Record<string, DataStrategyResult>) => void
+): Promise<{ propagate: boolean; result: unknown }> {
   let { request } = args;
   if (request.signal.aborted) {
     if (request.signal.reason) {
@@ -4790,25 +4890,26 @@ async function callRouteMiddleware(
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
     let result = await handler(keyedResults);
-    return returnHandlerResult ? result : undefined;
+    return { propagate: result !== undefined, result };
   }
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
+  let shouldPropagate = false;
   let next: Parameters<ClientMiddlewareFunction>[1] = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
     nextCalled = true;
-    let result = await callRouteMiddleware(
+    let { propagate, result } = await callRouteMiddleware(
       middlewares,
       idx + 1,
       args,
       keyedResults,
-      handler,
-      returnHandlerResult
+      handler
     );
-    return returnHandlerResult ? result : undefined;
+    shouldPropagate = propagate;
+    return propagate ? result : undefined;
   };
 
   try {
@@ -4816,7 +4917,7 @@ async function callRouteMiddleware(
     if (!nextCalled) {
       result = await next();
     }
-    return returnHandlerResult ? result : undefined;
+    return { propagate: shouldPropagate, result };
   } catch (e) {
     if (e instanceof MiddlewareError) {
       throw e;

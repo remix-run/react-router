@@ -271,7 +271,7 @@ async function handleSingleFetchRequest(
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void
 ): Promise<Response> {
-  let { result, headers, status } =
+  let response =
     request.method !== "GET"
       ? await singleFetchAction(
           build,
@@ -292,34 +292,7 @@ async function handleSingleFetchRequest(
           handleError
         );
 
-  // Mark all successful responses with a header so we can identify in-flight
-  // network errors that are missing this header
-  let resultHeaders = new Headers(headers);
-  resultHeaders.set("X-Remix-Response", "yes");
-
-  // 304 responses should not have a body
-  if (status === 304) {
-    return new Response(null, { status: 304, headers: resultHeaders });
-  }
-
-  // We use a less-descriptive `text/x-script` here instead of something like
-  // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
-  //  - https://github.com/remix-run/remix/issues/9884
-  //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
-  resultHeaders.set("Content-Type", "text/x-script");
-
-  return new Response(
-    encodeViaTurboStream(
-      result,
-      request.signal,
-      build.entry.module.streamTimeout,
-      serverMode
-    ),
-    {
-      status: status || 200,
-      headers: resultHeaders,
-    }
-  );
+  return response;
 }
 
 async function handleDocumentRequest(
@@ -332,9 +305,14 @@ async function handleDocumentRequest(
   criticalCss?: string
 ) {
   try {
-    let response = await staticHandler.respond(request, renderHtml, {
+    let response = await staticHandler.query(request, {
       requestContext: loadContext,
+      respond: renderHtml,
     });
+    invariant(
+      isResponse(response),
+      "Expected a Response to be returned from query"
+    );
     return response;
   } catch (error: unknown) {
     handleError(error);

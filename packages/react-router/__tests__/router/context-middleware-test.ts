@@ -1004,8 +1004,8 @@ describe("context/middleware", () => {
     });
   });
 
-  describe("middleware - handler.respond()", () => {
-    it("returns result of middleware in handler.respond()", async () => {
+  describe("middleware - handler.query", () => {
+    it("propagates a Response through middleware when a `respond` API is passed", async () => {
       let context = {};
       let handler = createStaticHandler([
         {
@@ -1053,17 +1053,19 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let response = await handler.respond(
+      let response = (await handler.query(
         new Request("http://localhost/parent/child"),
-        (staticContext) => {
-          return new Response(JSON.stringify(staticContext), {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-        },
-        { requestContext: context }
-      );
+        {
+          requestContext: context,
+          respond: async (staticContext) => {
+            return new Response(JSON.stringify(staticContext), {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+          },
+        }
+      )) as Response;
 
       expect(await response.json()).toMatchInlineSnapshot(`
         {
@@ -1132,9 +1134,7 @@ describe("context/middleware", () => {
       expect(response.headers.get("child1")).toEqual("yes");
       expect(response.headers.get("child2")).toEqual("yes");
     });
-  });
 
-  describe("middleware - handler.query", () => {
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
         let context = { order: [] };
@@ -1162,10 +1162,9 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let staticContext = await handler.query(
-          new Request("http://localhost/parent/child"),
-          { requestContext: context }
-        );
+        await handler.query(new Request("http://localhost/parent/child"), {
+          requestContext: context,
+        });
 
         expect(context).toEqual({
           order: [
@@ -1931,6 +1930,71 @@ describe("context/middleware", () => {
   });
 
   describe("middleware - handler.queryRoute", () => {
+    it("propagates a Response through middleware when a `respond` API is passed", async () => {
+      let context = {};
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          middleware: [
+            async ({ context }, next) => {
+              let res = (await next()) as Response;
+              res.headers.set("parent1", "yes");
+              return res;
+            },
+            async ({ context }, next) => {
+              let res = (await next()) as Response;
+              res.headers.set("parent2", "yes");
+              return res;
+            },
+          ],
+          loader() {
+            return new Response("PARENT");
+          },
+          children: [
+            {
+              id: "child",
+              path: "child",
+              middleware: [
+                async ({ context }, next) => {
+                  let res = (await next()) as Response;
+                  res.headers.set("child1", "yes");
+                  return res;
+                },
+                async ({ context }, next) => {
+                  let res = (await next()) as Response;
+                  res.headers.set("child2", "yes");
+                  return res;
+                },
+              ],
+              loader({ context }) {
+                return new Response("CHILD");
+              },
+            },
+          ],
+        },
+      ]);
+
+      let response = (await handler.queryRoute(
+        new Request("http://localhost/parent/child"),
+        {
+          requestContext: context,
+          async respond(val) {
+            return val;
+          },
+        }
+      )) as Response;
+
+      expect(await response.text()).toBe("CHILD");
+      expect(response.headers.get("parent1")).toEqual("yes");
+      expect(response.headers.get("parent2")).toEqual("yes");
+      expect(response.headers.get("child1")).toEqual("yes");
+      expect(response.headers.get("child2")).toEqual("yes");
+    });
+
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
         let context = { order: [] };

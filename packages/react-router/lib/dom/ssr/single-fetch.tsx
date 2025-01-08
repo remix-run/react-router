@@ -147,7 +147,7 @@ export function getSingleFetchDataStrategy(
         matches.findIndex((m) => m.shouldLoad),
         async (keyedResults) => {
           let results = await singleFetchActionStrategy(request, matches);
-          return Object.assign(keyedResults, results);
+          Object.assign(keyedResults, results);
         }
       );
     }
@@ -162,7 +162,7 @@ export function getSingleFetchDataStrategy(
             request,
             matches
           );
-          return Object.assign(keyedResults, results);
+          Object.assign(keyedResults, results);
         }
       );
     }
@@ -188,7 +188,7 @@ export function getSingleFetchDataStrategy(
           request,
           matches
         );
-        return Object.assign(keyedResults, results);
+        Object.assign(keyedResults, results);
       }
     );
   };
