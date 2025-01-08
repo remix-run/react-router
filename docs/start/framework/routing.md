@@ -263,6 +263,8 @@ async function loader({ params }: LoaderArgs) {
 }
 ```
 
+You should ensure that all dynamic segments in a given path are unique.  Otherwise, as we the `params` object is populated - latter dynamic segment values will override earlier values.
+
 ## Optional Segments
 
 You can make a route segment optional by adding a `?` to the end of the segment.
