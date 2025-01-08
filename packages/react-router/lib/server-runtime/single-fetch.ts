@@ -1,7 +1,11 @@
 import { encode } from "turbo-stream";
 
-import type { StaticHandler } from "../router/router";
-import { isRedirectStatusCode, isResponse } from "../router/router";
+import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import {
+  isRedirectResponse,
+  isRedirectStatusCode,
+  isResponse,
+} from "../router/router";
 import type {
   DataStrategyFunctionArgs,
   DataStrategyFunction,
@@ -23,9 +27,21 @@ import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
+import invariant from "./invariant";
 
 export type { SingleFetchResult, SingleFetchResults };
 export { SingleFetchRedirectSymbol };
+
+// Do not include a response body if the status code is one of these,
+// otherwise `undici` will throw an error when constructing the Response:
+//   https://github.com/nodejs/undici/blob/bd98a6303e45d5e0d44192a93731b1defdb415f3/lib/web/fetch/response.js#L522-L528
+//
+// Specs:
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-informational-1xx
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
+export const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205, 304]);
 
 // We can't use a 3xx status or else the `fetch()` would follow the redirect.
 // We need to communicate the redirect back as data so we can act on it in the
@@ -34,6 +50,7 @@ export { SingleFetchRedirectSymbol };
 // the user control cache behavior via Cache-Control
 export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
+// TODO: Add this logic as flags to query() and remove this function
 export function getSingleFetchDataStrategy({
   isActionDataRequest,
   loadRouteIds,
@@ -71,7 +88,7 @@ export async function singleFetchAction(
   handlerUrl: URL,
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void
-): Promise<{ result: SingleFetchResult; headers: Headers; status: number }> {
+): Promise<Response> {
   try {
     let handlerRequest = new Request(handlerUrl, {
       method: request.method,
@@ -84,15 +101,58 @@ export async function singleFetchAction(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      dataStrategy: getSingleFetchDataStrategy({
-        isActionDataRequest: true,
-      }),
+      async respond(context: StaticHandlerContext) {
+        let headers = getDocumentHeaders(build, context);
+
+        if (
+          isRedirectStatusCode(context.statusCode) &&
+          headers.has("Location")
+        ) {
+          return generateSingleFetchResponse(request, build, serverMode, {
+            result: getSingleFetchRedirect(
+              context.statusCode,
+              headers,
+              build.basename
+            ),
+            headers,
+            status: SINGLE_FETCH_REDIRECT_STATUS,
+          });
+        }
+
+        // Sanitize errors outside of development environments
+        if (context.errors) {
+          Object.values(context.errors).forEach((err) => {
+            // @ts-expect-error This is "private" from users but intended for internal use
+            if (!isRouteErrorResponse(err) || err.error) {
+              handleError(err);
+            }
+          });
+          context.errors = sanitizeErrors(context.errors, serverMode);
+        }
+
+        let singleFetchResult: SingleFetchResult;
+        if (context.errors) {
+          singleFetchResult = { error: Object.values(context.errors)[0] };
+        } else {
+          singleFetchResult = {
+            data: Object.values(context.actionData || {})[0],
+          };
+        }
+
+        return generateSingleFetchResponse(request, build, serverMode, {
+          result: singleFetchResult,
+          headers,
+          status: context.statusCode,
+        });
+      },
     });
+
+    invariant(isResponse(result), " Expected a Response from query()");
 
     // Unlike `handleDataRequest`, when singleFetch is enabled, query does
     // let non-Response return values through
-    if (isResponse(result)) {
-      return {
+    if (isRedirectResponse(result)) {
+      return generateSingleFetchResponse(request, build, serverMode, {
         result: getSingleFetchRedirect(
           result.status,
           result.headers,
@@ -100,55 +160,18 @@ export async function singleFetchAction(
         ),
         headers: result.headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
-    }
-
-    let context = result;
-    let headers = getDocumentHeaders(build, context);
-
-    if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
-      return {
-        result: getSingleFetchRedirect(
-          context.statusCode,
-          headers,
-          build.basename
-        ),
-        headers,
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
-    }
-
-    // Sanitize errors outside of development environments
-    if (context.errors) {
-      Object.values(context.errors).forEach((err) => {
-        // @ts-expect-error This is "private" from users but intended for internal use
-        if (!isRouteErrorResponse(err) || err.error) {
-          handleError(err);
-        }
       });
-      context.errors = sanitizeErrors(context.errors, serverMode);
     }
 
-    let singleFetchResult: SingleFetchResult;
-    if (context.errors) {
-      singleFetchResult = { error: Object.values(context.errors)[0] };
-    } else {
-      singleFetchResult = { data: Object.values(context.actionData || {})[0] };
-    }
-
-    return {
-      result: singleFetchResult,
-      headers,
-      status: context.statusCode,
-    };
+    return result;
   } catch (error) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs
-    return {
+    return generateSingleFetchResponse(request, build, serverMode, {
       result: { error },
       headers: new Headers(),
       status: 500,
-    };
+    });
   }
 }
 
@@ -160,7 +183,7 @@ export async function singleFetchLoaders(
   handlerUrl: URL,
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void
-): Promise<{ result: SingleFetchResults; headers: Headers; status: number }> {
+): Promise<Response> {
   try {
     let handlerRequest = new Request(handlerUrl, {
       headers: request.headers,
@@ -172,13 +195,67 @@ export async function singleFetchLoaders(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      dataStrategy: getSingleFetchDataStrategy({
-        loadRouteIds,
-      }),
+      async respond(context: StaticHandlerContext) {
+        let headers = getDocumentHeaders(build, context);
+
+        if (
+          isRedirectStatusCode(context.statusCode) &&
+          headers.has("Location")
+        ) {
+          return generateSingleFetchResponse(request, build, serverMode, {
+            result: {
+              [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
+                context.statusCode,
+                headers,
+                build.basename
+              ),
+            },
+            headers,
+            status: SINGLE_FETCH_REDIRECT_STATUS,
+          });
+        }
+
+        // Sanitize errors outside of development environments
+        if (context.errors) {
+          Object.values(context.errors).forEach((err) => {
+            // @ts-expect-error This is "private" from users but intended for internal use
+            if (!isRouteErrorResponse(err) || err.error) {
+              handleError(err);
+            }
+          });
+          context.errors = sanitizeErrors(context.errors, serverMode);
+        }
+
+        // Aggregate results based on the matches we intended to load since we get
+        // `null` values back in `context.loaderData` for routes we didn't load
+        let results: SingleFetchResults = {};
+        let loadedMatches = loadRouteIds
+          ? context.matches.filter(
+              (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
+            )
+          : context.matches;
+
+        loadedMatches.forEach((m) => {
+          let { id } = m.route;
+          if (context.errors && context.errors.hasOwnProperty(id)) {
+            results[id] = { error: context.errors[id] };
+          } else if (context.loaderData.hasOwnProperty(id)) {
+            results[id] = { data: context.loaderData[id] };
+          }
+        });
+
+        return generateSingleFetchResponse(request, build, serverMode, {
+          result: results,
+          headers,
+          status: context.statusCode,
+        });
+      },
     });
 
-    if (isResponse(result)) {
-      return {
+    invariant(isResponse(result), " Expected a Response from query()");
+
+    if (isRedirectResponse(result)) {
+      return generateSingleFetchResponse(request, build, serverMode, {
         result: {
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
             result.status,
@@ -188,69 +265,63 @@ export async function singleFetchLoaders(
         },
         headers: result.headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
-    }
-
-    let context = result;
-    let headers = getDocumentHeaders(build, context);
-
-    if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
-      return {
-        result: {
-          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
-            context.statusCode,
-            headers,
-            build.basename
-          ),
-        },
-        headers,
-        status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
-    }
-
-    // Sanitize errors outside of development environments
-    if (context.errors) {
-      Object.values(context.errors).forEach((err) => {
-        // @ts-expect-error This is "private" from users but intended for internal use
-        if (!isRouteErrorResponse(err) || err.error) {
-          handleError(err);
-        }
       });
-      context.errors = sanitizeErrors(context.errors, serverMode);
     }
 
-    // Aggregate results based on the matches we intended to load since we get
-    // `null` values back in `context.loaderData` for routes we didn't load
-    let results: SingleFetchResults = {};
-    let loadedMatches = loadRouteIds
-      ? context.matches.filter(
-          (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
-        )
-      : context.matches;
-
-    loadedMatches.forEach((m) => {
-      let { id } = m.route;
-      if (context.errors && context.errors.hasOwnProperty(id)) {
-        results[id] = { error: context.errors[id] };
-      } else if (context.loaderData.hasOwnProperty(id)) {
-        results[id] = { data: context.loaderData[id] };
-      }
-    });
-
-    return {
-      result: results,
-      headers,
-      status: context.statusCode,
-    };
+    return result;
   } catch (error: unknown) {
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs
-    return {
+    return generateSingleFetchResponse(request, build, serverMode, {
       result: { root: { error } },
       headers: new Headers(),
       status: 500,
-    };
+    });
   }
+}
+
+function generateSingleFetchResponse(
+  request: Request,
+  build: ServerBuild,
+  serverMode: ServerMode,
+  {
+    result,
+    headers,
+    status,
+  }: {
+    result: SingleFetchResult | SingleFetchResults;
+    headers: Headers;
+    status: number;
+  }
+) {
+  // Mark all successful responses with a header so we can identify in-flight
+  // network errors that are missing this header
+  let resultHeaders = new Headers(headers);
+  resultHeaders.set("X-Remix-Response", "yes");
+
+  // Skip response body for unsupported status codes
+  if (NO_BODY_STATUS_CODES.has(status)) {
+    return new Response(null, { status, headers: resultHeaders });
+  }
+
+  // We use a less-descriptive `text/x-script` here instead of something like
+  // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
+  //  - https://github.com/remix-run/remix/issues/9884
+  //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
+  resultHeaders.set("Content-Type", "text/x-script");
+
+  return new Response(
+    encodeViaTurboStream(
+      result,
+      request.signal,
+      build.entry.module.streamTimeout,
+      serverMode
+    ),
+    {
+      status: status || 200,
+      headers: resultHeaders,
+    }
+  );
 }
 
 export function getSingleFetchRedirect(
