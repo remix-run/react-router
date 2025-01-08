@@ -1480,6 +1480,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           hasRouteChunks,
           hasClientActionChunk,
           hasClientLoaderChunk,
+          hasHydrateFallbackChunk,
           chunkedExports,
         } = await detectRouteChunksIfEnabled(cache, ctx, id, code);
 
@@ -1519,8 +1520,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               chunkBasePath,
               "clientLoader"
             )}";`,
-          // Note: HydrateFallback is not included here because it's only needed
-          // on the initial page load. It's only ever requested as an import in the HTML from the server
+          hasHydrateFallbackChunk &&
+            `export { HydrateFallback } from "${getRouteChunkModuleId(
+              chunkBasePath,
+              "HydrateFallback"
+            )}";`,
         ]
           .filter(Boolean)
           .join("\n");
