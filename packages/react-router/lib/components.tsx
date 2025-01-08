@@ -61,74 +61,7 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-const ENABLE_DEV_WARNINGS = __DEV__;
-
-/**
- * @private
- */
-export function mapRouteProperties(route: RouteObject) {
-  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this -- please and thank you!
-    hasErrorBoundary:
-      route.hasErrorBoundary ||
-      route.ErrorBoundary != null ||
-      route.errorElement != null,
-  };
-
-  if (route.Component) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.element) {
-        warning(
-          false,
-          "You should not include both `Component` and `element` on your route - " +
-            "`Component` will be used."
-        );
-      }
-    }
-    Object.assign(updates, {
-      element: React.createElement(route.Component),
-      Component: undefined,
-    });
-  }
-
-  if (route.HydrateFallback) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.hydrateFallbackElement) {
-        warning(
-          false,
-          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
-            "`HydrateFallback` will be used."
-        );
-      }
-    }
-    Object.assign(updates, {
-      hydrateFallbackElement: React.createElement(route.HydrateFallback),
-      HydrateFallback: undefined,
-    });
-  }
-
-  if (route.ErrorBoundary) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.errorElement) {
-        warning(
-          false,
-          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-            "`ErrorBoundary` will be used."
-        );
-      }
-    }
-    Object.assign(updates, {
-      errorElement: React.createElement(route.ErrorBoundary),
-      ErrorBoundary: undefined,
-    });
-  }
-
-  return updates;
-}
+import { mapRouteProperties } from "./dom/shared";
 
 /**
  * @category Routers

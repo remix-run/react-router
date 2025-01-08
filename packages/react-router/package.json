@@ -23,6 +23,21 @@
   "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
+      "react-server": {
+        "node": {
+          "types": "./dist/development/server.d.ts",
+          "module-sync": "./dist/development/server.mjs",
+          "default": "./dist/development/server.js"
+        },
+        "import": {
+          "types": "./dist/development/server.d.mts",
+          "default": "./dist/development/server.mjs"
+        },
+        "default": {
+          "types": "./dist/development/server.d.ts",
+          "default": "./dist/development/server.js"
+        }
+      },
       "node": {
         "types": "./dist/development/index.d.ts",
         "module-sync": "./dist/development/index.mjs",
@@ -67,7 +82,7 @@
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup",
+      "command": "rimraf dist && tsup && tsup --config tsup.config.server.ts",
       "files": [
         "lib/**",
         "*.ts",
