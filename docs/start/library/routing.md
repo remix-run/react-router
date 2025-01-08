@@ -168,7 +168,7 @@ export default function Team() {
 }
 ```
 
-You should ensure that all dynamic segments in a given path are unique.  Otherwise, as the `params` object is populated - latter dynamic segment values will override earlier values.
+You should ensure that all dynamic segments in a given path are unique. Otherwise, as the `params` object is populated - latter dynamic segment values will override earlier values.
 
 ## Optional Segments
 
