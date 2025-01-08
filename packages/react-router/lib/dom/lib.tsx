@@ -65,7 +65,8 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import { Router, mapRouteProperties } from "../components";
+import { Router } from "../components";
+import { mapRouteProperties } from "../dom/shared";
 import type {
   RouteObject,
   NavigateOptions,

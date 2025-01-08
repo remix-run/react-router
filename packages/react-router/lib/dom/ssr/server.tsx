@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 import * as React from "react";
 
-import { createStaticRouter, StaticRouterProvider } from "../server";
+import { StaticRouterProvider } from "../components";
+import { createStaticRouter } from "../server";
 import { FrameworkContext } from "./components";
 import type { EntryContext } from "./entry";
 import { RemixErrorBoundary } from "./errorBoundaries";

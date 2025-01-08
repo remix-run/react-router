@@ -180,13 +180,9 @@ export { createSearchParams } from "./lib/dom/dom";
 export type {
   StaticRouterProps,
   StaticRouterProviderProps,
-} from "./lib/dom/server";
-export {
-  createStaticHandler,
-  createStaticRouter,
-  StaticRouter,
-  StaticRouterProvider,
-} from "./lib/dom/server";
+} from "./lib/dom/components";
+export { StaticRouter, StaticRouterProvider } from "./lib/dom/components";
+export { createStaticHandler, createStaticRouter } from "./lib/dom/server";
 export {
   Meta,
   Links,
@@ -303,7 +299,7 @@ export {
 } from "./lib/context";
 
 /** @internal */
-export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
+export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/dom/shared";
 
 /** @internal */
 export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
