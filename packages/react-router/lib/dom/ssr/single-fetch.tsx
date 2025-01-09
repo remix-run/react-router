@@ -145,6 +145,7 @@ export function getSingleFetchDataStrategy(
       return runMiddlewarePipeline(
         args,
         matches.findIndex((m) => m.shouldLoad),
+        false,
         async (keyedResults) => {
           let results = await singleFetchActionStrategy(request, matches);
           Object.assign(keyedResults, results);
@@ -157,6 +158,7 @@ export function getSingleFetchDataStrategy(
       return runMiddlewarePipeline(
         args,
         matches.findIndex((m) => m.shouldLoad),
+        false,
         async (keyedResults) => {
           let results = await singleFetchLoaderFetcherStrategy(
             request,
@@ -180,6 +182,7 @@ export function getSingleFetchDataStrategy(
     return runMiddlewarePipeline(
       args,
       lowestLoadingIndex,
+      false,
       async (keyedResults) => {
         let results = await singleFetchLoaderNavigationStrategy(
           manifest,
