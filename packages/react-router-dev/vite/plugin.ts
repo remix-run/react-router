@@ -41,6 +41,7 @@ import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import {
   type RouteChunkName,
+  chunkedExportNames,
   detectRouteChunks,
   getRouteChunkCode,
   isRouteChunkModuleId,
@@ -2564,7 +2565,7 @@ async function detectRouteChunksIfEnabled(
   }
 
   let code = await resolveRouteFileCode(ctx, input);
-  if (!code.includes("clientLoader") && !code.includes("clientAction")) {
+  if (!chunkedExportNames.some((exportName) => code.includes(exportName))) {
     return {
       chunkedExports: [],
       hasClientActionChunk: false,

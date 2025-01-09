@@ -930,7 +930,7 @@ export function detectRouteChunks(
 }
 
 const mainChunkName = "main" as const;
-const chunkedExportNames = [
+export const chunkedExportNames = [
   "clientAction",
   "clientLoader",
   "HydrateFallback",
