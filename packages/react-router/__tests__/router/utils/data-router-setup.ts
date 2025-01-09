@@ -226,6 +226,7 @@ export function setup({
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
       let enhancedRoute: AgnosticDataRouteObject = {
+        middleware: undefined,
         ...r,
         lazy: undefined,
         loader: undefined,

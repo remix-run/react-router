@@ -4952,16 +4952,21 @@ async function callDataStrategyImpl(
       : undefined
   );
 
-  // If any routes has a `lazy` implementation and no statically defined `middleware`,
+  // If any routes have a `lazy` implementation and no statically defined `middleware`,
   // then we have to resolve those `lazy` implementations before we can call
   // `dataStrategy` so the middlewares will be available
-  await Promise.all(
-    matches.map((m, i) => {
-      if ("lazy" in m.route && !("middleware" in m.route)) {
-        return loadRouteDefinitionsPromises[i];
-      }
-    })
-  );
+  let lazyMiddlewarePromises = matches
+    .map((m, i) =>
+      m.route.lazy && !("middleware" in m.route)
+        ? // Swallow the error here, let it bubble up from resolve()
+          loadRouteDefinitionsPromises[i]!.catch((e) => e)
+        : null
+    )
+    .filter((p) => p != null);
+
+  if (lazyMiddlewarePromises.length > 0) {
+    await Promise.all(lazyMiddlewarePromises);
+  }
 
   let dsMatches = matches.map((match, i) => {
     let loadRoutePromise = loadRouteDefinitionsPromises[i];
