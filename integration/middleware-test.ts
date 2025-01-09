@@ -768,6 +768,9 @@ test.describe("Middleware", () => {
             export const middleware = [
               ({ request, context }) => { throw redirect('/target'); }
             ]
+            export function loader() {
+              return null;
+            }
             export default function Component() {
               return <h1>Redirect</h1>
             }
@@ -792,7 +795,7 @@ test.describe("Middleware", () => {
       appFixture.close();
     });
 
-    test.only("handles redirects thrown on the way up", async ({ page }) => {
+    test("handles redirects thrown on the way up", async ({ page }) => {
       let fixture = await createFixture({
         files: {
           "vite.config.ts": js`
@@ -819,6 +822,9 @@ test.describe("Middleware", () => {
                 throw redirect('/target');
               }
             ]
+            export function loader() {
+              return null;
+            }
             export default function Component() {
               return <h1>Redirect</h1>
             }
@@ -838,8 +844,6 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await new Promise((r) => setTimeout(r, 1000));
-      console.log(await app.getHtml());
       await page.waitForSelector('h1:has-text("Target")');
 
       appFixture.close();
