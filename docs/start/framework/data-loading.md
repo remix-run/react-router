@@ -182,6 +182,8 @@ Next: [Actions](./actions)
 See also:
 
 - [Streaming with Suspense](../../how-to/suspense)
+- [Client Data](../../how-to/client-data)
+- [Using Fetchers](../../how-to/fetchers#loading-data)
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching
 [data]: ../../api/react-router/data
