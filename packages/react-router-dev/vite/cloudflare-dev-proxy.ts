@@ -1,5 +1,5 @@
-import { createRequestHandler } from "react-router";
-import { type AppLoadContext, type ServerBuild } from "react-router";
+import type * as rr from "react-router";
+import type { AppLoadContext, ServerBuild } from "react-router";
 import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
@@ -95,6 +95,10 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
                 serverBuildId
               )) as ServerBuild;
 
+              const { createRequestHandler } =
+                (await viteDevServer.ssrLoadModule(
+                  "react-router"
+                )) as typeof rr;
               let handler = createRequestHandler(build, "development");
               let req = fromNodeRequest(nodeReq, nodeRes);
               let loadContext = getLoadContext
