@@ -1049,6 +1049,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                                 route.file
                               );
 
+                              let isRootRoute =
+                                route.file ===
+                                ctx.reactRouterConfig.routes.root.file;
+
                               let code = fse.readFileSync(
                                 routeFilePath,
                                 "utf-8"
@@ -1056,14 +1060,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
                               return [
                                 `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-                                ...routeChunkExportNames.map((exportName) =>
-                                  code.includes(exportName)
-                                    ? getRouteChunkModuleId(
-                                        routeFilePath,
-                                        exportName
-                                      )
-                                    : null
-                                ),
+                                ...(!isRootRoute
+                                  ? routeChunkExportNames.map((exportName) =>
+                                      code.includes(exportName)
+                                        ? getRouteChunkModuleId(
+                                            routeFilePath,
+                                            exportName
+                                          )
+                                        : null
+                                    )
+                                  : []),
                               ].filter(isNonNullable);
                             }),
                           ],
@@ -2518,31 +2524,43 @@ const resolveRouteFileCode = async (
   );
 };
 
-function noRouteChunksDetected(): ReturnType<typeof detectRouteChunks> {
-  return {
-    chunkedExports: [],
-    hasRouteChunks: false,
-    hasRouteChunkByExportName: {
-      clientAction: false,
-      clientLoader: false,
-      HydrateFallback: false,
-    },
-  };
-}
-
 async function detectRouteChunksIfEnabled(
   cache: Cache,
   ctx: ReactRouterPluginContext,
   id: string,
   input: ResolveRouteFileCodeInput
 ): Promise<ReturnType<typeof detectRouteChunks>> {
+  function noRouteChunks(): ReturnType<typeof detectRouteChunks> {
+    return {
+      chunkedExports: [],
+      hasRouteChunks: false,
+      hasRouteChunkByExportName: {
+        clientAction: false,
+        clientLoader: false,
+        HydrateFallback: false,
+      },
+    };
+  }
+
   if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
-    return noRouteChunksDetected();
+    return noRouteChunks();
+  }
+
+  // If this is the root route, we disable chunking since the chunks would never
+  // be loaded on demand during navigation. Because the root route is matched
+  // for all requests, all of its chunks would always be loaded up front during
+  // the initial page load. Instead of firing off multiple requests to resolve
+  // the root route code, we want it to be downloaded in a single request.
+  if (
+    normalizeRelativeFilePath(id, ctx.reactRouterConfig) ===
+    ctx.reactRouterConfig.routes.root.file
+  ) {
+    return noRouteChunks();
   }
 
   let code = await resolveRouteFileCode(ctx, input);
   if (!routeChunkExportNames.some((exportName) => code.includes(exportName))) {
-    return noRouteChunksDetected();
+    return noRouteChunks();
   }
 
   let cacheKey =
