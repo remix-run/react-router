@@ -27,6 +27,11 @@ export async function clientLoader({
   return product;
 }
 
+// HydrateFallback is rendered while the client loader is running
+export function HydrateFallback() {
+  return <div>Loading...</div>;
+}
+
 export default function Product({
   loaderData,
 }: Route.ComponentProps) {
@@ -150,46 +155,23 @@ export default function Product({
 You can also force the client loader to run during hydration and before the page renders by setting the `hydrate` property on the function. In this situation you will want to render a `HydrateFallback` component to show a fallback UI while the client loader runs.
 
 ```tsx filename=app/product.tsx
-// route("products/:pid", "./product.tsx");
-import type { Route } from "./+types/product";
-import { fakeDb } from "../db";
-
-export async function loader({ params }: Route.LoaderArgs) {
-  return fakeDb.getProduct(params.pid);
+export async function loader() {
+  /* ... */
 }
 
-export async function clientLoader({
-  serverLoader,
-  params,
-}: Route.ClientLoader) {
-  const serverData = await serverLoader();
-  const res = await fetch(`/api/products/${params.pid}`);
-  return { ...serverData, ...res.json() };
+export async function clientLoader() {
+  /* ... */
 }
 
-// Note: if there is no `loader`, this is implied
-clientLoader.hydrate = true as const;
+// force the client loader to run during hydration
+clientLoader.hydrate = true as const; // `as const` for type inference
 
 export function HydrateFallback() {
-  return (
-    <div>
-      <h1>Product Loading...</h1>
-      <p>Description loading...</p>
-    </div>
-  );
+  return <div>Loading...</div>;
 }
 
-export default function Product({
-  loaderData,
-}: Route.ComponentProps) {
-  const { name, description } = loaderData;
-
-  return (
-    <div>
-      <h1>{name}</h1>
-      <p>{description}</p>
-    </div>
-  );
+export default function Product() {
+  /* ... */
 }
 ```
 
