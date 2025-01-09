@@ -49,8 +49,7 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
-These approaches can also be combined, as shown below:
+If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention][file-route-conventions]. You can even combine different routing conventions if you like:
 
 ```ts filename=app/routes.ts
 import { type RouteConfig, route } from "@react-router/dev/routes";
