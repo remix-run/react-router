@@ -901,43 +901,38 @@ export function detectRouteChunks(
   cache: Cache,
   cacheKey: string
 ): {
-  hasClientActionChunk: boolean;
-  hasClientLoaderChunk: boolean;
-  hasHydrateFallbackChunk: boolean;
   hasRouteChunks: boolean;
-  chunkedExports: RouteChunkName[];
+  hasRouteChunkByExportName: Record<RouteChunkExportName, boolean>;
+  chunkedExports: RouteChunkExportName[];
 } {
-  const chunkStatus = Object.fromEntries(
-    chunkedExportNames.map((exportName) => [
+  const hasRouteChunkByExportName = Object.fromEntries(
+    routeChunkExportNames.map((exportName) => [
       exportName,
       hasChunkableExport(code, exportName, cache, cacheKey),
     ])
-  ) as Record<RouteChunkName, boolean>;
+  ) as Record<RouteChunkExportName, boolean>;
 
-  const chunkedExports = Object.entries(chunkStatus)
+  const chunkedExports = Object.entries(hasRouteChunkByExportName)
     .filter(([, isChunked]) => isChunked)
-    .map(([exportName]) => exportName as RouteChunkName);
+    .map(([exportName]) => exportName as RouteChunkExportName);
 
   const hasRouteChunks = chunkedExports.length > 0;
 
   return {
-    hasClientActionChunk: chunkStatus.clientAction,
-    hasClientLoaderChunk: chunkStatus.clientLoader,
-    hasHydrateFallbackChunk: chunkStatus.HydrateFallback,
     hasRouteChunks,
+    hasRouteChunkByExportName,
     chunkedExports,
   };
 }
 
 const mainChunkName = "main" as const;
-export const chunkedExportNames = [
+export const routeChunkExportNames = [
   "clientAction",
   "clientLoader",
   "HydrateFallback",
 ] as const;
-export type RouteChunkName =
-  | typeof mainChunkName
-  | (typeof chunkedExportNames)[number];
+export type RouteChunkExportName = (typeof routeChunkExportNames)[number];
+export type RouteChunkName = typeof mainChunkName | RouteChunkExportName;
 
 export function getRouteChunkCode(
   code: string,
@@ -946,7 +941,7 @@ export function getRouteChunkCode(
   cacheKey: string
 ): GeneratorResult | undefined {
   if (chunkName === mainChunkName) {
-    return omitChunkedExports(code, chunkedExportNames, {}, cache, cacheKey);
+    return omitChunkedExports(code, routeChunkExportNames, {}, cache, cacheKey);
   }
 
   return getChunkedExport(code, chunkName, {}, cache, cacheKey);
@@ -977,7 +972,7 @@ export function isRouteChunkModuleId(id: string): boolean {
 }
 
 function isRouteChunkName(name: string): name is RouteChunkName {
-  return name === mainChunkName || chunkedExportNames.includes(name as any);
+  return name === mainChunkName || routeChunkExportNames.includes(name as any);
 }
 
 export function getRouteChunkNameFromModuleId(
