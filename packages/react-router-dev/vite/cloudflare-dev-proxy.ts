@@ -5,6 +5,7 @@ import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { preloadVite, getVite } from "./vite";
+import { virtual } from "./plugin";
 
 let serverBuildId = "virtual:react-router/server-build";
 
@@ -97,7 +98,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
               const { createRequestHandler } =
                 (await viteDevServer.ssrLoadModule(
-                  "react-router"
+                  virtual.reactRouterReexport.id
                 )) as typeof rr;
               let handler = createRequestHandler(build, "development");
               let req = fromNodeRequest(nodeReq, nodeRes);

@@ -176,6 +176,7 @@ let virtual = {
   serverBuild: VirtualModule.create("server-build"),
   serverManifest: VirtualModule.create("server-manifest"),
   browserManifest: VirtualModule.create("browser-manifest"),
+  reactRouterReexport: VirtualModule.create("react-router-reexport"),
 };
 
 let invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
@@ -1073,7 +1074,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           unstable_setDevServerHooks: setDevServerHooks,
           createRequestHandler,
           matchRoutes,
-        } = (await viteDevServer.ssrLoadModule("react-router")) as typeof rr;
+        } = (await viteDevServer.ssrLoadModule(
+          virtual.reactRouterReexport.id
+        )) as typeof rr;
 
         setDevServerHooks({
           // Give the request handler access to the critical CSS in dev to avoid a
@@ -1335,6 +1338,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             });
 
             return `window.__reactRouterManifest=${reactRouterManifestString};`;
+          }
+          case virtual.reactRouterReexport.resolvedId: {
+            return `export * from "react-router";`;
           }
         }
       },
