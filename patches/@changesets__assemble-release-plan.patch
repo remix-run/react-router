@@ -1,0 +1,60 @@
+diff --git a/dist/assemble-release-plan.cjs.dev.js b/dist/assemble-release-plan.cjs.dev.js
+index e1376ca756d69816f8c79637ee7b45161f092167..314c42e8c39a34dacc3ed0c10bc7e62ca46de7d3 100644
+--- a/dist/assemble-release-plan.cjs.dev.js
++++ b/dist/assemble-release-plan.cjs.dev.js
+@@ -254,10 +254,16 @@ function shouldBumpMajor({
+   preInfo,
+   onlyUpdatePeerDependentsWhenOutOfRange
+ }) {
++  // PATCH: Don't do peerDependency-driven major bumps because we release in lock step
++  if (nextRelease.name === "react-router" || nextRelease.name.startsWith('@react-router/')) {
++    return false;
++  }
++
+   // we check if it is a peerDependency because if it is, our dependent bump type might need to be major.
+   return depType === "peerDependencies" && nextRelease.type !== "none" && nextRelease.type !== "patch" && ( // 1. If onlyUpdatePeerDependentsWhenOutOfRange set to true, bump major if the version is leaving the range.
+   // 2. If onlyUpdatePeerDependentsWhenOutOfRange set to false, bump major regardless whether or not the version is leaving the range.
+-  !onlyUpdatePeerDependentsWhenOutOfRange || !semverSatisfies__default['default'](incrementVersion(nextRelease, preInfo), versionRange)) && ( // bump major only if the dependent doesn't already has a major release.
++  // PATCH: pass includePrerelease to incrementVersion()
++  !onlyUpdatePeerDependentsWhenOutOfRange || !semverSatisfies__default['default'](incrementVersion(nextRelease, preInfo), versionRange, { includePrerelease: true })) && ( // bump major only if the dependent doesn't already has a major release.
+   !releases.has(dependent) || releases.has(dependent) && releases.get(dependent).type !== "major");
+ }
+ 
+diff --git a/dist/assemble-release-plan.cjs.prod.js b/dist/assemble-release-plan.cjs.prod.js
+index 3a83720644a94cdf6e62fa188a72c51c0384d00e..273f6bb9b46cf166f9d72058e524b4f3cbc05957 100644
+--- a/dist/assemble-release-plan.cjs.prod.js
++++ b/dist/assemble-release-plan.cjs.prod.js
+@@ -130,7 +130,10 @@ function getDependencyVersionRanges(dependentPkgJSON, dependencyRelease) {
+ }
+ 
+ function shouldBumpMajor({dependent: dependent, depType: depType, versionRange: versionRange, releases: releases, nextRelease: nextRelease, preInfo: preInfo, onlyUpdatePeerDependentsWhenOutOfRange: onlyUpdatePeerDependentsWhenOutOfRange}) {
+-  return "peerDependencies" === depType && "none" !== nextRelease.type && "patch" !== nextRelease.type && (!onlyUpdatePeerDependentsWhenOutOfRange || !semverSatisfies__default.default(incrementVersion(nextRelease, preInfo), versionRange)) && (!releases.has(dependent) || releases.has(dependent) && "major" !== releases.get(dependent).type);
++  if (nextRelease.name === "react-router" || nextRelease.name.startsWith('@react-router/')) {
++    return false;
++  }
++  return "peerDependencies" === depType && "none" !== nextRelease.type && "patch" !== nextRelease.type && (!onlyUpdatePeerDependentsWhenOutOfRange || !semverSatisfies__default.default(incrementVersion(nextRelease, preInfo), versionRange, { includePrerelease: true })) && (!releases.has(dependent) || releases.has(dependent) && "major" !== releases.get(dependent).type);
+ }
+ 
+ function flattenReleases(changesets, packagesByName, ignoredPackages) {
+diff --git a/dist/assemble-release-plan.esm.js b/dist/assemble-release-plan.esm.js
+index 62891eb5dee97a33e6587514267c3cde5b314830..9a70c1ac86f530dc0cb3857d202675ed23d694b5 100644
+--- a/dist/assemble-release-plan.esm.js
++++ b/dist/assemble-release-plan.esm.js
+@@ -243,10 +243,16 @@ function shouldBumpMajor({
+   preInfo,
+   onlyUpdatePeerDependentsWhenOutOfRange
+ }) {
++  // PATCH: Don't do peerDependency-driven major bumps because we release in lock step
++  if (nextRelease.name === "react-router" || nextRelease.name.startsWith('@react-router/')) {
++    return false;
++  }
++
+   // we check if it is a peerDependency because if it is, our dependent bump type might need to be major.
+   return depType === "peerDependencies" && nextRelease.type !== "none" && nextRelease.type !== "patch" && ( // 1. If onlyUpdatePeerDependentsWhenOutOfRange set to true, bump major if the version is leaving the range.
+   // 2. If onlyUpdatePeerDependentsWhenOutOfRange set to false, bump major regardless whether or not the version is leaving the range.
+-  !onlyUpdatePeerDependentsWhenOutOfRange || !semverSatisfies(incrementVersion(nextRelease, preInfo), versionRange)) && ( // bump major only if the dependent doesn't already has a major release.
++  // PATCH: pass includePrerelease to incrementVersion()
++  !onlyUpdatePeerDependentsWhenOutOfRange || !semverSatisfies(incrementVersion(nextRelease, preInfo), versionRange, { includePrerelease: true })) && ( // bump major only if the dependent doesn't already has a major release.
+   !releases.has(dependent) || releases.has(dependent) && releases.get(dependent).type !== "major");
+ }
+ 

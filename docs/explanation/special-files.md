@@ -20,7 +20,7 @@ export default {
 } satisfies Config;
 ```
 
-See the [config API](https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html) for more information.
+See the details on [react-router config API][react-router-config] for more information.
 
 ## root.tsx
 
@@ -229,6 +229,32 @@ The `default` export of this module is a function that lets you create the respo
 
 This module should render the markup for the current page using a `<ServerRouter>` element with the `context` and `url` for the current request. This markup will (optionally) be re-hydrated once JavaScript loads in the browser using the [client entry module][client-entry].
 
+### `streamTimeout`
+
+If you are [streaming] responses, you can export an optional `streamTimeout` value (in milliseconds) that will control the amount of time the server will wait for streamed promises to settle before rejecting outstanding promises them and closing the stream.
+
+It's recommended to decouple this value from the timeout in which you abort the React renderer. You should always set the React rendering timeout to a higher value so it has time to stream down the underlying rejections from your `streamTimeout`.
+
+```tsx lines=[1-2,13-15]
+// Reject all pending promises from handler functions after 10 seconds
+export const streamTimeout = 10000;
+
+export default function handleRequest(...) {
+  return new Promise((resolve, reject) => {
+    // ...
+
+    const { pipe, abort } = renderToPipeableStream(
+      <ServerRouter context={routerContext} url={request.url} />,
+      { /* ... */ }
+    );
+
+    // Abort the streaming render pass after 11 seconds soto allow the rejected
+    // boundaries to be flushed
+    setTimeout(abort, streamTimeout + 1000);
+  });
+}
+```
+
 ### `handleDataRequest`
 
 You can export an optional `handleDataRequest` function that will allow you to modify the response of a data request. These are the requests that do not render HTML, but rather return the loader and action data to the browser once client-side hydration has occurred.
@@ -281,6 +307,45 @@ For an example, please refer to the default [`entry.server.tsx`][node-streaming-
 
 Note that this does not handle thrown `Response` instances from your `loader`/`action` functions. The intention of this handler is to find bugs in your code which result in unexpected thrown errors. If you are detecting a scenario and throwing a 401/404/etc. `Response` in your `loader`/`action` then it's an expected flow that is handled by your code. If you also wish to log, or send those to an external service, that should be done at the time you throw the response.
 
+## `.server` modules
+
+While not strictly necessary, `.server` modules are a good way to explicitly mark entire modules as server-only.
+The build will fail if any code in a `.server` file or `.server` directory accidentally ends up in the client module graph.
+
+```txt
+app
+├── .server 👈 marks all files in this directory as server-only
+│   ├── auth.ts
+│   └── db.ts
+├── cms.server.ts 👈 marks this file as server-only
+├── root.tsx
+└── routes.ts
+```
+
+`.server` modules must be within your app directory.
+
+Refer to the Route Module section in the sidebar for more information.
+
+## `.client` modules
+
+While uncommon, you may have a file or dependency that uses module side effects in the browser. You can use `*.client.ts` on file names or nest files within `.client` directories to force them out of server bundles.
+
+```ts filename=feature-check.client.ts
+// this would break the server
+export const supportsVibrationAPI =
+  "vibrate" in window.navigator;
+```
+
+Note that values exported from this module will all be `undefined` on the server, so the only places to use them are in [`useEffect`][use_effect] and user events like click handlers.
+
+```ts
+import { supportsVibrationAPI } from "./feature-check.client.ts";
+
+console.log(supportsVibrationAPI);
+// server: undefined
+// client: true | false
+```
+
 [react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
 [route-module]: ../start/framework/route-module
 [routing]: ../start/framework/routing
@@ -289,3 +354,5 @@ Note that this does not handle thrown `Response` instances from your `loader`/`a
 [rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
 [rendertoreadablestream]: https://react.dev/reference/react-dom/server/renderToReadableStream
 [node-streaming-entry-server]: https://github.com/remix-run/react-router/blob/dev/packages/react-router-dev/config/defaults/entry.server.node.tsx
+[streaming]: ../how-to/suspense
+[use_effect]: https://react.dev/reference/react/useEffect

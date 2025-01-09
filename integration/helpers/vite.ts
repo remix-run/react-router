@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import path from "node:path";
+import path from "pathe";
 import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
@@ -123,11 +123,22 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName = "vite-template" | "vite-cloudflare-template";
+type TemplateName =
+  | "vite-5-template"
+  | "vite-6-template"
+  | "vite-cloudflare-template";
+
+export const viteMajorTemplates = [
+  { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
+  { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+] as const satisfies Array<{
+  templateName: TemplateName;
+  templateDisplayName: string;
+}>;
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-template"
+  templateName: TemplateName = "vite-5-template"
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -273,7 +284,10 @@ type Fixtures = {
     port: number;
     cwd: string;
   }>;
-  customDev: (files: Files) => Promise<{
+  customDev: (
+    files: Files,
+    templateName?: TemplateName
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -307,9 +321,9 @@ export const test = base.extend<Fixtures>({
   // eslint-disable-next-line no-empty-pattern
   customDev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
-    await use(async (files) => {
+    await use(async (files, template) => {
       let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      let cwd = await createProject(await files({ port }), template);
       stop = await customDev({ cwd, port });
       return { port, cwd };
     });

@@ -1,9 +1,57 @@
 # `@react-router/dev`
 
+## 7.1.1
+
+### Patch Changes
+
+- Fix for a crash when optional args are passed to the CLI ([`5b1ca202f`](https://github.com/remix-run/react-router/commit/5b1ca202f77ef342db0109c6b791d33188077cd0))
+- Updated dependencies:
+  - `react-router@7.1.1`
+  - `@react-router/node@7.1.1`
+  - `@react-router/serve@7.1.1`
+
+## 7.1.0
+
+### Minor Changes
+
+- Add support for Vite v6 ([#12469](https://github.com/remix-run/react-router/pull/12469))
+
+### Patch Changes
+
+- Properly initialize `NODE_ENV` if not already set for compatibility with React 19 ([#12578](https://github.com/remix-run/react-router/pull/12578))
+
+- Remove the leftover/unused `abortDelay` prop from `ServerRouter` and update the default `entry.server.tsx` to use the new `streamTimeout` value for Single Fetch ([#12478](https://github.com/remix-run/react-router/pull/12478))
+
+  - The `abortDelay` functionality was removed in v7 as it was coupled to the `defer` implementation from Remix v2, but this removal of this prop was missed
+  - If you were still using this prop in your `entry.server` file, it's likely your app is not aborting streams as you would expect and you will need to adopt the new [`streamTimeout`](https://reactrouter.com/explanation/special-files#streamtimeout) value introduced with Single Fetch
+
+- Updated dependencies:
+  - `react-router@7.1.0`
+  - `@react-router/node@7.1.0`
+  - `@react-router/serve@7.1.0`
+
+## 7.0.2
+
+### Patch Changes
+
+- Support `moduleResolution` `Node16` and `NodeNext` ([#12440](https://github.com/remix-run/react-router/pull/12440))
+
+- Generate wide `matches` and `params` types for current route and child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
+
+  At runtime, `matches` includes child route matches and `params` include child route path parameters.
+  But previously, we only generated types for parent routes in `matches`; for `params`, we only considered the parent routes and the current route.
+  To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
+
+- Updated dependencies:
+  - `react-router@7.0.2`
+  - `@react-router/node@7.0.2`
+  - `@react-router/serve@7.0.2`
+
 ## 7.0.1
 
 ### Patch Changes
 
+- Pass route error to ErrorBoundary as a prop ([#12338](https://github.com/remix-run/react-router/pull/12338))
 - Ensure typegen file watcher is cleaned up when Vite dev server restarts ([#12331](https://github.com/remix-run/react-router/pull/12331))
 - Updated dependencies:
   - `react-router@7.0.1`

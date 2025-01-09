@@ -1,6 +1,11 @@
 import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
 
+// silence expected warnings in Node 22.12 about `require(esm)`
+// when it implicitly uses `react-router`'s `module-sync` export condition
+process.env.NODE_OPTIONS =
+  (process.env.NODE_OPTIONS ?? "") + ` --no-warnings=ExperimentalWarning`;
+
 const config: PlaywrightTestConfig = {
   testDir: ".",
   testMatch: ["**/*-test.ts"],

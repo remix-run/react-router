@@ -102,7 +102,7 @@ Usually your URLs aren't static but data-driven. Dynamic segments allow you to m
 | `/concerts/salt-lake-city` | `app/routes/concerts.$city.tsx`    |
 | `/concerts/san-diego`      | `app/routes/concerts.$city.tsx`    |
 
-The value will be parsed from the URL and pass it to various APIs. We call these values "URL Parameters". The most useful places to access the URL params are in [loaders] and [actions].
+The value will be parsed from the URL and passed to various APIs. We call these values "URL Parameters". The most useful places to access the URL params are in [loaders] and [actions].
 
 ```tsx
 export async function serverLoader({ params }) {
@@ -290,7 +290,7 @@ If you want one of the special characters used for these route conventions to ac
 | `app/routes/weird-url.[_index].tsx` | `/weird-url/_index` |
 | `app/routes/dolla-bills-[$].tsx`    | `/dolla-bills-$`    |
 | `app/routes/[[so-weird]].tsx`       | `/[so-weird]`       |
-| `app/routes/reports.$id[.pdf].ts    | `/reports/123.pdf   |
+| `app/routes/reports.$id[.pdf].ts`   | `/reports/123.pdf`  |
 
 ## Folders for Organization
 
@@ -362,13 +362,13 @@ app/routes/app._index.tsx
 app/routes/app._index/route.tsx
 ```
 
-[route-config-file]: ../start/routing#route-config-file
-[loaders]: ../start/data-loading
-[actions]: ../start/actions
-[routing_guide]: ../start/routing
-[root_route]: ../start/route-module#root-route
-[index_route]: ../start/routing#index-routes
-[nested_routing]: ../start/routing#nested-routes
+[route-config-file]: ../start/framework/routing#configuring-routes
+[loaders]: ../start/framework/data-loading
+[actions]: ../start/framework/actions
+[routing_guide]: ../start/framework/routing
+[root_route]: ../start/framework/route-module
+[index_route]: ../start/framework/routing#index-routes
+[nested_routing]: ../start/framework/routing#nested-routes
 [nested_routes]: #nested-routes
 [dot_delimiters]: #dot-delimiters
 [dynamic_segments]: #dynamic-segments

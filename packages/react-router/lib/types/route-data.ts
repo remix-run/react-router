@@ -48,11 +48,13 @@ type DataFrom<T> =
 
 // prettier-ignore
 type ClientData<T> =
+  T extends Response ? never :
   T extends DataWithResponseInit<infer U> ? U :
   T
 
 // prettier-ignore
 type ServerData<T> =
+  T extends Response ? never :
   T extends DataWithResponseInit<infer U> ? Serialize<U> :
   Serialize<T>
 
@@ -88,6 +90,7 @@ type __tests = [
       | { data: string; b: Date; c: undefined }
     >
   >,
+  Expect<Equal<ServerDataFrom<() => { a: string } | Response>, { a: string }>>,
 
   // ClientDataFrom
   Expect<Equal<ClientDataFrom<any>, undefined>>,
@@ -109,5 +112,6 @@ type __tests = [
       | { json: string; b: Date; c: () => boolean }
       | { data: string; b: Date; c: () => boolean }
     >
-  >
+  >,
+  Expect<Equal<ClientDataFrom<() => { a: string } | Response>, { a: string }>>
 ];

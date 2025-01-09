@@ -30,6 +30,9 @@ Edit your tsconfig to get TypeScript to use the generated types. Additionally, `
 }
 ```
 
+If you are using multiple `tsconfig` files for your app, you'll need to make these changes in whichever one `include`s your app directory.
+For example, the [`node-custom-server` template](https://github.com/remix-run/react-router-templates/tree/390fcec476dd336c810280479688fe893da38713/node-custom-server) contains `tsconfig.json`, `tsconfig.node.json`, and `tsconfig.vite.json`. Since `tsconfig.vite.json` is the one that [includes the app directory](https://github.com/remix-run/react-router-templates/blob/390fcec476dd336c810280479688fe893da38713/node-custom-server/tsconfig.vite.json#L4-L6), that's the one that sets up `.react-router/types` for route module type safety.
+
 ## 3. Generate types before type checking
 
 If you want to run type checking as its own command — for example, as part of your Continuous Integration pipeline — you'll need to make sure to generate types _before_ running typechecking:
@@ -50,37 +53,24 @@ When auto-importing the `Route` type helper, TypeScript will generate:
 import { Route } from "./+types/my-route";
 ```
 
-This will work, but you may want the `type` modifier for the import added automatically as well.
+But if you enable [verbatimModuleSyntax](https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax):
+
+```json filename=tsconfig.json
+{
+  "compilerOptions": {
+    "verbatimModuleSyntax": true
+  }
+}
+```
+
+Then, you will get the `type` modifier for the import automatically as well:
 
 ```ts filename=app/routes/my-route.tsx
 import type { Route } from "./+types/my-route";
 //     ^^^^
 ```
 
-For example, this helps tools like bundlers to detect type-only module that can be safely excluded from the bundle.
-
-### VSCode
-
-In VSCode, you can get this behavior automatically by selecting `TypeScript › Preferences: Prefer Type Only Auto Imports` from the command palette or by manually setting `preferTypeOnlyAutoImports`:
-
-```json filename=.vscode/settings.json
-{
-  "typescript.preferences.preferTypeOnlyAutoImports": true
-}
-```
-
-### eslint
-
-In eslint, you can get this behavior by setting `prefer: "type-imports"` for the `consistent-type-imports` rule:
-
-```json
-{
-  "@typescript-eslint/consistent-type-imports": [
-    "warn",
-    { "prefer": "type-imports" }
-  ]
-}
-```
+This helps tools like bundlers to detect type-only module that can be safely excluded from the bundle.
 
 ## Conclusion
 

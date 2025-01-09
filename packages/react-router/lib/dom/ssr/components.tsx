@@ -279,7 +279,6 @@ export function PrefetchPageLinks({
   );
 
   if (!matches) {
-    console.warn(`Tried to prefetch ${page} but no routes matched.`);
     return null;
   }
 

@@ -31,11 +31,11 @@ import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
-import * as VirtualModule from "./vmod";
+import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
-import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type ConfigLoader,
@@ -54,7 +54,7 @@ export async function resolveViteConfig({
   mode?: string;
   root: string;
 }) {
-  let vite = await import("vite");
+  let vite = getVite();
 
   let viteConfig = await vite.resolveConfig(
     { mode, configFile, root },
@@ -130,12 +130,11 @@ const CLIENT_ROUTE_EXPORTS = [
   "shouldRevalidate",
 ];
 
-// Each route gets its own virtual module marked with an entry query string
-const ROUTE_ENTRY_QUERY_STRING = "?route-entry=1";
-
-const isRouteEntry = (id: string): boolean => {
-  return id.endsWith(ROUTE_ENTRY_QUERY_STRING);
-};
+/** This is used to manage a build optimization to remove unused route exports
+from the client build output. This is important in cases where custom route
+exports are only ever used on the server. Without this optimization we can't
+tree-shake any unused custom exports because routes are entry points. */
+const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
 export type ServerBundleBuildConfig = {
   routes: RouteManifest;
@@ -163,30 +162,29 @@ export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
   viteManifestEnabled: boolean;
 };
 
-let serverBuildId = VirtualModule.id("server-build");
-let serverManifestId = VirtualModule.id("server-manifest");
-let browserManifestId = VirtualModule.id("browser-manifest");
-let hmrRuntimeId = VirtualModule.id("hmr-runtime");
-let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
+let virtualHmrRuntime = VirtualModule.create("hmr-runtime");
+let virtualInjectHmrRuntime = VirtualModule.create("inject-hmr-runtime");
 
 const resolveRelativeRouteFilePath = (
   route: RouteManifestEntry,
   reactRouterConfig: ResolvedReactRouterConfig
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let file = route.file;
   let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
 
   return vite.normalizePath(fullPath);
 };
 
-let vmods = [serverBuildId, serverManifestId, browserManifestId];
+let virtual = {
+  serverBuild: VirtualModule.create("server-build"),
+  serverManifest: VirtualModule.create("server-manifest"),
+  browserManifest: VirtualModule.create("browser-manifest"),
+};
 
-const invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
-  vmods.forEach((vmod) => {
-    let mod = viteDevServer.moduleGraph.getModuleById(
-      VirtualModule.resolve(vmod)
-    );
+let invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
+  Object.values(virtual).forEach((vmod) => {
+    let mod = viteDevServer.moduleGraph.getModuleById(vmod.resolvedId);
     if (mod) {
       viteDevServer.moduleGraph.invalidateModule(mod);
     }
@@ -203,12 +201,12 @@ const resolveChunk = (
   viteManifest: Vite.Manifest,
   absoluteFilePath: string
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let rootRelativeFilePath = vite.normalizePath(
     path.relative(ctx.rootDirectory, absoluteFilePath)
   );
   let entryChunk =
-    viteManifest[rootRelativeFilePath + ROUTE_ENTRY_QUERY_STRING] ??
+    viteManifest[rootRelativeFilePath + BUILD_CLIENT_ROUTE_QUERY_STRING] ??
     viteManifest[rootRelativeFilePath];
 
   if (!entryChunk) {
@@ -509,11 +507,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          ) + ROUTE_ENTRY_QUERY_STRING
+          )
         )};`;
       })
       .join("\n")}
-      export { default as assets } from ${JSON.stringify(serverManifestId)};
+      export { default as assets } from ${JSON.stringify(
+        virtual.serverManifest.id
+      )};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
           ctx.rootDirectory,
@@ -693,10 +693,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         caseSensitive: route.caseSensitive,
         module: combineURLs(
           ctx.publicPath,
-          `${resolveFileUrl(
+          resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          )}${ROUTE_ENTRY_QUERY_STRING}`
+          )
         ),
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
@@ -709,12 +709,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     return {
       version: String(Math.random()),
-      url: combineURLs(ctx.publicPath, VirtualModule.url(browserManifestId)),
+      url: combineURLs(ctx.publicPath, virtual.browserManifest.url),
       hmr: {
-        runtime: combineURLs(
-          ctx.publicPath,
-          VirtualModule.url(injectHmrRuntimeId)
-        ),
+        runtime: combineURLs(ctx.publicPath, virtualInjectHmrRuntime.url),
       },
       entry: {
         module: combineURLs(
@@ -732,14 +729,29 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       name: "react-router",
       config: async (_viteUserConfig, _viteConfigEnv) => {
         // Preload Vite's ESM build up-front as soon as we're in an async context
-        await preloadViteEsm();
+        await preloadVite();
 
         // Ensure sync import of Vite works after async preload
-        let vite = importViteEsmSync();
+        let vite = getVite();
 
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
+
+        // This is a compatibility layer for Vite 5. Default conditions were
+        // automatically added to any custom conditions in Vite 5, but Vite 6
+        // removed this behavior. Instead, the default conditions are overridden
+        // by any custom conditions. If we wish to retain the default
+        // conditions, we need to manually merge them using the provided default
+        // conditions arrays exported from Vite. In Vite 5, these default
+        // conditions arrays do not exist.
+        // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+        let viteClientConditions: string[] = [
+          ...(vite.defaultClientConditions ?? []),
+        ];
+        let viteServerConditions: string[] = [
+          ...(vite.defaultServerConditions ?? []),
+        ];
 
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
@@ -807,9 +819,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ssr: {
             external: ssrExternals,
             resolve: {
-              conditions: viteCommand === "build" ? [] : ["development"],
+              conditions:
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
               externalConditions:
-                viteCommand === "build" ? [] : ["development"],
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
             },
           },
           optimizeDeps: {
@@ -856,7 +873,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router/dom",
               "react-router-dom",
             ],
-            conditions: viteCommand === "build" ? [] : ["development"],
+            conditions:
+              viteCommand === "build"
+                ? viteClientConditions
+                : ["development", ...viteClientConditions],
           },
           base: viteUserConfig.base,
 
@@ -888,7 +908,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                                 `${path.resolve(
                                   ctx.reactRouterConfig.appDirectory,
                                   route.file
-                                )}${ROUTE_ENTRY_QUERY_STRING}`
+                                )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
                             ),
                           ],
                         },
@@ -908,7 +928,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                           preserveEntrySignatures: "exports-only",
                           input:
                             viteUserConfig.build?.rollupOptions?.input ??
-                            serverBuildId,
+                            virtual.serverBuild.id,
                           output: {
                             entryFileNames:
                               ctx.reactRouterConfig.serverBuildFile,
@@ -951,7 +971,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           );
         }
 
-        let vite = importViteEsmSync();
+        let vite = getVite();
 
         let childCompilerConfigFile = await vite.loadConfigFromFile(
           {
@@ -1012,8 +1032,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   plugin !== null &&
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
-                  plugin.name !== "react-router-route-exports" &&
-                  plugin.name !== "react-router-hmr-updates"
+                  plugin.name !== "react-router:route-exports" &&
+                  plugin.name !== "react-router:hmr-updates"
               ),
           ],
         });
@@ -1119,7 +1139,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
                 let build = (await viteDevServer.ssrLoadModule(
-                  serverBuildId
+                  virtual.serverBuild.id
                 )) as ServerBuild;
 
                 let handler = createRequestHandler(build, "development");
@@ -1253,11 +1273,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-route-entry",
+      name: "react-router:build-client-route",
       enforce: "pre",
       async transform(_code, id, options) {
-        if (!isRouteEntry(id)) return;
-        let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
+        if (!id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) return;
+        let routeModuleId = id.replace(BUILD_CLIENT_ROUTE_QUERY_STRING, "");
 
         let routeFileName = path.basename(routeModuleId);
 
@@ -1279,17 +1299,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-virtual-modules",
+      name: "react-router:virtual-modules",
       enforce: "pre",
       resolveId(id) {
-        if (vmods.includes(id)) return VirtualModule.resolve(id);
+        const vmod = Object.values(virtual).find((vmod) => vmod.id === id);
+        if (vmod) return vmod.resolvedId;
       },
       async load(id) {
         switch (id) {
-          case VirtualModule.resolve(serverBuildId): {
+          case virtual.serverBuild.resolvedId: {
             return await getServerEntry();
           }
-          case VirtualModule.resolve(serverManifestId): {
+          case virtual.serverManifest.resolvedId: {
             let reactRouterManifest = ctx.isSsrBuild
               ? await ctx.getReactRouterServerManifest()
               : await getReactRouterManifestForDev();
@@ -1298,7 +1319,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               es6: true,
             })};`;
           }
-          case VirtualModule.resolve(browserManifestId): {
+          case virtual.browserManifest.resolvedId: {
             if (viteCommand === "build") {
               throw new Error("This module only exists in development");
             }
@@ -1314,7 +1335,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-dot-server",
+      name: "react-router:dot-server",
       enforce: "pre",
       async resolveId(id, importer, options) {
         // https://vitejs.dev/config/dep-optimization-options
@@ -1324,9 +1345,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (isOptimizeDeps || options?.ssr) return;
 
-        let isResolving = options?.custom?.["react-router-dot-server"] ?? false;
+        let isResolving = options?.custom?.["react-router:dot-server"] ?? false;
         if (isResolving) return;
-        options.custom = { ...options.custom, "react-router-dot-server": true };
+        options.custom = { ...options.custom, "react-router:dot-server": true };
         let resolved = await this.resolve(id, importer, options);
         if (!resolved) return;
 
@@ -1344,7 +1365,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return;
         }
 
-        let vite = importViteEsmSync();
+        let vite = getVite();
         let importerShort = vite.normalizePath(
           path.relative(ctx.rootDirectory, importer)
         );
@@ -1384,7 +1405,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-dot-client",
+      name: "react-router:dot-client",
       async transform(code, id, options) {
         if (!options?.ssr) return;
         let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
@@ -1406,7 +1427,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     WithProps.plugin,
     {
-      name: "react-router-route-exports",
+      name: "react-router:route-exports",
       async transform(code, id, options) {
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
@@ -1454,17 +1475,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-inject-hmr-runtime",
+      name: "react-router:inject-hmr-runtime",
       enforce: "pre",
       resolveId(id) {
-        if (id === injectHmrRuntimeId)
-          return VirtualModule.resolve(injectHmrRuntimeId);
+        if (id === virtualInjectHmrRuntime.id) {
+          return virtualInjectHmrRuntime.resolvedId;
+        }
       },
       async load(id) {
-        if (id !== VirtualModule.resolve(injectHmrRuntimeId)) return;
+        if (id !== virtualInjectHmrRuntime.resolvedId) return;
 
         return [
-          `import RefreshRuntime from "${hmrRuntimeId}"`,
+          `import RefreshRuntime from "${virtualHmrRuntime.id}"`,
           "RefreshRuntime.injectIntoGlobalHook(window)",
           "window.$RefreshReg$ = () => {}",
           "window.$RefreshSig$ = () => (type) => type",
@@ -1473,13 +1495,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-hmr-runtime",
+      name: "react-router:hmr-runtime",
       enforce: "pre",
       resolveId(id) {
-        if (id === hmrRuntimeId) return VirtualModule.resolve(hmrRuntimeId);
+        if (id === virtualHmrRuntime.id) return virtualHmrRuntime.resolvedId;
       },
       async load(id) {
-        if (id !== VirtualModule.resolve(hmrRuntimeId)) return;
+        if (id !== virtualHmrRuntime.resolvedId) return;
 
         let reactRefreshDir = path.dirname(
           require.resolve("react-refresh/package.json")
@@ -1501,7 +1523,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-react-refresh-babel",
+      name: "react-router:react-refresh-babel",
       async transform(code, id, options) {
         if (viteCommand !== "serve") return;
         if (id.includes("/node_modules/")) return;
@@ -1515,10 +1537,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let isJSX = filepath.endsWith("x");
         let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
-
-        if (isRouteEntry(id)) {
-          return { code: addRefreshWrapper(ctx.reactRouterConfig, code, id) };
-        }
 
         let result = await babel.transformAsync(code, {
           babelrc: false,
@@ -1543,7 +1561,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router-hmr-updates",
+      name: "react-router:hmr-updates",
       async handleHotUpdate({ server, file, modules, read }) {
         let route = getRoute(ctx.reactRouterConfig, file);
 
@@ -1553,8 +1571,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (route) {
           // invalidate manifest on route exports change
-          let serverManifest = (await server.ssrLoadModule(serverManifestId))
-            .default as ReactRouterManifest;
+          let serverManifest = (
+            await server.ssrLoadModule(virtual.serverManifest.id)
+          ).default as ReactRouterManifest;
 
           let oldRouteMetadata = serverManifest.routes[route.id];
           let newRouteMetadata = await getRouteMetadata(
@@ -1591,8 +1610,65 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return modules;
       },
     },
+    {
+      name: "react-router-server-change-trigger-client-hmr",
+      // This hook is only available in Vite v6+ so this is a no-op in v5.
+      // Previously the server and client modules were shared in a single module
+      // graph. This meant that changes to server code automatically resulted in
+      // client HMR updates. In Vite v6+ these module graphs are separate from
+      // each other so we need to manually trigger client HMR updates if server
+      // code has changed.
+      hotUpdate(this, { server, modules }) {
+        if (this.environment.name !== "ssr" && modules.length <= 0) {
+          return;
+        }
+
+        let clientModules = uniqueNodes(
+          modules.flatMap((mod) =>
+            getParentClientNodes(server.environments.client.moduleGraph, mod)
+          )
+        );
+
+        for (let clientModule of clientModules) {
+          server.environments.client.reloadModule(clientModule);
+        }
+      },
+    },
   ];
 };
+
+function getParentClientNodes(
+  clientModuleGraph: Vite.EnvironmentModuleGraph,
+  module: Vite.EnvironmentModuleNode
+): Vite.EnvironmentModuleNode[] {
+  if (!module.id) {
+    return [];
+  }
+
+  let clientModule = clientModuleGraph.getModuleById(module.id);
+  if (clientModule) {
+    return [clientModule];
+  }
+
+  return [...module.importers].flatMap((importer) =>
+    getParentClientNodes(clientModuleGraph, importer)
+  );
+}
+
+function uniqueNodes(
+  nodes: Vite.EnvironmentModuleNode[]
+): Vite.EnvironmentModuleNode[] {
+  let nodeUrls = new Set<string>();
+  let unique: Vite.EnvironmentModuleNode[] = [];
+  for (let node of nodes) {
+    if (nodeUrls.has(node.url)) {
+      continue;
+    }
+    nodeUrls.add(node.url);
+    unique.push(node);
+  }
+  return unique;
+}
 
 function findConfig(
   dir: string,
@@ -1614,46 +1690,27 @@ function addRefreshWrapper(
   id: string
 ): string {
   let route = getRoute(reactRouterConfig, id);
-  let acceptExports =
-    route || isRouteEntry(id)
-      ? [
-          "clientAction",
-          "clientLoader",
-          "handle",
-          "meta",
-          "links",
-          "shouldRevalidate",
-        ]
-      : [];
+  let acceptExports = route
+    ? [
+        "clientAction",
+        "clientLoader",
+        "handle",
+        "meta",
+        "links",
+        "shouldRevalidate",
+      ]
+    : [];
   return (
-    "\n\n" +
-    withCommentBoundaries(
-      "REACT REFRESH HEADER",
-      REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id))
-    ) +
-    "\n\n" +
-    withCommentBoundaries("REACT REFRESH BODY", code) +
-    "\n\n" +
-    withCommentBoundaries(
-      "REACT REFRESH FOOTER",
-      REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
-        .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
-        .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
-    ) +
-    "\n"
+    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
+    code +
+    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+      .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
   );
 }
 
-function withCommentBoundaries(label: string, text: string) {
-  let begin = `// [BEGIN] ${label} `;
-  begin += "-".repeat(80 - begin.length);
-  let end = `// [END] ${label} `;
-  end += "-".repeat(80 - end.length);
-  return `${begin}\n${text}\n${end}`;
-}
-
 const REACT_REFRESH_HEADER = `
-import RefreshRuntime from "${hmrRuntimeId}";
+import RefreshRuntime from "${virtualHmrRuntime.id}";
 
 const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 let prevRefreshReg;
@@ -1672,7 +1729,7 @@ if (import.meta.hot && !inWebWorker) {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
-}`.trim();
+}`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
 
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
@@ -1687,13 +1744,13 @@ if (import.meta.hot && !inWebWorker) {
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
     });
   });
-}`.trim();
+}`;
 
 function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
   file: string
 ): RouteManifestEntry | undefined {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file)
   );
@@ -1827,7 +1884,8 @@ async function handlePrerender(
     "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
-    let matches = matchRoutes(routes, path);
+    // Ensure we have a leading slash for matching
+    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
     let hasLoaders = matches?.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {

@@ -51,11 +51,11 @@ GET requests are handled by the `loader`, while POST, PUT, PATCH, and DELETE are
 import type { Route } from "./+types/resource";
 
 export function loader(_: Route.LoaderArgs) {
-  return new Response.json({ message: "I handle GET" });
+  return Response.json({ message: "I handle GET" });
 }
 
-export function action(_: Route.LoaderArgs) {
-  return new Response.json({
+export function action(_: Route.ActionArgs) {
+  return Response.json({
     message: "I handle everything else",
   });
 }

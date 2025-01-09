@@ -1,5 +1,26 @@
 # `react-router`
 
+## 7.1.1
+
+## 7.1.0
+
+### Patch Changes
+
+- Throw unwrapped single fetch redirect to align with pre-single fetch behavior ([#12506](https://github.com/remix-run/react-router/pull/12506))
+- Ignore redirects when inferring loader data types ([#12527](https://github.com/remix-run/react-router/pull/12527))
+- Remove `<Link prefetch>` warning which suffers from false positives in a lazy route discovery world ([#12485](https://github.com/remix-run/react-router/pull/12485))
+
+## 7.0.2
+
+### Patch Changes
+
+- temporarily only use one build in export map so packages can have a peer dependency on react router ([#12437](https://github.com/remix-run/react-router/pull/12437))
+- Generate wide `matches` and `params` types for current route and child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
+
+  At runtime, `matches` includes child route matches and `params` include child route path parameters.
+  But previously, we only generated types for parent routes in `matches`; for `params`, we only considered the parent routes and the current route.
+  To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
+
 ## 7.0.1
 
 ## 7.0.0

@@ -153,6 +153,23 @@ export default [
 ] satisfies RouteConfig;
 ```
 
+To see `projects/home.tsx` appear in the layout, we'll need an outlet:
+
+```tsx filename=./projects/project-layout.tsx lines=[8]
+import { Outlet } from "react-router";
+
+export default function ProjectLayout() {
+  return (
+    <div>
+      <aside>Example sidebar</aside>
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+```
+
 ## Index Routes
 
 ```ts
@@ -308,4 +325,4 @@ Note that these routes do not participate in data loading, actions, code splitti
 Next: [Route Module](./route-module)
 
 [file-route-conventions]: ../../how-to/file-route-conventions
-[outlet]: ../../api/react-router/Outlet
+[outlet]: https://api.reactrouter.com/v7/functions/react_router.Outlet.html

@@ -13,6 +13,16 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.1.1](#v711)
+    - [Patch Changes](#patch-changes)
+  - [v7.1.0](#v710)
+    - [Minor Changes](#minor-changes)
+    - [Patch Changes](#patch-changes-1)
+    - [Changes by Package](#changes-by-package)
+  - [v7.0.2](#v702)
+    - [Patch Changes](#patch-changes-2)
+  - [v7.0.1](#v701)
+    - [Patch Changes](#patch-changes-3)
   - [v7.0.0](#v700)
     - [Breaking Changes](#breaking-changes)
       - [Package Restructuring](#package-restructuring)
@@ -25,199 +35,194 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Other Notable Changes](#other-notable-changes)
       - [`routes.ts`](#routests)
       - [Typesafety improvements](#typesafety-improvements)
-        - [Setup](#setup)
-        - [`typegen` command](#typegen-command)
-        - [TypeScript plugin](#typescript-plugin)
-          - [VSCode](#vscode)
-          - [Troubleshooting](#troubleshooting)
       - [Prerendering](#prerendering)
     - [Major Changes (`react-router`)](#major-changes-react-router)
     - [Major Changes (`@react-router/*`)](#major-changes-react-router-1)
-    - [Minor Changes](#minor-changes)
-    - [Patch Changes](#patch-changes)
-    - [Changes by Package](#changes-by-package)
-- [**Full Changelog**: `v6.28.0...v7.0.0`](#full-changelog-v6280v700)
+    - [Minor Changes](#minor-changes-1)
+    - [Patch Changes](#patch-changes-4)
+    - [Changes by Package](#changes-by-package-1)
+  - [v6.28.1](#v6281)
+    - [Patch Changes](#patch-changes-5)
   - [v6.28.0](#v6280)
     - [What's Changed](#whats-changed)
-    - [Minor Changes](#minor-changes-1)
-    - [Patch Changes](#patch-changes-1)
-- [\<\<\<\<\<\<\< HEAD](#-head)
+    - [Minor Changes](#minor-changes-2)
+    - [Patch Changes](#patch-changes-6)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-1)
       - [Stabilized APIs](#stabilized-apis)
-    - [Minor Changes](#minor-changes-2)
-    - [Patch Changes](#patch-changes-2)
-  - [v6.26.2](#v6262)
-    - [Patch Changes](#patch-changes-3)
-  - [v6.26.1](#v6261)
-    - [Patch Changes](#patch-changes-4)
-  - [v6.26.0](#v6260)
     - [Minor Changes](#minor-changes-3)
-    - [Patch Changes](#patch-changes-5)
+    - [Patch Changes](#patch-changes-7)
+  - [v6.26.2](#v6262)
+    - [Patch Changes](#patch-changes-8)
+  - [v6.26.1](#v6261)
+    - [Patch Changes](#patch-changes-9)
+  - [v6.26.0](#v6260)
+    - [Minor Changes](#minor-changes-4)
+    - [Patch Changes](#patch-changes-10)
   - [v6.25.1](#v6251)
-    - [Patch Changes](#patch-changes-6)
+    - [Patch Changes](#patch-changes-11)
   - [v6.25.0](#v6250)
     - [What's Changed](#whats-changed-2)
       - [Stabilized `v7_skipActionErrorRevalidation`](#stabilized-v7_skipactionerrorrevalidation)
-    - [Minor Changes](#minor-changes-4)
-    - [Patch Changes](#patch-changes-7)
+    - [Minor Changes](#minor-changes-5)
+    - [Patch Changes](#patch-changes-12)
   - [v6.24.1](#v6241)
-    - [Patch Changes](#patch-changes-8)
+    - [Patch Changes](#patch-changes-13)
   - [v6.24.0](#v6240)
     - [What's Changed](#whats-changed-3)
       - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
-    - [Minor Changes](#minor-changes-5)
-    - [Patch Changes](#patch-changes-9)
+    - [Minor Changes](#minor-changes-6)
+    - [Patch Changes](#patch-changes-14)
   - [v6.23.1](#v6231)
-    - [Patch Changes](#patch-changes-10)
+    - [Patch Changes](#patch-changes-15)
   - [v6.23.0](#v6230)
     - [What's Changed](#whats-changed-4)
       - [Data Strategy (unstable)](#data-strategy-unstable)
       - [Skip Action Error Revalidation (unstable)](#skip-action-error-revalidation-unstable)
-    - [Minor Changes](#minor-changes-6)
+    - [Minor Changes](#minor-changes-7)
   - [v6.22.3](#v6223)
-    - [Patch Changes](#patch-changes-11)
+    - [Patch Changes](#patch-changes-16)
   - [v6.22.2](#v6222)
-    - [Patch Changes](#patch-changes-12)
+    - [Patch Changes](#patch-changes-17)
   - [v6.22.1](#v6221)
-    - [Patch Changes](#patch-changes-13)
+    - [Patch Changes](#patch-changes-18)
   - [v6.22.0](#v6220)
     - [What's Changed](#whats-changed-5)
       - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
-    - [Minor Changes](#minor-changes-7)
-    - [Patch Changes](#patch-changes-14)
+    - [Minor Changes](#minor-changes-8)
+    - [Patch Changes](#patch-changes-19)
   - [v6.21.3](#v6213)
-    - [Patch Changes](#patch-changes-15)
+    - [Patch Changes](#patch-changes-20)
   - [v6.21.2](#v6212)
-    - [Patch Changes](#patch-changes-16)
+    - [Patch Changes](#patch-changes-21)
   - [v6.21.1](#v6211)
-    - [Patch Changes](#patch-changes-17)
+    - [Patch Changes](#patch-changes-22)
   - [v6.21.0](#v6210)
     - [What's Changed](#whats-changed-6)
       - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
       - [Partial Hydration](#partial-hydration)
-    - [Minor Changes](#minor-changes-8)
-    - [Patch Changes](#patch-changes-18)
-  - [v6.20.1](#v6201)
-    - [Patch Changes](#patch-changes-19)
-  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-9)
-    - [Patch Changes](#patch-changes-20)
+    - [Patch Changes](#patch-changes-23)
+  - [v6.20.1](#v6201)
+    - [Patch Changes](#patch-changes-24)
+  - [v6.20.0](#v6200)
+    - [Minor Changes](#minor-changes-10)
+    - [Patch Changes](#patch-changes-25)
   - [v6.19.0](#v6190)
     - [What's Changed](#whats-changed-7)
       - [`unstable_flushSync` API](#unstable_flushsync-api)
-    - [Minor Changes](#minor-changes-10)
-    - [Patch Changes](#patch-changes-21)
+    - [Minor Changes](#minor-changes-11)
+    - [Patch Changes](#patch-changes-26)
   - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-8)
       - [New Fetcher APIs](#new-fetcher-apis)
       - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
-    - [Minor Changes](#minor-changes-11)
-    - [Patch Changes](#patch-changes-22)
+    - [Minor Changes](#minor-changes-12)
+    - [Patch Changes](#patch-changes-27)
   - [v6.17.0](#v6170)
     - [What's Changed](#whats-changed-9)
       - [View Transitions 🚀](#view-transitions-)
-    - [Minor Changes](#minor-changes-12)
-    - [Patch Changes](#patch-changes-23)
-  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-13)
-    - [Patch Changes](#patch-changes-24)
-  - [v6.15.0](#v6150)
+    - [Patch Changes](#patch-changes-28)
+  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-14)
-    - [Patch Changes](#patch-changes-25)
+    - [Patch Changes](#patch-changes-29)
+  - [v6.15.0](#v6150)
+    - [Minor Changes](#minor-changes-15)
+    - [Patch Changes](#patch-changes-30)
   - [v6.14.2](#v6142)
-    - [Patch Changes](#patch-changes-26)
+    - [Patch Changes](#patch-changes-31)
   - [v6.14.1](#v6141)
-    - [Patch Changes](#patch-changes-27)
+    - [Patch Changes](#patch-changes-32)
   - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-10)
       - [JSON/Text Submissions](#jsontext-submissions)
-    - [Minor Changes](#minor-changes-15)
-    - [Patch Changes](#patch-changes-28)
+    - [Minor Changes](#minor-changes-16)
+    - [Patch Changes](#patch-changes-33)
   - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-11)
       - [`future.v7_startTransition`](#futurev7_starttransition)
-    - [Minor Changes](#minor-changes-16)
-    - [Patch Changes](#patch-changes-29)
+    - [Minor Changes](#minor-changes-17)
+    - [Patch Changes](#patch-changes-34)
   - [v6.12.1](#v6121)
-    - [Patch Changes](#patch-changes-30)
+    - [Patch Changes](#patch-changes-35)
   - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-12)
       - [`React.startTransition` support](#reactstarttransition-support)
-    - [Minor Changes](#minor-changes-17)
-    - [Patch Changes](#patch-changes-31)
-  - [v6.11.2](#v6112)
-    - [Patch Changes](#patch-changes-32)
-  - [v6.11.1](#v6111)
-    - [Patch Changes](#patch-changes-33)
-  - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-18)
-    - [Patch Changes](#patch-changes-34)
+    - [Patch Changes](#patch-changes-36)
+  - [v6.11.2](#v6112)
+    - [Patch Changes](#patch-changes-37)
+  - [v6.11.1](#v6111)
+    - [Patch Changes](#patch-changes-38)
+  - [v6.11.0](#v6110)
+    - [Minor Changes](#minor-changes-19)
+    - [Patch Changes](#patch-changes-39)
   - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-13)
-    - [Minor Changes](#minor-changes-19)
+    - [Minor Changes](#minor-changes-20)
       - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
-    - [Patch Changes](#patch-changes-35)
+    - [Patch Changes](#patch-changes-40)
   - [v6.9.0](#v690)
     - [What's Changed](#whats-changed-14)
       - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
       - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
-    - [Minor Changes](#minor-changes-20)
-    - [Patch Changes](#patch-changes-36)
-  - [v6.8.2](#v682)
-    - [Patch Changes](#patch-changes-37)
-  - [v6.8.1](#v681)
-    - [Patch Changes](#patch-changes-38)
-  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-21)
-    - [Patch Changes](#patch-changes-39)
-  - [v6.7.0](#v670)
-    - [Minor Changes](#minor-changes-22)
-    - [Patch Changes](#patch-changes-40)
-  - [v6.6.2](#v662)
     - [Patch Changes](#patch-changes-41)
-  - [v6.6.1](#v661)
+  - [v6.8.2](#v682)
     - [Patch Changes](#patch-changes-42)
+  - [v6.8.1](#v681)
+    - [Patch Changes](#patch-changes-43)
+  - [v6.8.0](#v680)
+    - [Minor Changes](#minor-changes-22)
+    - [Patch Changes](#patch-changes-44)
+  - [v6.7.0](#v670)
+    - [Minor Changes](#minor-changes-23)
+    - [Patch Changes](#patch-changes-45)
+  - [v6.6.2](#v662)
+    - [Patch Changes](#patch-changes-46)
+  - [v6.6.1](#v661)
+    - [Patch Changes](#patch-changes-47)
   - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-15)
-    - [Minor Changes](#minor-changes-23)
-    - [Patch Changes](#patch-changes-43)
+    - [Minor Changes](#minor-changes-24)
+    - [Patch Changes](#patch-changes-48)
   - [v6.5.0](#v650)
     - [What's Changed](#whats-changed-16)
-    - [Minor Changes](#minor-changes-24)
-    - [Patch Changes](#patch-changes-44)
-  - [v6.4.5](#v645)
-    - [Patch Changes](#patch-changes-45)
-  - [v6.4.4](#v644)
-    - [Patch Changes](#patch-changes-46)
-  - [v6.4.3](#v643)
-    - [Patch Changes](#patch-changes-47)
-  - [v6.4.2](#v642)
-    - [Patch Changes](#patch-changes-48)
-  - [v6.4.1](#v641)
+    - [Minor Changes](#minor-changes-25)
     - [Patch Changes](#patch-changes-49)
+  - [v6.4.5](#v645)
+    - [Patch Changes](#patch-changes-50)
+  - [v6.4.4](#v644)
+    - [Patch Changes](#patch-changes-51)
+  - [v6.4.3](#v643)
+    - [Patch Changes](#patch-changes-52)
+  - [v6.4.2](#v642)
+    - [Patch Changes](#patch-changes-53)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-54)
   - [v6.4.0](#v640)
     - [What's Changed](#whats-changed-17)
       - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-50)
-  - [v6.3.0](#v630)
-    - [Minor Changes](#minor-changes-25)
-  - [v6.2.2](#v622)
-    - [Patch Changes](#patch-changes-51)
-  - [v6.2.1](#v621)
-    - [Patch Changes](#patch-changes-52)
-  - [v6.2.0](#v620)
-    - [Minor Changes](#minor-changes-26)
-    - [Patch Changes](#patch-changes-53)
-  - [v6.1.1](#v611)
-    - [Patch Changes](#patch-changes-54)
-  - [v6.1.0](#v610)
-    - [Minor Changes](#minor-changes-27)
     - [Patch Changes](#patch-changes-55)
-  - [v6.0.2](#v602)
+  - [v6.3.0](#v630)
+    - [Minor Changes](#minor-changes-26)
+  - [v6.2.2](#v622)
     - [Patch Changes](#patch-changes-56)
-  - [v6.0.1](#v601)
+  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-57)
+  - [v6.2.0](#v620)
+    - [Minor Changes](#minor-changes-27)
+    - [Patch Changes](#patch-changes-58)
+  - [v6.1.1](#v611)
+    - [Patch Changes](#patch-changes-59)
+  - [v6.1.0](#v610)
+    - [Minor Changes](#minor-changes-28)
+    - [Patch Changes](#patch-changes-60)
+  - [v6.0.2](#v602)
+    - [Patch Changes](#patch-changes-61)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-62)
   - [v6.0.0](#v600)
 
 </details>
@@ -240,6 +245,7 @@ Date: YYYY-MM-DD
 
 ### Changes by Package
 
+- [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/create-react-router/CHANGELOG.md#7XY)
 - [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router/CHANGELOG.md#7XY)
 - [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-architect/CHANGELOG.md#7XY)
 - [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/react-router-cloudflare/CHANGELOG.md#7XY)
@@ -252,6 +258,77 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
+
+## v7.1.1
+
+Date: 2024-12-23
+
+### Patch Changes
+
+- `@react-router/dev` - Fix for a crash when optional args are passed to the CLI ([#12609](https://github.com/remix-run/react-router/pull/12609))
+
+**Full Changelog**: [`v7.1.0...v7.1.1`](https://github.com/remix-run/react-router/compare/react-router@7.1.0...react-router@7.1.1)
+
+## v7.1.0
+
+Date: 2024-12-20
+
+### Minor Changes
+
+- Add support for Vite v6 ([#12469](https://github.com/remix-run/react-router/pull/12469))
+
+### Patch Changes
+
+- `react-router` - Throw unwrapped Single Fetch `redirect` to align with pre-Single Fetch behavior ([#12506](https://github.com/remix-run/react-router/pull/12506))
+- `react-router` - Ignore redirects when inferring loader data types ([#12527](https://github.com/remix-run/react-router/pull/12527))
+- `react-router` - Remove `<Link prefetch>` warning which suffers from false positives in a lazy route discovery world ([#12485](https://github.com/remix-run/react-router/pull/12485))
+- `create-react-router` - Fix missing `fs-extra` dependency ([#12556](https://github.com/remix-run/react-router/pull/12556))
+- `@react-router/dev`/`@react-router/serve` - Properly initialize `NODE_ENV` if not already set for compatibility with React 19 ([#12578](https://github.com/remix-run/react-router/pull/12578))
+- `@react-router/dev` - Remove the leftover/unused `abortDelay` prop from `ServerRouter` and update the default `entry.server.tsx` to use the new `streamTimeout` value for Single Fetch ([#12478](https://github.com/remix-run/react-router/pull/12478))
+  - The `abortDelay` functionality was removed in v7 as it was coupled to the `defer` implementation from Remix v2, but this removal of this prop was missed
+  - If you were still using this prop in your `entry.server` file, it's likely your app is not aborting streams as you would expect and you will need to adopt the new [`streamTimeout`](https://reactrouter.com/explanation/special-files#streamtimeout) value introduced with Single Fetch
+- `@react-router/fs-routes` - Throw error in `flatRoutes` if routes directory is missing ([#12407](https://github.com/remix-run/react-router/pull/12407))
+
+### Changes by Package
+
+- [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/create-react-router/CHANGELOG.md#710)
+- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router/CHANGELOG.md#710)
+- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-architect/CHANGELOG.md#710)
+- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-cloudflare/CHANGELOG.md#710)
+- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-dev/CHANGELOG.md#710)
+- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-express/CHANGELOG.md#710)
+- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-fs-routes/CHANGELOG.md#710)
+- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-node/CHANGELOG.md#710)
+- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#710)
+- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.1.0/packages/react-router-serve/CHANGELOG.md#710)
+
+**Full Changelog**: [`v7.0.2...v7.1.0`](https://github.com/remix-run/react-router/compare/react-router@7.0.2...react-router@7.1.0)
+
+## v7.0.2
+
+Date: 2024-12-02
+
+### Patch Changes
+
+- `react-router` - Temporarily only use one build in export map so packages can have a peer dependency on react router ([#12437](https://github.com/remix-run/react-router/pull/12437))
+- `@react-router/dev` - Support `moduleResolution` `Node16` and `NodeNext` ([#12440](https://github.com/remix-run/react-router/pull/12440))
+- `@react-router/dev` - Generate wide `matches` and `params` types for child routes ([#12397](https://github.com/remix-run/react-router/pull/12397))
+  - At runtime, `matches` includes child route matches and `params` include child route path parameters
+  - But previously, we only generated types for parent routes and the current route in `matches` and `params`
+  - To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information
+
+**Full Changelog**: [`v7.0.1...v7.0.2`](https://github.com/remix-run/react-router/compare/react-router@7.0.1...react-router@7.0.2)
+
+## v7.0.1
+
+Date: 2024-11-22
+
+### Patch Changes
+
+- `@react-router/dev` - Ensure typegen file watcher is cleaned up when Vite dev server restarts ([#12331](https://github.com/remix-run/react-router/pull/12331))
+- `@react-router/dev` - Pass route `error` to `ErrorBoundary` as a prop ([#12338](https://github.com/remix-run/react-router/pull/12338))
+
+**Full Changelog**: [`v7.0.0...v7.0.1`](https://github.com/remix-run/react-router/compare/react-router@7.0.0...react-router@7.0.1)
 
 ## v7.0.0
 
@@ -297,7 +374,7 @@ React Router v7 requires the following minimum versions:
 
 #### Adopted Future Flag Behaviors
 
-Remix and React Router follow an [API Development Strategy](https://reactrouter.com/en/main/guides/api-development-strategy) leveraging "Future Flags" to avoid introducing a slew of breaking changes in a major release. Instead, breaking changes are introduce din minor releases behind a flag, allowing users to opt-in at their convenience. In the next major release, all future flag behaviors become the default behavior.
+Remix and React Router follow an [API Development Strategy](https://reactrouter.com/en/main/guides/api-development-strategy) leveraging "Future Flags" to avoid introducing a slew of breaking changes in a major release. Instead, breaking changes are introduced in minor releases behind a flag, allowing users to opt-in at their convenience. In the next major release, all future flag behaviors become the default behavior.
 
 The following previously flagged behaviors are now the default in React Router v7:
 
@@ -334,29 +411,26 @@ For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareD
 +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
 ```
 
-**Removed Vite Plugin `manifest` option**
+**Removed `manifest` option**
 
 For Remix consumers migrating to React Router, the Vite plugin's `manifest` option has been removed. The `manifest` option been superseded by the more powerful `buildEnd` hook since it's passed the `buildManifest` argument. You can still write the build manifest to disk if needed, but you'll most likely find it more convenient to write any logic depending on the build manifest within the `buildEnd` hook itself. ([#11573](https://github.com/remix-run/react-router/pull/11573))
 
 If you were using the `manifest` option, you can replace it with a `buildEnd` hook that writes the manifest to disk like this:
 
 ```js
-import { reactRouter } from "@react-router/dev/vite";
+// react-router.config.ts
+import { type Config } from "@react-router/dev/config";
 import { writeFile } from "node:fs/promises";
 
 export default {
-  plugins: [
-    reactRouter({
-      async buildEnd({ buildManifest }) {
-        await writeFile(
-          "build/manifest.json",
-          JSON.stringify(buildManifest, null, 2),
-          "utf-8"
-        );
-      },
-    }),
-  ],
-};
+  async buildEnd({ buildManifest }) {
+    await writeFile(
+      "build/manifest.json",
+      JSON.stringify(buildManifest, null, 2),
+      "utf-8"
+    );
+  },
+} satisfies Config;
 ```
 
 #### Exposed Router Promises
@@ -470,131 +544,9 @@ Also note that, if you were using Remix's `routes` option to define config-based
 
 #### Typesafety improvements
 
-React Router now generates types for each of your route modules and passes typed props to route module component exports ([#11961](https://github.com/remix-run/react-router/pull/11961), [#12019](https://github.com/remix-run/react-router/pull/12019)). You can access those types by importing them from `./+types.<route filename without extension>`.
+React Router now generates types for each of your route modules and passes typed props to route module component exports ([#11961](https://github.com/remix-run/react-router/pull/11961), [#12019](https://github.com/remix-run/react-router/pull/12019)). You can access those types by importing them from `./+types/<route filename without extension>`.
 
-For example:
-
-```ts
-// app/routes/product.tsx
-import type * as Route from "./+types.product";
-
-export function loader({ params }: Route.LoaderArgs) {}
-
-export default function Component({ loaderData }: Route.ComponentProps) {}
-```
-
-This initial implementation targets type inference for:
-
-- `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
-- `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
-- `ActionData` : Action data from `action` and/or `clientAction` within your route module
-
-These types are then used to create types for route export args and props:
-
-- `LoaderArgs`
-- `ClientLoaderArgs`
-- `ActionArgs`
-- `ClientActionArgs`
-- `HydrateFallbackProps`
-- `ComponentProps` (for the `default` export)
-- `ErrorBoundaryProps`
-
-In the future, we plan to add types for the rest of the route module exports: `meta`, `links`, `headers`, `shouldRevalidate`, etc.
-
-We also plan to generate types for typesafe `Link`s:
-
-```tsx
-<Link to="/products/:id" params={{ id: 1 }} />
-//        ^^^^^^^^^^^^^          ^^^^^^^^^
-// typesafe `to` and `params` based on the available routes in your app
-```
-
-##### Setup
-
-React Router will generate types into a `.react-router/` directory at the root of your app. This directory is fully managed by React Router and is derived based on your route config (`routes.ts`).
-
-👉 **Add `.react-router/` to `.gitignore`**
-
-```txt
-.react-router
-```
-
-You should also ensure that generated types for routes are always present before running typechecking, especially for running typechecking in CI.
-
-👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
-
-```json
-{
-  "scripts": {
-    "typecheck": "react-router typegen && tsc"
-  }
-}
-```
-
-To get TypeScript to use those generated types, you'll need to add them to `include` in `tsconfig.json`. And to be able to import them as if they files next to your route modules, you'll also need to configure `rootDirs`.
-
-👉 **Configure `tsconfig.json` for generated types**
-
-```json
-{
-  "include": [".react-router/types/**/*"],
-  "compilerOptions": {
-    "rootDirs": [".", "./.react-router/types"]
-  }
-}
-```
-
-##### `typegen` command
-
-You can manually generate types with the new `typegen` command:
-
-```sh
-react-router typegen
-```
-
-However, manual type generation is tedious and types can get out of sync quickly if you ever forget to run `typegen`. Instead, we recommend that you setup our new TypeScript plugin which will automatically generate fresh types whenever routes change. That way, you'll always have up-to-date types.
-
-##### TypeScript plugin
-
-To get automatic type generation, you can use our new TypeScript plugin.
-
-👉 **Add the TypeScript plugin to `tsconfig.json`**
-
-```json
-{
-  "compilerOptions": {
-    "plugins": [{ "name": "@react-router/dev" }]
-  }
-}
-```
-
-We plan to add some other goodies to our TypeScript plugin soon, including:
-
-- Automatic `jsdoc` for route exports that include links to official docs
-- Autocomplete for route exports
-- Warnings for non-HMR compliant exports
-
-###### VSCode
-
-TypeScript looks for plugins registered in `tsconfig.json` in the local `node_modules/`,
-but VSCode ships with its own copy of TypeScript that is installed outside of your project.
-For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
-
-👉 **Ensure that VSCode is using the workspace version of TypeScript**
-
-This should already be set up for you by a `.vscode/settings.json`:
-
-```json
-{
-  "typescript.tsdk": "node_modules/typescript/lib"
-}
-```
-
-Alternatively, you can open up any TypeScript file and use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to find `Select TypeScript Version` and then select `Use Workspace Version`. You may need to quit VSCode and reopen it for this setting to take effect.
-
-###### Troubleshooting
-
-In VSCode, open up any TypeScript file in your project and then use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to select `Open TS Server log`. There should be a log for `[react-router] setup` that indicates that the plugin was resolved correctly. Then look for any errors in the log.
+See [_How To > Route Module Type Safety_](https://reactrouter.com/dev/how-to/route-module-type-safety) and [_Explanations > Type Safety_](https://reactrouter.com/dev/explanation/type-safety) for more details.
 
 #### Prerendering
 
@@ -791,9 +743,17 @@ async function fakeGetSlugsFromCms() {
 - [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#700)
 - [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.0.0/packages/react-router-serve/CHANGELOG.md#700)
 
-# **Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
+**Full Changelog**: [`v6.28.0...v7.0.0`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@7.0.0)
 
-> > > > > > > release-next
+## v6.28.1
+
+Date: 2024-12-20
+
+### Patch Changes
+
+- Allow users to opt out of v7 deprecation warnings by setting flags to `false` ([#12441](https://github.com/remix-run/react-router/pull/12441))
+
+**Full Changelog**: [`v6.28.0...v6.28.1`](https://github.com/remix-run/react-router/compare/react-router@6.28.0...react-router@6.28.1)
 
 ## v6.28.0
 
@@ -814,12 +774,6 @@ Date: 2024-11-06
 - Update JSDoc URLs for new website structure (add /v6/ segment) ([#12141](https://github.com/remix-run/react-router/pull/12141))
 
 **Full Changelog**: [`v6.27.0...v6.28.0`](https://github.com/remix-run/react-router/compare/react-router@6.27.0...react-router@6.28.0)
-
-# <<<<<<< HEAD
-
-> > > > > > > dev
-
-> > > > > > > release-next
 
 ## v6.27.0
 

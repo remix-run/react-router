@@ -30,10 +30,10 @@ With server rendering disabled, you can still use `clientLoader` and `clientActi
 ```tsx filename=some-route.tsx
 import { Route } from "./+types/some-route";
 
-export async function clientLoader(
-  _: Route.ClientLoaderArgs
-) {
-  let data = await fetch("/some/api/stuff");
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  let data = await fetch(`/some/api/stuff/${params.id}`);
   return data;
 }
 
@@ -71,4 +71,4 @@ In contrast `react-router build` (with server rendering disabled) pre-renders yo
 - Use React components to generate the initial page users see
 - Re-enable server rendering later without changing anything about your UI
 
-This is also why your project still needs a dependency on `@react-router/node`.
+React Router will still server render your index route to generate that `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.

@@ -150,9 +150,20 @@ function listAllFiles(_dir: string) {
 test.describe("Prerendering", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
+  let _consoleError: typeof console.error;
+  let _consoleWarn: typeof console.warn;
+
+  test.beforeAll(() => {
+    _consoleError = console.error;
+    console.error = () => {};
+    _consoleWarn = console.warn;
+    console.warn = () => {};
+  });
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = _consoleError;
+    console.warn = _consoleWarn;
   });
 
   test("Prerenders known static routes when true is specified", async () => {
@@ -427,6 +438,59 @@ test.describe("Prerendering", () => {
     });
   });
 
+  test("Adds leading slashes if omitted in config", async () => {
+    fixture = await createFixture({
+      prerender: true,
+      files: {
+        ...files,
+        "react-router.config.ts": js`
+          export default {
+            async prerender() {
+              await new Promise(r => setTimeout(r, 1));
+              return ['/', 'about'];
+            },
+          }
+        `,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter()
+            ],
+          });
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let clientDir = path.join(fixture.projectDir, "build", "client");
+    expect(listAllFiles(clientDir).sort()).toEqual([
+      "__manifest",
+      "_root.data",
+      "about.data",
+      "about/index.html",
+      "favicon.ico",
+      "index.html",
+    ]);
+
+    let res = await fixture.requestDocument("/");
+    let html = await res.text();
+    expect(html).toMatch("<title>Index Title: Index Loader Data</title>");
+    expect(html).toMatch("<h1>Root</h1>");
+    expect(html).toMatch('<h2 data-route="true">Index</h2>');
+    expect(html).toMatch('<p data-loader-data="true">Index Loader Data</p>');
+
+    res = await fixture.requestDocument("/about");
+    html = await res.text();
+    expect(html).toMatch("<title>About Title: About Loader Data</title>");
+    expect(html).toMatch("<h1>Root</h1>");
+    expect(html).toMatch('<h2 data-route="true">About</h2>');
+    expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
+  });
+
   test("Hydrates into a navigable app", async ({ page }) => {
     fixture = await createFixture({
       prerender: true,
@@ -577,7 +641,7 @@ test.describe("Prerendering", () => {
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
-  
+
           export default defineConfig({
             build: { manifest: true },
             plugins: [reactRouter()],
@@ -591,7 +655,7 @@ test.describe("Prerendering", () => {
               data: "한글 데이터 - UTF-8 문자",
             };
           }
-  
+
           export default function Comp() {
             let data = useLoaderData();
             return (
@@ -611,7 +675,7 @@ test.describe("Prerendering", () => {
               data: "非プリレンダリングデータ - UTF-8文字",
             };
           }
-  
+
           export default function Comp() {
             let data = useLoaderData();
             return (

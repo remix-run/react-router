@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "7.0.1",
+  "version": "7.1.1",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -18,58 +18,46 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "types": "./dist/production/index.d.ts",
-  "main": "./dist/production/index.js",
-  "module": "./dist/production/index.mjs",
+  "types": "./dist/development/index.d.ts",
+  "main": "./dist/development/index.js",
+  "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
       "node": {
-        "types": "./dist/production/index.d.ts",
-        "development": {
-          "module-sync": "./dist/development/index.mjs",
-          "default": "./dist/development/index.js"
-        },
-        "module-sync": "./dist/production/index.mjs",
-        "default": "./dist/production/index.js"
+        "types": "./dist/development/index.d.ts",
+        "module-sync": "./dist/development/index.mjs",
+        "default": "./dist/development/index.js"
       },
       "import": {
-        "types": "./dist/production/index.d.mts",
-        "development": "./dist/development/index.mjs",
-        "default": "./dist/production/index.mjs"
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "default": {
-        "types": "./dist/production/index.d.ts",
-        "development": "./dist/development/index.js",
-        "default": "./dist/production/index.js"
+        "types": "./dist/development/index.d.ts",
+        "default": "./dist/development/index.js"
       }
     },
     "./route-module": {
       "import": {
-        "types": "./dist/production/lib/types/route-module.d.mts"
+        "types": "./dist/development/lib/types/route-module.d.mts"
       },
       "default": {
-        "types": "./dist/production/lib/types/route-module.d.ts"
+        "types": "./dist/development/lib/types/route-module.d.ts"
       }
     },
     "./dom": {
       "node": {
-        "types": "./dist/production/dom-export.d.ts",
-        "development": {
-          "module-sync": "./dist/development/dom-export.mjs",
-          "default": "./dist/development/dom-export.js"
-        },
-        "module-sync": "./dist/production/dom-export.mjs",
-        "default": "./dist/production/dom-export.js"
+        "types": "./dist/development/dom-export.d.ts",
+        "module-sync": "./dist/development/dom-export.mjs",
+        "default": "./dist/development/dom-export.js"
       },
       "import": {
-        "types": "./dist/production/dom-export.d.mts",
-        "development": "./dist/development/dom-export.mjs",
-        "default": "./dist/production/dom-export.mjs"
+        "types": "./dist/development/dom-export.d.mts",
+        "default": "./dist/development/dom-export.mjs"
       },
       "default": {
-        "types": "./dist/production/dom-export.d.ts",
-        "development": "./dist/development/dom-export.js",
-        "default": "./dist/production/dom-export.js"
+        "types": "./dist/development/dom-export.d.ts",
+        "default": "./dist/development/dom-export.js"
       }
     },
     "./package.json": "./package.json"
