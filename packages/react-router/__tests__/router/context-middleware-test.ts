@@ -1370,7 +1370,6 @@ describe("context/middleware", () => {
             middleware: [
               async (_, next) => {
                 await next();
-                debugger;
                 await next();
               },
             ],

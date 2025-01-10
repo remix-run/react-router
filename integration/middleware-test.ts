@@ -901,5 +901,93 @@ test.describe("Middleware", () => {
 
       appFixture.close();
     });
+
+    test("only calls middleware as deep as needed for granular data requests", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router'
+            export default function Component({ loaderData }) {
+              return <Link to="/a/b">Link</Link>;
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { Outlet } from 'react-router'
+            export const middleware = [
+              ({ context }) => {
+                context.a = true;
+              },
+            ];
+
+            export async function loader({ context }) {
+              return JSON.stringify(context);
+            }
+
+            // Force a granular call for this route
+            export function clientLoader({ serverLoader }) {
+              return serverLoader()
+            }
+
+            export default function Component({ loaderData }) {
+              return (
+                <>
+                  <h2 data-a>A: {loaderData}</h2>
+                  <Outlet />
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet } from 'react-router'
+            export const middleware = [
+              ({ context }) => {
+                context.b = true;
+              },
+            ];
+
+            export async function loader({ context }) {
+              return JSON.stringify(context);
+            }
+
+            // Force a granular call for this route
+            export function clientLoader({ serverLoader }) {
+              return serverLoader()
+            }
+
+            export default function Component({ loaderData }) {
+              return <h3 data-b>B: {loaderData}</h3>;
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await page.waitForSelector('a[href="/a/b"]');
+
+      (await page.$('a[href="/a/b"]'))?.click();
+      await page.waitForSelector("[data-b]");
+      expect(await page.locator("[data-a]").textContent()).toBe(
+        'A: {"a":true}'
+      );
+      expect(await page.locator("[data-b]").textContent()).toBe(
+        'B: {"a":true,"b":true}'
+      );
+
+      appFixture.close();
+    });
   });
 });
