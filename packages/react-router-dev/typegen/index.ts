@@ -1,5 +1,6 @@
 import fs from "node:fs";
 
+import ts from "dedent";
 import * as Path from "pathe";
 import pc from "picocolors";
 import type vite from "vite";
@@ -9,7 +10,7 @@ import { createConfigLoader } from "../config/config";
 import { generate } from "./generate";
 import type { Context } from "./context";
 import { getTypesDir, getTypesPath } from "./paths";
-import type { RouteManifest, RouteManifestEntry } from "../config/routes";
+import type { RouteManifestEntry } from "../config/routes";
 
 export async function run(rootDirectory: string) {
   const ctx = await createContext({ rootDirectory, watch: false });
@@ -72,25 +73,27 @@ async function createContext({
   };
 }
 
-// TODO:
-// 1. commit as wip
-// 2. normalized data per route
-
-function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
-  const result: RouteManifestEntry[] = [];
-  while (route) {
-    result.push(route);
-    if (!route.parentId) break;
-    route = routes[route.parentId];
-  }
-  result.reverse();
-  return result;
+function asJS(path: string) {
+  return path.replace(/\.(js|ts)x?$/, ".js");
 }
 
-function parseParams(urlpath: string) {
+function formatRoute({ id, path, file, parentId }: RouteManifestEntry) {
+  let params = path === undefined ? {} : parseParams(path);
+  return [
+    `"${id}": {`,
+    `  params: ${formatParams(params)}`,
+    `  module: typeof import("./app/${asJS(file)}")`,
+    `  parentId: ${JSON.stringify(parentId)}`,
+    `}`,
+  ]
+    .map((line) => `  ${line}`)
+    .join("\n");
+}
+
+function parseParams(path: string) {
   const result: Record<string, boolean> = {};
 
-  let segments = urlpath.split("/");
+  let segments = path.split("/");
   segments.forEach((segment) => {
     const match = segment.match(/^:([\w-]+)(\?)?/);
     if (!match) return;
@@ -104,27 +107,6 @@ function parseParams(urlpath: string) {
   const hasSplat = segments.at(-1) === "*";
   if (hasSplat) result["*"] = true;
   return result;
-}
-
-type Route = {
-  id: string;
-  path: string;
-  file: string;
-  parent?: string;
-};
-
-function formatRoute({ id, path, parent }: Route) {
-  let params = parseParams(path);
-  return [
-    `"${path}": {`,
-    `  path: "${path}"`,
-    `  params: ${formatParams(params)}`,
-    `  module: typeof import("./app/${id}.js")`,
-    `  parent: ${JSON.stringify(parent)}`,
-    `}`,
-  ]
-    .map((line) => `  ${line}`)
-    .join("\n");
 }
 
 function formatParams(params: Record<string, boolean>) {
@@ -145,35 +127,51 @@ function formatParams(params: Record<string, boolean>) {
 async function writeAll(ctx: Context): Promise<void> {
   let routes = Object.values(ctx.config.routes);
 
-  let paths = new Map<string, string>();
-  for (let route of routes) {
-    let lineage = getRouteLineage(ctx.config.routes, route);
-    let path = lineage.map((route) => route.path).join("/");
-    if (path === "") path = "<root>";
-    paths.set(route.id, path);
-  }
-
   const typegenDir = getTypesDir(ctx);
   fs.rmSync(typegenDir, { recursive: true, force: true });
-
-  let types: Array<Route> = [];
-  for (let route of routes) {
-    let path = paths.get(route.id);
-    if (path === undefined) throw new Error();
-
-    types.push({
-      id: route.id,
-      path,
-      file: route.file,
-      parent: route.parentId && paths.get(route.parentId),
-    });
-  }
 
   const newTypes = Path.join(typegenDir, "routes.ts");
   fs.mkdirSync(Path.dirname(newTypes), { recursive: true });
   fs.writeFileSync(
     newTypes,
-    `export type Routes = {\n${types.map(formatRoute).join("\n")}\n}`
+    `export type Routes = {\n${routes.map(formatRoute).join("\n")}\n}\n\n` +
+      ts`
+        type Pretty<T> = { [K in keyof T]: T[K] } & {};
+
+        type RouteId = keyof Routes
+
+        type GetParents<T extends RouteId> = Routes[T] extends {
+          parent: infer P extends RouteId;
+        }
+          ? [...GetParents<P>, P]
+          : [];
+
+        type _GetChildren<T extends RouteId> = {
+          [K in RouteId]: Routes[K] extends { parent: T }
+            ? [K, ..._GetChildren<K>]
+            : [];
+        }[RouteId];
+        type GetChildren<T extends RouteId> = _GetChildren<T> extends []
+          ? []
+          : Exclude<_GetChildren<T>, []>;
+
+        type GetBranch<T extends RouteId> = [
+          ...GetParents<T>,
+          T,
+          ...GetChildren<T>
+        ];
+
+        type _GetBranchParams<Branch extends Array<RouteId>> = Branch extends [
+          infer R extends RouteId,
+          ...infer Rs extends Array<RouteId>
+        ]
+          ? Routes[R]["params"] & _GetBranchParams<Rs>
+          : {};
+        type GetBranchParams<Branch extends Array<RouteId>> = Pretty<
+          _GetBranchParams<Branch>
+        >;
+        export type GetParams<T extends RouteId> = GetBranchParams<GetBranch<T>>;
+    `
   );
 
   Object.values(ctx.config.routes).forEach((route) => {
@@ -183,29 +181,3 @@ async function writeAll(ctx: Context): Promise<void> {
     fs.writeFileSync(typesPath, content);
   });
 }
-
-/*
-type GetParents<T extends keyof Routes> = Routes[T] extends {
-  parent: infer P extends keyof Routes;
-}
-  ? [...GetParents<P>, P]
-  : [];
-
-type P1 = GetParents<"/products/:id/blah/:id?">;
-
-type _GetChildren<T extends keyof Routes> = {
-  [K in keyof Routes]: Routes[K] extends { parent: T }
-    ? [K, ..._GetChildren<K>]
-    : [];
-}[keyof Routes];
-type GetChildren<T extends keyof Routes> = Exclude<_GetChildren<T>, []>;
-
-type C1 = GetChildren<"<root>">;
-
-type GetBranches<T extends keyof Routes> = [
-  ...GetParents<T>,
-  T,
-  ...GetChildren<T>
-];
-type B1 = GetBranches<"<root>">;
-*/

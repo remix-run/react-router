@@ -27,8 +27,6 @@ type RouteInfo = {
   parents: RouteInfo[];
   module: RouteModule;
   id: unknown;
-  file: string;
-  path: string;
   params: unknown;
   loaderData: unknown;
   actionData: unknown;
