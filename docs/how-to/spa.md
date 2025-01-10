@@ -63,7 +63,7 @@ If you're getting 404s at valid routes for your app, it's likely you need to con
 
 ## Important Note
 
-Typical Single Pages apps send a mostly blank index.html template with little more than an empty `<div id="root"></div>`.
+Typical Single Pages apps send a mostly blank `index.html` template with little more than an empty `<div id="root"></div>`.
 
 In contrast `react-router build` (with server rendering disabled) pre-renders your root and index routes. This means you can:
 
