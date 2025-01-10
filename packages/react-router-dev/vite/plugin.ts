@@ -42,6 +42,7 @@ import { removeExports } from "./remove-exports";
 import {
   type RouteChunkName,
   type RouteChunkExportName,
+  routeChunkNames,
   routeChunkExportNames,
   detectRouteChunks,
   getRouteChunkCode,
@@ -238,20 +239,22 @@ const resolveChunk = (
   let rootRelativeFilePath = vite.normalizePath(
     path.relative(ctx.rootDirectory, absoluteFilePath)
   );
-  let entryChunk =
-    viteManifest[rootRelativeFilePath + BUILD_CLIENT_ROUTE_QUERY_STRING] ??
-    viteManifest[rootRelativeFilePath];
+  let entryChunk = viteManifest[rootRelativeFilePath];
 
   if (!entryChunk) {
-    let knownManifestKeys = Object.keys(viteManifest)
-      .map((key) => '"' + key + '"')
-      .join(", ");
-    throw new Error(
-      `No manifest entry found for "${rootRelativeFilePath}". Known manifest keys: ${knownManifestKeys}`
-    );
+    return undefined;
   }
 
   return entryChunk;
+};
+
+const getPublicModulePathForEntry = (
+  ctx: ReactRouterPluginContext,
+  viteManifest: Vite.Manifest,
+  entryFilePath: string
+): string | undefined => {
+  let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
+  return entryChunk ? `${ctx.publicPath}${entryChunk.file}` : undefined;
 };
 
 const getReactRouterManifestBuildAssets = (
@@ -261,15 +264,29 @@ const getReactRouterManifestBuildAssets = (
   prependedAssetFilePaths: string[] = []
 ): ReactRouterManifest["entry"] & { css: string[] } => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
+  invariant(entryChunk, "Chunk not found");
 
   // This is here to support prepending client entry assets to the root route
-  let prependedAssetChunks = prependedAssetFilePaths.map((filePath) =>
-    resolveChunk(ctx, viteManifest, filePath)
-  );
+  let prependedAssetChunks = prependedAssetFilePaths.map((filePath) => {
+    let chunk = resolveChunk(ctx, viteManifest, filePath);
+    invariant(chunk, "Chunk not found");
+    return chunk;
+  });
+
+  let routeModuleChunks = routeChunkNames
+    .map((routeChunkName) =>
+      resolveChunk(
+        ctx,
+        viteManifest,
+        getRouteChunkModuleId(entryFilePath.split("?")[0], routeChunkName)
+      )
+    )
+    .filter(isNonNullable);
 
   let chunks = resolveDependantChunks(viteManifest, [
     ...prependedAssetChunks,
     entryChunk,
+    ...routeModuleChunks,
   ]);
 
   return {
@@ -704,32 +721,32 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ...getReactRouterManifestBuildAssets(
           ctx,
           viteManifest,
-          routeFile,
+          `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
           // If this is the root route, we also need to include assets from the
           // client entry file as this is a common way for consumers to import
           // global reset styles, etc.
           isRootRoute ? [ctx.entryClientFilePath] : []
         ),
         clientActionModule: hasRouteChunkByExportName.clientAction
-          ? getReactRouterManifestBuildAssets(
+          ? getPublicModulePathForEntry(
               ctx,
               viteManifest,
               getRouteChunkModuleId(routeFile, "clientAction")
-            )?.module
+            )
           : undefined,
         clientLoaderModule: hasRouteChunkByExportName.clientLoader
-          ? getReactRouterManifestBuildAssets(
+          ? getPublicModulePathForEntry(
               ctx,
               viteManifest,
               getRouteChunkModuleId(routeFile, "clientLoader")
-            )?.module
+            )
           : undefined,
         hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
-          ? getReactRouterManifestBuildAssets(
+          ? getPublicModulePathForEntry(
               ctx,
               viteManifest,
               getRouteChunkModuleId(routeFile, "HydrateFallback")
-            )?.module
+            )
           : undefined,
       };
 

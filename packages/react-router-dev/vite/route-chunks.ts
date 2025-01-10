@@ -925,14 +925,16 @@ export function detectRouteChunks(
   };
 }
 
-const mainChunkName = "main" as const;
 export const routeChunkExportNames = [
   "clientAction",
   "clientLoader",
   "HydrateFallback",
 ] as const;
 export type RouteChunkExportName = (typeof routeChunkExportNames)[number];
-export type RouteChunkName = typeof mainChunkName | RouteChunkExportName;
+
+const mainChunkName = "main" as const;
+export const routeChunkNames = ["main", ...routeChunkExportNames] as const;
+export type RouteChunkName = (typeof routeChunkNames)[number];
 
 export function getRouteChunkCode(
   code: string,
