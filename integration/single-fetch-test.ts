@@ -187,9 +187,6 @@ test.describe("single-fetch", () => {
           message: "ROOT",
         },
       },
-      "routes/_index": {
-        data: null,
-      },
     });
     expect(res.headers.get("Content-Type")).toBe("text/x-script");
 

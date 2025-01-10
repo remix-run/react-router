@@ -39,36 +39,6 @@ export { SingleFetchRedirectSymbol };
 // the user control cache behavior via Cache-Control
 export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
-// TODO: Add this logic as flags to query() and remove this function
-export function getSingleFetchDataStrategy({
-  isActionDataRequest,
-  loadRouteIds,
-}: {
-  isActionDataRequest?: boolean;
-  loadRouteIds?: string[];
-} = {}): DataStrategyFunction {
-  return async ({ request, matches }: DataStrategyFunctionArgs) => {
-    // Don't call loaders on action data requests
-    if (isActionDataRequest && request.method === "GET") {
-      return {};
-    }
-
-    // Only run opt-in loaders when fine-grained revalidation is enabled
-    let matchesToLoad = loadRouteIds
-      ? matches.filter((m) => loadRouteIds.includes(m.route.id))
-      : matches;
-
-    let results = await Promise.all(
-      matchesToLoad.map((match) => match.resolve())
-    );
-    return results.reduce(
-      (acc, result, i) =>
-        Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
-      {}
-    );
-  };
-}
-
 export async function singleFetchAction(
   build: ServerBuild,
   serverMode: ServerMode,
@@ -90,6 +60,7 @@ export async function singleFetchAction(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
+      skipRevalidation: true,
       async respond(context: StaticHandlerContext) {
         let headers = getDocumentHeaders(build, context);
 
@@ -178,11 +149,12 @@ export async function singleFetchLoaders(
       headers: request.headers,
       signal: request.signal,
     });
-    let loadRouteIds =
-      new URL(request.url).searchParams.get("_routes")?.split(",") || undefined;
+    let routesParam = new URL(request.url).searchParams.get("_routes");
+    let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
+      filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
       async respond(context: StaticHandlerContext) {
         let headers = getDocumentHeaders(build, context);
@@ -218,11 +190,10 @@ export async function singleFetchLoaders(
         // Aggregate results based on the matches we intended to load since we get
         // `null` values back in `context.loaderData` for routes we didn't load
         let results: SingleFetchResults = {};
-        let loadedMatches = loadRouteIds
-          ? context.matches.filter(
-              (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
-            )
-          : context.matches;
+        let loadedMatches = context.matches.filter(
+          (m) =>
+            m.route.loader && (!loadRouteIds || loadRouteIds.has(m.route.id))
+        );
 
         loadedMatches.forEach((m) => {
           let { id } = m.route;

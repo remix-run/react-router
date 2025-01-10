@@ -394,10 +394,6 @@ export interface StaticHandlerContext {
   _deepestRenderedBoundaryId?: string | null;
 }
 
-type StaticRenderFunction = (
-  context: StaticHandlerContext
-) => Promise<Response>;
-
 /**
  * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
@@ -407,7 +403,9 @@ export interface StaticHandler {
     request: Request,
     opts?: {
       requestContext?: unknown;
+      filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
       skipLoaderErrorBubbling?: boolean;
+      skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction;
       respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
     }
@@ -3383,11 +3381,15 @@ export function createStaticHandler(
     request: Request,
     {
       requestContext,
+      filterMatchesToLoad,
       skipLoaderErrorBubbling,
+      skipRevalidation,
       dataStrategy,
       respond,
     }: {
       requestContext?: unknown;
+      filterMatchesToLoad?: (m: AgnosticDataRouteMatch) => boolean;
+      skipRevalidation?: boolean;
       skipLoaderErrorBubbling?: boolean;
       dataStrategy?: DataStrategyFunction;
       respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
@@ -3437,6 +3439,12 @@ export function createStaticHandler(
       };
     } else if (respond) {
       try {
+        // Run middleware as far deep as the deepest loader to be executed
+        let tailIdx = [...matches]
+          .reverse()
+          .findIndex((m) => !filterMatchesToLoad || filterMatchesToLoad(m));
+        let lowestLoadingIdx = tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
+
         let response = await runMiddlewarePipeline(
           {
             request,
@@ -3444,7 +3452,7 @@ export function createStaticHandler(
             params: matches[0].params,
             context: requestContext,
           },
-          matches.length - 1,
+          lowestLoadingIdx,
           true,
           async () => {
             let result = await callQueryHandlers(
@@ -3454,7 +3462,9 @@ export function createStaticHandler(
               requestContext,
               dataStrategy || defaultDataStrategyWithoutMiddleware,
               skipLoaderErrorBubbling === true,
-              null
+              null,
+              filterMatchesToLoad || null,
+              skipRevalidation === true
             );
 
             if (isResponse(result)) {
@@ -3489,7 +3499,9 @@ export function createStaticHandler(
         requestContext,
         dataStrategy || null,
         skipLoaderErrorBubbling === true,
-        null
+        null,
+        filterMatchesToLoad || null,
+        skipRevalidation === true
       );
 
       if (isResponse(result)) {
@@ -3598,7 +3610,9 @@ export function createStaticHandler(
             requestContext,
             dataStrategy || defaultDataStrategyWithoutMiddleware,
             false,
-            match!
+            match!,
+            null,
+            false
           );
 
           if (isResponse(result)) {
@@ -3629,7 +3643,9 @@ export function createStaticHandler(
         requestContext,
         dataStrategy || null,
         false,
-        match
+        match,
+        null,
+        false
       );
 
       if (isResponse(result)) {
@@ -3665,7 +3681,9 @@ export function createStaticHandler(
     requestContext: unknown,
     dataStrategy: DataStrategyFunction | null,
     skipLoaderErrorBubbling: boolean,
-    routeMatch: AgnosticDataRouteMatch | null
+    routeMatch: AgnosticDataRouteMatch | null,
+    filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
+    skipRevalidation: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
@@ -3681,7 +3699,9 @@ export function createStaticHandler(
           requestContext,
           dataStrategy,
           skipLoaderErrorBubbling,
-          routeMatch != null
+          routeMatch != null,
+          filterMatchesToLoad,
+          skipRevalidation
         );
         return result;
       }
@@ -3692,7 +3712,8 @@ export function createStaticHandler(
         requestContext,
         dataStrategy,
         skipLoaderErrorBubbling,
-        routeMatch
+        routeMatch,
+        filterMatchesToLoad
       );
       return isResponse(result)
         ? result
@@ -3727,7 +3748,9 @@ export function createStaticHandler(
     requestContext: unknown,
     dataStrategy: DataStrategyFunction | null,
     skipLoaderErrorBubbling: boolean,
-    isRouteRequest: boolean
+    isRouteRequest: boolean,
+    filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
+    skipRevalidation: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
 
@@ -3794,6 +3817,50 @@ export function createStaticHandler(
       };
     }
 
+    // TODO: DRY this up with below...
+    if (skipRevalidation) {
+      if (isErrorResult(result)) {
+        // Store off the pending error - we use it to determine which loaders
+        // to call and will commit it when we complete the navigation
+        let boundaryMatch = skipLoaderErrorBubbling
+          ? actionMatch
+          : findNearestBoundary(matches, actionMatch.route.id);
+        return {
+          matches,
+          loaderData: {},
+          actionData: null,
+          errors: {
+            [boundaryMatch.route.id]: result.error,
+          },
+          statusCode: isRouteErrorResponse(result.error)
+            ? result.error.status
+            : result.statusCode != null
+            ? result.statusCode
+            : 500,
+          loaderHeaders: {},
+          actionHeaders: {
+            ...(result.headers
+              ? { [actionMatch.route.id]: result.headers }
+              : {}),
+          },
+        };
+      } else {
+        return {
+          matches,
+          loaderData: {},
+          actionData: {
+            [actionMatch.route.id]: result.data,
+          },
+          errors: null,
+          statusCode: result.statusCode || 200,
+          loaderHeaders: {},
+          actionHeaders: result.headers
+            ? { [actionMatch.route.id]: result.headers }
+            : {},
+        };
+      }
+    }
+
     // Create a GET request for the loaders
     let loaderRequest = new Request(request.url, {
       headers: request.headers,
@@ -3815,6 +3882,7 @@ export function createStaticHandler(
         dataStrategy,
         skipLoaderErrorBubbling,
         null,
+        filterMatchesToLoad,
         [boundaryMatch.route.id, result]
       );
 
@@ -3839,7 +3907,8 @@ export function createStaticHandler(
       requestContext,
       dataStrategy,
       skipLoaderErrorBubbling,
-      null
+      null,
+      filterMatchesToLoad
     );
 
     return {
@@ -3862,6 +3931,7 @@ export function createStaticHandler(
     dataStrategy: DataStrategyFunction | null,
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
+    filterMatchesToLoad: ((match: AgnosticDataRouteMatch) => boolean) | null,
     pendingActionResult?: PendingActionResult
   ): Promise<
     | Omit<
@@ -3891,7 +3961,9 @@ export function createStaticHandler(
       ? getLoaderMatchesUntilBoundary(matches, pendingActionResult[0])
       : matches;
     let matchesToLoad = requestMatches.filter(
-      (m) => m.route.loader || m.route.lazy
+      (m) =>
+        (m.route.loader || m.route.lazy) &&
+        (!filterMatchesToLoad || filterMatchesToLoad(m))
     );
 
     // Short circuit if we have no loaders to run (query())

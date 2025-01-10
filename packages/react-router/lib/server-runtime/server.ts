@@ -271,9 +271,6 @@ async function handleSingleFetchRequest(
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void
 ): Promise<Response> {
-  // TODO: Re-imoplement the stuff we used to do in datastragegy
-  // - `skipRevalidation`
-  // - `loadRouteIds`/`filterMatchesToLoad`
   let response =
     request.method !== "GET"
       ? await singleFetchAction(
