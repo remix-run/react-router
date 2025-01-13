@@ -118,7 +118,7 @@ export function useFogOFWarDiscovery(
       }
       // optimization: use the already-parsed pathname from links
       let pathname =
-        el.tagName === 'A'
+        el.tagName === "A"
           ? (el as HTMLAnchorElement).pathname
           : new URL(path, window.location.origin).pathname;
       if (!discoveredPaths.has(pathname)) {
@@ -166,7 +166,7 @@ export function useFogOFWarDiscovery(
 
     // Setup a MutationObserver to fetch all subsequently rendered links/form
     // It just schedules a full scan since that's faster than checking subtrees
-    let observer = new MutationObserver(debouncedFetchPatches);
+    let observer = new MutationObserver(() => debouncedFetchPatches());
 
     observer.observe(document.documentElement, {
       subtree: true,
