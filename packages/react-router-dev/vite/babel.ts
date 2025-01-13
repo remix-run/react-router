@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
+import { createRequire } from "node:module";
 import type { NodePath } from "@babel/traverse";
 import type { types as Babel } from "@babel/core";
 import { parse, type ParseResult } from "@babel/parser";
 import * as t from "@babel/types";
+
+const require = createRequire(import.meta.url);
 
 // These `require`s were needed to support building within vite-ecosystem-ci,
 // otherwise we get errors that `traverse` and `generate` are not functions.

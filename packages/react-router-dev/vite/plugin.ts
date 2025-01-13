@@ -1,10 +1,11 @@
 // We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build to avoid deprecation warnings
 import type * as Vite from "vite";
+import { createRequire } from "node:module";
 import { type BinaryLike, createHash } from "node:crypto";
 import * as path from "node:path";
 import * as url from "node:url";
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 import * as babel from "@babel/core";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
@@ -44,6 +45,8 @@ import {
   ssrExternals,
 } from "../config/config";
 import * as WithProps from "./with-props";
+
+const require = createRequire(import.meta.url);
 
 export async function resolveViteConfig({
   configFile,

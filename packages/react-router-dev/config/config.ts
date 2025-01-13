@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
+import { createRequire } from "node:module";
 import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
@@ -9,10 +10,10 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
+import pick from "lodash/pick.js";
+import omit from "lodash/omit.js";
+import cloneDeep from "lodash/cloneDeep.js";
+import isEqual from "lodash/isEqual.js";
 
 import {
   type RouteManifest,
@@ -24,6 +25,8 @@ import {
 } from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import { isReactRouterRepo } from "./is-react-router-repo";
+
+const require = createRequire(import.meta.url);
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig

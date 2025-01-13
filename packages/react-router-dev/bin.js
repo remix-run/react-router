@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-let arg = require("arg");
+import arg from "arg";
 
 // Minimal replication of our actual parsing in `run.ts`.  If not already set,
 // default `NODE_ENV` so React loads the proper version in it's CJS entry script.
@@ -12,4 +12,6 @@ if (args._[0] === "dev") {
   process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 }
 
-require("./dist/cli/index");
+(async () => {
+  await import("./dist/cli/index.js");
+})();

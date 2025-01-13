@@ -21,7 +21,7 @@ export default defineConfig([
   {
     clean: true,
     entry,
-    format: ["cjs"],
+    format: ["esm"],
     outDir: "dist",
     dts: true,
     external,

@@ -1,4 +1,7 @@
 import path from "pathe";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 
 export function isReactRouterRepo() {
   // We use '@react-router/node' for this check since it's a

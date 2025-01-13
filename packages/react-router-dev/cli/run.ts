@@ -1,3 +1,4 @@
+import url from "node:url";
 import arg from "arg";
 import semver from "semver";
 import colors from "picocolors";
@@ -161,7 +162,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
 
-  flags.interactive = flags.interactive ?? require.main === module;
+  flags.interactive =
+    flags.interactive ??
+    import.meta.url === url.pathToFileURL(process.argv[1]).href;
   if (args["--no-typescript"]) {
     flags.typescript = false;
   }
