@@ -749,8 +749,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let viteClientConditions: string[] = [
           ...(vite.defaultClientConditions ?? []),
         ];
+
+        let packageRoot = path.dirname(
+          require.resolve("@react-router/dev/package.json")
+        );
+        let { moduleSyncEnabled } = await import(
+          `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
+        );
         let viteServerConditions: string[] = [
           ...(vite.defaultServerConditions ?? []),
+          ...(moduleSyncEnabled ? ["module-sync"] : []),
         ];
 
         logger = vite.createLogger(viteUserConfig.logLevel, {
