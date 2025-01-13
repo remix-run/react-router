@@ -147,6 +147,7 @@
   },
   "files": [
     "dist/",
+    "module-sync-enabled/",
     "bin.js",
     "CHANGELOG.md",
     "LICENSE.md",
