@@ -40,13 +40,22 @@ async function ensureBuildVersion(packageName, version) {
  * @param {string} packageName
  * @param {string} tag
  */
-function publishBuild(packageName, tag) {
+function publishBuild(packageName, tag, releaseBranch) {
   let buildDir = path.join(rootDir, "packages", packageName);
-  let args = ["--access public", `--tag ${tag}`];
-  if (tag === "experimental") {
-    args.push(`--no-git-checks`);
+
+  let args = ["--access public"];
+  if (tag) {
+    args.push(`--tag ${tag}`);
+  }
+
+  if (tag === "experimental" || tag === "nightly") {
+    args.push("--no-git-checks");
+  } else if (releaseBranch) {
+    args.push(`--publish-branch ${releaseBranch}`);
   } else {
-    args.push("--publish-branch release-next");
+    throw new Error(
+      "Expected a release branch name to be provided for non-experimental/nightly releases"
+    );
   }
   console.log();
   console.log(`  pnpm publish ${buildDir} --tag ${tag} --access public`);
@@ -75,11 +84,19 @@ async function run() {
     );
 
     // 2. Determine the appropriate npm tag to use
-    let tag = version.includes("experimental")
-      ? "experimental"
-      : semver.prerelease(version) == null
-      ? "latest"
-      : "pre";
+    let publishBranch;
+    let tag;
+    if (version.includes("experimental")) {
+      tag = "experimental";
+    } else if (version.includes("nightly")) {
+      tag = "nightly";
+    } else if (version.startsWith("6.")) {
+      publishBranch = "release-v6";
+      tag = null;
+    } else if (version.startsWith("7.")) {
+      publishBranch = "release-next";
+      tag = semver.prerelease(version) == null ? "latest" : "pre";
+    }
 
     console.log();
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
@@ -96,11 +113,11 @@ async function run() {
     await ensureBuildVersion("react-router-native", version);
 
     // 4. Publish to npm
-    publishBuild("router", tag);
-    publishBuild("react-router", tag);
-    publishBuild("react-router-dom", tag);
-    publishBuild("react-router-dom-v5-compat", tag);
-    publishBuild("react-router-native", tag);
+    publishBuild("router", tag, publishBranch);
+    publishBuild("react-router", tag, publishBranch);
+    publishBuild("react-router-dom", tag, publishBranch);
+    publishBuild("react-router-dom-v5-compat", tag, publishBranch);
+    publishBuild("react-router-native", tag, publishBranch);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);
