@@ -38,14 +38,16 @@ export default defineConfig([
             "dist/static/refresh-utils.cjs"
           );
 
-          await fsp.mkdir("dist/config/defaults", { recursive: true });
-          const files = await fsp.readdir("config/defaults");
-          for (const file of files) {
-            await fsp.copyFile(
-              `config/defaults/${file}`,
-              `dist/config/defaults/${file}`
-            );
-          }
+          ["defaults", "module-sync-enabled"].forEach(async (dir) => {
+            await fsp.mkdir(`dist/config/${dir}`, { recursive: true });
+            const files = await fsp.readdir(`config/${dir}`);
+            for (const file of files) {
+              await fsp.copyFile(
+                `config/${dir}/${file}`,
+                `dist/config/${dir}/${file}`
+              );
+            }
+          });
         },
       },
     ],

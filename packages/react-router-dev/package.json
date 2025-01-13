@@ -34,8 +34,8 @@
   },
   "imports": {
     "#module-sync-enabled": {
-      "module-sync": "./config/module-sync-enabled/true.js",
-      "default": "./config/module-sync-enabled/false.cjs"
+      "module-sync": "./dist/config/module-sync-enabled/true.js",
+      "default": "./dist/config/module-sync-enabled/false.cjs"
     }
   },
   "bin": {
