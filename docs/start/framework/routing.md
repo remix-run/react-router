@@ -49,7 +49,18 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
+If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention][file-route-conventions]. You can even combine different routing conventions if you like:
+
+```ts filename=app/routes.ts
+import { type RouteConfig, route } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default = [
+  route("/", "./home.tsx"),
+
+  ...await flatRoutes(),
+] satisfies RouteConfig;
+```
 
 ## Route Modules
 
@@ -153,6 +164,23 @@ export default [
 ] satisfies RouteConfig;
 ```
 
+To see `projects/home.tsx` appear in the layout, we'll need an outlet:
+
+```tsx filename=./projects/project-layout.tsx lines=[8]
+import { Outlet } from "react-router";
+
+export default function ProjectLayout() {
+  return (
+    <div>
+      <aside>Example sidebar</aside>
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+```
+
 ## Index Routes
 
 ```ts
@@ -246,6 +274,8 @@ async function loader({ params }: LoaderArgs) {
 }
 ```
 
+You should ensure that all dynamic segments in a given path are unique. Otherwise, as the `params` object is populated - latter dynamic segment values will override earlier values.
+
 ## Optional Segments
 
 You can make a route segment optional by adding a `?` to the end of the segment.
@@ -308,4 +338,4 @@ Note that these routes do not participate in data loading, actions, code splitti
 Next: [Route Module](./route-module)
 
 [file-route-conventions]: ../../how-to/file-route-conventions
-[outlet]: ../../api/react-router/Outlet
+[outlet]: https://api.reactrouter.com/v7/functions/react_router.Outlet.html

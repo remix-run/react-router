@@ -63,7 +63,7 @@ If you're getting 404s at valid routes for your app, it's likely you need to con
 
 ## Important Note
 
-Typical Single Pages apps send a mostly blank index.html template with little more than an empty `<div id="root"></div>`.
+Typical Single Pages apps send a mostly blank `index.html` template with little more than an empty `<div id="root"></div>`.
 
 In contrast `react-router build` (with server rendering disabled) pre-renders your root and index routes. This means you can:
 
@@ -71,4 +71,4 @@ In contrast `react-router build` (with server rendering disabled) pre-renders yo
 - Use React components to generate the initial page users see
 - Re-enable server rendering later without changing anything about your UI
 
-This is also why your project still needs a dependency on `@react-router/node`.
+React Router will still server render your index route to generate that `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.

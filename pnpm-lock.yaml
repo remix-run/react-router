@@ -11,9 +11,9 @@ overrides:
   workerd: 1.20240614.0
 
 patchedDependencies:
-  '@changesets/assemble-release-plan@5.2.4':
-    hash: xlpxbvc6gfcmwbnthfqwsopnoi
-    path: patches/@changesets__assemble-release-plan@5.2.4.patch
+  '@changesets/assemble-release-plan':
+    hash: ismjcgzyajdphoz3q5q3incsia
+    path: patches/@changesets__assemble-release-plan.patch
   '@changesets/get-dependents-graph@1.3.6':
     hash: arforfmj6nw2w4znv7h66rwf5y
     path: patches/@changesets__get-dependents-graph@1.3.6.patch
@@ -8985,7 +8985,7 @@ snapshots:
       resolve-from: 5.0.0
       semver: 7.5.4
 
-  '@changesets/assemble-release-plan@5.2.4(patch_hash=xlpxbvc6gfcmwbnthfqwsopnoi)':
+  '@changesets/assemble-release-plan@5.2.4(patch_hash=ismjcgzyajdphoz3q5q3incsia)':
     dependencies:
       '@babel/runtime': 7.24.1
       '@changesets/errors': 0.1.4
@@ -9002,7 +9002,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.24.1
       '@changesets/apply-release-plan': 6.1.4
-      '@changesets/assemble-release-plan': 5.2.4(patch_hash=xlpxbvc6gfcmwbnthfqwsopnoi)
+      '@changesets/assemble-release-plan': 5.2.4(patch_hash=ismjcgzyajdphoz3q5q3incsia)
       '@changesets/changelog-git': 0.1.14
       '@changesets/config': 2.3.1
       '@changesets/errors': 0.1.4
@@ -9066,7 +9066,7 @@ snapshots:
   '@changesets/get-release-plan@3.0.17':
     dependencies:
       '@babel/runtime': 7.24.1
-      '@changesets/assemble-release-plan': 5.2.4(patch_hash=xlpxbvc6gfcmwbnthfqwsopnoi)
+      '@changesets/assemble-release-plan': 5.2.4(patch_hash=ismjcgzyajdphoz3q5q3incsia)
       '@changesets/config': 2.3.1
       '@changesets/pre': 1.0.14
       '@changesets/read': 0.5.9
