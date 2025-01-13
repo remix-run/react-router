@@ -31,6 +31,12 @@
     },
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#module-sync-enabled": {
+      "module-sync": "./dist/config/module-sync-enabled/true.mjs",
+      "default": "./dist/config/module-sync-enabled/false.cjs"
+    }
+  },
   "bin": {
     "react-router": "bin.js"
   },
