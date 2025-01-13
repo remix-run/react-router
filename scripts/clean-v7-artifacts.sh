@@ -17,6 +17,8 @@ rm -rf packages/react-router-node/
 rm -rf packages/react-router-remix-routes-option-adapter/
 rm -rf packages/react-router-serve/
 rm -rf packages/react-router/.wireit/
+rm -rf integration/
+rm -rf playground-local/
 set +x
 
 echo "Installing and building..."
