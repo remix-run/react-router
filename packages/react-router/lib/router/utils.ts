@@ -692,7 +692,7 @@ function explodeOptionalSegments(path: string): string[] {
   let required = first.replace(/\?$/, "");
 
   if (rest.length === 0) {
-    // Intepret empty string as omitting an optional segment
+    // Interpret empty string as omitting an optional segment
     // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
     return isOptional ? [required, ""] : [required];
   }
@@ -1081,7 +1081,7 @@ export function decodePath(value: string) {
   } catch (error) {
     warning(
       false,
-      `The URL path "${value}" could not be decoded because it is is a ` +
+      `The URL path "${value}" could not be decoded because it is a ` +
         `malformed URL segment. This is probably due to a bad percent ` +
         `encoding (${error}).`
     );
