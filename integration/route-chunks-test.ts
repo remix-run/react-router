@@ -39,16 +39,23 @@ const files = {
     // elimination in the build by introducing a side effect
     export const inChunkableMainChunk = () => console.log() || true;
 
-    export const clientLoader = () => {
+    export const clientLoader = async () => {
+      // Allow HydrateFallback to be visible longer
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // eval is used here to avoid a chunking de-opt:
       return "clientLoader in main chunk: " + eval("typeof inChunkableMainChunk === 'function'");
     };
 
-    // Export is wrapped in an IIFE so we can detect when it's downloaded
+    // Exports are wrapped in IIFEs so we can detect when they're downloaded
     export const clientAction = (function() {
       (globalThis as any).chunkableClientActionDownloaded = true;
       // eval is used here to avoid a chunking de-opt:
       return () => "clientAction in main chunk: " + eval("typeof inChunkableMainChunk === 'function'");
+    })();
+    export const HydrateFallback = (function() {
+      (globalThis as any).chunkableHydrateFallbackDownloaded = true;
+      // eval is used here to avoid a chunking de-opt:
+      return () => <div data-hydrate-fallback>Loading...</div>;
     })();
 
     export default function ChunkableRoute() {
@@ -77,18 +84,26 @@ const files = {
     // elimination in the build by introducing a side effect
     export const inUnchunkableMainChunk = () => console.log() || true;
 
-    export const clientLoader = () => {
+    export const clientLoader = async () => {
       inUnchunkableMainChunk();
+      // Allow HydrateFallback to be visible longer
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // eval is used here to avoid a chunking de-opt:
       return "clientLoader in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
     };
-
-    // Export is wrapped in an IIFE so we can detect when it's downloaded
+ 
+    // Exports are wrapped in IIFEs so we can detect when they're downloaded
     export const clientAction = (function() {
       inUnchunkableMainChunk();
       (globalThis as any).unchunkableClientActionDownloaded = true;
       // eval is used here to avoid a chunking de-opt:
       return () => "clientAction in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
+    })();
+    export const HydrateFallback = (function() {
+      inUnchunkableMainChunk();
+      (globalThis as any).unchunkableHydrateFallbackDownloaded = true;
+      // eval is used here to avoid a chunking de-opt:
+      return () => <div data-hydrate-fallback>Loading...</div>;
     })();
 
     export default function UnchunkableRoute() {
@@ -115,9 +130,21 @@ async function chunkableClientActionDownloaded(page: Page) {
   );
 }
 
+async function chunkableHydrateFallbackDownloaded(page: Page) {
+  return await page.evaluate(() =>
+    Boolean((globalThis as any).chunkableHydrateFallbackDownloaded)
+  );
+}
+
 async function unchunkableClientActionDownloaded(page: Page) {
   return await page.evaluate(() =>
     Boolean((globalThis as any).unchunkableClientActionDownloaded)
+  );
+}
+
+async function unchunkableHydrateFallbackDownloaded(page: Page) {
+  return await page.evaluate(() =>
+    Boolean((globalThis as any).unchunkableHydrateFallbackDownloaded)
   );
 }
 
@@ -150,8 +177,9 @@ test.describe("Route chunks", async () => {
       await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
       expect(pageErrors).toEqual([]);
 
-      // Ensure chunkable client loader and action are not in main chunk
+      // Ensure chunkable exports are not in main chunk
       await page.getByRole("link", { name: "/chunkable" }).click();
+      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(false);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
@@ -164,8 +192,9 @@ test.describe("Route chunks", async () => {
 
       await page.goBack();
 
-      // Ensure unchunkable client loader and action are not in main chunk
+      // Ensure unchunkable exports are in main chunk
       await page.getByRole("link", { name: "/unchunkable" }).click();
+      expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
@@ -175,14 +204,18 @@ test.describe("Route chunks", async () => {
         'actionData = "clientAction in main chunk: true"'
       );
 
-      // Ensure chunkable client loader works during SSR
+      // Ensure chunkable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/chunkable`);
+      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
 
-      // Ensure unchunkable client loader works during SSR
+      // Ensure chunkable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/unchunkable`);
+      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -217,8 +250,9 @@ test.describe("Route chunks", async () => {
       await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
       expect(pageErrors).toEqual([]);
 
-      // Ensure chunkable client loader and action are kept in main chunk
+      // Ensure chunkable exports are kept in main chunk
       await page.getByRole("link", { name: "/chunkable" }).click();
+      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -230,8 +264,9 @@ test.describe("Route chunks", async () => {
 
       await page.goBack();
 
-      // Ensure unchunkable client loader and action are kept in main chunk
+      // Ensure unchunkable exports are kept in main chunk
       await page.getByRole("link", { name: "/unchunkable" }).click();
+      expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
@@ -243,12 +278,16 @@ test.describe("Route chunks", async () => {
 
       // Ensure chunkable client loader works during SSR
       await page.goto(`http://localhost:${port}/chunkable`);
+      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      expect(await chunkableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
 
       // Ensure unchunkable client loader works during SSR
       await page.goto(`http://localhost:${port}/unchunkable`);
+      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      expect(await unchunkableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -296,6 +335,7 @@ test.describe("Route chunks", async () => {
             
             - clientAction
             - clientLoader
+            - HydrateFallback
 
             These exports were unable to be split into their own chunks because they reference code in the same file that is used by other route module exports.
             
