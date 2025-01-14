@@ -471,6 +471,9 @@ async function handleResourceRequest(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
+      async respond(ctx: Response) {
+        return ctx;
+      },
     });
 
     invariant(

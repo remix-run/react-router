@@ -1,3 +1,7 @@
+import type {
+  Request as PlaywrightRequest,
+  Response as PlaywrightResponse,
+} from "@playwright/test";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -986,6 +990,113 @@ test.describe("Middleware", () => {
       expect(await page.locator("[data-b]").textContent()).toBe(
         'B: {"a":true,"b":true}'
       );
+
+      appFixture.close();
+    });
+
+    test("calls middleware on resource routes", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/_index.tsx": js`
+            import * as React from 'react'
+            import { useFetcher } from 'react-router'
+            export default function Component({ loaderData }) {
+              let fetcher = useFetcher();
+              let [data, setData] = React.useState();
+
+              async function rawFetch() {
+                let res = await fetch('/a/b?raw');
+                let text = await res.text();
+                setData(text);
+              }
+
+              return (
+                <>
+                  <button id="fetcher" onClick={() => fetcher.load('/a/b')}>
+                    Load Fetcher
+                  </button>
+                  {fetcher.data ? <pre data-fetcher>{fetcher.data}</pre> : null}
+
+                  <br/>
+
+                  <button id="fetch" onClick={rawFetch}>
+                    Load Raw Fetch
+                  </button>
+                  {data ? <pre data-fetch>{data}</pre> : null}
+                </>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            export const middleware = [
+              async ({ context }, next) => {
+                context.a = true;
+                let res = await next();
+                res.headers.set('x-a', 'true');
+                return res;
+              },
+            ];
+          `,
+          "app/routes/a.b.tsx": js`
+            export const middleware = [
+              async ({ context }, next) => {
+                context.b = true;
+                let res = await next();
+                res.headers.set('x-b', 'true');
+                return res;
+              },
+            ];
+
+            export async function loader({ request, context }) {
+              let data = JSON.stringify(context);
+              let isRaw = new URL(request.url).searchParams.has('raw');
+              return isRaw ? new Response(data) : data;
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let fetcherHeaders: ReturnType<PlaywrightResponse["headers"]> | undefined;
+      let fetchHeaders: ReturnType<PlaywrightResponse["headers"]> | undefined;
+      page.on("request", async (r: PlaywrightRequest) => {
+        if (r.url().includes("/a/b.data")) {
+          let res = await r.response();
+          fetcherHeaders = res?.headers();
+        } else if (r.url().endsWith("/a/b?raw")) {
+          let res = await r.response();
+          fetchHeaders = res?.headers();
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      (await page.$("#fetcher"))?.click();
+      await page.waitForSelector("[data-fetcher]");
+      expect(await page.locator("[data-fetcher]").textContent()).toBe(
+        '{"a":true,"b":true}'
+      );
+      expect(fetcherHeaders!["x-a"]).toBe("true");
+      expect(fetcherHeaders!["x-b"]).toBe("true");
+
+      (await page.$("#fetch"))?.click();
+      await page.waitForSelector("[data-fetch]");
+      expect(await page.locator("[data-fetch]").textContent()).toBe(
+        '{"a":true,"b":true}'
+      );
+      expect(fetchHeaders!["x-a"]).toBe("true");
+      expect(fetchHeaders!["x-b"]).toBe("true");
 
       appFixture.close();
     });
