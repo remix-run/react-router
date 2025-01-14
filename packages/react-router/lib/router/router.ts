@@ -416,7 +416,7 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction;
-      respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
+      respond?: (res: Response) => Promise<Response>;
     }
   ): Promise<any>;
 }
@@ -3572,7 +3572,7 @@ export function createStaticHandler(
       requestContext?: unknown;
       routeId?: string;
       dataStrategy?: DataStrategyFunction;
-      respond?: (context: StaticHandlerContext) => Promise<Response>;
+      respond?: (res: Response) => Promise<Response>;
     } = {}
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3625,7 +3625,7 @@ export function createStaticHandler(
           );
 
           if (isResponse(result)) {
-            return result;
+            return respond(result);
           }
 
           let error = result.errors
