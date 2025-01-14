@@ -8,5 +8,7 @@
     "react-router-native": "6.28.1",
     "@remix-run/router": "1.21.0"
   },
-  "changesets": []
+  "changesets": [
+    "beige-ants-pay"
+  ]
 }
