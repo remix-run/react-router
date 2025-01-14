@@ -30,8 +30,14 @@ const files = {
       );
     }
   `,
-  "app/routes/chunkable.tsx": js`
+  "app/routes/chunkable/route.tsx": js`
     import { useLoaderData, useActionData, Form } from "react-router";
+    
+    // Ensure these style imports are still included in the page even though
+    // they're not used in the main chunk
+    import clientLoaderStyles from "./clientLoader.module.css";
+    import clientActionStyles from "./clientAction.module.css";
+    import hydrateFallbackStyles from "./hydrateFallback.module.css";
 
     // Usage of this exported function forces any consuming code into the main
     // chunk. The variable name is globally unique to prevent name mangling,
@@ -43,19 +49,25 @@ const files = {
       // Allow HydrateFallback to be visible longer
       await new Promise((resolve) => setTimeout(resolve, 100));
       // eval is used here to avoid a chunking de-opt:
-      return "clientLoader in main chunk: " + eval("typeof inChunkableMainChunk === 'function'");
+      return {
+        message: "clientLoader in main chunk: " + eval("typeof inChunkableMainChunk === 'function'"),
+        className: clientLoaderStyles.root,
+      };
     };
 
     // Exports are wrapped in IIFEs so we can detect when they're downloaded
     export const clientAction = (function() {
       (globalThis as any).chunkableClientActionDownloaded = true;
       // eval is used here to avoid a chunking de-opt:
-      return () => "clientAction in main chunk: " + eval("typeof inChunkableMainChunk === 'function'");
+      return () => ({
+        message: "clientAction in main chunk: " + eval("typeof inChunkableMainChunk === 'function'"),
+        className: clientActionStyles.root,
+      });
     })();
     export const HydrateFallback = (function() {
       (globalThis as any).chunkableHydrateFallbackDownloaded = true;
       // eval is used here to avoid a chunking de-opt:
-      return () => <div data-hydrate-fallback>Loading...</div>;
+      return () => <div data-hydrate-fallback className={hydrateFallbackStyles.root}>Loading...</div>;
     })();
 
     export default function ChunkableRoute() {
@@ -64,8 +76,16 @@ const files = {
       const actionData = useActionData();
       return (
         <>
-          <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
-          <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
+          <div
+            data-loader-data
+            className={loaderData?.className}>
+            loaderData = {JSON.stringify(loaderData?.message)}
+          </div>
+          <div
+            data-action-data
+            className={actionData?.className}>
+            actionData = {JSON.stringify(actionData?.message)}
+          </div>
           <input type="text" />
           <Form method="post">
             <button>Submit</button>
@@ -73,6 +93,15 @@ const files = {
         </>
       );
     }
+  `,
+  "app/routes/chunkable/clientLoader.module.css": `
+    .root { padding: 20px; }
+  `,
+  "app/routes/chunkable/clientAction.module.css": `
+    .root { padding: 20px; }
+  `,
+  "app/routes/chunkable/hydrateFallback.module.css": `
+    .root { padding: 20px; }
   `,
 
   "app/routes/unchunkable.tsx": js`
@@ -183,11 +212,14 @@ test.describe("Route chunks", async () => {
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
+      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(false);
+      expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
       expect(await chunkableClientActionDownloaded(page)).toBe(false);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: false"'
       );
+      expect(page.locator("[data-action-data]")).toHaveCSS("padding", "20px");
       expect(await chunkableClientActionDownloaded(page)).toBe(true);
 
       await page.goBack();
@@ -207,10 +239,15 @@ test.describe("Route chunks", async () => {
       // Ensure chunkable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/chunkable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
+        "padding",
+        "20px"
+      );
       expect(await chunkableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
+      expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
 
       // Ensure chunkable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/unchunkable`);
@@ -256,11 +293,13 @@ test.describe("Route chunks", async () => {
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
+      expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
       expect(await chunkableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
       );
+      expect(page.locator("[data-action-data]")).toHaveCSS("padding", "20px");
 
       await page.goBack();
 
@@ -279,6 +318,10 @@ test.describe("Route chunks", async () => {
       // Ensure chunkable client loader works during SSR
       await page.goto(`http://localhost:${port}/chunkable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
+        "padding",
+        "20px"
+      );
       expect(await chunkableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
@@ -305,8 +348,7 @@ test.describe("Route chunks", async () => {
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({ routeChunks }),
           "vite.config.js": await viteConfig.basic({ port }),
-          ...files,
-          "app/routes/unchunkable.tsx": files["app/routes/chunkable.tsx"],
+          "app/routes/unchunkable.tsx": "export default function(){}",
         });
       });
 
