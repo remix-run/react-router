@@ -21,5 +21,12 @@
     "@playground/framework-express": "0.0.0",
     "@playground/framework-spa": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-jeans-drive",
+    "beige-ants-pay",
+    "calm-cycles-dress",
+    "lazy-elephants-tell",
+    "new-news-decide",
+    "polite-clocks-shake"
+  ]
 }
