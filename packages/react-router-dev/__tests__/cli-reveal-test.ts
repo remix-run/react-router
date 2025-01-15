@@ -6,7 +6,7 @@ function getProjectDir() {
   let projectDir = path.join(
     __dirname,
     ".tmp",
-    `remix-tests-${Math.random().toString(32).slice(2)}`
+    `reveal-test-${Math.random().toString(32).slice(2)}`
   );
   fse.copySync(path.join(__dirname, "fixtures", "basic"), projectDir);
   return projectDir;
