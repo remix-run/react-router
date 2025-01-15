@@ -3,6 +3,8 @@ import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
 import colors from "picocolors";
+// Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
+import "react-router";
 
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
