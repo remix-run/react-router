@@ -107,15 +107,13 @@ async function writeAll(ctx: Context): Promise<void> {
           }
         }
 
-        // DEBUG
-        import type { Routes } from "react-router/types"
-        type X = Routes
+        export {}
     `
   );
 
   Object.values(ctx.config.routes).forEach((route) => {
     const typesPath = getTypesPath(ctx, route);
-    const content = generate(ctx, route);
+    const content = generate(route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });

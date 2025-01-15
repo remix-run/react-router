@@ -1,4 +1,7 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
+import type { LinkDescriptor } from "../router/links";
+import type { AppLoadContext } from "../server-runtime/data";
+import type { ServerDataFrom } from "./route-data";
 import type {
   CreateActionData,
   CreateLoaderData,
@@ -117,6 +120,7 @@ type Matches = {
 
 export type Routes = {
   [Id in RouteId]: {
+    module: UserRoutes[Id]["module"];
     params: Params[Id];
     loaderData: Data[Id]["loaderData"];
     actionData: Data[Id]["actionData"];
@@ -124,6 +128,104 @@ export type Routes = {
     matches: Matches[Id]["matches"];
   };
 };
+
+type AnyRoute = {
+  module: RouteModule;
+  params: Record<string, string | undefined>;
+  loaderData: unknown;
+  actionData: unknown;
+  metaMatches: Array<MetaMatch<RouteId>>;
+  matches: Array<Match<RouteId>>;
+};
+
+type RouteExport<Route extends AnyRoute> = {
+  links: {
+    return: Array<LinkDescriptor>;
+  };
+
+  meta: {
+    args: {
+      location: Location;
+      params: Route["params"];
+      data: Route["loaderData"];
+      error?: unknown;
+      matches: Route["metaMatches"];
+    };
+    return: Array<MetaDescriptor>;
+  };
+
+  headers: {
+    args: {
+      loaderHeaders: Headers;
+      parentHeaders: Headers;
+      actionHeaders: Headers;
+      errorHeaders: Headers | undefined;
+    };
+    return: Headers | HeadersInit;
+  };
+
+  loader: {
+    args: {
+      context: AppLoadContext;
+      request: Request;
+      params: Route["params"];
+    };
+  };
+
+  clientLoader: {
+    args: {
+      request: Request;
+      params: Route["params"];
+      serverLoader: () => Promise<ServerDataFrom<Route["module"]["loader"]>>;
+    };
+  };
+
+  action: {
+    args: {
+      context: AppLoadContext;
+      request: Request;
+      params: Route["params"];
+    };
+  };
+
+  clientAction: {
+    args: {
+      request: Request;
+      params: Route["params"];
+      serverAction: () => Promise<ServerDataFrom<Route["module"]["action"]>>;
+    };
+  };
+
+  HydrateFallback: {
+    args: {
+      params: Route["params"];
+    };
+  };
+
+  default: {
+    args: {
+      params: Route["params"];
+      loaderData: Route["loaderData"];
+      actionData?: Route["actionData"];
+      matches: Route["matches"];
+    };
+  };
+
+  ErrorBoundary: {
+    args: {
+      params: Route["params"];
+      loaderData?: Route["loaderData"];
+      actionData?: Route["actionData"];
+      error: unknown;
+    };
+  };
+};
+
+export type RouteExports = {
+  [Id in RouteId]: RouteExport<Routes[Id]>;
+};
+
+// --- PARSE PARAM ---
 
 // prettier-ignore
 type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
