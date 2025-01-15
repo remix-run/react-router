@@ -3454,6 +3454,7 @@ export function createStaticHandler(
           .findIndex((m) => !filterMatchesToLoad || filterMatchesToLoad(m));
         let lowestLoadingIdx = tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
 
+        let renderedStaticContext: StaticHandlerContext | undefined;
         let response = await runMiddlewarePipeline(
           {
             request,
@@ -3483,15 +3484,72 @@ export function createStaticHandler(
             // When returning StaticHandlerContext, we patch back in the location here
             // since we need it for React Context.  But this helps keep our submit and
             // loadRouteData operating on a Request instead of a Location
-            let res = await respond({
+            renderedStaticContext = {
               location,
               basename,
               ...result,
-            });
+            };
+            let res = await respond(renderedStaticContext);
 
+            return res;
+          },
+          async (e) => {
+            if (isResponse(e.error)) {
+              return e.error;
+            }
+
+            let boundary = findNearestBoundary(matches!, e.routeId);
+            let errorContext: StaticHandlerContext;
+
+            if (renderedStaticContext) {
+              // We rendered an HTML response and caught an error going back up
+              // the middleware chain - render again with an updated context
+
+              // If we had loaderData for the route that threw, clear it out
+              // to align server/client behavior.  Client side middleware uses
+              // dataStrategy and a given route can only have one result, so the
+              // error overwrites any prior loader data.
+              if (e.routeId in renderedStaticContext.loaderData) {
+                renderedStaticContext.loaderData[e.routeId] = undefined;
+              }
+
+              errorContext = getStaticContextFromError(
+                dataRoutes,
+                renderedStaticContext,
+                e.error,
+                boundary.route.id
+              );
+            } else {
+              // We never even got to the handlers, so we've got now data -
+              // just create an empty context reflecting the error
+
+              // FIXME: Boundary should not be below any routes with loaders
+              // since we have no loaderData to provide, so use the higher of:
+              // - ancestor w/ boundary
+              // - first route with loader
+
+              errorContext = {
+                matches: matches!,
+                location,
+                basename,
+                loaderData: {},
+                actionData: null,
+                errors: {
+                  [boundary.route.id]: e.error,
+                },
+                statusCode: isRouteErrorResponse(e.error)
+                  ? e.error.status
+                  : 500,
+                actionHeaders: {},
+                loaderHeaders: {},
+              };
+            }
+
+            let res = await respond(errorContext);
             return res;
           }
         );
+
         invariant(isResponse(response), "Expected a response in query()");
         return response;
       } catch (e) {
@@ -3641,6 +3699,15 @@ export function createStaticHandler(
           }
 
           throw new Error("Expected a response from queryRoute");
+        },
+        (e) => {
+          if (isResponse(e.error)) {
+            return respond(e.error);
+          }
+          return new Response(String(e.error), {
+            status: 500,
+            statusText: "Unexpected Server Error",
+          });
         }
       );
       return response;
@@ -4110,13 +4177,16 @@ export function createStaticHandler(
 export function getStaticContextFromError(
   routes: AgnosticDataRouteObject[],
   handlerContext: StaticHandlerContext,
-  error: any
+  error: any,
+  boundaryId?: string
 ): StaticHandlerContext {
+  let errorBoundaryId =
+    boundaryId || handlerContext._deepestRenderedBoundaryId || routes[0].id;
   return {
     ...handlerContext,
     statusCode: isRouteErrorResponse(error) ? error.status : 500,
     errors: {
-      [handlerContext._deepestRenderedBoundaryId || routes[0].id]: error,
+      [errorBoundaryId]: error,
     },
   };
 }
@@ -4840,7 +4910,7 @@ async function defaultDataStrategy(
     }
   }
 
-  let results = await runMiddlewarePipeline(
+  let results = (await runMiddlewarePipeline(
     args,
     lastIndex,
     false,
@@ -4849,10 +4919,22 @@ async function defaultDataStrategy(
       results.forEach((result, i) => {
         keyedResults[matchesToLoad[i].route.id] = result;
       });
+    },
+    (e, keyedResults) => {
+      // we caught an error running the middleware, copy that overtop any
+      // non-error result for the route
+      Object.assign(keyedResults, {
+        [e.routeId]: { type: "error", result: e.error },
+      });
     }
-  );
+  )) as Record<string, DataStrategyResult>;
   return results;
 }
+
+type MutableMiddlewareState = {
+  keyedResults: Record<string, DataStrategyResult>;
+  propagateResult: boolean;
+};
 
 export async function runMiddlewarePipeline(
   {
@@ -4865,9 +4947,16 @@ export async function runMiddlewarePipeline(
   },
   lastIndex: number,
   propagateResult: boolean,
-  handler: (r: Record<string, DataStrategyResult>) => unknown
-): Promise<Record<string, DataStrategyResult>> {
-  let keyedResults: Record<string, DataStrategyResult> = {};
+  handler: (results: Record<string, DataStrategyResult>) => unknown,
+  errorHandler: (
+    error: MiddlewareError,
+    results: Record<string, DataStrategyResult>
+  ) => unknown
+): Promise<unknown> {
+  let middlewareState: MutableMiddlewareState = {
+    keyedResults: {},
+    propagateResult,
+  };
   try {
     let result = await callRouteMiddleware(
       matches
@@ -4879,30 +4968,29 @@ export async function runMiddlewarePipeline(
         ) as [string, ClientMiddlewareFunction][],
       0,
       { request, params, context },
-      keyedResults,
-      propagateResult,
+      middlewareState,
       handler
     );
-    // TODO: Clean this up
-    // @ts-expect-error Unsure the best way to handle this for now
-    return propagateResult ? result : keyedResults;
+    return middlewareState.propagateResult
+      ? result
+      : middlewareState.keyedResults;
   } catch (e) {
     if (!(e instanceof MiddlewareError)) {
+      // This shouldn't happen?  This would have to come from a bug in our
+      // library code...
       throw e;
     }
     if (propagateResult && isResponse(e.error)) {
       throw e.error;
     }
-    // we caught an error running the middleware, copy that overtop any
-    // non-error result for the route
-    return {
-      ...keyedResults,
-      [e.routeId]: { type: "error", result: e.error },
-    };
+    let result = await errorHandler(e, middlewareState.keyedResults);
+    return middlewareState.propagateResult
+      ? result
+      : middlewareState.keyedResults;
   }
 }
 
-class MiddlewareError {
+export class MiddlewareError {
   routeId: string;
   error: unknown;
   constructor(routeId: string, error: unknown) {
@@ -4915,8 +5003,7 @@ async function callRouteMiddleware(
   middlewares: [string, ClientMiddlewareFunction][],
   idx: number,
   args: LoaderFunctionArgs | ActionFunctionArgs,
-  keyedResults: Record<string, DataStrategyResult>,
-  propagateResult: boolean,
+  middlewareState: MutableMiddlewareState,
   handler: (r: Record<string, DataStrategyResult>) => void
 ): Promise<unknown> {
   let { request } = args;
@@ -4932,7 +5019,7 @@ async function callRouteMiddleware(
   let tuple = middlewares[idx];
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
-    let result = await handler(keyedResults);
+    let result = await handler(middlewareState.keyedResults);
     return result;
   }
 
@@ -4947,11 +5034,10 @@ async function callRouteMiddleware(
       middlewares,
       idx + 1,
       args,
-      keyedResults,
-      propagateResult,
+      middlewareState,
       handler
     );
-    return propagateResult ? result : undefined;
+    return middlewareState.propagateResult ? result : undefined;
   };
 
   try {

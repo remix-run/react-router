@@ -1,6 +1,9 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
-import type { Router as DataRouter } from "../../router/router";
+import type {
+  Router as DataRouter,
+  MiddlewareError,
+} from "../../router/router";
 import { isResponse, runMiddlewarePipeline } from "../../router/router";
 import type {
   DataStrategyFunction,
@@ -132,6 +135,17 @@ export function StreamTransfer({
   }
 }
 
+function middlewareErrorHandler(
+  e: MiddlewareError,
+  keyedResults: Record<string, DataStrategyResult>
+) {
+  // we caught an error running the middleware, copy that overtop any
+  // non-error result for the route
+  Object.assign(keyedResults, {
+    [e.routeId]: { type: "error", result: e.error },
+  });
+}
+
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
@@ -149,8 +163,9 @@ export function getSingleFetchDataStrategy(
         async (keyedResults) => {
           let results = await singleFetchActionStrategy(request, matches);
           Object.assign(keyedResults, results);
-        }
-      );
+        },
+        middlewareErrorHandler
+      ) as Promise<Record<string, DataStrategyResult>>;
     }
 
     // Fetcher loads are singular calls to one loader
@@ -165,8 +180,9 @@ export function getSingleFetchDataStrategy(
             matches
           );
           Object.assign(keyedResults, results);
-        }
-      );
+        },
+        middlewareErrorHandler
+      ) as Promise<Record<string, DataStrategyResult>>;
     }
 
     // Navigational loads are more complex...
@@ -192,8 +208,9 @@ export function getSingleFetchDataStrategy(
           matches
         );
         Object.assign(keyedResults, results);
-      }
-    );
+      },
+      middlewareErrorHandler
+    ) as Promise<Record<string, DataStrategyResult>>;
   };
 }
 
