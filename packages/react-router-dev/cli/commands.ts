@@ -6,9 +6,9 @@ import colors from "picocolors";
 
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
+import { loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
-import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
 import * as Typegen from "../typegen";
@@ -21,20 +21,16 @@ export async function routes(
     json?: boolean;
   } = {}
 ): Promise<void> {
-  let ctx = await loadPluginContext({
-    root: reactRouterRoot,
-    configFile: flags.config,
-  });
+  let rootDirectory = reactRouterRoot ?? process.cwd();
+  let configResult = await loadConfig({ rootDirectory });
 
-  if (!ctx) {
-    console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
-    );
+  if (!configResult.ok) {
+    console.error(colors.red(configResult.error));
     process.exit(1);
   }
 
   let format: RoutesFormat = flags.json ? "json" : "jsx";
-  console.log(formatRoutes(ctx.reactRouterConfig.routes, format));
+  console.log(formatRoutes(configResult.value.routes, format));
 }
 
 export async function build(
@@ -78,27 +74,29 @@ let conjunctionListFormat = new Intl.ListFormat("en", {
 });
 
 export async function generateEntry(
-  entry: string,
-  reactRouterRoot: string,
+  entry?: string,
+  reactRouterRoot?: string,
   flags: {
     typescript?: boolean;
     config?: string;
   } = {}
 ) {
-  let ctx = await loadPluginContext({
-    root: reactRouterRoot,
-    configFile: flags.config,
-  });
-
-  let rootDirectory = ctx.rootDirectory;
-  let appDirectory = ctx.reactRouterConfig.appDirectory;
-
   // if no entry passed, attempt to create both
   if (!entry) {
     await generateEntry("entry.client", reactRouterRoot, flags);
     await generateEntry("entry.server", reactRouterRoot, flags);
     return;
   }
+
+  let rootDirectory = reactRouterRoot ?? process.cwd();
+  let configResult = await loadConfig({ rootDirectory });
+
+  if (!configResult.ok) {
+    console.error(colors.red(configResult.error));
+    return;
+  }
+
+  let appDirectory = configResult.value.appDirectory;
 
   if (!entries.includes(entry)) {
     let entriesArray = Array.from(entries);
