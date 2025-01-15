@@ -36,6 +36,7 @@ import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
   ClientMiddlewareFunction,
+  ClientMiddlewareFunctionArgs,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -5025,7 +5026,7 @@ async function callRouteMiddleware(
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
-  let next: Parameters<ClientMiddlewareFunction>[1] = async () => {
+  let next: ClientMiddlewareFunctionArgs["next"] = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
@@ -5037,15 +5038,14 @@ async function callRouteMiddleware(
       middlewareState,
       handler
     );
-    return middlewareState.propagateResult ? result : undefined;
+    if (middlewareState.propagateResult) {
+      return result;
+    }
   };
 
   try {
-    let result = await middleware(args, next);
-    if (!nextCalled) {
-      result = await next();
-    }
-    return result;
+    let result = await middleware({ ...args, next });
+    return nextCalled ? result : next();
   } catch (e) {
     if (e instanceof MiddlewareError) {
       throw e;

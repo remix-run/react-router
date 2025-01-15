@@ -244,7 +244,7 @@ test.describe("Middleware", () => {
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
             export const clientMiddleware = [
-              async ({ request, context }, next) => {
+              async ({ request, context, next }) => {
                 await next();
                 throw redirect('/target');
               }
@@ -299,7 +299,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               export const clientMiddleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   throw new Error('broken!');
                 }
               ]
@@ -356,7 +356,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               export const clientMiddleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   await next();
                   throw new Error('broken!');
                 }
@@ -681,7 +681,7 @@ test.describe("Middleware", () => {
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
             export const clientMiddleware = [
-              async ({ request, context }, next) => {
+              async ({ request, context, next }) => {
                 await next();
                 throw redirect('/target');
               }
@@ -734,7 +734,7 @@ test.describe("Middleware", () => {
             "app/routes/broken.tsx": js`
               import { useRouteError } from 'react-router'
               export const clientMiddleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   throw new Error('broken!')
                 }
               ]
@@ -789,7 +789,7 @@ test.describe("Middleware", () => {
             "app/routes/broken.tsx": js`
               import { useRouteError } from 'react-router'
               export const clientMiddleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   await next();
                   throw new Error('broken!')
                 }
@@ -1108,7 +1108,7 @@ test.describe("Middleware", () => {
           "app/routes/redirect.tsx": js`
             import { Link, redirect } from 'react-router'
             export const middleware = [
-              async ({ request, context }, next) => {
+              async ({ request, context, next }) => {
                 await next();
                 throw redirect('/target');
               }
@@ -1164,7 +1164,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               export const middleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   throw new Error('broken!');
                 }
               ]
@@ -1214,7 +1214,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               export const middleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   throw new Error('broken!');
                 }
               ]
@@ -1270,7 +1270,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               export const middleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   await next();
                   debugger;
                   throw new Error('broken!');
@@ -1331,7 +1331,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/broken.tsx": js`
               export const middleware = [
-                async ({ request, context }, next) => {
+                async ({ request, context, next }) => {
                   await next()
                   throw new Error('broken!');
                 }
@@ -1395,7 +1395,7 @@ test.describe("Middleware", () => {
               import { Outlet } from 'react-router'
 
               export const middleware = [
-                async ({ context }, next) => {
+                async ({ context, next }) => {
                   context.a = true;
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -1417,7 +1417,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               export const middleware = [
-                async ({ context }, next) => {
+                async ({ context, next }) => {
                   let res = await next();
                   throw new Error('broken!')
                 },
@@ -1472,7 +1472,7 @@ test.describe("Middleware", () => {
               import { Outlet } from 'react-router'
 
               export const middleware = [
-                async ({ context }, next) => {
+                async ({ context, next }) => {
                   context.a = true;
                   let res = await next();
                   res.headers.set('x-a', 'true');
@@ -1494,7 +1494,7 @@ test.describe("Middleware", () => {
             `,
             "app/routes/a.b.tsx": js`
               export const middleware = [
-                async ({ context }, next) => {
+                async ({ context, next }) => {
                   let res = await next();
                   throw new Error('broken!')
                 },
@@ -1799,7 +1799,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             export const middleware = [
-              async ({ context }, next) => {
+              async ({ context, next }) => {
                 context.a = true;
                 let res = await next();
                 res.headers.set('x-a', 'true');
@@ -1809,7 +1809,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             export const middleware = [
-              async ({ context }, next) => {
+              async ({ context, next }) => {
                 context.b = true;
                 let res = await next();
                 res.headers.set('x-b', 'true');
