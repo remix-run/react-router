@@ -78,49 +78,14 @@ function asJS(path: string) {
 }
 
 function formatRoute({ id, path, file, parentId }: RouteManifestEntry) {
-  let params = path === undefined ? {} : parseParams(path);
   return [
     `"${id}": {`,
-    `  params: ${formatParams(params)}`,
-    `  module: typeof import("./app/${asJS(file)}")`,
     `  parentId: ${JSON.stringify(parentId)}`,
+    `  path: ${JSON.stringify(path)}`,
+    `  module: typeof import("./app/${asJS(file)}")`,
     `}`,
   ]
     .map((line) => `  ${line}`)
-    .join("\n");
-}
-
-function parseParams(path: string) {
-  const result: Record<string, boolean> = {};
-
-  let segments = path.split("/");
-  segments.forEach((segment) => {
-    const match = segment.match(/^:([\w-]+)(\?)?/);
-    if (!match) return;
-    const param = match[1];
-    const isRequired = match[2] === undefined;
-
-    result[param] ||= isRequired;
-    return;
-  });
-
-  const hasSplat = segments.at(-1) === "*";
-  if (hasSplat) result["*"] = true;
-  return result;
-}
-
-function formatParams(params: Record<string, boolean>) {
-  let entries = Object.entries(params);
-  if (entries.length === 0) return `{}`;
-  return [
-    "{",
-    ...entries.map(
-      ([param, isRequired]) =>
-        `  ${JSON.stringify(param)}${isRequired ? "" : "?"}: string`
-    ),
-    "}",
-  ]
-    .map((line, index) => (index === 0 ? line : `    ${line}`))
     .join("\n");
 }
 
@@ -134,43 +99,17 @@ async function writeAll(ctx: Context): Promise<void> {
   fs.mkdirSync(Path.dirname(newTypes), { recursive: true });
   fs.writeFileSync(
     newTypes,
-    `export type Routes = {\n${routes.map(formatRoute).join("\n")}\n}\n\n` +
+    `type UserRoutes = {\n${routes.map(formatRoute).join("\n")}\n}\n\n` +
       ts`
-        type Pretty<T> = { [K in keyof T]: T[K] } & {};
-
-        type RouteId = keyof Routes
-
-        type GetParents<T extends RouteId> = Routes[T] extends {
-          parent: infer P extends RouteId;
+        declare module "react-router/types" {
+          interface Register {
+            routes: UserRoutes
+          }
         }
-          ? [...GetParents<P>, P]
-          : [];
 
-        type _GetChildren<T extends RouteId> = {
-          [K in RouteId]: Routes[K] extends { parent: T }
-            ? [K, ..._GetChildren<K>]
-            : [];
-        }[RouteId];
-        type GetChildren<T extends RouteId> = _GetChildren<T> extends []
-          ? []
-          : Exclude<_GetChildren<T>, []>;
-
-        type GetBranch<T extends RouteId> = [
-          ...GetParents<T>,
-          T,
-          ...GetChildren<T>
-        ];
-
-        type _GetBranchParams<Branch extends Array<RouteId>> = Branch extends [
-          infer R extends RouteId,
-          ...infer Rs extends Array<RouteId>
-        ]
-          ? Routes[R]["params"] & _GetBranchParams<Rs>
-          : {};
-        type GetBranchParams<Branch extends Array<RouteId>> = Pretty<
-          _GetBranchParams<Branch>
-        >;
-        export type GetParams<T extends RouteId> = GetBranchParams<GetBranch<T>>;
+        // DEBUG
+        import type { Routes } from "react-router/types"
+        type X = Routes
     `
   );
 
