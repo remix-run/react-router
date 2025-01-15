@@ -6,10 +6,6 @@ import {
   isRedirectStatusCode,
   isResponse,
 } from "../router/router";
-import type {
-  DataStrategyFunctionArgs,
-  DataStrategyFunction,
-} from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,

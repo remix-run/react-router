@@ -3,6 +3,7 @@ import type {
   Response as PlaywrightResponse,
 } from "@playwright/test";
 import { test, expect } from "@playwright/test";
+import { UNSAFE_ServerMode } from "react-router";
 
 import {
   createAppFixture,
@@ -13,6 +14,16 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { reactRouterConfig } from "./helpers/vite.js";
 
 test.describe("Middleware", () => {
+  let originalConsoleError = console.error;
+
+  test.beforeEach(() => {
+    console.error = () => {};
+  });
+
+  test.afterEach(() => {
+    console.error = originalConsoleError;
+  });
+
   test.describe("SPA Mode", () => {
     test("calls clientMiddleware before/after loaders", async ({ page }) => {
       let fixture = await createFixture({
@@ -263,58 +274,125 @@ test.describe("Middleware", () => {
     });
 
     test("handles errors thrown on the way down", async ({ page }) => {
-      let fixture = await createFixture({
-        spaMode: true,
-        files: {
-          "react-router.config.ts": reactRouterConfig({
-            ssr: false,
-          }),
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
+      let fixture = await createFixture(
+        {
+          spaMode: true,
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              ssr: false,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
 
-            export default defineConfig({
-              build: { manifest: true },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router'
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
 
-            export default function Component() {
-              return <Link to="/private/page">Link</Link>;
-            }
-          `,
-          "app/routes/private.tsx": js`
-            import { Link, redirect } from 'react-router'
-            export const clientMiddleware = [
-              async ({ request, context }, next) => {
-                throw new Response(null, { status: 401 });
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
               }
-            ]
-            export default function Component() {
-              return <Outlet/>
-            }
-            export function ErrorBoundary() {
-              return <h1>Access Denied</h1>
-            }
-          `,
-          "app/routes/private.page.tsx": js`
-            export default function Component() {
-              return <h1>Target</h1>
-            }
-          `,
+            `,
+            "app/routes/broken.tsx": js`
+              export const clientMiddleware = [
+                async ({ request, context }, next) => {
+                  throw new Error('broken!');
+                }
+              ]
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ error }) {
+                return <h1>{error.message}</h1>
+              }
+            `,
+          },
         },
-      });
+        UNSAFE_ServerMode.Development
+      );
 
-      let appFixture = await createAppFixture(fixture);
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("Access Denied")');
+      await page.waitForSelector('h1:has-text("broken!")');
+
+      appFixture.close();
+    });
+
+    test("handles errors thrown on the way up", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          spaMode: true,
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              ssr: false,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
+              }
+            `,
+            "app/routes/broken.tsx": js`
+              export const clientMiddleware = [
+                async ({ request, context }, next) => {
+                  await next();
+                  throw new Error('broken!');
+                }
+              ]
+              export function clientLoader() {
+                return "nope"
+              }
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ loaderData, error }) {
+                return (
+                  <>
+                    <h1>{error.message}</h1>
+                    <pre>{loaderData ?? 'empty'}</pre>
+                  </>
+                );
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await page.waitForSelector('a:has-text("Link")');
+
+      (await page.getByRole("link"))?.click();
+      await page.waitForSelector('h1:has-text("broken!")');
+      expect(await page.innerText("pre")).toBe("empty");
 
       appFixture.close();
     });
@@ -560,55 +638,121 @@ test.describe("Middleware", () => {
     });
 
     test("handles errors thrown on the way down", async ({ page }) => {
-      let fixture = await createFixture({
-        files: {
-          "react-router.config.ts": reactRouterConfig({}),
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({}),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
 
-            export default defineConfig({
-              build: { manifest: true },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router'
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
 
-            export default function Component() {
-              return <Link to="/private/page">Link</Link>;
-            }
-          `,
-          "app/routes/private.tsx": js`
-            import { Link, redirect } from 'react-router'
-            export const clientMiddleware = [
-              async ({ request, context }, next) => {
-                throw new Response(null, { status: 401 });
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
               }
-            ]
-            export default function Component() {
-              return <Outlet/>
-            }
-            export function ErrorBoundary() {
-              return <h1>Access Denied</h1>
-            }
-          `,
-          "app/routes/private.page.tsx": js`
-            export default function Component() {
-              return <h1>Target</h1>
-            }
-          `,
+            `,
+            "app/routes/broken.tsx": js`
+              import { useRouteError } from 'react-router'
+              export const clientMiddleware = [
+                async ({ request, context }, next) => {
+                  throw new Error('broken!')
+                }
+              ]
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary() {
+                return <h1>{useRouteError().message}</h1>
+              }
+            `,
+          },
         },
-      });
+        UNSAFE_ServerMode.Development
+      );
 
-      let appFixture = await createAppFixture(fixture);
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("Access Denied")');
+      await page.waitForSelector('h1:has-text("broken!")');
+
+      appFixture.close();
+    });
+
+    test("handles errors thrown on the way up", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({}),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
+              }
+            `,
+            "app/routes/broken.tsx": js`
+              import { useRouteError } from 'react-router'
+              export const clientMiddleware = [
+                async ({ request, context }, next) => {
+                  await next();
+                  throw new Error('broken!')
+                }
+              ]
+              export function clientLoader() {
+                return "nope"
+              }
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ loaderData, error }) {
+                return (
+                  <>
+                    <h1>{error.message}</h1>
+                    <pre>{loaderData ?? 'empty'}</pre>
+                  </>
+                );
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await page.waitForSelector('a:has-text("Link")');
+
+      (await page.getByRole("link"))?.click();
+      await page.waitForSelector('h1:has-text("broken!")');
+      expect(await page.innerText("pre")).toBe("empty");
 
       appFixture.close();
     });
@@ -853,55 +997,391 @@ test.describe("Middleware", () => {
       appFixture.close();
     });
 
-    test("handles errors thrown on the way down", async ({ page }) => {
-      let fixture = await createFixture({
-        files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
+    test("handles errors thrown on the way down (document)", async ({
+      page,
+    }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
 
-            export default defineConfig({
-              build: { manifest: true },
-              plugins: [reactRouter()],
-            });
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router'
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
 
-            export default function Component() {
-              return <Link to="/private/page">Link</Link>;
-            }
-          `,
-          "app/routes/private.tsx": js`
-            import { Link, redirect } from 'react-router'
-            export const middleware = [
-              async ({ request, context }, next) => {
-                throw new Response(null, { status: 401 });
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
               }
-            ]
-            export default function Component() {
-              return <Outlet/>
-            }
-            export function ErrorBoundary() {
-              return <h1>Access Denied</h1>
-            }
-          `,
-          "app/routes/private.page.tsx": js`
-            export default function Component() {
-              return <h1>Target</h1>
-            }
-          `,
+            `,
+            "app/routes/broken.tsx": js`
+              export const middleware = [
+                async ({ request, context }, next) => {
+                  throw new Error('broken!');
+                }
+              ]
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ error }) {
+                return <h1>{error.message}</h1>
+              }
+            `,
+          },
         },
-      });
+        UNSAFE_ServerMode.Development
+      );
 
-      let appFixture = await createAppFixture(fixture);
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/broken");
+      expect(await page.innerText("h1")).toBe("broken!");
+
+      appFixture.close();
+    });
+
+    test("handles errors thrown on the way down (data)", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
+              }
+            `,
+            "app/routes/broken.tsx": js`
+              export const middleware = [
+                async ({ request, context }, next) => {
+                  throw new Error('broken!');
+                }
+              ]
+              export function loader() {
+                return null
+              }
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ error }) {
+                return <h1>{error.message}</h1>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
-      await page.waitForSelector('a:has-text("Link")');
 
-      (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("Access Denied")');
+      (await page.$('a[href="/broken"]'))?.click();
+      await page.waitForSelector("h1");
+      expect(await page.innerText("h1")).toBe("broken!");
+
+      appFixture.close();
+    });
+
+    test("handles errors thrown on the way up (document)", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
+              }
+            `,
+            "app/routes/broken.tsx": js`
+              export const middleware = [
+                async ({ request, context }, next) => {
+                  await next();
+                  debugger;
+                  throw new Error('broken!');
+                }
+              ]
+              export function loader() {
+                return "nope"
+              }
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ error, loaderData }) {
+                return (
+                  <>
+                    <h1>{error.message}</h1>
+                    <pre>{loaderData ?? 'empty'}</pre>
+                  </>
+                );
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/broken");
+      expect(await page.innerText("h1")).toBe("broken!");
+      expect(await page.innerText("pre")).toBe("empty");
+
+      appFixture.close();
+    });
+
+    test("handles errors thrown on the way up (data)", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+
+              export default function Component() {
+                return <Link to="/broken">Link</Link>;
+              }
+            `,
+            "app/routes/broken.tsx": js`
+              export const middleware = [
+                async ({ request, context }, next) => {
+                  await next()
+                  throw new Error('broken!');
+                }
+              ]
+              export function loader() {
+                return "nope"
+              }
+              export default function Component() {
+                return <h1>Should not see me</h1>
+              }
+              export function ErrorBoundary({ error, loaderData }) {
+                return (
+                  <>
+                    <h1>{error.message}</h1>
+                    <pre>{loaderData ?? 'empty'}</pre>
+                  </>
+                );
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      (await page.$('a[href="/broken"]'))?.click();
+      await page.waitForSelector("h1");
+      expect(await page.innerText("h1")).toBe("broken!");
+      expect(await page.innerText("pre")).toBe("empty");
+
+      appFixture.close();
+    });
+
+    test("bubbles errors up on document requests", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b">Link</Link>
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+
+              export const middleware = [
+                async ({ context }, next) => {
+                  context.a = true;
+                  let res = await next();
+                  res.headers.set('x-a', 'true');
+                  return res;
+                },
+              ];
+
+              export function loader() {
+                return "A";
+              }
+
+              export default function Component() {
+                return <><h1>A</h1><Outlet/></>;
+              }
+
+              export function ErrorBoundary({ error }) {
+                return <><h1>A Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              export const middleware = [
+                async ({ context }, next) => {
+                  let res = await next();
+                  throw new Error('broken!')
+                },
+              ];
+
+              export function loader() {
+                return "B";
+              }
+
+              export default function Component() {
+                return <h2>B</h2>;
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a/b");
+      expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
+      expect(await page.locator("pre").textContent()).toBe("broken!");
+
+      appFixture.close();
+    });
+
+    test("bubbles errors up on data requests", async ({ page }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b">Link</Link>
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+
+              export const middleware = [
+                async ({ context }, next) => {
+                  context.a = true;
+                  let res = await next();
+                  res.headers.set('x-a', 'true');
+                  return res;
+                },
+              ];
+
+              export function loader() {
+                return "A";
+              }
+
+              export default function Component() {
+                return <><h1>A</h1><Outlet/></>;
+              }
+
+              export function ErrorBoundary({ error }) {
+                return <><h1>A Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              export const middleware = [
+                async ({ context }, next) => {
+                  let res = await next();
+                  throw new Error('broken!')
+                },
+              ];
+
+              export function loader() {
+                return "B";
+              }
+
+              export default function Component() {
+                return <h2>B</h2>;
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      (await page.$('a[href="/a/b"]'))?.click();
+      await page.waitForSelector("pre");
+      expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
+      expect(await page.locator("pre").textContent()).toBe("broken!");
 
       appFixture.close();
     });
