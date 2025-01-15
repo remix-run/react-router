@@ -9,7 +9,14 @@ import type {
 } from "./route-module";
 import type { Pretty } from "./utils";
 
+// TODO: refactor
+// - do we need `route-module` anymore?
+// - should `Register` be its own file?
+// - comment for why `export {}` is necessary
+// - probably name generated `routes.ts` differently?
+
 export interface Register {
+  // paths
   // routes
 }
 

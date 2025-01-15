@@ -59,6 +59,7 @@ export {
 export {
   data,
   generatePath,
+  href,
   isRouteErrorResponse,
   matchPath,
   matchRoutes,

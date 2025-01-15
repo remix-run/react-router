@@ -10,7 +10,7 @@ import { createConfigLoader } from "../config/config";
 import { generate } from "./generate";
 import type { Context } from "./context";
 import { getTypesDir, getTypesPath } from "./paths";
-import type { RouteManifestEntry } from "../config/routes";
+import type { RouteManifest, RouteManifestEntry } from "../config/routes";
 
 export async function run(rootDirectory: string) {
   const ctx = await createContext({ rootDirectory, watch: false });
@@ -92,6 +92,27 @@ function formatRoute({ id, path, file, parentId }: RouteManifestEntry) {
 async function writeAll(ctx: Context): Promise<void> {
   let routes = Object.values(ctx.config.routes);
 
+  let pathsToParams = new Map<string, Record<string, boolean>>();
+  for (let route of routes) {
+    if (route.path === undefined) continue;
+    let lineage = getRouteLineage(ctx.config.routes, route);
+    let path = lineage
+      .filter((route) => route.path !== undefined)
+      .map((route) => route.path)
+      .join("/");
+    if (path === "") path = "/";
+    pathsToParams.set(path, parseParams(path));
+  }
+  let formattedPaths = `type Paths = {`;
+  for (let [path, params] of pathsToParams.entries()) {
+    let formattedParams = Object.entries(params).map(
+      ([param, required]) => `"${param}"${required ? "" : "?"}: string`
+    );
+    let formattedEntry = `"${path}": {${formattedParams.join(",")}},\n`;
+    formattedPaths += formattedEntry;
+  }
+  formattedPaths += `}`;
+
   const typegenDir = getTypesDir(ctx);
   fs.rmSync(typegenDir, { recursive: true, force: true });
 
@@ -99,11 +120,14 @@ async function writeAll(ctx: Context): Promise<void> {
   fs.mkdirSync(Path.dirname(newTypes), { recursive: true });
   fs.writeFileSync(
     newTypes,
-    `type UserRoutes = {\n${routes.map(formatRoute).join("\n")}\n}\n\n` +
+    formattedPaths +
+      "\n\n" +
+      `type Routes = {\n${routes.map(formatRoute).join("\n")}\n}\n\n` +
       ts`
         declare module "react-router/types" {
           interface Register {
-            routes: UserRoutes
+            paths: Paths
+            routes: Routes
           }
         }
 
@@ -117,4 +141,33 @@ async function writeAll(ctx: Context): Promise<void> {
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });
+}
+
+function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
+  const result: RouteManifestEntry[] = [];
+  while (route) {
+    result.push(route);
+    if (!route.parentId) break;
+    route = routes[route.parentId];
+  }
+  result.reverse();
+  return result;
+}
+
+function parseParams(urlpath: string): Record<string, boolean> {
+  const result: Record<string, boolean> = {};
+
+  let segments = urlpath.split("/");
+  segments.forEach((segment) => {
+    const match = segment.match(/^:([\w-]+)(\?)?/);
+    if (!match) return;
+    const param = match[1];
+    const isRequired = match[2] === undefined;
+    result[param] ||= isRequired;
+    return;
+  });
+
+  const hasSplat = segments.at(-1) === "*";
+  if (hasSplat) result["*"] = true;
+  return result;
 }
