@@ -95,7 +95,6 @@
     "vite-node": "3.0.0-beta.2"
   },
   "devDependencies": {
-    "@react-router/dev": "workspace:*",
     "@react-router/serve": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.6.8",
