@@ -1,3 +1,4 @@
+import { AppLoadContext } from "../server-runtime/data";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -128,25 +129,35 @@ interface DataFunctionArgs<Context> {
   context: Context;
 }
 
-type BaseMiddlewareFunction<Result, Context> = {
-  (args: DataFunctionArgs<Context>, next: () => Promise<Result>):
-    | Result
-    | Promise<Result>;
-};
+/**
+ * Server-side route middleware function arguments
+ */
+export type MiddlewareFunctionArgs<
+  Context = AppLoadContext,
+  Result = unknown
+> = DataFunctionArgs<Context> & { next: () => Promise<Result> };
 
 /**
  * Server-side route middleware function signature
  */
-export type MiddlewareFunction<Context = DefaultRouterContext> =
-  // TODO: Change this from unknown to Response
-  BaseMiddlewareFunction<unknown, Context>;
+export type MiddlewareFunction<Context = AppLoadContext> = (
+  args: MiddlewareFunctionArgs<Context>
+) => Response | Promise<Response>;
+
+/**
+ * Client-side route middleware function arguments
+ */
+export type ClientMiddlewareFunctionArgs<
+  Context = DefaultRouterContext,
+  Result = unknown
+> = DataFunctionArgs<Context> & { next: () => Promise<Result> };
 
 /**
  * Client-side route middleware function signature
  */
-export type ClientMiddlewareFunction<Context = DefaultRouterContext> =
-  // TODO: Change this from unknown to undefined
-  BaseMiddlewareFunction<unknown, Context>;
+export type ClientMiddlewareFunction<Context = DefaultRouterContext> = (
+  args: MiddlewareFunctionArgs<Context>
+) => undefined | Promise<undefined>;
 
 /**
  * Arguments passed to loader functions
@@ -315,7 +326,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  middleware?: ClientMiddlewareFunction[];
+  middleware?: MiddlewareFunction[] | ClientMiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
