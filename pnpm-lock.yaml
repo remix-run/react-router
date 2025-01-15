@@ -791,9 +791,6 @@ importers:
         specifier: 3.0.0-beta.2
         version: 3.0.0-beta.2(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
     devDependencies:
-      '@react-router/dev':
-        specifier: workspace:*
-        version: 'link:'
       '@react-router/serve':
         specifier: workspace:*
         version: link:../react-router-serve
