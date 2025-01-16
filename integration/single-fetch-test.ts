@@ -1703,34 +1703,31 @@ test.describe("single-fetch", () => {
   test("does not try to encode a turbo-stream body into 204 responses", async ({
     page,
   }) => {
-    let fixture = await createFixture(
-      {
-        files: {
-          ...files,
-          "app/routes/_index.tsx": js`
-            import { data, Form, useActionData, useNavigation } from "react-router";
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { data, Form, useActionData, useNavigation } from "react-router";
 
-            export async function action({ request }) {
-              await new Promise(r => setTimeout(r, 500));
-              return data(null, { status: 204 });
-            };
+          export async function action({ request }) {
+            await new Promise(r => setTimeout(r, 500));
+            return data(null, { status: 204 });
+          };
 
-            export default function Index() {
-              const navigation = useNavigation();
-              const actionData = useActionData();
-              return (
-                <Form method="post">
-                  {navigation.state === "idle" ? <p data-idle>idle</p> : <p data-active>active</p>}
-                  <button data-submit type="submit">{actionData ?? 'no content!'}</button>
-                </Form>
-              );
-            }
-          `,
-        },
+          export default function Index() {
+            const navigation = useNavigation();
+            const actionData = useActionData();
+            return (
+              <Form method="post">
+                {navigation.state === "idle" ? <p data-idle>idle</p> : <p data-active>active</p>}
+                <button data-submit type="submit">{actionData ?? 'no content!'}</button>
+              </Form>
+            );
+          }
+        `,
       },
-      ServerMode.Development
-    );
-    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    });
+    let appFixture = await createAppFixture(fixture);
 
     let app = new PlaywrightFixture(appFixture, page);
 

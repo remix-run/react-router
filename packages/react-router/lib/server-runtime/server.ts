@@ -306,9 +306,8 @@ async function handleSingleFetchRequest(
   //   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
   //   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
   //   https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
-  const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205, 304]);
+  let NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205, 304]);
   if (NO_BODY_STATUS_CODES.has(status)) {
-    console.log("returning single fetch response with no body");
     return new Response(null, { status, headers: resultHeaders });
   }
 
