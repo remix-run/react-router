@@ -1184,7 +1184,7 @@ importers:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.4.5)(vite@6.0.2(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
 
-  playground/route-chunks:
+  playground/split-route-modules:
     dependencies:
       '@react-router/node':
         specifier: workspace:*
@@ -1224,7 +1224,7 @@ importers:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.4.5)(vite@6.0.2(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
 
-  playground/route-chunks-spa:
+  playground/split-route-modules-spa:
     dependencies:
       '@react-router/node':
         specifier: workspace:*
