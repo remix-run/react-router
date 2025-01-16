@@ -1,5 +1,5 @@
 {
-  "name": "@playground/route-chunks-spa",
+  "name": "@playground/split-route-modules-spa",
   "version": "0.0.0",
   "private": true,
   "sideEffects": false,

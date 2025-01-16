@@ -12,10 +12,10 @@ export default function Index() {
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
       <ul>
         <li>
-          <Link to="/chunkable">Chunkable route</Link>
+          <Link to="/splittable">Splittable route</Link>
         </li>
         <li>
-          <Link to="/unchunkable">Unchunkable route</Link>
+          <Link to="/unsplittable">Unsplittable route</Link>
         </li>
       </ul>
     </div>

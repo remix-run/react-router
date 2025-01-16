@@ -1,15 +1,18 @@
 import { useLoaderData } from "react-router";
 
+// Dummy variable to prevent route exports from being split
+let shared: null = null;
+
 export const clientLoader = async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  return "Hello from chunkable client loader";
+  return shared ?? "Hello from unsplittable client loader";
 };
 
 export function HydrateFallback() {
-  return <div>Loading...</div>;
+  return shared ?? <div>Loading...</div>;
 }
 
 export default function Hello() {
   const message = useLoaderData() as Awaited<ReturnType<typeof clientLoader>>;
-  return <div>{message}</div>;
+  return shared ?? <div>{message}</div>;
 }
