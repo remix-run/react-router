@@ -8,7 +8,7 @@
     "format:check": "prettier --ignore-path .eslintignore --check .",
     "lint": "eslint --cache .",
     "prerelease": "pnpm build",
-    "release": "changeset publish",
+    "release": "changeset publish --tag v6",
     "size": "filesize",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
