@@ -26,6 +26,9 @@ const files = {
           <li>
             <Link to="/unchunkable">/unchunkable</Link>
           </li>
+          <li>
+            <Link to="/mixed">/mixed</Link>
+          </li>
         </ul>
       );
     }
@@ -46,27 +49,23 @@ const files = {
     export const inChunkableMainChunk = () => console.log() || true;
 
     export const clientLoader = async () => {
-      // Allow HydrateFallback to be visible longer
       await new Promise((resolve) => setTimeout(resolve, 100));
-      // eval is used here to avoid a chunking de-opt:
       return {
         message: "clientLoader in main chunk: " + eval("typeof inChunkableMainChunk === 'function'"),
         className: clientLoaderStyles.root,
       };
     };
 
-    // Exports are wrapped in IIFEs so we can detect when they're downloaded
     export const clientAction = (function() {
       (globalThis as any).chunkableClientActionDownloaded = true;
-      // eval is used here to avoid a chunking de-opt:
       return () => ({
         message: "clientAction in main chunk: " + eval("typeof inChunkableMainChunk === 'function'"),
         className: clientActionStyles.root,
       });
     })();
+
     export const HydrateFallback = (function() {
       (globalThis as any).chunkableHydrateFallbackDownloaded = true;
-      // eval is used here to avoid a chunking de-opt:
       return () => <div data-hydrate-fallback className={hydrateFallbackStyles.root}>Loading...</div>;
     })();
 
@@ -115,28 +114,67 @@ const files = {
 
     export const clientLoader = async () => {
       inUnchunkableMainChunk();
-      // Allow HydrateFallback to be visible longer
       await new Promise((resolve) => setTimeout(resolve, 100));
-      // eval is used here to avoid a chunking de-opt:
       return "clientLoader in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
     };
  
-    // Exports are wrapped in IIFEs so we can detect when they're downloaded
     export const clientAction = (function() {
       inUnchunkableMainChunk();
       (globalThis as any).unchunkableClientActionDownloaded = true;
-      // eval is used here to avoid a chunking de-opt:
       return () => "clientAction in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
     })();
+
     export const HydrateFallback = (function() {
       inUnchunkableMainChunk();
       (globalThis as any).unchunkableHydrateFallbackDownloaded = true;
-      // eval is used here to avoid a chunking de-opt:
       return () => <div data-hydrate-fallback>Loading...</div>;
     })();
 
     export default function UnchunkableRoute() {
       inUnchunkableMainChunk();
+      const loaderData = useLoaderData();
+      const actionData = useActionData();
+      return (
+        <>
+          <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
+          <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
+          <input type="text" />
+          <Form method="post">
+            <button>Submit</button>
+          </Form>
+        </>
+      );
+    }
+  `,
+
+  "app/routes/mixed.tsx": js`
+    import { useLoaderData, useActionData, Form } from "react-router";
+
+    // Usage of this exported function forces any consuming code into the main
+    // chunk. The variable name is globally unique to prevent name mangling,
+    // e.g. inMixedMainChunk$1. The use of console.log prevents dead code
+    // elimination in the build by introducing a side effect
+    export const inMixedMainChunk = () => console.log() || true;
+
+    export const clientLoader = async () => {
+      inMixedMainChunk();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return "clientLoader in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
+    };
+ 
+    export const clientAction = (function() {
+      (globalThis as any).mixedClientActionDownloaded = true;
+      return () => "clientAction in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
+    })();
+
+    export const HydrateFallback = (function() {
+      inMixedMainChunk();
+      (globalThis as any).mixedHydrateFallbackDownloaded = true;
+      return () => <div data-hydrate-fallback>Loading...</div>;
+    })();
+
+    export default function MixedRoute() {
+      inMixedMainChunk();
       const loaderData = useLoaderData();
       const actionData = useActionData();
       return (
@@ -174,6 +212,18 @@ async function unchunkableClientActionDownloaded(page: Page) {
 async function unchunkableHydrateFallbackDownloaded(page: Page) {
   return await page.evaluate(() =>
     Boolean((globalThis as any).unchunkableHydrateFallbackDownloaded)
+  );
+}
+
+async function mixedClientActionDownloaded(page: Page) {
+  return await page.evaluate(() =>
+    Boolean((globalThis as any).mixedClientActionDownloaded)
+  );
+}
+
+async function mixedHydrateFallbackDownloaded(page: Page) {
+  return await page.evaluate(() =>
+    Boolean((globalThis as any).mixedHydrateFallbackDownloaded)
   );
 }
 
@@ -236,6 +286,22 @@ test.describe("Route chunks", async () => {
         'actionData = "clientAction in main chunk: true"'
       );
 
+      await page.goBack();
+
+      // Ensure mix of chunkable and unchunkable exports are handled correctly.
+      // Note that only the client action is in its own chunk.
+      await page.getByRole("link", { name: "/mixed" }).click();
+      expect(await mixedHydrateFallbackDownloaded(page)).toBe(true);
+      await expect(page.locator("[data-loader-data]")).toHaveText(
+        'loaderData = "clientLoader in main chunk: true"'
+      );
+      expect(await mixedClientActionDownloaded(page)).toBe(false);
+      await page.getByRole("button").click();
+      await expect(page.locator("[data-action-data]")).toHaveText(
+        'actionData = "clientAction in main chunk: false"'
+      );
+      expect(await mixedClientActionDownloaded(page)).toBe(true);
+
       // Ensure chunkable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/chunkable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
@@ -249,7 +315,7 @@ test.describe("Route chunks", async () => {
       );
       expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
 
-      // Ensure chunkable HydrateFallback and client loader work during SSR
+      // Ensure unchunkable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/unchunkable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
       expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
@@ -348,7 +414,9 @@ test.describe("Route chunks", async () => {
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({ routeChunks }),
           "vite.config.js": await viteConfig.basic({ port }),
+          // Make unchunkable routes valid so the build can pass
           "app/routes/unchunkable.tsx": "export default function(){}",
+          "app/routes/mixed.tsx": "export default function(){}",
         });
       });
 
@@ -365,6 +433,8 @@ test.describe("Route chunks", async () => {
           "react-router.config.ts": reactRouterConfig({ routeChunks }),
           "vite.config.js": await viteConfig.basic({ port }),
           ...files,
+          // Ensure we're only testing the mixed route
+          "app/routes/unchunkable.tsx": "export default function(){}",
         });
       });
 
@@ -373,9 +443,8 @@ test.describe("Route chunks", async () => {
         expect(status).toBe(1);
         expect(stderr.toString()).toMatch(
           dedent`
-            Route chunks error: routes/unchunkable.tsx
+            Route chunks error: routes/mixed.tsx
             
-            - clientAction
             - clientLoader
             - HydrateFallback
 
