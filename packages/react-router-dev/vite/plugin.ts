@@ -2604,17 +2604,11 @@ function validateRouteChunks({
 
       invalidChunks.map((name) => `- ${name}`).join("\n"),
 
-      `${
-        plural ? `These exports were` : `This export was`
-      } unable to be split into ${
+      `${plural ? "These exports" : "This export"} could not be split into ${
         plural ? "their own chunks" : "its own chunk"
       } because ${
-        plural ? "they reference" : "it references"
-      } code in the same file that is used by other route module exports.`,
-
-      `If you need to share code between ${
-        plural ? `these` : `this`
-      } and other exports, you should extract the shared code into a separate module.`,
+        plural ? "they share" : "it shares"
+      } code with other exports. You should extract any shared code into its own module and then import it within the route module.`,
     ].join("\n\n")
   );
 }

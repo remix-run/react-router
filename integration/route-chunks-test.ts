@@ -448,9 +448,7 @@ test.describe("Route chunks", async () => {
             - clientLoader
             - HydrateFallback
 
-            These exports were unable to be split into their own chunks because they reference code in the same file that is used by other route module exports.
-            
-            If you need to share code between these and other exports, you should extract the shared code into a separate module.
+            These exports could not be split into their own chunks because they share code with other exports. You should extract any shared code into its own module and then import it within the route module.
           `
         );
       });
