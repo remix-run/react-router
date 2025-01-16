@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## 1.21.1
+
+### Patch Changes
+
+- - Fix issue with fetcher data cleanup in the data layer on fetcher unmount ([#12674](https://github.com/remix-run/react-router/pull/12674))
+  - Fix behavior of manual fetcher keys when not opted into `future.v7_fetcherPersist`
+
 ## 1.21.0
 
 ### Minor Changes
