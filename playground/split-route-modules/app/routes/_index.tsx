@@ -17,6 +17,9 @@ export default function Index() {
         <li>
           <Link to="/unsplittable">Unsplittable route</Link>
         </li>
+        <li>
+          <Link to="/semi-splittable">Semi-splittable route</Link>
+        </li>
       </ul>
     </div>
   );

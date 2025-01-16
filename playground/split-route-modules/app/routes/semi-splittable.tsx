@@ -10,7 +10,7 @@ export const clientLoader = async () => {
 
 export const clientAction = async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  return shared ?? "Hello from unsplittable client action";
+  return "Hello from splittable client action";
 };
 
 export function HydrateFallback() {
