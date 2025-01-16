@@ -1045,7 +1045,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
                               return [
                                 `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-                                ...(!isRootRoute
+                                ...(ctx.reactRouterConfig.future
+                                  .unstable_routeChunks && !isRootRoute
                                   ? routeChunkExportNames.map((exportName) =>
                                       code.includes(exportName)
                                         ? getRouteChunkModuleId(
