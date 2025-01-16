@@ -1,4 +1,5 @@
-import { Form, useLoaderData, useActionData } from "react-router";
+import type { Route } from "./+types/splittable";
+import { Form } from "react-router";
 
 export const clientLoader = async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -14,14 +15,13 @@ export function HydrateFallback() {
   return <div>Loading...</div>;
 }
 
-export default function Hello() {
-  const message = useLoaderData() as Awaited<ReturnType<typeof clientLoader>>;
-  const actionData = useActionData() as Awaited<
-    ReturnType<typeof clientAction>
-  >;
+export default function SplittableRoute({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   return (
     <>
-      <p>{message}</p>
+      <p>{loaderData}</p>
       <p>{actionData}</p>
       <Form method="post">
         <button>Submit</button>

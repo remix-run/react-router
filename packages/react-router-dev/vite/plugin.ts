@@ -1710,6 +1710,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     {
       name: "react-router:route-exports",
       async transform(code, id, options) {
+        // Ensure we perform this transform on all route module chunks
+        if (isRouteChunkModuleId(id)) {
+          id = id.split("?")[0];
+        }
+
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
 
