@@ -333,10 +333,7 @@ export {
 export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
-export {
-  decodeViaTurboStream as UNSAFE_decodeViaTurboStream,
-  SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
-} from "./lib/dom/ssr/single-fetch";
+export { decodeViaTurboStream as UNSAFE_decodeViaTurboStream } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
 export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";

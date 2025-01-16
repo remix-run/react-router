@@ -3,6 +3,7 @@
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "target": "ES2020",
     "module": "Node16",
     "moduleResolution": "Node16",

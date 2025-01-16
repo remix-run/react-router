@@ -99,7 +99,7 @@ export function createStaticHandlerDataRoutes(
                 data && route.id in data,
                 "Unable to decode prerendered data"
               );
-              let result = data[route.id] as SingleFetchResult;
+              let result = data.data?.[route.id] as SingleFetchResult;
               invariant("data" in result, "Unable to process prerendered data");
               return result.data;
             }

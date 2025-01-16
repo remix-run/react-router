@@ -1,8 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  UNSAFE_ServerMode as ServerMode,
-  UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
-} from "react-router";
+import { UNSAFE_ServerMode as ServerMode } from "react-router";
 
 import {
   createAppFixture,
@@ -899,7 +896,7 @@ test.describe("single-fetch", () => {
 
     let { status, data } = await fixture.requestSingleFetchData("/data.data");
     expect(data).toEqual({
-      [SingleFetchRedirectSymbol]: {
+      redirect: {
         status: 302,
         redirect: "/target",
         reload: false,
@@ -944,7 +941,7 @@ test.describe("single-fetch", () => {
 
     let { status, data } = await fixture.requestSingleFetchData("/data.data");
     expect(data).toEqual({
-      [SingleFetchRedirectSymbol]: {
+      redirect: {
         status: 302,
         redirect: "/target",
         reload: false,
@@ -994,7 +991,7 @@ test.describe("single-fetch", () => {
 
     let { status, data } = await fixture.requestSingleFetchData("/data.data");
     expect(data).toEqual({
-      [SingleFetchRedirectSymbol]: {
+      redirect: {
         status: 302,
         redirect: "/target",
         reload: false,
@@ -1260,7 +1257,7 @@ test.describe("single-fetch", () => {
 
     let { status, data } = await fixture.requestSingleFetchData("/data.data");
     expect(data).toEqual({
-      [SingleFetchRedirectSymbol]: {
+      redirect: {
         status: 302,
         redirect: "/target",
         reload: false,
@@ -1410,7 +1407,7 @@ test.describe("single-fetch", () => {
       "/base/data.data"
     );
     expect(data).toEqual({
-      [SingleFetchRedirectSymbol]: {
+      redirect: {
         status: 302,
         redirect: "/target",
         reload: false,

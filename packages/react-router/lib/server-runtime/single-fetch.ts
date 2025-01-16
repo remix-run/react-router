@@ -17,7 +17,6 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
@@ -25,7 +24,6 @@ import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
 
 export type { SingleFetchResult, SingleFetchResults };
-export { SingleFetchRedirectSymbol };
 
 // We can't use a 3xx status or else the `fetch()` would follow the redirect.
 // We need to communicate the redirect back as data so we can act on it in the
@@ -180,7 +178,7 @@ export async function singleFetchLoaders(
     if (isResponse(result)) {
       return {
         result: {
-          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
+          redirect: getSingleFetchRedirect(
             result.status,
             result.headers,
             build.basename
@@ -197,7 +195,7 @@ export async function singleFetchLoaders(
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
       return {
         result: {
-          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
+          redirect: getSingleFetchRedirect(
             context.statusCode,
             headers,
             build.basename
@@ -221,7 +219,7 @@ export async function singleFetchLoaders(
 
     // Aggregate results based on the matches we intended to load since we get
     // `null` values back in `context.loaderData` for routes we didn't load
-    let results: SingleFetchResults = {};
+    let results: SingleFetchResults = { data: {} };
     let loadedMatches = loadRouteIds
       ? context.matches.filter(
           (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
@@ -231,9 +229,9 @@ export async function singleFetchLoaders(
     loadedMatches.forEach((m) => {
       let { id } = m.route;
       if (context.errors && context.errors.hasOwnProperty(id)) {
-        results[id] = { error: context.errors[id] };
+        results.data![id] = { error: context.errors[id] };
       } else if (context.loaderData.hasOwnProperty(id)) {
-        results[id] = { data: context.loaderData[id] };
+        results.data![id] = { data: context.loaderData[id] };
       }
     });
 
@@ -246,7 +244,7 @@ export async function singleFetchLoaders(
     handleError(error);
     // These should only be internal remix errors, no need to deal with responseStubs
     return {
-      result: { root: { error } },
+      result: { data: { root: { error } } },
       headers: new Headers(),
       status: 500,
     };
@@ -348,9 +346,10 @@ export function encodeViaTurboStream(
         if (
           value &&
           typeof value === "object" &&
-          SingleFetchRedirectSymbol in value
+          "redirect" in value &&
+          value.redirect
         ) {
-          return ["SingleFetchRedirect", value[SingleFetchRedirectSymbol]];
+          return ["SingleFetchRedirect", value.redirect];
         }
       },
     ],

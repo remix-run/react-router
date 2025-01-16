@@ -99,8 +99,8 @@ export function createRoutesStub(
     hydrationData,
     future,
   }: RoutesTestStubProps) {
-    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let remixContextRef = React.useRef<FrameworkContextObject>();
+    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>(undefined);
+    let remixContextRef = React.useRef<FrameworkContextObject>(undefined);
 
     if (routerRef.current == null) {
       remixContextRef.current = {

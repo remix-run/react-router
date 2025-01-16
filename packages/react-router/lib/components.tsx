@@ -121,7 +121,7 @@ class Deferred<T> {
 // Copied from react-dom types
 export interface RouterProviderProps {
   router: DataRouter;
-  flushSync?: (fn: () => unknown) => undefined;
+  flushSync?: <R>(fn: () => R) => R;
 }
 
 /**
@@ -411,7 +411,7 @@ export function MemoryRouter({
   initialEntries,
   initialIndex,
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
+  let historyRef = React.useRef<MemoryHistory>(undefined);
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({
       initialEntries,
@@ -1052,7 +1052,7 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, treePath)
+        createRoutesFromChildren((element.props as any).children, treePath)
       );
       return;
     }
@@ -1065,35 +1065,35 @@ export function createRoutesFromChildren(
     );
 
     invariant(
-      !element.props.index || !element.props.children,
+      !(element.props as any).index || !(element.props as any).children,
       "An index route cannot have child routes."
     );
 
     let route: RouteObject = {
-      id: element.props.id || treePath.join("-"),
-      caseSensitive: element.props.caseSensitive,
-      element: element.props.element,
-      Component: element.props.Component,
-      index: element.props.index,
-      path: element.props.path,
-      loader: element.props.loader,
-      action: element.props.action,
-      hydrateFallbackElement: element.props.hydrateFallbackElement,
-      HydrateFallback: element.props.HydrateFallback,
-      errorElement: element.props.errorElement,
-      ErrorBoundary: element.props.ErrorBoundary,
+      id: (element.props as any).id || treePath.join("-"),
+      caseSensitive: (element.props as any).caseSensitive,
+      element: (element.props as any).element,
+      Component: (element.props as any).Component,
+      index: (element.props as any).index,
+      path: (element.props as any).path,
+      loader: (element.props as any).loader,
+      action: (element.props as any).action,
+      hydrateFallbackElement: (element.props as any).hydrateFallbackElement,
+      HydrateFallback: (element.props as any).HydrateFallback,
+      errorElement: (element.props as any).errorElement,
+      ErrorBoundary: (element.props as any).ErrorBoundary,
       hasErrorBoundary:
-        element.props.hasErrorBoundary === true ||
-        element.props.ErrorBoundary != null ||
-        element.props.errorElement != null,
-      shouldRevalidate: element.props.shouldRevalidate,
-      handle: element.props.handle,
-      lazy: element.props.lazy,
+        (element.props as any).hasErrorBoundary === true ||
+        (element.props as any).ErrorBoundary != null ||
+        (element.props as any).errorElement != null,
+      shouldRevalidate: (element.props as any).shouldRevalidate,
+      handle: (element.props as any).handle,
+      lazy: (element.props as any).lazy,
     };
 
-    if (element.props.children) {
+    if ((element.props as any).children) {
       route.children = createRoutesFromChildren(
-        element.props.children,
+        (element.props as any).children,
         treePath
       );
     }

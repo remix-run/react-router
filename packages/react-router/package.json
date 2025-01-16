@@ -97,10 +97,12 @@
   "dependencies": {
     "@types/cookie": "^0.6.0",
     "cookie": "^1.0.1",
+    "rsc-html-stream": "0.0.4",
     "set-cookie-parser": "^2.6.0",
     "turbo-stream": "2.4.0"
   },
   "devDependencies": {
+    "@types/node": "^22.10.6",
     "@types/set-cookie-parser": "^2.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -110,10 +112,14 @@
     "wireit": "0.14.9"
   },
   "peerDependencies": {
+    "@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
     "react": ">=18",
     "react-dom": ">=18"
   },
   "peerDependenciesMeta": {
+    "@jacob-ebey/react-server-dom-vite": {
+      "optional": true
+    },
     "react-dom": {
       "optional": true
     }

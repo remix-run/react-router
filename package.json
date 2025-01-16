@@ -39,8 +39,8 @@
   },
   "packageManager": "pnpm@9.10.0",
   "resolutions": {
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
     "jsdom": "22.1.0"
   },
   "dependencies": {
@@ -69,8 +69,8 @@
     "@types/jest": "^29.5.4",
     "@types/jsdom": "^21.1.1",
     "@types/jsonfile": "^6.1.1",
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
     "@types/react-test-renderer": "^18.0.0",
     "@types/semver": "^7.5.0",
     "@types/shelljs": "^0.8.11",

@@ -7,6 +7,8 @@ import pkg from "./package.json";
 
 const entry = ["server.ts"];
 
+const external = ["virtual:react-manifest"];
+
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
     {
@@ -24,6 +26,7 @@ const config = (enableDevWarnings: boolean) =>
         __DEV__: JSON.stringify(enableDevWarnings),
       },
       treeshake: true,
+      external,
     },
     {
       clean: false,
@@ -39,6 +42,7 @@ const config = (enableDevWarnings: boolean) =>
         __DEV__: JSON.stringify(enableDevWarnings),
       },
       treeshake: true,
+      external,
     },
   ]);
 

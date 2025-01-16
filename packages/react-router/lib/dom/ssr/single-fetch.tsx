@@ -20,8 +20,6 @@ import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
 
-export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
-
 export type SingleFetchRedirectResult = {
   redirect: string;
   status: number;
@@ -36,8 +34,8 @@ export type SingleFetchResult =
   | SingleFetchRedirectResult;
 
 export type SingleFetchResults = {
-  [key: string]: SingleFetchResult;
-  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
+  data?: { [key: string]: SingleFetchResult };
+  redirect?: SingleFetchRedirectResult;
 };
 
 interface StreamTransferProps {
@@ -479,7 +477,7 @@ export function decodeViaTurboStream(
         }
 
         if (type === "SingleFetchRedirect") {
-          return { value: { [SingleFetchRedirectSymbol]: rest[0] } };
+          return { value: { redirect: rest[0] } };
         }
 
         if (type === "SingleFetchClassInstance") {
@@ -498,13 +496,13 @@ function unwrapSingleFetchResults(
   results: SingleFetchResults,
   routeId: string
 ) {
-  let redirect = results[SingleFetchRedirectSymbol];
+  let redirect = results.redirect;
   if (redirect) {
     return unwrapSingleFetchResult(redirect, routeId);
   }
 
-  return results[routeId] !== undefined
-    ? unwrapSingleFetchResult(results[routeId], routeId)
+  return results.data?.[routeId] !== undefined
+    ? unwrapSingleFetchResult(results.data[routeId], routeId)
     : null;
 }
 

@@ -5,7 +5,16 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["index.ts", "dom-export.ts", "lib/types/route-module.ts"];
+const entry = [
+  "index.ts",
+  "browser.tsx",
+  "client.tsx",
+  "dom-export.ts",
+  "references.browser.ts",
+  "lib/types/route-module.ts",
+];
+
+const external = ["virtual:react-manifest"];
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
@@ -23,6 +32,7 @@ const config = (enableDevWarnings: boolean) =>
         REACT_ROUTER_VERSION: JSON.stringify(pkg.version),
         __DEV__: JSON.stringify(enableDevWarnings),
       },
+      external,
     },
     {
       clean: false,
@@ -37,6 +47,7 @@ const config = (enableDevWarnings: boolean) =>
         REACT_ROUTER_VERSION: JSON.stringify(pkg.version),
         __DEV__: JSON.stringify(enableDevWarnings),
       },
+      external,
     },
   ]);
 

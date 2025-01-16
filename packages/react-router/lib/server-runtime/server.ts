@@ -25,7 +25,6 @@ import {
   getSingleFetchRedirect,
   singleFetchAction,
   singleFetchLoaders,
-  SingleFetchRedirectSymbol,
   SINGLE_FETCH_REDIRECT_STATUS,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
@@ -42,7 +41,7 @@ export type CreateRequestHandlerFunction = (
   mode?: string
 ) => RequestHandler;
 
-function derive(build: ServerBuild, mode?: string) {
+export function derive(build: ServerBuild, mode?: string) {
   let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
@@ -169,7 +168,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
           if (request.method === "GET") {
             result = {
-              [SingleFetchRedirectSymbol]: result,
+              redirect: result,
             };
           }
           let headers = new Headers(response.headers);
