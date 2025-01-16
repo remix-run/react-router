@@ -49,7 +49,18 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
+If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention][file-route-conventions]. You can even combine different routing conventions if you like:
+
+```ts filename=app/routes.ts
+import { type RouteConfig, route } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default = [
+  route("/", "./home.tsx"),
+
+  ...await flatRoutes(),
+] satisfies RouteConfig;
+```
 
 ## Route Modules
 
@@ -262,6 +273,8 @@ async function loader({ params }: LoaderArgs) {
   //                    ^? { categoryId: string; productId: string }
 }
 ```
+
+You should ensure that all dynamic segments in a given path are unique. Otherwise, as the `params` object is populated - latter dynamic segment values will override earlier values.
 
 ## Optional Segments
 

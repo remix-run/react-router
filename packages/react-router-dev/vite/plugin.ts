@@ -76,46 +76,6 @@ export async function extractPluginContext(viteConfig: Vite.ResolvedConfig) {
     | undefined;
 }
 
-export async function loadPluginContext({
-  configFile,
-  root,
-}: {
-  configFile?: string;
-  root?: string;
-}) {
-  if (!root) {
-    root = process.env.REACT_ROUTER_ROOT || process.cwd();
-  }
-
-  configFile =
-    configFile ??
-    findConfig(root, "vite.config", [
-      ".ts",
-      ".cts",
-      ".mts",
-      ".js",
-      ".cjs",
-      ".mjs",
-    ]);
-
-  if (!configFile) {
-    console.error(colors.red("Vite config file not found"));
-    process.exit(1);
-  }
-
-  let viteConfig = await resolveViteConfig({ configFile, root });
-  let ctx = await extractPluginContext(viteConfig);
-
-  if (!ctx) {
-    console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
-    );
-    process.exit(1);
-  }
-
-  return ctx;
-}
-
 const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
 const CLIENT_ROUTE_EXPORTS = [
   "clientAction",
@@ -749,8 +709,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let viteClientConditions: string[] = [
           ...(vite.defaultClientConditions ?? []),
         ];
+
+        let packageRoot = path.dirname(
+          require.resolve("@react-router/dev/package.json")
+        );
+        let { moduleSyncEnabled } = await import(
+          `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
+        );
         let viteServerConditions: string[] = [
           ...(vite.defaultServerConditions ?? []),
+          ...(moduleSyncEnabled ? ["module-sync"] : []),
         ];
 
         logger = vite.createLogger(viteUserConfig.logLevel, {

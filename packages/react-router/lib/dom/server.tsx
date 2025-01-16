@@ -37,7 +37,7 @@ export function createStaticHandler(
 }
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export function createStaticRouter(
   routes: RouteObject[],

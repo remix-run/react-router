@@ -64,7 +64,7 @@ import { warnOnce } from "./server-runtime/warnings";
 import { mapRouteProperties } from "./dom/shared";
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export function createMemoryRouter(
   routes: RouteObject[],
@@ -403,7 +403,7 @@ export interface MemoryRouterProps {
 /**
  * A `<Router>` that stores all entries in memory.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function MemoryRouter({
   basename,

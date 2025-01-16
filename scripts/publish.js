@@ -84,17 +84,17 @@ async function run() {
     );
 
     // 2. Determine the appropriate npm tag to use
-    let publishBranch;
+    let releaseBranch;
     let tag;
     if (version.includes("experimental")) {
       tag = "experimental";
     } else if (version.includes("nightly")) {
       tag = "nightly";
     } else if (version.startsWith("6.")) {
-      publishBranch = "release-v6";
+      releaseBranch = "release-v6";
       tag = null;
     } else if (version.startsWith("7.")) {
-      publishBranch = "release-next";
+      releaseBranch = "release-next";
       tag = semver.prerelease(version) == null ? "latest" : "pre";
     }
 

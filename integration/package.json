@@ -8,7 +8,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@playwright/test": "^1.33.0",
+    "@playwright/test": "^1.49.1",
     "@react-router/dev": "workspace:*",
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
