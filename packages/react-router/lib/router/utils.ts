@@ -1367,12 +1367,7 @@ export interface TrackedPromise extends Promise<any> {
 export type RedirectFunction = (
   url: string,
   init?: number | ResponseInit
-) => Redirect;
-
-// use a `unique symbol` to create a branded type
-// https://egghead.io/blog/using-branded-types-in-typescript
-declare const redirectSymbol: unique symbol;
-export type Redirect = Response & { [redirectSymbol]: never };
+) => Response;
 
 /**
  * A redirect response. Sets the status code and the `Location` header.
@@ -1391,10 +1386,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
-  return new Response(null, {
-    ...responseInit,
-    headers,
-  }) as Redirect;
+  return new Response(null, { ...responseInit, headers });
 };
 
 /**

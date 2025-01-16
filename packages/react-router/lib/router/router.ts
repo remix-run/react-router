@@ -1135,7 +1135,7 @@ export function createRouter(init: RouterInit): Router {
     // care about in-flight fetchers
     // - If it's been unmounted then we can completely delete it
     // - If it's still mounted we can remove it from `state.fetchers`, but we
-    //   need to keep it around in thing like `fetchLoadMatches`, etc. since
+    //   need to keep it around in things like `fetchLoadMatches`, etc. since
     //   it may be called again
     let unmountedFetchers: string[] = [];
     let mountedFetchers: string[] = [];
@@ -1147,6 +1147,15 @@ export function createRouter(init: RouterInit): Router {
         } else {
           mountedFetchers.push(key);
         }
+      }
+    });
+
+    // Delete any other `idle` fetchers unmounted in the UI that were previously
+    // removed from state.fetchers.  Check `fetchControllers` in case this
+    // fetcher is actively revalidating and we want to let that finish
+    fetchersQueuedForDeletion.forEach((key) => {
+      if (!state.fetchers.has(key) && !fetchControllers.has(key)) {
+        unmountedFetchers.push(key);
       }
     });
 

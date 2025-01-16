@@ -35,7 +35,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
-import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type ConfigLoader,
@@ -54,7 +54,7 @@ export async function resolveViteConfig({
   mode?: string;
   root: string;
 }) {
-  let vite = await import("vite");
+  let vite = getVite();
 
   let viteConfig = await vite.resolveConfig(
     { mode, configFile, root },
@@ -169,7 +169,7 @@ const resolveRelativeRouteFilePath = (
   route: RouteManifestEntry,
   reactRouterConfig: ResolvedReactRouterConfig
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let file = route.file;
   let fullPath = path.resolve(reactRouterConfig.appDirectory, file);
 
@@ -201,7 +201,7 @@ const resolveChunk = (
   viteManifest: Vite.Manifest,
   absoluteFilePath: string
 ) => {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let rootRelativeFilePath = vite.normalizePath(
     path.relative(ctx.rootDirectory, absoluteFilePath)
   );
@@ -729,14 +729,37 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       name: "react-router",
       config: async (_viteUserConfig, _viteConfigEnv) => {
         // Preload Vite's ESM build up-front as soon as we're in an async context
-        await preloadViteEsm();
+        await preloadVite();
 
         // Ensure sync import of Vite works after async preload
-        let vite = importViteEsmSync();
+        let vite = getVite();
 
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
+
+        // This is a compatibility layer for Vite 5. Default conditions were
+        // automatically added to any custom conditions in Vite 5, but Vite 6
+        // removed this behavior. Instead, the default conditions are overridden
+        // by any custom conditions. If we wish to retain the default
+        // conditions, we need to manually merge them using the provided default
+        // conditions arrays exported from Vite. In Vite 5, these default
+        // conditions arrays do not exist.
+        // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+        let viteClientConditions: string[] = [
+          ...(vite.defaultClientConditions ?? []),
+        ];
+
+        let packageRoot = path.dirname(
+          require.resolve("@react-router/dev/package.json")
+        );
+        let { moduleSyncEnabled } = await import(
+          `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
+        );
+        let viteServerConditions: string[] = [
+          ...(vite.defaultServerConditions ?? []),
+          ...(moduleSyncEnabled ? ["module-sync"] : []),
+        ];
 
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
@@ -804,9 +827,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ssr: {
             external: ssrExternals,
             resolve: {
-              conditions: viteCommand === "build" ? [] : ["development"],
+              conditions:
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
               externalConditions:
-                viteCommand === "build" ? [] : ["development"],
+                viteCommand === "build"
+                  ? viteServerConditions
+                  : ["development", ...viteServerConditions],
             },
           },
           optimizeDeps: {
@@ -853,7 +881,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               "react-router/dom",
               "react-router-dom",
             ],
-            conditions: viteCommand === "build" ? [] : ["development"],
+            conditions:
+              viteCommand === "build"
+                ? viteClientConditions
+                : ["development", ...viteClientConditions],
           },
           base: viteUserConfig.base,
 
@@ -948,7 +979,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           );
         }
 
-        let vite = importViteEsmSync();
+        let vite = getVite();
 
         let childCompilerConfigFile = await vite.loadConfigFromFile(
           {
@@ -1342,7 +1373,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return;
         }
 
-        let vite = importViteEsmSync();
+        let vite = getVite();
         let importerShort = vite.normalizePath(
           path.relative(ctx.rootDirectory, importer)
         );
@@ -1678,30 +1709,12 @@ function addRefreshWrapper(
       ]
     : [];
   return (
-    "\n\n" +
-    withCommentBoundaries(
-      "REACT REFRESH HEADER",
-      REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id))
-    ) +
-    "\n\n" +
-    withCommentBoundaries("REACT REFRESH BODY", code) +
-    "\n\n" +
-    withCommentBoundaries(
-      "REACT REFRESH FOOTER",
-      REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
-        .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
-        .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
-    ) +
-    "\n"
+    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
+    code +
+    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+      .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
   );
-}
-
-function withCommentBoundaries(label: string, text: string) {
-  let begin = `// [BEGIN] ${label} `;
-  begin += "-".repeat(80 - begin.length);
-  let end = `// [END] ${label} `;
-  end += "-".repeat(80 - end.length);
-  return `${begin}\n${text}\n${end}`;
 }
 
 const REACT_REFRESH_HEADER = `
@@ -1724,7 +1737,7 @@ if (import.meta.hot && !inWebWorker) {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
-}`.trim();
+}`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
 
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
@@ -1739,13 +1752,13 @@ if (import.meta.hot && !inWebWorker) {
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
     });
   });
-}`.trim();
+}`;
 
 function getRoute(
   pluginConfig: ResolvedReactRouterConfig,
   file: string
 ): RouteManifestEntry | undefined {
-  let vite = importViteEsmSync();
+  let vite = getVite();
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file)
   );
@@ -1879,7 +1892,8 @@ async function handlePrerender(
     "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
-    let matches = matchRoutes(routes, path);
+    // Ensure we have a leading slash for matching
+    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
     let hasLoaders = matches?.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {
