@@ -263,7 +263,7 @@ Date: YYYY-MM-DD
 
 ## v7.1.2
 
-Date: 2025-01-15
+Date: 2025-01-16
 
 ### Patch Changes
 
