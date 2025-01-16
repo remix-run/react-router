@@ -1,5 +1,18 @@
 # `@react-router/dev`
 
+## 7.1.2
+
+### Patch Changes
+
+- Fix default external conditions in Vite v6. This fixes resolution issues with certain npm packages. ([#12644](https://github.com/remix-run/react-router/pull/12644))
+- Fix mismatch in prerendering html/data files when path is missing a leading slash ([#12684](https://github.com/remix-run/react-router/pull/12684))
+- Use `module-sync` server condition when enabled in the runtime. This fixes React context mismatches (e.g. `useHref() may be used only in the context of a <Router> component.`) during development on Node 22.10.0+ when using libraries that have a peer dependency on React Router. ([#12729](https://github.com/remix-run/react-router/pull/12729))
+- Fix react-refresh source maps ([#12686](https://github.com/remix-run/react-router/pull/12686))
+- Updated dependencies:
+  - `react-router@7.1.2`
+  - `@react-router/node@7.1.2`
+  - `@react-router/serve@7.1.2`
+
 ## 7.1.1
 
 ### Patch Changes
@@ -74,7 +87,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 

@@ -271,7 +271,7 @@ export interface Router {
 
 /**
  * State maintained internally by the router.  During a navigation, all states
- * reflect the the "old" location unless otherwise noted.
+ * reflect the "old" location unless otherwise noted.
  */
 export interface RouterState {
   // TODO: (v7) should we consider renaming this `navigationType` to align with
@@ -1766,7 +1766,7 @@ export function createRouter(init: RouterInit): Router {
       if (opts && opts.replace != null) {
         replace = opts.replace;
       } else {
-        // If the user didn't explicity indicate replace behavior, replace if
+        // If the user didn't explicitly indicate replace behavior, replace if
         // we redirected to the exact same location we're currently at to avoid
         // double back-buttons
         let location = normalizeRedirectLocation(

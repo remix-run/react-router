@@ -131,7 +131,7 @@ export function mapRouteProperties(route: RouteObject) {
 }
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export function createMemoryRouter(
   routes: RouteObject[],
@@ -470,7 +470,7 @@ export interface MemoryRouterProps {
 /**
  * A `<Router>` that stores all entries in memory.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function MemoryRouter({
   basename,

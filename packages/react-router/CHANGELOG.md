@@ -1,5 +1,20 @@
 # `react-router`
 
+## 7.1.2
+
+### Patch Changes
+
+- Fix issue with fetcher data cleanup in the data layer on fetcher unmount ([#12681](https://github.com/remix-run/react-router/pull/12681))
+- Do not rely on `symbol` for filtering out `redirect` responses from loader data ([#12694](https://github.com/remix-run/react-router/pull/12694))
+
+  Previously, some projects were getting type checking errors like:
+
+  ```ts
+  error TS4058: Return type of exported function has or is using name 'redirectSymbol' from external module "node_modules/..." but cannot be named.
+  ```
+
+  Now that `symbol`s are not used for the `redirect` response type, these errors should no longer be present.
+
 ## 7.1.1
 
 ## 7.1.0
@@ -40,7 +55,7 @@
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
