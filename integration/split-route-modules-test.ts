@@ -21,10 +21,10 @@ const files = {
       return (
         <ul>
           <li>
-            <Link to="/chunkable">/chunkable</Link>
+            <Link to="/splittable">/splittable</Link>
           </li>
           <li>
-            <Link to="/unchunkable">/unchunkable</Link>
+            <Link to="/unsplittable">/unsplittable</Link>
           </li>
           <li>
             <Link to="/mixed">/mixed</Link>
@@ -33,7 +33,7 @@ const files = {
       );
     }
   `,
-  "app/routes/chunkable/route.tsx": js`
+  "app/routes/splittable/route.tsx": js`
     import { useLoaderData, useActionData, Form } from "react-router";
     
     // Ensure these style imports are still included in the page even though
@@ -44,33 +44,33 @@ const files = {
 
     // Usage of this exported function forces any consuming code into the main
     // chunk. The variable name is globally unique to prevent name mangling,
-    // e.g. inChunkableMainChunk$1. The use of console.log prevents dead code
+    // e.g. inSplittableMainChunk$1. The use of console.log prevents dead code
     // elimination in the build by introducing a side effect
-    export const inChunkableMainChunk = () => console.log() || true;
+    export const inSplittableMainChunk = () => console.log() || true;
 
     export const clientLoader = async () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       return {
-        message: "clientLoader in main chunk: " + eval("typeof inChunkableMainChunk === 'function'"),
+        message: "clientLoader in main chunk: " + eval("typeof inSplittableMainChunk === 'function'"),
         className: clientLoaderStyles.root,
       };
     };
 
     export const clientAction = (function() {
-      (globalThis as any).chunkableClientActionDownloaded = true;
+      (globalThis as any).splittableClientActionDownloaded = true;
       return () => ({
-        message: "clientAction in main chunk: " + eval("typeof inChunkableMainChunk === 'function'"),
+        message: "clientAction in main chunk: " + eval("typeof inSplittableMainChunk === 'function'"),
         className: clientActionStyles.root,
       });
     })();
 
     export const HydrateFallback = (function() {
-      (globalThis as any).chunkableHydrateFallbackDownloaded = true;
+      (globalThis as any).splittableHydrateFallbackDownloaded = true;
       return () => <div data-hydrate-fallback className={hydrateFallbackStyles.root}>Loading...</div>;
     })();
 
-    export default function ChunkableRoute() {
-      inChunkableMainChunk();
+    export default function SplittableRoute() {
+      inSplittableMainChunk();
       const loaderData = useLoaderData();
       const actionData = useActionData();
       return (
@@ -93,45 +93,45 @@ const files = {
       );
     }
   `,
-  "app/routes/chunkable/clientLoader.module.css": `
+  "app/routes/splittable/clientLoader.module.css": `
     .root { padding: 20px; }
   `,
-  "app/routes/chunkable/clientAction.module.css": `
+  "app/routes/splittable/clientAction.module.css": `
     .root { padding: 20px; }
   `,
-  "app/routes/chunkable/hydrateFallback.module.css": `
+  "app/routes/splittable/hydrateFallback.module.css": `
     .root { padding: 20px; }
   `,
 
-  "app/routes/unchunkable.tsx": js`
+  "app/routes/unsplittable.tsx": js`
     import { useLoaderData, useActionData, Form } from "react-router";
 
     // Usage of this exported function forces any consuming code into the main
     // chunk. The variable name is globally unique to prevent name mangling,
-    // e.g. inUnchunkableMainChunk$1. The use of console.log prevents dead code
+    // e.g. inUnsplittableMainChunk$1. The use of console.log prevents dead code
     // elimination in the build by introducing a side effect
-    export const inUnchunkableMainChunk = () => console.log() || true;
+    export const inUnsplittableMainChunk = () => console.log() || true;
 
     export const clientLoader = async () => {
-      inUnchunkableMainChunk();
+      inUnsplittableMainChunk();
       await new Promise((resolve) => setTimeout(resolve, 100));
-      return "clientLoader in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
+      return "clientLoader in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
     };
  
     export const clientAction = (function() {
-      inUnchunkableMainChunk();
-      (globalThis as any).unchunkableClientActionDownloaded = true;
-      return () => "clientAction in main chunk: " + eval("typeof inUnchunkableMainChunk === 'function'");
+      inUnsplittableMainChunk();
+      (globalThis as any).unsplittableClientActionDownloaded = true;
+      return () => "clientAction in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
     })();
 
     export const HydrateFallback = (function() {
-      inUnchunkableMainChunk();
-      (globalThis as any).unchunkableHydrateFallbackDownloaded = true;
+      inUnsplittableMainChunk();
+      (globalThis as any).unsplittableHydrateFallbackDownloaded = true;
       return () => <div data-hydrate-fallback>Loading...</div>;
     })();
 
-    export default function UnchunkableRoute() {
-      inUnchunkableMainChunk();
+    export default function UnsplittableRoute() {
+      inUnsplittableMainChunk();
       const loaderData = useLoaderData();
       const actionData = useActionData();
       return (
@@ -191,27 +191,27 @@ const files = {
   `,
 };
 
-async function chunkableClientActionDownloaded(page: Page) {
+async function splittableClientActionDownloaded(page: Page) {
   return await page.evaluate(() =>
-    Boolean((globalThis as any).chunkableClientActionDownloaded)
+    Boolean((globalThis as any).splittableClientActionDownloaded)
   );
 }
 
-async function chunkableHydrateFallbackDownloaded(page: Page) {
+async function splittableHydrateFallbackDownloaded(page: Page) {
   return await page.evaluate(() =>
-    Boolean((globalThis as any).chunkableHydrateFallbackDownloaded)
+    Boolean((globalThis as any).splittableHydrateFallbackDownloaded)
   );
 }
 
-async function unchunkableClientActionDownloaded(page: Page) {
+async function unsplittableClientActionDownloaded(page: Page) {
   return await page.evaluate(() =>
-    Boolean((globalThis as any).unchunkableClientActionDownloaded)
+    Boolean((globalThis as any).unsplittableClientActionDownloaded)
   );
 }
 
-async function unchunkableHydrateFallbackDownloaded(page: Page) {
+async function unsplittableHydrateFallbackDownloaded(page: Page) {
   return await page.evaluate(() =>
-    Boolean((globalThis as any).unchunkableHydrateFallbackDownloaded)
+    Boolean((globalThis as any).unsplittableHydrateFallbackDownloaded)
   );
 }
 
@@ -227,9 +227,9 @@ async function mixedHydrateFallbackDownloaded(page: Page) {
   );
 }
 
-test.describe("Route chunks", async () => {
+test.describe("Split route modules", async () => {
   test.describe("enabled", () => {
-    let routeChunks = true;
+    let splitRouteModules = true;
     let port: number;
     let cwd: string;
     let stop: Awaited<ReturnType<typeof reactRouterServe>>;
@@ -237,7 +237,7 @@ test.describe("Route chunks", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "react-router.config.ts": reactRouterConfig({ routeChunks }),
+        "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });
@@ -249,38 +249,38 @@ test.describe("Route chunks", async () => {
       stop();
     });
 
-    test("supports route chunks", async ({ page }) => {
+    test("supports splitting route modules", async ({ page }) => {
       let pageErrors: Error[] = [];
       page.on("pageerror", (error) => pageErrors.push(error));
 
       await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
       expect(pageErrors).toEqual([]);
 
-      // Ensure chunkable exports are not in main chunk
-      await page.getByRole("link", { name: "/chunkable" }).click();
-      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(false);
+      // Ensure splittable exports are not in main chunk
+      await page.getByRole("link", { name: "/splittable" }).click();
+      expect(await splittableHydrateFallbackDownloaded(page)).toBe(false);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
-      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(false);
+      expect(await splittableHydrateFallbackDownloaded(page)).toBe(false);
       expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
-      expect(await chunkableClientActionDownloaded(page)).toBe(false);
+      expect(await splittableClientActionDownloaded(page)).toBe(false);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: false"'
       );
       expect(page.locator("[data-action-data]")).toHaveCSS("padding", "20px");
-      expect(await chunkableClientActionDownloaded(page)).toBe(true);
+      expect(await splittableClientActionDownloaded(page)).toBe(true);
 
       await page.goBack();
 
-      // Ensure unchunkable exports are in main chunk
-      await page.getByRole("link", { name: "/unchunkable" }).click();
-      expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
+      // Ensure unsplittable exports are in main chunk
+      await page.getByRole("link", { name: "/unsplittable" }).click();
+      expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
-      expect(await unchunkableClientActionDownloaded(page)).toBe(true);
+      expect(await unsplittableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
@@ -288,13 +288,13 @@ test.describe("Route chunks", async () => {
 
       await page.goBack();
 
-      // Ensure mix of chunkable and unchunkable exports are handled correctly.
+      // Ensure mix of splittable and unsplittable exports are handled correctly.
       // Note that only the client action is in its own chunk.
       await page.getByRole("link", { name: "/mixed" }).click();
-      expect(await mixedHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
+      expect(await mixedHydrateFallbackDownloaded(page)).toBe(true);
       expect(await mixedClientActionDownloaded(page)).toBe(false);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
@@ -302,23 +302,23 @@ test.describe("Route chunks", async () => {
       );
       expect(await mixedClientActionDownloaded(page)).toBe(true);
 
-      // Ensure chunkable HydrateFallback and client loader work during SSR
-      await page.goto(`http://localhost:${port}/chunkable`);
+      // Ensure splittable HydrateFallback and client loader work during SSR
+      await page.goto(`http://localhost:${port}/splittable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
       expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
         "padding",
         "20px"
       );
-      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(true);
+      expect(await splittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
       expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
 
-      // Ensure unchunkable HydrateFallback and client loader work during SSR
-      await page.goto(`http://localhost:${port}/unchunkable`);
+      // Ensure unsplittable HydrateFallback and client loader work during SSR
+      await page.goto(`http://localhost:${port}/unsplittable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
-      expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
+      expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -326,7 +326,7 @@ test.describe("Route chunks", async () => {
   });
 
   test.describe("disabled", () => {
-    let routeChunks = false;
+    let splitRouteModules = false;
     let port: number;
     let cwd: string;
     let stop: Awaited<ReturnType<typeof reactRouterServe>>;
@@ -334,7 +334,7 @@ test.describe("Route chunks", async () => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "react-router.config.ts": reactRouterConfig({ routeChunks }),
+        "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
         "vite.config.js": await viteConfig.basic({ port }),
         ...files,
       });
@@ -346,21 +346,21 @@ test.describe("Route chunks", async () => {
       stop();
     });
 
-    test("keeps exports in main chunk", async ({ page }) => {
+    test("keeps route module in a single chunk", async ({ page }) => {
       let pageErrors: Error[] = [];
       page.on("pageerror", (error) => pageErrors.push(error));
 
       await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
       expect(pageErrors).toEqual([]);
 
-      // Ensure chunkable exports are kept in main chunk
-      await page.getByRole("link", { name: "/chunkable" }).click();
-      expect(await chunkableHydrateFallbackDownloaded(page)).toBe(true);
+      // Ensure splittable exports are kept in main chunk
+      await page.getByRole("link", { name: "/splittable" }).click();
+      expect(await splittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
       expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
-      expect(await chunkableClientActionDownloaded(page)).toBe(true);
+      expect(await splittableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
@@ -369,34 +369,34 @@ test.describe("Route chunks", async () => {
 
       await page.goBack();
 
-      // Ensure unchunkable exports are kept in main chunk
-      await page.getByRole("link", { name: "/unchunkable" }).click();
-      expect(await unchunkableHydrateFallbackDownloaded(page)).toBe(true);
+      // Ensure unsplittable exports are kept in main chunk
+      await page.getByRole("link", { name: "/unsplittable" }).click();
+      expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
-      expect(await unchunkableClientActionDownloaded(page)).toBe(true);
+      expect(await unsplittableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
       );
 
-      // Ensure chunkable client loader works during SSR
-      await page.goto(`http://localhost:${port}/chunkable`);
+      // Ensure splittable client loader works during SSR
+      await page.goto(`http://localhost:${port}/splittable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
       expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
         "padding",
         "20px"
       );
-      expect(await chunkableClientActionDownloaded(page)).toBe(true);
+      expect(await splittableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
 
-      // Ensure unchunkable client loader works during SSR
-      await page.goto(`http://localhost:${port}/unchunkable`);
+      // Ensure unsplittable client loader works during SSR
+      await page.goto(`http://localhost:${port}/unsplittable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
-      expect(await unchunkableClientActionDownloaded(page)).toBe(true);
+      expect(await unsplittableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -404,18 +404,18 @@ test.describe("Route chunks", async () => {
   });
 
   test.describe("enforce", () => {
-    let routeChunks = "enforce" as const;
+    let splitRouteModules = "enforce" as const;
     let port: number;
     let cwd: string;
 
-    test.describe("chunkable routes", () => {
+    test.describe("splittable routes", () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "react-router.config.ts": reactRouterConfig({ routeChunks }),
+          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
           "vite.config.js": await viteConfig.basic({ port }),
-          // Make unchunkable routes valid so the build can pass
-          "app/routes/unchunkable.tsx": "export default function(){}",
+          // Make unsplittable routes valid so the build can pass
+          "app/routes/unsplittable.tsx": "export default function(){}",
           "app/routes/mixed.tsx": "export default function(){}",
         });
       });
@@ -426,15 +426,15 @@ test.describe("Route chunks", async () => {
       });
     });
 
-    test.describe("unchunkable routes", () => {
+    test.describe("unsplittable routes", () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject({
-          "react-router.config.ts": reactRouterConfig({ routeChunks }),
+          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
           "vite.config.js": await viteConfig.basic({ port }),
           ...files,
           // Ensure we're only testing the mixed route
-          "app/routes/unchunkable.tsx": "export default function(){}",
+          "app/routes/unsplittable.tsx": "export default function(){}",
         });
       });
 
@@ -443,7 +443,7 @@ test.describe("Route chunks", async () => {
         expect(status).toBe(1);
         expect(stderr.toString()).toMatch(
           dedent`
-            Route chunks error: routes/mixed.tsx
+            Error splitting route module: routes/mixed.tsx
             
             - clientLoader
             - HydrateFallback

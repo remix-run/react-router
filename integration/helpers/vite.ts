@@ -28,13 +28,15 @@ export const reactRouterConfig = ({
   basename,
   prerender,
   appDirectory,
-  routeChunks,
+  splitRouteModules,
 }: {
   ssr?: boolean;
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
-  routeChunks?: NonNullable<Config["future"]>["unstable_routeChunks"];
+  splitRouteModules?: NonNullable<
+    Config["future"]
+  >["unstable_splitRouteModules"];
 }) => {
   let config: Config = {
     ssr,
@@ -42,7 +44,7 @@ export const reactRouterConfig = ({
     prerender,
     appDirectory,
     future: {
-      unstable_routeChunks: routeChunks,
+      unstable_splitRouteModules: splitRouteModules,
     },
   };
 

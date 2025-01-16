@@ -16,15 +16,15 @@ test.describe("SPA Mode", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
-  [true, false].forEach((routeChunks) => {
-    test.describe(`routeChunks: ${routeChunks}`, () => {
+  [true, false].forEach((splitRouteModules) => {
+    test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
       test.describe("custom builds", () => {
         test.describe("build errors", () => {
           test("errors on server-only exports", async () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/routes/invalid-exports.tsx": String.raw`
               // Invalid exports
@@ -51,7 +51,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/routes/invalid-exports.tsx": String.raw`
               // Invalid exports
@@ -76,7 +76,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/entry.server.tsx": js`
               import { ServerRouter } from "react-router";
@@ -144,7 +144,7 @@ test.describe("SPA Mode", () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/root.tsx": String.raw`
               export function HydrateFallback() {
@@ -167,7 +167,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -209,7 +209,7 @@ test.describe("SPA Mode", () => {
               "react-router.config.ts": reactRouterConfig({
                 basename: "/base/",
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/root.tsx": js`
                 import { Outlet, Scripts } from "react-router";
@@ -282,7 +282,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "app/index.html": String.raw`
                 <!DOCTYPE html>
@@ -466,7 +466,7 @@ test.describe("SPA Mode", () => {
                 // file below
                 appDirectory: "src",
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "src/routes.ts": js`
                 import { type RouteConfig } from "@react-router/dev/routes";
@@ -548,7 +548,7 @@ test.describe("SPA Mode", () => {
                 // file below
                 appDirectory: "src",
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "src/routes.ts": js`
                 import { type RouteConfig } from "@react-router/dev/routes";
@@ -614,7 +614,7 @@ test.describe("SPA Mode", () => {
             files: {
               "react-router.config.ts": reactRouterConfig({
                 ssr: false,
-                routeChunks,
+                splitRouteModules,
               }),
               "vite.config.ts": js`
                 import { defineConfig } from "vite";

@@ -634,8 +634,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       ctx
     );
 
-    let enforceRouteChunks =
-      ctx.reactRouterConfig.future.unstable_routeChunks === "enforce";
+    let enforceSplitRouteModules =
+      ctx.reactRouterConfig.future.unstable_splitRouteModules === "enforce";
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
@@ -652,7 +652,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         { routeFile, viteChildCompiler }
       );
 
-      if (enforceRouteChunks) {
+      if (enforceSplitRouteModules) {
         validateRouteChunks({
           ctx,
           id: route.file,
@@ -763,8 +763,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       ctx
     );
 
-    let enforceRouteChunks =
-      ctx.reactRouterConfig.future.unstable_routeChunks === "enforce";
+    let enforceSplitRouteModules =
+      ctx.reactRouterConfig.future.unstable_splitRouteModules === "enforce";
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
       let routeFile = route.file;
@@ -780,7 +780,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         )}`
       );
 
-      if (enforceRouteChunks) {
+      if (enforceSplitRouteModules) {
         let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
           cache,
           ctx,
@@ -1046,7 +1046,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                               return [
                                 `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
                                 ...(ctx.reactRouterConfig.future
-                                  .unstable_routeChunks && !isRootRoute
+                                  .unstable_splitRouteModules && !isRootRoute
                                   ? routeChunkExportNames.map((exportName) =>
                                       code.includes(exportName)
                                         ? getRouteChunkModuleId(
@@ -1559,10 +1559,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           return preventEmptyChunkSnippet({ reason: "Route chunks disabled" });
         }
 
-        let enforceRouteChunks =
-          ctx.reactRouterConfig.future.unstable_routeChunks === "enforce";
+        let enforceSplitRouteModules =
+          ctx.reactRouterConfig.future.unstable_splitRouteModules === "enforce";
 
-        if (enforceRouteChunks && chunkName === "main" && chunk) {
+        if (enforceSplitRouteModules && chunkName === "main" && chunk) {
           let exportNames = getExportNames(chunk.code);
 
           validateRouteChunks({
@@ -2528,7 +2528,7 @@ async function detectRouteChunksIfEnabled(
     };
   }
 
-  if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
+  if (!ctx.reactRouterConfig.future.unstable_splitRouteModules) {
     return noRouteChunks();
   }
 
@@ -2563,7 +2563,7 @@ async function getRouteChunkIfEnabled(
   chunkName: RouteChunkName,
   input: ResolveRouteFileCodeInput
 ): Promise<ReturnType<typeof getRouteChunkCode> | null> {
-  if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
+  if (!ctx.reactRouterConfig.future.unstable_splitRouteModules) {
     return null;
   }
 
@@ -2597,7 +2597,7 @@ function validateRouteChunks({
 
   throw new Error(
     [
-      `Route chunks error: ${normalizeRelativeFilePath(
+      `Error splitting route module: ${normalizeRelativeFilePath(
         id,
         ctx.reactRouterConfig
       )}`,

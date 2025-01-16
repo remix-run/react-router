@@ -11,7 +11,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { reactRouterConfig } from "./helpers/vite.js";
 
 function getFiles({
-  routeChunks,
+  splitRouteModules,
   parentClientLoader,
   parentClientLoaderHydrate,
   parentAdditions,
@@ -19,7 +19,7 @@ function getFiles({
   childClientLoaderHydrate,
   childAdditions,
 }: {
-  routeChunks: boolean;
+  splitRouteModules: boolean;
   parentClientLoader: boolean;
   parentClientLoaderHydrate: boolean;
   parentAdditions?: string;
@@ -28,7 +28,7 @@ function getFiles({
   childAdditions?: string;
 }) {
   return {
-    "react-router.config.ts": reactRouterConfig({ routeChunks }),
+    "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
     "app/root.tsx": js`
       import { Outlet, Scripts } from "react-router"
 
@@ -147,14 +147,14 @@ test.describe("Client Data", () => {
     appFixture.close();
   });
 
-  [true, false].forEach((routeChunks) => {
-    test.describe(`routeChunks: ${routeChunks}`, () => {
+  [true, false].forEach((splitRouteModules) => {
+    test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
       test.describe("clientLoader - critical route module", () => {
         test("no client loaders or fallbacks", async ({ page }) => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -175,7 +175,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -198,7 +198,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: true,
                 childClientLoader: true,
@@ -227,7 +227,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -256,7 +256,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: true,
                 childClientLoader: true,
@@ -284,7 +284,7 @@ test.describe("Client Data", () => {
         test("handles synchronous client loaders", async ({ page }) => {
           let fixture = await createFixture({
             files: getFiles({
-              routeChunks,
+              splitRouteModules,
               parentClientLoader: false,
               parentClientLoaderHydrate: false,
               childClientLoader: false,
@@ -327,7 +327,7 @@ test.describe("Client Data", () => {
           let fixture = await createFixture({
             files: {
               ...getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -397,7 +397,7 @@ test.describe("Client Data", () => {
         }) => {
           let fixture = await createFixture({
             files: getFiles({
-              routeChunks,
+              splitRouteModules,
               parentClientLoader: false,
               parentClientLoaderHydrate: false,
               childClientLoader: false,
@@ -428,7 +428,7 @@ test.describe("Client Data", () => {
           let fixture = await createFixture({
             files: {
               ...getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -478,7 +478,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -522,7 +522,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -566,7 +566,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -610,7 +610,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -677,7 +677,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -756,7 +756,7 @@ test.describe("Client Data", () => {
               {
                 files: {
                   ...getFiles({
-                    routeChunks,
+                    splitRouteModules,
                     parentClientLoader: false,
                     parentClientLoaderHydrate: false,
                     childClientLoader: false,
@@ -812,7 +812,7 @@ test.describe("Client Data", () => {
               {
                 files: {
                   ...getFiles({
-                    routeChunks,
+                    splitRouteModules,
                     parentClientLoader: false,
                     parentClientLoaderHydrate: false,
                     childClientLoader: false,
@@ -918,7 +918,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -941,7 +941,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -963,7 +963,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -985,7 +985,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -1010,7 +1010,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -1055,7 +1055,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: true,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -1106,7 +1106,7 @@ test.describe("Client Data", () => {
             await createFixture(
               {
                 files: getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -1144,7 +1144,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -1187,7 +1187,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -1232,7 +1232,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -1278,7 +1278,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
@@ -1323,7 +1323,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -1360,7 +1360,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: false,
@@ -1405,7 +1405,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: false,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -1452,7 +1452,7 @@ test.describe("Client Data", () => {
           appFixture = await createAppFixture(
             await createFixture({
               files: getFiles({
-                routeChunks,
+                splitRouteModules,
                 parentClientLoader: true,
                 parentClientLoaderHydrate: false,
                 childClientLoader: true,
@@ -1500,7 +1500,7 @@ test.describe("Client Data", () => {
             await createFixture({
               files: {
                 ...getFiles({
-                  routeChunks,
+                  splitRouteModules,
                   parentClientLoader: false,
                   parentClientLoaderHydrate: false,
                   childClientLoader: false,
