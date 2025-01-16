@@ -34,7 +34,8 @@ const files = {
     }
   `,
   "app/routes/splittable/route.tsx": js`
-    import { useLoaderData, useActionData, Form } from "react-router";
+    import type { Route } from "./+types/splittable/route";
+    import { Form } from "react-router";
     
     // Ensure these style imports are still included in the page even though
     // they're not used in the main chunk
@@ -69,22 +70,25 @@ const files = {
       return () => <div data-hydrate-fallback className={hydrateFallbackStyles.root}>Loading...</div>;
     })();
 
-    export default function SplittableRoute() {
+    export default function SplittableRoute({
+      loaderData,
+      actionData,
+    }: Route.ComponentProps) {
       inSplittableMainChunk();
-      const loaderData = useLoaderData();
-      const actionData = useActionData();
       return (
         <>
           <div
             data-loader-data
-            className={loaderData?.className}>
-            loaderData = {JSON.stringify(loaderData?.message)}
+            className={loaderData.className}>
+            loaderData = {JSON.stringify(loaderData.message)}
           </div>
-          <div
-            data-action-data
-            className={actionData?.className}>
-            actionData = {JSON.stringify(actionData?.message)}
-          </div>
+          {actionData ? (
+            <div
+              data-action-data
+              className={actionData.className}>
+              actionData = {JSON.stringify(actionData.message)}
+            </div>
+          ) : null}
           <input type="text" />
           <Form method="post">
             <button>Submit</button>
@@ -104,7 +108,8 @@ const files = {
   `,
 
   "app/routes/unsplittable.tsx": js`
-    import { useLoaderData, useActionData, Form } from "react-router";
+    import type { Route } from "./+types/unsplittable";
+    import { Form } from "react-router";
 
     // Usage of this exported function forces any consuming code into the main
     // chunk. The variable name is globally unique to prevent name mangling,
@@ -130,14 +135,17 @@ const files = {
       return () => <div data-hydrate-fallback>Loading...</div>;
     })();
 
-    export default function UnsplittableRoute() {
+    export default function UnsplittableRoute({
+      loaderData,
+      actionData,
+    }: Route.ComponentProps) {
       inUnsplittableMainChunk();
-      const loaderData = useLoaderData();
-      const actionData = useActionData();
       return (
         <>
           <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
-          <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
+          {actionData ? (
+            <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
+          ) : null}
           <input type="text" />
           <Form method="post">
             <button>Submit</button>
@@ -148,7 +156,8 @@ const files = {
   `,
 
   "app/routes/mixed.tsx": js`
-    import { useLoaderData, useActionData, Form } from "react-router";
+    import type { Route } from "./+types/mixed";
+    import { Form } from "react-router";
 
     // Usage of this exported function forces any consuming code into the main
     // chunk. The variable name is globally unique to prevent name mangling,
@@ -173,14 +182,17 @@ const files = {
       return () => <div data-hydrate-fallback>Loading...</div>;
     })();
 
-    export default function MixedRoute() {
+    export default function MixedRoute({
+      loaderData,
+      actionData,
+    }: Route.ComponentProps) {
       inMixedMainChunk();
-      const loaderData = useLoaderData();
-      const actionData = useActionData();
       return (
         <>
           <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
-          <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
+          {actionData ? (
+            <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
+          ) : null}
           <input type="text" />
           <Form method="post">
             <button>Submit</button>
