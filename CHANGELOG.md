@@ -222,7 +222,7 @@ Date: YYYY-MM-DD
 
 ## v6.28.2
 
-Date: 2025-01-15
+Date: 2025-01-16
 
 ### Patch Changes
 
