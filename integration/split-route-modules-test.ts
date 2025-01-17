@@ -57,13 +57,10 @@ const files = {
       };
     };
 
-    export const clientAction = (function() {
-      (globalThis as any).splittableClientActionDownloaded = true;
-      return () => ({
-        message: "clientAction in main chunk: " + eval("typeof inSplittableMainChunk === 'function'"),
-        className: clientActionStyles.root,
-      });
-    })();
+    export const clientAction = () => ({
+      message: "clientAction in main chunk: " + eval("typeof inSplittableMainChunk === 'function'"),
+      className: clientActionStyles.root,
+    });
 
     export const HydrateFallback = (function() {
       (globalThis as any).splittableHydrateFallbackDownloaded = true;
@@ -123,11 +120,10 @@ const files = {
       return "clientLoader in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
     };
  
-    export const clientAction = (function() {
+    export const clientAction = () => {
       inUnsplittableMainChunk();
-      (globalThis as any).unsplittableClientActionDownloaded = true;
-      return () => "clientAction in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
-    })();
+      return "clientAction in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
+    }
 
     export const HydrateFallback = (function() {
       inUnsplittableMainChunk();
@@ -171,10 +167,9 @@ const files = {
       return "clientLoader in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
     };
  
-    export const clientAction = (function() {
-      (globalThis as any).mixedClientActionDownloaded = true;
-      return () => "clientAction in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
-    })();
+    export const clientAction = () => {
+      return "clientAction in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
+    };
 
     export const HydrateFallback = (function() {
       inMixedMainChunk();
@@ -203,21 +198,9 @@ const files = {
   `,
 };
 
-async function splittableClientActionDownloaded(page: Page) {
-  return await page.evaluate(() =>
-    Boolean((globalThis as any).splittableClientActionDownloaded)
-  );
-}
-
 async function splittableHydrateFallbackDownloaded(page: Page) {
   return await page.evaluate(() =>
     Boolean((globalThis as any).splittableHydrateFallbackDownloaded)
-  );
-}
-
-async function unsplittableClientActionDownloaded(page: Page) {
-  return await page.evaluate(() =>
-    Boolean((globalThis as any).unsplittableClientActionDownloaded)
   );
 }
 
@@ -226,13 +209,6 @@ async function unsplittableHydrateFallbackDownloaded(page: Page) {
     Boolean((globalThis as any).unsplittableHydrateFallbackDownloaded)
   );
 }
-
-async function mixedClientActionDownloaded(page: Page) {
-  return await page.evaluate(() =>
-    Boolean((globalThis as any).mixedClientActionDownloaded)
-  );
-}
-
 async function mixedHydrateFallbackDownloaded(page: Page) {
   return await page.evaluate(() =>
     Boolean((globalThis as any).mixedHydrateFallbackDownloaded)
@@ -276,13 +252,11 @@ test.describe("Split route modules", async () => {
       );
       expect(await splittableHydrateFallbackDownloaded(page)).toBe(false);
       expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
-      expect(await splittableClientActionDownloaded(page)).toBe(false);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: false"'
       );
       expect(page.locator("[data-action-data]")).toHaveCSS("padding", "20px");
-      expect(await splittableClientActionDownloaded(page)).toBe(true);
 
       await page.goBack();
 
@@ -292,7 +266,6 @@ test.describe("Split route modules", async () => {
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
-      expect(await unsplittableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
@@ -307,12 +280,10 @@ test.describe("Split route modules", async () => {
         'loaderData = "clientLoader in main chunk: true"'
       );
       expect(await mixedHydrateFallbackDownloaded(page)).toBe(true);
-      expect(await mixedClientActionDownloaded(page)).toBe(false);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: false"'
       );
-      expect(await mixedClientActionDownloaded(page)).toBe(true);
 
       // Ensure splittable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/splittable`);
@@ -372,7 +343,6 @@ test.describe("Split route modules", async () => {
         `loaderData = "clientLoader in main chunk: true"`
       );
       expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
-      expect(await splittableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
@@ -387,7 +357,6 @@ test.describe("Split route modules", async () => {
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
-      expect(await unsplittableClientActionDownloaded(page)).toBe(true);
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
@@ -400,7 +369,6 @@ test.describe("Split route modules", async () => {
         "padding",
         "20px"
       );
-      expect(await splittableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -408,7 +376,6 @@ test.describe("Split route modules", async () => {
       // Ensure unsplittable client loader works during SSR
       await page.goto(`http://localhost:${port}/unsplittable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
-      expect(await unsplittableClientActionDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );

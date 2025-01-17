@@ -5,12 +5,10 @@ import { Form } from "react-router";
 let shared: null = null;
 
 export const clientLoader = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   return shared ?? "Hello from unsplittable client loader";
 };
 
 export const clientAction = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   return "Hello from splittable client action";
 };
 

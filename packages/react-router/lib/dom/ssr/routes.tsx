@@ -259,6 +259,30 @@ export function createClientRoutes(
       return fetchServerHandler(singleFetch);
     }
 
+    function prefetchModule(modulePath: string) {
+      import(
+        /* @vite-ignore */
+        /* webpackIgnore: true */
+        modulePath
+      );
+    }
+
+    function prefetchRouteModuleChunks(route: EntryRoute) {
+      // We fetch the client action module first since the loader function we
+      // create internally already handles the client loader. This function is
+      // most useful in cases where only the client action is splittable, but is
+      // also useful for prefetching the client loader module if a client action
+      // is triggered from another route.
+      if (route.clientActionModule) {
+        prefetchModule(route.clientActionModule);
+      }
+      // Also prefetch the client loader module if it exists
+      // since it's called after the client action
+      if (route.clientLoaderModule) {
+        prefetchModule(route.clientLoaderModule);
+      }
+    }
+
     async function prefetchStylesAndCallHandler(
       handler: () => Promise<unknown>
     ) {
@@ -410,7 +434,9 @@ export function createClientRoutes(
         ) => {
           invariant(route.clientLoaderModule);
           let { clientLoader } = await import(
-            /* webpackIgnore: true */ route.clientLoaderModule
+            /* @vite-ignore */
+            /* webpackIgnore: true */
+            route.clientLoaderModule
           );
           return clientLoader({
             ...args,
@@ -438,8 +464,11 @@ export function createClientRoutes(
           singleFetch?: unknown
         ) => {
           invariant(route.clientActionModule);
+          prefetchRouteModuleChunks(route);
           let { clientAction } = await import(
-            /* webpackIgnore: true */ route.clientActionModule
+            /* @vite-ignore */
+            /* webpackIgnore: true */
+            route.clientActionModule
           );
           return clientAction({
             ...args,
@@ -463,10 +492,12 @@ export function createClientRoutes(
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
 
-        let mod = await loadRouteModuleWithBlockingLinks(
+        let modPromise = loadRouteModuleWithBlockingLinks(
           route,
           routeModulesCache
         );
+        prefetchRouteModuleChunks(route);
+        let mod = await modPromise;
 
         let lazyRoute: Partial<DataRouteObject> = { ...mod };
         if (mod.clientLoader && !route.clientLoaderModule) {

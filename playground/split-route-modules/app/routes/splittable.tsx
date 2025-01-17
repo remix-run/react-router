@@ -2,12 +2,10 @@ import type { Route } from "./+types/splittable";
 import { Form } from "react-router";
 
 export const clientLoader = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   return "Hello from splittable client loader";
 };
 
 export const clientAction = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   return "Hello from splittable client action";
 };
 
