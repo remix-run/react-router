@@ -1700,7 +1700,7 @@ test.describe("single-fetch", () => {
     ]);
   });
 
-  test("does not try to encode a turbo-stream body into 204 responses", async ({
+  test.only("does not try to encode a turbo-stream body into 204 responses", async ({
     page,
   }) => {
     let fixture = await createFixture({
@@ -1743,6 +1743,14 @@ test.describe("single-fetch", () => {
       }
     });
 
+    // Document requests
+    let documentRes = await fixture.requestDocument("/?index", {
+      method: "post",
+    });
+    expect(documentRes.status).toBe(204);
+    expect(await documentRes.text()).toBe("");
+
+    // Data requests
     await app.goto("/");
     (await page.$("[data-submit]"))?.click();
     await page.waitForSelector("[data-active]");

@@ -356,9 +356,17 @@ async function handleDocumentRequest(
 
   let headers = getDocumentHeaders(build, context);
 
-  // 304 responses should not have a body or a content-type
-  if (context.statusCode === 304) {
-    return new Response(null, { status: 304, headers });
+  // Do not include a response body if the status code is one of these,
+  // otherwise `undici` will throw an error when constructing the Response:
+  //   https://github.com/nodejs/undici/blob/bd98a6303e45d5e0d44192a93731b1defdb415f3/lib/web/fetch/response.js#L522-L528
+  //
+  // Specs:
+  //   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
+  //   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
+  //   https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
+  let NO_BODY_STATUS_CODES = new Set([204, 205, 304]);
+  if (NO_BODY_STATUS_CODES.has(context.statusCode)) {
+    return new Response(null, { status: context.statusCode, headers });
   }
 
   // Sanitize errors outside of development environments
