@@ -91,9 +91,15 @@ async function run() {
     } else if (version.includes("nightly")) {
       tag = "nightly";
     } else if (version.startsWith("6.")) {
+      // !!! Note: publish.js is not used for prereleases and stable releases.
+      // We should be using the Changesets CI process for those.
+      // These code paths are only left here for emergency usages
       releaseBranch = "release-v6";
       tag = null;
     } else if (version.startsWith("7.")) {
+      // !!! Note: publish.js is not used for prereleases and stable releases.
+      // We should be using the Changesets CI process for those.
+      // These code paths are only left here for emergency usages
       releaseBranch = "release-next";
       tag = semver.prerelease(version) == null ? "latest" : "pre";
     }
