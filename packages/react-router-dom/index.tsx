@@ -525,6 +525,12 @@ export function RouterProvider({
         viewTransitionOpts: viewTransitionOpts,
       }
     ) => {
+      console.log("updateState", {
+        navigationState: newState.navigation.state,
+        revalidationState: newState.revalidation,
+        data: newState.loaderData,
+        viewTransitionOpts,
+      });
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
           fetcherData.current.set(key, fetcher.data);
@@ -543,6 +549,7 @@ export function RouterProvider({
         if (flushSync) {
           flushSyncSafe(() => setStateImpl(newState));
         } else {
+          console.log("setState 1 - no view transition enabled");
           optInStartTransition(() => setStateImpl(newState));
         }
         return;
@@ -590,6 +597,9 @@ export function RouterProvider({
         // out, and then kick off a new transition from the interruption state
         renderDfd && renderDfd.resolve();
         transition.skipTransition();
+        console.log(
+          "setInterruption - viewTransition enabled and transition in progress"
+        );
         setInterruption({
           state: newState,
           currentLocation: viewTransitionOpts.currentLocation,
@@ -597,6 +607,9 @@ export function RouterProvider({
         });
       } else {
         // Completed navigation update with opted-in view transitions, let 'er rip
+        console.log(
+          "setPendingState/setVtContext - beginning a new viewTransition"
+        );
         setPendingState(newState);
         setVtContext({
           isTransitioning: true,
@@ -617,6 +630,7 @@ export function RouterProvider({
   // eventual "completed" render
   React.useEffect(() => {
     if (vtContext.isTransitioning && !vtContext.flushSync) {
+      console.log("creating a new renderDfd for a transition");
       setRenderDfd(new Deferred<void>());
     }
   }, [vtContext]);
@@ -628,11 +642,15 @@ export function RouterProvider({
     if (renderDfd && pendingState && router.window) {
       let newState = pendingState;
       let renderPromise = renderDfd.promise;
+      console.log("calling window.document.startViewTransition");
       let transition = router.window.document.startViewTransition(async () => {
+        console.log("setState 2 - inside of startViewTransition");
         optInStartTransition(() => setStateImpl(newState));
         await renderPromise;
+        console.log("renderPromise resolved");
       });
       transition.finished.finally(() => {
+        console.log("transition finished, resetting");
         setRenderDfd(undefined);
         setTransition(undefined);
         setPendingState(undefined);
@@ -650,6 +668,7 @@ export function RouterProvider({
       pendingState &&
       state.location.key === pendingState.location.key
     ) {
+      console.log("resolving renderDfd");
       renderDfd.resolve();
     }
   }, [renderDfd, transition, state.location, pendingState]);
@@ -658,6 +677,7 @@ export function RouterProvider({
   // the active transition, let it cleanup, then kick it off again here
   React.useEffect(() => {
     if (!vtContext.isTransitioning && interruption) {
+      console.log("processing interruption with setPendingState");
       setPendingState(interruption.state);
       setVtContext({
         isTransitioning: true,

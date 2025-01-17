@@ -1137,6 +1137,19 @@ export function createRouter(init: RouterInit): Router {
       viewTransitionOpts?: ViewTransitionOpts;
     } = {}
   ): void {
+    console.log("updateState()", opts.viewTransitionOpts);
+    console.log(
+      "  navigation change",
+      state.navigation.state,
+      "->",
+      newState.navigation?.state
+    );
+    console.log(
+      "  revalidation change",
+      state.revalidation,
+      "->",
+      newState.revalidation
+    );
     state = {
       ...state,
       ...newState,
@@ -1344,6 +1357,7 @@ export function createRouter(init: RouterInit): Router {
     to: number | To | null,
     opts?: RouterNavigateOptions
   ): Promise<void> {
+    console.log("navigate()", to, JSON.stringify(state.navigation));
     if (typeof to === "number") {
       init.history.go(to);
       return;
@@ -1452,6 +1466,8 @@ export function createRouter(init: RouterInit): Router {
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
   function revalidate() {
+    console.log("revalidate()");
+    console.log("  current navigation", JSON.stringify(state.navigation));
     interruptActiveLoads();
     updateState({ revalidation: "loading" });
 
@@ -1465,6 +1481,7 @@ export function createRouter(init: RouterInit): Router {
     // action/location and mark it as uninterrupted, which will skip the history
     // update in completeNavigation
     if (state.navigation.state === "idle") {
+      console.log("startNavigation() - startUninterruptedRevalidation=true");
       startNavigation(state.historyAction, state.location, {
         startUninterruptedRevalidation: true,
       });
@@ -1474,6 +1491,9 @@ export function createRouter(init: RouterInit): Router {
     // Otherwise, if we're currently in a loading state, just start a new
     // navigation to the navigation.location but do not trigger an uninterrupted
     // revalidation so that history correctly updates once the navigation completes
+    console.log("startNavigation() - interrupting", {
+      pendingViewTransitionEnabled,
+    });
     startNavigation(
       pendingAction || state.historyAction,
       state.navigation.location,
@@ -1641,6 +1661,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Call loaders
+    console.log("  start handleLoaders()");
     let {
       shortCircuited,
       matches: updatedMatches,
@@ -1659,8 +1680,10 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
       pendingActionResult
     );
+    console.log("  end handleLoaders()");
 
     if (shortCircuited) {
+      console.log("  short circuited from handleLoaders()");
       return;
     }
 
