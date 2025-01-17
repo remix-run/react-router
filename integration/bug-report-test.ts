@@ -58,29 +58,72 @@ test.beforeAll(async () => {
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
     files: {
-      "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+      "app/routes.ts": js`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
 
-        export function loader() {
-          return "pizza";
-        }
-
-        export default function Index() {
-          let data = useLoaderData();
-          return (
-            <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
-            </div>
-          )
-        }
+        export default [
+            route('organizations/:orgId', 'routes/organizations.tsx', [
+                route("users", "routes/organization-users.tsx"),
+            ])
+        ] satisfies RouteConfig;
       `,
 
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+      'app/routes/organizations.tsx': js`
+        import {type LoaderFunctionArgs, Outlet, redirect, useLoaderData} from "react-router";
+        
+        export const loader = async ({params, request}: LoaderFunctionArgs) => {
+            const { orgId }  = params;
+            
+            const delay = orgId === 'justpark' ? 200 : 0;
+        
+            const org = new Promise((resolve) => {
+              setTimeout(() => resolve('JustPark'), delay);
+            });
+        
+            return {
+                organisation: await org
+            };
         }
+        
+        export default () => {
+            const data = useLoaderData<typeof loader>();
+        
+            return <>
+                <h1>{data.organisation}</h1>
+                <Outlet />
+            </>;
+        };
       `,
+      'app/routes/organization-users.tsx' : js`
+        import {Await, useAsyncError, useLoaderData} from "react-router";
+        import {Suspense} from "react";
+        
+        export const loader = async () => {
+            return {
+                users: new Promise((resolve, reject) => {
+                  setTimeout(() => reject(new Error('500: Unexpected server error')), 100);
+                })
+            };
+        }
+        
+        const ErrorComponent = () => {
+            const errorResponse = useAsyncError();
+            return <div id="error-component">{errorResponse.message}</div>;
+        };
+        
+        export default () => {
+            const data = useLoaderData();
+        
+            return (<Suspense fallback={"Loading"}>
+                <Await resolve={data.users} errorElement={<ErrorComponent />} children={(users) =>
+                    <ol id="users-list">
+                        {users.map((user) => <li key={user.id}>{user.name}</li>)}
+                    </ol>
+        
+                }/>
+            </Suspense>);
+        };
+      `
     },
   });
 
@@ -97,22 +140,12 @@ test.afterAll(() => {
 // add a good description for what you expect Remix to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
-  let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
+test("Can handle returning a rejected promise in a nested route loader where a parent takes longer to resolve without crashing the server", async ({ page }) => {
+  let fastOrganisationResponse = await fixture.requestDocument("/organizations/remix/users");
+  expect(await fastOrganisationResponse.text()).toMatch("<div id=\"error-component\">500: Unexpected server error</div>");
 
-  // If you need to test interactivity use the `app`
-  await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
-
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
-  // await app.poke(20);
-
-  // Go check out the other tests to see what else you can do.
+  let slowOrganisationResponse = await fixture.requestDocument("/organizations/justpark/users");
+  expect(await slowOrganisationResponse.text()).toMatch("<div id=\"error-component\">500: Unexpected server error</div>");
 });
 
 ////////////////////////////////////////////////////////////////////////////////
