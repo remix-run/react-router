@@ -1700,7 +1700,7 @@ test.describe("single-fetch", () => {
     ]);
   });
 
-  test.only("does not try to encode a turbo-stream body into 204 responses", async ({
+  test("does not try to encode a turbo-stream body into 204 responses", async ({
     page,
   }) => {
     let fixture = await createFixture({
