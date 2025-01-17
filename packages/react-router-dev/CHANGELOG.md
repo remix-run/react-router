@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.1.3-pre.0
+
+### Patch Changes
+
+- Fix `reveal` and `routes` CLI commands ([#12745](https://github.com/remix-run/react-router/pull/12745))
+- Updated dependencies:
+  - `react-router@7.1.3-pre.0`
+  - `@react-router/node@7.1.3-pre.0`
+  - `@react-router/serve@7.1.3-pre.0`
+
 ## 7.1.2
 
 ### Patch Changes
