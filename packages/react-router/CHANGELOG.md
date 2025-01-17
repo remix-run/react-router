@@ -1,5 +1,9 @@
 # `react-router`
 
+## 7.1.3
+
+_No changes_
+
 ## 7.1.2
 
 ### Patch Changes
@@ -16,6 +20,8 @@
   Now that `symbol`s are not used for the `redirect` response type, these errors should no longer be present.
 
 ## 7.1.1
+
+_No changes_
 
 ## 7.1.0
 
@@ -37,6 +43,8 @@
   To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
 
 ## 7.0.1
+
+_No changes_
 
 ## 7.0.0
 
