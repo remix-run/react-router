@@ -78,7 +78,7 @@ export default [
   ...prefix("concerts", [
     index("./concerts/home.tsx"),
     route(":city", "./concerts/city.tsx"),
-    route(":city/:id", "./concerts/show.tsx")
+    route(":city/:id", "./concerts/show.tsx"),
     route("trending", "./concerts/trending.tsx"),
   ]),
 ] satisfies RouteConfig;
