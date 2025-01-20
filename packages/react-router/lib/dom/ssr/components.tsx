@@ -687,7 +687,6 @@ ${matches
       module,
     } = manifestEntry;
 
-    // Ordered lowest to highest priority in terms of merging chunks
     let chunks: Array<{ module: string; varName: string }> = [
       ...(clientActionModule
         ? [

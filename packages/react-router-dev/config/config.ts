@@ -192,7 +192,7 @@ export type ResolvedReactRouterConfig = Readonly<{
   /**
    * Enabled future flags
    */
-  future: Required<FutureConfig>;
+  future: FutureConfig;
   /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
@@ -386,7 +386,6 @@ async function resolveConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
-    future: userFuture,
     prerender,
     serverBuildFile,
     serverBundles,
@@ -488,7 +487,8 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
-    unstable_splitRouteModules: userFuture?.unstable_splitRouteModules ?? false,
+    unstable_splitRouteModules:
+      reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({

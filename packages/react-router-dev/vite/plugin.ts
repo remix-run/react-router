@@ -809,7 +809,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         index: route.index,
         caseSensitive: route.caseSensitive,
         module: routeModulePath,
-        // Route chunks are a build-time optimization
+        // Split route modules are a build-time optimization
         clientActionModule: undefined,
         clientLoaderModule: undefined,
         hydrateFallbackModule: undefined,
@@ -1530,13 +1530,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
     },
     {
-      name: "react-router:route-chunks",
+      name: "react-router:split-route-modules",
       async transform(code, id, options) {
         // Routes aren't chunked on the server
         if (options?.ssr) return;
 
         // Ignore anything that isn't marked as a route chunk
         if (!isRouteChunkModuleId(id)) return;
+
+        invariant(
+          viteCommand === "build",
+          "Route modules are only split in build mode"
+        );
 
         let chunkName = getRouteChunkNameFromModuleId(id);
 
@@ -1556,7 +1561,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           `Math.random()<0&&console.log(${JSON.stringify(reason)});`;
 
         if (chunk === null) {
-          return preventEmptyChunkSnippet({ reason: "Route chunks disabled" });
+          return preventEmptyChunkSnippet({
+            reason: "Split round modules disabled",
+          });
         }
 
         let enforceSplitRouteModules =
