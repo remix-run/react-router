@@ -690,15 +690,30 @@ ${matches
     // Ordered lowest to highest priority in terms of merging chunks
     let chunks: Array<{ module: string; varName: string }> = [
       ...(clientActionModule
-        ? [{ module: clientActionModule, varName: `${routeVarName}_a` }]
+        ? [
+            {
+              module: clientActionModule,
+              varName: `${routeVarName}_clientAction`,
+            },
+          ]
         : []),
       ...(clientLoaderModule
-        ? [{ module: clientLoaderModule, varName: `${routeVarName}_l` }]
+        ? [
+            {
+              module: clientLoaderModule,
+              varName: `${routeVarName}_clientLoader`,
+            },
+          ]
         : []),
       ...(hydrateFallbackModule
-        ? [{ module: hydrateFallbackModule, varName: `${routeVarName}_h` }]
+        ? [
+            {
+              module: hydrateFallbackModule,
+              varName: `${routeVarName}_HydrateFallback`,
+            },
+          ]
         : []),
-      { module, varName: `${routeVarName}_m` },
+      { module, varName: `${routeVarName}_main` },
     ];
 
     if (chunks.length === 1) {
@@ -757,7 +772,11 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   let preloads = isHydrated
     ? []
-    : manifest.entry.imports.concat(getModuleLinkHrefs(matches, manifest));
+    : manifest.entry.imports.concat(
+        getModuleLinkHrefs(matches, manifest, {
+          includeHydrateFallback: true,
+        })
+      );
 
   return isHydrated ? null : (
     <>
