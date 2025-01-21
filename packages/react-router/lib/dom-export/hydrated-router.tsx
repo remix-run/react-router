@@ -199,7 +199,7 @@ function createHydratedRouter(): DataRouter {
 }
 
 /**
- * @category Router Components
+ * @category Component Routers
  */
 export function HydratedRouter() {
   if (!router) {

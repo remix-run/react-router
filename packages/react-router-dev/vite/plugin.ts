@@ -76,46 +76,6 @@ export async function extractPluginContext(viteConfig: Vite.ResolvedConfig) {
     | undefined;
 }
 
-export async function loadPluginContext({
-  configFile,
-  root,
-}: {
-  configFile?: string;
-  root?: string;
-}) {
-  if (!root) {
-    root = process.env.REACT_ROUTER_ROOT || process.cwd();
-  }
-
-  configFile =
-    configFile ??
-    findConfig(root, "vite.config", [
-      ".ts",
-      ".cts",
-      ".mts",
-      ".js",
-      ".cjs",
-      ".mjs",
-    ]);
-
-  if (!configFile) {
-    console.error(colors.red("Vite config file not found"));
-    process.exit(1);
-  }
-
-  let viteConfig = await resolveViteConfig({ configFile, root });
-  let ctx = await extractPluginContext(viteConfig);
-
-  if (!ctx) {
-    console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
-    );
-    process.exit(1);
-  }
-
-  return ctx;
-}
-
 const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
 const CLIENT_ROUTE_EXPORTS = [
   "clientAction",
@@ -1243,6 +1203,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
+              ssrViteManifest[virtual.serverBuild.id].file,
               clientBuildDirectory
             );
           }
@@ -1253,6 +1214,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
+              ssrViteManifest[virtual.serverBuild.id].file,
               clientBuildDirectory
             );
           }
@@ -1814,13 +1776,10 @@ async function getRouteMetadata(
 
 async function getPrerenderBuildAndHandler(
   viteConfig: Vite.ResolvedConfig,
-  reactRouterConfig: ResolvedReactRouterConfig,
-  serverBuildDirectory: string
+  serverBuildDirectory: string,
+  serverBuildFile: string
 ) {
-  let serverBuildPath = path.join(
-    serverBuildDirectory,
-    reactRouterConfig.serverBuildFile
-  );
+  let serverBuildPath = path.join(serverBuildDirectory, serverBuildFile);
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
   let { createRequestHandler: createHandler } = await import("react-router");
   return {
@@ -1833,12 +1792,13 @@ async function handleSpaMode(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
+  serverBuildFile: string,
   clientBuildDirectory: string
 ) {
   let { handler } = await getPrerenderBuildAndHandler(
     viteConfig,
-    reactRouterConfig,
-    serverBuildDirectory
+    serverBuildDirectory,
+    serverBuildFile
   );
   let request = new Request(`http://localhost${reactRouterConfig.basename}`);
   let response = await handler(request);
@@ -1861,12 +1821,13 @@ async function handlePrerender(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
+  serverBuildPath: string,
   clientBuildDirectory: string
 ) {
   let { build, handler } = await getPrerenderBuildAndHandler(
     viteConfig,
-    reactRouterConfig,
-    serverBuildDirectory
+    serverBuildDirectory,
+    serverBuildPath
   );
 
   let routes = createPrerenderRoutes(build.routes);

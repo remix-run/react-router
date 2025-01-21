@@ -1,6 +1,27 @@
 # `react-router`
 
+## 7.1.3
+
+_No changes_
+
+## 7.1.2
+
+### Patch Changes
+
+- Fix issue with fetcher data cleanup in the data layer on fetcher unmount ([#12681](https://github.com/remix-run/react-router/pull/12681))
+- Do not rely on `symbol` for filtering out `redirect` responses from loader data ([#12694](https://github.com/remix-run/react-router/pull/12694))
+
+  Previously, some projects were getting type checking errors like:
+
+  ```ts
+  error TS4058: Return type of exported function has or is using name 'redirectSymbol' from external module "node_modules/..." but cannot be named.
+  ```
+
+  Now that `symbol`s are not used for the `redirect` response type, these errors should no longer be present.
+
 ## 7.1.1
+
+_No changes_
 
 ## 7.1.0
 
@@ -22,6 +43,8 @@
   To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
 
 ## 7.0.1
+
+_No changes_
 
 ## 7.0.0
 

@@ -1,5 +1,19 @@
 # `@react-router/node`
 
+## 7.1.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.3`
+
+## 7.1.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.2`
+
 ## 7.1.1
 
 ### Patch Changes

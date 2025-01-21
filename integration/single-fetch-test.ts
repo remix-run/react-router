@@ -1700,6 +1700,69 @@ test.describe("single-fetch", () => {
     ]);
   });
 
+  test("does not try to encode a turbo-stream body into 204 responses", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { data, Form, useActionData, useNavigation } from "react-router";
+
+          export async function action({ request }) {
+            await new Promise(r => setTimeout(r, 500));
+            return data(null, { status: 204 });
+          };
+
+          export default function Index() {
+            const navigation = useNavigation();
+            const actionData = useActionData();
+            return (
+              <Form method="post">
+                {navigation.state === "idle" ? <p data-idle>idle</p> : <p data-active>active</p>}
+                <button data-submit type="submit">{actionData ?? 'no content!'}</button>
+              </Form>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let requests: [string, number, string][] = [];
+    page.on("request", async (req) => {
+      if (req.url().includes(".data")) {
+        let url = new URL(req.url());
+        requests.push([
+          req.method(),
+          (await req.response())!.status(),
+          url.pathname + url.search,
+        ]);
+      }
+    });
+
+    // Document requests
+    let documentRes = await fixture.requestDocument("/?index", {
+      method: "post",
+    });
+    expect(documentRes.status).toBe(204);
+    expect(await documentRes.text()).toBe("");
+
+    // Data requests
+    await app.goto("/");
+    (await page.$("[data-submit]"))?.click();
+    await page.waitForSelector("[data-active]");
+    await page.waitForSelector("[data-idle]");
+
+    expect(await page.innerText("[data-submit]")).toEqual("no content!");
+    expect(requests).toEqual([
+      ["POST", 204, "/_root.data?index"],
+      ["GET", 200, "/_root.data"],
+    ]);
+  });
+
   test("does not try to encode a turbo-stream body into 304 responses", async () => {
     let fixture = await createFixture({
       files: {
