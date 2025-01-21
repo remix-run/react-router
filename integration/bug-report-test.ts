@@ -29,7 +29,7 @@ let appFixture: AppFixture;
 //    ```
 //    pnpm install && pnpm build
 //    ```
-// 
+//
 // If you have never installed playwright on your system before, you may also need
 // to install a browser engine:
 //
@@ -122,6 +122,6 @@ test("[description of what you expect it to do]", async ({ page }) => {
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-// 💿 Finally, push your changes to your fork of React Router 
+// 💿 Finally, push your changes to your fork of React Router
 // and open a pull request!
 ////////////////////////////////////////////////////////////////////////////////
