@@ -535,6 +535,7 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
+  debugger;
   let matches =
     dataRouterState &&
     dataRouterState.matches &&

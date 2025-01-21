@@ -150,9 +150,10 @@ describe("<NavLink />", () => {
 
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/")
-    );
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/", children: [{ id: "empty", index: true }] },
+    ]).query(new Request("http://localhost/"));
+
     invariant(
       !(staticHandlerContext instanceof Response),
       "Expected a context"
