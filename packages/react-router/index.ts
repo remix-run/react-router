@@ -200,6 +200,8 @@ export type {
   ClientActionFunctionArgs,
   ClientLoaderFunction,
   ClientLoaderFunctionArgs,
+  HeadersArgs,
+  HeadersFunction,
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
@@ -250,11 +252,6 @@ export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
 } from "./lib/router/links";
-
-export type {
-  HeadersArgs,
-  HeadersFunction,
-} from "./lib/server-runtime/routeModules";
 
 export type { RequestHandler } from "./lib/server-runtime/server";
 

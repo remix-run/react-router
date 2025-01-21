@@ -7,13 +7,13 @@ import type {
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
-import type { ServerRouteModule } from "./routeModules";
 import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
 import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
+import { ServerRouteModule } from "../dom/ssr/routeModules";
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
