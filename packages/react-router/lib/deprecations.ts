@@ -4,7 +4,7 @@ import type { FutureConfig as RenderFutureConfig } from "./components";
 const alreadyWarned: { [key: string]: boolean } = {};
 
 export function warnOnce(key: string, message: string): void {
-  if (!alreadyWarned[message]) {
+  if (__DEV__ && !alreadyWarned[message]) {
     alreadyWarned[message] = true;
     console.warn(message);
   }
