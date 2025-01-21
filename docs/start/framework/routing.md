@@ -55,7 +55,7 @@ If you prefer to define your routes via file naming conventions rather than conf
 import { type RouteConfig, route } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
-export default = [
+export default [
   route("/", "./home.tsx"),
 
   ...await flatRoutes(),
