@@ -13,7 +13,7 @@ import type {
 } from "../dom/ssr/single-fetch";
 import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
-import { ServerRouteModule } from "../dom/ssr/routeModules";
+import type { ServerRouteModule } from "../dom/ssr/routeModules";
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
