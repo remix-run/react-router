@@ -96,11 +96,6 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-type ServerBundleBuildVars = {
-  serverBundleId: string;
-  routesByServerBundleId: Record<string, RouteManifest>;
-};
-
 export type ReactRouterPluginSharedBuildContext = {
   routesByServerBundleId: Record<string, RouteManifest>;
 };
