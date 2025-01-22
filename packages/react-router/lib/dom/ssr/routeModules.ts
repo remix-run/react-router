@@ -53,7 +53,7 @@ export type ClientActionFunction = (
 /**
  * Arguments passed to a route `clientAction` function
  */
-export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
+export type ClientActionFunctionArgs = ActionFunctionArgs & {
   serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
@@ -69,7 +69,7 @@ export type ClientLoaderFunction = ((
 /**
  * Arguments passed to a route `clientLoader` function
  */
-export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
+export type ClientLoaderFunctionArgs = LoaderFunctionArgs & {
   serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
