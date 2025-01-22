@@ -19,11 +19,6 @@ import type { RouteManifestEntry, RouteManifest } from "../config/routes";
 import invariant from "../invariant";
 import { preloadVite, getVite } from "./vite";
 
-type ServerBundleBuildConfig = {
-  routes: RouteManifest;
-  serverBundleId: string;
-};
-
 function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
   let nonAddressableIds = new Set<string>();
 
@@ -64,7 +59,7 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
-async function getBuilds(ctx: ReactRouterPluginContext): Promise<{
+async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
   clientBuild: ReactRouterPluginBuildContext;
   serverBuilds: ReactRouterPluginBuildContext[];
   buildManifest: BuildManifest;
@@ -76,7 +71,7 @@ async function getBuilds(ctx: ReactRouterPluginContext): Promise<{
 
   let clientBuild: ReactRouterPluginBuildContext = {
     environment: {
-      environmentName: "client",
+      name: "client",
       serverBundleId: undefined,
     },
     shared: {
@@ -90,7 +85,7 @@ async function getBuilds(ctx: ReactRouterPluginContext): Promise<{
       serverBuilds: [
         {
           environment: {
-            environmentName: "ssr",
+            name: "ssr",
             serverBundleId: undefined,
           },
           shared: {
@@ -121,9 +116,7 @@ async function getBuilds(ctx: ReactRouterPluginContext): Promise<{
     routes: rootRelativeRoutes,
   };
 
-  let serverBundleIds: string[] = [];
   let routesByServerBundleId: Record<string, RouteManifest> = {};
-  let serverBundleBuildConfigById = new Map<string, ServerBundleBuildConfig>();
 
   await Promise.all(
     getAddressableRoutes(routes).map(async (route) => {
@@ -145,47 +138,45 @@ async function getBuilds(ctx: ReactRouterPluginContext): Promise<{
           `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
         );
       }
-      serverBundleIds.push(serverBundleId);
       buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
-      let relativeServerBundleDirectory = path.relative(
-        rootDirectory,
-        path.join(serverBuildDirectory, serverBundleId)
-      );
-      let serverBuildConfig = serverBundleBuildConfigById.get(serverBundleId);
-      if (!serverBuildConfig) {
-        buildManifest.serverBundles[serverBundleId] = {
-          id: serverBundleId,
-          file: normalizePath(
-            path.join(relativeServerBundleDirectory, serverBuildFile)
-          ),
-        };
-        serverBuildConfig = {
-          routes: {},
-          serverBundleId,
-        };
-        serverBundleBuildConfigById.set(serverBundleId, serverBuildConfig);
-      }
+      buildManifest.serverBundles[serverBundleId] = buildManifest.serverBundles[
+        serverBundleId
+      ] ?? {
+        id: serverBundleId,
+        file: normalizePath(
+          path.join(
+            path.relative(
+              rootDirectory,
+              path.join(serverBuildDirectory, serverBundleId)
+            ),
+            serverBuildFile
+          )
+        ),
+      };
+
+      routesByServerBundleId[serverBundleId] =
+        routesByServerBundleId[serverBundleId] || {};
       for (let route of branch) {
-        serverBuildConfig.routes[route.id] = route;
+        routesByServerBundleId[serverBundleId][route.id] = route;
       }
-      routesByServerBundleId[serverBundleId] = serverBuildConfig.routes;
     })
   );
 
-  let serverBuilds: ReactRouterPluginBuildContext[] = Array.from(
-    serverBundleBuildConfigById.values()
-  ).map((serverBundleBuildConfig): ReactRouterPluginBuildContext => {
-    return {
-      environment: {
-        environmentName: "ssr",
-        serverBundleId: serverBundleBuildConfig.serverBundleId,
-      },
-      shared: {
-        routesByServerBundleId,
-      },
-    };
-  });
+  let serverBundleIds = Object.keys(routesByServerBundleId);
+  let serverBuilds: ReactRouterPluginBuildContext[] = serverBundleIds.map(
+    (serverBundleId): ReactRouterPluginBuildContext => {
+      return {
+        environment: {
+          name: `server-bundle-${serverBundleId}`,
+          serverBundleId,
+        },
+        shared: {
+          routesByServerBundleId,
+        },
+      };
+    }
+  );
 
   return {
     clientBuild,
@@ -277,7 +268,8 @@ export async function build(
   let vite = getVite();
 
   async function viteBuild(buildContext: ReactRouterPluginBuildContext) {
-    let ssr = buildContext.environment.environmentName !== "client";
+    let ssr = buildContext.environment.name !== "client";
+
     await vite.build({
       root,
       mode,
@@ -298,7 +290,7 @@ export async function build(
 
   await cleanBuildDirectory(viteConfig, ctx);
 
-  let { clientBuild, serverBuilds, buildManifest } = await getBuilds(ctx);
+  let { clientBuild, serverBuilds, buildManifest } = await getBuildContext(ctx);
 
   // Run the Vite client build first
   await viteBuild(clientBuild);

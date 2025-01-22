@@ -106,7 +106,7 @@ export type ReactRouterPluginSharedBuildContext = {
 };
 
 export type ReactRouterPluginEnvironmentBuildContext = {
-  environmentName: "client" | "ssr";
+  name: "client" | "ssr" | `server-bundle-${string}`;
   serverBundleId: string | undefined;
 };
 
@@ -1001,10 +1001,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           {
             command: viteConfig.command,
             mode: viteConfig.mode,
-            // TODO: Is this even needed since we're not running a build
-            // with the child compiler?
-            // isSsrBuild:
-            //   ctx.buildContext?.environment.environmentName !== "client",
           },
           viteConfig.configFile
         );
@@ -1193,7 +1189,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
         async handler() {
-          if (ctx.buildContext!.environment.environmentName === "client") {
+          if (ctx.buildContext!.environment.name === "client") {
             return;
           }
 
