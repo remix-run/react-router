@@ -309,35 +309,6 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
-const getServerBundleBuildVars = (
-  viteUserConfig: Vite.UserConfig
-): ServerBundleBuildVars | null => {
-  if (
-    !("__reactRouterServerBundleId" in viteUserConfig) ||
-    !viteUserConfig.__reactRouterServerBundleId
-  ) {
-    return null;
-  }
-
-  let serverBundleId = viteUserConfig.__reactRouterServerBundleId as string;
-  invariant(serverBundleId, "serverBundleId is required");
-
-  invariant(
-    "__reactRouterRoutesByServerBundleId" in viteUserConfig,
-    "routesByServerBundleId not found"
-  );
-  let routesByServerBundleId =
-    viteUserConfig.__reactRouterRoutesByServerBundleId as Record<
-      string,
-      RouteManifest
-    >;
-
-  return {
-    serverBundleId,
-    routesByServerBundleId,
-  };
-};
-
 const getBuildContext = (
   viteUserConfig: Vite.UserConfig
 ): ReactRouterPluginBuildContext | null => {
