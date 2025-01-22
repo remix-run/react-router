@@ -96,24 +96,27 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type ServerBundleBuildConfig = {
-  routes: RouteManifest;
+type ServerBundleBuildVars = {
   serverBundleId: string;
+  routesByServerBundleId: Record<string, RouteManifest>;
 };
 
-type ReactRouterPluginSsrBuildContext =
-  | {
-      isSsrBuild: false;
-      getReactRouterServerManifest?: never;
-      serverBundleBuildConfig?: never;
-    }
-  | {
-      isSsrBuild: true;
-      getReactRouterServerManifest: () => Promise<ReactRouterManifest>;
-      serverBundleBuildConfig: ServerBundleBuildConfig | null;
-    };
+export type ReactRouterPluginSharedBuildContext = {
+  routesByServerBundleId: Record<string, RouteManifest>;
+};
 
-export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
+export type ReactRouterPluginEnvironmentBuildContext = {
+  environmentName: "client" | "ssr";
+  serverBundleId: string | undefined;
+};
+
+export type ReactRouterPluginBuildContext = {
+  environment: ReactRouterPluginEnvironmentBuildContext;
+  shared: ReactRouterPluginSharedBuildContext;
+};
+
+export type ReactRouterPluginContext = {
+  buildContext: ReactRouterPluginBuildContext | null;
   rootDirectory: string;
   entryClientFilePath: string;
   entryServerFilePath: string;
@@ -306,25 +309,57 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
-const getServerBundleBuildConfig = (
+const getServerBundleBuildVars = (
   viteUserConfig: Vite.UserConfig
-): ServerBundleBuildConfig | null => {
+): ServerBundleBuildVars | null => {
   if (
-    !("__reactRouterServerBundleBuildConfig" in viteUserConfig) ||
-    !viteUserConfig.__reactRouterServerBundleBuildConfig
+    !("__reactRouterServerBundleId" in viteUserConfig) ||
+    !viteUserConfig.__reactRouterServerBundleId
   ) {
     return null;
   }
 
-  return viteUserConfig.__reactRouterServerBundleBuildConfig as ServerBundleBuildConfig;
+  let serverBundleId = viteUserConfig.__reactRouterServerBundleId as string;
+  invariant(serverBundleId, "serverBundleId is required");
+
+  invariant(
+    "__reactRouterRoutesByServerBundleId" in viteUserConfig,
+    "routesByServerBundleId not found"
+  );
+  let routesByServerBundleId =
+    viteUserConfig.__reactRouterRoutesByServerBundleId as Record<
+      string,
+      RouteManifest
+    >;
+
+  return {
+    serverBundleId,
+    routesByServerBundleId,
+  };
+};
+
+const getBuildContext = (
+  viteUserConfig: Vite.UserConfig
+): ReactRouterPluginBuildContext | null => {
+  if (
+    !("__reactRouterBuildContext" in viteUserConfig) ||
+    !viteUserConfig.__reactRouterBuildContext
+  ) {
+    return null;
+  }
+
+  let buildContext =
+    viteUserConfig.__reactRouterBuildContext as ReactRouterPluginBuildContext;
+
+  return buildContext;
 };
 
 export let getServerBuildDirectory = (ctx: ReactRouterPluginContext) =>
   path.join(
     ctx.reactRouterConfig.buildDirectory,
     "server",
-    ...(ctx.serverBundleBuildConfig
-      ? [ctx.serverBundleBuildConfig.serverBundleId]
+    ...(ctx.buildContext?.environment.serverBundleId
+      ? [ctx.buildContext.environment.serverBundleId]
       : [])
   );
 
@@ -417,27 +452,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
-    let ssrBuildCtx: ReactRouterPluginSsrBuildContext =
-      viteConfigEnv.isSsrBuild && viteCommand === "build"
-        ? {
-            isSsrBuild: true,
-            getReactRouterServerManifest: async () =>
-              (await generateReactRouterManifestsForBuild())
-                .reactRouterServerManifest,
-            serverBundleBuildConfig: getServerBundleBuildConfig(viteUserConfig),
-          }
-        : { isSsrBuild: false };
+    let buildContext: ReactRouterPluginBuildContext | null =
+      viteCommand === "build" ? getBuildContext(viteUserConfig) : null;
 
     firstLoad = false;
 
     ctx = {
+      buildContext,
       reactRouterConfig,
       rootDirectory,
       entryClientFilePath,
       entryServerFilePath,
       publicPath,
       viteManifestEnabled,
-      ...ssrBuildCtx,
     };
   };
 
@@ -446,15 +473,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     return viteConfig.plugins.findIndex((plugin) => plugin.name === pluginName);
   };
 
-  let getServerEntry = async () => {
+  let getServerEntry = async ({
+    serverBundleId,
+  }: {
+    serverBundleId?: string;
+  }) => {
     invariant(viteConfig, "viteconfig required to generate the server entry");
 
-    let routes = ctx.serverBundleBuildConfig
-      ? // For server bundle builds, the server build should only import the
-        // routes for this bundle rather than importing all routes
-        ctx.serverBundleBuildConfig.routes
-      : // Otherwise, all routes are imported as usual
-        ctx.reactRouterConfig.routes;
+    let routesByServerBundleId =
+      ctx.buildContext?.shared.routesByServerBundleId;
+
+    let routes =
+      serverBundleId && routesByServerBundleId
+        ? // For server bundle builds, the server build should only import the
+          // routes for this bundle rather than importing all routes
+          routesByServerBundleId[serverBundleId]
+        : // Otherwise, all routes are imported as usual
+          ctx.reactRouterConfig.routes;
 
     return `
     import * as entryServer from ${JSON.stringify(
@@ -472,7 +507,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       })
       .join("\n")}
       export { default as assets } from ${JSON.stringify(
-        virtual.serverManifest.id
+        `${virtual.serverManifest.id}${
+          serverBundleId ? `?server-bundle-id=${serverBundleId}` : ""
+        }`
       )};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
@@ -536,7 +573,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     return new Set([...cssUrlPaths, ...chunkAssetPaths]);
   };
 
-  let generateReactRouterManifestsForBuild = async (): Promise<{
+  let generateReactRouterManifestsForBuild = async ({
+    serverBundleId,
+  }: {
+    serverBundleId?: string;
+  }): Promise<{
     reactRouterBrowserManifest: ReactRouterManifest;
     reactRouterServerManifest: ReactRouterManifest;
   }> => {
@@ -592,7 +633,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
       browserRoutes[key] = routeManifestEntry;
 
-      let serverBundleRoutes = ctx.serverBundleBuildConfig?.routes;
+      invariant(
+        ctx.buildContext,
+        "buildContext required to generate the build manifest"
+      );
+      let routesByServerBundleId =
+        ctx.buildContext.shared.routesByServerBundleId;
+
+      let serverBundleRoutes = serverBundleId
+        ? routesByServerBundleId[serverBundleId]
+        : undefined;
+
       if (!serverBundleRoutes || serverBundleRoutes[key]) {
         serverRoutes[key] = routeManifestEntry;
       }
@@ -896,7 +947,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                           preserveEntrySignatures: "exports-only",
                           input:
                             viteUserConfig.build?.rollupOptions?.input ??
-                            virtual.serverBuild.id,
+                            virtual.serverBuild.id +
+                              (ctx.buildContext!.environment.serverBundleId
+                                ? `?server-bundle-id=${
+                                    ctx.buildContext!.environment.serverBundleId
+                                  }`
+                                : ""),
                           output: {
                             entryFileNames:
                               ctx.reactRouterConfig.serverBuildFile,
@@ -945,7 +1001,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           {
             command: viteConfig.command,
             mode: viteConfig.mode,
-            isSsrBuild: ctx.isSsrBuild,
+            // TODO: Is this even needed since we're not running a build
+            // with the child compiler?
+            // isSsrBuild:
+            //   ctx.buildContext?.environment.environmentName !== "client",
           },
           viteConfig.configFile
         );
@@ -1134,7 +1193,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
         async handler() {
-          if (!ctx.isSsrBuild) {
+          if (ctx.buildContext!.environment.environmentName === "client") {
             return;
           }
 
@@ -1270,18 +1329,33 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       name: "react-router:virtual-modules",
       enforce: "pre",
       resolveId(id) {
-        const vmod = Object.values(virtual).find((vmod) => vmod.id === id);
-        if (vmod) return vmod.resolvedId;
+        let [baseId, queryString] = id.split("?");
+        const vmod = Object.values(virtual).find((vmod) => vmod.id === baseId);
+        if (vmod)
+          return vmod.resolvedId + (queryString ? `?${queryString}` : "");
       },
       async load(id) {
-        switch (id) {
+        let [baseId, queryString] = id.split("?");
+        switch (baseId) {
           case virtual.serverBuild.resolvedId: {
-            return await getServerEntry();
+            // Parse query string from id to handle any additional parameters
+            let searchParams = new URLSearchParams(queryString);
+            let serverBundleId =
+              searchParams.get("server-bundle-id") || undefined;
+            return await getServerEntry({ serverBundleId });
           }
           case virtual.serverManifest.resolvedId: {
-            let reactRouterManifest = ctx.isSsrBuild
-              ? await ctx.getReactRouterServerManifest()
-              : await getReactRouterManifestForDev();
+            let searchParams = new URLSearchParams(queryString);
+            let serverBundleId =
+              searchParams.get("server-bundle-id") || undefined;
+            let reactRouterManifest =
+              viteCommand === "build"
+                ? (
+                    await generateReactRouterManifestsForBuild({
+                      serverBundleId,
+                    })
+                  ).reactRouterServerManifest
+                : await getReactRouterManifestForDev();
 
             return `export default ${jsesc(reactRouterManifest, {
               es6: true,
