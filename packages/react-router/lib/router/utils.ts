@@ -112,11 +112,14 @@ export type Submission =
     };
 
 /**
- * @private
- * Default context value type for `createRouter`, can be overridden via the generics
- * on LoaderFunction/LoaderFunctionArgs/ActionFunction/ActionFunctionArgs
+ * An object of unknown type for client-side loaders and actions provided by the
+ * `createBrowserRouter` `context` option.  This is defined as an empty interface
+ * specifically so apps can leverage declaration merging to augment this type
+ * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
  */
-export type DefaultRouterContext = any;
+export interface RouterContext {
+  [key: string]: unknown;
+}
 
 /**
  * @private
@@ -148,27 +151,27 @@ export type MiddlewareFunction<Context = AppLoadContext> = (
  * Client-side route middleware function arguments
  */
 export type ClientMiddlewareFunctionArgs<
-  Context = DefaultRouterContext,
+  Context = RouterContext,
   Result = unknown
 > = DataFunctionArgs<Context> & { next: () => Promise<Result> };
 
 /**
  * Client-side route middleware function signature
  */
-export type ClientMiddlewareFunction<Context = DefaultRouterContext> = (
+export type ClientMiddlewareFunction<Context = RouterContext> = (
   args: MiddlewareFunctionArgs<Context>
 ) => undefined | Promise<undefined>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = DefaultRouterContext>
+export interface LoaderFunctionArgs<Context = RouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = DefaultRouterContext>
+export interface ActionFunctionArgs<Context = RouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
@@ -181,7 +184,7 @@ type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = DefaultRouterContext> = {
+export type LoaderFunction<Context = RouterContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -191,7 +194,7 @@ export type LoaderFunction<Context = DefaultRouterContext> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = DefaultRouterContext> {
+export interface ActionFunction<Context = RouterContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -238,7 +241,7 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = DefaultRouterContext>
+export interface DataStrategyFunctionArgs<Context = RouterContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   fetcherKey: string | null;
@@ -252,8 +255,10 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = RouterContext> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<

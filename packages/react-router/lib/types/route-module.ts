@@ -1,7 +1,7 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
 import type {
-  DefaultRouterContext,
+  RouterContext,
   MiddlewareFunctionArgs,
   ClientMiddlewareFunctionArgs,
 } from "../router/utils";
@@ -113,13 +113,16 @@ type _CreateActionData<ServerActionData, ClientActionData> = Awaited<
   undefined
 >
 
-type ClientDataFunctionArgs<T extends RouteInfo> = {
+type SharedDataFunctionArgs<T extends RouteInfo> = {
   request: Request;
   params: T["params"];
-  context: DefaultRouterContext;
 };
 
-type ServerDataFunctionArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
+type ClientDataFunctionArgs<T extends RouteInfo> = SharedDataFunctionArgs<T> & {
+  context: RouterContext;
+};
+
+type ServerDataFunctionArgs<T extends RouteInfo> = SharedDataFunctionArgs<T> & {
   context: AppLoadContext;
 };
 
@@ -130,7 +133,7 @@ export type CreateServerMiddlewareArgs<T extends RouteInfo> =
 
 export type CreateClientMiddlewareArgs<T extends RouteInfo> =
   ClientDataFunctionArgs<T> & {
-    next: ClientMiddlewareFunctionArgs<DefaultRouterContext, undefined>["next"];
+    next: ClientMiddlewareFunctionArgs<RouterContext, undefined>["next"];
   };
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =

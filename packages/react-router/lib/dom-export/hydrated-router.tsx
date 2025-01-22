@@ -24,7 +24,7 @@ import {
   matchRoutes,
 } from "react-router";
 import { RouterProvider } from "./dom-router-provider";
-import type { DefaultRouterContext } from "../router/utils";
+import type { RouterContext } from "../router/utils";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -64,7 +64,7 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   context,
 }: {
-  context?: DefaultRouterContext;
+  context?: RouterContext;
 }): DataRouter {
   initSsrInfo();
 
@@ -211,7 +211,7 @@ interface HydratedRouterProps {
    * Context object to passed through to `createBrowserRouter` and made available
    * to `clientLoader`/`clientActon` functions
    */
-  context?: DefaultRouterContext;
+  context?: RouterContext;
 }
 
 /**

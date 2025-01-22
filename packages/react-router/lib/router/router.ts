@@ -32,11 +32,13 @@ import type {
   UIMatch,
   AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
-  DefaultRouterContext,
+  RouterContext,
   LoaderFunctionArgs,
   ActionFunctionArgs,
   ClientMiddlewareFunction,
   ClientMiddlewareFunctionArgs,
+  LoaderFunction,
+  ActionFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -370,7 +372,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  context?: DefaultRouterContext;
+  context?: RouterContext;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -4943,7 +4945,7 @@ export async function runMiddlewarePipeline(
     params,
     context,
     matches,
-  }: (LoaderFunctionArgs | ActionFunctionArgs) & {
+  }: (LoaderFunctionArgs<unknown> | ActionFunctionArgs<unknown>) & {
     matches: AgnosticDataRouteMatch[];
   },
   lastIndex: number,
@@ -4966,7 +4968,7 @@ export async function runMiddlewarePipeline(
           m.route.middleware
             ? m.route.middleware.map((fn) => [m.route.id, fn])
             : []
-        ) as [string, ClientMiddlewareFunction][],
+        ) as [string, ClientMiddlewareFunction<unknown>][],
       0,
       { request, params, context },
       middlewareState,
@@ -5001,9 +5003,9 @@ export class MiddlewareError {
 }
 
 async function callRouteMiddleware(
-  middlewares: [string, ClientMiddlewareFunction][],
+  middlewares: [string, ClientMiddlewareFunction<unknown>][],
   idx: number,
-  args: LoaderFunctionArgs | ActionFunctionArgs,
+  args: LoaderFunctionArgs<unknown> | ActionFunctionArgs<unknown>,
   middlewareState: MutableMiddlewareState,
   handler: (r: Record<string, DataStrategyResult>) => void
 ): Promise<unknown> {
@@ -5044,7 +5046,12 @@ async function callRouteMiddleware(
   };
 
   try {
-    let result = await middleware({ ...args, next });
+    let result = await middleware({
+      request: args.request,
+      params: args.params,
+      context: args.context,
+      next,
+    });
     return nextCalled ? result : next();
   } catch (e) {
     if (e instanceof MiddlewareError) {
@@ -5055,7 +5062,7 @@ async function callRouteMiddleware(
 }
 
 async function callDataStrategyImpl(
-  dataStrategyImpl: DataStrategyFunction,
+  dataStrategyImpl: DataStrategyFunction<unknown>,
   type: "loader" | "action",
   request: Request,
   matchesToLoad: AgnosticDataRouteMatch[],
@@ -5157,7 +5164,7 @@ async function callLoaderOrAction(
   let onReject: (() => void) | undefined;
 
   let runHandler = (
-    handler: AgnosticRouteObject["loader"] | AgnosticRouteObject["action"]
+    handler: LoaderFunction<unknown> | ActionFunction<unknown>
   ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;

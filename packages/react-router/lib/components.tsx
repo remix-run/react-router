@@ -24,7 +24,7 @@ import type {
 import { createRouter } from "./router/router";
 import type {
   DataStrategyFunction,
-  DefaultRouterContext,
+  RouterContext,
   LazyRouteFunction,
   TrackedPromise,
 } from "./router/utils";
@@ -139,7 +139,7 @@ export interface MemoryRouterOpts {
   /**
    * Router context singleton that will be passed to loader/action functions.
    */
-  context?: DefaultRouterContext;
+  context?: RouterContext;
   /**
    * Future flags to enable for the router.
    */

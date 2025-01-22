@@ -43,6 +43,7 @@ export type {
   PathParam,
   PathPattern,
   RedirectFunction,
+  RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
