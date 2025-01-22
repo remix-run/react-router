@@ -24,7 +24,7 @@ import {
   matchRoutes,
 } from "react-router";
 import { RouterProvider } from "./dom-router-provider";
-import { DefaultRouterContext } from "../router/utils";
+import type { DefaultRouterContext } from "../router/utils";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
