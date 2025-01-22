@@ -22,7 +22,7 @@ import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModule, RouteModules } from "./routeModules";
 import invariant from "./invariant";
-import { EntryRoute } from "./routes";
+import type { EntryRoute } from "./routes";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 

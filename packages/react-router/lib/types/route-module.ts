@@ -1,11 +1,7 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
-import type {
-  RouterContext,
-  MiddlewareFunctionArgs,
-  ClientMiddlewareFunctionArgs,
-} from "../router/utils";
-import type { AppLoadContext } from "../server-runtime/data";
+import type { MiddlewareFunctionArgs } from "../router/utils";
+import type { AppLoadContext, RouterContext } from "../server-runtime/data";
 
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
 import type { Equal, Expect, Func, Pretty } from "./utils";
@@ -133,7 +129,7 @@ export type CreateServerMiddlewareArgs<T extends RouteInfo> =
 
 export type CreateClientMiddlewareArgs<T extends RouteInfo> =
   ClientDataFunctionArgs<T> & {
-    next: ClientMiddlewareFunctionArgs<RouterContext, undefined>["next"];
+    next: MiddlewareFunctionArgs<RouterContext, undefined>["next"];
   };
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =

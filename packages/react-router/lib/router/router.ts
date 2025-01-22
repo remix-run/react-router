@@ -32,13 +32,13 @@ import type {
   UIMatch,
   AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
-  RouterContext,
   LoaderFunctionArgs,
   ActionFunctionArgs,
-  ClientMiddlewareFunction,
-  ClientMiddlewareFunctionArgs,
   LoaderFunction,
   ActionFunction,
+  DefaultRouterContext,
+  MiddlewareFunction,
+  MiddlewareFunctionArgs,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -372,7 +372,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  context?: RouterContext;
+  context?: DefaultRouterContext;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -409,7 +409,7 @@ export interface StaticHandler {
       filterMatchesToLoad?: (match: AgnosticDataRouteMatch) => boolean;
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
-      dataStrategy?: DataStrategyFunction;
+      dataStrategy?: DataStrategyFunction<unknown>;
       respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
     }
   ): Promise<StaticHandlerContext | Response>;
@@ -418,7 +418,7 @@ export interface StaticHandler {
     opts?: {
       routeId?: string;
       requestContext?: unknown;
-      dataStrategy?: DataStrategyFunction;
+      dataStrategy?: DataStrategyFunction<unknown>;
       respond?: (res: Response) => Promise<Response>;
     }
   ): Promise<any>;
@@ -827,7 +827,8 @@ export function createRouter(init: RouterInit): Router {
 
   // TODO: Should this be a singleton or fresh per request?
   let routerContext = typeof init.context !== "undefined" ? init.context : {};
-  let dataStrategyImpl = init.dataStrategy || defaultDataStrategy;
+  let dataStrategyImpl = (init.dataStrategy ||
+    defaultDataStrategy) as DataStrategyFunction<unknown>;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
 
   // Config driven behavior flags
@@ -1763,7 +1764,6 @@ export function createRouter(init: RouterInit): Router {
     } else {
       let results = await callDataStrategy(
         "action",
-        state,
         request,
         [actionMatch],
         matches,
@@ -2273,7 +2273,6 @@ export function createRouter(init: RouterInit): Router {
     let originatingLoadId = incrementingLoadId;
     let actionResults = await callDataStrategy(
       "action",
-      state,
       fetchRequest,
       [match],
       requestMatches,
@@ -2553,7 +2552,6 @@ export function createRouter(init: RouterInit): Router {
     let originatingLoadId = incrementingLoadId;
     let results = await callDataStrategy(
       "loader",
-      state,
       fetchRequest,
       [match],
       matches,
@@ -2745,7 +2743,6 @@ export function createRouter(init: RouterInit): Router {
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
     type: "loader" | "action",
-    state: RouterState,
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
@@ -2810,7 +2807,6 @@ export function createRouter(init: RouterInit): Router {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       "loader",
-      state,
       request,
       matchesToLoad,
       matches,
@@ -2822,7 +2818,6 @@ export function createRouter(init: RouterInit): Router {
         if (f.matches && f.match && f.controller) {
           let results = await callDataStrategy(
             "loader",
-            state,
             createClientSideRequest(init.history, f.path, f.controller.signal),
             [f.match],
             f.matches,
@@ -3403,7 +3398,7 @@ export function createStaticHandler(
       filterMatchesToLoad?: (m: AgnosticDataRouteMatch) => boolean;
       skipRevalidation?: boolean;
       skipLoaderErrorBubbling?: boolean;
-      dataStrategy?: DataStrategyFunction;
+      dataStrategy?: DataStrategyFunction<unknown>;
       respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
     } = {}
   ): Promise<StaticHandlerContext | Response> {
@@ -3632,7 +3627,7 @@ export function createStaticHandler(
     }: {
       requestContext?: unknown;
       routeId?: string;
-      dataStrategy?: DataStrategyFunction;
+      dataStrategy?: DataStrategyFunction<unknown>;
       respond?: (res: Response) => Promise<Response>;
     } = {}
   ): Promise<any> {
@@ -3758,7 +3753,7 @@ export function createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
-    dataStrategy: DataStrategyFunction | null,
+    dataStrategy: DataStrategyFunction<unknown> | null,
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
@@ -3825,7 +3820,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
-    dataStrategy: DataStrategyFunction | null,
+    dataStrategy: DataStrategyFunction<unknown> | null,
     skipLoaderErrorBubbling: boolean,
     isRouteRequest: boolean,
     filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
@@ -4113,7 +4108,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     isRouteRequest: boolean,
     routerContext: unknown,
-    dataStrategy: DataStrategyFunction | null
+    dataStrategy: DataStrategyFunction<unknown> | null
   ): Promise<Record<string, DataResult>> {
     let results = await callDataStrategyImpl(
       dataStrategy || defaultDataStrategy,
@@ -4884,8 +4879,8 @@ async function loadLazyRouteModule(
 // Default implementation of `dataStrategy` which calls middleware and fetches
 // all loaders in parallel
 async function defaultDataStrategyWithoutMiddleware(
-  args: DataStrategyFunctionArgs
-): ReturnType<DataStrategyFunction> {
+  args: DataStrategyFunctionArgs<unknown>
+): ReturnType<DataStrategyFunction<unknown>> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
   let keyedResults: Record<string, DataStrategyResult> = {};
   let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
@@ -4898,8 +4893,8 @@ async function defaultDataStrategyWithoutMiddleware(
 // Default implementation of `dataStrategy` which calls middleware and fetches
 // all loaders in parallel
 async function defaultDataStrategy(
-  args: DataStrategyFunctionArgs
-): ReturnType<DataStrategyFunction> {
+  args: DataStrategyFunctionArgs<unknown>
+): ReturnType<DataStrategyFunction<unknown>> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
 
   // Determine how far down we'll be loading so we only run middleware to that
@@ -4968,7 +4963,7 @@ export async function runMiddlewarePipeline(
           m.route.middleware
             ? m.route.middleware.map((fn) => [m.route.id, fn])
             : []
-        ) as [string, ClientMiddlewareFunction<unknown>][],
+        ) as [string, MiddlewareFunction<unknown>][],
       0,
       { request, params, context },
       middlewareState,
@@ -5003,7 +4998,7 @@ export class MiddlewareError {
 }
 
 async function callRouteMiddleware(
-  middlewares: [string, ClientMiddlewareFunction<unknown>][],
+  middlewares: [string, MiddlewareFunction<unknown>][],
   idx: number,
   args: LoaderFunctionArgs<unknown> | ActionFunctionArgs<unknown>,
   middlewareState: MutableMiddlewareState,
@@ -5028,7 +5023,7 @@ async function callRouteMiddleware(
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
-  let next: ClientMiddlewareFunctionArgs["next"] = async () => {
+  let next: MiddlewareFunctionArgs["next"] = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
@@ -5164,7 +5159,7 @@ async function callLoaderOrAction(
   let onReject: (() => void) | undefined;
 
   let runHandler = (
-    handler: LoaderFunction<unknown> | ActionFunction<unknown>
+    handler: boolean | LoaderFunction | ActionFunction
   ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;

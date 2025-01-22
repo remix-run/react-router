@@ -1,4 +1,3 @@
-import { AppLoadContext } from "../server-runtime/data";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -112,14 +111,11 @@ export type Submission =
     };
 
 /**
- * An object of unknown type for client-side loaders and actions provided by the
- * `createBrowserRouter` `context` option.  This is defined as an empty interface
- * specifically so apps can leverage declaration merging to augment this type
- * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
- */
-export interface RouterContext {
-  [key: string]: unknown;
-}
+ * @private
+ * Default context value type for `createRouter`, can be overridden via the generics
+ * on LoaderFunction/LoaderFunctionArgs/ActionFunction/ActionFunctionArgs
+ * */
+export type DefaultRouterContext = any;
 
 /**
  * @private
@@ -133,45 +129,31 @@ interface DataFunctionArgs<Context> {
 }
 
 /**
- * Server-side route middleware function arguments
+ * Route middleware function arguments
  */
 export type MiddlewareFunctionArgs<
-  Context = AppLoadContext,
+  Context = DefaultRouterContext,
   Result = unknown
 > = DataFunctionArgs<Context> & { next: () => Promise<Result> };
 
 /**
- * Server-side route middleware function signature
+ * Route middleware function signature
  */
-export type MiddlewareFunction<Context = AppLoadContext> = (
-  args: MiddlewareFunctionArgs<Context>
-) => Response | Promise<Response>;
-
-/**
- * Client-side route middleware function arguments
- */
-export type ClientMiddlewareFunctionArgs<
-  Context = RouterContext,
+export type MiddlewareFunction<
+  Context = DefaultRouterContext,
   Result = unknown
-> = DataFunctionArgs<Context> & { next: () => Promise<Result> };
-
-/**
- * Client-side route middleware function signature
- */
-export type ClientMiddlewareFunction<Context = RouterContext> = (
-  args: MiddlewareFunctionArgs<Context>
-) => undefined | Promise<undefined>;
+> = (args: MiddlewareFunctionArgs<Context, Result>) => Result | Promise<Result>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = RouterContext>
+export interface LoaderFunctionArgs<Context = DefaultRouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = RouterContext>
+export interface ActionFunctionArgs<Context = DefaultRouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
@@ -184,7 +166,7 @@ type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = RouterContext> = {
+export type LoaderFunction<Context = DefaultRouterContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -194,7 +176,7 @@ export type LoaderFunction<Context = RouterContext> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = RouterContext> {
+export interface ActionFunction<Context = DefaultRouterContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -241,7 +223,7 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = RouterContext>
+export interface DataStrategyFunctionArgs<Context = DefaultRouterContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   fetcherKey: string | null;
@@ -255,7 +237,7 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction<Context = RouterContext> {
+export interface DataStrategyFunction<Context = DefaultRouterContext> {
   (args: DataStrategyFunctionArgs<Context>): Promise<
     Record<string, DataStrategyResult>
   >;
@@ -331,7 +313,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  middleware?: MiddlewareFunction[] | ClientMiddlewareFunction[];
+  middleware?: MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;

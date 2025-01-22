@@ -23,8 +23,8 @@ import {
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
 } from "react-router";
+import type { RouterContext } from "../server-runtime/data";
 import { RouterProvider } from "./dom-router-provider";
-import type { RouterContext } from "../router/utils";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
