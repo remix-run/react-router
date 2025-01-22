@@ -103,6 +103,7 @@ export type ReactRouterPluginSharedBuildContext = {
 export type ReactRouterPluginEnvironmentBuildContext = {
   name: "client" | "ssr" | `server-bundle-${string}`;
   serverBundleId: string | undefined;
+  build: Vite.BuildEnvironmentOptions;
 };
 
 export type ReactRouterPluginBuildContext = {
@@ -134,7 +135,7 @@ const resolveRelativeRouteFilePath = (
   return vite.normalizePath(fullPath);
 };
 
-let virtual = {
+export let virtual = {
   serverBuild: VirtualModule.create("server-build"),
   serverManifest: VirtualModule.create("server-manifest"),
   browserManifest: VirtualModule.create("browser-manifest"),
@@ -320,13 +321,14 @@ const getBuildContext = (
   return buildContext;
 };
 
-export let getServerBuildDirectory = (ctx: ReactRouterPluginContext) =>
+export let getServerBuildDirectory = (
+  ctx: ReactRouterPluginContext,
+  { serverBundleId }: { serverBundleId?: string } = {}
+) =>
   path.join(
     ctx.reactRouterConfig.buildDirectory,
     "server",
-    ...(ctx.buildContext?.environment.serverBundleId
-      ? [ctx.buildContext.environment.serverBundleId]
-      : [])
+    ...(serverBundleId ? [serverBundleId] : [])
   );
 
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
@@ -877,56 +879,58 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // Vite config options for building
           ...(viteCommand === "build"
             ? {
-                build: {
-                  cssMinify: viteUserConfig.build?.cssMinify ?? true,
-                  ...(!viteConfigEnv.isSsrBuild
-                    ? {
-                        manifest: true,
-                        outDir: getClientBuildDirectory(ctx.reactRouterConfig),
-                        rollupOptions: {
-                          ...baseRollupOptions,
-                          preserveEntrySignatures: "exports-only",
-                          input: [
-                            ctx.entryClientFilePath,
-                            ...Object.values(ctx.reactRouterConfig.routes).map(
-                              (route) =>
-                                `${path.resolve(
-                                  ctx.reactRouterConfig.appDirectory,
-                                  route.file
-                                )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
-                            ),
-                          ],
-                        },
-                      }
-                    : {
-                        // We move SSR-only assets to client assets. Note that the
-                        // SSR build can also emit code-split JS files (e.g. by
-                        // dynamic import) under the same assets directory
-                        // regardless of "ssrEmitAssets" option, so we also need to
-                        // keep these JS files have to be kept as-is.
-                        ssrEmitAssets: true,
-                        copyPublicDir: false, // Assets in the public directory are only used by the client
-                        manifest: true, // We need the manifest to detect SSR-only assets
-                        outDir: getServerBuildDirectory(ctx),
-                        rollupOptions: {
-                          ...baseRollupOptions,
-                          preserveEntrySignatures: "exports-only",
-                          input:
-                            viteUserConfig.build?.rollupOptions?.input ??
-                            virtual.serverBuild.id +
-                              (ctx.buildContext!.environment.serverBundleId
-                                ? `?server-bundle-id=${
-                                    ctx.buildContext!.environment.serverBundleId
-                                  }`
-                                : ""),
-                          output: {
-                            entryFileNames:
-                              ctx.reactRouterConfig.serverBuildFile,
-                            format: ctx.reactRouterConfig.serverModuleFormat,
+                build: vite.mergeConfig(
+                  {
+                    cssMinify: viteUserConfig.build?.cssMinify ?? true,
+                    ...(!viteConfigEnv.isSsrBuild
+                      ? {
+                          manifest: true,
+                          outDir: getClientBuildDirectory(
+                            ctx.reactRouterConfig
+                          ),
+                          rollupOptions: {
+                            ...baseRollupOptions,
+                            preserveEntrySignatures: "exports-only",
+                            input: [
+                              ctx.entryClientFilePath,
+                              ...Object.values(
+                                ctx.reactRouterConfig.routes
+                              ).map(
+                                (route) =>
+                                  `${path.resolve(
+                                    ctx.reactRouterConfig.appDirectory,
+                                    route.file
+                                  )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
+                              ),
+                            ],
                           },
-                        },
-                      }),
-                },
+                        }
+                      : {
+                          // We move SSR-only assets to client assets. Note that the
+                          // SSR build can also emit code-split JS files (e.g. by
+                          // dynamic import) under the same assets directory
+                          // regardless of "ssrEmitAssets" option, so we also need to
+                          // keep these JS files have to be kept as-is.
+                          ssrEmitAssets: true,
+                          copyPublicDir: false, // Assets in the public directory are only used by the client
+                          manifest: true, // We need the manifest to detect SSR-only assets
+                          rollupOptions: {
+                            ...baseRollupOptions,
+                            preserveEntrySignatures: "exports-only",
+                            // input:
+                            //   viteUserConfig.build?.rollupOptions?.input ??
+                            //   virtual.serverBuild.id,
+                            output: {
+                              entryFileNames:
+                                ctx.reactRouterConfig.serverBuildFile,
+                              format: ctx.reactRouterConfig.serverModuleFormat,
+                            },
+                          },
+                        }),
+                  },
+                  ctx.buildContext?.environment.build ?? {},
+                  false
+                ),
               }
             : undefined),
 
@@ -1164,7 +1168,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let clientBuildDirectory = getClientBuildDirectory(
             ctx.reactRouterConfig
           );
-          let serverBuildDirectory = getServerBuildDirectory(ctx);
+
+          let serverBuildDirectory = ctx.buildContext?.environment.build.outDir;
+          invariant(
+            serverBuildDirectory,
+            "Expected build.outDir for build environment"
+          );
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);

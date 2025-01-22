@@ -9,6 +9,7 @@ import {
   resolveViteConfig,
   extractPluginContext,
   getServerBuildDirectory,
+  virtual,
 } from "./plugin";
 import {
   type BuildManifest,
@@ -73,6 +74,7 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
     environment: {
       name: "client",
       serverBundleId: undefined,
+      build: {},
     },
     shared: {
       routesByServerBundleId: {},
@@ -87,6 +89,12 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
           environment: {
             name: "ssr",
             serverBundleId: undefined,
+            build: {
+              outDir: getServerBuildDirectory(ctx),
+              rollupOptions: {
+                input: virtual.serverBuild.id,
+              },
+            },
           },
           shared: {
             routesByServerBundleId: {},
@@ -170,6 +178,14 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
         environment: {
           name: `server-bundle-${serverBundleId}`,
           serverBundleId,
+          build: {
+            outDir: getServerBuildDirectory(ctx, { serverBundleId }),
+            rollupOptions: {
+              input:
+                virtual.serverBuild.id +
+                (serverBundleId ? `?server-bundle-id=${serverBundleId}` : ""),
+            },
+          },
         },
         shared: {
           routesByServerBundleId,
