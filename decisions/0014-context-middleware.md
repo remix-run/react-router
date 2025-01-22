@@ -1,6 +1,6 @@
-# Title
+# Middleware + Context
 
-Date: 2024-12-19
+Date: 2025-01-22
 
 Status: proposed
 
@@ -8,156 +8,181 @@ Status: proposed
 
 _Lol "context", get it 😉_
 
-The [Middleware RFC][rfc] is the _most-upvoted_ RFC/Proposal in the React Router repo. We actually tried to build and ship it quite some time ago but realized that without single fetch it didn't make much sense in an SSR world because of the lack of a shared request scope across routes.
+The [Middleware RFC][rfc] is the _most-upvoted_ RFC/Proposal in the React Router repo. We actually tried to build and ship it quite some time ago but realized that without single fetch it didn't make much sense in an SSR world for 2 reasons:
 
-We've done a lot of work since then to get us to a place where we could ship a middleware API we were happy with
+- With the individual HTTP requests per loader, middleware wouldn't actually reduce the # of queries to your DB/API's - it would just be a code convenience with no functional impact
+- Individual HTTP requests meant a lack of a shared request scope across routes
 
-TODO: Add Links
+We've done a lot of work since then to get us to a place where we could ship a middleware API we were happy with:
 
-- Shipped Single Fetch
-- Shipped `dataStrategy` for DIY middleware in React Router SPAs
-- Iterated on middleware and context APIs in the "Remix the Web" project
-- Developed a non-invasive type-safe + composable context API
+- Shipped [Single Fetch][single-fetch]
+- Shipped [`dataStrategy`][data-strategy] for DIY middleware in React Router SPAs
+- Iterated on middleware/context APIs in the [Remix the Web][remix-the-web] project
+- Developed a non-invasive type-safe + composable [context][async-provider] API
 
 ## Decision
 
 ### Lean on existing `context` parameter for initial implementation
 
-- No need to develop an internal type-safe API, can use something external that composes well with our APIs
-- Requires us to add a client-side `context` which is also a [long requested feature][client-context]
-- Right now, this is a singleton since that provides maximum flexibility. But we should also provide a way for folks to do request (navigation) scoped stuff that gets auto-cleaned up. So I think we should do a shallow clone for each new navigation:
-  - `let scopedContext = { ...singletonContext }`
-  - That way folks can add stuff in root middleware and know it'l be cleaned up and created fresh the next time
-  - Only keys on the original object will be persisted
+During our experiments we realized that we could offload type-safe context to an external package.This would result in a simpler implementation within React Router and avoid the need to try to patch on type-safety to our existing `context` API which was designed as a quick escape hatch to cross the bridge from your server (i.e., `express` `req`/`res`) to the Remix handlers.
 
-### Implementation
+Therefore, our recommendation for proper type-safe context for usage within middlewares and route handlers will be the [`@ryanflorence/async-provider`][async-provider] package.
 
-```js
-function middleware({ request, params, context }, next) {
-  doSomething()
-  let res = await next(); // call action and loaders
-   // after the action this is an turbo-stream Response
-   // after the loaders its the HTML Response
-  res.headers.set()
-  return res
+If you don't want to adopt an extra package, or don't care about 100% type-safety and are happy with the module augmentation approach used by `AppLoadContext`, then you can use the existing `context` parameter passed to loaders and actions.
+
+```ts
+declare module "react-router" {
+  interface AppLoadContext {
+    user: User | null;
+  }
+}
+
+// root.tsx
+function userMiddleware({ request, context }: Route.MiddlewareArgs) {
+  context.user = getUser(request);
+}
+
+export const middleware = [userMiddleware];
+
+// In some other route
+export async function loader({ context }: Route.LoaderArgs) {
+  let posts = await getPostsForUser(context.user);
+  return { posts };
 }
 ```
 
-action document execution -> turbo stream response - never goes to browser
-loader document execution - HTML response
-action data execution - turbo stream
-loader data execution - turbo stream
+#### Client Side Context
 
----
+In order to support the same API on the client, we will need to add support for a client-side `context` value which is already a [long requested feature][client-context]. We can do so just like the server and let users use module augmentation to define their context shape. This will default to an empty object like the server, and can be passed to `<HydratedRouter>` in `entry.client` to provide up-front singleton values.
 
-Server side handling is fairly straightforward:
+```ts
+declare module "react-router" {
+  interface RouterContext {
+    logger(...args: unknown[]): void
+  }
+}
 
-- Middleware runs around "response generation"
-- The lowest `next()` function runs the handlers and generates the `Response` which is bubbled back up through the middleware chain
-- GET requests are straightforward
-  - Document requests - middleware down, run loaders, HTML Response, middleware up
-  - Data requests - middleware down, run loaders, turbo-stream Response, middleware up
-- Single Fetch POST data requests are simple too
-  - middleware down, run action, turbo-stream Response, middleware up
-- POST document requests are interesting because they have to run _both_ the action and loaders to before they can generate the HTML `Response`
-  - middleware down, run action, run loaders, HTML Response, middleware up
-- If we ever did single flight mutations, they'd do the same thing
-  - middleware down, run action, run loaders, turbo-stream Response, middleware up
-- The net result of this behavior is that for a document submission, your middleware wil run once:
-  - `POST /a/b - a mw -> b mw -> action -> loaders -> render -> b mw -> a mw`
-- But if it's a data (SPA) POST, middlewares will run twice:
-  - `POST /a/b.data - a mw -> b mw -> action -> turbo-stream -> b mw -> a mw`
-  - `GET /a/b.data - a mw -> b mw -> loaders -> turbo-stream -> b mw -> a mw`
-- This is a function of our single fetch Request behavior and client side `shouldRevalidate`/`clientLoader` requirements and is pretty easy to grok/document.
+// Singleton fields that don't change and are always available
+let globalContext: RouterContext = { logger: getLogger() };
 
----
+// ...
+return <HydratedRouter context={globalContext}>
+```
 
-Client side middleware gets more interesting because there is no inherent Request/Response, there's just a navigation.
+`context` on the server has the advantage of auto-cleanup since it's scoped to a request and thus automatically cleaned up after the request completes. In order to mimic this behavior on the client, we'll create a new object per navigation/fetch and spread in the properties from the global singleton context. Therefore, the context object you receive in your handlers will acually be something like:
 
-- GET navigations are again simple
-  - middlewares down, loaders, middlewares up, update state
-- POST navigations are more complex
-  - Should they mimic a document POST requests (middlewares run one time total)?
-  - Or, should they mimic SPA POST requests (middlewares run once for action, again for loaders)?
-- Pros cons listed below
+```ts
+let scopedContext = { ...globalContext };
+```
 
----
+This way, singleton values will always be there, but any new fields added to that object in middleware will only exist for that specific navigation or fetcher call and it will disappear once the request is complete.
 
-**Using dataStrategy**
+### API
 
-- We have an existing `dataStrategy` API that allows users to take control over execution of route data functions (loaders/actions)
-- This allows users to change how data functions are called (parallel/sequential) and also change _which_ are called (single fetch, new revalidation patterns, etc.)
-- This _also_ allows users to implement their own [sequential middleware](https://reactrouter.com/6.28.1/routers/create-browser-router#middleware)
-- In an ideal world, middleware would be an implementation detail of `dataStrategy`
-- That way, when a user provides a custom `dataStrategy` they take full control over all data processing - including both middleware and data functions
-- It would be a bit weird if a user took control over `dataStrategy` but was still subject to our `middleware` execution followed by their `loader` execution
-- The caveat or potential downside of doing middleware in `dataStrategy` is that it's scoped to actions or loaders.
+We wanted our middleware API to meet a handful of criteria:
 
-  - For a submission request, `dataStrategy` runs once for the action and then a second time for the loader revalidations (and potentially additional times for fetcher revalidating fetchers)
+- Allow users to perform logic sequentially top-down before handlers are called
+- Allow users to modify he outgoing response bottom-up after handlers are called
+- Allow multiple middlewares per route
 
----
+The middleware API we landed on to ship looks as follows:
 
-**PROS/CONS**
+```ts
+async function myMiddleware({ request, context, next }: Route.MiddlewareArgs) {
+  // Do stuff before the handlers are called
+  context.user = await getUser(request);
+  // Call handlers and generate the Response
+  let res = await next();
+  // Amend the response if needed
+  res.headers.set("X-Whatever", "stuff");
+  // Propagate the response up the middleware chain
+  return res;
+}
 
-- client actions run middlewares once
-  - pros
-    - user middleware code wont run twice
-    - Feels more like express middleware
-  - cons
-    - More complex implementation - cannot use `dataStrategy`
-      - need to wrap the entire flow of a navigation into the `next` function
-    - User's can't change the implementation via `dataStrategy`
-      - They could opt-out of it by not specifying any `route.middleware` functions and then implement their own via `dataStrategy` - but it would then run twice
-      - So there is no real way for a like-for-like userland implementation
-    - Potential stale data on `context` after an action mutation
-      - user must remember to redirect or clear any impacted `context` data in actions :/
-    - May run middlewares for loaders that don't run via `shouldRevalidate`
-      - Probably not a huge issue?
-- client actions run middlewares twice
-  - pros
-    - Very simple implementation via `dataStrategy`
-    - Allows user behavioral override via `dataStrategy`
-    - Avoid stale data issues after action mutations
-    - May run middlewares for loaders that don't run via `shouldRevalidate`
-  - cons
-    - potential dup user code running
-      - but is any of it expensive?
-      - Can be avoided with minimal user code
-        - `if (!context.user) context.user = getUser();`
-    - Feels less like express middleware and more custom too our "actions then loaders" flow
+// Export an array of middlewares per-route which will run left-to-right on
+// the server
+export const middleware = [myMiddleware];
 
----
+// You can also export an array of client middlewares that run before/after
+// `clientLoader`/`clientAction`
+async function myClientMiddleware({
+  context,
+  next,
+}: Route.ClientMiddlewareArgs) {
+  //...
+}
 
-First attempt was to do it within data strategy
-Users providing their own data strategy would implement their own middleware
-Doesn't hold up for actions/revalidations because it means middleware runs twice
-Not a huge deal in the browser, but more so for server POST document requests
-Not just that middleware runs twice, that's suboptimal, but...
-The API of returning a Response up the middleware chain is impossible during action middlewares if loaders haven't run yet since we can't render the HTML to a Response
-Instead, middleware has to happen at a higher level, outside of data strategy so the final `handler` has access to the results of all actions/loaders
-This means users cannot change the middleware implementation via a custom dataStrategy because it will have already run by the time their dataStrategy runs
-This is an acceptable tradeoff because they can always forego the first-class `middleware` API and implement their own via `handler.middleware` or something similar
+export const clientMiddleware = [myClientSideMiddleware];
+```
 
-Plot twist! Client-side middleware _can't_ happen early and _must_ happen as part of dataStrategy!
+If you only want to perform logic _before_ the request, you can skip calling the `next` function and it'll be called and the response propagated upwards for you automatically:
 
-- matches for actions and loaders are not the same
-- action results can impact the loaders that will run
-  - consider an `/a` route with a child `index` route
-  - POST /a should only run the middleware only for `/a` before the `action`
-  - But the revalidation step (GET) will revalidate `/a` and `index` by default
-  - `shouldRevalidate` can opt out either one based on the `actionResult`
-  - So it is impossible to know what `loader` middlewares to run until _after_ we run the `action`
-  - the behavior thus should mimic what would happen if we mde 2 separate HTTP requests (remember we're a browser emulator)
-- Fetcher posts and revalidations must be totally separate
-- When a server exists, the post/get are separate requests and will invoke middlewares twice
+```ts
+async function myMiddleware({ request, context }: Route.MiddlewareArgs) {
+  context.user = await getUser(request);
+  // Look ma, no next!
+}
+```
 
-Client side will mimic the server behavior with few exceptions:
+The only nuance between server and client middleware is that on the server, we want to propagate a `Response` back up the middleware chain, so `next` must call the handlers _and_ generate the final response. In document requests, this will be the rendered HTML document,. and in data requests this will be the `turbo-stream` `Response`.
 
-- shared context from action to loader?
+Client-side navigations don't really have this type of singular `Response` - they're just updating a stateful router and triggering a React re-render. Therefore, there is no response to bubble back up and the next function will run handlers but won't return anything so there's nothing to propagate back up the middleware chain.
 
-However, document POST /a/b requests _cannot_ use `dataStrategy` because we need both action and loader results to render the document and send the response back through the middleware chain
+### Client-side Implementation
+
+For client side middleware, up until now we've been recommending that if folks want middleware they can add it themselves using `dataStrategy`. Therefore, we can leverage that API and add our middleware implementation inside our default `dataStrategy`. This has the primary advantage of being very simple to implement, but it also means that if folks decide to take control of their own `dataStrategy`, then they take control of the _entire_ data flow. It would have been confusing if a user provided a custom `dataStrategy` in which they wanted to do heir own middleware approach - and the router was still running it's own middleware logic before handing off to `dataStrategy`.
+
+If users _want_ to take control over `loader`/`action` execution but still want to use our middleware flows, we should provide an API for them to do so. The current thought here is to pass them a utility into `dataStrategy` they can leverage:
+
+```ts
+async function dataStrategy({ request, matches, defaultMiddleware }) {
+  let results = await defaultMiddleware(() => {
+    // custom loader/action execution logic here
+  });
+  return results;
+}
+```
+
+One consequence of implementing middleware as part of `dataStrategy` is that on client-side submission requests it will run once for the action and again for the loaders. We went back and forth on this a bit and decided this was the right approach because it mimics the current behavior of SPA navigations in a full-stack React Router app since actions and revalidations are separate HTTP requests and thus run the middleware chains independently. We don't expect this to be an issue except in expensive middlewares - and in those cases the context will be shared between the action/loader chains and the second execution can be skipped if necessary:
+
+```ts
+async function expensiveMiddleware({
+  request,
+  context,
+}: Route.ClientMiddlewareArgs) {
+  // Guard this such that we use the existing value if it exists from the action pass
+  context.something = context.something ?? (await getExpensiveValue());
+}
+```
+
+**Note:** This will make more sense after reading the next section, but it's worth noting that client middlewares _have_ to be run as part of `dataStrategy` to avoid running middlewares for loaders which have opted out of revalidation. The `shouldRevalidate` function decodes which loaders to run and does so using the `actionResult` as an input. so it's impossible to decide which loaders will be _prior_ to running the action. So we need to run middleware once for the action and again for the chosen loaders.
+
+### Server-Side Implementation
+
+Server-side middleware is a bit trickier because it needs to propagate a Response back upwards. This means that it _can't_ be done via `dataStrategy` because on document POST requests we need to know the results of _both_ the action and the loaders so we can render the HTML response. And we need to render the HTML response a single tim in `next`, which means middleware can only be run once _per request_ - not once for actions and once for loaders.
+
+This is an important concept to grasp because it points out a nuance between document and data requests. GET navigations will behave the same because there is a single request/response for goth document and data GET navigations. POST navigations are different though:
+
+- A document POST navigation (JS unavailable) is a single request/response to call action+loaders and generate a single HTML response.
+- A data POST navigation (JS available) is 2 separate request/response's - one to call the action and a second revalidation call for the loaders.
+
+This means that there may be a slight different in behavior of your middleware when it comes to loaders if you begin doing request-specific logic:
+
+```ts
+function weirdMiddleware({ request }) {
+  if (request.method === "POST") {
+    // ✅ Runs before the action/loaders on document submissions
+    // ✅ Runs before the action on data submissions
+    // ❌ Does not runs before the loaders on data submission revalidations
+  }
+}
+```
+
+Our suggestion is mostly to avoid doing request-specific logic in middlewares, and if you need to do so, be aware of the behavior differences between document and data requests.
 
 ### Scenarios
+
+The below outlines a few sample scenarios to give you an idea of the flow through middleware chains.
 
 The simplest scenario is a document `GET /a/b` request:
 
@@ -213,32 +238,10 @@ If `clientLoaders` do call `serverLoaders` it gets trickier since they make indi
 - Finish b `clientMiddleware`
 - Finish a `clientMiddleware`
 
-- SPA GET
-  - middlewares run as part of `dataStrategy`
-  - running them outside would happen from `startNavigation`?
-- SPA POST
-  - middlewares run as part of `dataStrategy`, but this means they ru once for actions and again for loaders which feels suboptimal
-  - running them outside would happen from `startNavigation`?
-- GET /a/b.data
-  - middlewares could run as part of `dataStrategy`, but would require plumbing a `respond` API all the way down
-  - Would be easier to call outside of `query()`, or as part of a new `respond()` method
-- POST /a/b.data
-  - middlewares could run as part of `dataStrategy`, but would require plumbing a `respond` API all the way down
-  - Currently uses `dataStrategy` to skip loader calls
-  - Would be easier to call outside of `query()`, or as part of a new `respond()` method
-- GET /a/b document
-  - Could happen in `dataStrategy` with `respond` API
-- POST /a/b document
-  - MUST happen outside of `dataStrategy` so we have both action and loader results for the `render()` function a the end of middleware chain
-- GET /a/b resource
-- POST /a/b resource
-
----
-
-Other random thoughts
+### Other Thoughts
 
 - Middleware is data-focused, not an event system
-  - you should nt be relying on middleware to track how users hit a certain page etc
+  - you should nt be relying on middleware to track how many users hit a certain page etc
   - middleware may run once for actions and once for loaders
   - middleware will run independently for navigational loaders and fetcher loaders
   - middleware may run many times for revalidations
@@ -248,12 +251,9 @@ Other random thoughts
   - auth/redirecting
   - 404 handling
 
-## Open Questions
-
-- how to handle aborted requests?
-  - `await next()` throws the `AbortSignal.reason` to avoid running the code after `next()`
-
-## Consequences
-
 [rfc]: https://github.com/remix-run/react-router/discussions/9564
 [client-context]: https://github.com/remix-run/react-router/discussions/9856
+[single-fetch]: https://remix.run/docs/en/main/guides/single-fetch
+[data-strategy]: https://reactrouter.com/v6/routers/create-browser-router#optsdatastrategy
+[remix-the-web]: https://github.com/mjackson/remix-the-web
+[async-provider]: https://github.com/ryanflorence/async-provider
