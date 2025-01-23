@@ -18,6 +18,9 @@ export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
 }
 
+/**
+ * The shape of a route module shipped to the client
+ */
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
@@ -29,6 +32,15 @@ export interface RouteModule {
   links?: LinksFunction;
   meta?: MetaFunction;
   shouldRevalidate?: ShouldRevalidateFunction;
+}
+
+/**
+ * The shape of a route module on the server
+ */
+export interface ServerRouteModule extends RouteModule {
+  action?: ActionFunction;
+  headers?: HeadersFunction | { [name: string]: string };
+  loader?: LoaderFunction;
 }
 
 /**
@@ -65,6 +77,21 @@ export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
  * ErrorBoundary to display for this route
  */
 export type ErrorBoundaryComponent = ComponentType;
+
+export type HeadersArgs = {
+  loaderHeaders: Headers;
+  parentHeaders: Headers;
+  actionHeaders: Headers;
+  errorHeaders: Headers | undefined;
+};
+
+/**
+ * A function that returns HTTP headers to be used for a route. These headers
+ * will be merged with (and take precedence over) headers from parent routes.
+ */
+export interface HeadersFunction {
+  (args: HeadersArgs): Headers | HeadersInit;
+}
 
 /**
  * `<Route HydrateFallback>` component to render on initial loads
