@@ -8,6 +8,7 @@ import {
   type ReactRouterPluginBuildContext,
   resolveViteConfig,
   extractPluginContext,
+  getClientBuildDirectory,
   getServerBuildDirectory,
   virtual,
 } from "./plugin";
@@ -73,8 +74,9 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
   let clientBuild: ReactRouterPluginBuildContext = {
     environment: {
       name: "client",
-      serverBundleId: undefined,
-      build: {},
+      build: {
+        outDir: getClientBuildDirectory(ctx.reactRouterConfig),
+      },
     },
     shared: {
       routesByServerBundleId: {},
@@ -88,7 +90,6 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
         {
           environment: {
             name: "ssr",
-            serverBundleId: undefined,
             build: {
               outDir: getServerBuildDirectory(ctx),
               rollupOptions: {
@@ -177,7 +178,6 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
       return {
         environment: {
           name: `server-bundle-${serverBundleId}`,
-          serverBundleId,
           build: {
             outDir: getServerBuildDirectory(ctx, { serverBundleId }),
             rollupOptions: {
@@ -216,23 +216,12 @@ async function cleanBuildDirectory(
   }
 }
 
-function getViteManifestPaths(
-  ctx: ReactRouterPluginContext,
-  serverBuilds: ReactRouterPluginBuildContext[]
-) {
-  let buildRelative = (pathname: string) =>
-    path.resolve(ctx.reactRouterConfig.buildDirectory, pathname);
-
-  let viteManifestPaths: Array<string> = [
-    "client/.vite/manifest.json",
-    ...serverBuilds.map((serverBuild) => {
-      let serverBundleId = serverBuild.environment.serverBundleId;
-      let serverBundlePath = serverBundleId ? serverBundleId + "/" : "";
-      return `server/${serverBundlePath}.vite/manifest.json`;
-    }),
-  ].map((srcPath) => buildRelative(srcPath));
-
-  return viteManifestPaths;
+function getViteManifestPaths(builds: ReactRouterPluginBuildContext[]) {
+  return builds.map((build) => {
+    let outDir = build.environment.build.outDir;
+    invariant(outDir, "Expected build.outDir for build environment");
+    return path.join(outDir, ".vite/manifest.json");
+  });
 }
 
 export interface ViteBuildOptions {
@@ -314,7 +303,7 @@ export async function build(
   // Then run Vite SSR builds in parallel
   await Promise.all(serverBuilds.map((serverBuild) => viteBuild(serverBuild)));
 
-  let viteManifestPaths = getViteManifestPaths(ctx, serverBuilds);
+  let viteManifestPaths = getViteManifestPaths([clientBuild, ...serverBuilds]);
   await Promise.all(
     viteManifestPaths.map(async (viteManifestPath) => {
       let manifestExists = await fse.pathExists(viteManifestPath);

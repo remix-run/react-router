@@ -102,7 +102,6 @@ export type ReactRouterPluginSharedBuildContext = {
 
 export type ReactRouterPluginEnvironmentBuildContext = {
   name: "client" | "ssr" | `server-bundle-${string}`;
-  serverBundleId: string | undefined;
   build: Vite.BuildEnvironmentOptions;
 };
 
@@ -331,8 +330,9 @@ export let getServerBuildDirectory = (
     ...(serverBundleId ? [serverBundleId] : [])
   );
 
-let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
-  path.join(reactRouterConfig.buildDirectory, "client");
+export let getClientBuildDirectory = (
+  reactRouterConfig: ResolvedReactRouterConfig
+) => path.join(reactRouterConfig.buildDirectory, "client");
 
 let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
@@ -885,9 +885,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     ...(!viteConfigEnv.isSsrBuild
                       ? {
                           manifest: true,
-                          outDir: getClientBuildDirectory(
-                            ctx.reactRouterConfig
-                          ),
                           rollupOptions: {
                             ...baseRollupOptions,
                             preserveEntrySignatures: "exports-only",
@@ -917,9 +914,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                           rollupOptions: {
                             ...baseRollupOptions,
                             preserveEntrySignatures: "exports-only",
-                            // input:
-                            //   viteUserConfig.build?.rollupOptions?.input ??
-                            //   virtual.serverBuild.id,
                             output: {
                               entryFileNames:
                                 ctx.reactRouterConfig.serverBuildFile,
