@@ -112,14 +112,7 @@ test.describe("ErrorBoundary", () => {
     );
     expect(status).toBe(200);
     expect(headers.has("X-Remix-Error")).toBe(false);
-    expect(data).toEqual({
-      root: {
-        data: null,
-      },
-      "routes/_index": {
-        data: null,
-      },
-    });
+    expect(data).toEqual({});
   });
 
   test("returns a 405 on a data fetch POST to a path with no action", async () => {

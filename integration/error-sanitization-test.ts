@@ -232,9 +232,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -244,9 +241,6 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
         },
@@ -392,9 +386,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -404,9 +395,6 @@ test.describe("Error Sanitization", () => {
     test("does not sanitize loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Loader Error"),
         },
@@ -640,9 +628,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -652,8 +637,9 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: { data: null },
-        "routes/_index": { error: new Error("Unexpected Server Error") },
+        "routes/_index": {
+          error: new Error("Unexpected Server Error"),
+        },
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(

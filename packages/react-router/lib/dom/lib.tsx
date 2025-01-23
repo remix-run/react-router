@@ -27,7 +27,6 @@ import type {
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
   DataStrategyFunction,
-  DefaultRouterContext,
   FormEncType,
   HTMLFormMethod,
   UIMatch,
@@ -137,7 +136,7 @@ export interface DOMRouterOpts {
   /**
    * Router context singleton that will be passed to loader/action functions.
    */
-  context?: DefaultRouterContext;
+  context?: any;
   /**
    * Future flags to enable for the router.
    */

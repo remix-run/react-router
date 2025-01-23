@@ -5,6 +5,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
+  MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
 } from "../../router/utils";
@@ -12,6 +13,7 @@ import type {
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
+import type { AppLoadContext, RouterContext } from "../../server-runtime/data";
 import type { SerializeFrom } from "../../types/route-data";
 
 export interface RouteModules {
@@ -24,6 +26,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<RouterContext, undefined>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -41,6 +44,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
+  middleware?: MiddlewareFunction<AppLoadContext, Response>[];
 }
 
 /**
