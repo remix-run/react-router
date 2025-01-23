@@ -73,7 +73,6 @@ export default function MyRouteComponent() {
 ### Benefits of using props
 1. Route data is directly accessible via props, leading to more readable code.
 
-
 ## `loader`
 
 Route loaders provide data to route components before they are rendered. They are only called on the server when server rendering or during the build with pre-rendering.
