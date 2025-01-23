@@ -78,9 +78,6 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
         outDir: getClientBuildDirectory(ctx.reactRouterConfig),
       },
     },
-    shared: {
-      routesByServerBundleId: {},
-    },
   };
 
   if (!serverBundles) {
@@ -96,9 +93,6 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
                 input: virtual.serverBuild.id,
               },
             },
-          },
-          shared: {
-            routesByServerBundleId: {},
           },
         },
       ],
@@ -172,27 +166,22 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
     })
   );
 
-  let serverBundleIds = Object.keys(routesByServerBundleId);
-  let serverBuilds: ReactRouterPluginBuildContext[] = serverBundleIds.map(
-    (serverBundleId): ReactRouterPluginBuildContext => {
-      return {
-        environment: {
-          name: `server-bundle-${serverBundleId}`,
-          build: {
-            outDir: getServerBuildDirectory(ctx, { serverBundleId }),
-            rollupOptions: {
-              input:
-                virtual.serverBuild.id +
-                (serverBundleId ? `?server-bundle-id=${serverBundleId}` : ""),
-            },
+  let serverBuilds: ReactRouterPluginBuildContext[] = Object.entries(
+    routesByServerBundleId
+  ).map(([serverBundleId, routes]): ReactRouterPluginBuildContext => {
+    let routeIds = Object.keys(routes).join(",");
+    return {
+      environment: {
+        name: `server-bundle-${serverBundleId}`,
+        build: {
+          outDir: getServerBuildDirectory(ctx, { serverBundleId }),
+          rollupOptions: {
+            input: `${virtual.serverBuild.id}?route-ids=${routeIds}`,
           },
         },
-        shared: {
-          routesByServerBundleId,
-        },
-      };
-    }
-  );
+      },
+    };
+  });
 
   return {
     clientBuild,
