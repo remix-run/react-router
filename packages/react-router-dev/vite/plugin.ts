@@ -97,13 +97,25 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type ReactRouterPluginEnvironmentBuildContext = {
-  name: "client" | "ssr" | `server-bundle-${string}`;
-  build: Vite.BuildEnvironmentOptions;
-};
+type ReactRouterPluginBuildEnvironmentName =
+  | "client"
+  | "ssr"
+  | `server-bundle-${string}`;
+
+type ReactRouterPluginBuildEnvironmentOptions = Required<
+  Pick<Vite.EnvironmentOptions, "build">
+>;
+
+export type ReactRouterPluginBuildEnvironments = Partial<
+  Record<
+    ReactRouterPluginBuildEnvironmentName,
+    ReactRouterPluginBuildEnvironmentOptions
+  >
+>;
 
 export type ReactRouterPluginBuildContext = {
-  environment: ReactRouterPluginEnvironmentBuildContext;
+  name: ReactRouterPluginBuildEnvironmentName;
+  options: ReactRouterPluginBuildEnvironmentOptions;
 };
 
 export type ReactRouterPluginContext = {
@@ -310,10 +322,7 @@ const getBuildContext = (
     return null;
   }
 
-  let buildContext =
-    viteUserConfig.__reactRouterBuildContext as ReactRouterPluginBuildContext;
-
-  return buildContext;
+  return viteUserConfig.__reactRouterBuildContext as ReactRouterPluginBuildContext;
 };
 
 export let getServerBuildDirectory = (
@@ -591,7 +600,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
       invariant(
         ctx.buildContext,
-        "buildContext required to generate the build manifest"
+        "ctx.buildContext required to generate the build manifest"
       );
 
       if (!routeIds || routeIds.includes(route.id)) {
@@ -904,7 +913,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                           },
                         }),
                   },
-                  ctx.buildContext?.environment.build ?? {},
+                  ctx.buildContext?.options.build ?? {},
                   false
                 ),
               }
@@ -1135,7 +1144,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
         async handler() {
-          if (ctx.buildContext!.environment.name === "client") {
+          invariant(ctx.buildContext);
+          if (ctx.buildContext.name === "client") {
             return;
           }
 
@@ -1145,7 +1155,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ctx.reactRouterConfig
           );
 
-          let serverBuildDirectory = ctx.buildContext?.environment.build.outDir;
+          let serverBuildDirectory = ctx.buildContext?.options.build.outDir;
           invariant(
             serverBuildDirectory,
             "Expected build.outDir for build environment"
