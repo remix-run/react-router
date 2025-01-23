@@ -73,6 +73,40 @@ export default function MyRouteComponent() {
 ### Benefits of using props
 1. Route data is directly accessible via props, leading to more readable code.
 
+### Default props passed to the Component
+1. params: An object containing the route parameters (if any).
+
+2. location: An object providing details about the current location (e.g., pathname, search, etc.).
+
+3. navigate: A function to programmatically navigate to another route.
+
+### Using props
+```tsx filename=app/routes/my-route-with-default-params.tsx
+import { useParams, useLoaderData, useLocation } from 'react-router-dom';
+
+export default function MyRouteComponent() {
+  const params = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  return (
+    <div>
+      <h1>Welcome to My Route</h1>
+      {/* Display route params */}
+      <p>Route Parameters: {JSON.stringify(params)}</p>
+      {/* Display current path */}
+      <p>Current Path: {location.pathname}</p>
+
+      {/* Button to navigate to home */}
+      <button onClick={() => navigate('/')}>Go to Home</button>
+    </div>
+  );
+}
+```
+
+### Benefits of using props
+1. Route data is directly accessible via props, leading to more readable code.
+
 ## `loader`
 
 Route loaders provide data to route components before they are rendered. They are only called on the server when server rendering or during the build with pre-rendering.
