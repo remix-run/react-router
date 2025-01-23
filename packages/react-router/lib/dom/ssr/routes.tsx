@@ -4,6 +4,7 @@ import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
+  MiddlewareFunction,
   RouteManifest,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
@@ -147,8 +148,8 @@ export function createServerRoutes(
       // render, so just give it a no-op function so we can render down to the
       // proper fallback
       loader: route.hasLoader || route.hasClientLoader ? () => null : undefined,
-      // We don't need action/shouldRevalidate on these routes since they're
-      // for a static render
+      // We don't need middleware/action/shouldRevalidate on these routes since
+      // they're for a static render
     };
 
     let children = createServerRoutes(
@@ -285,6 +286,7 @@ export function createClientRoutes(
       Object.assign(dataRoute, {
         ...dataRoute,
         ...getRouteComponents(route, routeModule, isSpaMode),
+        middleware: routeModule.clientMiddleware,
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
           routeModule,
@@ -451,6 +453,10 @@ export function createClientRoutes(
         return {
           ...(lazyRoute.loader ? { loader: lazyRoute.loader } : {}),
           ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
+          middleware: mod.clientMiddleware as unknown as MiddlewareFunction<
+            any,
+            unknown
+          >[],
           hasErrorBoundary: lazyRoute.hasErrorBoundary,
           shouldRevalidate: getShouldRevalidateFunction(
             lazyRoute,
@@ -537,6 +543,7 @@ async function loadRouteModuleWithBlockingLinks(
   return {
     Component: getRouteModuleComponent(routeModule),
     ErrorBoundary: routeModule.ErrorBoundary,
+    clientMiddleware: routeModule.clientMiddleware,
     clientAction: routeModule.clientAction,
     clientLoader: routeModule.clientLoader,
     handle: routeModule.handle,

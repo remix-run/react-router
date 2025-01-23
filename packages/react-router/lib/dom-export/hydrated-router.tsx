@@ -23,8 +23,8 @@ import {
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
 } from "react-router";
+import type { RouterContext } from "../server-runtime/data";
 import { RouterProvider } from "./dom-router-provider";
-import type { DefaultRouterContext } from "../router/utils";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -64,7 +64,7 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   context,
 }: {
-  context?: DefaultRouterContext;
+  context?: RouterContext;
 }): DataRouter {
   initSsrInfo();
 
@@ -174,11 +174,13 @@ function createHydratedRouter({
     context,
     hydrationData,
     mapRouteProperties,
-    dataStrategy: getSingleFetchDataStrategy(
-      ssrInfo.manifest,
-      ssrInfo.routeModules,
-      () => router
-    ),
+    dataStrategy: ssrInfo.context.isSpaMode
+      ? undefined
+      : getSingleFetchDataStrategy(
+          ssrInfo.manifest,
+          ssrInfo.routeModules,
+          () => router
+        ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,
@@ -209,7 +211,7 @@ interface HydratedRouterProps {
    * Context object to passed through to `createBrowserRouter` and made available
    * to `clientLoader`/`clientActon` functions
    */
-  context?: DefaultRouterContext;
+  context?: RouterContext;
 }
 
 /**

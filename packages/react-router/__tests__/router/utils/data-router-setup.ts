@@ -9,7 +9,7 @@ import type {
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
-  DefaultRouterContext,
+  RouterContext,
 } from "../../../lib/router/utils";
 import { createRouter, IDLE_FETCHER } from "../../../lib/router/router";
 import {
@@ -145,7 +145,7 @@ type SetupOpts = {
   initialIndex?: number;
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
-  context?: DefaultRouterContext;
+  context?: RouterContext;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -226,6 +226,7 @@ export function setup({
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
       let enhancedRoute: AgnosticDataRouteObject = {
+        middleware: undefined,
         ...r,
         lazy: undefined,
         loader: undefined,

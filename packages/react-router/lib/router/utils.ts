@@ -114,7 +114,7 @@ export type Submission =
  * @private
  * Default context value type for `createRouter`, can be overridden via the generics
  * on LoaderFunction/LoaderFunctionArgs/ActionFunction/ActionFunctionArgs
- */
+ * */
 export type DefaultRouterContext = any;
 
 /**
@@ -129,6 +129,22 @@ interface DataFunctionArgs<Context> {
 }
 
 /**
+ * Route middleware function arguments
+ */
+export type MiddlewareFunctionArgs<
+  Context = DefaultRouterContext,
+  Result = unknown
+> = DataFunctionArgs<Context> & { next: () => Promise<Result> };
+
+/**
+ * Route middleware function signature
+ */
+export type MiddlewareFunction<
+  Context = DefaultRouterContext,
+  Result = unknown
+> = (args: MiddlewareFunctionArgs<Context, Result>) => Result | Promise<Result>;
+
+/**
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<Context = DefaultRouterContext>
@@ -141,11 +157,9 @@ export interface ActionFunctionArgs<Context = DefaultRouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
 type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 
@@ -223,8 +237,10 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = DefaultRouterContext> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
@@ -297,6 +313,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  middleware?: MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;

@@ -414,9 +414,6 @@ test.describe("Prerendering", () => {
 
     let dataRes = await fixture.requestSingleFetchData("/json.json.data");
     expect(dataRes.data).toEqual({
-      root: {
-        data: null,
-      },
       "routes/json[.json]": {
         data: {
           hello: "world",
@@ -429,9 +426,6 @@ test.describe("Prerendering", () => {
 
     dataRes = await fixture.requestSingleFetchData("/text.txt.data");
     expect(dataRes.data).toEqual({
-      root: {
-        data: null,
-      },
       "routes/text[.txt]": {
         data: "Hello, world",
       },
