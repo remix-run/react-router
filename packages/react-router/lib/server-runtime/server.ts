@@ -504,12 +504,15 @@ async function handleResourceRequest(
       requestContext: loadContext,
     });
 
-    invariant(
-      isResponse(response),
-      "Expected a Response to be returned from resource route handler"
-    );
+    if (isResponse(response)) {
+      return response;
+    }
 
-    return response;
+    if (typeof response === "string") {
+      return new Response(response);
+    }
+
+    return Response.json(response);
   } catch (error: unknown) {
     if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers
