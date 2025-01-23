@@ -46,25 +46,18 @@ export default function MyRouteComponent() {
 
 3. navigate: A function to programmatically navigate to another route.
 
+4. loaderData: The data returned from the loader function assigned to the route. eg. A loader might fetch some data from an API and return it for the route to use.
+
 ### Using props
 ```tsx filename=app/routes/my-route-with-default-params.tsx
-import { useParams, useLoaderData, useLocation } from 'react-router-dom';
-
-export default function MyRouteComponent() {
-  const params = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-
+export default function MyRouteComponent({ loaderData, actionData, params, matches }) {
   return (
     <div>
-      <h1>Welcome to My Route</h1>
-      {/* Display route params */}
+      <h1>Welcome to My Route with Props!</h1>
+      <p>Loader Data: {JSON.stringify(loaderData)}</p>
+      <p>Action Data: {JSON.stringify(actionData)}</p>
       <p>Route Parameters: {JSON.stringify(params)}</p>
-      {/* Display current path */}
-      <p>Current Path: {location.pathname}</p>
-
-      {/* Button to navigate to home */}
-      <button onClick={() => navigate('/')}>Go to Home</button>
+      <p>Matched Routes: {JSON.stringify(matches)}</p>
     </div>
   );
 }
