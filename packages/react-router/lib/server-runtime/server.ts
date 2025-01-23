@@ -498,6 +498,17 @@ async function handleResourceRequest(
       return errorResponseToJson(error, serverMode);
     }
 
+    if (
+      error instanceof Error &&
+      error.message === "Expected a response from queryRoute"
+    ) {
+      let newError = new Error(
+        "Expected a Response to be returned from resource route handler"
+      );
+      handleError(newError);
+      return returnLastResortErrorResponse(newError, serverMode);
+    }
+
     handleError(error);
     return returnLastResortErrorResponse(error, serverMode);
   }

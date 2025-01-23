@@ -114,7 +114,7 @@ export async function singleFetchAction(
       },
     });
 
-    invariant(isResponse(result), " Expected a Response from query()");
+    invariant(isResponse(result), "Expected a Response from query()");
 
     // Unlike `handleDataRequest`, when singleFetch is enabled, query does
     // let non-Response return values through
@@ -197,19 +197,26 @@ export async function singleFetchLoaders(
         // Aggregate results based on the matches we intended to load since we get
         // `null` values back in `context.loaderData` for routes we didn't load
         let results: SingleFetchResults = {};
-        let loadedMatches = context.matches.filter(
-          (m) =>
-            m.route.loader && (!loadRouteIds || loadRouteIds.has(m.route.id))
+        let loadedMatches = new Set(
+          context.matches
+            .filter((m) =>
+              loadRouteIds
+                ? loadRouteIds.has(m.route.id)
+                : m.route.loader != null
+            )
+            .map((m) => m.route.id)
         );
 
-        loadedMatches.forEach((m) => {
-          let { id } = m.route;
-          if (context.errors && context.errors.hasOwnProperty(id)) {
-            results[id] = { error: context.errors[id] };
-          } else if (context.loaderData.hasOwnProperty(id)) {
-            results[id] = { data: context.loaderData[id] };
+        if (context.errors) {
+          for (let [id, error] of Object.entries(context.errors)) {
+            results[id] = { error };
           }
-        });
+        }
+        for (let [id, data] of Object.entries(context.loaderData)) {
+          if (!(id in results) && loadedMatches.has(id)) {
+            results[id] = { data };
+          }
+        }
 
         return generateSingleFetchResponse(request, build, serverMode, {
           result: results,
@@ -219,7 +226,7 @@ export async function singleFetchLoaders(
       },
     });
 
-    invariant(isResponse(result), " Expected a Response from query()");
+    invariant(isResponse(result), "Expected a Response from query()");
 
     if (isRedirectResponse(result)) {
       return generateSingleFetchResponse(request, build, serverMode, {

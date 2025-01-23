@@ -1,8 +1,8 @@
 ---
-"react-router": minor
+"react-router": patch
 ---
 
-Support `middleware` on routes
+Support `middleware` on routes (unstable)
 
 Routes can now define a `middleware` property accepting an array of functions that will run sequentially before route loader run in parallel. These functions accept the same arguments as `loader`/`action` and an additional `next` function to run the remaining data pipeline. This allows middlewares to perform logic before and after loaders/actions execute.
 
