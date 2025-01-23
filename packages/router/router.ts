@@ -5061,15 +5061,25 @@ async function convertDataStrategyResultToDataResult(
           type: ResultType.error,
           error: result.data,
           statusCode: result.init?.status,
+          headers: result.init?.headers
+            ? new Headers(result.init.headers)
+            : undefined,
         };
       }
 
       // Convert thrown data() to ErrorResponse instances
-      result = new ErrorResponseImpl(
-        result.init?.status || 500,
-        undefined,
-        result.data
-      );
+      return {
+        type: ResultType.error,
+        error: new ErrorResponseImpl(
+          result.init?.status || 500,
+          undefined,
+          result.data
+        ),
+        statusCode: isRouteErrorResponse(result) ? result.status : undefined,
+        headers: result.init?.headers
+          ? new Headers(result.init.headers)
+          : undefined,
+      };
     }
     return {
       type: ResultType.error,
