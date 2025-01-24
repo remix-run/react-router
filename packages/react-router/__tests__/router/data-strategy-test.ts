@@ -896,7 +896,6 @@ describe("router dataStrategy", () => {
       });
     });
 
-    jest.setTimeout(10000000);
     it("allows a single-fetch type approach", async () => {
       let t = setup({
         routes: [

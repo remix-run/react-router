@@ -36,7 +36,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   ActionFunction,
-  DefaultRouterContext,
+  RouterContext,
   MiddlewareFunction,
   MiddlewareFunctionArgs,
 } from "./utils";
@@ -372,7 +372,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  context?: DefaultRouterContext;
+  context?: RouterContext;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -825,7 +825,6 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
 
-  // TODO: Should this be a singleton or fresh per request?
   let routerContext = typeof init.context !== "undefined" ? init.context : {};
   let dataStrategyImpl = (init.dataStrategy ||
     defaultDataStrategy) as DataStrategyFunction<unknown>;
@@ -1588,6 +1587,7 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission
     );
+    let scopedContext = { ...routerContext };
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -1610,6 +1610,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
+        scopedContext,
         fogOfWar.active,
         { replace: opts.replace, flushSync }
       );
@@ -1665,6 +1666,7 @@ export function createRouter(init: RouterInit): Router {
       request,
       location,
       matches,
+      scopedContext,
       fogOfWar.active,
       loadingNavigation,
       opts && opts.submission,
@@ -1699,6 +1701,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
+    scopedContext: RouterContext,
     isFogOfWar: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
@@ -1762,11 +1765,12 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let results = await callDataStrategy(
+      let results = await callRouterDataStrategy(
         "action",
         request,
         [actionMatch],
         matches,
+        scopedContext,
         null
       );
       result = results[actionMatch.route.id];
@@ -1841,6 +1845,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
+    scopedContext: RouterContext,
     isFogOfWar: boolean,
     overrideNavigation?: Navigation,
     submission?: Submission,
@@ -2002,11 +2007,11 @@ export function createRouter(init: RouterInit): Router {
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
-        state,
         matches,
         matchesToLoad,
         revalidatingFetchers,
-        request
+        request,
+        scopedContext
       );
 
     if (request.signal.aborted) {
@@ -2156,6 +2161,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let match = getTargetMatch(matches, path);
+    let scopedContext = { ...routerContext };
 
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
@@ -2166,6 +2172,7 @@ export function createRouter(init: RouterInit): Router {
         path,
         match,
         matches,
+        scopedContext,
         fogOfWar.active,
         flushSync,
         preventScrollReset,
@@ -2183,6 +2190,7 @@ export function createRouter(init: RouterInit): Router {
       path,
       match,
       matches,
+      scopedContext,
       fogOfWar.active,
       flushSync,
       preventScrollReset,
@@ -2198,6 +2206,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
+    scopedContext: RouterContext,
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
@@ -2271,11 +2280,12 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResults = await callDataStrategy(
+    let actionResults = await callRouterDataStrategy(
       "action",
       fetchRequest,
       [match],
       requestMatches,
+      scopedContext,
       key
     );
     let actionResult = actionResults[match.route.id];
@@ -2394,11 +2404,11 @@ export function createRouter(init: RouterInit): Router {
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
-        state,
         matches,
         matchesToLoad,
         revalidatingFetchers,
-        revalidationRequest
+        revalidationRequest,
+        scopedContext
       );
 
     if (abortController.signal.aborted) {
@@ -2498,6 +2508,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
+    scopedContext: RouterContext,
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
@@ -2550,11 +2561,12 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let results = await callDataStrategy(
+    let results = await callRouterDataStrategy(
       "loader",
       fetchRequest,
       [match],
       matches,
+      scopedContext,
       key
     );
     let result = results[match.route.id];
@@ -2741,11 +2753,12 @@ export function createRouter(init: RouterInit): Router {
 
   // Utility wrapper for calling dataStrategy client-side without having to
   // pass around the manifest, mapRouteProperties, etc.
-  async function callDataStrategy(
+  async function callRouterDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
+    scopedContext: RouterContext,
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
@@ -2760,7 +2773,7 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         manifest,
         mapRouteProperties,
-        routerContext
+        scopedContext
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -2798,29 +2811,31 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function callLoadersAndMaybeResolveData(
-    state: RouterState,
     matches: AgnosticDataRouteMatch[],
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
-    request: Request
+    request: Request,
+    scopedContext: RouterContext
   ) {
     // Kick off loaders and fetchers in parallel
-    let loaderResultsPromise = callDataStrategy(
+    let loaderResultsPromise = callRouterDataStrategy(
       "loader",
       request,
       matchesToLoad,
       matches,
+      scopedContext,
       null
     );
 
     let fetcherResultsPromise = Promise.all(
       fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.controller) {
-          let results = await callDataStrategy(
+          let results = await callRouterDataStrategy(
             "loader",
             createClientSideRequest(init.history, f.path, f.controller.signal),
             [f.match],
             f.matches,
+            scopedContext,
             f.key
           );
           let result = results[f.match.route.id];
@@ -3842,7 +3857,7 @@ export function createStaticHandler(
         error,
       };
     } else {
-      let results = await callDataStrategy(
+      let results = await callStaticHandlerDataStrategy(
         "action",
         request,
         [actionMatch],
@@ -4002,7 +4017,7 @@ export function createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
-    dataStrategy: DataStrategyFunction | null,
+    dataStrategy: DataStrategyFunction<unknown> | null,
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     filterMatchesToLoad: ((match: AgnosticDataRouteMatch) => boolean) | null,
@@ -4060,7 +4075,7 @@ export function createStaticHandler(
       };
     }
 
-    let results = await callDataStrategy(
+    let results = await callStaticHandlerDataStrategy(
       "loader",
       request,
       matchesToLoad,
@@ -4101,13 +4116,13 @@ export function createStaticHandler(
 
   // Utility wrapper for calling dataStrategy server-side without having to
   // pass around the manifest, mapRouteProperties, etc.
-  async function callDataStrategy(
+  async function callStaticHandlerDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
     isRouteRequest: boolean,
-    routerContext: unknown,
+    requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null
   ): Promise<Record<string, DataResult>> {
     let results = await callDataStrategyImpl(
@@ -4119,7 +4134,7 @@ export function createStaticHandler(
       null,
       manifest,
       mapRouteProperties,
-      routerContext
+      requestContext
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -5065,7 +5080,7 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  routerContext: unknown
+  scopedContext: unknown
 ): Promise<Record<string, DataStrategyResult>> {
   let loadRouteDefinitionsPromises = matches.map((m) =>
     m.route.lazy
@@ -5111,7 +5126,7 @@ async function callDataStrategyImpl(
             match,
             loadRoutePromise,
             handlerOverride,
-            routerContext
+            scopedContext
           )
         : Promise.resolve({ type: ResultType.data, result: undefined });
     };
@@ -5131,7 +5146,7 @@ async function callDataStrategyImpl(
     request,
     params: matches[0].params,
     fetcherKey,
-    context: routerContext,
+    context: scopedContext,
   });
 
   // Wait for all routes to load here but swallow the error since we want
@@ -5153,13 +5168,13 @@ async function callLoaderOrAction(
   match: AgnosticDataRouteMatch,
   loadRoutePromise: Promise<void> | undefined,
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
-  routerContext: unknown
+  scopedContext: unknown
 ): Promise<DataStrategyResult> {
   let result: DataStrategyResult;
   let onReject: (() => void) | undefined;
 
   let runHandler = (
-    handler: boolean | LoaderFunction | ActionFunction
+    handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>
   ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;
@@ -5182,7 +5197,7 @@ async function callLoaderOrAction(
         {
           request,
           params: match.params,
-          context: routerContext,
+          context: scopedContext,
         },
         ...(ctx !== undefined ? [ctx] : [])
       );
@@ -5203,7 +5218,9 @@ async function callLoaderOrAction(
   };
 
   try {
-    let handler = match.route[type];
+    let handler = match.route[type] as
+      | LoaderFunction<unknown>
+      | ActionFunction<unknown>;
 
     // If we have a route.lazy promise, await that first
     if (loadRoutePromise) {
@@ -5227,7 +5244,9 @@ async function callLoaderOrAction(
         // Load lazy route module, then run any returned handler
         await loadRoutePromise;
 
-        handler = match.route[type];
+        handler = match.route[type] as
+          | LoaderFunction<unknown>
+          | ActionFunction<unknown>;
         if (handler) {
           // Handler still runs even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
