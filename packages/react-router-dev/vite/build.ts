@@ -63,6 +63,14 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
+function mergeBuildOptions(
+  base: Vite.BuildOptions,
+  overrides: Vite.BuildOptions
+): Vite.BuildOptions {
+  let vite = getVite();
+  return vite.mergeConfig({ build: base }, { build: overrides }).build;
+}
+
 async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
   environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers;
   buildManifest: BuildManifest;
@@ -77,47 +85,42 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
   } = ctx.reactRouterConfig;
   let serverBuildDirectory = getServerBuildDirectory(ctx);
 
-  let getBaseBuildOptions = ({
+  function getBaseBuildOptions({
     viteUserConfig,
   }: {
     viteUserConfig: Vite.UserConfig;
-  }): Vite.BuildOptions => {
+  }): Vite.BuildOptions {
     return {
       cssMinify: viteUserConfig.build?.cssMinify ?? true,
-      // The manifest is enabled for all builds because we also need to detect
-      // SSR-only assets
-      manifest: true,
+      manifest: true, // The manifest is enabled for all builds to detect SSR-only assets
+      rollupOptions: {
+        preserveEntrySignatures: "exports-only",
+        // Silence Rollup "use client" warnings
+        // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
+        onwarn(warning, defaultHandler) {
+          if (
+            warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+            warning.message.includes("use client")
+          ) {
+            return;
+          }
+          let userOwnOnwarn = viteUserConfig.build?.rollupOptions?.onwarn;
+          if (userOwnOnwarn) {
+            userOwnOnwarn(warning, defaultHandler);
+          } else {
+            defaultHandler(warning);
+          }
+        },
+      },
     };
-  };
+  }
 
-  let getBaseRollupOptions = ({
+  function getBaseServerBuildOptions({
     viteUserConfig,
   }: {
     viteUserConfig: Vite.UserConfig;
-  }): Vite.BuildOptions["rollupOptions"] => {
-    return {
-      preserveEntrySignatures: "exports-only",
-      // Silence Rollup "use client" warnings
-      // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
-      onwarn(warning, defaultHandler) {
-        if (
-          warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-          warning.message.includes("use client")
-        ) {
-          return;
-        }
-        let userOwnOnwarn = viteUserConfig.build?.rollupOptions?.onwarn;
-        if (userOwnOnwarn) {
-          userOwnOnwarn(warning, defaultHandler);
-        } else {
-          defaultHandler(warning);
-        }
-      },
-    };
-  };
-
-  let getBaseServerBuildOptions = (): Vite.BuildOptions => {
-    return {
+  }): Vite.BuildOptions {
+    return mergeBuildOptions(getBaseBuildOptions({ viteUserConfig }), {
       // We move SSR-only assets to client assets. Note that the
       // SSR build can also emit code-split JS files (e.g. by
       // dynamic import) under the same assets directory
@@ -125,25 +128,19 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
       // keep these JS files have to be kept as-is.
       ssrEmitAssets: true,
       copyPublicDir: false, // Assets in the public directory are only used by the client
-    };
-  };
-
-  let getBaseServerRollupOptions = (): Vite.BuildOptions["rollupOptions"] => {
-    return {
-      preserveEntrySignatures: "exports-only",
-      output: {
-        entryFileNames: serverBuildFile,
-        format: serverModuleFormat,
+      rollupOptions: {
+        output: {
+          entryFileNames: serverBuildFile,
+          format: serverModuleFormat,
+        },
       },
-    };
-  };
+    });
+  }
 
   let environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers = {
     client: ({ viteUserConfig }) => ({
-      build: {
-        ...getBaseBuildOptions({ viteUserConfig }),
+      build: mergeBuildOptions(getBaseBuildOptions({ viteUserConfig }), {
         rollupOptions: {
-          ...getBaseRollupOptions({ viteUserConfig }),
           input: [
             ctx.entryClientFilePath,
             ...Object.values(ctx.reactRouterConfig.routes).map(
@@ -156,24 +153,20 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
           ],
         },
         outDir: getClientBuildDirectory(ctx.reactRouterConfig),
-      },
+      }),
     }),
   };
 
   if (!serverBundles) {
     environmentResolvers.ssr = ({ viteUserConfig }) => ({
-      build: {
-        ...getBaseBuildOptions({ viteUserConfig }),
-        ...getBaseServerBuildOptions(),
+      build: mergeBuildOptions(getBaseServerBuildOptions({ viteUserConfig }), {
         outDir: getServerBuildDirectory(ctx),
         rollupOptions: {
-          ...getBaseRollupOptions({ viteUserConfig }),
-          ...getBaseServerRollupOptions(),
           input:
             viteUserConfig.build?.rollupOptions?.input ??
             virtual.serverBuild.id,
         },
-      },
+      }),
     });
 
     return {
@@ -249,18 +242,14 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
     environmentResolvers[`server-bundle-${serverBundleId}`] = ({
       viteUserConfig,
     }) => ({
-      build: {
-        ...getBaseBuildOptions({ viteUserConfig }),
-        ...getBaseServerBuildOptions(),
+      build: mergeBuildOptions(getBaseServerBuildOptions({ viteUserConfig }), {
         outDir: getServerBuildDirectory(ctx, { serverBundleId }),
         rollupOptions: {
-          ...getBaseRollupOptions({ viteUserConfig }),
-          ...getBaseServerRollupOptions(),
           input: `${virtual.serverBuild.id}?route-ids=${Object.keys(
             routes
           ).join(",")}`,
         },
-      },
+      }),
     });
   }
 
