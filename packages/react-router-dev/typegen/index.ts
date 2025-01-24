@@ -77,12 +77,19 @@ function asJS(path: string) {
   return path.replace(/\.(js|ts)x?$/, ".js");
 }
 
-function formatRoute({ id, path, file, parentId }: RouteManifestEntry) {
+function formatRoute(
+  ctx: Context,
+  { id, path, file, parentId }: RouteManifestEntry
+) {
+  const modulePath = Path.relative(
+    ctx.rootDirectory,
+    Path.join(ctx.config.appDirectory, file)
+  );
   return [
     `"${id}": {`,
     `  parentId: ${JSON.stringify(parentId)}`,
     `  path: ${JSON.stringify(path)}`,
-    `  module: typeof import("./app/${asJS(file)}")`,
+    `  module: typeof import("${asJS(modulePath)}")`,
     `}`,
   ]
     .map((line) => `  ${line}`)
@@ -122,7 +129,9 @@ async function writeAll(ctx: Context): Promise<void> {
     newTypes,
     formattedPaths +
       "\n\n" +
-      `type Routes = {\n${routes.map(formatRoute).join("\n")}\n}\n\n` +
+      `type Routes = {\n${routes
+        .map((route) => formatRoute(ctx, route))
+        .join("\n")}\n}\n\n` +
       ts`
         declare module "react-router/types" {
           interface Register {
