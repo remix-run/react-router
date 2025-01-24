@@ -111,11 +111,14 @@ export type Submission =
     };
 
 /**
- * @private
- * Default context value type for `createRouter`, can be overridden via the generics
- * on LoaderFunction/LoaderFunctionArgs/ActionFunction/ActionFunctionArgs
- * */
-export type DefaultRouterContext = any;
+ * An object of unknown type for client-side loaders and actions provided by the
+ * `createBrowserRouter` `context` option.  This is defined as an empty interface
+ * specifically so apps can leverage declaration merging to augment this type
+ * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+ */
+export interface RouterContext {
+  [key: string]: unknown;
+}
 
 /**
  * @private
@@ -132,28 +135,27 @@ interface DataFunctionArgs<Context> {
  * Route middleware function arguments
  */
 export type MiddlewareFunctionArgs<
-  Context = DefaultRouterContext,
+  Context = RouterContext,
   Result = unknown
 > = DataFunctionArgs<Context> & { next: () => Promise<Result> };
 
 /**
  * Route middleware function signature
  */
-export type MiddlewareFunction<
-  Context = DefaultRouterContext,
-  Result = unknown
-> = (args: MiddlewareFunctionArgs<Context, Result>) => Result | Promise<Result>;
+export type MiddlewareFunction<Context = RouterContext, Result = unknown> = (
+  args: MiddlewareFunctionArgs<Context, Result>
+) => Result | Promise<Result>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = DefaultRouterContext>
+export interface LoaderFunctionArgs<Context = RouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = DefaultRouterContext>
+export interface ActionFunctionArgs<Context = RouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
@@ -166,7 +168,7 @@ type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = DefaultRouterContext> = {
+export type LoaderFunction<Context = RouterContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -176,7 +178,7 @@ export type LoaderFunction<Context = DefaultRouterContext> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = DefaultRouterContext> {
+export interface ActionFunction<Context = RouterContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -223,7 +225,7 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = DefaultRouterContext>
+export interface DataStrategyFunctionArgs<Context = RouterContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   fetcherKey: string | null;
@@ -237,7 +239,7 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction<Context = DefaultRouterContext> {
+export interface DataStrategyFunction<Context = RouterContext> {
   (args: DataStrategyFunctionArgs<Context>): Promise<
     Record<string, DataStrategyResult>
   >;
