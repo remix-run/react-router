@@ -95,7 +95,8 @@ const CLIENT_ROUTE_EXPORTS = [
 from the client build output. This is important in cases where custom route
 exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
-const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
+export const BUILD_CLIENT_ROUTE_QUERY_STRING =
+  "?__react-router-build-client-route";
 
 type ReactRouterPluginBuildEnvironmentName =
   | "client"
@@ -106,20 +107,30 @@ type ReactRouterPluginBuildEnvironmentOptions = Required<
   Pick<Vite.EnvironmentOptions, "build">
 >;
 
-export type ReactRouterPluginBuildEnvironments = Partial<
+type ReactRouterPluginBuildEnvironmentOptionsResolver = (options: {
+  viteCommand: Vite.ResolvedConfig["command"];
+  viteUserConfig: Vite.UserConfig;
+}) => ReactRouterPluginBuildEnvironmentOptions;
+
+export type ReactRouterPluginBuildEnvironmentResolvers = Partial<
   Record<
     ReactRouterPluginBuildEnvironmentName,
-    ReactRouterPluginBuildEnvironmentOptions
+    ReactRouterPluginBuildEnvironmentOptionsResolver
   >
 >;
 
 export type ReactRouterPluginBuildContext = {
   name: ReactRouterPluginBuildEnvironmentName;
+  resolveOptions: ReactRouterPluginBuildEnvironmentOptionsResolver;
+};
+
+type ReactRouterPluginResolvedBuildContext = {
+  name: ReactRouterPluginBuildEnvironmentName;
   options: ReactRouterPluginBuildEnvironmentOptions;
 };
 
 export type ReactRouterPluginContext = {
-  buildContext: ReactRouterPluginBuildContext | null;
+  buildContext: ReactRouterPluginResolvedBuildContext | null;
   rootDirectory: string;
   entryClientFilePath: string;
   entryServerFilePath: string;
@@ -312,9 +323,13 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
-const getBuildContext = (
-  viteUserConfig: Vite.UserConfig
-): ReactRouterPluginBuildContext | null => {
+const resolveBuildContext = ({
+  viteCommand,
+  viteUserConfig,
+}: {
+  viteCommand: Vite.ResolvedConfig["command"];
+  viteUserConfig: Vite.UserConfig;
+}): ReactRouterPluginResolvedBuildContext | null => {
   if (
     !("__reactRouterBuildContext" in viteUserConfig) ||
     !viteUserConfig.__reactRouterBuildContext
@@ -322,7 +337,15 @@ const getBuildContext = (
     return null;
   }
 
-  return viteUserConfig.__reactRouterBuildContext as ReactRouterPluginBuildContext;
+  let buildContext =
+    viteUserConfig.__reactRouterBuildContext as ReactRouterPluginBuildContext;
+
+  let resolvedBuildContext: ReactRouterPluginResolvedBuildContext = {
+    name: buildContext.name,
+    options: buildContext.resolveOptions({ viteCommand, viteUserConfig }),
+  };
+
+  return resolvedBuildContext;
 };
 
 export let getServerBuildDirectory = (
@@ -425,8 +448,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
-    let buildContext: ReactRouterPluginBuildContext | null =
-      viteCommand === "build" ? getBuildContext(viteUserConfig) : null;
+    let buildContext: ReactRouterPluginResolvedBuildContext | null =
+      viteCommand === "build"
+        ? resolveBuildContext({ viteCommand, viteUserConfig })
+        : null;
 
     firstLoad = false;
 
@@ -868,56 +893,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             : undefined,
 
           // Vite config options for building
-          ...(viteCommand === "build"
-            ? {
-                build: vite.mergeConfig(
-                  {
-                    cssMinify: viteUserConfig.build?.cssMinify ?? true,
-                    ...(!viteConfigEnv.isSsrBuild
-                      ? {
-                          manifest: true,
-                          rollupOptions: {
-                            ...baseRollupOptions,
-                            preserveEntrySignatures: "exports-only",
-                            input: [
-                              ctx.entryClientFilePath,
-                              ...Object.values(
-                                ctx.reactRouterConfig.routes
-                              ).map(
-                                (route) =>
-                                  `${path.resolve(
-                                    ctx.reactRouterConfig.appDirectory,
-                                    route.file
-                                  )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
-                              ),
-                            ],
-                          },
-                        }
-                      : {
-                          // We move SSR-only assets to client assets. Note that the
-                          // SSR build can also emit code-split JS files (e.g. by
-                          // dynamic import) under the same assets directory
-                          // regardless of "ssrEmitAssets" option, so we also need to
-                          // keep these JS files have to be kept as-is.
-                          ssrEmitAssets: true,
-                          copyPublicDir: false, // Assets in the public directory are only used by the client
-                          manifest: true, // We need the manifest to detect SSR-only assets
-                          rollupOptions: {
-                            ...baseRollupOptions,
-                            preserveEntrySignatures: "exports-only",
-                            output: {
-                              entryFileNames:
-                                ctx.reactRouterConfig.serverBuildFile,
-                              format: ctx.reactRouterConfig.serverModuleFormat,
-                            },
-                          },
-                        }),
-                  },
-                  ctx.buildContext?.options.build ?? {},
-                  false
-                ),
-              }
-            : undefined),
+          build: ctx.buildContext?.options.build,
 
           // Vite config options for SPA preview mode
           ...(viteCommand === "serve" && ctx.reactRouterConfig.ssr === false

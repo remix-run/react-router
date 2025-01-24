@@ -6,12 +6,13 @@ import colors from "picocolors";
 import {
   type ReactRouterPluginContext,
   type ReactRouterPluginBuildContext,
-  type ReactRouterPluginBuildEnvironments,
+  type ReactRouterPluginBuildEnvironmentResolvers,
   resolveViteConfig,
   extractPluginContext,
   getClientBuildDirectory,
   getServerBuildDirectory,
   virtual,
+  BUILD_CLIENT_ROUTE_QUERY_STRING,
 } from "./plugin";
 import {
   type BuildManifest,
@@ -63,34 +64,120 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
 }
 
 async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
-  environments: ReactRouterPluginBuildEnvironments;
+  environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers;
   buildManifest: BuildManifest;
 }> {
   let { rootDirectory } = ctx;
-  const { routes, serverBuildFile, serverBundles, appDirectory } =
-    ctx.reactRouterConfig;
+  const {
+    routes,
+    serverBuildFile,
+    serverModuleFormat,
+    serverBundles,
+    appDirectory,
+  } = ctx.reactRouterConfig;
   let serverBuildDirectory = getServerBuildDirectory(ctx);
 
-  let environments: ReactRouterPluginBuildEnvironments = {
-    client: {
+  let getBaseBuildOptions = ({
+    viteUserConfig,
+  }: {
+    viteUserConfig: Vite.UserConfig;
+  }): Vite.BuildOptions => {
+    return {
+      cssMinify: viteUserConfig.build?.cssMinify ?? true,
+      // The manifest is enabled for all builds because we also need to detect
+      // SSR-only assets
+      manifest: true,
+    };
+  };
+
+  let getBaseRollupOptions = ({
+    viteUserConfig,
+  }: {
+    viteUserConfig: Vite.UserConfig;
+  }): Vite.BuildOptions["rollupOptions"] => {
+    return {
+      preserveEntrySignatures: "exports-only",
+      // Silence Rollup "use client" warnings
+      // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
+      onwarn(warning, defaultHandler) {
+        if (
+          warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+          warning.message.includes("use client")
+        ) {
+          return;
+        }
+        let userOwnOnwarn = viteUserConfig.build?.rollupOptions?.onwarn;
+        if (userOwnOnwarn) {
+          userOwnOnwarn(warning, defaultHandler);
+        } else {
+          defaultHandler(warning);
+        }
+      },
+    };
+  };
+
+  let getBaseServerBuildOptions = (): Vite.BuildOptions => {
+    return {
+      // We move SSR-only assets to client assets. Note that the
+      // SSR build can also emit code-split JS files (e.g. by
+      // dynamic import) under the same assets directory
+      // regardless of "ssrEmitAssets" option, so we also need to
+      // keep these JS files have to be kept as-is.
+      ssrEmitAssets: true,
+      copyPublicDir: false, // Assets in the public directory are only used by the client
+    };
+  };
+
+  let getBaseServerRollupOptions = (): Vite.BuildOptions["rollupOptions"] => {
+    return {
+      preserveEntrySignatures: "exports-only",
+      output: {
+        entryFileNames: serverBuildFile,
+        format: serverModuleFormat,
+      },
+    };
+  };
+
+  let environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers = {
+    client: ({ viteUserConfig }) => ({
       build: {
+        ...getBaseBuildOptions({ viteUserConfig }),
+        rollupOptions: {
+          ...getBaseRollupOptions({ viteUserConfig }),
+          input: [
+            ctx.entryClientFilePath,
+            ...Object.values(ctx.reactRouterConfig.routes).map(
+              (route) =>
+                `${path.resolve(
+                  ctx.reactRouterConfig.appDirectory,
+                  route.file
+                )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
+            ),
+          ],
+        },
         outDir: getClientBuildDirectory(ctx.reactRouterConfig),
       },
-    },
+    }),
   };
 
   if (!serverBundles) {
-    environments.ssr = {
+    environmentResolvers.ssr = ({ viteUserConfig }) => ({
       build: {
+        ...getBaseBuildOptions({ viteUserConfig }),
+        ...getBaseServerBuildOptions(),
         outDir: getServerBuildDirectory(ctx),
         rollupOptions: {
-          input: virtual.serverBuild.id,
+          ...getBaseRollupOptions({ viteUserConfig }),
+          ...getBaseServerRollupOptions(),
+          input:
+            viteUserConfig.build?.rollupOptions?.input ??
+            virtual.serverBuild.id,
         },
       },
-    };
+    });
 
     return {
-      environments,
+      environmentResolvers,
       buildManifest: { routes },
     };
   }
@@ -159,20 +246,26 @@ async function getBuildContext(ctx: ReactRouterPluginContext): Promise<{
   );
 
   for (let [serverBundleId, routes] of Object.entries(routesByServerBundleId)) {
-    environments[`server-bundle-${serverBundleId}`] = {
+    environmentResolvers[`server-bundle-${serverBundleId}`] = ({
+      viteUserConfig,
+    }) => ({
       build: {
+        ...getBaseBuildOptions({ viteUserConfig }),
+        ...getBaseServerBuildOptions(),
         outDir: getServerBuildDirectory(ctx, { serverBundleId }),
         rollupOptions: {
+          ...getBaseRollupOptions({ viteUserConfig }),
+          ...getBaseServerRollupOptions(),
           input: `${virtual.serverBuild.id}?route-ids=${Object.keys(
             routes
           ).join(",")}`,
         },
       },
-    };
+    });
   }
 
   return {
-    environments,
+    environmentResolvers,
     buildManifest,
   };
 }
@@ -193,10 +286,14 @@ async function cleanBuildDirectory(
 }
 
 function getViteManifestPaths(
-  environments: ReactRouterPluginBuildEnvironments
+  environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers
 ) {
-  return Object.values(environments).map((options) => {
-    invariant(options, "Expected build environment options");
+  return Object.values(environmentResolvers).map((resolver) => {
+    invariant(resolver, "Expected build environment resolver");
+    let options = resolver({
+      viteCommand: "build",
+      viteUserConfig: {},
+    });
     let outDir = options.build.outDir;
     invariant(outDir, "Expected build.outDir for build environment");
     return path.join(outDir, ".vite/manifest.json");
@@ -252,20 +349,20 @@ export async function build(
   let vite = getVite();
 
   async function viteBuild(
-    environments: ReactRouterPluginBuildEnvironments,
-    environmentName: keyof ReactRouterPluginBuildEnvironments
+    environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers,
+    environmentName: keyof ReactRouterPluginBuildEnvironmentResolvers
   ) {
     let ssr = environmentName !== "client";
 
-    let envionmentOptions = environments[environmentName];
+    let environmentResolver = environmentResolvers[environmentName];
     invariant(
-      envionmentOptions,
-      `Missing environment options for ${environmentName}`
+      environmentResolver,
+      `Missing environment resolver for ${environmentName}`
     );
 
     let buildContext: ReactRouterPluginBuildContext = {
       name: environmentName,
-      options: envionmentOptions,
+      resolveOptions: environmentResolver,
     };
 
     await vite.build({
@@ -288,25 +385,25 @@ export async function build(
 
   await cleanBuildDirectory(viteConfig, ctx);
 
-  let { environments, buildManifest } = await getBuildContext(ctx);
+  let { environmentResolvers, buildManifest } = await getBuildContext(ctx);
 
   // Run the Vite client build first
-  await viteBuild(environments, "client");
+  await viteBuild(environmentResolvers, "client");
 
   // Then run Vite SSR builds in parallel
-  let serverEnvironmentNames = Object.keys(environments).filter(
+  let serverEnvironmentNames = Object.keys(environmentResolvers).filter(
     (environmentName) => environmentName !== "client"
   );
   await Promise.all(
     serverEnvironmentNames.map((environmentName) =>
       viteBuild(
-        environments,
-        environmentName as keyof ReactRouterPluginBuildEnvironments
+        environmentResolvers,
+        environmentName as keyof ReactRouterPluginBuildEnvironmentResolvers
       )
     )
   );
 
-  let viteManifestPaths = getViteManifestPaths(environments);
+  let viteManifestPaths = getViteManifestPaths(environmentResolvers);
   await Promise.all(
     viteManifestPaths.map(async (viteManifestPath) => {
       let manifestExists = await fse.pathExists(viteManifestPath);
