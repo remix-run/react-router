@@ -55,13 +55,12 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/product"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test1 = Expect<Equal<typeof params.id, string>>
-          type Test2 = Expect<Equal<typeof params.asdf, string | undefined>>
+          type Assert = Expect<Equal<typeof params, { id: string }>>
           return { planet: "world" }
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          type Assert = Expect<Equal<typeof loaderData, { planet: string }>>
           return <h1>Hello, {loaderData.planet}!</h1>
         }
       `,
@@ -90,8 +89,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/repeated-params"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Expected = [string, string | undefined, string]
-            type Test = Expect<Equal<typeof params.id, Expected>>
+            type Assert = Expect<Equal<typeof params, { id: string }>>
             return null
           }
         `,
@@ -118,7 +116,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/splat"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params["*"], string>>
+            type Assert = Expect<Equal<typeof params, { "*": string }>>
             return null
           }
         `,
@@ -146,7 +144,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params["lang"], string>>
+            type Assert = Expect<Equal<typeof params, { "lang": string }>>
             return null
           }
         `,
@@ -155,7 +153,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/optional-param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params["user"], string | undefined>>
+            type Assert = Expect<Equal<typeof params, { user?: string }>>
             return null
           }
         `,
@@ -189,7 +187,7 @@ test.describe("typegen", () => {
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          type Test = Expect<Equal<typeof loaderData, { client: string }>>
+          type Assert = Expect<Equal<typeof loaderData, { client: string }>>
           return <h1>Hello from {loaderData.client}!</h1>
         }
       `,
@@ -214,12 +212,12 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/products.$id"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test = Expect<Equal<typeof params.id, string>>
+          type Assert = Expect<Equal<typeof params, { id: string }>>
           return { planet: "world" }
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          type Assert = Expect<Equal<typeof loaderData, { planet: string }>>
           return <h1>Hello, {loaderData.planet}!</h1>
         }
       `,
@@ -242,7 +240,10 @@ test.describe("typegen", () => {
         export default [
           route("parent1/:parent1", "routes/parent1.tsx", [
             route("parent2/:parent2", "routes/parent2.tsx", [
-              route("current", "routes/current.tsx")
+              route("current", "routes/current.tsx", [
+                route("childA/:a", "routes/childA.tsx"),
+                route("childB/:b?", "routes/childB.tsx"),
+              ])
             ])
           ])
         ] satisfies RouteConfig;
@@ -287,40 +288,135 @@ test.describe("typegen", () => {
           return { current: 3 }
         }
 
+        type Expected = [
+          {
+            id: "root";
+            params:
+              | { parent1: string }
+              | {
+                  parent1: string;
+                  parent2: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  a: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  b?: string;
+                };
+            data: undefined;
+          },
+          {
+            id: "routes/parent1";
+            params:
+              | {
+                  parent1: string;
+                  parent2: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  a: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  b?: string;
+                };
+            data: {
+              parent1: number;
+            };
+          },
+          {
+            id: "routes/parent2";
+            params:
+              | {
+                  parent1: string;
+                  parent2: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  a: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  b?: string;
+                };
+          },
+          {
+            id: "routes/current";
+            params:
+              | {
+                  parent1: string;
+                  parent2: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  a: string;
+                }
+              | {
+                  parent1: string;
+                  parent2: string;
+                  b?: string;
+                };
+            data: {
+              current: number;
+            };
+          },
+          (
+            | {
+                id: "routes/childA";
+                params: {
+                  parent1: string;
+                  parent2: string;
+                  a: string;
+                };
+                data: {
+                  childA: number;
+                };
+              }
+            | {
+                id: "routes/childB";
+                params: {
+                  parent1: string;
+                  parent2: string;
+                  b?: string;
+                };
+                data: {
+                  childB: number;
+                };
+              }
+          )
+        ]
+
         export function meta({ matches }: Route.MetaArgs) {
-          const parent1 = matches[1]
-          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
-
-          const parent2 = matches[2]
-          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
-
-          const current = matches[3]
-          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
-
-          const child1 = matches[4]
-          type Test4a = Expect<undefined extends typeof child1 ? true : false>
-          if (child1) {
-            type Test4b = Expect<Equal<typeof child1.data, unknown>>
-          }
+          type Test = Expect<typeof matches extends Expected ? true : false>
           return []
         }
 
         export default function Component({ matches }: Route.ComponentProps) {
-          const parent1 = matches[1]
-          type Test1 = Expect<Equal<typeof parent1.data, { parent1: number }>>
-
-          const parent2 = matches[2]
-          type Test2 = Expect<Equal<typeof parent2.data, { parent2: number }>>
-
-          const current = matches[3]
-          type Test3 = Expect<Equal<typeof current.data, { current: number }>>
-
-          const child1 = matches[4]
-          type Test4a = Expect<undefined extends typeof child1 ? true : false>
-          if (child1) {
-            type Test4b = Expect<Equal<typeof child1.data, unknown>>
-          }
+          type Test = Expect<typeof matches extends Expected ? true : false>
         }
+      `,
+      "app/routes/childA.tsx": tsx`
+        export function loader() {
+          return { childA: 4 }
+        }
+
+        export default function Component() {}
+      `,
+      "app/routes/childB.tsx": tsx`
+        export function loader() {
+          return { childB: 4 }
+        }
+
+        export default function Component() {}
       `,
     });
     const proc = typecheck(cwd);
@@ -346,12 +442,12 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/absolute"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test = Expect<Equal<typeof params.id, string>>
+          type Assert = Expect<Equal<typeof params, { id: string }>>
           return { planet: "world" }
         }
 
         export default function Component({ loaderData }: Route.ComponentProps) {
-          type Test = Expect<Equal<typeof loaderData.planet, string>>
+          type Assert = Expect<Equal<typeof loaderData, { planet: string }>>
           return <h1>Hello, {loaderData.planet}!</h1>
         }
       `,

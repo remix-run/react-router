@@ -1,4 +1,4 @@
-// We can only import types from Vite at the top level since we're in a CJS
+//  We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build to avoid deprecation warnings
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
