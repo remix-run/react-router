@@ -268,5 +268,5 @@ type __tests = [
  * in your application.
  */
 export type SerializesTo<T> = {
-  $__RR_SerializesTo?: [T];
+  __ReactRouter_SerializesTo?: [T];
 };
