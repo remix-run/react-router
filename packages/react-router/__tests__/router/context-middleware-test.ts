@@ -4,6 +4,7 @@ import { createRouter, createStaticHandler } from "../../lib/router/router";
 import type {
   DataStrategyResult,
   MiddlewareFunction,
+  MiddlewareFunctionArgs,
 } from "../../lib/router/utils";
 import { redirect } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
@@ -13,23 +14,30 @@ let router: Router;
 
 afterEach(() => cleanup(router));
 
+declare module "../../lib/router/utils" {
+  interface RouterContext {
+    count?: { value: number };
+    order?: string[];
+  }
+}
+
 function getOrderMiddleware(name: string): MiddlewareFunction {
   return async ({ context, next }) => {
-    context.order.push(`${name} middleware - before next()`);
+    context.order?.push(`${name} middleware - before next()`);
     await tick(); // Force async to ensure ordering is correct
     await next();
     await tick(); // Force async to ensure ordering is correct
-    context.order.push(`${name} middleware - after next()`);
+    context.order?.push(`${name} middleware - after next()`);
   };
 }
 
 describe("context/middleware", () => {
   describe("context", () => {
     it("provides context to loaders and actions", async () => {
-      let context = { count: 1 };
+      let globalContext = { count: { value: 0 } };
       router = createRouter({
         history: createMemoryHistory(),
-        context,
+        context: globalContext,
         routes: [
           {
             path: "/",
@@ -38,40 +46,42 @@ describe("context/middleware", () => {
             id: "a",
             path: "/a",
             loader({ context }) {
-              return ++context.count;
+              if (context.count) context.count.value++;
+              return context.count?.value;
             },
           },
           {
             id: "b",
             path: "/b",
             action({ context }) {
-              return ++context.count;
+              if (context.count) context.count.value++;
+              return context.count?.value;
             },
             loader({ context }) {
-              return ++context.count;
+              if (context.count) context.count.value++;
+              return context.count?.value;
             },
           },
         ],
       });
 
       await router.navigate("/a");
-      expect(router.state.loaderData.a).toBe(2);
-      expect(context.count).toBe(2);
+      expect(router.state.loaderData.a).toBe(1);
+      expect(globalContext.count.value).toBe(1);
 
       await router.navigate("/b", {
         formMethod: "post",
         formData: createFormData({}),
       });
-      expect(router.state.actionData?.b).toBe(3);
-      expect(router.state.loaderData.b).toBe(4);
-      expect(context.count).toBe(4);
+      expect(router.state.actionData?.b).toBe(2);
+      expect(router.state.loaderData.b).toBe(3);
+      expect(globalContext.count.value).toBe(3);
     });
 
     it("works with dataStrategy for a sequential implementation", async () => {
-      let context = {};
       router = createRouter({
         history: createMemoryHistory(),
-        context,
+        context: {},
         routes: [
           {
             path: "/",
@@ -83,7 +93,7 @@ describe("context/middleware", () => {
               // Ensure these actually run sequentially :)
               await tick();
               context.parent = "PARENT MIDDLEWARE";
-              return "PARENT";
+              return context;
             },
             children: [
               {
@@ -92,7 +102,7 @@ describe("context/middleware", () => {
                 loader({ context }) {
                   context.parent += " (amended from child)";
                   context.child = "CHILD MIDDLEWARE";
-                  return "CHILD";
+                  return context;
                 },
               },
             ],
@@ -109,21 +119,22 @@ describe("context/middleware", () => {
 
       await router.navigate("/parent/child");
 
-      expect(context).toEqual({
-        child: "CHILD MIDDLEWARE",
-        parent: "PARENT MIDDLEWARE (amended from child)",
-      });
       expect(router.state.loaderData).toEqual({
-        child: "CHILD",
-        parent: "PARENT",
+        parent: expect.objectContaining({
+          child: "CHILD MIDDLEWARE",
+          parent: "PARENT MIDDLEWARE (amended from child)",
+        }),
+        child: expect.objectContaining({
+          child: "CHILD MIDDLEWARE",
+          parent: "PARENT MIDDLEWARE (amended from child)",
+        }),
       });
     });
 
     it("works with dataStrategy for an easy middleware implementation", async () => {
-      let context = {};
       router = createRouter({
         history: createMemoryHistory(),
-        context,
+        context: {},
         routes: [
           {
             path: "/",
@@ -131,7 +142,7 @@ describe("context/middleware", () => {
           {
             id: "parent",
             path: "/parent",
-            loader: ({ context }) => ({ contextSnapshot: { ...context } }),
+            loader: ({ context }) => context,
             handle: {
               middleware(context) {
                 context.parent = "PARENT MIDDLEWARE";
@@ -141,7 +152,7 @@ describe("context/middleware", () => {
               {
                 id: "child",
                 path: "child",
-                loader: ({ context }) => ({ contextSnapshot: { ...context } }),
+                loader: ({ context }) => context,
                 handle: {
                   middleware(context) {
                     context.parent += " (amended from child)";
@@ -171,23 +182,15 @@ describe("context/middleware", () => {
 
       await router.navigate("/parent/child");
 
-      expect(context).toEqual({
-        child: "CHILD MIDDLEWARE",
-        parent: "PARENT MIDDLEWARE (amended from child)",
-      });
       expect(router.state.loaderData).toEqual({
-        child: {
-          contextSnapshot: {
-            child: "CHILD MIDDLEWARE",
-            parent: "PARENT MIDDLEWARE (amended from child)",
-          },
-        },
-        parent: {
-          contextSnapshot: {
-            child: "CHILD MIDDLEWARE",
-            parent: "PARENT MIDDLEWARE (amended from child)",
-          },
-        },
+        child: expect.objectContaining({
+          child: "CHILD MIDDLEWARE",
+          parent: "PARENT MIDDLEWARE (amended from child)",
+        }),
+        parent: expect.objectContaining({
+          child: "CHILD MIDDLEWARE",
+          parent: "PARENT MIDDLEWARE (amended from child)",
+        }),
       });
     });
   });
@@ -195,10 +198,10 @@ describe("context/middleware", () => {
   describe("middleware - client side", () => {
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
-        let context = { order: [] };
+        let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: globalContext,
           routes: [
             {
               path: "/",
@@ -208,7 +211,7 @@ describe("context/middleware", () => {
               path: "/parent",
               middleware: [getOrderMiddleware("a"), getOrderMiddleware("b")],
               loader({ context }) {
-                context.order.push("parent loader");
+                context.order?.push("parent loader");
               },
               children: [
                 {
@@ -219,7 +222,7 @@ describe("context/middleware", () => {
                     getOrderMiddleware("d"),
                   ],
                   loader({ context }) {
-                    context.order.push("child loader");
+                    context.order?.push("child loader");
                   },
                 },
               ],
@@ -229,7 +232,7 @@ describe("context/middleware", () => {
 
         await router.navigate("/parent/child");
 
-        expect(context).toEqual({
+        expect(globalContext).toEqual({
           order: [
             "a middleware - before next()",
             "b middleware - before next()",
@@ -245,13 +248,11 @@ describe("context/middleware", () => {
         });
       });
 
-      jest.setTimeout(1000000);
-
       it("runs middleware sequentially before and after actions", async () => {
-        let context = { order: [] };
+        let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: globalContext,
           routes: [
             {
               path: "/",
@@ -261,7 +262,7 @@ describe("context/middleware", () => {
               path: "/parent",
               middleware: [getOrderMiddleware("a"), getOrderMiddleware("b")],
               loader({ context }) {
-                context.order.push("parent loader");
+                context.order?.push("parent loader");
               },
               children: [
                 {
@@ -272,10 +273,10 @@ describe("context/middleware", () => {
                     getOrderMiddleware("d"),
                   ],
                   action({ context }) {
-                    context.order.push("child action");
+                    context.order?.push("child action");
                   },
                   loader({ context }) {
-                    context.order.push("child loader");
+                    context.order?.push("child loader");
                   },
                 },
               ],
@@ -288,7 +289,7 @@ describe("context/middleware", () => {
           formData: createFormData({}),
         });
 
-        expect(context).toEqual({
+        expect(globalContext).toEqual({
           order: [
             // Action
             "a middleware - before next()",
@@ -316,10 +317,9 @@ describe("context/middleware", () => {
       });
 
       it("does not return result of middleware in client side routers", async () => {
-        let context = {};
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: {},
           routes: [
             {
               path: "/",
@@ -355,7 +355,7 @@ describe("context/middleware", () => {
                     },
                   ],
                   loader({ context }) {
-                    return "CHILD";
+                    return context;
                   },
                 },
               ],
@@ -365,23 +365,21 @@ describe("context/middleware", () => {
 
         await router.navigate("/parent/child");
 
-        expect(context).toEqual({
-          child1: undefined,
-          child2: undefined,
-          parent1: undefined,
-          parent2: undefined,
-        });
-        expect(router.state.loaderData).toEqual({
-          child: "CHILD",
+        expect(router.state.loaderData).toMatchObject({
           parent: "PARENT",
+          child: {
+            child1: undefined,
+            child2: undefined,
+            parent1: undefined,
+            parent2: undefined,
+          },
         });
       });
 
       it("does not require that you call next()", async () => {
-        let context = {};
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: {},
           routes: [
             {
               path: "/",
@@ -394,8 +392,8 @@ describe("context/middleware", () => {
                   context.parent = "PARENT MIDDLEWARE";
                 },
               ],
-              loader() {
-                return "PARENT";
+              loader({ context }) {
+                return context;
               },
               children: [
                 {
@@ -406,8 +404,8 @@ describe("context/middleware", () => {
                       context.child = "CHILD MIDDLEWARE";
                     },
                   ],
-                  loader() {
-                    return "CHILD";
+                  loader({ context }) {
+                    return context;
                   },
                 },
               ],
@@ -417,13 +415,15 @@ describe("context/middleware", () => {
 
         await router.navigate("/parent/child");
 
-        expect(context).toEqual({
-          child: "CHILD MIDDLEWARE",
-          parent: "PARENT MIDDLEWARE",
-        });
         expect(router.state.loaderData).toEqual({
-          child: "CHILD",
-          parent: "PARENT",
+          parent: {
+            child: "CHILD MIDDLEWARE",
+            parent: "PARENT MIDDLEWARE",
+          },
+          child: {
+            child: "CHILD MIDDLEWARE",
+            parent: "PARENT MIDDLEWARE",
+          },
         });
         expect(router.state.errors).toBeNull();
       });
@@ -458,14 +458,99 @@ describe("context/middleware", () => {
           parent: new Error("You may only call `next()` once per middleware"),
         });
       });
+
+      it("creates a new context per navigation/fetcher call", async () => {
+        let globalContext = { count: { value: 0 } };
+        router = createRouter({
+          history: createMemoryHistory(),
+          context: globalContext,
+          routes: [
+            {
+              id: "index",
+              path: "/",
+            },
+            {
+              id: "page",
+              path: "/page",
+              middleware: [
+                ({ context }: MiddlewareFunctionArgs) => {
+                  if (context.count) context.count.value++;
+                  context.localCount =
+                    ((context.localCount as number) || 0) + 1;
+                },
+              ],
+              action({ context }) {
+                // point in time snapshot
+                return JSON.parse(JSON.stringify(context));
+              },
+              loader({ context }) {
+                return context;
+              },
+            },
+          ],
+        });
+
+        await router.navigate("/page");
+        expect(router.state.loaderData.page).toEqual({
+          count: { value: 1 },
+          localCount: 1,
+        });
+
+        await router.navigate("/");
+        await router.navigate("/page");
+        expect(router.state.loaderData.page).toEqual({
+          count: { value: 2 },
+          localCount: 1,
+        });
+
+        await router.navigate("/");
+        await router.navigate("/page", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(router.state.actionData?.page).toEqual({
+          count: { value: 3 },
+          localCount: 1,
+        });
+        expect(router.state.loaderData.page).toEqual({
+          count: { value: 4 },
+          localCount: 2, // context persists from action -> loader
+        });
+
+        let fetcherData;
+        let unsub = router.subscribe((state) => {
+          if (state.fetchers.get("a")?.data) {
+            fetcherData = state.fetchers.get("a")?.data;
+          }
+        });
+        await router.fetch("a", "page", "/page");
+        expect(fetcherData).toEqual({
+          count: { value: 5 },
+          localCount: 1,
+        });
+
+        await router.fetch("a", "page", "/page", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(fetcherData).toEqual({
+          count: { value: 6 },
+          localCount: 1,
+        });
+        expect(router.state.loaderData.page).toEqual({
+          count: { value: 7 },
+          localCount: 2, // context persists from action -> loader
+        });
+
+        unsub();
+      });
     });
 
     describe("throwing", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
-        let context = {};
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: {},
           routes: [
             {
               path: "/",
@@ -481,8 +566,8 @@ describe("context/middleware", () => {
                   throw new Error("PARENT 2");
                 },
               ],
-              loader() {
-                return "PARENT";
+              loader({ context }) {
+                return context;
               },
               children: [
                 {
@@ -495,7 +580,7 @@ describe("context/middleware", () => {
                     },
                   ],
                   loader({ context }) {
-                    return "CHILD";
+                    return context;
                   },
                 },
               ],
@@ -505,9 +590,6 @@ describe("context/middleware", () => {
 
         await router.navigate("/parent/child");
 
-        expect(context).toEqual({
-          parent1: "PARENT 1",
-        });
         expect(router.state.loaderData).toEqual({});
         expect(router.state.errors).toEqual({
           parent: new Error("PARENT 2"),
@@ -515,10 +597,9 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - loader)", async () => {
-        let context = {};
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: {},
           routes: [
             {
               path: "/",
@@ -533,8 +614,8 @@ describe("context/middleware", () => {
                   context.parent = "PARENT UP";
                 },
               ],
-              loader() {
-                return "PARENT";
+              loader({ context }) {
+                return context;
               },
               children: [
                 {
@@ -548,7 +629,7 @@ describe("context/middleware", () => {
                     },
                   ],
                   loader({ context }) {
-                    return "CHILD";
+                    return context;
                   },
                 },
               ],
@@ -558,12 +639,11 @@ describe("context/middleware", () => {
 
         await router.navigate("/parent/child");
 
-        expect(context).toEqual({
-          child: "CHILD DOWN",
-          parent: "PARENT DOWN",
-        });
         expect(router.state.loaderData).toEqual({
-          parent: "PARENT",
+          parent: {
+            child: "CHILD DOWN",
+            parent: "PARENT DOWN",
+          },
         });
         expect(router.state.errors).toEqual({
           parent: new Error("CHILD UP"),
@@ -571,10 +651,10 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going down - action w/boundary)", async () => {
-        let context = { order: [] };
+        let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: globalContext,
           routes: [
             {
               path: "/",
@@ -585,13 +665,13 @@ describe("context/middleware", () => {
               middleware: [
                 async ({ request, context, next }) => {
                   if (request.method !== "GET") {
-                    context.order.push("parent action start");
+                    context.order?.push("parent action start");
                     await next();
-                    context.order.push("parent action end");
+                    context.order?.push("parent action end");
                   } else {
-                    context.order.push("parent loader start");
+                    context.order?.push("parent loader start");
                     await next();
-                    context.order.push("parent loader end");
+                    context.order?.push("parent loader end");
                   }
                 },
               ],
@@ -606,23 +686,23 @@ describe("context/middleware", () => {
                   middleware: [
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 1 action start - throwing");
+                        context.order?.push("child 1 action start - throwing");
                         throw new Error("child 1 action error");
                       } else {
-                        context.order.push("child 1 loader start");
+                        context.order?.push("child 1 loader start");
                         await next();
-                        context.order.push("child 1 loader end");
+                        context.order?.push("child 1 loader end");
                       }
                     },
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 2 action start");
+                        context.order?.push("child 2 action start");
                         await next();
-                        context.order.push("child 2 action end");
+                        context.order?.push("child 2 action end");
                       } else {
-                        context.order.push("child 2 loader start");
+                        context.order?.push("child 2 loader start");
                         await next();
-                        context.order.push("child 2 loader end");
+                        context.order?.push("child 2 loader end");
                       }
                     },
                   ],
@@ -643,7 +723,7 @@ describe("context/middleware", () => {
           formData: createFormData({}),
         });
 
-        expect(context).toMatchInlineSnapshot(`
+        expect(globalContext).toMatchInlineSnapshot(`
           {
             "order": [
               "parent action start",
@@ -667,10 +747,10 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/boundary)", async () => {
-        let context = { order: [] };
+        let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: globalContext,
           routes: [
             {
               path: "/",
@@ -681,13 +761,13 @@ describe("context/middleware", () => {
               middleware: [
                 async ({ request, context, next }) => {
                   if (request.method !== "GET") {
-                    context.order.push("parent action start");
+                    context.order?.push("parent action start");
                     await next();
-                    context.order.push("parent action end");
+                    context.order?.push("parent action end");
                   } else {
-                    context.order.push("parent loader start");
+                    context.order?.push("parent loader start");
                     await next();
-                    context.order.push("parent loader end");
+                    context.order?.push("parent loader end");
                   }
                 },
               ],
@@ -702,25 +782,25 @@ describe("context/middleware", () => {
                   middleware: [
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 1 action start");
+                        context.order?.push("child 1 action start");
                         await next();
-                        context.order.push("child 1 action end");
+                        context.order?.push("child 1 action end");
                       } else {
-                        context.order.push("child 1 loader start");
+                        context.order?.push("child 1 loader start");
                         await next();
-                        context.order.push("child 1 loader end");
+                        context.order?.push("child 1 loader end");
                       }
                     },
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 2 action start");
+                        context.order?.push("child 2 action start");
                         await next();
-                        context.order.push("child 2 action end - throwing");
+                        context.order?.push("child 2 action end - throwing");
                         throw new Error("child 2 action error");
                       } else {
-                        context.order.push("child 2 loader start");
+                        context.order?.push("child 2 loader start");
                         await next();
-                        context.order.push("child 2 loader end");
+                        context.order?.push("child 2 loader end");
                       }
                     },
                   ],
@@ -741,7 +821,7 @@ describe("context/middleware", () => {
           formData: createFormData({}),
         });
 
-        expect(context).toEqual({
+        expect(globalContext).toEqual({
           order: [
             "parent action start",
             "child 1 action start",
@@ -761,10 +841,10 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going down - action w/o boundary)", async () => {
-        let context = { order: [] };
+        let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: globalContext,
           routes: [
             {
               path: "/",
@@ -776,13 +856,13 @@ describe("context/middleware", () => {
               middleware: [
                 async ({ request, context, next }) => {
                   if (request.method !== "GET") {
-                    context.order.push("parent action start");
+                    context.order?.push("parent action start");
                     await next();
-                    context.order.push("parent action end");
+                    context.order?.push("parent action end");
                   } else {
-                    context.order.push("parent loader start");
+                    context.order?.push("parent loader start");
                     await next();
-                    context.order.push("parent loader end");
+                    context.order?.push("parent loader end");
                   }
                 },
               ],
@@ -796,23 +876,23 @@ describe("context/middleware", () => {
                   middleware: [
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 1 action start - throwing");
+                        context.order?.push("child 1 action start - throwing");
                         throw new Error("child 1 action error");
                       } else {
-                        context.order.push("child 1 loader start");
+                        context.order?.push("child 1 loader start");
                         await next();
-                        context.order.push("child 1 loader end");
+                        context.order?.push("child 1 loader end");
                       }
                     },
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 2 action start");
+                        context.order?.push("child 2 action start");
                         await next();
-                        context.order.push("child 2 action end");
+                        context.order?.push("child 2 action end");
                       } else {
-                        context.order.push("child 2 loader start");
+                        context.order?.push("child 2 loader start");
                         await next();
-                        context.order.push("child 2 loader end");
+                        context.order?.push("child 2 loader end");
                       }
                     },
                   ],
@@ -833,7 +913,7 @@ describe("context/middleware", () => {
           formData: createFormData({}),
         });
 
-        expect(context).toEqual({
+        expect(globalContext).toEqual({
           order: ["parent action start", "child 1 action start - throwing"],
         });
         expect(router.state.loaderData).toEqual({});
@@ -843,10 +923,10 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/o boundary)", async () => {
-        let context = { order: [] };
+        let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context,
+          context: globalContext,
           routes: [
             {
               path: "/",
@@ -858,13 +938,13 @@ describe("context/middleware", () => {
               middleware: [
                 async ({ request, context, next }) => {
                   if (request.method !== "GET") {
-                    context.order.push("parent action start");
+                    context.order?.push("parent action start");
                     await next();
-                    context.order.push("parent action end");
+                    context.order?.push("parent action end");
                   } else {
-                    context.order.push("parent loader start");
+                    context.order?.push("parent loader start");
                     await next();
-                    context.order.push("parent loader end");
+                    context.order?.push("parent loader end");
                   }
                 },
               ],
@@ -878,25 +958,25 @@ describe("context/middleware", () => {
                   middleware: [
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 1 action start");
+                        context.order?.push("child 1 action start");
                         await next();
-                        context.order.push("child 1 action end");
+                        context.order?.push("child 1 action end");
                       } else {
-                        context.order.push("child 1 loader start");
+                        context.order?.push("child 1 loader start");
                         await next();
-                        context.order.push("child 1 loader end");
+                        context.order?.push("child 1 loader end");
                       }
                     },
                     async ({ request, context, next }) => {
                       if (request.method !== "GET") {
-                        context.order.push("child 2 action start");
+                        context.order?.push("child 2 action start");
                         await next();
-                        context.order.push("child 2 action end - throwing");
+                        context.order?.push("child 2 action end - throwing");
                         throw new Error("child 2 action error");
                       } else {
-                        context.order.push("child 2 loader start");
+                        context.order?.push("child 2 loader start");
                         await next();
-                        context.order.push("child 2 loader end");
+                        context.order?.push("child 2 loader end");
                       }
                     },
                   ],
@@ -917,7 +997,7 @@ describe("context/middleware", () => {
           formData: createFormData({}),
         });
 
-        expect(context).toEqual({
+        expect(globalContext).toEqual({
           order: [
             "parent action start",
             "child 1 action start",
@@ -1006,7 +1086,6 @@ describe("context/middleware", () => {
 
   describe("middleware - handler.query", () => {
     it("propagates a Response through middleware when a `respond` API is passed", async () => {
-      let context = {};
       let handler = createStaticHandler([
         {
           path: "/",
@@ -1015,12 +1094,12 @@ describe("context/middleware", () => {
           id: "parent",
           path: "/parent",
           middleware: [
-            async ({ context, next }) => {
+            async ({ next }) => {
               let res = (await next()) as Response;
               res.headers.set("parent1", "yes");
               return res;
             },
-            async ({ context, next }) => {
+            async ({ next }) => {
               let res = (await next()) as Response;
               res.headers.set("parent2", "yes");
               return res;
@@ -1034,18 +1113,18 @@ describe("context/middleware", () => {
               id: "child",
               path: "child",
               middleware: [
-                async ({ context, next }) => {
+                async ({ next }) => {
                   let res = (await next()) as Response;
                   res.headers.set("child1", "yes");
                   return res;
                 },
-                async ({ context, next }) => {
+                async ({ next }) => {
                   let res = (await next()) as Response;
                   res.headers.set("child2", "yes");
                   return res;
                 },
               ],
-              loader({ context }) {
+              loader() {
                 return "CHILD";
               },
             },
@@ -1056,7 +1135,6 @@ describe("context/middleware", () => {
       let response = (await handler.query(
         new Request("http://localhost/parent/child"),
         {
-          requestContext: context,
           respond: async (staticContext) => {
             return new Response(JSON.stringify(staticContext), {
               headers: {
@@ -1137,7 +1215,6 @@ describe("context/middleware", () => {
 
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1147,7 +1224,7 @@ describe("context/middleware", () => {
             path: "/parent",
             middleware: [getOrderMiddleware("a"), getOrderMiddleware("b")],
             loader({ context }) {
-              context.order.push("parent loader");
+              context.order?.push("parent loader");
             },
             children: [
               {
@@ -1155,18 +1232,19 @@ describe("context/middleware", () => {
                 path: "child",
                 middleware: [getOrderMiddleware("c"), getOrderMiddleware("d")],
                 loader({ context }) {
-                  context.order.push("child loader");
+                  context.order?.push("child loader");
                 },
               },
             ],
           },
         ]);
 
+        let requestContext = { order: [] };
         await handler.query(new Request("http://localhost/parent/child"), {
-          requestContext: context,
+          requestContext,
         });
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "a middleware - before next()",
             "b middleware - before next()",
@@ -1183,7 +1261,7 @@ describe("context/middleware", () => {
       });
 
       it("runs middleware sequentially before and after actions", async () => {
-        let context = { order: [] };
+        let requestContext = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1193,7 +1271,7 @@ describe("context/middleware", () => {
             path: "/parent",
             middleware: [getOrderMiddleware("a"), getOrderMiddleware("b")],
             loader({ context }) {
-              context.order.push("parent loader");
+              context.order?.push("parent loader");
             },
             children: [
               {
@@ -1201,10 +1279,10 @@ describe("context/middleware", () => {
                 path: "child",
                 middleware: [getOrderMiddleware("c"), getOrderMiddleware("d")],
                 action({ context }) {
-                  context.order.push("child action");
+                  context.order?.push("child action");
                 },
                 loader({ context }) {
-                  context.order.push("child loader");
+                  context.order?.push("child loader");
                 },
               },
             ],
@@ -1216,10 +1294,10 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             // Action
             "a middleware - before next()",
@@ -1247,7 +1325,6 @@ describe("context/middleware", () => {
       });
 
       it("does not return result of middleware in static handler by default", async () => {
-        let context = {};
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1290,14 +1367,15 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = {};
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child"),
           {
-            requestContext: context,
+            requestContext,
           }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           child1: undefined,
           child2: undefined,
           parent1: undefined,
@@ -1310,7 +1388,6 @@ describe("context/middleware", () => {
       });
 
       it("does not require that you call next()", async () => {
-        let context = {};
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1343,12 +1420,13 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = {};
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child"),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           child: "CHILD MIDDLEWARE",
           parent: "PARENT MIDDLEWARE",
         });
@@ -1393,7 +1471,6 @@ describe("context/middleware", () => {
 
     describe("throwing", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
-        let context = {};
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1430,12 +1507,13 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = {};
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child"),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           parent1: "PARENT 1",
         });
         expect((staticContext as StaticHandlerContext).loaderData).toEqual({});
@@ -1481,15 +1559,13 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let context = {};
+        let requestContext = {};
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child"),
-          {
-            requestContext: context,
-          }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           child: "CHILD DOWN",
           parent: "PARENT DOWN",
         });
@@ -1512,13 +1588,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -1533,23 +1609,23 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start - throwing");
+                      context.order?.push("child 1 action start - throwing");
                       throw new Error("child 1 action error");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end");
+                      context.order?.push("child 2 action end");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -1564,16 +1640,16 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let context = { order: [] };
+        let requestContext = { order: [] };
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child", {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toMatchInlineSnapshot(`
+        expect(requestContext).toMatchInlineSnapshot(`
           {
             "order": [
               "parent action start",
@@ -1599,7 +1675,6 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/boundary)", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1610,13 +1685,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -1631,25 +1706,25 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start");
+                      context.order?.push("child 1 action start");
                       await next();
-                      context.order.push("child 1 action end");
+                      context.order?.push("child 1 action end");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end - throwing");
+                      context.order?.push("child 2 action end - throwing");
                       throw new Error("child 2 action error");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -1664,15 +1739,16 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = { order: [] };
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child", {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "parent action start",
             "child 1 action start",
@@ -1693,7 +1769,6 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going down - action w/o boundary)", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1705,13 +1780,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -1725,23 +1800,23 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start - throwing");
+                      context.order?.push("child 1 action start - throwing");
                       throw new Error("child 1 action error");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end");
+                      context.order?.push("child 2 action end");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -1756,15 +1831,16 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = { order: [] };
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child", {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: ["parent action start", "child 1 action start - throwing"],
         });
         expect((staticContext as StaticHandlerContext).loaderData).toEqual({
@@ -1777,7 +1853,6 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/o boundary)", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1789,13 +1864,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -1809,25 +1884,25 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start");
+                      context.order?.push("child 1 action start");
                       await next();
-                      context.order.push("child 1 action end");
+                      context.order?.push("child 1 action end");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end - throwing");
+                      context.order?.push("child 2 action end - throwing");
                       throw new Error("child 2 action error");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -1842,15 +1917,16 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = { order: [] };
         let staticContext = await handler.query(
           new Request("http://localhost/parent/child", {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "parent action start",
             "child 1 action start",
@@ -1930,7 +2006,6 @@ describe("context/middleware", () => {
 
   describe("middleware - handler.queryRoute", () => {
     it("propagates a Response through middleware when a `respond` API is passed", async () => {
-      let context = {};
       let handler = createStaticHandler([
         {
           path: "/",
@@ -1980,7 +2055,6 @@ describe("context/middleware", () => {
       let response = (await handler.queryRoute(
         new Request("http://localhost/parent/child"),
         {
-          requestContext: context,
           async respond(val) {
             return val;
           },
@@ -1996,7 +2070,6 @@ describe("context/middleware", () => {
 
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2006,7 +2079,7 @@ describe("context/middleware", () => {
             path: "/parent",
             middleware: [getOrderMiddleware("a"), getOrderMiddleware("b")],
             loader({ context }) {
-              context.order.push("parent loader");
+              context.order?.push("parent loader");
             },
             children: [
               {
@@ -2014,18 +2087,19 @@ describe("context/middleware", () => {
                 path: "child",
                 middleware: [getOrderMiddleware("c"), getOrderMiddleware("d")],
                 loader({ context }) {
-                  context.order.push("child loader");
+                  context.order?.push("child loader");
                 },
               },
             ],
           },
         ]);
 
+        let requestContext = { order: [] };
         await handler.queryRoute(new Request("http://localhost/parent/child"), {
-          requestContext: context,
+          requestContext,
         });
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "a middleware - before next()",
             "b middleware - before next()",
@@ -2041,7 +2115,6 @@ describe("context/middleware", () => {
       });
 
       it("runs middleware sequentially before and after actions", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2051,7 +2124,7 @@ describe("context/middleware", () => {
             path: "/parent",
             middleware: [getOrderMiddleware("a"), getOrderMiddleware("b")],
             loader({ context }) {
-              context.order.push("parent loader");
+              context.order?.push("parent loader");
             },
             children: [
               {
@@ -2059,25 +2132,26 @@ describe("context/middleware", () => {
                 path: "child",
                 middleware: [getOrderMiddleware("c"), getOrderMiddleware("d")],
                 action({ context }) {
-                  context.order.push("child action");
+                  context.order?.push("child action");
                 },
                 loader({ context }) {
-                  context.order.push("child loader");
+                  context.order?.push("child loader");
                 },
               },
             ],
           },
         ]);
 
+        let requestContext = { order: [] };
         await handler.queryRoute(
           new Request("http://localhost/parent/child", {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext: context }
+          { requestContext }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "a middleware - before next()",
             "b middleware - before next()",
@@ -2093,7 +2167,6 @@ describe("context/middleware", () => {
       });
 
       it("returns result of middleware in static handler", async () => {
-        let context = {};
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2136,14 +2209,15 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = {};
         let staticContext = await handler.queryRoute(
           new Request("http://localhost/parent/child"),
           {
-            requestContext: context,
+            requestContext,
           }
         );
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           child1: undefined,
           child2: undefined,
           parent1: undefined,
@@ -2153,7 +2227,6 @@ describe("context/middleware", () => {
       });
 
       it("does not require that you call next()", async () => {
-        let context = {};
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2186,12 +2259,13 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = {};
         let response = (await handler.queryRoute(
           new Request("http://localhost/parent/child"),
-          { requestContext: context }
+          { requestContext }
         )) as Response;
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           child: "CHILD MIDDLEWARE",
           parent: "PARENT MIDDLEWARE",
         });
@@ -2228,7 +2302,6 @@ describe("context/middleware", () => {
 
     describe("throwing", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
-        let context = {};
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2265,13 +2338,14 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = {};
         await expect(
           handler.queryRoute(new Request("http://localhost/parent/child"), {
-            requestContext: context,
+            requestContext,
           })
         ).rejects.toEqual(new Error("PARENT 2"));
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           parent1: "PARENT 1",
         });
       });
@@ -2313,14 +2387,14 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let context = {};
+        let requestContext = {};
         await expect(
           handler.queryRoute(new Request("http://localhost/parent/child"), {
-            requestContext: context,
+            requestContext,
           })
         ).rejects.toEqual(new Error("CHILD UP"));
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           child: "CHILD DOWN",
           parent: "PARENT DOWN",
         });
@@ -2337,13 +2411,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -2358,23 +2432,23 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start - throwing");
+                      context.order?.push("child 1 action start - throwing");
                       throw new Error("child 1 action error");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end");
+                      context.order?.push("child 2 action end");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -2389,18 +2463,18 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let context = { order: [] };
+        let requestContext = { order: [] };
         await expect(
           handler.queryRoute(
             new Request("http://localhost/parent/child", {
               method: "post",
               body: createFormData({}),
             }),
-            { requestContext: context }
+            { requestContext }
           )
         ).rejects.toEqual(new Error("child 1 action error"));
 
-        expect(context).toMatchInlineSnapshot(`
+        expect(requestContext).toMatchInlineSnapshot(`
           {
             "order": [
               "parent action start",
@@ -2411,7 +2485,6 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/boundary)", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2422,13 +2495,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -2443,25 +2516,25 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start");
+                      context.order?.push("child 1 action start");
                       await next();
-                      context.order.push("child 1 action end");
+                      context.order?.push("child 1 action end");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end - throwing");
+                      context.order?.push("child 2 action end - throwing");
                       throw new Error("child 2 action error");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -2476,17 +2549,18 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = { order: [] };
         await expect(
           handler.queryRoute(
             new Request("http://localhost/parent/child", {
               method: "post",
               body: createFormData({}),
             }),
-            { requestContext: context }
+            { requestContext }
           )
         ).rejects.toEqual(new Error("child 2 action error"));
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "parent action start",
             "child 1 action start",
@@ -2497,7 +2571,6 @@ describe("context/middleware", () => {
       });
 
       it("throwing from a middleware short circuits immediately (going down - action w/o boundary)", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2509,13 +2582,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -2529,23 +2602,23 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start - throwing");
+                      context.order?.push("child 1 action start - throwing");
                       throw new Error("child 1 action error");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end");
+                      context.order?.push("child 2 action end");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -2560,23 +2633,23 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = { order: [] };
         await expect(
           handler.queryRoute(
             new Request("http://localhost/parent/child", {
               method: "post",
               body: createFormData({}),
             }),
-            { requestContext: context }
+            { requestContext }
           )
         ).rejects.toEqual(new Error("child 1 action error"));
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: ["parent action start", "child 1 action start - throwing"],
         });
       });
 
       it("throwing from a middleware short circuits immediately (going up - action w/o boundary)", async () => {
-        let context = { order: [] };
         let handler = createStaticHandler([
           {
             path: "/",
@@ -2588,13 +2661,13 @@ describe("context/middleware", () => {
             middleware: [
               async ({ request, context, next }) => {
                 if (request.method !== "GET") {
-                  context.order.push("parent action start");
+                  context.order?.push("parent action start");
                   await next();
-                  context.order.push("parent action end");
+                  context.order?.push("parent action end");
                 } else {
-                  context.order.push("parent loader start");
+                  context.order?.push("parent loader start");
                   await next();
-                  context.order.push("parent loader end");
+                  context.order?.push("parent loader end");
                 }
               },
             ],
@@ -2608,25 +2681,25 @@ describe("context/middleware", () => {
                 middleware: [
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 1 action start");
+                      context.order?.push("child 1 action start");
                       await next();
-                      context.order.push("child 1 action end");
+                      context.order?.push("child 1 action end");
                     } else {
-                      context.order.push("child 1 loader start");
+                      context.order?.push("child 1 loader start");
                       await next();
-                      context.order.push("child 1 loader end");
+                      context.order?.push("child 1 loader end");
                     }
                   },
                   async ({ request, context, next }) => {
                     if (request.method !== "GET") {
-                      context.order.push("child 2 action start");
+                      context.order?.push("child 2 action start");
                       await next();
-                      context.order.push("child 2 action end - throwing");
+                      context.order?.push("child 2 action end - throwing");
                       throw new Error("child 2 action error");
                     } else {
-                      context.order.push("child 2 loader start");
+                      context.order?.push("child 2 loader start");
                       await next();
-                      context.order.push("child 2 loader end");
+                      context.order?.push("child 2 loader end");
                     }
                   },
                 ],
@@ -2641,17 +2714,18 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let requestContext = { order: [] };
         await expect(
           handler.queryRoute(
             new Request("http://localhost/parent/child", {
               method: "post",
               body: createFormData({}),
             }),
-            { requestContext: context }
+            { requestContext }
           )
         ).rejects.toEqual(new Error("child 2 action error"));
 
-        expect(context).toEqual({
+        expect(requestContext).toEqual({
           order: [
             "parent action start",
             "child 1 action start",

@@ -16,16 +16,6 @@ export interface AppLoadContext {
   [key: string]: unknown;
 }
 
-/**
- * An object of unknown type for client-side loaders and actions provided by the
- * `createBrowserRouter` `context` option.  This is defined as an empty interface
- * specifically so apps can leverage declaration merging to augment this type
- * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
- */
-export interface RouterContext {
-  [key: string]: unknown;
-}
-
 // Need to use RR's version here to permit the optional context even
 // though we know it'll always be provided in remix
 export async function callRouteHandler(

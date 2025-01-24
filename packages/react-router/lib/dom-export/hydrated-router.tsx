@@ -5,6 +5,7 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   DataRouter,
   HydrationState,
+  RouterContext,
 } from "react-router";
 import {
   UNSAFE_invariant as invariant,
@@ -23,7 +24,6 @@ import {
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
 } from "react-router";
-import type { RouterContext } from "../server-runtime/data";
 import { RouterProvider } from "./dom-router-provider";
 
 type SSRInfo = {
