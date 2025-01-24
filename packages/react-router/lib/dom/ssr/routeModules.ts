@@ -7,13 +7,14 @@ import type {
   LoaderFunctionArgs,
   MiddlewareFunction,
   Params,
+  RouterContext,
   ShouldRevalidateFunction,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
-import type { AppLoadContext, RouterContext } from "../../server-runtime/data";
+import type { AppLoadContext } from "../../server-runtime/data";
 import type { SerializeFrom } from "../../types/route-data";
 
 export interface RouteModules {
