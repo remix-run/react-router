@@ -26,10 +26,14 @@ git clone https://github.com/<your_github_username>/react-router.git
 cd react-router
 
 # if you are making *any* code changes, make sure to checkout the dev branch
-git checkout dev
+git checkout -b dev
 ```
 
 3. Install dependencies and build. React Router uses [pnpm](https://pnpm.io), so you should too. If you install using `npm`, unnecessary `package-lock.json` files will be generated.
+
+```bash
+pnpm install
+```
 
 ## Think You Found a Bug?
 
