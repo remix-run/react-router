@@ -135,6 +135,7 @@ export async function clientLoader({
   params,
 }: Route.ClientLoaderArgs) {
   const res = await fetch(`/api/products/${params.pid}`);
+  const serverData = await serverLoader({ params });
   return { ...serverData, ...res.json() };
 }
 
