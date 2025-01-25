@@ -22,7 +22,7 @@ The following steps will get you set up to contribute changes to this repo:
 
 ```bash
 # in a terminal, cd to parent directory where you want your clone to be, then
-git clone https://github.com/<your_github_username>/react-router.git
+git clone git@github.com:<your_github_username>/react-router.git
 cd react-router
 
 # if you are making *any* code changes, make sure to checkout the dev branch
