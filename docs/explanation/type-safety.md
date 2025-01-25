@@ -75,3 +75,16 @@ But if you really need to run type generation on its own, you can also use `--wa
 ```sh
 react-router typegen --watch
 ```
+
+## Extending app `Context` types
+
+To define your app's `context` type, add the following in a `.td` or `.d.ts` file within your project:
+
+```typescript
+import "react-router";
+declare module "react-router" {
+  interface AppLoadContext {
+    // add context properties here
+  }
+}
+```
