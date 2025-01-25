@@ -80,7 +80,7 @@ react-router typegen --watch
 
 To define your app's `context` type, add the following in a `.td` or `.d.ts` file within your project:
 
-```typescript
+```typescript filename=app/index.d.ts
 import "react-router";
 declare module "react-router" {
   interface AppLoadContext {
