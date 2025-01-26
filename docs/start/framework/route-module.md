@@ -39,6 +39,7 @@ export default function MyRouteComponent() {
   );
 }
 ```
+
 ### Props passed to the Component
 
 When the component is rendered, it is provided the props defined in `Route.ComponentProps` that React Router will automatically generate for you. These props include: 
@@ -51,6 +52,7 @@ When the component is rendered, it is provided the props defined in `Route.Compo
 You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferrable because they will be automatically typed correctly for the route. 
 
 ### Using props
+
 ```tsx filename=app/routes/my-route-with-default-params.tsx
 import type { Route } from './+types/route-name'
 
@@ -70,6 +72,7 @@ export default function MyRouteComponent({
     </div>
   );
 }
+```
 
 ## `loader`
 
