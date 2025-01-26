@@ -50,7 +50,14 @@ export default function MyRouteComponent() {
 
 ### Using props
 ```tsx filename=app/routes/my-route-with-default-params.tsx
-export default function MyRouteComponent({ loaderData, actionData, params, matches }) {
+import type { Route } from './+types/route-name'
+
+export default function MyRouteComponent({ 
+  loaderData, 
+  actionData,
+  params, 
+  matches 
+}: Route.ComponentProps) {
   return (
     <div>
       <h1>Welcome to My Route with Props!</h1>
