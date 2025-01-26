@@ -65,6 +65,7 @@ export default function MyRouteComponent({ loaderData, actionData, params, match
 
 ### Benefits of using props
 1. Route data is directly accessible via props, leading to more readable code.
+2. Route data can be automatically typed when Route is imported from `+types`.
 
 ## `loader`
 
