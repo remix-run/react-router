@@ -44,9 +44,9 @@ export default function MyRouteComponent() {
 
 2. `location`: An object providing details about the current location (e.g., pathname, search, etc.).
 
-3. navigate: A function to programmatically navigate to another route.
+3. `navigate`: A function to programmatically navigate to another route.
 
-4. loaderData: The data returned from the loader function assigned to the route. eg. A loader might fetch some data from an API and return it for the route to use.
+4. `loaderData`: The data returned from the loader function assigned to the route. eg. A loader might fetch some data from an API and return it for the route to use.
 
 ### Using props
 ```tsx filename=app/routes/my-route-with-default-params.tsx
