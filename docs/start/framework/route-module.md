@@ -25,7 +25,7 @@ This guide is a quick overview of every route module feature. The rest of the ge
 
 ## Component (`default`)
 
-The default Component in a route module defines the component that will render when the route matches.
+The `default` export in a route module defines the component that will render when the route matches.
 
 ```tsx filename=app/routes/my-route.tsx
 export default function MyRouteComponent() {
@@ -39,14 +39,16 @@ export default function MyRouteComponent() {
   );
 }
 ```
-### Default props passed to the Component
-1. `params`: An object containing the route parameters (if any).
+### Props passed to the Component
 
-2. `location`: An object providing details about the current location (e.g., pathname, search, etc.).
+When the component is rendered, it is provided the props defined in `Route.ComponentProps` that React Router will automatically generate for you. These props include: 
 
-3. `navigate`: A function to programmatically navigate to another route.
+1. `loaderData`: The data returned from the `loader` function in this route module
+2. `actionData`: The data returned from the `action` function in this route module
+3. `params`: An object containing the route parameters (if any).
+4. `matches`: An array of all the matches in the current route tree.
 
-4. `loaderData`: The data returned from the loader function assigned to the route. eg. A loader might fetch some data from an API and return it for the route to use.
+You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferrable because they will be automatically typed correctly for the route. 
 
 ### Using props
 ```tsx filename=app/routes/my-route-with-default-params.tsx
@@ -68,11 +70,6 @@ export default function MyRouteComponent({
     </div>
   );
 }
-```
-
-### Benefits of using props
-1. Route data is directly accessible via props, leading to more readable code.
-2. Route data can be automatically typed when Route is imported from `+types`.
 
 ## `loader`
 
