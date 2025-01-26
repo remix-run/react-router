@@ -40,7 +40,7 @@ export default function MyRouteComponent() {
 }
 ```
 ### Default props passed to the Component
-1. params: An object containing the route parameters (if any).
+1. `params`: An object containing the route parameters (if any).
 
 2. location: An object providing details about the current location (e.g., pathname, search, etc.).
 
