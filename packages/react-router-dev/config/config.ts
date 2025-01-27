@@ -68,8 +68,8 @@ type BaseBuildManifest = {
 };
 
 type DefaultBuildManifest = BaseBuildManifest & {
-  serverBundles?: never;
-  routeIdToServerBundleId?: never;
+  serverBundles?: undefined;
+  routeIdToServerBundleId?: undefined;
 };
 
 export type ServerBundlesBuildManifest = BaseBuildManifest & {

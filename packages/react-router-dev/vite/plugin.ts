@@ -1271,7 +1271,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let [baseId, queryString] = id.split("?");
         switch (baseId) {
           case virtual.serverBuild.resolvedId: {
-            // Parse query string from id to handle any additional parameters
             let searchParams = new URLSearchParams(queryString);
             let routeIds =
               searchParams.get("route-ids")?.split(",") || undefined;
