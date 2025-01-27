@@ -1777,7 +1777,7 @@ export function createRouter(init: RouterInit): Router {
 
       if (!result) {
         // If this error came from a parent middleware before the action ran,
-        // then it won't be tired to the action route
+        // then it won't be tied to the action route
         for (let match of matches) {
           if (results[match.route.id]) {
             result = results[match.route.id];
@@ -3423,13 +3423,11 @@ export function createStaticHandler(
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    let staticContext: StaticHandlerContext;
-
     if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
-      staticContext = {
+      let staticContext: StaticHandlerContext = {
         basename,
         location,
         matches: methodNotAllowedMatches,
@@ -3442,11 +3440,14 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-    } else if (!matches) {
+      return respond ? respond(staticContext) : staticContext;
+    }
+
+    if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
-      staticContext = {
+      let staticContext: StaticHandlerContext = {
         basename,
         location,
         matches: notFoundMatches,
@@ -3459,7 +3460,10 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-    } else if (respond) {
+      return respond ? respond(staticContext) : staticContext;
+    }
+
+    if (respond) {
       try {
         // Run middleware as far deep as the deepest loader to be executed
         let tailIdx = [...matches]
@@ -3478,7 +3482,7 @@ export function createStaticHandler(
           lowestLoadingIdx,
           true,
           async () => {
-            let result = await callQueryHandlers(
+            let result = await queryImpl(
               request,
               location,
               matches!,
@@ -3571,39 +3575,31 @@ export function createStaticHandler(
         }
         throw e;
       }
-    } else {
-      let result = await callQueryHandlers(
-        request,
-        location,
-        matches!,
-        requestContext,
-        dataStrategy || null,
-        skipLoaderErrorBubbling === true,
-        null,
-        filterMatchesToLoad || null,
-        skipRevalidation === true
-      );
+    }
+    let result = await queryImpl(
+      request,
+      location,
+      matches!,
+      requestContext,
+      dataStrategy || null,
+      skipLoaderErrorBubbling === true,
+      null,
+      filterMatchesToLoad || null,
+      skipRevalidation === true
+    );
 
-      if (isResponse(result)) {
-        return result;
-      }
-
-      // When returning StaticHandlerContext, we patch back in the location here
-      // since we need it for React Context.  But this helps keep our submit and
-      // loadRouteData operating on a Request instead of a Location
-      staticContext = {
-        location,
-        basename,
-        ...result,
-      };
+    if (isResponse(result)) {
+      return result;
     }
 
-    if (respond) {
-      let res = await respond(staticContext);
-      return res;
-    }
-
-    return staticContext;
+    // When returning StaticHandlerContext, we patch back in the location here
+    // since we need it for React Context.  But this helps keep our submit and
+    // loadRouteData operating on a Request instead of a Location
+    return {
+      location,
+      basename,
+      ...result,
+    };
   }
 
   /**
@@ -3683,7 +3679,7 @@ export function createStaticHandler(
         matches.length - 1,
         true,
         async () => {
-          let result = await callQueryHandlers(
+          let result = await queryImpl(
             request,
             location,
             matches!,
@@ -3724,46 +3720,45 @@ export function createStaticHandler(
         }
       );
       return response;
-    } else {
-      let result = await callQueryHandlers(
-        request,
-        location,
-        matches,
-        requestContext,
-        dataStrategy || null,
-        false,
-        match,
-        null,
-        false
-      );
-
-      if (isResponse(result)) {
-        return result;
-      }
-
-      let error = result.errors ? Object.values(result.errors)[0] : undefined;
-      if (error !== undefined) {
-        // If we got back result.errors, that means the loader/action threw
-        // _something_ that wasn't a Response, but it's not guaranteed/required
-        // to be an `instanceof Error` either, so we have to use throw here to
-        // preserve the "error" state outside of queryImpl.
-        throw error;
-      }
-
-      // Pick off the right state value to return
-      if (result.actionData) {
-        return Object.values(result.actionData)[0];
-      }
-
-      if (result.loaderData) {
-        return Object.values(result.loaderData)[0];
-      }
-
-      return undefined;
     }
+    let result = await queryImpl(
+      request,
+      location,
+      matches,
+      requestContext,
+      dataStrategy || null,
+      false,
+      match,
+      null,
+      false
+    );
+
+    if (isResponse(result)) {
+      return result;
+    }
+
+    let error = result.errors ? Object.values(result.errors)[0] : undefined;
+    if (error !== undefined) {
+      // If we got back result.errors, that means the loader/action threw
+      // _something_ that wasn't a Response, but it's not guaranteed/required
+      // to be an `instanceof Error` either, so we have to use throw here to
+      // preserve the "error" state outside of queryImpl.
+      throw error;
+    }
+
+    // Pick off the right state value to return
+    if (result.actionData) {
+      return Object.values(result.actionData)[0];
+    }
+
+    if (result.loaderData) {
+      return Object.values(result.loaderData)[0];
+    }
+
+    return undefined;
   }
 
-  async function callQueryHandlers(
+  async function queryImpl(
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
@@ -3906,50 +3901,6 @@ export function createStaticHandler(
       };
     }
 
-    // TODO: DRY this up with below...
-    if (skipRevalidation) {
-      if (isErrorResult(result)) {
-        // Store off the pending error - we use it to determine which loaders
-        // to call and will commit it when we complete the navigation
-        let boundaryMatch = skipLoaderErrorBubbling
-          ? actionMatch
-          : findNearestBoundary(matches, actionMatch.route.id);
-        return {
-          matches,
-          loaderData: {},
-          actionData: null,
-          errors: {
-            [boundaryMatch.route.id]: result.error,
-          },
-          statusCode: isRouteErrorResponse(result.error)
-            ? result.error.status
-            : result.statusCode != null
-            ? result.statusCode
-            : 500,
-          loaderHeaders: {},
-          actionHeaders: {
-            ...(result.headers
-              ? { [actionMatch.route.id]: result.headers }
-              : {}),
-          },
-        };
-      } else {
-        return {
-          matches,
-          loaderData: {},
-          actionData: {
-            [actionMatch.route.id]: result.data,
-          },
-          errors: null,
-          statusCode: result.statusCode || 200,
-          loaderHeaders: {},
-          actionHeaders: result.headers
-            ? { [actionMatch.route.id]: result.headers }
-            : {},
-        };
-      }
-    }
-
     // Create a GET request for the loaders
     let loaderRequest = new Request(request.url, {
       headers: request.headers,
@@ -3963,6 +3914,33 @@ export function createStaticHandler(
       let boundaryMatch = skipLoaderErrorBubbling
         ? actionMatch
         : findNearestBoundary(matches, actionMatch.route.id);
+
+      let actionContext: Pick<
+        StaticHandlerContext,
+        "statusCode" | "actionData" | "actionHeaders"
+      > = {
+        statusCode: isRouteErrorResponse(result.error)
+          ? result.error.status
+          : result.statusCode != null
+          ? result.statusCode
+          : 500,
+        actionData: null,
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        },
+      };
+
+      if (skipRevalidation) {
+        return {
+          ...actionContext,
+          matches,
+          loaderData: {},
+          errors: {
+            [boundaryMatch.route.id]: result.error,
+          },
+          loaderHeaders: {},
+        };
+      }
 
       let handlerContext = await loadRouteData(
         loaderRequest,
@@ -3978,15 +3956,31 @@ export function createStaticHandler(
       // action status codes take precedence over loader status codes
       return {
         ...handlerContext,
-        statusCode: isRouteErrorResponse(result.error)
-          ? result.error.status
-          : result.statusCode != null
-          ? result.statusCode
-          : 500,
-        actionData: null,
-        actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
-        },
+        ...actionContext,
+      };
+    }
+
+    let actionContext: Pick<
+      StaticHandlerContext,
+      "actionData" | "actionHeaders"
+    > = {
+      // action status codes take precedence over loader status codes
+      actionData: {
+        [actionMatch.route.id]: result.data,
+      },
+      actionHeaders: result.headers
+        ? { [actionMatch.route.id]: result.headers }
+        : {},
+    };
+
+    if (skipRevalidation) {
+      return {
+        ...actionContext,
+        matches,
+        loaderData: {},
+        errors: null,
+        statusCode: result.statusCode || 200,
+        loaderHeaders: {},
       };
     }
 
@@ -4000,13 +3994,18 @@ export function createStaticHandler(
       filterMatchesToLoad
     );
 
+    invariant(
+      !isResponse(handlerContext),
+      "Did not expect a Response returned from loadRouteData"
+    );
+
     return {
       ...handlerContext,
+      // action status codes take precedence over loader status codes
+      statusCode: result.statusCode || handlerContext.statusCode,
       actionData: {
         [actionMatch.route.id]: result.data,
       },
-      // action status codes take precedence over loader status codes
-      ...(result.statusCode ? { statusCode: result.statusCode } : {}),
       actionHeaders: result.headers
         ? { [actionMatch.route.id]: result.headers }
         : {},
@@ -4910,6 +4909,11 @@ async function defaultDataStrategyWithoutMiddleware(
 async function defaultDataStrategy(
   args: DataStrategyFunctionArgs<unknown>
 ): ReturnType<DataStrategyFunction<unknown>> {
+  // Short circuit all the middleware logic if we have no middlewares
+  if (!args.matches.some((m) => m.route.middleware)) {
+    return defaultDataStrategyWithoutMiddleware(args);
+  }
+
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
 
   // Determine how far down we'll be loading so we only run middleware to that
