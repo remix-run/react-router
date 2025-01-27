@@ -49,7 +49,7 @@ If you want to run type checking as its own command — for example, as part of 
 
 ## Extending app `Context` types
 
-To define your app's `context` type, add the following in a `.td` or `.d.ts` file within your project:
+To define your app's `context` type, add the following in a `.ts` or `.d.ts` file within your project:
 
 ```typescript
 import "react-router";
