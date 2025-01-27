@@ -25,7 +25,7 @@ import jsesc from "jsesc";
 import colors from "picocolors";
 
 import * as Typegen from "../typegen";
-import { type RouteManifestEntry } from "../config/routes";
+import type { RouteManifestEntry, RouteManifest } from "../config/routes";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
 import { generate, parse } from "./babel";
@@ -39,10 +39,13 @@ import { removeExports } from "./remove-exports";
 import { preloadVite, getVite } from "./vite";
 import {
   type ResolvedReactRouterConfig,
+  type BuildManifest,
+  type ServerBundlesBuildManifest,
   type ConfigLoader,
   createConfigLoader,
   resolveEntryFiles,
   ssrExternals,
+  configRouteToBranchRoute,
 } from "../config/config";
 import * as WithProps from "./with-props";
 
@@ -95,8 +98,7 @@ const CLIENT_ROUTE_EXPORTS = [
 from the client build output. This is important in cases where custom route
 exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
-export const BUILD_CLIENT_ROUTE_QUERY_STRING =
-  "?__react-router-build-client-route";
+const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
 type ReactRouterPluginBuildEnvironmentName =
   | "client"
@@ -153,7 +155,7 @@ const resolveRelativeRouteFilePath = (
   return vite.normalizePath(fullPath);
 };
 
-export let virtual = {
+let virtual = {
   serverBuild: VirtualModule.create("server-build"),
   serverManifest: VirtualModule.create("server-manifest"),
   browserManifest: VirtualModule.create("browser-manifest"),
@@ -2145,4 +2147,259 @@ function createPrerenderRoutes(
           ...commonRoute,
         };
   });
+}
+
+function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
+  let nonAddressableIds = new Set<string>();
+
+  for (let id in routes) {
+    let route = routes[id];
+
+    // We omit the parent route of index routes since the index route takes ownership of its parent's path
+    if (route.index) {
+      invariant(
+        route.parentId,
+        `Expected index route "${route.id}" to have "parentId" set`
+      );
+      nonAddressableIds.add(route.parentId);
+    }
+
+    // We omit pathless routes since they can only be addressed via descendant routes
+    if (typeof route.path !== "string" && !route.index) {
+      nonAddressableIds.add(id);
+    }
+  }
+
+  return Object.values(routes).filter(
+    (route) => !nonAddressableIds.has(route.id)
+  );
+}
+
+function getRouteBranch(routes: RouteManifest, routeId: string) {
+  let branch: RouteManifestEntry[] = [];
+  let currentRouteId: string | undefined = routeId;
+
+  while (currentRouteId) {
+    let route: RouteManifestEntry = routes[currentRouteId];
+    invariant(route, `Missing route for ${currentRouteId}`);
+    branch.push(route);
+    currentRouteId = route.parentId;
+  }
+
+  return branch.reverse();
+}
+
+function getRoutesByServerBundleId(
+  buildManifest: BuildManifest
+): Record<string, RouteManifest> {
+  if (!buildManifest.routeIdToServerBundleId) {
+    return {};
+  }
+
+  let routesByServerBundleId: Record<string, RouteManifest> = {};
+
+  for (let [routeId, serverBundleId] of Object.entries(
+    buildManifest.routeIdToServerBundleId
+  )) {
+    routesByServerBundleId[serverBundleId] ??= {};
+    let branch = getRouteBranch(buildManifest.routes, routeId);
+    for (let route of branch) {
+      routesByServerBundleId[serverBundleId][route.id] = route;
+    }
+  }
+
+  return routesByServerBundleId;
+}
+
+export async function getBuildManifest(
+  ctx: ReactRouterPluginContext
+): Promise<BuildManifest> {
+  let { routes, serverBundles, appDirectory } = ctx.reactRouterConfig;
+
+  if (!serverBundles) {
+    return { routes };
+  }
+
+  let { normalizePath } = await import("vite");
+  let serverBuildDirectory = getServerBuildDirectory(ctx);
+  let resolvedAppDirectory = path.resolve(ctx.rootDirectory, appDirectory);
+  let rootRelativeRoutes = Object.fromEntries(
+    Object.entries(routes).map(([id, route]) => {
+      let filePath = path.join(resolvedAppDirectory, route.file);
+      let rootRelativeFilePath = normalizePath(
+        path.relative(ctx.rootDirectory, filePath)
+      );
+      return [id, { ...route, file: rootRelativeFilePath }];
+    })
+  );
+
+  let buildManifest: ServerBundlesBuildManifest = {
+    serverBundles: {},
+    routeIdToServerBundleId: {},
+    routes: rootRelativeRoutes,
+  };
+
+  await Promise.all(
+    getAddressableRoutes(routes).map(async (route) => {
+      let branch = getRouteBranch(routes, route.id);
+      let serverBundleId = await serverBundles({
+        branch: branch.map((route) =>
+          configRouteToBranchRoute({
+            ...route,
+            // Ensure absolute paths are passed to the serverBundles function
+            file: path.join(resolvedAppDirectory, route.file),
+          })
+        ),
+      });
+      if (typeof serverBundleId !== "string") {
+        throw new Error(`The "serverBundles" function must return a string`);
+      }
+      if (!/^[a-zA-Z0-9-_]+$/.test(serverBundleId)) {
+        throw new Error(
+          `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
+        );
+      }
+      buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
+
+      buildManifest.serverBundles[serverBundleId] ??= {
+        id: serverBundleId,
+        file: normalizePath(
+          path.join(
+            path.relative(
+              ctx.rootDirectory,
+              path.join(serverBuildDirectory, serverBundleId)
+            ),
+            ctx.reactRouterConfig.serverBuildFile
+          )
+        ),
+      };
+    })
+  );
+
+  return buildManifest;
+}
+
+function mergeBuildOptions(
+  base: Vite.BuildOptions,
+  overrides: Vite.BuildOptions
+): Vite.BuildOptions {
+  let vite = getVite();
+  return vite.mergeConfig({ build: base }, { build: overrides }).build;
+}
+
+export async function getEnvironmentResolvers(
+  ctx: ReactRouterPluginContext,
+  buildManifest: BuildManifest
+): Promise<ReactRouterPluginBuildEnvironmentResolvers> {
+  let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
+
+  function getBaseBuildOptions({
+    viteUserConfig,
+  }: {
+    viteUserConfig: Vite.UserConfig;
+  }): Vite.BuildOptions {
+    return {
+      cssMinify: viteUserConfig.build?.cssMinify ?? true,
+      manifest: true, // The manifest is enabled for all builds to detect SSR-only assets
+      rollupOptions: {
+        preserveEntrySignatures: "exports-only",
+        // Silence Rollup "use client" warnings
+        // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
+        onwarn(warning, defaultHandler) {
+          if (
+            warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+            warning.message.includes("use client")
+          ) {
+            return;
+          }
+          let userHandler = viteUserConfig.build?.rollupOptions?.onwarn;
+          if (userHandler) {
+            userHandler(warning, defaultHandler);
+          } else {
+            defaultHandler(warning);
+          }
+        },
+      },
+    };
+  }
+
+  function getBaseServerBuildOptions({
+    viteUserConfig,
+  }: {
+    viteUserConfig: Vite.UserConfig;
+  }): Vite.BuildOptions {
+    return mergeBuildOptions(getBaseBuildOptions({ viteUserConfig }), {
+      // We move SSR-only assets to client assets. Note that the
+      // SSR build can also emit code-split JS files (e.g. by
+      // dynamic import) under the same assets directory
+      // regardless of "ssrEmitAssets" option, so we also need to
+      // keep these JS files have to be kept as-is.
+      ssrEmitAssets: true,
+      copyPublicDir: false, // Assets in the public directory are only used by the client
+      rollupOptions: {
+        output: {
+          entryFileNames: serverBuildFile,
+          format: serverModuleFormat,
+        },
+      },
+    });
+  }
+
+  let environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers = {
+    client: ({ viteUserConfig }) => ({
+      build: mergeBuildOptions(getBaseBuildOptions({ viteUserConfig }), {
+        rollupOptions: {
+          input: [
+            ctx.entryClientFilePath,
+            ...Object.values(ctx.reactRouterConfig.routes).map(
+              (route) =>
+                `${path.resolve(
+                  ctx.reactRouterConfig.appDirectory,
+                  route.file
+                )}${BUILD_CLIENT_ROUTE_QUERY_STRING}`
+            ),
+          ],
+        },
+        outDir: getClientBuildDirectory(ctx.reactRouterConfig),
+      }),
+    }),
+  };
+
+  if (Object.keys(buildManifest.serverBundles ?? {}).length === 0) {
+    environmentResolvers.ssr = ({ viteUserConfig }) => ({
+      build: mergeBuildOptions(getBaseServerBuildOptions({ viteUserConfig }), {
+        outDir: getServerBuildDirectory(ctx),
+        rollupOptions: {
+          input:
+            viteUserConfig.build?.rollupOptions?.input ??
+            virtual.serverBuild.id,
+        },
+      }),
+    });
+
+    return environmentResolvers;
+  } else {
+    let routesByServerBundleId = getRoutesByServerBundleId(buildManifest);
+    for (let [serverBundleId, routes] of Object.entries(
+      routesByServerBundleId
+    )) {
+      environmentResolvers[`server-bundle-${serverBundleId}`] = ({
+        viteUserConfig,
+      }) => ({
+        build: mergeBuildOptions(
+          getBaseServerBuildOptions({ viteUserConfig }),
+          {
+            outDir: getServerBuildDirectory(ctx, { serverBundleId }),
+            rollupOptions: {
+              input: `${virtual.serverBuild.id}?route-ids=${Object.keys(
+                routes
+              ).join(",")}`,
+            },
+          }
+        ),
+      });
+    }
+  }
+
+  return environmentResolvers;
 }
