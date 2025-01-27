@@ -5,9 +5,9 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
-  MiddlewareFunction,
+  unstable_MiddlewareFunction,
   Params,
-  RouterContext,
+  unstable_RouterContext,
   ShouldRevalidateFunction,
 } from "../../router/utils";
 
@@ -27,7 +27,10 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  clientMiddleware?: MiddlewareFunction<RouterContext, undefined>[];
+  unstable_clientMiddleware?: unstable_MiddlewareFunction<
+    unstable_RouterContext,
+    undefined
+  >[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -45,7 +48,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
-  middleware?: MiddlewareFunction<AppLoadContext, Response>[];
+  unstable_middleware?: unstable_MiddlewareFunction<AppLoadContext, Response>[];
 }
 
 /**

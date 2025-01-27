@@ -60,8 +60,8 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
       export type HeadersArgs = T.HeadersArgs
       export type HeadersFunction = (args: HeadersArgs) => Headers | HeadersInit
 
-      export type MiddlewareArgs = T.CreateServerMiddlewareArgs<Info>
-      export type ClientMiddlewareArgs = T.CreateClientMiddlewareArgs<Info>
+      export type unstable_MiddlewareArgs = T.CreateServerMiddlewareArgs<Info>
+      export type unstable_ClientMiddlewareArgs = T.CreateClientMiddlewareArgs<Info>
       export type LoaderArgs = T.CreateServerLoaderArgs<Info>
       export type ClientLoaderArgs = T.CreateClientLoaderArgs<Info>
       export type ActionArgs = T.CreateServerActionArgs<Info>

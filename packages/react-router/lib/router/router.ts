@@ -36,9 +36,9 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   ActionFunction,
-  RouterContext,
-  MiddlewareFunction,
-  MiddlewareFunctionArgs,
+  unstable_RouterContext,
+  unstable_MiddlewareFunction,
+  unstable_MiddlewareFunctionArgs,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -372,7 +372,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  context?: RouterContext;
+  context?: unstable_RouterContext;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -826,11 +826,10 @@ export function createRouter(init: RouterInit): Router {
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
-
-  let routerContext = typeof init.context !== "undefined" ? init.context : {};
-  let dataStrategyImpl = (init.dataStrategy ||
-    defaultDataStrategyWithMiddleware) as DataStrategyFunction<unknown>;
+  let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
+  let unstable_RouterContext =
+    typeof init.context !== "undefined" ? init.context : {};
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -1591,7 +1590,7 @@ export function createRouter(init: RouterInit): Router {
     );
     // Create a new context per navigation that has references to all global
     // contextual fields
-    let scopedContext = { ...routerContext };
+    let scopedContext = { ...unstable_RouterContext };
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -1705,7 +1704,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
-    scopedContext: RouterContext,
+    scopedContext: unstable_RouterContext,
     isFogOfWar: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
@@ -1849,7 +1848,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
-    scopedContext: RouterContext,
+    scopedContext: unstable_RouterContext,
     isFogOfWar: boolean,
     overrideNavigation?: Navigation,
     submission?: Submission,
@@ -2167,7 +2166,7 @@ export function createRouter(init: RouterInit): Router {
     let match = getTargetMatch(matches, path);
     // Create a new context per fetch that has references to all global
     // contextual fields
-    let scopedContext = { ...routerContext };
+    let scopedContext = { ...unstable_RouterContext };
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
@@ -2211,7 +2210,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
-    scopedContext: RouterContext,
+    scopedContext: unstable_RouterContext,
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
@@ -2513,7 +2512,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
-    scopedContext: RouterContext,
+    scopedContext: unstable_RouterContext,
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
@@ -2763,14 +2762,14 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
-    scopedContext: RouterContext,
+    scopedContext: unstable_RouterContext,
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
     try {
       results = await callDataStrategyImpl(
-        dataStrategyImpl,
+        dataStrategyImpl as DataStrategyFunction<unknown>,
         type,
         request,
         matchesToLoad,
@@ -2820,7 +2819,7 @@ export function createRouter(init: RouterInit): Router {
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
-    scopedContext: RouterContext
+    scopedContext: unstable_RouterContext
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
@@ -4886,8 +4885,7 @@ async function loadLazyRouteModule(
   });
 }
 
-// Default implementation of `dataStrategy` which calls middleware and fetches
-// all loaders in parallel
+// Default implementation of `dataStrategy` which fetches all loaders in parallel
 async function defaultDataStrategy(
   args: DataStrategyFunctionArgs<unknown>
 ): ReturnType<DataStrategyFunction<unknown>> {
@@ -4900,17 +4898,15 @@ async function defaultDataStrategy(
   return keyedResults;
 }
 
-// Default implementation of `dataStrategy` which calls middleware and fetches
-// all loaders in parallel
+// Middleware-enabled implementation of `dataStrategy` which calls middleware
+// and fetches all loaders in parallel
 async function defaultDataStrategyWithMiddleware(
   args: DataStrategyFunctionArgs<unknown>
 ): ReturnType<DataStrategyFunction<unknown>> {
   // Short circuit all the middleware logic if we have no middlewares
-  if (!args.matches.some((m) => m.route.middleware)) {
+  if (!args.matches.some((m) => m.route.unstable_middleware)) {
     return defaultDataStrategy(args);
   }
-
-  let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
 
   // Determine how far down we'll be loading so we only run middleware to that
   // point.  This prevents us from calling middleware below an action error
@@ -4923,15 +4919,12 @@ async function defaultDataStrategyWithMiddleware(
     }
   }
 
-  let results = (await runMiddlewarePipeline(
+  let results = await runMiddlewarePipeline(
     args,
     lastIndex,
     false,
     async (keyedResults: Record<string, DataStrategyResult>) => {
-      let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
-      results.forEach((result, i) => {
-        keyedResults[matchesToLoad[i].route.id] = result;
-      });
+      Object.assign(keyedResults, await defaultDataStrategy(args));
     },
     (e, keyedResults) => {
       // we caught an error running the middleware, copy that overtop any
@@ -4940,8 +4933,8 @@ async function defaultDataStrategyWithMiddleware(
         [e.routeId]: { type: "error", result: e.error },
       });
     }
-  )) as Record<string, DataStrategyResult>;
-  return results;
+  );
+  return results as Record<string, DataStrategyResult>;
 }
 
 type MutableMiddlewareState = {
@@ -4975,10 +4968,10 @@ export async function runMiddlewarePipeline(
       matches
         .slice(0, lastIndex + 1)
         .flatMap((m) =>
-          m.route.middleware
-            ? m.route.middleware.map((fn) => [m.route.id, fn])
+          m.route.unstable_middleware
+            ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
             : []
-        ) as [string, MiddlewareFunction<unknown>][],
+        ) as [string, unstable_MiddlewareFunction<unknown>][],
       0,
       { request, params, context },
       middlewareState,
@@ -5010,7 +5003,7 @@ export class MiddlewareError {
 }
 
 async function callRouteMiddleware(
-  middlewares: [string, MiddlewareFunction<unknown>][],
+  middlewares: [string, unstable_MiddlewareFunction<unknown>][],
   idx: number,
   args: LoaderFunctionArgs<unknown> | ActionFunctionArgs<unknown>,
   middlewareState: MutableMiddlewareState,
@@ -5035,7 +5028,7 @@ async function callRouteMiddleware(
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
-  let next: MiddlewareFunctionArgs["next"] = async () => {
+  let next: unstable_MiddlewareFunctionArgs["next"] = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }

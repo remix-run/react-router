@@ -4,7 +4,7 @@ import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  MiddlewareFunction,
+  unstable_MiddlewareFunction,
   RouteManifest,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
@@ -286,7 +286,7 @@ export function createClientRoutes(
       Object.assign(dataRoute, {
         ...dataRoute,
         ...getRouteComponents(route, routeModule, isSpaMode),
-        middleware: routeModule.clientMiddleware,
+        unstable_middleware: routeModule.unstable_clientMiddleware,
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
           routeModule,
@@ -453,10 +453,11 @@ export function createClientRoutes(
         return {
           ...(lazyRoute.loader ? { loader: lazyRoute.loader } : {}),
           ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
-          middleware: mod.clientMiddleware as unknown as MiddlewareFunction<
-            any,
-            unknown
-          >[],
+          unstable_middleware:
+            mod.unstable_clientMiddleware as unknown as unstable_MiddlewareFunction<
+              any,
+              unknown
+            >[],
           hasErrorBoundary: lazyRoute.hasErrorBoundary,
           shouldRevalidate: getShouldRevalidateFunction(
             lazyRoute,
@@ -543,7 +544,7 @@ async function loadRouteModuleWithBlockingLinks(
   return {
     Component: getRouteModuleComponent(routeModule),
     ErrorBoundary: routeModule.ErrorBoundary,
-    clientMiddleware: routeModule.clientMiddleware,
+    unstable_clientMiddleware: routeModule.unstable_clientMiddleware,
     clientAction: routeModule.clientAction,
     clientLoader: routeModule.clientLoader,
     handle: routeModule.handle,

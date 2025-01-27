@@ -1,6 +1,9 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
-import type { MiddlewareFunctionArgs, RouterContext } from "../router/utils";
+import type {
+  unstable_MiddlewareFunctionArgs,
+  unstable_RouterContext,
+} from "../router/utils";
 import type { AppLoadContext } from "../server-runtime/data";
 
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
@@ -115,7 +118,7 @@ type SharedDataFunctionArgs<T extends RouteInfo> = {
 };
 
 type ClientDataFunctionArgs<T extends RouteInfo> = SharedDataFunctionArgs<T> & {
-  context: RouterContext;
+  context: unstable_RouterContext;
 };
 
 type ServerDataFunctionArgs<T extends RouteInfo> = SharedDataFunctionArgs<T> & {
@@ -124,12 +127,15 @@ type ServerDataFunctionArgs<T extends RouteInfo> = SharedDataFunctionArgs<T> & {
 
 export type CreateServerMiddlewareArgs<T extends RouteInfo> =
   ServerDataFunctionArgs<T> & {
-    next: MiddlewareFunctionArgs<AppLoadContext, Response>["next"];
+    next: unstable_MiddlewareFunctionArgs<AppLoadContext, Response>["next"];
   };
 
 export type CreateClientMiddlewareArgs<T extends RouteInfo> =
   ClientDataFunctionArgs<T> & {
-    next: MiddlewareFunctionArgs<RouterContext, undefined>["next"];
+    next: unstable_MiddlewareFunctionArgs<
+      unstable_RouterContext,
+      undefined
+    >["next"];
   };
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =
