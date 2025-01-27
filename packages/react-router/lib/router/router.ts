@@ -827,7 +827,7 @@ export function createRouter(init: RouterInit): Router {
 
   let routerContext = typeof init.context !== "undefined" ? init.context : {};
   let dataStrategyImpl = (init.dataStrategy ||
-    defaultDataStrategy) as DataStrategyFunction<unknown>;
+    defaultDataStrategyWithMiddleware) as DataStrategyFunction<unknown>;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
 
   // Config driven behavior flags
@@ -1587,6 +1587,8 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission
     );
+    // Create a new context per navigation that has references to all global
+    // contextual fields
     let scopedContext = { ...routerContext };
     let pendingActionResult: PendingActionResult | undefined;
 
@@ -1765,7 +1767,7 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let results = await callRouterDataStrategy(
+      let results = await callDataStrategy(
         "action",
         request,
         [actionMatch],
@@ -2161,8 +2163,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let match = getTargetMatch(matches, path);
+    // Create a new context per fetch that has references to all global
+    // contextual fields
     let scopedContext = { ...routerContext };
-
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
@@ -2280,7 +2283,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResults = await callRouterDataStrategy(
+    let actionResults = await callDataStrategy(
       "action",
       fetchRequest,
       [match],
@@ -2561,7 +2564,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let results = await callRouterDataStrategy(
+    let results = await callDataStrategy(
       "loader",
       fetchRequest,
       [match],
@@ -2753,7 +2756,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Utility wrapper for calling dataStrategy client-side without having to
   // pass around the manifest, mapRouteProperties, etc.
-  async function callRouterDataStrategy(
+  async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
@@ -2818,7 +2821,7 @@ export function createRouter(init: RouterInit): Router {
     scopedContext: RouterContext
   ) {
     // Kick off loaders and fetchers in parallel
-    let loaderResultsPromise = callRouterDataStrategy(
+    let loaderResultsPromise = callDataStrategy(
       "loader",
       request,
       matchesToLoad,
@@ -2830,7 +2833,7 @@ export function createRouter(init: RouterInit): Router {
     let fetcherResultsPromise = Promise.all(
       fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.controller) {
-          let results = await callRouterDataStrategy(
+          let results = await callDataStrategy(
             "loader",
             createClientSideRequest(init.history, f.path, f.controller.signal),
             [f.match],
@@ -3441,9 +3444,7 @@ export function createStaticHandler(
         actionHeaders: {},
       };
       return respond ? respond(staticContext) : staticContext;
-    }
-
-    if (!matches) {
+    } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
@@ -3487,7 +3488,7 @@ export function createStaticHandler(
               location,
               matches!,
               requestContext,
-              dataStrategy || defaultDataStrategyWithoutMiddleware,
+              dataStrategy || null,
               skipLoaderErrorBubbling === true,
               null,
               filterMatchesToLoad || null,
@@ -3501,11 +3502,7 @@ export function createStaticHandler(
             // When returning StaticHandlerContext, we patch back in the location here
             // since we need it for React Context.  But this helps keep our submit and
             // loadRouteData operating on a Request instead of a Location
-            renderedStaticContext = {
-              location,
-              basename,
-              ...result,
-            };
+            renderedStaticContext = { location, basename, ...result };
             let res = await respond(renderedStaticContext);
 
             return res;
@@ -3514,9 +3511,6 @@ export function createStaticHandler(
             if (isResponse(e.error)) {
               return e.error;
             }
-
-            let boundary = findNearestBoundary(matches!, e.routeId);
-            let errorContext: StaticHandlerContext;
 
             if (renderedStaticContext) {
               // We rendered an HTML response and caught an error going back up
@@ -3530,22 +3524,26 @@ export function createStaticHandler(
                 renderedStaticContext.loaderData[e.routeId] = undefined;
               }
 
-              errorContext = getStaticContextFromError(
-                dataRoutes,
-                renderedStaticContext,
-                e.error,
-                boundary.route.id
+              return respond(
+                getStaticContextFromError(
+                  dataRoutes,
+                  renderedStaticContext,
+                  e.error,
+                  findNearestBoundary(matches!, e.routeId).route.id
+                )
               );
             } else {
-              // We never even got to the handlers, so we've got now data -
-              // just create an empty context reflecting the error
+              // We never even got to the handlers, so we've got no data -
+              // just create an empty context reflecting the error.
+              // Find the boundary at or above the highest loader.  We can't
+              // render any UI below there since we have no loader data available
+              let loaderIdx = matches!.findIndex((m) => m.route.loader);
+              let boundary =
+                loaderIdx >= 0
+                  ? findNearestBoundary(matches!, matches![loaderIdx].route.id)
+                  : findNearestBoundary(matches!);
 
-              // FIXME: Boundary should not be below any routes with loaders
-              // since we have no loaderData to provide, so use the higher of:
-              // - ancestor w/ boundary
-              // - first route with loader
-
-              errorContext = {
+              return respond({
                 matches: matches!,
                 location,
                 basename,
@@ -3559,11 +3557,8 @@ export function createStaticHandler(
                   : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
-              };
+              });
             }
-
-            let res = await respond(errorContext);
-            return res;
           }
         );
 
@@ -3576,10 +3571,11 @@ export function createStaticHandler(
         throw e;
       }
     }
+
     let result = await queryImpl(
       request,
       location,
-      matches!,
+      matches,
       requestContext,
       dataStrategy || null,
       skipLoaderErrorBubbling === true,
@@ -3595,11 +3591,7 @@ export function createStaticHandler(
     // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
-    return {
-      location,
-      basename,
-      ...result,
-    };
+    return { location, basename, ...result };
   }
 
   /**
@@ -3684,7 +3676,7 @@ export function createStaticHandler(
             location,
             matches!,
             requestContext,
-            dataStrategy || defaultDataStrategyWithoutMiddleware,
+            dataStrategy || null,
             false,
             match!,
             null,
@@ -3721,6 +3713,7 @@ export function createStaticHandler(
       );
       return response;
     }
+
     let result = await queryImpl(
       request,
       location,
@@ -3852,7 +3845,7 @@ export function createStaticHandler(
         error,
       };
     } else {
-      let results = await callStaticHandlerDataStrategy(
+      let results = await callDataStrategy(
         "action",
         request,
         [actionMatch],
@@ -3901,6 +3894,48 @@ export function createStaticHandler(
       };
     }
 
+    if (skipRevalidation) {
+      if (isErrorResult(result)) {
+        let boundaryMatch = skipLoaderErrorBubbling
+          ? actionMatch
+          : findNearestBoundary(matches, actionMatch.route.id);
+
+        return {
+          statusCode: isRouteErrorResponse(result.error)
+            ? result.error.status
+            : result.statusCode != null
+            ? result.statusCode
+            : 500,
+          actionData: null,
+          actionHeaders: {
+            ...(result.headers
+              ? { [actionMatch.route.id]: result.headers }
+              : {}),
+          },
+          matches,
+          loaderData: {},
+          errors: {
+            [boundaryMatch.route.id]: result.error,
+          },
+          loaderHeaders: {},
+        };
+      } else {
+        return {
+          actionData: {
+            [actionMatch.route.id]: result.data,
+          },
+          actionHeaders: result.headers
+            ? { [actionMatch.route.id]: result.headers }
+            : {},
+          matches,
+          loaderData: {},
+          errors: null,
+          statusCode: result.statusCode || 200,
+          loaderHeaders: {},
+        };
+      }
+    }
+
     // Create a GET request for the loaders
     let loaderRequest = new Request(request.url, {
       headers: request.headers,
@@ -3914,33 +3949,6 @@ export function createStaticHandler(
       let boundaryMatch = skipLoaderErrorBubbling
         ? actionMatch
         : findNearestBoundary(matches, actionMatch.route.id);
-
-      let actionContext: Pick<
-        StaticHandlerContext,
-        "statusCode" | "actionData" | "actionHeaders"
-      > = {
-        statusCode: isRouteErrorResponse(result.error)
-          ? result.error.status
-          : result.statusCode != null
-          ? result.statusCode
-          : 500,
-        actionData: null,
-        actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
-        },
-      };
-
-      if (skipRevalidation) {
-        return {
-          ...actionContext,
-          matches,
-          loaderData: {},
-          errors: {
-            [boundaryMatch.route.id]: result.error,
-          },
-          loaderHeaders: {},
-        };
-      }
 
       let handlerContext = await loadRouteData(
         loaderRequest,
@@ -3956,31 +3964,15 @@ export function createStaticHandler(
       // action status codes take precedence over loader status codes
       return {
         ...handlerContext,
-        ...actionContext,
-      };
-    }
-
-    let actionContext: Pick<
-      StaticHandlerContext,
-      "actionData" | "actionHeaders"
-    > = {
-      // action status codes take precedence over loader status codes
-      actionData: {
-        [actionMatch.route.id]: result.data,
-      },
-      actionHeaders: result.headers
-        ? { [actionMatch.route.id]: result.headers }
-        : {},
-    };
-
-    if (skipRevalidation) {
-      return {
-        ...actionContext,
-        matches,
-        loaderData: {},
-        errors: null,
-        statusCode: result.statusCode || 200,
-        loaderHeaders: {},
+        statusCode: isRouteErrorResponse(result.error)
+          ? result.error.status
+          : result.statusCode != null
+          ? result.statusCode
+          : 500,
+        actionData: null,
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        },
       };
     }
 
@@ -3994,18 +3986,13 @@ export function createStaticHandler(
       filterMatchesToLoad
     );
 
-    invariant(
-      !isResponse(handlerContext),
-      "Did not expect a Response returned from loadRouteData"
-    );
-
     return {
       ...handlerContext,
-      // action status codes take precedence over loader status codes
-      statusCode: result.statusCode || handlerContext.statusCode,
       actionData: {
         [actionMatch.route.id]: result.data,
       },
+      // action status codes take precedence over loader status codes
+      ...(result.statusCode ? { statusCode: result.statusCode } : {}),
       actionHeaders: result.headers
         ? { [actionMatch.route.id]: result.headers }
         : {},
@@ -4074,7 +4061,7 @@ export function createStaticHandler(
       };
     }
 
-    let results = await callStaticHandlerDataStrategy(
+    let results = await callDataStrategy(
       "loader",
       request,
       matchesToLoad,
@@ -4115,7 +4102,7 @@ export function createStaticHandler(
 
   // Utility wrapper for calling dataStrategy server-side without having to
   // pass around the manifest, mapRouteProperties, etc.
-  async function callStaticHandlerDataStrategy(
+  async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
@@ -4892,7 +4879,7 @@ async function loadLazyRouteModule(
 
 // Default implementation of `dataStrategy` which calls middleware and fetches
 // all loaders in parallel
-async function defaultDataStrategyWithoutMiddleware(
+async function defaultDataStrategy(
   args: DataStrategyFunctionArgs<unknown>
 ): ReturnType<DataStrategyFunction<unknown>> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
@@ -4906,12 +4893,12 @@ async function defaultDataStrategyWithoutMiddleware(
 
 // Default implementation of `dataStrategy` which calls middleware and fetches
 // all loaders in parallel
-async function defaultDataStrategy(
+async function defaultDataStrategyWithMiddleware(
   args: DataStrategyFunctionArgs<unknown>
 ): ReturnType<DataStrategyFunction<unknown>> {
   // Short circuit all the middleware logic if we have no middlewares
   if (!args.matches.some((m) => m.route.middleware)) {
-    return defaultDataStrategyWithoutMiddleware(args);
+    return defaultDataStrategy(args);
   }
 
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);

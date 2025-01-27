@@ -989,7 +989,6 @@ test.describe("Middleware", () => {
 
       let requests: string[] = [];
       page.on("request", (request: PlaywrightRequest) => {
-        console.log(request.url());
         if (request.url().includes(".data")) {
           requests.push(request.url());
         }
@@ -1821,6 +1820,79 @@ test.describe("Middleware", () => {
 
       (await page.$('a[href="/a/b"]'))?.click();
       await page.waitForSelector("pre");
+      expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
+      expect(await page.locator("pre").textContent()).toBe("broken!");
+
+      appFixture.close();
+    });
+
+    test("bubbles errors on the way down up to at least the highest route with a loader", async ({
+      page,
+    }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b">Link</Link>
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1>A Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              import { Outlet } from 'react-router'
+              export function loader() {
+                return null;
+              }
+              export default function Component() {
+                return <Outlet/>
+              }
+            `,
+            "app/routes/a.b.c.tsx": js`
+              import { Outlet } from 'react-router'
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1>C Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.c.d.tsx": js`
+              import { Outlet } from 'react-router'
+              export const middleware = [() => { throw new Error("broken!") }]
+              export default function Component() {
+                return <Outlet/>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a/b/c/d");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
 
