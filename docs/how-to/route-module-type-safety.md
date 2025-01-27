@@ -47,7 +47,6 @@ If you want to run type checking as its own command — for example, as part of 
 
 ## 4. Typing `AppLoadContext`
 
-
 ## Extending app `Context` types
 
 To define your app's `context` type, add the following in a `.td` or `.d.ts` file within your project:
