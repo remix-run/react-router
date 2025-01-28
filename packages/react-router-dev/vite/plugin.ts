@@ -40,7 +40,6 @@ import { preloadVite, getVite } from "./vite";
 import {
   type ResolvedReactRouterConfig,
   type BuildManifest,
-  type ServerBundlesBuildManifest,
   type ConfigLoader,
   createConfigLoader,
   resolveEntryFiles,
@@ -2187,7 +2186,7 @@ export async function getBuildManifest(
     })
   );
 
-  let buildManifest: ServerBundlesBuildManifest = {
+  let buildManifest: BuildManifest = {
     serverBundles: {},
     routeIdToServerBundleId: {},
     routes: rootRelativeRoutes,
