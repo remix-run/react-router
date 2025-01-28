@@ -12,8 +12,7 @@ let fixture: Fixture;
 let appFixture: AppFixture;
 
 ////////////////////////////////////////////////////////////////////////////////
-// 💿 👋 Hola! It's me, Dora the Remix Disc, I'm here to help you write a great
-// bug report pull request.
+/// 👋 Hola! I'm here to help you write a great bug report pull request.
 //
 // You don't need to fix the bug, this is just to report one.
 //
@@ -24,23 +23,30 @@ let appFixture: AppFixture;
 // commit to this pull request, and your now-succeeding test will have to be moved
 // to the appropriate file.
 //
-// First, make sure to install dependencies and build Remix. From the root of
+// First, make sure to install dependencies and build React Router. From the root of
 // the project, run this:
 //
 //    ```
 //    pnpm install && pnpm build
 //    ```
 //
+// If you have never installed playwright on your system before, you may also need
+// to install a browser engine:
+//
+//    ```
+//    pnpm exec playwright install chromium
+//    ```
+//
 // Now try running this test:
 //
 //    ```
-//    pnpm bug-report-test
+//    pnpm test:integration bug-report --project chromium
 //    ```
 //
 // You can add `--watch` to the end to have it re-run on file changes:
 //
 //    ```
-//    pnpm bug-report-test --watch
+//    pnpm test:integration bug-report --project chromium --watch
 //    ```
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +95,7 @@ test.afterAll(() => {
 
 ////////////////////////////////////////////////////////////////////////////////
 // 💿 Almost done, now write your failing test case(s) down here Make sure to
-// add a good description for what you expect Remix to do 👇🏽
+// add a good description for what you expect React Router to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
 test("redirects to external url while preserving original request headers", async ({
@@ -103,5 +109,6 @@ test("redirects to external url while preserving original request headers", asyn
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-// 💿 Finally, push your changes to your fork of Remix and open a pull request!
+// 💿 Finally, push your changes to your fork of React Router
+// and open a pull request!
 ////////////////////////////////////////////////////////////////////////////////
