@@ -410,7 +410,7 @@ export interface StaticHandler {
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
-      respond?: (
+      unstable_respond?: (
         staticContext: StaticHandlerContext
       ) => Response | Promise<Response>;
     }
@@ -421,7 +421,7 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      respond?: (res: Response) => Response | Promise<Response>;
+      unstable_respond?: (res: Response) => Response | Promise<Response>;
     }
   ): Promise<any>;
 }
@@ -3404,22 +3404,15 @@ export function createStaticHandler(
    *   for the handling route
    */
   async function query(
-    request: Request,
+    request: Parameters<StaticHandler["query"]>[0],
     {
       requestContext,
       filterMatchesToLoad,
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      respond,
-    }: {
-      requestContext?: unknown;
-      filterMatchesToLoad?: (m: AgnosticDataRouteMatch) => boolean;
-      skipRevalidation?: boolean;
-      skipLoaderErrorBubbling?: boolean;
-      dataStrategy?: DataStrategyFunction<unknown>;
-      respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
-    } = {}
+      unstable_respond: respond,
+    }: Parameters<StaticHandler["query"]>[1] = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3465,7 +3458,7 @@ export function createStaticHandler(
       return respond ? respond(staticContext) : staticContext;
     }
 
-    if (respond) {
+    if (respond && matches.some((m) => m.route.middleware)) {
       try {
         // Run middleware as far deep as the deepest loader to be executed
         let tailIdx = [...matches]
@@ -3622,18 +3615,13 @@ export function createStaticHandler(
    *    to actions/loaders in the `context` parameter
    */
   async function queryRoute(
-    request: Request,
+    request: Parameters<StaticHandler["queryRoute"]>[0],
     {
       routeId,
       requestContext,
       dataStrategy,
-      respond,
-    }: {
-      requestContext?: unknown;
-      routeId?: string;
-      dataStrategy?: DataStrategyFunction<unknown>;
-      respond?: (res: Response) => Promise<Response>;
-    } = {}
+      unstable_respond: respond,
+    }: Parameters<StaticHandler["queryRoute"]>[1] = {}
   ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3661,7 +3649,7 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (respond) {
+    if (respond && matches.some((m) => m.route.middleware)) {
       let response = await runMiddlewarePipeline(
         {
           request,

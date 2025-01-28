@@ -1164,7 +1164,7 @@ describe("context/middleware", () => {
 
       let res = (await handler.query(
         new Request("http://localhost/parent/child"),
-        { respond: respondWithJson }
+        { unstable_respond: respondWithJson }
       )) as Response;
       let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1221,7 +1221,7 @@ describe("context/middleware", () => {
         let requestContext = { order: [] };
         await handler.query(new Request("http://localhost/parent/child"), {
           requestContext,
-          respond: respondWithJson,
+          unstable_respond: respondWithJson,
         });
 
         expect(requestContext).toEqual({
@@ -1280,7 +1280,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         );
 
         expect(requestContext).toEqual({
@@ -1337,7 +1337,7 @@ describe("context/middleware", () => {
         let requestContext = {};
         let res = (await handler.query(
           new Request("http://localhost/parent/child"),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1375,7 +1375,7 @@ describe("context/middleware", () => {
         ]);
 
         let res = (await handler.query(new Request("http://localhost/parent"), {
-          respond: respondWithJson,
+          unstable_respond: respondWithJson,
         })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
         expect(staticContext).toMatchObject({
@@ -1429,7 +1429,7 @@ describe("context/middleware", () => {
         let requestContext = {};
         let res = (await handler.query(
           new Request("http://localhost/parent/child"),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1482,7 +1482,7 @@ describe("context/middleware", () => {
         let requestContext = {};
         let res = (await handler.query(
           new Request("http://localhost/parent/child"),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1551,7 +1551,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1624,7 +1624,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1697,7 +1697,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1765,7 +1765,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: respondWithJson }
+          { requestContext, unstable_respond: respondWithJson }
         )) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1808,7 +1808,7 @@ describe("context/middleware", () => {
 
         let response = (await handler.query(
           new Request("http://localhost/parent"),
-          { respond: respondWithJson }
+          { unstable_respond: respondWithJson }
         )) as Response;
 
         expect(response.status).toBe(302);
@@ -1839,7 +1839,7 @@ describe("context/middleware", () => {
 
         let response = (await handler.query(
           new Request("http://localhost/parent"),
-          { respond: respondWithJson }
+          { unstable_respond: respondWithJson }
         )) as Response;
 
         expect(response.status).toBe(302);
@@ -1910,7 +1910,7 @@ describe("context/middleware", () => {
       let res = (await handler.queryRoute(
         new Request("http://localhost/parent/child"),
         {
-          respond: (v) => v,
+          unstable_respond: (v) => v,
         }
       )) as Response;
 
@@ -1957,7 +1957,7 @@ describe("context/middleware", () => {
         let requestContext = { order: [] };
         await handler.queryRoute(new Request("http://localhost/parent/child"), {
           requestContext,
-          respond: (v) => v,
+          unstable_respond: (v) => v,
         });
 
         expect(requestContext).toEqual({
@@ -2019,7 +2019,7 @@ describe("context/middleware", () => {
           }),
           {
             requestContext,
-            respond: (v) => v,
+            unstable_respond: (v) => v,
           }
         );
 
@@ -2074,7 +2074,7 @@ describe("context/middleware", () => {
         let requestContext = {};
         let response = (await handler.queryRoute(
           new Request("http://localhost/parent/child"),
-          { requestContext, respond: (v) => v }
+          { requestContext, unstable_respond: (v) => v }
         )) as Response;
 
         expect(requestContext).toEqual({
@@ -2107,7 +2107,7 @@ describe("context/middleware", () => {
         let res = await handler.queryRoute(
           new Request("http://localhost/parent/"),
           {
-            respond: (v) => v,
+            unstable_respond: (v) => v,
           }
         );
 
@@ -2160,7 +2160,7 @@ describe("context/middleware", () => {
           new Request("http://localhost/parent/child"),
           {
             requestContext,
-            respond: (v) => v,
+            unstable_respond: (v) => v,
           }
         );
         expect(await res.text()).toBe("Error: PARENT 2");
@@ -2213,7 +2213,7 @@ describe("context/middleware", () => {
           new Request("http://localhost/parent/child"),
           {
             requestContext,
-            respond: (v) => v,
+            unstable_respond: (v) => v,
           }
         );
         expect(await res.text()).toBe("Error: CHILD UP");
@@ -2276,7 +2276,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: (v) => v }
+          { requestContext, unstable_respond: (v) => v }
         );
         expect(await res.text()).toEqual("Error: child 1 error");
 
@@ -2345,7 +2345,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: (v) => v }
+          { requestContext, unstable_respond: (v) => v }
         );
         expect(await res.text()).toEqual("Error: child 2 error");
 
@@ -2412,7 +2412,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: (v) => v }
+          { requestContext, unstable_respond: (v) => v }
         );
         expect(await res.text()).toEqual("Error: child 1 action error");
 
@@ -2476,7 +2476,7 @@ describe("context/middleware", () => {
             method: "post",
             body: createFormData({}),
           }),
-          { requestContext, respond: (v) => v }
+          { requestContext, unstable_respond: (v) => v }
         );
         expect(await res.text()).toEqual("Error: child 2 error");
 
@@ -2513,7 +2513,7 @@ describe("context/middleware", () => {
 
         let response = (await handler.queryRoute(
           new Request("http://localhost/parent"),
-          { respond: (v) => v }
+          { unstable_respond: (v) => v }
         )) as Response;
 
         expect(response.status).toBe(302);
@@ -2544,7 +2544,7 @@ describe("context/middleware", () => {
 
         let response = (await handler.queryRoute(
           new Request("http://localhost/parent"),
-          { respond: (v) => v }
+          { unstable_respond: (v) => v }
         )) as Response;
 
         expect(response.status).toBe(302);
