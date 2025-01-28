@@ -74,7 +74,24 @@ test.beforeAll(async () => {
 
         export default function Index() {
           return (
-            <Form>
+            <Form method="post">
+              <button type="submit">
+                Redirect
+              </button>
+            </Form>
+          )
+        }
+      `,
+      "app/routes/action-redirect-working.tsx": js`
+        import { redirect, Form } from "react-router";
+
+        export function action() {
+          return redirect("https://remix.run/");
+        }
+
+        export default function Index() {
+          return (
+            <Form method="post">
               <button type="submit">
                 Redirect
               </button>
@@ -104,6 +121,14 @@ test("redirects to external url while preserving original request headers", asyn
   let app = new PlaywrightFixture(appFixture, page);
 
   await app.waitForNetworkAfter(() => app.goto("/action-redirect"));
+  await app.clickElement("button");
+  expect(app.page.url()).toBe("https://remix.run/");
+});
+
+test("redirects to external url", async ({ page }) => {
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.waitForNetworkAfter(() => app.goto("/action-redirect-working"));
   await app.clickElement("button");
   expect(app.page.url()).toBe("https://remix.run/");
 });
