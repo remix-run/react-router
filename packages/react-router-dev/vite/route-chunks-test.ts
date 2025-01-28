@@ -428,7 +428,34 @@ describe("route chunks", () => {
       `);
     });
 
-    test("empty imports are placed in main chunk", () => {
+    test("shared browser global usage", () => {
+      const code = dedent`
+        export const chunk1 = () => localStorage.getItem("chunk1");
+        export const chunk2 = () => localStorage.getItem("chunk2");
+        export const main = () => localStorage.getItem("main");
+      `;
+
+      expect(hasChunkableExport(code, "chunk1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk1", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(
+        `"export const chunk1 = () => localStorage.getItem("chunk1");"`
+      );
+      expect(
+        getChunkedExport(code, "chunk2", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(
+        `"export const chunk2 = () => localStorage.getItem("chunk2");"`
+      );
+      expect(
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(
+        `"export const main = () => localStorage.getItem("main");"`
+      );
+    });
+
+    test("empty exports are placed in main chunk", () => {
       const code = dedent`
         export const chunk = "chunk";
         export {};
