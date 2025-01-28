@@ -100,39 +100,31 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-type ReactRouterPluginBuildEnvironmentName =
-  | "client"
-  | "ssr"
-  | `server-bundle-${string}`;
+type BuildEnvironmentName = "client" | "ssr" | `server-bundle-${string}`;
 
-type ReactRouterPluginBuildEnvironmentOptions = Required<
-  Pick<Vite.EnvironmentOptions, "build">
->;
+type BuildEnvironmentOptions = Required<Pick<Vite.EnvironmentOptions, "build">>;
 
-type ReactRouterPluginBuildEnvironmentOptionsResolver = (options: {
+type BuildEnvironmentOptionsResolver = (options: {
   viteCommand: Vite.ResolvedConfig["command"];
   viteUserConfig: Vite.UserConfig;
-}) => ReactRouterPluginBuildEnvironmentOptions;
+}) => BuildEnvironmentOptions;
 
-export type ReactRouterPluginBuildEnvironmentResolvers = Partial<
-  Record<
-    ReactRouterPluginBuildEnvironmentName,
-    ReactRouterPluginBuildEnvironmentOptionsResolver
-  >
+export type BuildEnvironmentOptionsResolvers = Partial<
+  Record<BuildEnvironmentName, BuildEnvironmentOptionsResolver>
 >;
 
-export type ReactRouterPluginBuildContext = {
-  name: ReactRouterPluginBuildEnvironmentName;
-  resolveOptions: ReactRouterPluginBuildEnvironmentOptionsResolver;
+export type BuildContext = {
+  name: BuildEnvironmentName;
+  resolveOptions: BuildEnvironmentOptionsResolver;
 };
 
-type ReactRouterPluginResolvedBuildContext = {
-  name: ReactRouterPluginBuildEnvironmentName;
-  options: ReactRouterPluginBuildEnvironmentOptions;
+type ResolvedBuildContext = {
+  name: BuildEnvironmentName;
+  options: BuildEnvironmentOptions;
 };
 
 export type ReactRouterPluginContext = {
-  buildContext: ReactRouterPluginResolvedBuildContext | null;
+  buildContext: ResolvedBuildContext | null;
   rootDirectory: string;
   entryClientFilePath: string;
   entryServerFilePath: string;
@@ -331,7 +323,7 @@ const resolveBuildContext = ({
 }: {
   viteCommand: Vite.ResolvedConfig["command"];
   viteUserConfig: Vite.UserConfig;
-}): ReactRouterPluginResolvedBuildContext | null => {
+}): ResolvedBuildContext | null => {
   if (
     !("__reactRouterBuildContext" in viteUserConfig) ||
     !viteUserConfig.__reactRouterBuildContext
@@ -339,10 +331,9 @@ const resolveBuildContext = ({
     return null;
   }
 
-  let buildContext =
-    viteUserConfig.__reactRouterBuildContext as ReactRouterPluginBuildContext;
+  let buildContext = viteUserConfig.__reactRouterBuildContext as BuildContext;
 
-  let resolvedBuildContext: ReactRouterPluginResolvedBuildContext = {
+  let resolvedBuildContext: ResolvedBuildContext = {
     name: buildContext.name,
     options: buildContext.resolveOptions({ viteCommand, viteUserConfig }),
   };
@@ -449,7 +440,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
-    let buildContext: ReactRouterPluginResolvedBuildContext | null =
+    let buildContext: ResolvedBuildContext | null =
       viteCommand === "build"
         ? resolveBuildContext({ viteCommand, viteUserConfig })
         : null;
@@ -789,27 +780,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ""
           )
         );
-
-        let baseRollupOptions = {
-          // Silence Rollup "use client" warnings
-          // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
-          onwarn(warning, defaultHandler) {
-            if (
-              warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-              warning.message.includes("use client")
-            ) {
-              return;
-            }
-            if (viteUserConfig.build?.rollupOptions?.onwarn) {
-              viteUserConfig.build.rollupOptions.onwarn(
-                warning,
-                defaultHandler
-              );
-            } else {
-              defaultHandler(warning);
-            }
-          },
-        } satisfies Vite.BuildOptions["rollupOptions"];
 
         return {
           __reactRouterPluginContext: ctx,
@@ -2289,7 +2259,7 @@ function mergeBuildOptions(
 export async function getEnvironmentResolvers(
   ctx: ReactRouterPluginContext,
   buildManifest: BuildManifest
-): Promise<ReactRouterPluginBuildEnvironmentResolvers> {
+): Promise<BuildEnvironmentOptionsResolvers> {
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
 
   function getBaseBuildOptions({
@@ -2344,7 +2314,7 @@ export async function getEnvironmentResolvers(
     });
   }
 
-  let environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers = {
+  let environmentResolvers: BuildEnvironmentOptionsResolvers = {
     client: ({ viteUserConfig }) => ({
       build: mergeBuildOptions(getBaseBuildOptions({ viteUserConfig }), {
         rollupOptions: {

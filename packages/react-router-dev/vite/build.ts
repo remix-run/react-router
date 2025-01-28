@@ -5,8 +5,8 @@ import colors from "picocolors";
 
 import {
   type ReactRouterPluginContext,
-  type ReactRouterPluginBuildContext,
-  type ReactRouterPluginBuildEnvironmentResolvers,
+  type BuildContext,
+  type BuildEnvironmentOptionsResolvers,
   resolveViteConfig,
   extractPluginContext,
   getBuildManifest,
@@ -31,7 +31,7 @@ async function cleanBuildDirectory(
 }
 
 function getViteManifestPaths(
-  environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers
+  environmentResolvers: BuildEnvironmentOptionsResolvers
 ) {
   return Object.values(environmentResolvers).map((resolver) => {
     invariant(resolver, "Expected build environment resolver");
@@ -94,8 +94,8 @@ export async function build(
   let vite = getVite();
 
   async function viteBuild(
-    environmentResolvers: ReactRouterPluginBuildEnvironmentResolvers,
-    environmentName: keyof ReactRouterPluginBuildEnvironmentResolvers
+    environmentResolvers: BuildEnvironmentOptionsResolvers,
+    environmentName: keyof BuildEnvironmentOptionsResolvers
   ) {
     let ssr = environmentName !== "client";
 
@@ -105,7 +105,7 @@ export async function build(
       `Missing environment resolver for ${environmentName}`
     );
 
-    let buildContext: ReactRouterPluginBuildContext = {
+    let buildContext: BuildContext = {
       name: environmentName,
       resolveOptions: environmentResolver,
     };
@@ -144,7 +144,7 @@ export async function build(
     serverEnvironmentNames.map((environmentName) =>
       viteBuild(
         environmentResolvers,
-        environmentName as keyof ReactRouterPluginBuildEnvironmentResolvers
+        environmentName as keyof BuildEnvironmentOptionsResolvers
       )
     )
   );
