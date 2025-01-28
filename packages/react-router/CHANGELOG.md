@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.28.3-pre-v6.1
+
+### Patch Changes
+
+- Limit matchRoutes optimization to client side routers ([#12881](https://github.com/remix-run/react-router/pull/12881))
+
 ## 6.28.3-pre-v6.0
 
 ### Patch Changes
