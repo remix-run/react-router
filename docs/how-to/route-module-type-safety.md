@@ -45,7 +45,22 @@ If you want to run type checking as its own command — for example, as part of 
 }
 ```
 
-## 4. Type-only auto-imports (optional)
+## 4. Typing `AppLoadContext`
+
+## Extending app `Context` types
+
+To define your app's `context` type, add the following in a `.ts` or `.d.ts` file within your project:
+
+```typescript
+import "react-router";
+declare module "react-router" {
+  interface AppLoadContext {
+    // add context properties here
+  }
+}
+```
+
+## 5. Type-only auto-imports (optional)
 
 When auto-importing the `Route` type helper, TypeScript will generate:
 
