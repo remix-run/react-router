@@ -1,5 +1,14 @@
 # `react-router`
 
+## 6.28.3-pre-v6.0
+
+### Patch Changes
+
+- Do not log v7 deprecation warnings in production builds ([#12794](https://github.com/remix-run/react-router/pull/12794))
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12169](https://github.com/remix-run/react-router/pull/12169))
+- Updated dependencies:
+  - `@remix-run/router@1.21.2-pre-v6.0`
+
 ## 6.28.2
 
 ### Patch Changes
