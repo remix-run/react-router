@@ -2143,6 +2143,10 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
+function hasServerBundles(buildManifest: BuildManifest) {
+  return Object.keys(buildManifest.serverBundles ?? {}).length > 0;
+}
+
 function getRoutesByServerBundleId(
   buildManifest: BuildManifest
 ): Record<string, RouteManifest> {
@@ -2319,23 +2323,9 @@ export async function getEnvironmentOptionsResolvers(
     }),
   };
 
-  if (Object.keys(buildManifest.serverBundles ?? {}).length === 0) {
-    environmentOptionsResolvers.ssr = ({ viteUserConfig }) => ({
-      build: mergeBuildOptions(getBaseServerBuildOptions({ viteUserConfig }), {
-        outDir: getServerBuildDirectory(ctx),
-        rollupOptions: {
-          input:
-            viteUserConfig.build?.rollupOptions?.input ??
-            virtual.serverBuild.id,
-        },
-      }),
-    });
-
-    return environmentOptionsResolvers;
-  } else {
-    let routesByServerBundleId = getRoutesByServerBundleId(buildManifest);
+  if (hasServerBundles(buildManifest)) {
     for (let [serverBundleId, routes] of Object.entries(
-      routesByServerBundleId
+      getRoutesByServerBundleId(buildManifest)
     )) {
       environmentOptionsResolvers[`server-bundle-${serverBundleId}`] = ({
         viteUserConfig,
@@ -2353,6 +2343,17 @@ export async function getEnvironmentOptionsResolvers(
         ),
       });
     }
+  } else {
+    environmentOptionsResolvers.ssr = ({ viteUserConfig }) => ({
+      build: mergeBuildOptions(getBaseServerBuildOptions({ viteUserConfig }), {
+        outDir: getServerBuildDirectory(ctx),
+        rollupOptions: {
+          input:
+            viteUserConfig.build?.rollupOptions?.input ??
+            virtual.serverBuild.id,
+        },
+      }),
+    });
   }
 
   return environmentOptionsResolvers;
