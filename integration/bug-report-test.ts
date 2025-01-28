@@ -12,7 +12,7 @@ let fixture: Fixture;
 let appFixture: AppFixture;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 👋 Hola! I'm here to help you write a great bug report pull request.
+// 👋 Hola! I'm here to help you write a great bug report pull request.
 //
 // You don't need to fix the bug, this is just to report one.
 //
