@@ -1,18 +1,19 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
+import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
   createFixture,
   js,
 } from "./helpers/create-fixture.js";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 let fixture: Fixture;
 let appFixture: AppFixture;
 
 ////////////////////////////////////////////////////////////////////////////////
-// 👋 Hola! I'm here to help you write a great bug report pull request.
+// 💿 👋 Hola! It's me, Dora the Remix Disc, I'm here to help you write a great
+// bug report pull request.
 //
 // You don't need to fix the bug, this is just to report one.
 //
@@ -23,30 +24,23 @@ let appFixture: AppFixture;
 // commit to this pull request, and your now-succeeding test will have to be moved
 // to the appropriate file.
 //
-// First, make sure to install dependencies and build React Router. From the root of
+// First, make sure to install dependencies and build Remix. From the root of
 // the project, run this:
 //
 //    ```
 //    pnpm install && pnpm build
 //    ```
 //
-// If you have never installed playwright on your system before, you may also need
-// to install a browser engine:
-//
-//    ```
-//    pnpm exec playwright install chromium
-//    ```
-//
 // Now try running this test:
 //
 //    ```
-//    pnpm test:integration bug-report --project chromium
+//    pnpm bug-report-test
 //    ```
 //
 // You can add `--watch` to the end to have it re-run on file changes:
 //
 //    ```
-//    pnpm test:integration bug-report --project chromium --watch
+//    pnpm bug-report-test --watch
 //    ```
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,27 +58,22 @@ test.beforeAll(async () => {
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
     files: {
-      "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+      "app/routes/action-redirect.tsx": js`
+        import { redirect, Form } from "react-router";
 
-        export function loader() {
-          return "pizza";
+        export function action({ request }) {
+          const headers = new Headers(request.headers);
+          return redirect("https://remix.run/", { headers });
         }
 
         export default function Index() {
-          let data = useLoaderData();
           return (
-            <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
-            </div>
+            <Form>
+              <button type="submit">
+                Redirect
+              </button>
+            </Form>
           )
-        }
-      `,
-
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
         }
       `,
     },
@@ -100,28 +89,19 @@ test.afterAll(() => {
 
 ////////////////////////////////////////////////////////////////////////////////
 // 💿 Almost done, now write your failing test case(s) down here Make sure to
-// add a good description for what you expect React Router to do 👇🏽
+// add a good description for what you expect Remix to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
+test("redirects to external url while preserving original request headers", async ({
+  page,
+}) => {
   let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
 
-  // If you need to test interactivity use the `app`
-  await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
-
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
-  // await app.poke(20);
-
-  // Go check out the other tests to see what else you can do.
+  await app.waitForNetworkAfter(() => app.goto("/action-redirect"));
+  await app.clickElement("button");
+  expect(app.page.url()).toBe("https://remix.run/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-// 💿 Finally, push your changes to your fork of React Router
-// and open a pull request!
+// 💿 Finally, push your changes to your fork of Remix and open a pull request!
 ////////////////////////////////////////////////////////////////////////////////
