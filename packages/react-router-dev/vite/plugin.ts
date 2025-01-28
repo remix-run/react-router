@@ -615,11 +615,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
       browserRoutes[route.id] = routeManifestEntry;
 
-      invariant(
-        ctx.buildContext,
-        "ctx.buildContext required to generate the build manifest"
-      );
-
       if (!routeIds || routeIds.includes(route.id)) {
         serverRoutes[route.id] = routeManifestEntry;
       }
@@ -863,18 +858,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ? { fs: { allow: defaultEntries } }
             : undefined,
 
-          // Vite config options for building
-          build: ctx.buildContext?.options.build,
-
-          // Vite config options for SPA preview mode
-          ...(viteCommand === "serve" && ctx.reactRouterConfig.ssr === false
-            ? {
-                build: {
-                  manifest: true,
-                  outDir: getClientBuildDirectory(ctx.reactRouterConfig),
-                },
-              }
-            : undefined),
+          build: await resolveBuildOptions({
+            ctx,
+            viteCommand,
+            viteConfigEnv,
+            viteUserConfig,
+          }),
         };
       },
       async configResolved(resolvedViteConfig) {
@@ -1091,22 +1080,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
         async handler() {
-          invariant(ctx.buildContext);
-          if (ctx.buildContext.name === "client") {
+          if (!viteConfigEnv.isSsrBuild) {
             return;
           }
-
           invariant(viteConfig);
 
           let clientBuildDirectory = getClientBuildDirectory(
             ctx.reactRouterConfig
           );
 
-          let serverBuildDirectory = ctx.buildContext?.options.build.outDir;
-          invariant(
-            serverBuildDirectory,
-            "Expected build.outDir for build environment"
-          );
+          let serverBuildDirectory =
+            ctx.buildContext?.options.build.outDir ??
+            getServerBuildDirectory(ctx);
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
@@ -2371,4 +2356,52 @@ export async function getEnvironmentResolvers(
   }
 
   return environmentResolvers;
+}
+
+async function getEnvironmentOptions(
+  ctx: ReactRouterPluginContext,
+  environmentName: BuildEnvironmentName,
+  resolverOptions: Parameters<BuildEnvironmentOptionsResolver>[0]
+): Promise<BuildEnvironmentOptions> {
+  let buildManifest = await getBuildManifest(ctx);
+  let environmentResolvers = await getEnvironmentResolvers(ctx, buildManifest);
+
+  let resolver = environmentResolvers[environmentName];
+  invariant(resolver, `Missing environment resolver for ${environmentName}`);
+
+  return resolver(resolverOptions);
+}
+
+async function resolveBuildOptions({
+  ctx,
+  viteCommand,
+  viteConfigEnv,
+  viteUserConfig,
+}: {
+  ctx: ReactRouterPluginContext;
+  viteCommand: Vite.ResolvedConfig["command"];
+  viteConfigEnv: Vite.ConfigEnv;
+  viteUserConfig: Vite.UserConfig;
+}): Promise<Vite.BuildOptions | undefined> {
+  // Handle options injected from `react-router build`
+  if (ctx.buildContext?.options.build) {
+    return ctx.buildContext.options.build;
+  }
+
+  // Handle `vite preview` in SPA mode
+  if (viteCommand === "serve" && ctx.reactRouterConfig.ssr === false) {
+    return {
+      manifest: true,
+      outDir: getClientBuildDirectory(ctx.reactRouterConfig),
+    };
+  }
+
+  // Otherwise, handle `vite build`
+  let environmentOptions = await getEnvironmentOptions(
+    ctx,
+    viteConfigEnv.isSsrBuild ? "ssr" : "client",
+    { viteCommand, viteUserConfig }
+  );
+
+  return environmentOptions.build;
 }
