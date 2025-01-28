@@ -350,7 +350,7 @@ const resolveBuildContext = ({
   return resolvedBuildContext;
 };
 
-export let getServerBuildDirectory = (
+let getServerBuildDirectory = (
   ctx: ReactRouterPluginContext,
   { serverBundleId }: { serverBundleId?: string } = {}
 ) =>
@@ -360,9 +360,8 @@ export let getServerBuildDirectory = (
     ...(serverBundleId ? [serverBundleId] : [])
   );
 
-export let getClientBuildDirectory = (
-  reactRouterConfig: ResolvedReactRouterConfig
-) => path.join(reactRouterConfig.buildDirectory, "client");
+let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
+  path.join(reactRouterConfig.buildDirectory, "client");
 
 let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
