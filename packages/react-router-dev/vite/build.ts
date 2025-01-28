@@ -5,12 +5,13 @@ import colors from "picocolors";
 
 import {
   type ReactRouterPluginContext,
-  type BuildContext,
-  type BuildEnvironmentOptionsResolvers,
+  type EnvironmentName,
+  type EnvironmentBuildContext,
+  type EnvironmentOptionsResolvers,
   resolveViteConfig,
   extractPluginContext,
   getBuildManifest,
-  getEnvironmentResolvers,
+  getEnvironmentOptionsResolvers,
 } from "./plugin";
 import invariant from "../invariant";
 import { preloadVite, getVite } from "./vite";
@@ -31,18 +32,23 @@ async function cleanBuildDirectory(
 }
 
 function getViteManifestPaths(
-  environmentResolvers: BuildEnvironmentOptionsResolvers
+  environmentOptionsResolvers: EnvironmentOptionsResolvers
 ) {
-  return Object.values(environmentResolvers).map((resolver) => {
-    invariant(resolver, "Expected build environment resolver");
-    let options = resolver({
-      viteCommand: "build",
-      viteUserConfig: {},
-    });
-    let outDir = options.build.outDir;
-    invariant(outDir, "Expected build.outDir for build environment");
-    return path.join(outDir, ".vite/manifest.json");
-  });
+  return Object.entries(environmentOptionsResolvers).map(
+    ([environmentName, resolveOptions]) => {
+      invariant(
+        resolveOptions,
+        `Expected build environment options resolver for ${environmentName}`
+      );
+      let options = resolveOptions({
+        viteCommand: "build",
+        viteUserConfig: {},
+      });
+      let outDir = options.build.outDir;
+      invariant(outDir, `Expected build.outDir for ${environmentName}`);
+      return path.join(outDir, ".vite/manifest.json");
+    }
+  );
 }
 
 export interface ViteBuildOptions {
@@ -94,20 +100,20 @@ export async function build(
   let vite = getVite();
 
   async function viteBuild(
-    environmentResolvers: BuildEnvironmentOptionsResolvers,
-    environmentName: keyof BuildEnvironmentOptionsResolvers
+    environmentOptionsResolvers: EnvironmentOptionsResolvers,
+    environmentName: EnvironmentName
   ) {
     let ssr = environmentName !== "client";
 
-    let environmentResolver = environmentResolvers[environmentName];
+    let resolveOptions = environmentOptionsResolvers[environmentName];
     invariant(
-      environmentResolver,
-      `Missing environment resolver for ${environmentName}`
+      resolveOptions,
+      `Missing environment options resolver for ${environmentName}`
     );
 
-    let buildContext: BuildContext = {
+    let environmentBuildContext: EnvironmentBuildContext = {
       name: environmentName,
-      resolveOptions: environmentResolver,
+      resolveOptions,
     };
 
     await vite.build({
@@ -124,32 +130,34 @@ export async function build(
       optimizeDeps: { force },
       clearScreen,
       logLevel,
-      ...{ __reactRouterBuildContext: buildContext },
+      ...{ __reactRouterEnvironmentBuildContext: environmentBuildContext },
     });
   }
 
   await cleanBuildDirectory(viteConfig, ctx);
 
   let buildManifest = await getBuildManifest(ctx);
-  let environmentResolvers = await getEnvironmentResolvers(ctx, buildManifest);
+  let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
+    ctx,
+    buildManifest
+  );
 
   // Run the Vite client build first
-  await viteBuild(environmentResolvers, "client");
+  await viteBuild(environmentOptionsResolvers, "client");
 
   // Then run Vite SSR builds in parallel
-  let serverEnvironmentNames = Object.keys(environmentResolvers).filter(
-    (environmentName) => environmentName !== "client"
-  );
+  let serverEnvironmentNames = (
+    Object.keys(
+      environmentOptionsResolvers
+    ) as (keyof typeof environmentOptionsResolvers)[]
+  ).filter((environmentName) => environmentName !== "client");
   await Promise.all(
     serverEnvironmentNames.map((environmentName) =>
-      viteBuild(
-        environmentResolvers,
-        environmentName as keyof BuildEnvironmentOptionsResolvers
-      )
+      viteBuild(environmentOptionsResolvers, environmentName)
     )
   );
 
-  let viteManifestPaths = getViteManifestPaths(environmentResolvers);
+  let viteManifestPaths = getViteManifestPaths(environmentOptionsResolvers);
   await Promise.all(
     viteManifestPaths.map(async (viteManifestPath) => {
       let manifestExists = await fse.pathExists(viteManifestPath);

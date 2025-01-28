@@ -99,31 +99,31 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-type BuildEnvironmentName = "client" | "ssr" | `server-bundle-${string}`;
+export type EnvironmentName = "client" | "ssr" | `server-bundle-${string}`;
 
-type BuildEnvironmentOptions = Required<Pick<Vite.EnvironmentOptions, "build">>;
+type EnvironmentOptions = Required<Pick<Vite.EnvironmentOptions, "build">>;
 
-type BuildEnvironmentOptionsResolver = (options: {
+type EnvironmentOptionsResolver = (options: {
   viteCommand: Vite.ResolvedConfig["command"];
   viteUserConfig: Vite.UserConfig;
-}) => BuildEnvironmentOptions;
+}) => EnvironmentOptions;
 
-export type BuildEnvironmentOptionsResolvers = Partial<
-  Record<BuildEnvironmentName, BuildEnvironmentOptionsResolver>
+export type EnvironmentOptionsResolvers = Partial<
+  Record<EnvironmentName, EnvironmentOptionsResolver>
 >;
 
-export type BuildContext = {
-  name: BuildEnvironmentName;
-  resolveOptions: BuildEnvironmentOptionsResolver;
+export type EnvironmentBuildContext = {
+  name: EnvironmentName;
+  resolveOptions: EnvironmentOptionsResolver;
 };
 
-type ResolvedBuildContext = {
-  name: BuildEnvironmentName;
-  options: BuildEnvironmentOptions;
+type ResolvedEnvironmentBuildContext = {
+  name: EnvironmentName;
+  options: EnvironmentOptions;
 };
 
 export type ReactRouterPluginContext = {
-  buildContext: ResolvedBuildContext | null;
+  environmentBuildContext: ResolvedEnvironmentBuildContext | null;
   rootDirectory: string;
   entryClientFilePath: string;
   entryServerFilePath: string;
@@ -316,23 +316,24 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
-const resolveBuildContext = ({
+const resolveEnvironmentBuildContext = ({
   viteCommand,
   viteUserConfig,
 }: {
   viteCommand: Vite.ResolvedConfig["command"];
   viteUserConfig: Vite.UserConfig;
-}): ResolvedBuildContext | null => {
+}): ResolvedEnvironmentBuildContext | null => {
   if (
-    !("__reactRouterBuildContext" in viteUserConfig) ||
-    !viteUserConfig.__reactRouterBuildContext
+    !("__reactRouterEnvironmentBuildContext" in viteUserConfig) ||
+    !viteUserConfig.__reactRouterEnvironmentBuildContext
   ) {
     return null;
   }
 
-  let buildContext = viteUserConfig.__reactRouterBuildContext as BuildContext;
+  let buildContext =
+    viteUserConfig.__reactRouterEnvironmentBuildContext as EnvironmentBuildContext;
 
-  let resolvedBuildContext: ResolvedBuildContext = {
+  let resolvedBuildContext: ResolvedEnvironmentBuildContext = {
     name: buildContext.name,
     options: buildContext.resolveOptions({ viteCommand, viteUserConfig }),
   };
@@ -439,15 +440,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
-    let buildContext: ResolvedBuildContext | null =
+    let environmentBuildContext: ResolvedEnvironmentBuildContext | null =
       viteCommand === "build"
-        ? resolveBuildContext({ viteCommand, viteUserConfig })
+        ? resolveEnvironmentBuildContext({ viteCommand, viteUserConfig })
         : null;
 
     firstLoad = false;
 
     ctx = {
-      buildContext,
+      environmentBuildContext,
       reactRouterConfig,
       rootDirectory,
       entryClientFilePath,
@@ -1089,7 +1090,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           );
 
           let serverBuildDirectory =
-            ctx.buildContext?.options.build.outDir ??
+            ctx.environmentBuildContext?.options.build.outDir ??
             getServerBuildDirectory(ctx);
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
@@ -2240,10 +2241,10 @@ function mergeBuildOptions(
   return vite.mergeConfig({ build: base }, { build: overrides }).build;
 }
 
-export async function getEnvironmentResolvers(
+export async function getEnvironmentOptionsResolvers(
   ctx: ReactRouterPluginContext,
   buildManifest: BuildManifest
-): Promise<BuildEnvironmentOptionsResolvers> {
+): Promise<EnvironmentOptionsResolvers> {
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
 
   function getBaseBuildOptions({
@@ -2298,7 +2299,7 @@ export async function getEnvironmentResolvers(
     });
   }
 
-  let environmentResolvers: BuildEnvironmentOptionsResolvers = {
+  let environmentOptionsResolvers: EnvironmentOptionsResolvers = {
     client: ({ viteUserConfig }) => ({
       build: mergeBuildOptions(getBaseBuildOptions({ viteUserConfig }), {
         rollupOptions: {
@@ -2319,7 +2320,7 @@ export async function getEnvironmentResolvers(
   };
 
   if (Object.keys(buildManifest.serverBundles ?? {}).length === 0) {
-    environmentResolvers.ssr = ({ viteUserConfig }) => ({
+    environmentOptionsResolvers.ssr = ({ viteUserConfig }) => ({
       build: mergeBuildOptions(getBaseServerBuildOptions({ viteUserConfig }), {
         outDir: getServerBuildDirectory(ctx),
         rollupOptions: {
@@ -2330,13 +2331,13 @@ export async function getEnvironmentResolvers(
       }),
     });
 
-    return environmentResolvers;
+    return environmentOptionsResolvers;
   } else {
     let routesByServerBundleId = getRoutesByServerBundleId(buildManifest);
     for (let [serverBundleId, routes] of Object.entries(
       routesByServerBundleId
     )) {
-      environmentResolvers[`server-bundle-${serverBundleId}`] = ({
+      environmentOptionsResolvers[`server-bundle-${serverBundleId}`] = ({
         viteUserConfig,
       }) => ({
         build: mergeBuildOptions(
@@ -2354,16 +2355,19 @@ export async function getEnvironmentResolvers(
     }
   }
 
-  return environmentResolvers;
+  return environmentOptionsResolvers;
 }
 
 async function getEnvironmentOptions(
   ctx: ReactRouterPluginContext,
-  environmentName: BuildEnvironmentName,
-  resolverOptions: Parameters<BuildEnvironmentOptionsResolver>[0]
-): Promise<BuildEnvironmentOptions> {
+  environmentName: EnvironmentName,
+  resolverOptions: Parameters<EnvironmentOptionsResolver>[0]
+): Promise<EnvironmentOptions> {
   let buildManifest = await getBuildManifest(ctx);
-  let environmentResolvers = await getEnvironmentResolvers(ctx, buildManifest);
+  let environmentResolvers = await getEnvironmentOptionsResolvers(
+    ctx,
+    buildManifest
+  );
 
   let resolver = environmentResolvers[environmentName];
   invariant(resolver, `Missing environment resolver for ${environmentName}`);
@@ -2383,8 +2387,8 @@ async function resolveBuildOptions({
   viteUserConfig: Vite.UserConfig;
 }): Promise<Vite.BuildOptions | undefined> {
   // Handle options injected from `react-router build`
-  if (ctx.buildContext?.options.build) {
-    return ctx.buildContext.options.build;
+  if (ctx.environmentBuildContext?.options.build) {
+    return ctx.environmentBuildContext.options.build;
   }
 
   // Handle `vite preview` in SPA mode
