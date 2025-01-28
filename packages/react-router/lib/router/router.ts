@@ -410,7 +410,9 @@ export interface StaticHandler {
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
-      respond?: (staticContext: StaticHandlerContext) => Promise<Response>;
+      respond?: (
+        staticContext: StaticHandlerContext
+      ) => Response | Promise<Response>;
     }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -419,7 +421,7 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      respond?: (res: Response) => Promise<Response>;
+      respond?: (res: Response) => Response | Promise<Response>;
     }
   ): Promise<any>;
 }
@@ -3699,7 +3701,14 @@ export function createStaticHandler(
             throw error;
           }
 
-          throw new Error("Expected a response from queryRoute");
+          // Pick off the right state value to return
+          let value = result.actionData
+            ? Object.values(result.actionData)[0]
+            : Object.values(result.loaderData)[0];
+
+          return typeof value === "string"
+            ? new Response(value)
+            : Response.json(value);
         },
         (e) => {
           if (isResponse(e.error)) {
@@ -4983,9 +4992,6 @@ export async function runMiddlewarePipeline(
       // This shouldn't happen?  This would have to come from a bug in our
       // library code...
       throw e;
-    }
-    if (propagateResult && isResponse(e.error)) {
-      throw e.error;
     }
     let result = await errorHandler(e, middlewareState.keyedResults);
     return middlewareState.propagateResult
