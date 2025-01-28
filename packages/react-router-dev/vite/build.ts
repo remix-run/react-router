@@ -5,171 +5,16 @@ import colors from "picocolors";
 
 import {
   type ReactRouterPluginContext,
-  type ServerBundleBuildConfig,
+  type EnvironmentName,
+  type EnvironmentBuildContext,
+  type EnvironmentOptionsResolvers,
   resolveViteConfig,
   extractPluginContext,
-  getServerBuildDirectory,
+  getBuildManifest,
+  getEnvironmentOptionsResolvers,
 } from "./plugin";
-import {
-  type BuildManifest,
-  type ServerBundlesBuildManifest,
-  configRouteToBranchRoute,
-} from "../config/config";
-import type { RouteManifestEntry, RouteManifest } from "../config/routes";
 import invariant from "../invariant";
 import { preloadVite, getVite } from "./vite";
-
-function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
-  let nonAddressableIds = new Set<string>();
-
-  for (let id in routes) {
-    let route = routes[id];
-
-    // We omit the parent route of index routes since the index route takes ownership of its parent's path
-    if (route.index) {
-      invariant(
-        route.parentId,
-        `Expected index route "${route.id}" to have "parentId" set`
-      );
-      nonAddressableIds.add(route.parentId);
-    }
-
-    // We omit pathless routes since they can only be addressed via descendant routes
-    if (typeof route.path !== "string" && !route.index) {
-      nonAddressableIds.add(id);
-    }
-  }
-
-  return Object.values(routes).filter(
-    (route) => !nonAddressableIds.has(route.id)
-  );
-}
-
-function getRouteBranch(routes: RouteManifest, routeId: string) {
-  let branch: RouteManifestEntry[] = [];
-  let currentRouteId: string | undefined = routeId;
-
-  while (currentRouteId) {
-    let route: RouteManifestEntry = routes[currentRouteId];
-    invariant(route, `Missing route for ${currentRouteId}`);
-    branch.push(route);
-    currentRouteId = route.parentId;
-  }
-
-  return branch.reverse();
-}
-
-type ReactRouterClientBuildArgs = {
-  ssr: false;
-  serverBundleBuildConfig?: never;
-};
-
-type ReactRouterServerBuildArgs = {
-  ssr: true;
-  serverBundleBuildConfig?: ServerBundleBuildConfig;
-};
-
-type ReactRouterBuildArgs =
-  | ReactRouterClientBuildArgs
-  | ReactRouterServerBuildArgs;
-
-async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
-  serverBuilds: ReactRouterServerBuildArgs[];
-  buildManifest: BuildManifest;
-}> {
-  let { rootDirectory } = ctx;
-  const { routes, serverBuildFile, serverBundles, appDirectory } =
-    ctx.reactRouterConfig;
-  let serverBuildDirectory = getServerBuildDirectory(ctx);
-  if (!serverBundles) {
-    return {
-      serverBuilds: [{ ssr: true }],
-      buildManifest: { routes },
-    };
-  }
-
-  let { normalizePath } = await import("vite");
-
-  let resolvedAppDirectory = path.resolve(rootDirectory, appDirectory);
-  let rootRelativeRoutes = Object.fromEntries(
-    Object.entries(routes).map(([id, route]) => {
-      let filePath = path.join(resolvedAppDirectory, route.file);
-      let rootRelativeFilePath = normalizePath(
-        path.relative(rootDirectory, filePath)
-      );
-      return [id, { ...route, file: rootRelativeFilePath }];
-    })
-  );
-
-  let buildManifest: ServerBundlesBuildManifest = {
-    serverBundles: {},
-    routeIdToServerBundleId: {},
-    routes: rootRelativeRoutes,
-  };
-
-  let serverBundleBuildConfigById = new Map<string, ServerBundleBuildConfig>();
-
-  await Promise.all(
-    getAddressableRoutes(routes).map(async (route) => {
-      let branch = getRouteBranch(routes, route.id);
-      let serverBundleId = await serverBundles({
-        branch: branch.map((route) =>
-          configRouteToBranchRoute({
-            ...route,
-            // Ensure absolute paths are passed to the serverBundles function
-            file: path.join(resolvedAppDirectory, route.file),
-          })
-        ),
-      });
-      if (typeof serverBundleId !== "string") {
-        throw new Error(`The "serverBundles" function must return a string`);
-      }
-      if (!/^[a-zA-Z0-9-_]+$/.test(serverBundleId)) {
-        throw new Error(
-          `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
-        );
-      }
-      buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
-
-      let relativeServerBundleDirectory = path.relative(
-        rootDirectory,
-        path.join(serverBuildDirectory, serverBundleId)
-      );
-      let serverBuildConfig = serverBundleBuildConfigById.get(serverBundleId);
-      if (!serverBuildConfig) {
-        buildManifest.serverBundles[serverBundleId] = {
-          id: serverBundleId,
-          file: normalizePath(
-            path.join(relativeServerBundleDirectory, serverBuildFile)
-          ),
-        };
-        serverBuildConfig = {
-          routes: {},
-          serverBundleId,
-        };
-        serverBundleBuildConfigById.set(serverBundleId, serverBuildConfig);
-      }
-      for (let route of branch) {
-        serverBuildConfig.routes[route.id] = route;
-      }
-    })
-  );
-
-  let serverBuilds = Array.from(serverBundleBuildConfigById.values()).map(
-    (serverBundleBuildConfig): ReactRouterServerBuildArgs => {
-      let serverBuild: ReactRouterServerBuildArgs = {
-        ssr: true,
-        serverBundleBuildConfig,
-      };
-      return serverBuild;
-    }
-  );
-
-  return {
-    serverBuilds,
-    buildManifest,
-  };
-}
 
 async function cleanBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
@@ -187,22 +32,23 @@ async function cleanBuildDirectory(
 }
 
 function getViteManifestPaths(
-  ctx: ReactRouterPluginContext,
-  serverBuilds: Array<ReactRouterServerBuildArgs>
+  environmentOptionsResolvers: EnvironmentOptionsResolvers
 ) {
-  let buildRelative = (pathname: string) =>
-    path.resolve(ctx.reactRouterConfig.buildDirectory, pathname);
-
-  let viteManifestPaths: Array<string> = [
-    "client/.vite/manifest.json",
-    ...serverBuilds.map(({ serverBundleBuildConfig }) => {
-      let serverBundleId = serverBundleBuildConfig?.serverBundleId;
-      let serverBundlePath = serverBundleId ? serverBundleId + "/" : "";
-      return `server/${serverBundlePath}.vite/manifest.json`;
-    }),
-  ].map((srcPath) => buildRelative(srcPath));
-
-  return viteManifestPaths;
+  return Object.entries(environmentOptionsResolvers).map(
+    ([environmentName, resolveOptions]) => {
+      invariant(
+        resolveOptions,
+        `Expected build environment options resolver for ${environmentName}`
+      );
+      let options = resolveOptions({
+        viteCommand: "build",
+        viteUserConfig: {},
+      });
+      let outDir = options.build.outDir;
+      invariant(outDir, `Expected build.outDir for ${environmentName}`);
+      return path.join(outDir, ".vite/manifest.json");
+    }
+  );
 }
 
 export interface ViteBuildOptions {
@@ -253,10 +99,23 @@ export async function build(
 
   let vite = getVite();
 
-  async function viteBuild({
-    ssr,
-    serverBundleBuildConfig,
-  }: ReactRouterBuildArgs) {
+  async function viteBuild(
+    environmentOptionsResolvers: EnvironmentOptionsResolvers,
+    environmentName: EnvironmentName
+  ) {
+    let ssr = environmentName !== "client";
+
+    let resolveOptions = environmentOptionsResolvers[environmentName];
+    invariant(
+      resolveOptions,
+      `Missing environment options resolver for ${environmentName}`
+    );
+
+    let environmentBuildContext: EnvironmentBuildContext = {
+      name: environmentName,
+      resolveOptions,
+    };
+
     await vite.build({
       root,
       mode,
@@ -271,22 +130,34 @@ export async function build(
       optimizeDeps: { force },
       clearScreen,
       logLevel,
-      ...(serverBundleBuildConfig
-        ? { __reactRouterServerBundleBuildConfig: serverBundleBuildConfig }
-        : {}),
+      ...{ __reactRouterEnvironmentBuildContext: environmentBuildContext },
     });
   }
 
   await cleanBuildDirectory(viteConfig, ctx);
 
+  let buildManifest = await getBuildManifest(ctx);
+  let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
+    ctx,
+    buildManifest
+  );
+
   // Run the Vite client build first
-  await viteBuild({ ssr: false });
+  await viteBuild(environmentOptionsResolvers, "client");
 
   // Then run Vite SSR builds in parallel
-  let { serverBuilds, buildManifest } = await getServerBuilds(ctx);
-  await Promise.all(serverBuilds.map(viteBuild));
+  let serverEnvironmentNames = (
+    Object.keys(
+      environmentOptionsResolvers
+    ) as (keyof typeof environmentOptionsResolvers)[]
+  ).filter((environmentName) => environmentName !== "client");
+  await Promise.all(
+    serverEnvironmentNames.map((environmentName) =>
+      viteBuild(environmentOptionsResolvers, environmentName)
+    )
+  );
 
-  let viteManifestPaths = getViteManifestPaths(ctx, serverBuilds);
+  let viteManifestPaths = getViteManifestPaths(environmentOptionsResolvers);
   await Promise.all(
     viteManifestPaths.map(async (viteManifestPath) => {
       let manifestExists = await fse.pathExists(viteManifestPath);
