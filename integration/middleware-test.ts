@@ -1008,18 +1008,16 @@ test.describe("Middleware", () => {
       ]);
 
       // But client middlewares only ran once
-      expect(
-        JSON.parse(await page.locator("[data-parent]").textContent())
-      ).toEqual({
+      let json = (await page.locator("[data-parent]").textContent()) as string;
+      expect(JSON.parse(json)).toEqual({
         serverData: "PARENT",
         context: {
           parent: { value: 1 },
           child: { value: 1 },
         },
       });
-      expect(
-        JSON.parse(await page.locator("[data-child]").textContent())
-      ).toEqual({
+      json = (await page.locator("[data-child]").textContent()) as string;
+      expect(JSON.parse(json)).toEqual({
         serverData: "CHILD",
         context: {
           parent: { value: 1 },
