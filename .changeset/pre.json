@@ -21,5 +21,15 @@
     "@playground/framework-express": "0.0.0",
     "@playground/framework-spa": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "eight-monkeys-type",
+    "fifty-eagles-love",
+    "gentle-carrots-appear",
+    "kind-hats-greet",
+    "loud-masks-battle",
+    "moody-comics-exist",
+    "rich-pans-fail",
+    "smooth-mangos-act",
+    "twenty-llamas-lick"
+  ]
 }
