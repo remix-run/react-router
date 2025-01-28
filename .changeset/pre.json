@@ -8,5 +8,9 @@
     "react-router-native": "6.28.2",
     "@remix-run/router": "1.21.1"
   },
-  "changesets": []
+  "changesets": [
+    "big-lamps-remain",
+    "proud-stingrays-wink",
+    "short-pugs-double"
+  ]
 }
