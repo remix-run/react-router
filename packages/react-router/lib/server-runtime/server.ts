@@ -145,7 +145,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       let handlerUrl = new URL(request.url);
       handlerUrl.pathname = handlerUrl.pathname
         .replace(/\.data$/, "")
-        .replace(/^\/_root$/, "/");
+        .replace(new RegExp(`^(${_build.basename || "/"})_root$`), "$1");
 
       let singleFetchMatches = matchServerRoutes(
         routes,
