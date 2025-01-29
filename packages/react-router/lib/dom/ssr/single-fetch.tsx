@@ -444,6 +444,10 @@ function stripIndexParam(url: URL) {
 }
 
 export function singleFetchUrl(reqUrl: URL | string) {
+  let basename =
+    (typeof window !== "undefined" && window.__reactRouterContext?.basename) ||
+    "";
+  basename = `/${basename}/`.replace(/\/+/g, "/");
   let url =
     typeof reqUrl === "string"
       ? new URL(
@@ -456,8 +460,8 @@ export function singleFetchUrl(reqUrl: URL | string) {
         )
       : reqUrl;
 
-  if (url.pathname === "/") {
-    url.pathname = "_root.data";
+  if (url.pathname === basename) {
+    url.pathname = `${basename}_root.data`;
   } else {
     url.pathname = `${url.pathname.replace(/\/$/, "")}.data`;
   }

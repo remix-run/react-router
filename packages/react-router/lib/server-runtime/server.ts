@@ -107,9 +107,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let url = new URL(request.url);
+    let basebane = `/${_build.basename || ''}/`.replace(/\/+/g,'/')
     let normalizedPath = url.pathname
       .replace(/\.data$/, "")
-      .replace(/^\/_root$/, "/");
+      .replace(new RegExp(`^${basebane}_root$`), basebane);
     if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
