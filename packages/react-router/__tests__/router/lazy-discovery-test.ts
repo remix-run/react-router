@@ -2333,5 +2333,76 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       expect(router.getFetcher(key).state).toBe("idle");
       expect(fetcherData.get(key)).toBe("C ACTION");
     });
+
+    it("does not include search params in the `path` (fetcher.load)", async () => {
+      let capturedPath;
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+          },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          capturedPath = path;
+          patch("parent", [
+            {
+              id: "child",
+              path: "child",
+              loader: () => "CHILD",
+            },
+          ]);
+        },
+      });
+
+      let key = "key";
+      router.fetch(key, "0", "/parent/child?a=b");
+      await tick();
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(router.getFetcher(key).data).toBe("CHILD");
+      expect(capturedPath).toBe("/parent/child");
+    });
+
+    it("does not include search params in the `path` (fetcher.submit)", async () => {
+      let capturedPath;
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+          },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          capturedPath = path;
+          patch("parent", [
+            {
+              id: "child",
+              path: "child",
+              action: () => "CHILD",
+            },
+          ]);
+        },
+      });
+
+      let key = "key";
+      router.fetch(key, "0", "/parent/child?a=b", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await tick();
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(router.getFetcher(key).data).toBe("CHILD");
+      expect(capturedPath).toBe("/parent/child");
+    });
   });
 });

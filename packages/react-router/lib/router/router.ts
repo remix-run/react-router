@@ -2330,7 +2330,7 @@ export function createRouter(init: RouterInit): Router {
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         requestMatches,
-        path,
+        new URL(fetchRequest.url).pathname,
         fetchRequest.signal,
         key
       );
@@ -2634,7 +2634,7 @@ export function createRouter(init: RouterInit): Router {
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         matches,
-        path,
+        new URL(fetchRequest.url).pathname,
         fetchRequest.signal,
         key
       );
