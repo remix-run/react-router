@@ -38,15 +38,26 @@ export function getKeyedLinksForMatches(
   return dedupeLinkDescriptors(descriptors, preloads);
 }
 
+function getRouteCssDescriptors(route: EntryRoute): HtmlLinkDescriptor[] {
+  if (!route.css) return [];
+  return route.css.map((href) => ({ rel: "stylesheet", href }));
+}
+
+export async function prefetchRouteCss(route: EntryRoute): Promise<void> {
+  if (!route.css) return;
+  let descriptors = getRouteCssDescriptors(route);
+  await Promise.all(descriptors.map(prefetchStyleLink));
+}
+
 export async function prefetchStyleLinks(
   route: EntryRoute,
   routeModule: RouteModule
 ): Promise<void> {
   if ((!route.css && !routeModule.links) || !isPreloadSupported()) return;
 
-  let descriptors = [];
+  let descriptors: LinkDescriptor[] = [];
   if (route.css) {
-    descriptors.push(...route.css.map((href) => ({ rel: "stylesheet", href })));
+    descriptors.push(...getRouteCssDescriptors(route));
   }
   if (routeModule.links) {
     descriptors.push(...routeModule.links());
@@ -64,21 +75,24 @@ export async function prefetchStyleLinks(
     }
   }
 
-  // don't block for non-matching media queries, or for stylesheets that are
-  // already in the DOM (active route revalidations)
-  let matchingLinks = styleLinks.filter(
-    (link) =>
-      (!link.media || window.matchMedia(link.media).matches) &&
-      !document.querySelector(`link[rel="stylesheet"][href="${link.href}"]`)
-  );
-
-  await Promise.all(matchingLinks.map(prefetchStyleLink));
+  await Promise.all(styleLinks.map(prefetchStyleLink));
 }
 
 async function prefetchStyleLink(
   descriptor: HtmlLinkDescriptor
 ): Promise<void> {
   return new Promise((resolve) => {
+    // don't prefetch non-matching media queries, or stylesheets that are
+    // already in the DOM (active route revalidations)
+    if (
+      (descriptor.media && !window.matchMedia(descriptor.media).matches) ||
+      document.querySelector(
+        `link[rel="stylesheet"][href="${descriptor.href}"]`
+      )
+    ) {
+      return resolve();
+    }
+
     let link = document.createElement("link");
     Object.assign(link, descriptor);
 
