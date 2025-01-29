@@ -955,9 +955,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           optimizeDeps: {
             entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
               ? [
-                  ctx.entryClientFilePath,
+                  vite.normalizePath(ctx.entryClientFilePath),
                   ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
-                    path.join(ctx.reactRouterConfig.appDirectory, route.file)
+                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
                   ),
                 ]
               : [],
@@ -1383,6 +1383,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
+              ssrViteManifest[virtual.serverBuild.id].file,
               clientBuildDirectory
             );
           }
@@ -1393,6 +1394,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
+              ssrViteManifest[virtual.serverBuild.id].file,
               clientBuildDirectory
             );
           }
@@ -2134,13 +2136,10 @@ async function getRouteMetadata(
 
 async function getPrerenderBuildAndHandler(
   viteConfig: Vite.ResolvedConfig,
-  reactRouterConfig: ResolvedReactRouterConfig,
-  serverBuildDirectory: string
+  serverBuildDirectory: string,
+  serverBuildFile: string
 ) {
-  let serverBuildPath = path.join(
-    serverBuildDirectory,
-    reactRouterConfig.serverBuildFile
-  );
+  let serverBuildPath = path.join(serverBuildDirectory, serverBuildFile);
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
   let { createRequestHandler: createHandler } = await import("react-router");
   return {
@@ -2153,12 +2152,13 @@ async function handleSpaMode(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
+  serverBuildFile: string,
   clientBuildDirectory: string
 ) {
   let { handler } = await getPrerenderBuildAndHandler(
     viteConfig,
-    reactRouterConfig,
-    serverBuildDirectory
+    serverBuildDirectory,
+    serverBuildFile
   );
   let request = new Request(`http://localhost${reactRouterConfig.basename}`);
   let response = await handler(request);
@@ -2181,12 +2181,13 @@ async function handlePrerender(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: ResolvedReactRouterConfig,
   serverBuildDirectory: string,
+  serverBuildPath: string,
   clientBuildDirectory: string
 ) {
   let { build, handler } = await getPrerenderBuildAndHandler(
     viteConfig,
-    reactRouterConfig,
-    serverBuildDirectory
+    serverBuildDirectory,
+    serverBuildPath
   );
 
   let routes = createPrerenderRoutes(build.routes);
