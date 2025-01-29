@@ -12,7 +12,7 @@ import { ErrorResponseImpl } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
 import type { FutureConfig } from "./entry";
-import { prefetchStyleLinks } from "./links";
+import { prefetchRouteCss, prefetchStyleLinks } from "./links";
 import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
@@ -533,8 +533,16 @@ async function loadRouteModuleWithBlockingLinks(
   route: EntryRoute,
   routeModules: RouteModules
 ) {
-  let routeModule = await loadRouteModule(route, routeModules);
-  await prefetchStyleLinks(route, routeModule);
+  // Ensure the route module and its static CSS links are loaded in parallel as
+  // soon as possible before blocking on the route module
+  let routeModulePromise = loadRouteModule(route, routeModules);
+  let prefetchRouteCssPromise = prefetchRouteCss(route);
+
+  let routeModule = await routeModulePromise;
+  await Promise.all([
+    prefetchRouteCssPromise,
+    prefetchStyleLinks(route, routeModule),
+  ]);
 
   // Include all `browserSafeRouteExports` fields, except `HydrateFallback`
   // since those aren't used on lazily loaded routes
