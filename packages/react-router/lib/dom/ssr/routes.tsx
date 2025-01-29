@@ -500,7 +500,7 @@ export function createClientRoutes(
         let mod = await modPromise;
 
         let lazyRoute: Partial<DataRouteObject> = { ...mod };
-        if (mod.clientLoader && !route.clientLoaderModule) {
+        if (mod.clientLoader) {
           let clientLoader = mod.clientLoader;
           lazyRoute.loader = (
             args: LoaderFunctionArgs,
@@ -515,7 +515,7 @@ export function createClientRoutes(
             });
         }
 
-        if (mod.clientAction && !route.clientActionModule) {
+        if (mod.clientAction) {
           let clientAction = mod.clientAction;
           lazyRoute.action = (
             args: ActionFunctionArgs,
