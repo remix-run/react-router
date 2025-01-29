@@ -135,10 +135,16 @@ function getExportDependencies(
           }
 
           // export const { foo } = ...;
-          let isWithinExportNamedDeclaration = Boolean(
-            identifier.findParent((path) => path.isExportNamedDeclaration())
+          let isWithinExportDestructuring = Boolean(
+            identifier.findParent((path) =>
+              Boolean(
+                path.isPattern() &&
+                  path.parentPath?.isVariableDeclarator() &&
+                  path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration()
+              )
+            )
           );
-          if (isWithinExportNamedDeclaration) {
+          if (isWithinExportDestructuring) {
             let currentPath: NodePath | null = identifier;
             while (currentPath) {
               if (

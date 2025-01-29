@@ -1025,6 +1025,28 @@ describe("route chunks", () => {
   });
 
   describe("export dependency analysis", () => {
+    test("function variables", () => {
+      const code = dedent`
+        export const chunk = () => {
+          let chunkMessage = "chunk";
+          return chunkMessage;
+        }
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "export const chunk = () => {
+          let chunkMessage = "chunk";
+          return chunkMessage;
+        };"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
     test("top level await", () => {
       const code = dedent`
         import { getMessage } from "./messages";
@@ -1056,12 +1078,14 @@ describe("route chunks", () => {
         import { check } from "./check";
         import { chunkMessage1, chunkMessage2 } from "./messages";
         let messages = [];
-        if (check()) {
-          messages.push(chunkMessage1);
-        } else {
-          messages.push(chunkMessage2);
-        }
-        export const chunk = messages;
+        export const chunk = () => {
+          if (check()) {
+            messages.push(chunkMessage1);
+          } else {
+            messages.push(chunkMessage2);
+          }
+          return messages;
+        };
         export const main = "main";
       `;
 
@@ -1071,12 +1095,14 @@ describe("route chunks", () => {
         "import { check } from "./check";
         import { chunkMessage1, chunkMessage2 } from "./messages";
         let messages = [];
-        if (check()) {
-          messages.push(chunkMessage1);
-        } else {
-          messages.push(chunkMessage2);
-        }
-        export const chunk = messages;"
+        export const chunk = () => {
+          if (check()) {
+            messages.push(chunkMessage1);
+          } else {
+            messages.push(chunkMessage2);
+          }
+          return messages;
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1087,12 +1113,14 @@ describe("route chunks", () => {
       const code = dedent`
         import { chunkMessage1, errorMessage } from "./messages";
         let messages = [];
-        try {
-          messages.push(chunkMessage1);
-        } catch (error) {
-          messages.push(errorMessage(error));
-        }
-        export const chunk = messages;
+        export const chunk = () => {
+          try {
+            messages.push(chunkMessage1);
+          } catch (error) {
+            messages.push(errorMessage(error));
+          }
+          return messages;
+        };
         export const main = "main";
       `;
 
@@ -1101,12 +1129,14 @@ describe("route chunks", () => {
         .toMatchInlineSnapshot(`
         "import { chunkMessage1, errorMessage } from "./messages";
         let messages = [];
-        try {
-          messages.push(chunkMessage1);
-        } catch (error) {
-          messages.push(errorMessage(error));
-        }
-        export const chunk = messages;"
+        export const chunk = () => {
+          try {
+            messages.push(chunkMessage1);
+          } catch (error) {
+            messages.push(errorMessage(error));
+          }
+          return messages;
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1116,11 +1146,13 @@ describe("route chunks", () => {
     test("for...of", () => {
       const code = dedent`
         import { messages } from "./messages";
-        let chunkMessages = [];
-        for (let message of messages) {
-          chunkMessages.push(message);
-        }
-        export const chunk = chunkMessages;
+        export const chunk = () => {
+          let chunkMessages = [];
+          for (let message of messages) {
+            chunkMessages.push(message);
+          }
+          return chunkMessages;
+        };
         export const main = "main";
       `;
 
@@ -1128,11 +1160,13 @@ describe("route chunks", () => {
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "import { messages } from "./messages";
-        let chunkMessages = [];
-        for (let message of messages) {
-          chunkMessages.push(message);
-        }
-        export const chunk = chunkMessages;"
+        export const chunk = () => {
+          let chunkMessages = [];
+          for (let message of messages) {
+            chunkMessages.push(message);
+          }
+          return chunkMessages;
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1142,11 +1176,13 @@ describe("route chunks", () => {
     test("for...of with destructuring and default value", () => {
       const code = dedent`
         import { messages, defaultMessage } from "./messages";
-        let chunkMessages = [];
-        for (let { key, value = defaultMessage } of messages) {
-          chunkMessages.push([key, value]);
-        }
-        export const chunk = chunkMessages;
+        export const chunk = () => {
+          let chunkMessages = [];
+          for (let { key, value = defaultMessage } of messages) {
+            chunkMessages.push([key, value]);
+          }
+          return chunkMessages;
+        };
         export const main = "main";
       `;
 
@@ -1154,14 +1190,16 @@ describe("route chunks", () => {
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "import { messages, defaultMessage } from "./messages";
-        let chunkMessages = [];
-        for (let {
-          key,
-          value = defaultMessage
-        } of messages) {
-          chunkMessages.push([key, value]);
-        }
-        export const chunk = chunkMessages;"
+        export const chunk = () => {
+          let chunkMessages = [];
+          for (let {
+            key,
+            value = defaultMessage
+          } of messages) {
+            chunkMessages.push([key, value]);
+          }
+          return chunkMessages;
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1171,11 +1209,13 @@ describe("route chunks", () => {
     test("block", () => {
       const code = dedent`
         import { chunkMessage } from "./messages";
-        let messages = [];
-        {
-          messages.push(chunkMessage);
-        }
-        export const chunk = messages;
+        export const chunk = () => {
+          let messages = [];
+          {
+            messages.push(chunkMessage);
+          }
+          return messages;
+        };
         export const main = "main";
       `;
 
@@ -1183,11 +1223,13 @@ describe("route chunks", () => {
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "import { chunkMessage } from "./messages";
-        let messages = [];
-        {
-          messages.push(chunkMessage);
-        }
-        export const chunk = messages;"
+        export const chunk = () => {
+          let messages = [];
+          {
+            messages.push(chunkMessage);
+          }
+          return messages;
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1198,7 +1240,10 @@ describe("route chunks", () => {
       const code = dedent`
         import { defaultMessage } from "./defaultMessage";
         const getChunkMessage = (message = defaultMessage) => message.toUpperCase();
-        export const chunk = getChunkMessage();
+        export const chunk = () => {
+          let message = "chunk";
+          return getChunkMessage(message);
+        };
         export const main = "main";
       `;
 
@@ -1207,7 +1252,10 @@ describe("route chunks", () => {
         .toMatchInlineSnapshot(`
         "import { defaultMessage } from "./defaultMessage";
         const getChunkMessage = (message = defaultMessage) => message.toUpperCase();
-        export const chunk = getChunkMessage();"
+        export const chunk = () => {
+          let message = "chunk";
+          return getChunkMessage(message);
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1218,7 +1266,9 @@ describe("route chunks", () => {
       const code = dedent`
         import { defaultMessage } from "./defaultMessage";
         const getChunkMessage = ([{ defaultMessage: message }] = [{ defaultMessage }]) => message.toUpperCase();
-        export const chunk = getChunkMessage();
+        export const chunk = () => {
+          return getChunkMessage();
+        };
         export const main = "main";
       `;
 
@@ -1231,7 +1281,9 @@ describe("route chunks", () => {
         }] = [{
           defaultMessage
         }]) => message.toUpperCase();
-        export const chunk = getChunkMessage();"
+        export const chunk = () => {
+          return getChunkMessage();
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1242,8 +1294,10 @@ describe("route chunks", () => {
       const code = dedent`
         import { reassignedMessage } from "./messages";  
         let chunkMessage = "chunk";
-        chunkMessage = reassignedMessage;
-        export const chunk = chunkMessage;
+        export const chunk = () => {
+          chunkMessage = reassignedMessage;
+          return chunkMessage;
+        };
         export const main = "main";
       `;
 
@@ -1252,8 +1306,10 @@ describe("route chunks", () => {
         .toMatchInlineSnapshot(`
         "import { reassignedMessage } from "./messages";
         let chunkMessage = "chunk";
-        chunkMessage = reassignedMessage;
-        export const chunk = chunkMessage;"
+        export const chunk = () => {
+          chunkMessage = reassignedMessage;
+          return chunkMessage;
+        };"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1262,18 +1318,18 @@ describe("route chunks", () => {
 
     test("constant reassignment", () => {
       const code = dedent`
-        const chunkMessage = "chunk";
-        chunkMessage = reassignedMessage;
-        export const chunk = chunkMessage;
+        const chunkMessage = () => "chunk";
+        chunkMessage = () => reassignedMessage;
+        export const chunk = () => chunkMessage();
         export const main = "main";
       `;
 
       expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
-        "const chunkMessage = "chunk";
-        chunkMessage = reassignedMessage;
-        export const chunk = chunkMessage;"
+        "const chunkMessage = () => "chunk";
+        chunkMessage = () => reassignedMessage;
+        export const chunk = () => chunkMessage();"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1283,9 +1339,9 @@ describe("route chunks", () => {
     test("reassignment with nullish coalescing", () => {
       const code = dedent`
         import { reassignedMessage } from "./messages";  
-        let chunkMessage = "chunk";
-        chunkMessage ??= reassignedMessage;
-        export const chunk = chunkMessage;
+        let chunkMessage = () => "chunk";
+        chunkMessage ??= () => reassignedMessage;
+        export const chunk = () => chunkMessage();
         export const main = "main";
       `;
 
@@ -1293,9 +1349,9 @@ describe("route chunks", () => {
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "import { reassignedMessage } from "./messages";
-        let chunkMessage = "chunk";
-        chunkMessage ??= reassignedMessage;
-        export const chunk = chunkMessage;"
+        let chunkMessage = () => "chunk";
+        chunkMessage ??= () => reassignedMessage;
+        export const chunk = () => chunkMessage();"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1304,18 +1360,20 @@ describe("route chunks", () => {
 
     test("destructured reassignment", () => {
       const code = dedent`
-        let chunkMessage = "chunk";
-        [chunkMessage] = [reassignedMessage];
-        export const chunk = chunkMessage;
+        import { reassignedMessage } from "./messages";
+        let chunkMessage = () => "chunk";
+        [chunkMessage] = [() => reassignedMessage];
+        export const chunk = () => chunkMessage();
         export const main = "main";
       `;
 
       expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
-        "let chunkMessage = "chunk";
-        [chunkMessage] = [reassignedMessage];
-        export const chunk = chunkMessage;"
+        "import { reassignedMessage } from "./messages";
+        let chunkMessage = () => "chunk";
+        [chunkMessage] = [() => reassignedMessage];
+        export const chunk = () => chunkMessage();"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1329,7 +1387,7 @@ describe("route chunks", () => {
           message = reassignedMessage;
           return message;
         };
-        export const chunk = getChunkMessage("chunk");
+        export const chunk = () => getChunkMessage("chunk");
         export const main = "main";
       `;
 
@@ -1341,7 +1399,7 @@ describe("route chunks", () => {
           message = reassignedMessage;
           return message;
         };
-        export const chunk = getChunkMessage("chunk");"
+        export const chunk = () => getChunkMessage("chunk");"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1351,8 +1409,8 @@ describe("route chunks", () => {
     test("destructuring assignment", () => {
       const code = dedent`
         import { getChunkMessage } from "./messages";
-        let [chunkMessage] = [getChunkMessage()];
-        export const chunk = chunkMessage;
+        let [chunkMessage] = [() => getChunkMessage()];
+        export const chunk = () => chunkMessage();
         export const main = "main";
       `;
 
@@ -1360,8 +1418,8 @@ describe("route chunks", () => {
       expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "import { getChunkMessage } from "./messages";
-        let [chunkMessage] = [getChunkMessage()];
-        export const chunk = chunkMessage;"
+        let [chunkMessage] = [() => getChunkMessage()];
+        export const chunk = () => chunkMessage();"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1371,7 +1429,7 @@ describe("route chunks", () => {
     test("object property usage", () => {
       const code = dedent`
         let messages = { chunkMessage: "chunk" };
-        export const chunk = messages.chunkMessage;
+        export const chunk = () => messages.chunkMessage;
         export const main = "main";
       `;
 
@@ -1381,7 +1439,7 @@ describe("route chunks", () => {
         "let messages = {
           chunkMessage: "chunk"
         };
-        export const chunk = messages.chunkMessage;"
+        export const chunk = () => messages.chunkMessage;"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1393,7 +1451,7 @@ describe("route chunks", () => {
         import { mutatedMessage } from "./messages";
         let messages = { chunkMessage: "chunk" };
         messages.chunkMessage = mutatedMessage;
-        export const chunk = messages.chunkMessage;
+        export const chunk = () => messages.chunkMessage;
         export const main = "main";
       `;
 
@@ -1405,7 +1463,7 @@ describe("route chunks", () => {
           chunkMessage: "chunk"
         };
         messages.chunkMessage = mutatedMessage;
-        export const chunk = messages.chunkMessage;"
+        export const chunk = () => messages.chunkMessage;"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1417,7 +1475,7 @@ describe("route chunks", () => {
         import { keyName } from "./messages";
         let getKey = () => keyName;
         let messages = { [getKey()]: "chunk" };
-        export const chunk = messages;
+        export const chunk = () => messages;
         export const main = "main";
       `;
 
@@ -1429,7 +1487,7 @@ describe("route chunks", () => {
         let messages = {
           [getKey()]: "chunk"
         };
-        export const chunk = messages;"
+        export const chunk = () => messages;"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1443,7 +1501,7 @@ describe("route chunks", () => {
           yield chunkMessage1;
           yield chunkMessage2;
         }
-        export const chunk = [...chunkGenerator()].join(" ");
+        export const chunk = () => [...chunkGenerator()].join(" ");
         export const main = "main";
       `;
 
@@ -1455,7 +1513,7 @@ describe("route chunks", () => {
           yield chunkMessage1;
           yield chunkMessage2;
         }
-        export const chunk = [...chunkGenerator()].join(" ");"
+        export const chunk = () => [...chunkGenerator()].join(" ");"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1468,7 +1526,7 @@ describe("route chunks", () => {
         class Chunk {
           static message = chunkMessage;
         }
-        export const chunk = new Chunk();
+        export const chunk = () => new Chunk();
         export const main = "main";
       `;
 
@@ -1479,7 +1537,7 @@ describe("route chunks", () => {
         class Chunk {
           static message = chunkMessage;
         }
-        export const chunk = new Chunk();"
+        export const chunk = () => new Chunk();"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1494,7 +1552,7 @@ describe("route chunks", () => {
         }
         let chunkInstance = new Chunk();
         chunkInstance.message = mutatedMessage;
-        export const chunk = chunkInstance;
+        export const chunk = () => chunkInstance;
         export const main = "main";
       `;
 
@@ -1507,7 +1565,7 @@ describe("route chunks", () => {
         }
         let chunkInstance = new Chunk();
         chunkInstance.message = mutatedMessage;
-        export const chunk = chunkInstance;"
+        export const chunk = () => chunkInstance;"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1522,7 +1580,7 @@ describe("route chunks", () => {
             return chunkMessage;
           }
         }
-        export const chunk = new Chunk();
+        export const chunk = () => new Chunk();
         export const main = "main";
       `;
 
@@ -1535,7 +1593,7 @@ describe("route chunks", () => {
             return chunkMessage;
           }
         }
-        export const chunk = new Chunk();"
+        export const chunk = () => new Chunk();"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
@@ -1552,7 +1610,7 @@ describe("route chunks", () => {
         }
         let chunkInstance = new Chunk();
         chunkInstance.message = () => mutatedMessage;
-        export const chunk = chunkInstance;
+        export const chunk = () => chunkInstance;
         export const main = "main";
       `;
 
@@ -1567,7 +1625,7 @@ describe("route chunks", () => {
         }
         let chunkInstance = new Chunk();
         chunkInstance.message = () => mutatedMessage;
-        export const chunk = chunkInstance;"
+        export const chunk = () => chunkInstance;"
       `);
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
