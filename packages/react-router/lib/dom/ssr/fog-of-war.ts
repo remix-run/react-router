@@ -26,8 +26,8 @@ const discoveredPaths = new Set<string>();
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
-export function isFogOfWarEnabled(isSpaMode: boolean) {
-  return !isSpaMode;
+export function isFogOfWarEnabled(ssr: boolean) {
+  return ssr === true;
 }
 
 export function getPartialManifest(
@@ -70,10 +70,11 @@ export function getPartialManifest(
 export function getPatchRoutesOnNavigationFunction(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (!isFogOfWarEnabled(isSpaMode)) {
+  if (!isFogOfWarEnabled(ssr)) {
     return undefined;
   }
 
@@ -96,14 +97,12 @@ export function useFogOFWarDiscovery(
   router: DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   isSpaMode: boolean
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
-    if (
-      !isFogOfWarEnabled(isSpaMode) ||
-      navigator.connection?.saveData === true
-    ) {
+    if (!isFogOfWarEnabled(ssr) || navigator.connection?.saveData === true) {
       return;
     }
 
@@ -176,7 +175,7 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [isSpaMode, manifest, routeModules, router]);
+  }, [ssr, isSpaMode, manifest, routeModules, router]);
 }
 
 export async function fetchAndApplyManifestPatches(

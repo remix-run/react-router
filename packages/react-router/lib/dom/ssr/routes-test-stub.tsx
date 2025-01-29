@@ -112,6 +112,7 @@ export function createRoutesStub(
           version: "",
         },
         routeModules: {},
+        ssr: false,
         isSpaMode: false,
       };
 

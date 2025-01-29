@@ -75,6 +75,7 @@ export function ServerRouter({
           criticalCss,
           serverHandoffString,
           future: context.future,
+          ssr: context.ssr,
           isSpaMode: context.isSpaMode,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,

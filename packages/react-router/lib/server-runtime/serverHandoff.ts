@@ -21,6 +21,7 @@ export function createServerHandoffString<T>(serverHandoff: {
   criticalCss?: string;
   basename: string | undefined;
   future: FutureConfig;
+  ssr: boolean;
   isSpaMode: boolean;
 }): string {
   // Uses faster alternative of jsesc to escape data returned from the loaders.

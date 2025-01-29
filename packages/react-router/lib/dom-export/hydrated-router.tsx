@@ -176,6 +176,7 @@ function createHydratedRouter(): DataRouter {
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,
+      ssrInfo.context.ssr,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename
     ),
@@ -247,6 +248,7 @@ export function HydratedRouter() {
     router,
     ssrInfo.manifest,
     ssrInfo.routeModules,
+    ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode
   );
 
@@ -264,6 +266,7 @@ export function HydratedRouter() {
           routeModules: ssrInfo.routeModules,
           future: ssrInfo.context.future,
           criticalCss,
+          ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
         }}
       >

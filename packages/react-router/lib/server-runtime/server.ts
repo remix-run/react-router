@@ -391,6 +391,7 @@ async function handleDocumentRequest(
       basename: build.basename,
       criticalCss,
       future: build.future,
+      ssr: build.ssr,
       isSpaMode: build.isSpaMode,
     }),
     serverHandoffStream: encodeViaTurboStream(
@@ -401,6 +402,7 @@ async function handleDocumentRequest(
     ),
     renderMeta: {},
     future: build.future,
+    ssr: build.ssr,
     isSpaMode: build.isSpaMode,
     serializeError: (err) => serializeError(err, serverMode),
   };
@@ -461,6 +463,7 @@ async function handleDocumentRequest(
       serverHandoffString: createServerHandoffString({
         basename: build.basename,
         future: build.future,
+        ssr: build.ssr,
         isSpaMode: build.isSpaMode,
       }),
       serverHandoffStream: encodeViaTurboStream(

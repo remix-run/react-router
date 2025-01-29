@@ -638,11 +638,11 @@ export type ScriptsProps = Omit<
   @category Components
  */
 export function Scripts(props: ScriptsProps) {
-  let { manifest, serverHandoffString, isSpaMode, renderMeta } =
+  let { manifest, serverHandoffString, isSpaMode, ssr, renderMeta } =
     useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = isFogOfWarEnabled(isSpaMode);
+  let enableFogOfWar = isFogOfWarEnabled(ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
