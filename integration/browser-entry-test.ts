@@ -95,7 +95,7 @@ test("allows users to pass a client side context to HydratedRouter", async ({
           hydrateRoot(
             document,
             <StrictMode>
-              <HydratedRouter context={{ foo: 'bar' }} />
+              <HydratedRouter unstable_context={{ foo: 'bar' }} />
             </StrictMode>
           );
         });
