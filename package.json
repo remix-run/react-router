@@ -20,7 +20,7 @@
     "test:integration:run": "pnpm playwright:integration",
     "test:integration": "pnpm build && pnpm test:integration:run",
     "posttest:integration:run": "pnpm clean:integration",
-    "playwright:integration": "playwright test --config ./integration/playwright.config.ts middleware",
+    "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
     "vite-ecosystem-ci:build": "pnpm build",
     "vite-ecosystem-ci:before-test": "pnpm playwright install",
     "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration",

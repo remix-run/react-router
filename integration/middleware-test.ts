@@ -397,7 +397,7 @@ test.describe("Middleware", () => {
       appFixture.close();
     });
 
-    test.only("calls clientMiddleware for routes even without a loader", async ({
+    test("calls clientMiddleware for routes even without a loader", async ({
       page,
     }) => {
       let fixture = await createFixture({
@@ -416,22 +416,18 @@ test.describe("Middleware", () => {
             });
           `,
           "app/routes/_index.tsx": js`
-            import { Link, useNavigation } from 'react-router'
+            import { Link } from 'react-router'
             export default function Component({ loaderData }) {
-              return <Link to="/a/b/c">Link ({useNavigation().state})</Link>;
+              return <Link to="/a/b/c">Link</Link>;
             }
           `,
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
             export const unstable_clientMiddleware = [
-              ({ context }) => {
-                console.log('a client middleware')
-                context.a = true;
-              },
+              ({ context }) => { context.a = true; },
             ];
 
             export function clientLoader({ context }) {
-              console.log('a client loader')
               return JSON.stringify(context)
             }
 
@@ -463,19 +459,9 @@ test.describe("Middleware", () => {
 
       let appFixture = await createAppFixture(fixture);
 
-      page.on("console", (msg) => {
-        console.log("console:", msg.text());
-      });
-
-      page.on("request", (req) => {
-        console.log("req:", req.url());
-      });
-
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       (await page.$('a[href="/a/b/c"]'))?.click();
-      await new Promise((r) => setTimeout(r, 1000));
-      console.log(await app.getHtml());
       await page.waitForSelector("h4");
       expect(await page.innerText("h2")).toBe('A: {"a":true,"b":true}');
       expect(await page.innerText("h3")).toBe("B");
