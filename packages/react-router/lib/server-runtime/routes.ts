@@ -3,7 +3,7 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
-  MiddlewareFunction,
+  unstable_MiddlewareFunction,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
@@ -73,7 +73,8 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
-      middleware: route.module.middleware as unknown as MiddlewareFunction<
+      unstable_middleware: route.module
+        .unstable_middleware as unknown as unstable_MiddlewareFunction<
         any,
         unknown
       >[],

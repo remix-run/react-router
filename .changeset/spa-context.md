@@ -1,5 +1,10 @@
 ---
-"react-router": minor
+"react-router": patch
 ---
 
-Add `context` support to client side data routers (`createBrowsertRouter`, etc.)
+Add `context` support to client side data routers (unstable)
+
+- Library mode
+  - `createBrowserRouter(routes, { unstable_context })`
+- Framework mode
+  - `<HydratedRouter unstable_context>`

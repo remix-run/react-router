@@ -308,13 +308,12 @@ async function handleDocumentRequest(
   try {
     let response = await staticHandler.query(request, {
       requestContext: loadContext,
-      respond: renderHtml,
+      unstable_respond: renderHtml,
     });
-    invariant(
-      isResponse(response),
-      "Expected a Response to be returned from query"
-    );
-    return response;
+    // while middleware is still unstable, we don't run the middleware pipeline
+    // if no routes have middleware, so we still might need to convert context
+    // to a response here
+    return isResponse(response) ? response : renderHtml(response);
   } catch (error: unknown) {
     handleError(error);
     return new Response(null, { status: 500 });
@@ -475,9 +474,7 @@ async function handleResourceRequest(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      async respond(ctx: Response) {
-        return ctx;
-      },
+      unstable_respond: (ctx) => ctx,
     });
 
     if (isResponse(response)) {

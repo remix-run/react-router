@@ -64,57 +64,61 @@ export async function singleFetchAction(
       ...(request.body ? { duplex: "half" } : undefined),
     });
 
+    function respond(context: StaticHandlerContext) {
+      let headers = getDocumentHeaders(build, context);
+
+      if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
+        return generateSingleFetchResponse(request, build, serverMode, {
+          result: getSingleFetchRedirect(
+            context.statusCode,
+            headers,
+            build.basename
+          ),
+          headers,
+          status: SINGLE_FETCH_REDIRECT_STATUS,
+        });
+      }
+
+      // Sanitize errors outside of development environments
+      if (context.errors) {
+        Object.values(context.errors).forEach((err) => {
+          // @ts-expect-error This is "private" from users but intended for internal use
+          if (!isRouteErrorResponse(err) || err.error) {
+            handleError(err);
+          }
+        });
+        context.errors = sanitizeErrors(context.errors, serverMode);
+      }
+
+      let singleFetchResult: SingleFetchResult;
+      if (context.errors) {
+        singleFetchResult = { error: Object.values(context.errors)[0] };
+      } else {
+        singleFetchResult = {
+          data: Object.values(context.actionData || {})[0],
+        };
+      }
+
+      return generateSingleFetchResponse(request, build, serverMode, {
+        result: singleFetchResult,
+        headers,
+        status: context.statusCode,
+      });
+    }
+
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       skipRevalidation: true,
-      async respond(context: StaticHandlerContext) {
-        let headers = getDocumentHeaders(build, context);
-
-        if (
-          isRedirectStatusCode(context.statusCode) &&
-          headers.has("Location")
-        ) {
-          return generateSingleFetchResponse(request, build, serverMode, {
-            result: getSingleFetchRedirect(
-              context.statusCode,
-              headers,
-              build.basename
-            ),
-            headers,
-            status: SINGLE_FETCH_REDIRECT_STATUS,
-          });
-        }
-
-        // Sanitize errors outside of development environments
-        if (context.errors) {
-          Object.values(context.errors).forEach((err) => {
-            // @ts-expect-error This is "private" from users but intended for internal use
-            if (!isRouteErrorResponse(err) || err.error) {
-              handleError(err);
-            }
-          });
-          context.errors = sanitizeErrors(context.errors, serverMode);
-        }
-
-        let singleFetchResult: SingleFetchResult;
-        if (context.errors) {
-          singleFetchResult = { error: Object.values(context.errors)[0] };
-        } else {
-          singleFetchResult = {
-            data: Object.values(context.actionData || {})[0],
-          };
-        }
-
-        return generateSingleFetchResponse(request, build, serverMode, {
-          result: singleFetchResult,
-          headers,
-          status: context.statusCode,
-        });
-      },
+      unstable_respond: respond,
     });
 
-    invariant(isResponse(result), "Expected a Response from query()");
+    // while middleware is still unstable, we don't run the middleware pipeline
+    // if no routes have middleware, so we still might need to convert context
+    // to a response here
+    if (!isResponse(result)) {
+      result = respond(result);
+    }
 
     // Unlike `handleDataRequest`, when singleFetch is enabled, query does
     // let non-Response return values through
@@ -159,74 +163,76 @@ export async function singleFetchLoaders(
     let routesParam = new URL(request.url).searchParams.get("_routes");
     let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
+    function respond(context: StaticHandlerContext) {
+      let headers = getDocumentHeaders(build, context);
+
+      if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
+        return generateSingleFetchResponse(request, build, serverMode, {
+          result: {
+            [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
+              context.statusCode,
+              headers,
+              build.basename
+            ),
+          },
+          headers,
+          status: SINGLE_FETCH_REDIRECT_STATUS,
+        });
+      }
+
+      // Sanitize errors outside of development environments
+      if (context.errors) {
+        Object.values(context.errors).forEach((err) => {
+          // @ts-expect-error This is "private" from users but intended for internal use
+          if (!isRouteErrorResponse(err) || err.error) {
+            handleError(err);
+          }
+        });
+        context.errors = sanitizeErrors(context.errors, serverMode);
+      }
+
+      // Aggregate results based on the matches we intended to load since we get
+      // `null` values back in `context.loaderData` for routes we didn't load
+      let results: SingleFetchResults = {};
+      let loadedMatches = new Set(
+        context.matches
+          .filter((m) =>
+            loadRouteIds ? loadRouteIds.has(m.route.id) : m.route.loader != null
+          )
+          .map((m) => m.route.id)
+      );
+
+      if (context.errors) {
+        for (let [id, error] of Object.entries(context.errors)) {
+          results[id] = { error };
+        }
+      }
+      for (let [id, data] of Object.entries(context.loaderData)) {
+        if (!(id in results) && loadedMatches.has(id)) {
+          results[id] = { data };
+        }
+      }
+
+      return generateSingleFetchResponse(request, build, serverMode, {
+        result: results,
+        headers,
+        status: context.statusCode,
+      });
+    }
+
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
-      async respond(context: StaticHandlerContext) {
-        let headers = getDocumentHeaders(build, context);
-
-        if (
-          isRedirectStatusCode(context.statusCode) &&
-          headers.has("Location")
-        ) {
-          return generateSingleFetchResponse(request, build, serverMode, {
-            result: {
-              [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
-                context.statusCode,
-                headers,
-                build.basename
-              ),
-            },
-            headers,
-            status: SINGLE_FETCH_REDIRECT_STATUS,
-          });
-        }
-
-        // Sanitize errors outside of development environments
-        if (context.errors) {
-          Object.values(context.errors).forEach((err) => {
-            // @ts-expect-error This is "private" from users but intended for internal use
-            if (!isRouteErrorResponse(err) || err.error) {
-              handleError(err);
-            }
-          });
-          context.errors = sanitizeErrors(context.errors, serverMode);
-        }
-
-        // Aggregate results based on the matches we intended to load since we get
-        // `null` values back in `context.loaderData` for routes we didn't load
-        let results: SingleFetchResults = {};
-        let loadedMatches = new Set(
-          context.matches
-            .filter((m) =>
-              loadRouteIds
-                ? loadRouteIds.has(m.route.id)
-                : m.route.loader != null
-            )
-            .map((m) => m.route.id)
-        );
-
-        if (context.errors) {
-          for (let [id, error] of Object.entries(context.errors)) {
-            results[id] = { error };
-          }
-        }
-        for (let [id, data] of Object.entries(context.loaderData)) {
-          if (!(id in results) && loadedMatches.has(id)) {
-            results[id] = { data };
-          }
-        }
-
-        return generateSingleFetchResponse(request, build, serverMode, {
-          result: results,
-          headers,
-          status: context.statusCode,
-        });
-      },
+      unstable_respond: respond,
     });
 
-    invariant(isResponse(result), "Expected a Response from query()");
+    // while middleware is still unstable, we don't run the middleware pipeline
+    // if no routes have middleware, so we still might need to convert context
+    // to a response here
+    if (!isResponse(result)) {
+      result = respond(result);
+    }
 
     if (isRedirectResponse(result)) {
       return generateSingleFetchResponse(request, build, serverMode, {
