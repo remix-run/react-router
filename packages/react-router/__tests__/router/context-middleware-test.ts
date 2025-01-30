@@ -3,8 +3,8 @@ import type { Router, StaticHandlerContext } from "../../lib/router/router";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
 import type {
   DataStrategyResult,
-  MiddlewareFunction,
-  MiddlewareFunctionArgs,
+  unstable_MiddlewareFunction,
+  unstable_MiddlewareFunctionArgs,
 } from "../../lib/router/utils";
 import { redirect } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
@@ -15,7 +15,7 @@ let router: Router;
 afterEach(() => cleanup(router));
 
 declare module "../../lib/router/utils" {
-  interface RouterContext {
+  interface unstable_RouterContext {
     count?: { value: number };
     order?: string[];
   }
@@ -49,7 +49,9 @@ describe("context/middleware", () => {
             id: "a",
             path: "/a",
             loader({ context }) {
-              if (context.count) context.count.value++;
+              if (context.count) {
+                //context
+              }
               return context.count?.value;
             },
           },
@@ -199,7 +201,7 @@ describe("context/middleware", () => {
   });
 
   describe("middleware - client side", () => {
-    function getOrderMiddleware(name: string): MiddlewareFunction {
+    function getOrderMiddleware(name: string): unstable_MiddlewareFunction {
       return async ({ context, next }) => {
         context.order?.push(`${name} middleware - before next()`);
         await tick(); // Force async to ensure ordering is correct
@@ -492,7 +494,7 @@ describe("context/middleware", () => {
               id: "page",
               path: "/page",
               unstable_middleware: [
-                ({ context }: MiddlewareFunctionArgs) => {
+                ({ context }: unstable_MiddlewareFunctionArgs) => {
                   if (context.count) context.count.value++;
                   context.localCount =
                     ((context.localCount as number) || 0) + 1;
@@ -1104,7 +1106,7 @@ describe("context/middleware", () => {
   });
 
   describe("middleware - handler.query", () => {
-    function getOrderMiddleware(name: string): MiddlewareFunction {
+    function getOrderMiddleware(name: string): unstable_MiddlewareFunction {
       return async ({ context, next }) => {
         context.order?.push(`${name} middleware - before next()`);
         await tick(); // Force async to ensure ordering is correct
@@ -1849,7 +1851,7 @@ describe("context/middleware", () => {
   });
 
   describe("middleware - handler.queryRoute", () => {
-    function getOrderMiddleware(name: string): MiddlewareFunction {
+    function getOrderMiddleware(name: string): unstable_MiddlewareFunction {
       return async ({ context, next }) => {
         context.order?.push(`${name} middleware - before next()`);
         await tick(); // Force async to ensure ordering is correct
