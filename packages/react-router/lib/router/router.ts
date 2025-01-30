@@ -838,6 +838,7 @@ export function createRouter(init: RouterInit): Router {
   let initialScrollRestored = init.hydrationData != null;
 
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
+  let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
 
   if (initialMatches == null && !patchRoutesOnNavigationImpl) {
@@ -882,6 +883,7 @@ export function createRouter(init: RouterInit): Router {
       init.history.location.pathname
     );
     if (fogOfWar.active && fogOfWar.matches) {
+      initialMatchesIsFOW = true;
       initialMatches = fogOfWar.matches;
     }
   } else if (initialMatches.some((m) => m.route.lazy)) {
@@ -1521,7 +1523,14 @@ export function createRouter(init: RouterInit): Router {
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = matchRoutes(routesToUse, location, basename);
+    let matches =
+      opts?.initialHydration &&
+      state.matches &&
+      state.matches.length > 0 &&
+      !initialMatchesIsFOW
+        ? // `matchRoutes()` has already been called if we're in here via `router.initialize()`
+          state.matches
+        : matchRoutes(routesToUse, location, basename);
     let flushSync = (opts && opts.flushSync) === true;
 
     let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
@@ -4867,15 +4876,25 @@ async function convertDataStrategyResultToDataResult(
           type: ResultType.error,
           error: result.data,
           statusCode: result.init?.status,
+          headers: result.init?.headers
+            ? new Headers(result.init.headers)
+            : undefined,
         };
       }
 
       // Convert thrown data() to ErrorResponse instances
-      result = new ErrorResponseImpl(
-        result.init?.status || 500,
-        undefined,
-        result.data
-      );
+      return {
+        type: ResultType.error,
+        error: new ErrorResponseImpl(
+          result.init?.status || 500,
+          undefined,
+          result.data
+        ),
+        statusCode: isRouteErrorResponse(result) ? result.status : undefined,
+        headers: result.init?.headers
+          ? new Headers(result.init.headers)
+          : undefined,
+      };
     }
 
     return {
