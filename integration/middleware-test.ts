@@ -472,7 +472,7 @@ test.describe("Middleware", () => {
       });
 
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
+      await app.goto("/", true);
       (await page.$('a[href="/a/b/c"]'))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       console.log(await app.getHtml());
