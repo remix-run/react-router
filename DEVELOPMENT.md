@@ -103,7 +103,7 @@ Hotfix releases follow the same process as standard releases above, but the `rel
 - Steps:
   - `git checkout v6 && git pull origin v6`
   - `git checkout -b release-v6`
-  - `pnpm changeset pre enter pre`
+  - `pnpm changeset pre enter pre-v6`
   - The process of the PRs and iterating on prereleases remains the same
 - Once the stable release is out:
   - Merge `release-v6` back to `v6` with a **Normal Merge**

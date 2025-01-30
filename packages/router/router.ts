@@ -2264,7 +2264,7 @@ export function createRouter(init: RouterInit): Router {
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         requestMatches,
-        path,
+        new URL(fetchRequest.url).pathname,
         fetchRequest.signal
       );
 
@@ -2556,7 +2556,7 @@ export function createRouter(init: RouterInit): Router {
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         matches,
-        path,
+        new URL(fetchRequest.url).pathname,
         fetchRequest.signal
       );
 
@@ -3293,6 +3293,7 @@ export function createRouter(init: RouterInit): Router {
       let localManifest = manifest;
       try {
         await patchRoutesOnNavigationImpl({
+          signal,
           path: pathname,
           matches: partialMatches,
           patch: (routeId, children) => {

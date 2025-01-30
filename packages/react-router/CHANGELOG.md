@@ -1,5 +1,49 @@
 # `react-router`
 
+## 6.29.0
+
+### Minor Changes
+
+- Provide the request `signal` as a parameter to `patchRoutesOnNavigation` ([#12900](https://github.com/remix-run/react-router/pull/12900))
+
+  - This can be used to abort any manifest fetches if the in-flight navigation/fetcher is aborted
+
+### Patch Changes
+
+- Do not log v7 deprecation warnings in production builds ([#12794](https://github.com/remix-run/react-router/pull/12794))
+- Limit matchRoutes optimization to client side routers ([#12881](https://github.com/remix-run/react-router/pull/12881))
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12169](https://github.com/remix-run/react-router/pull/12169))
+- Updated dependencies:
+  - `@remix-run/router@1.22.0`
+
+## 6.29.0-pre-v6.2
+
+### Minor Changes
+
+- Provide the request `signal` as a parameter to `patchRoutesOnNavigation` ([#12900](https://github.com/remix-run/react-router/pull/12900))
+
+  - This can be used to abort any manifest fetches if the in-flight navigation/fetcher is aborted
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.22.0-pre-v6.1`
+
+## 6.28.3-pre-v6.1
+
+### Patch Changes
+
+- Limit matchRoutes optimization to client side routers ([#12881](https://github.com/remix-run/react-router/pull/12881))
+
+## 6.28.3-pre-v6.0
+
+### Patch Changes
+
+- Do not log v7 deprecation warnings in production builds ([#12794](https://github.com/remix-run/react-router/pull/12794))
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12169](https://github.com/remix-run/react-router/pull/12169))
+- Updated dependencies:
+  - `@remix-run/router@1.21.2-pre-v6.0`
+
 ## 6.28.2
 
 ### Patch Changes

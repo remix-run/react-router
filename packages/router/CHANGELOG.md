@@ -1,5 +1,40 @@
 # `@remix-run/router`
 
+## 1.22.0
+
+### Minor Changes
+
+- Provide the request `signal` as a parameter to `patchRoutesOnNavigation` ([#12900](https://github.com/remix-run/react-router/pull/12900))
+
+  - This can be used to abort any manifest fetches if the in-flight navigation/fetcher is aborted
+
+### Patch Changes
+
+- Do not log v7 deprecation warnings in production builds ([#12794](https://github.com/remix-run/react-router/pull/12794))
+- Strip search parameters from `patchRoutesOnNavigation` `path` param for fetcher calls ([#12899](https://github.com/remix-run/react-router/pull/12899))
+- Properly bubble headers when throwing a `data()` result ([#12845](https://github.com/remix-run/react-router/pull/12845))
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12169](https://github.com/remix-run/react-router/pull/12169))
+
+## 1.22.0-pre-v6.1
+
+### Minor Changes
+
+- Provide the request `signal` as a parameter to `patchRoutesOnNavigation` ([#12900](https://github.com/remix-run/react-router/pull/12900))
+
+  - This can be used to abort any manifest fetches if the in-flight navigation/fetcher is aborted
+
+### Patch Changes
+
+- Strip search parameters from `patchRoutesOnNavigation` `path` param for fetcher calls ([#12899](https://github.com/remix-run/react-router/pull/12899))
+
+## 1.21.2-pre-v6.0
+
+### Patch Changes
+
+- Do not log v7 deprecation warnings in production builds ([#12794](https://github.com/remix-run/react-router/pull/12794))
+- Properly bubble headers when throwing a `data()` result ([#12845](https://github.com/remix-run/react-router/pull/12845))
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12169](https://github.com/remix-run/react-router/pull/12169))
+
 ## 1.21.1
 
 ### Patch Changes

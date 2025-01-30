@@ -259,6 +259,7 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = {
+  signal: AbortSignal;
   path: string;
   matches: M[];
   patch: (routeId: string | null, children: O[]) => void;
