@@ -20,6 +20,7 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
+  ssr: boolean;
   isSpaMode: boolean;
 }
 

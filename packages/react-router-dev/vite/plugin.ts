@@ -557,9 +557,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
-      export const isSpaMode = ${
-        !ctx.reactRouterConfig.ssr && ctx.reactRouterConfig.prerender == null
-      };
+      export const ssr = ${ctx.reactRouterConfig.ssr};
+      export const isSpaMode = ${isSpaModeEnabled(ctx.reactRouterConfig)};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -1743,7 +1742,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
 
-        if (!options?.ssr && !ctx.reactRouterConfig.ssr) {
+        if (!options?.ssr && isSpaModeEnabled(ctx.reactRouterConfig)) {
           let exportNames = getExportNames(code);
           let serverOnlyExports = exportNames.filter((exp) =>
             SERVER_ONLY_ROUTE_EXPORTS.includes(exp)
@@ -2150,6 +2149,19 @@ async function getRouteMetadata(
   return info;
 }
 
+function isSpaModeEnabled(
+  reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"]
+) {
+  return (
+    reactRouterConfig.ssr === false &&
+    (reactRouterConfig.prerender == null ||
+      reactRouterConfig.prerender === false ||
+      (Array.isArray(reactRouterConfig.prerender) &&
+        reactRouterConfig.prerender.length === 1 &&
+        reactRouterConfig.prerender[0] === "/"))
+  );
+}
+
 async function getPrerenderBuildAndHandler(
   viteConfig: Vite.ResolvedConfig,
   serverBuildDirectory: string,
@@ -2284,13 +2296,6 @@ async function handlePrerender(
       );
     }
   }
-
-  await prerenderManifest(
-    build,
-    clientBuildDirectory,
-    reactRouterConfig,
-    viteConfig
-  );
 }
 
 function determineStaticPrerenderRoutes(
@@ -2415,24 +2420,6 @@ async function prerenderResourceRoute(
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, text);
-  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
-}
-
-async function prerenderManifest(
-  build: ServerBuild,
-  clientBuildDirectory: string,
-  reactRouterConfig: ResolvedReactRouterConfig,
-  viteConfig: Vite.ResolvedConfig
-) {
-  let normalizedPath = `${reactRouterConfig.basename}/__manifest`.replace(
-    /\/\/+/g,
-    "/"
-  );
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
-  await fse.ensureDir(path.dirname(outfile));
-  let manifestData = JSON.stringify(build.assets.routes);
-  await fse.outputFile(outfile, manifestData);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 

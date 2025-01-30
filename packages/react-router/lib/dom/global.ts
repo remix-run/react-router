@@ -7,6 +7,7 @@ export type WindowReactRouterContext = {
   state: HydrationState;
   criticalCss?: string;
   future: FutureConfig;
+  ssr: boolean;
   isSpaMode: boolean;
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;

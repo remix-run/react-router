@@ -232,7 +232,6 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
-      "__manifest",
       "_root.data",
       "about.data",
       "about/index.html",
@@ -288,7 +287,6 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
-      "__manifest",
       "_root.data",
       "about.data",
       "about/index.html",
@@ -345,7 +343,6 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
-      "__manifest",
       "_root.data",
       "a.data",
       "a/index.html",
@@ -397,7 +394,6 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
-      "__manifest",
       "_root.data",
       "about.data",
       "about/index.html",
@@ -468,7 +464,6 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
-      "__manifest",
       "_root.data",
       "about.data",
       "about/index.html",
@@ -494,7 +489,13 @@ test.describe("Prerendering", () => {
   test("Hydrates into a navigable app", async ({ page }) => {
     fixture = await createFixture({
       prerender: true,
-      files,
+      files: {
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: true,
+        }),
+      },
     });
     appFixture = await createAppFixture(fixture);
 
@@ -511,14 +512,14 @@ test.describe("Prerendering", () => {
     await page.waitForSelector("[data-mounted]");
     await app.clickLink("/about");
     await page.waitForSelector("[data-route]:has-text('About')");
-    expect(requests).toEqual(["/__manifest", "/about.data"]);
+    expect(requests).toEqual(["/about.data"]);
   });
 
   test("Serves the prerendered HTML file alongside runtime routes", async ({
     page,
   }) => {
     fixture = await createFixture({
-      // Even thogh we are prerendering, we want a running server so we can
+      // Even though we are prerendering, we want a running server so we can
       // hit the pre-rendered HTML file and a non-prerendered route
       prerender: false,
       files: {
@@ -783,6 +784,10 @@ test.describe("Prerendering", () => {
       prerender: true,
       files: {
         ...files,
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: true,
+        }),
         "app/routes/$slug.tsx": js`
           import * as React  from "react";
           import { useLoaderData } from "react-router";
