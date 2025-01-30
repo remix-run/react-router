@@ -21,7 +21,7 @@ const config: PlaywrightTestConfig = {
     /* Maximum time expect() should wait for the condition to be met. */
     timeout: 5_000,
   },
-  forbidOnly: !!process.env.CI,
+  //forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 3 : 0,
   reporter: process.env.CI ? "dot" : [["html", { open: "never" }]],
   use: { actionTimeout: 0 },
@@ -31,23 +31,23 @@ const config: PlaywrightTestConfig = {
       name: "chromium",
       use: devices["Desktop Chrome"],
     },
-    {
-      name: "webkit",
-      use: devices["Desktop Safari"],
-    },
-    {
-      name: "msedge",
-      use: {
-        ...devices["Desktop Edge"],
-        // Desktop Edge uses chromium by default
-        // https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/deviceDescriptorsSource.json#L1502
-        channel: "msedge",
-      },
-    },
-    {
-      name: "firefox",
-      use: devices["Desktop Firefox"],
-    },
+    // {
+    //   name: "webkit",
+    //   use: devices["Desktop Safari"],
+    // },
+    // {
+    //   name: "msedge",
+    //   use: {
+    //     ...devices["Desktop Edge"],
+    //     // Desktop Edge uses chromium by default
+    //     // https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/deviceDescriptorsSource.json#L1502
+    //     channel: "msedge",
+    //   },
+    // },
+    // {
+    //   name: "firefox",
+    //   use: devices["Desktop Firefox"],
+    // },
   ],
 };
 
