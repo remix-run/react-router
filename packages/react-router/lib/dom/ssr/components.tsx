@@ -676,12 +676,59 @@ export function Scripts(props: ScriptsProps) {
             : ""
         }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
-  .map(
-    (match, index) =>
-      `import * as route${index} from ${JSON.stringify(
-        manifest.routes[match.route.id]!.module
-      )};`
-  )
+  .map((match, routeIndex) => {
+    let routeVarName = `route${routeIndex}`;
+    let manifestEntry = manifest.routes[match.route.id];
+    invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
+    let {
+      clientActionModule,
+      clientLoaderModule,
+      hydrateFallbackModule,
+      module,
+    } = manifestEntry;
+
+    let chunks: Array<{ module: string; varName: string }> = [
+      ...(clientActionModule
+        ? [
+            {
+              module: clientActionModule,
+              varName: `${routeVarName}_clientAction`,
+            },
+          ]
+        : []),
+      ...(clientLoaderModule
+        ? [
+            {
+              module: clientLoaderModule,
+              varName: `${routeVarName}_clientLoader`,
+            },
+          ]
+        : []),
+      ...(hydrateFallbackModule
+        ? [
+            {
+              module: hydrateFallbackModule,
+              varName: `${routeVarName}_HydrateFallback`,
+            },
+          ]
+        : []),
+      { module, varName: `${routeVarName}_main` },
+    ];
+
+    if (chunks.length === 1) {
+      return `import * as ${routeVarName} from ${JSON.stringify(module)};`;
+    }
+
+    let chunkImportsSnippet = chunks
+      .map((chunk) => `import * as ${chunk.varName} from "${chunk.module}";`)
+      .join("\n");
+
+    let mergedChunksSnippet = `const ${routeVarName} = {${chunks
+      .map((chunk) => `...${chunk.varName}`)
+      .join(",")}};`;
+
+    return [chunkImportsSnippet, mergedChunksSnippet].join("\n");
+  })
   .join("\n")}
   ${
     enableFogOfWar
@@ -722,14 +769,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  let routePreloads = matches
-    .map((match) => {
-      let route = manifest.routes[match.route.id];
-      return route ? (route.imports || []).concat([route.module]) : [];
-    })
-    .flat(1);
-
-  let preloads = isHydrated ? [] : manifest.entry.imports.concat(routePreloads);
+  let preloads = isHydrated
+    ? []
+    : manifest.entry.imports.concat(
+        getModuleLinkHrefs(matches, manifest, {
+          includeHydrateFallback: true,
+        })
+      );
 
   return isHydrated ? null : (
     <>

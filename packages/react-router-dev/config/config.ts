@@ -86,6 +86,10 @@ type ServerModuleFormat = "esm" | "cjs";
 
 interface FutureConfig {
   unstable_optimizeDeps: boolean;
+  /**
+   * Automatically split route modules into multiple chunks when possible.
+   */
+  unstable_splitRouteModules?: boolean | "enforce";
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -483,6 +487,8 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
+    unstable_splitRouteModules:
+      reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
