@@ -3458,7 +3458,7 @@ export function createStaticHandler(
       return respond ? respond(staticContext) : staticContext;
     }
 
-    if (respond && matches.some((m) => m.route.middleware)) {
+    if (respond && matches.some((m) => m.route.unstable_middleware)) {
       try {
         // Run middleware as far deep as the deepest loader to be executed
         let tailIdx = [...matches]
@@ -3649,7 +3649,7 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (respond && matches.some((m) => m.route.middleware)) {
+    if (respond && matches.some((m) => m.route.unstable_middleware)) {
       let response = await runMiddlewarePipeline(
         {
           request,
