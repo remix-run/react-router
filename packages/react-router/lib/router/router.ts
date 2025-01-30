@@ -3180,6 +3180,7 @@ export function createRouter(init: RouterInit): Router {
       let localManifest = manifest;
       try {
         await patchRoutesOnNavigationImpl({
+          signal,
           path: pathname,
           matches: partialMatches,
           patch: (routeId, children) => {
