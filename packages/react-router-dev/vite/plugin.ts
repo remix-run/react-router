@@ -22,6 +22,7 @@ import {
 } from "es-module-lexer";
 import jsesc from "jsesc";
 import colors from "picocolors";
+import kebabCase from "lodash/kebabCase";
 
 import * as Typegen from "../typegen";
 import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
@@ -1024,6 +1025,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                         rollupOptions: {
                           ...baseRollupOptions,
                           preserveEntrySignatures: "exports-only",
+                          output: {
+                            entryFileNames({ moduleIds }) {
+                              let routeChunkModuleId =
+                                moduleIds.find(isRouteChunkModuleId);
+                              let routeChunkName = routeChunkModuleId
+                                ? getRouteChunkNameFromModuleId(
+                                    routeChunkModuleId
+                                  )
+                                : null;
+                              let routeChunkSuffix = routeChunkName
+                                ? `-${kebabCase(routeChunkName)}`
+                                : "";
+                              return `assets/[name]${routeChunkSuffix}-[hash].js`;
+                            },
+                          },
                           input: [
                             ctx.entryClientFilePath,
                             ...Object.values(
