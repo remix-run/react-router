@@ -42,6 +42,17 @@ export type CreateRequestHandlerFunction = (
   mode?: string
 ) => RequestHandler;
 
+// Do not include a response body if the status code is one of these,
+// otherwise `undici` will throw an error when constructing the Response:
+//   https://github.com/nodejs/undici/blob/bd98a6303e45d5e0d44192a93731b1defdb415f3/lib/web/fetch/response.js#L522-L528
+//
+// Specs:
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-informational-1xx
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
+const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205, 304]);
+
 function derive(build: ServerBuild, mode?: string) {
   let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
@@ -297,9 +308,9 @@ async function handleSingleFetchRequest(
   let resultHeaders = new Headers(headers);
   resultHeaders.set("X-Remix-Response", "yes");
 
-  // 304 responses should not have a body
-  if (status === 304) {
-    return new Response(null, { status: 304, headers: resultHeaders });
+  // Skip response body for unsupported status codes
+  if (NO_BODY_STATUS_CODES.has(status)) {
+    return new Response(null, { status, headers: resultHeaders });
   }
 
   // We use a less-descriptive `text/x-script` here instead of something like
@@ -347,9 +358,9 @@ async function handleDocumentRequest(
 
   let headers = getDocumentHeaders(build, context);
 
-  // 304 responses should not have a body or a content-type
-  if (context.statusCode === 304) {
-    return new Response(null, { status: 304, headers });
+  // Skip response body for unsupported status codes
+  if (NO_BODY_STATUS_CODES.has(context.statusCode)) {
+    return new Response(null, { status: context.statusCode, headers });
   }
 
   // Sanitize errors outside of development environments
@@ -493,12 +504,15 @@ async function handleResourceRequest(
       requestContext: loadContext,
     });
 
-    invariant(
-      isResponse(response),
-      "Expected a Response to be returned from resource route handler"
-    );
+    if (isResponse(response)) {
+      return response;
+    }
 
-    return response;
+    if (typeof response === "string") {
+      return new Response(response);
+    }
+
+    return Response.json(response);
   } catch (error: unknown) {
     if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers

@@ -414,13 +414,32 @@ export function singleFetchUrl(reqUrl: URL | string) {
   return url;
 }
 
-async function fetchAndDecode(url: URL, init: RequestInit) {
+async function fetchAndDecode(
+  url: URL,
+  init: RequestInit
+): Promise<{ status: number; data: unknown }> {
   let res = await fetch(url, init);
 
   // If this 404'd without hitting the running server (most likely in a
   // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
   if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
     throw new ErrorResponseImpl(404, "Not Found", true);
+  }
+
+  // some status codes are not permitted to have bodies, so we want to just
+  // treat those as "no data" instead of throwing an exception.
+  // 304 is not included here because the browser should fill those responses
+  // with the cached body content.
+  const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205]);
+  if (NO_BODY_STATUS_CODES.has(res.status)) {
+    if (!init.method || init.method === "GET") {
+      // SingleFetchResults can just have no routeId keys which will result
+      // in no data for all routes
+      return { status: res.status, data: {} };
+    } else {
+      // SingleFetchResult is for a singular route and can specify no data
+      return { status: res.status, data: { data: undefined } };
+    }
   }
 
   invariant(res.body, "No response body to decode");
