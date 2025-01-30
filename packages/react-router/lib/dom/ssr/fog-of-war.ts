@@ -77,7 +77,7 @@ export function getPatchRoutesOnNavigationFunction(
     return undefined;
   }
 
-  return async ({ path, patch }) => {
+  return async ({ path, patch, signal }) => {
     if (discoveredPaths.has(path)) {
       return;
     }
@@ -87,7 +87,8 @@ export function getPatchRoutesOnNavigationFunction(
       routeModules,
       isSpaMode,
       basename,
-      patch
+      patch,
+      signal
     );
   };
 }
@@ -185,7 +186,8 @@ export async function fetchAndApplyManifestPatches(
   routeModules: RouteModules,
   isSpaMode: boolean,
   basename: string | undefined,
-  patchRoutes: DataRouter["patchRoutes"]
+  patchRoutes: DataRouter["patchRoutes"],
+  signal?: AbortSignal
 ): Promise<void> {
   let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
     /\/+/g,
@@ -203,15 +205,21 @@ export async function fetchAndApplyManifestPatches(
     return;
   }
 
-  let res = await fetch(url);
+  let serverPatches: AssetsManifest["routes"];
+  try {
+    let res = await fetch(url, { signal });
 
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}`);
-  } else if (res.status >= 400) {
-    throw new Error(await res.text());
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    } else if (res.status >= 400) {
+      throw new Error(await res.text());
+    }
+
+    serverPatches = (await res.json()) as AssetsManifest["routes"];
+  } catch (e) {
+    if (signal?.aborted) return;
+    throw e;
   }
-
-  let serverPatches = (await res.json()) as AssetsManifest["routes"];
 
   // Patch routes we don't know about yet into the manifest
   let knownRoutes = new Set(Object.keys(manifest.routes));
