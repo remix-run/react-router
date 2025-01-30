@@ -225,7 +225,7 @@ Date: YYYY-MM-DD
 
 ## v6.29.0
 
-Date: 2025-01-29
+Date: 2025-01-30
 
 ### Minor Changes
 
