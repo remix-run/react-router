@@ -1,5 +1,27 @@
 # `react-router`
 
+## 7.1.4
+
+### Patch Changes
+
+- Internal reorg to clean up some duplicated route module types ([#12799](https://github.com/remix-run/react-router/pull/12799))
+
+- Properly handle status codes that cannot have a body in single fetch responses (204, etc.) ([#12760](https://github.com/remix-run/react-router/pull/12760))
+
+- Stop erroring on resource routes that return raw strings/objects and instead serialize them as `text/plain` or `application/json` responses ([#12848](https://github.com/remix-run/react-router/pull/12848))
+
+  - This only applies when accessed as a resource route without the `.data` extension
+  - When accessed from a Single Fetch `.data` request, they will still be encoded via `turbo-stream`
+
+- REMOVE: limit matchRoutes optimization to client side ([#12882](https://github.com/remix-run/react-router/pull/12882))
+
+- Optimize Lazy Route Discovery path discovery to favor a single `querySelectorAll` call at the `body` level instead of many calls at the sub-tree level ([#12731](https://github.com/remix-run/react-router/pull/12731))
+
+- - Properly bubble headers as `errorHeaders` when throwing a `data()` result ([#12846](https://github.com/remix-run/react-router/pull/12846))
+  - Avoid duplication of `Set-Cookie` headers could be duplicated if also returned from `headers`
+
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12800](https://github.com/remix-run/react-router/pull/12800))
+
 ## 7.1.3
 
 _No changes_
@@ -63,7 +85,7 @@ _No changes_
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
