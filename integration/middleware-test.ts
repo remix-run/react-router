@@ -899,6 +899,301 @@ test.describe("Middleware", () => {
 
       appFixture.close();
     });
+
+    test("calls clientMiddleware once when multiple server requests happen", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({}),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/entry.client.tsx": js`
+            import { HydratedRouter } from "react-router/dom";
+            import { startTransition, StrictMode } from "react";
+            import { hydrateRoot } from "react-dom/client";
+
+            startTransition(() => {
+              hydrateRoot(
+                document,
+                <StrictMode>
+                  <HydratedRouter context={{
+                    parent: { value: 0 },
+                    child: { value: 0 }
+                  }} />
+                </StrictMode>
+              );
+            });
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router'
+            export default function Component({ loaderData }) {
+              return <Link to="/parent/child">Go to /parent/child</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Outlet } from 'react-router';
+            export function loader() {
+              return 'PARENT'
+            }
+            export const clientMiddleware = [
+              ({ context }) => { context.parent.value++ },
+            ];
+
+            export async function clientLoader({ serverLoader, context }) {
+              return {
+                serverData: await serverLoader(),
+                context
+              }
+            }
+
+            export default function Component({ loaderData }) {
+              return (
+                <>
+                  <h2 data-parent>{JSON.stringify(loaderData)}</h2>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.child.tsx": js`
+            export function loader() {
+              return 'CHILD'
+            }
+            export const clientMiddleware = [
+              ({ context }) => { context.child.value++ },
+            ];
+
+            export async function clientLoader({ serverLoader, context }) {
+              return {
+                serverData: await serverLoader(),
+                context
+              }
+            }
+
+            export default function Component({ loaderData }) {
+              return <h3 data-child>{JSON.stringify(loaderData)}</h3>;
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let requests: string[] = [];
+      page.on("request", (request: PlaywrightRequest) => {
+        if (request.url().includes(".data")) {
+          requests.push(request.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      (await page.$('a[href="/parent/child"]'))?.click();
+      await page.waitForSelector("[data-child]");
+
+      // 2 separate server requests made
+      expect(requests).toEqual([
+        expect.stringContaining("/parent/child.data?_routes=routes%2Fparent"),
+        expect.stringContaining(
+          "/parent/child.data?_routes=routes%2Fparent.child"
+        ),
+      ]);
+
+      // But client middlewares only ran once
+      let json = (await page.locator("[data-parent]").textContent()) as string;
+      expect(JSON.parse(json)).toEqual({
+        serverData: "PARENT",
+        context: {
+          parent: { value: 1 },
+          child: { value: 1 },
+        },
+      });
+      json = (await page.locator("[data-child]").textContent()) as string;
+      expect(JSON.parse(json)).toEqual({
+        serverData: "CHILD",
+        context: {
+          parent: { value: 1 },
+          child: { value: 1 },
+        },
+      });
+
+      appFixture.close();
+    });
+
+    test("calls clientMiddleware once when multiple server requests happen and some routes opt out", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({}),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/entry.client.tsx": js`
+            import { HydratedRouter } from "react-router/dom";
+            import { startTransition, StrictMode } from "react";
+            import { hydrateRoot } from "react-dom/client";
+
+            startTransition(() => {
+              hydrateRoot(
+                document,
+                <StrictMode>
+                  <HydratedRouter context={{
+                    parent: { value: 0 },
+                    child: { value: 0 },
+                    index: { value: 0 }
+                  }} />
+                </StrictMode>
+              );
+            });
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router'
+            export default function Component({ loaderData }) {
+              return <Link to="/parent/child">Go to /parent/child</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Outlet } from 'react-router';
+            export function loader() {
+              return 'PARENT'
+            }
+            export const clientMiddleware = [
+              ({ context }) => { context.parent.value++ },
+            ];
+            export default function Component({ loaderData }) {
+              return (
+                <>
+                  <h2 data-parent>{loaderData}</h2>
+                  <Outlet/>
+                </>
+              );
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+          `,
+          "app/routes/parent.child.tsx": js`
+            import { Outlet } from 'react-router';
+            export function loader() {
+              return 'CHILD'
+            }
+            export const clientMiddleware = [
+              ({ context }) => { context.child.value++ },
+            ];
+            export default function Component({ loaderData }) {
+              return (
+                <>
+                  <h3 data-child>{loaderData}</h3>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.child._index.tsx": js`
+            import { Form } from 'react-router';
+            export function action() {
+              return 'INDEX ACTION'
+            }
+            export function loader() {
+              return 'INDEX'
+            }
+            export const clientMiddleware = [
+              ({ context }) => { context.index.value++ },
+            ];
+            export async function clientLoader({ serverLoader, context }) {
+              return {
+                serverData: await serverLoader(),
+                context
+              }
+            }
+            export default function Component({ loaderData, actionData }) {
+              return (
+                <>
+                  <h4 data-index>{JSON.stringify(loaderData)}</h4>
+                  <Form method="post">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  {actionData ? <p data-action>{JSON.stringify(actionData)}</p> : null}
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let requests: string[] = [];
+      page.on("request", (request: PlaywrightRequest) => {
+        if (request.method() === "GET" && request.url().includes(".data")) {
+          requests.push(request.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      (await page.$('a[href="/parent/child"]'))?.click();
+      await page.waitForSelector("[data-child]");
+      expect(await page.locator("[data-parent]").textContent()).toBe("PARENT");
+      expect(await page.locator("[data-child]").textContent()).toBe("CHILD");
+      expect(
+        JSON.parse((await page.locator("[data-index]").textContent())!)
+      ).toEqual({
+        serverData: "INDEX",
+        context: {
+          parent: { value: 1 },
+          child: { value: 1 },
+          index: { value: 1 },
+        },
+      });
+
+      requests = []; // clear before form submission
+      (await page.$('button[type="submit"]'))?.click();
+      await page.waitForSelector("[data-action]");
+
+      // 2 separate server requests made
+      expect(requests).toEqual([
+        // index gets it's own due to clientLoader
+        expect.stringMatching(
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/
+        ),
+        // This is the normal request but only included parent.child because parent opted out
+        expect.stringMatching(
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child$/
+        ),
+      ]);
+
+      // But client middlewares only ran once for the action and once for the revalidation
+      expect(await page.locator("[data-parent]").textContent()).toBe("PARENT");
+      expect(await page.locator("[data-child]").textContent()).toBe("CHILD");
+      expect(
+        JSON.parse((await page.locator("[data-index]").textContent())!)
+      ).toEqual({
+        serverData: "INDEX",
+        context: {
+          parent: { value: 3 },
+          child: { value: 3 },
+          index: { value: 3 },
+        },
+      });
+
+      appFixture.close();
+    });
   });
 
   test.describe("Server Middleware", () => {
@@ -1523,6 +1818,79 @@ test.describe("Middleware", () => {
 
       (await page.$('a[href="/a/b"]'))?.click();
       await page.waitForSelector("pre");
+      expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
+      expect(await page.locator("pre").textContent()).toBe("broken!");
+
+      appFixture.close();
+    });
+
+    test("bubbles errors on the way down up to at least the highest route with a loader", async ({
+      page,
+    }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b">Link</Link>
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1>A Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              import { Outlet } from 'react-router'
+              export function loader() {
+                return null;
+              }
+              export default function Component() {
+                return <Outlet/>
+              }
+            `,
+            "app/routes/a.b.c.tsx": js`
+              import { Outlet } from 'react-router'
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1>C Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.c.d.tsx": js`
+              import { Outlet } from 'react-router'
+              export const middleware = [() => { throw new Error("broken!") }]
+              export default function Component() {
+                return <Outlet/>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a/b/c/d");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
 
