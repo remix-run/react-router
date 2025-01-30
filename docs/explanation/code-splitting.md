@@ -108,7 +108,7 @@ Run clientLoader:     |-----|
 Render:                     |-|
 ```
 
-To achieve this optimization, React Router will split the route module during the production build process. In this case, we'll end up with two separate [virtual modules][virtual-modules] — one for the client loader and one for the component.
+To achieve this optimization, React Router will split the route module into multiple smaller modules during the production build process. In this case, we'll end up with two separate [virtual modules][virtual-modules] — one for the client loader and one for the component and its dependencies.
 
 ```tsx filename=routes/example.tsx?route-chunk=clientLoader
 export async function clientLoader() {
@@ -125,6 +125,8 @@ export default function Component({ loaderData }) {
   return <MassiveComponent data={loaderData} />;
 }
 ```
+
+<docs-info>This optimization is automatically applied in framework mode, but you can also implement it in library mode via `route.lazy` and authoring your route in multiple files as covered in our blog post on [lazy loading route modules.][blog-lazy-loading-routes]</docs-info>
 
 Now that these are available as separate modules, the client loader and the component can be downloaded in parallel. This means that the client loader can be executed as soon as it's ready without having to wait for the component.
 
@@ -239,3 +241,4 @@ This export could not be split into its own chunk because it shares code with ot
 
 [route-module]: ../../start/framework/route-module
 [virtual-modules]: https://vite.dev/guide/api-plugin#virtual-modules-convention
+[blog-lazy-loading-routes]: https://remix.run/blog/lazy-loading-routes#advanced-usage-and-optimizations
