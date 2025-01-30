@@ -16,7 +16,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   let formData = await request.formData();
-  let title = await formData.get("title");
+  let title = formData.get("title");
   if (!title) {
     return data(
       { message: "Invalid title" },

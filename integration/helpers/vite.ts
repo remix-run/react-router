@@ -28,17 +28,24 @@ export const reactRouterConfig = ({
   basename,
   prerender,
   appDirectory,
+  splitRouteModules,
 }: {
   ssr?: boolean;
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
+  splitRouteModules?: NonNullable<
+    Config["future"]
+  >["unstable_splitRouteModules"];
 }) => {
   let config: Config = {
     ssr,
     basename,
     prerender,
     appDirectory,
+    future: {
+      unstable_splitRouteModules: splitRouteModules,
+    },
   };
 
   return dedent`
@@ -413,10 +420,17 @@ function bufferize(stream: Readable): () => string {
 }
 
 export function createEditor(projectDir: string) {
-  return async (file: string, transform: (contents: string) => string) => {
+  return async function edit(
+    file: string,
+    transform: (contents: string) => string
+  ) {
     let filepath = path.join(projectDir, file);
     let contents = await fs.readFile(filepath, "utf8");
     await fs.writeFile(filepath, transform(contents), "utf8");
+
+    return async function revert() {
+      await fs.writeFile(filepath, contents, "utf8");
+    };
   };
 }
 

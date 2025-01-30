@@ -1,5 +1,16 @@
 # `@react-router/dev`
 
+## 7.1.4
+
+### Patch Changes
+
+- Properly resolve Windows file paths to scan for Vite's dependency optimization when using the `unstable_optimizeDeps` future flag. ([#12637](https://github.com/remix-run/react-router/pull/12637))
+- Fix prerendering when using a custom server - previously we ended up trying to import the users custom server when we actually want to import the virtual server build module ([#12759](https://github.com/remix-run/react-router/pull/12759))
+- Updated dependencies:
+  - `react-router@7.1.4`
+  - `@react-router/node@7.1.4`
+  - `@react-router/serve@7.1.4`
+
 ## 7.1.3
 
 ### Patch Changes
