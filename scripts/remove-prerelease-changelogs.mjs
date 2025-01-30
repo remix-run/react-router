@@ -110,7 +110,7 @@ function removePreReleaseSectionFromMarkdown() {
  * @returns
  */
 function isPrereleaseVersion(str) {
-  return /^(v?\d+\.){2}\d+-[a-z]+\.\d+$/i.test(str.trim());
+  return /^v?\d+\.\d+\.\d+-pre(-v6)?\.\d+$/i.test(str.trim());
 }
 
 function isPrereleaseMode() {
