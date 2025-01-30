@@ -115,7 +115,7 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName = "client" | "ssr" | `server-bundle-${string}`;
+export type EnvironmentName = "client" | "ssr" | `ssr-bundle-${string}`;
 
 type EnvironmentOptions = Required<Pick<Vite.EnvironmentOptions, "build">>;
 
@@ -2819,7 +2819,7 @@ export async function getEnvironmentOptionsResolvers(
     for (let [serverBundleId, routes] of Object.entries(
       getRoutesByServerBundleId(buildManifest)
     )) {
-      environmentOptionsResolvers[`server-bundle-${serverBundleId}`] = ({
+      environmentOptionsResolvers[`ssr-bundle-${serverBundleId}`] = ({
         viteUserConfig,
       }) => ({
         build: mergeBuildOptions(
