@@ -17,7 +17,6 @@ import isEqual from "lodash/isEqual";
 import {
   type RouteManifest,
   type RouteManifestEntry,
-  type RouteConfig,
   setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
@@ -72,7 +71,7 @@ type DefaultBuildManifest = BaseBuildManifest & {
   routeIdToServerBundleId?: never;
 };
 
-export type ServerBundlesBuildManifest = BaseBuildManifest & {
+type ServerBundlesBuildManifest = BaseBuildManifest & {
   serverBundles: {
     [serverBundleId: string]: {
       id: string;
