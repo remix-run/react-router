@@ -1155,6 +1155,9 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../../packages/react-router-node
+      isbot:
+        specifier: ^5
+        version: 5.1.11
       react:
         specifier: ^18.2.0
         version: 18.2.0
