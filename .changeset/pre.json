@@ -21,5 +21,7 @@
     "@playground/framework-express": "0.0.0",
     "@playground/framework-spa": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "witty-birds-fetch"
+  ]
 }
