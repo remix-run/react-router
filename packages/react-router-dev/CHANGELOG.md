@@ -1,13 +1,13 @@
 # `@react-router/dev`
 
-## 7.1.5-pre.0
+## 7.1.5
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.1.5-pre.0`
-  - `@react-router/node@7.1.5-pre.0`
-  - `@react-router/serve@7.1.5-pre.0`
+  - `react-router@7.1.5`
+  - `@react-router/node@7.1.5`
+  - `@react-router/serve@7.1.5`
 
 ## 7.1.4
 
@@ -117,7 +117,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 
