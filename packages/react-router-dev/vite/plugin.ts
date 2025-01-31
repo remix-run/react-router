@@ -1017,12 +1017,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ? { fs: { allow: defaultEntries } }
             : undefined,
 
-          build: await resolveBuildOptions({
-            ctx,
-            viteCommand,
-            viteConfigEnv,
-            viteUserConfig,
-          }),
+          build:
+            ctx.environmentBuildContext?.options.build ??
+            (
+              await getEnvironmentOptions(
+                ctx,
+                viteConfigEnv.isSsrBuild ? "ssr" : "client",
+                { viteCommand, viteUserConfig }
+              )
+            ).build,
         };
       },
       async configResolved(resolvedViteConfig) {
@@ -2853,40 +2856,6 @@ async function getEnvironmentOptions(
   invariant(resolver, `Missing environment resolver for ${environmentName}`);
 
   return resolver(resolverOptions);
-}
-
-async function resolveBuildOptions({
-  ctx,
-  viteCommand,
-  viteConfigEnv,
-  viteUserConfig,
-}: {
-  ctx: ReactRouterPluginContext;
-  viteCommand: Vite.ResolvedConfig["command"];
-  viteConfigEnv: Vite.ConfigEnv;
-  viteUserConfig: Vite.UserConfig;
-}): Promise<Vite.BuildOptions | undefined> {
-  // Handle options injected from `react-router build`
-  if (ctx.environmentBuildContext?.options.build) {
-    return ctx.environmentBuildContext.options.build;
-  }
-
-  // Handle `vite preview` in SPA mode
-  if (viteCommand === "serve" && ctx.reactRouterConfig.ssr === false) {
-    return {
-      manifest: true,
-      outDir: getClientBuildDirectory(ctx.reactRouterConfig),
-    };
-  }
-
-  // Otherwise, handle `vite build`
-  let environmentOptions = await getEnvironmentOptions(
-    ctx,
-    viteConfigEnv.isSsrBuild ? "ssr" : "client",
-    { viteCommand, viteUserConfig }
-  );
-
-  return environmentOptions.build;
 }
 
 function isNonNullable<T>(x: T): x is NonNullable<T> {
