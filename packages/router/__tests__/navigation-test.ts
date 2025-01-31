@@ -1,5 +1,5 @@
 import type { HydrationState } from "../index";
-import { json } from "../index";
+import { createMemoryHistory, createRouter, json } from "../index";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
@@ -432,6 +432,47 @@ describe("navigations", () => {
         root: "ROOT",
         foo: "A",
       });
+    });
+
+    it("does not use fog of war partial matches for hash change only navigations", async () => {
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "*",
+              },
+            ],
+          },
+        ],
+        // This is what enables the partialMatches logic
+        patchRoutesOnNavigation: () => {},
+      }).initialize();
+      expect(router.state.location).toMatchObject({
+        pathname: "/",
+        hash: "",
+      });
+      expect(router.state.matches).toMatchObject([{ route: { path: "/" } }]);
+      await router.navigate("/foo");
+      expect(router.state.location).toMatchObject({
+        pathname: "/foo",
+        hash: "",
+      });
+      expect(router.state.matches).toMatchObject([
+        { route: { path: "/" } },
+        { route: { path: "*" } },
+      ]);
+      await router.navigate("/foo#bar");
+      expect(router.state.location).toMatchObject({
+        pathname: "/foo",
+        hash: "#bar",
+      });
+      expect(router.state.matches).toMatchObject([
+        { route: { path: "/" } },
+        { route: { path: "*" } },
+      ]);
     });
 
     it("redirects from loaders (throw)", async () => {
