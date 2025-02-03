@@ -53,7 +53,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 #### Client Side Context
 
-In order to support the same API on the client, we will need to add support for a client-side `context` value which is already a [long requested feature][client-context]. We can do so just like the server and let users use module augmentation to define their context shape. This will default to an empty object like the server, and can be passed to `<HydratedRouter>` in `entry.client` to provide up-front singleton values.
+In order to support the same API on the client, we will need to add support for a client-side `context` value which is already a [long requested feature][client-context]. We can do so just like the server and let users use module augmentation to define their context shape. This will default to an empty object like the server, and can be passed to `createBrowserRouter` in library mode or `<HydratedRouter>` in framework mode to provide up-front singleton values.
 
 ```ts
 declare module "react-router" {
@@ -65,11 +65,14 @@ declare module "react-router" {
 // Singleton fields that don't change and are always available
 let globalContext: RouterContext = { logger: getLogger() };
 
-// ...
+// library mode
+let router = createBrowserRouter(routes, { context: globalContext });
+
+// framework mode
 return <HydratedRouter context={globalContext}>
 ```
 
-`context` on the server has the advantage of auto-cleanup since it's scoped to a request and thus automatically cleaned up after the request completes. In order to mimic this behavior on the client, we'll create a new object per navigation/fetch and spread in the properties from the global singleton context. Therefore, the context object you receive in your handlers will acually be something like:
+`context` on the server has the advantage of auto-cleanup since it's scoped to a request and thus automatically cleaned up after the request completes. In order to mimic this behavior on the client, we'll create a new object per navigation/fetch and spread in the properties from the global singleton context. Therefore, the context object you receive in your handlers will be:
 
 ```ts
 let scopedContext = { ...globalContext };

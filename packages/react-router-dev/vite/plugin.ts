@@ -98,7 +98,7 @@ const SERVER_ONLY_ROUTE_EXPORTS = [
   "unstable_middleware",
   "headers",
 ];
-const CLIENT_ONLY_NON_COMPONENT_EXPORTS = [
+const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
   "unstable_clientMiddleware",
@@ -108,7 +108,7 @@ const CLIENT_ONLY_NON_COMPONENT_EXPORTS = [
   "shouldRevalidate",
 ];
 const CLIENT_ROUTE_EXPORTS = [
-  ...CLIENT_ONLY_NON_COMPONENT_EXPORTS,
+  ...CLIENT_NON_COMPONENT_EXPORTS,
   "default",
   "ErrorBoundary",
   "HydrateFallback",
@@ -2017,7 +2017,7 @@ function addRefreshWrapper(
   id: string
 ): string {
   let route = getRoute(reactRouterConfig, id);
-  let acceptExports = route ? CLIENT_ONLY_NON_COMPONENT_EXPORTS : [];
+  let acceptExports = route ? CLIENT_NON_COMPONENT_EXPORTS : [];
   return (
     REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
     code +

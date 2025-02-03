@@ -56,6 +56,7 @@ async function serverLogger({
 
   // 👇 Grab the response here
   let res = await next();
+
   let duration = performance.now() - start;
   console.log(`Navigated to ${request.url} (${duration}ms)`);
 
@@ -64,7 +65,7 @@ async function serverLogger({
 }
 ```
 
-You can throw a redirect from a middleware to short circuit any remaining processing:
+You can throw a `redirect` from a middleware to short circuit any remaining processing:
 
 ```tsx
 function serverAuth({ request, params, context, next }: Route.MiddlewareArgs) {
@@ -77,6 +78,8 @@ function serverAuth({ request, params, context, next }: Route.MiddlewareArgs) {
   // No need to call next() if you don't need to do any post processing
 }
 ```
+
+_Note that in cases like this where you don't need to do any post-processing you don't need to call the `next` function or return a `Response`._
 
 Here's another example of using a server middleware to detect 404s and check the CMS for a redirect:
 

@@ -30,6 +30,7 @@ import type {
   FormEncType,
   HTMLFormMethod,
   UIMatch,
+  unstable_RouterContext,
 } from "../router/utils";
 import {
   ErrorResponseImpl,
@@ -136,7 +137,7 @@ export interface DOMRouterOpts {
   /**
    * Router context singleton that will be passed to loader/action functions.
    */
-  context?: any;
+  unstable_context?: unstable_RouterContext;
   /**
    * Future flags to enable for the router.
    */
@@ -179,7 +180,7 @@ export function createBrowserRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
-    context: opts?.context,
+    unstable_context: opts?.unstable_context,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
@@ -202,7 +203,7 @@ export function createHashRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
-    context: opts?.context,
+    unstable_context: opts?.unstable_context,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),

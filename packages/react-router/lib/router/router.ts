@@ -372,7 +372,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  context?: unstable_RouterContext;
+  unstable_context?: unstable_RouterContext;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -828,8 +828,8 @@ export function createRouter(init: RouterInit): Router {
   let basename = init.basename || "/";
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
-  let unstable_RouterContext =
-    typeof init.context !== "undefined" ? init.context : {};
+  let routerContext =
+    typeof init.unstable_context !== "undefined" ? init.unstable_context : {};
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -1599,7 +1599,7 @@ export function createRouter(init: RouterInit): Router {
     );
     // Create a new context per navigation that has references to all global
     // contextual fields
-    let scopedContext = { ...unstable_RouterContext };
+    let scopedContext = { ...routerContext };
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -2175,7 +2175,7 @@ export function createRouter(init: RouterInit): Router {
     let match = getTargetMatch(matches, path);
     // Create a new context per fetch that has references to all global
     // contextual fields
-    let scopedContext = { ...unstable_RouterContext };
+    let scopedContext = { ...routerContext };
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {

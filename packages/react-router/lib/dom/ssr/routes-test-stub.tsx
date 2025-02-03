@@ -1,5 +1,9 @@
 import * as React from "react";
-import type { ActionFunction, LoaderFunction } from "../../router/utils";
+import type {
+  ActionFunction,
+  LoaderFunction,
+  unstable_RouterContext,
+} from "../../router/utils";
 import type {
   DataRouteObject,
   IndexRouteObject,
@@ -83,7 +87,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  context: AppLoadContext = {}
+  unstable_context: unstable_RouterContext = {}
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -118,7 +122,7 @@ export function createRoutesStub(
         remixContextRef.current.routeModules
       );
       routerRef.current = createMemoryRouter(patched, {
-        context,
+        unstable_context,
         initialEntries,
         initialIndex,
         hydrationData,

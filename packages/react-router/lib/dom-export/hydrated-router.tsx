@@ -171,7 +171,7 @@ function createHydratedRouter({
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    context: unstable_context,
+    unstable_context,
     hydrationData,
     mapRouteProperties,
     dataStrategy: ssrInfo.context.isSpaMode
