@@ -618,8 +618,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
       turbo-stream:
-        specifier: 2.4.0
-        version: 2.4.0
+        specifier: https://pkg.pr.new/jacob-ebey/turbo-stream@7aeb647
+        version: https://pkg.pr.new/jacob-ebey/turbo-stream@7aeb647
     devDependencies:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
@@ -7595,8 +7595,9 @@ packages:
     engines: {node: '>=8.0.0'}
     hasBin: true
 
-  turbo-stream@2.4.0:
-    resolution: {integrity: sha512-FHncC10WpBd2eOmGwpmQsWLDoK4cqsA/UT/GqNoaKOQnT8uzhtCbg3EoUDMvqpOSAI0S26mr0rkjzbOO6S3v1g==}
+  turbo-stream@https://pkg.pr.new/jacob-ebey/turbo-stream@7aeb647:
+    resolution: {tarball: https://pkg.pr.new/jacob-ebey/turbo-stream@7aeb647}
+    version: 2.4.1
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -15965,7 +15966,7 @@ snapshots:
       wcwidth: 1.0.1
       yargs: 17.7.2
 
-  turbo-stream@2.4.0: {}
+  turbo-stream@https://pkg.pr.new/jacob-ebey/turbo-stream@7aeb647: {}
 
   type-check@0.4.0:
     dependencies:

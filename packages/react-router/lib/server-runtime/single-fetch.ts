@@ -327,44 +327,20 @@ export function encodeViaTurboStream(
 
   return encode(data, {
     signal: controller.signal,
+    redactErrors: serverMode === ServerMode.Production,
     plugins: [
       (value) => {
-        // Even though we sanitized errors on context.errors prior to responding,
-        // we still need to handle this for any deferred data that rejects with an
-        // Error - as those will not be sanitized yet
-        if (value instanceof Error) {
-          let { name, message, stack } =
-            serverMode === ServerMode.Production
-              ? sanitizeError(value, serverMode)
-              : value;
-          return ["SanitizedError", name, message, stack];
-        }
-
         if (value instanceof ErrorResponseImpl) {
           let { data, status, statusText } = value;
           return ["ErrorResponse", data, status, statusText];
         }
 
         if (
-          value &&
-          typeof value === "object" &&
-          SingleFetchRedirectSymbol in value
+          SingleFetchRedirectSymbol in (value as any)
         ) {
-          return ["SingleFetchRedirect", value[SingleFetchRedirectSymbol]];
+          return ["SingleFetchRedirect", (value as any)[SingleFetchRedirectSymbol]];
         }
       },
     ],
-    postPlugins: [
-      (value) => {
-        if (!value) return;
-        if (typeof value !== "object") return;
-
-        return [
-          "SingleFetchClassInstance",
-          Object.fromEntries(Object.entries(value)),
-        ];
-      },
-      () => ["SingleFetchFallback"],
-    ],
-  });
+  }).pipeThrough(new TextEncoderStream());
 }

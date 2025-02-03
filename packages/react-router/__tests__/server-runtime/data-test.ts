@@ -35,6 +35,6 @@ describe("loaders", () => {
     let res = await handler(request);
     if (!res.body) throw new Error("No body");
     const decoded = await decodeViaTurboStream(res.body, global);
-    expect((decoded.value as any)[routeId].data).toEqual("/random");
+    expect((decoded as any)[routeId].data).toEqual("/random");
   });
 });
