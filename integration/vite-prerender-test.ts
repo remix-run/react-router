@@ -10,7 +10,7 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
+import { build, createProject, reactRouterConfig } from "./helpers/vite.js";
 
 let files = {
   "react-router.config.ts": reactRouterConfig({
@@ -150,20 +150,9 @@ function listAllFiles(_dir: string) {
 test.describe("Prerendering", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
-  let _consoleError: typeof console.error;
-  let _consoleWarn: typeof console.warn;
-
-  test.beforeAll(() => {
-    _consoleError = console.error;
-    console.error = () => {};
-    _consoleWarn = console.warn;
-    console.warn = () => {};
-  });
 
   test.afterAll(() => {
-    appFixture.close();
-    console.error = _consoleError;
-    console.warn = _consoleWarn;
+    appFixture?.close();
   });
 
   test("Prerenders known static routes when true is specified", async () => {
@@ -492,7 +481,7 @@ test.describe("Prerendering", () => {
       files: {
         ...files,
         "react-router.config.ts": reactRouterConfig({
-          ssr: false,
+          ssr: false, // turn off fog of war since we're serving with a static server
           prerender: true,
         }),
       },
@@ -783,11 +772,11 @@ test.describe("Prerendering", () => {
     fixture = await createFixture({
       prerender: true,
       files: {
-        ...files,
         "react-router.config.ts": reactRouterConfig({
-          ssr: false,
-          prerender: true,
+          ssr: false, // turn off fog of war since we're serving with a static server
+          prerender: ["/", "/slug"],
         }),
+        "app/root.tsx": files["app/root.tsx"],
         "app/routes/$slug.tsx": js`
           import * as React  from "react";
           import { useLoaderData } from "react-router";
@@ -818,5 +807,62 @@ test.describe("Prerendering", () => {
     await app.clickLink("/not-found");
     await page.waitForSelector("[data-error]:has-text('404 Not Found')");
     expect(requests).toEqual(["/not-found.data"]);
+  });
+
+  test.describe("ssr: false", () => {
+    test("Errors on headers/action functions in any route", async () => {
+      let cwd = await createProject({
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: ["/", "/a"],
+        }),
+        "app/routes/a.tsx": String.raw`
+          // Invalid exports
+          export function headers() {}
+          export function action() {}
+
+          // Valid exports
+          export function loader() {}
+          export function clientLoader() {}
+          export function clientAction() {}
+          export default function Component() {}
+        `,
+      });
+      let result = build({ cwd });
+      let stderr = result.stderr.toString("utf8");
+      expect(stderr).toMatch(
+        "Prerender: 2 invalid route export(s) in `routes/a` when prerendering " +
+          "with `ssr:false`: headers, action.  See https://reactrouter.com/how-to/spa for more information."
+      );
+    });
+
+    test("Errors on loader functions in non-prerendered routes", async () => {
+      let cwd = await createProject({
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: ["/", "/a"],
+        }),
+        "app/routes/a.tsx": String.raw`
+          export function loader() {}
+          export function clientLoader() {}
+          export function clientAction() {}
+          export default function Component() {}
+        `,
+        "app/routes/b.tsx": String.raw`
+          export function loader() {}
+          export function clientLoader() {}
+          export function clientAction() {}
+          export default function Component() {}
+        `,
+      });
+      let result = build({ cwd });
+      let stderr = result.stderr.toString("utf8");
+      expect(stderr).toMatch(
+        "Prerender: 1 invalid route export in `routes/b` when using `ssr:false` " +
+          "with `prerender` because the route is never prerendered so the loader " +
+          "will never be called.  See https://reactrouter.com/how-to/spa for more " +
+          "information."
+      );
+    });
   });
 });

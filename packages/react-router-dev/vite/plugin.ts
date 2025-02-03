@@ -1673,14 +1673,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (!options?.ssr && isSpaModeEnabled(ctx.reactRouterConfig)) {
           let exportNames = getExportNames(code);
-          let serverOnlyExports = exportNames.filter((exp) =>
-            SERVER_ONLY_ROUTE_EXPORTS.includes(exp)
-          );
+          let serverOnlyExports = exportNames.filter((exp) => {
+            // Root route can have a loader in SPA mode
+            if (route.id === "root" && exp === "loader") {
+              return false;
+            }
+            return SERVER_ONLY_ROUTE_EXPORTS.includes(exp);
+          });
+
           if (serverOnlyExports.length > 0) {
             let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
             let message =
               `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
-              `\`${route.file}\`: ${str}. See https://remix.run/guides/spa-mode ` +
+              `\`${route.file}\`: ${str}. See https://reactrouter.com/how-to/spa ` +
               `for more information.`;
             throw Error(message);
           }
@@ -1693,7 +1698,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               let message =
                 `SPA Mode: Invalid \`HydrateFallback\` export found in ` +
                 `\`${route.file}\`. \`HydrateFallback\` is only permitted on ` +
-                `the root route in SPA Mode. See https://remix.run/guides/spa-mode ` +
+                `the root route in SPA Mode. See https://reactrouter.com/how-to/spa ` +
                 `for more information.`;
               throw Error(message);
             }
@@ -2081,14 +2086,22 @@ async function getRouteMetadata(
 function isSpaModeEnabled(
   reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"]
 ) {
-  return (
-    reactRouterConfig.ssr === false &&
-    (reactRouterConfig.prerender == null ||
-      reactRouterConfig.prerender === false ||
-      (Array.isArray(reactRouterConfig.prerender) &&
-        reactRouterConfig.prerender.length === 1 &&
-        reactRouterConfig.prerender[0] === "/"))
-  );
+  // "SPA Mode" is possible in 2 ways:
+  //  - `ssr:false` and no `prerender` config (undefined or null)
+  //  - `ssr:false` and `prerender: false`
+  //    - not an expected config but since we support `prerender:true` we allow it
+  //
+  // "SPA Mode" means we will only prerender a *single* `index.html` file which
+  // prerenders only to the root route and thus can hydrate for _any_ path and
+  // the proper routes below the root will be loaded via `route.lazy` during
+  // hydration.
+  //
+  // If `ssr:false` is specified and the user provided a `prerender` config -
+  // then it's no longer a "SPA" because we are generating multiple HTML pages.
+  // It's now a MPA and we can prerender down past the root, which unlocks the
+  // ability to use loaders on any routes and prerender the UI with build-time
+  // loaderData
+  return reactRouterConfig.ssr === false && !reactRouterConfig.prerender;
 }
 
 async function getPrerenderBuildAndHandler(
@@ -2164,6 +2177,8 @@ async function handlePrerender(
   } else {
     routesToPrerender = reactRouterConfig.prerender || ["/"];
   }
+
+  let prerenderedRoutes = new Set<string>();
   let headers = {
     // Header that can be used in the loader to know if you're running at
     // build time or runtime
@@ -2172,7 +2187,12 @@ async function handlePrerender(
   for (let path of routesToPrerender) {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
-    let hasLoaders = matches?.some((m) => m.route.loader);
+    invariant(
+      matches,
+      `Unable to prerender path because it does not match any routes: ${path}`
+    );
+    matches.forEach((m) => prerenderedRoutes.add(m.route.id));
+    let hasLoaders = matches.some((m) => m.route.loader);
     let data: string | undefined;
     if (hasLoaders) {
       data = await prerenderData(
@@ -2222,6 +2242,43 @@ async function handlePrerender(
               },
             }
           : { headers }
+      );
+    }
+  }
+
+  // When `ssr:false` is set, we want to error if users are using invalid APIs
+  if (reactRouterConfig.ssr === false) {
+    let errors: string[] = [];
+    for (let [routeId, route] of Object.entries(build.routes)) {
+      let invalidApis: string[] = [];
+      if (route) {
+        // `headers`/`action` are never valid without SSR
+        if (route.module.headers) invalidApis.push("headers");
+        if (route.module.action) invalidApis.push("action");
+        if (invalidApis.length > 0) {
+          errors.push(
+            `Prerender: ${invalidApis.length} invalid route export(s) in ` +
+              `\`${route.id}\` when prerendering with \`ssr:false\`: ` +
+              `${invalidApis.join(", ")}.  ` +
+              "See https://reactrouter.com/how-to/spa for more information."
+          );
+        }
+
+        // `loader` is only valid if the route is matched by a `prerender` path
+        if (route.module.loader && !prerenderedRoutes.has(routeId)) {
+          errors.push(
+            `Prerender: 1 invalid route export in \`${route.id}\` when ` +
+              "using `ssr:false` with `prerender` because the route is never " +
+              "prerendered so the loader will never be called.  " +
+              "See https://reactrouter.com/how-to/spa for more information."
+          );
+        }
+      }
+    }
+    if (errors.length > 0) {
+      viteConfig.logger.error(errors.join("\n"));
+      throw new Error(
+        "Invalid route exports found when prerendering with `ssr:false`"
       );
     }
   }
