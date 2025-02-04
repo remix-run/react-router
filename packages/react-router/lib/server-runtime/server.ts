@@ -197,6 +197,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequest(
         serverMode,
+        _build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -308,7 +309,9 @@ async function handleDocumentRequest(
   try {
     let response = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_respond: renderHtml,
+      unstable_respond: build.future.unstable_middleware
+        ? renderHtml
+        : undefined,
     });
     // while middleware is still unstable, we don't run the middleware pipeline
     // if no routes have middleware, so we still might need to convert context
@@ -461,6 +464,7 @@ async function handleDocumentRequest(
 
 async function handleResourceRequest(
   serverMode: ServerMode,
+  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
@@ -474,7 +478,9 @@ async function handleResourceRequest(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_respond: (ctx) => ctx,
+      unstable_respond: build.future.unstable_middleware
+        ? (ctx) => ctx
+        : undefined,
     });
 
     if (isResponse(response)) {

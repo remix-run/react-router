@@ -41,7 +41,9 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_middleware: boolean;
+}
 
 export interface AssetsManifest {
   entry: {

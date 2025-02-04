@@ -363,7 +363,9 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_middleware: boolean;
+}
 
 /**
  * Initialization options for createRouter
@@ -833,6 +835,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
+    unstable_middleware: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -2786,7 +2789,8 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         manifest,
         mapRouteProperties,
-        scopedContext
+        scopedContext,
+        future.unstable_middleware
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -4126,7 +4130,8 @@ export function createStaticHandler(
       null,
       manifest,
       mapRouteProperties,
-      requestContext
+      requestContext,
+      false // middleware not done via dataStrategy in the static handler
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -5068,7 +5073,8 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  scopedContext: unknown
+  scopedContext: unknown,
+  enableMiddleware: boolean
 ): Promise<Record<string, DataStrategyResult>> {
   let loadRouteDefinitionsPromises = matches.map((m) =>
     m.route.lazy
@@ -5076,20 +5082,14 @@ async function callDataStrategyImpl(
       : undefined
   );
 
-  // If any routes have a `lazy` implementation and no statically defined `middleware`,
-  // then we have to resolve those `lazy` implementations before we can call
-  // `dataStrategy` so the middlewares will be available
-  let lazyMiddlewarePromises = matches
-    .map((m, i) =>
-      m.route.lazy && !("middleware" in m.route)
-        ? // Swallow the error here, let it bubble up from resolve()
-          loadRouteDefinitionsPromises[i]!.catch((e) => e)
-        : null
-    )
-    .filter((p) => p != null);
+  if (enableMiddleware) {
+    // TODO: For the initial implementation, we await route.lazy here to ensure
+    // client side middleware implementations have been loaded prior to running
+    // dataStrategy which will then run them.  This is a de-optimization and
+    // will be fixed before stable release by adding a new async middleware API
+    // allowing us to load middleware sin a split route module.
+    await Promise.all(loadRouteDefinitionsPromises);
 
-  if (lazyMiddlewarePromises.length > 0) {
-    await Promise.all(lazyMiddlewarePromises);
   }
 
   let dsMatches = matches.map((match, i) => {

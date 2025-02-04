@@ -174,6 +174,9 @@ function createHydratedRouter({
     unstable_context,
     hydrationData,
     mapRouteProperties,
+    future: {
+      unstable_middleware: ssrInfo.context.future.unstable_middleware,
+    },
     dataStrategy: ssrInfo.context.isSpaMode
       ? undefined
       : getSingleFetchDataStrategy(

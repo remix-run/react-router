@@ -40,7 +40,7 @@ describe("context/middleware", () => {
       let globalContext = { count: { value: 0 } };
       router = createRouter({
         history: createMemoryHistory(),
-        context: globalContext,
+        unstable_context: globalContext,
         routes: [
           {
             path: "/",
@@ -49,9 +49,7 @@ describe("context/middleware", () => {
             id: "a",
             path: "/a",
             loader({ context }) {
-              if (context.count) {
-                //context
-              }
+              if (context.count) context.count.value++;
               return context.count?.value;
             },
           },
@@ -86,7 +84,6 @@ describe("context/middleware", () => {
     it("works with dataStrategy for a sequential implementation", async () => {
       router = createRouter({
         history: createMemoryHistory(),
-        context: {},
         routes: [
           {
             path: "/",
@@ -139,7 +136,6 @@ describe("context/middleware", () => {
     it("works with dataStrategy for an easy middleware implementation", async () => {
       router = createRouter({
         history: createMemoryHistory(),
-        context: {},
         routes: [
           {
             path: "/",
@@ -216,7 +212,7 @@ describe("context/middleware", () => {
         let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               path: "/",
@@ -270,7 +266,7 @@ describe("context/middleware", () => {
         let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               path: "/",
@@ -340,7 +336,6 @@ describe("context/middleware", () => {
       it("does not return result of middleware in client side routers", async () => {
         router = createRouter({
           history: createMemoryHistory(),
-          context: {},
           routes: [
             {
               path: "/",
@@ -400,7 +395,6 @@ describe("context/middleware", () => {
       it("does not require that you call next()", async () => {
         router = createRouter({
           history: createMemoryHistory(),
-          context: {},
           routes: [
             {
               path: "/",
@@ -484,7 +478,7 @@ describe("context/middleware", () => {
         let globalContext = { count: { value: 0 } };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               id: "index",
@@ -571,7 +565,6 @@ describe("context/middleware", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
         router = createRouter({
           history: createMemoryHistory(),
-          context: {},
           routes: [
             {
               path: "/",
@@ -620,7 +613,6 @@ describe("context/middleware", () => {
       it("throwing from a middleware short circuits immediately (going up - loader)", async () => {
         router = createRouter({
           history: createMemoryHistory(),
-          context: {},
           routes: [
             {
               path: "/",
@@ -675,7 +667,7 @@ describe("context/middleware", () => {
         let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               path: "/",
@@ -771,7 +763,7 @@ describe("context/middleware", () => {
         let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               path: "/",
@@ -865,7 +857,7 @@ describe("context/middleware", () => {
         let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               path: "/",
@@ -947,7 +939,7 @@ describe("context/middleware", () => {
         let globalContext = { order: [] };
         router = createRouter({
           history: createMemoryHistory(),
-          context: globalContext,
+          unstable_context: globalContext,
           routes: [
             {
               path: "/",
