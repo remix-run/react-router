@@ -41,6 +41,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
   } & GetPlatformProxyOptions = {}
 ): Plugin => {
   let { getLoadContext, ...restOptions } = options;
+  const workerdConditions = ["workerd", "worker"];
 
   return {
     name: PLUGIN_NAME,
@@ -62,10 +63,19 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       return {
         ssr: {
           resolve: {
-            externalConditions: ["workerd", "worker", ...serverConditions],
+            externalConditions: [...workerdConditions, ...serverConditions],
           },
         },
       };
+    },
+    configEnvironment: async (name, options) => {
+      if (name !== "client") {
+        options.resolve = options.resolve ?? {};
+        options.resolve.externalConditions = [
+          ...workerdConditions,
+          ...(options.resolve?.externalConditions ?? []),
+        ];
+      }
     },
     configResolved: (viteConfig) => {
       let pluginIndex = (name: string) =>
