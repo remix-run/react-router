@@ -68,15 +68,17 @@ export async function resolveViteConfig({
   configFile,
   mode,
   root,
+  plugins,
 }: {
   configFile?: string;
   mode?: string;
+  plugins?: Vite.Plugin[];
   root: string;
 }) {
   let vite = getVite();
 
   let viteConfig = await vite.resolveConfig(
-    { mode, configFile, root },
+    { mode, configFile, root, plugins },
     "build", // command
     "production", // default mode
     "production" // default NODE_ENV
@@ -920,17 +922,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ...(vite.defaultClientConditions ?? []),
         ];
 
-        let packageRoot = path.dirname(
-          require.resolve("@react-router/dev/package.json")
-        );
-        let { moduleSyncEnabled } = await import(
-          `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
-        );
-        let viteServerConditions: string[] = [
-          ...(vite.defaultServerConditions ?? []),
-          ...(moduleSyncEnabled ? ["module-sync"] : []),
-        ];
-
         logger = vite.createLogger(viteUserConfig.logLevel, {
           prefix: "[react-router]",
         });
@@ -965,16 +956,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           )
         );
 
-        let environments = await getEnvironments(
+        let environments = await getEnvironmentsOptions(
           ctx,
           buildManifest,
           viteCommand,
           { viteUserConfig }
         );
 
-        let serverEnvironmentOptions =
+        let serverEnvironment =
           getServerBundleEnvironmentValues(environments)[0] ?? environments.ssr;
-        invariant(serverEnvironmentOptions);
+        invariant(serverEnvironment);
+
+        let clientEnvironment = environments.client;
+        invariant(clientEnvironment);
 
         return {
           __reactRouterPluginContext: ctx,
@@ -985,11 +979,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               ? "spa"
               : "custom",
 
-          environments,
-
           ssr: {
-            external: serverEnvironmentOptions.resolve?.external,
-            resolve: serverEnvironmentOptions.resolve,
+            external: serverEnvironment.resolve?.external,
+            resolve: serverEnvironment.resolve,
           },
           optimizeDeps: {
             entries: ctx.reactRouterConfig.future.unstable_optimizeDeps
@@ -1051,8 +1043,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ? { fs: { allow: defaultEntries } }
             : undefined,
 
-          ...(ctx.reactRouterConfig.future.unstable_viteBuilder
+          ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
+                environments,
                 builder: {
                   sharedConfigBuild: true,
                   sharedPlugins: true,
@@ -1060,23 +1053,24 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     invariant(viteConfig);
                     invariant(buildManifest);
 
-                    viteConfig.logger.info("Using Vite builder (experimental)");
+                    viteConfig.logger.info(
+                      "Using Vite Environment API (experimental)"
+                    );
 
                     let { reactRouterConfig } = ctx;
-                    let { environments, build } = builder;
                     let { serverBundles } = buildManifest;
 
                     await cleanBuildDirectory(viteConfig, ctx);
 
-                    await build(environments.client);
+                    await builder.build(builder.environments.client);
 
                     let serverEnvironments = serverBundles
-                      ? getServerBundleEnvironmentValues(environments)
-                      : [environments.ssr];
+                      ? getServerBundleEnvironmentValues(builder.environments)
+                      : [builder.environments.ssr];
 
-                    await Promise.all(serverEnvironments.map(build));
+                    await Promise.all(serverEnvironments.map(builder.build));
 
-                    await cleanViteManifests(viteConfig, ctx);
+                    await cleanViteManifests(environments, ctx);
 
                     await reactRouterConfig.buildEnd?.({
                       buildManifest,
@@ -1089,14 +1083,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             : {
                 build:
                   ctx.environmentBuildContext?.options.build ??
-                  (
-                    await getEnvironmentOptions(
-                      ctx,
-                      viteConfigEnv.isSsrBuild ? "ssr" : "client",
-                      viteCommand,
-                      { viteUserConfig }
-                    )
-                  ).build,
+                  (viteConfigEnv.isSsrBuild
+                    ? serverEnvironment.build
+                    : clientEnvironment.build),
               }),
         };
       },
@@ -1317,7 +1306,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let { future } = ctx.reactRouterConfig;
 
           if (
-            future.unstable_viteBuilder
+            future.unstable_viteEnvironmentApi
               ? this.environment.name === "client"
               : !viteConfigEnv.isSsrBuild
           ) {
@@ -1329,7 +1318,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             ctx.reactRouterConfig
           );
 
-          let serverBuildDirectory = future.unstable_viteBuilder
+          let serverBuildDirectory = future.unstable_viteEnvironmentApi
             ? this.environment.config?.build?.outDir
             : ctx.environmentBuildContext?.options.build?.outDir ??
               getServerBuildDirectory(ctx);
@@ -2718,12 +2707,12 @@ export async function cleanBuildDirectory(
 }
 
 export async function cleanViteManifests(
-  viteConfig: Vite.ResolvedConfig,
+  environmentsOptions: Record<string, EnvironmentOptions>,
   ctx: ReactRouterPluginContext
 ) {
-  let viteManifestPaths = Object.entries(viteConfig.environments).map(
+  let viteManifestPaths = Object.entries(environmentsOptions).map(
     ([environmentName, options]) => {
-      let outDir = options.build.outDir;
+      let outDir = options.build?.outDir;
       invariant(outDir, `Expected build.outDir for ${environmentName}`);
       return path.join(outDir, ".vite/manifest.json");
     }
@@ -2996,17 +2985,10 @@ export async function getEnvironmentOptionsResolvers(
   return environmentOptionsResolvers;
 }
 
-async function getEnvironments(
-  ctx: ReactRouterPluginContext,
-  buildManifest: BuildManifest,
-  viteCommand: Vite.ResolvedConfig["command"],
+export function resolveEnvironmentsOptions(
+  environmentResolvers: EnvironmentOptionsResolvers,
   resolverOptions: Parameters<EnvironmentOptionsResolver>[0]
-): Promise<Record<string, EnvironmentOptions>> {
-  let environmentResolvers = await getEnvironmentOptionsResolvers(
-    ctx,
-    buildManifest,
-    viteCommand
-  );
+): Record<string, EnvironmentOptions> {
   let environmentOptions: Record<string, EnvironmentOptions> = {};
   for (let [environmentName, resolver] of Object.entries(
     environmentResolvers
@@ -3016,23 +2998,21 @@ async function getEnvironments(
   return environmentOptions;
 }
 
-async function getEnvironmentOptions(
+async function getEnvironmentsOptions(
   ctx: ReactRouterPluginContext,
-  environmentName: EnvironmentName,
+  buildManifest: BuildManifest,
   viteCommand: Vite.ResolvedConfig["command"],
   resolverOptions: Parameters<EnvironmentOptionsResolver>[0]
-): Promise<EnvironmentOptions> {
-  let buildManifest = await getBuildManifest(ctx);
-  let environmentResolvers = await getEnvironmentOptionsResolvers(
+): Promise<Record<string, EnvironmentOptions>> {
+  let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
     buildManifest,
     viteCommand
   );
-
-  let resolver = environmentResolvers[environmentName];
-  invariant(resolver, `Missing environment resolver for ${environmentName}`);
-
-  return resolver(resolverOptions);
+  return resolveEnvironmentsOptions(
+    environmentOptionsResolvers,
+    resolverOptions
+  );
 }
 
 function isNonNullable<T>(x: T): x is NonNullable<T> {

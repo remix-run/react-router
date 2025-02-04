@@ -11,6 +11,7 @@ import {
   cleanViteManifests,
   getBuildManifest,
   getEnvironmentOptionsResolvers,
+  resolveEnvironmentsOptions,
   getServerBundleEnvironmentKeys,
 } from "./plugin";
 import invariant from "../invariant";
@@ -42,16 +43,16 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   }
 
   let config = configResult.value;
-  let viteBuilder = config.future.unstable_viteBuilder;
+  let unstable_viteEnvironmentApi = config.future.unstable_viteEnvironmentApi;
   let viteMajor = parseInt(vite.version.split(".")[0], 10);
 
-  if (viteBuilder && viteMajor === 5) {
+  if (unstable_viteEnvironmentApi && viteMajor === 5) {
     throw new Error(
-      "The future.unstable_viteBuilder option is not supported in Vite 5"
+      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5"
     );
   }
 
-  return await (viteBuilder
+  return await (unstable_viteEnvironmentApi
     ? viteAppBuild(root, viteBuildOptions)
     : viteBuild(root, viteBuildOptions));
 }
@@ -134,7 +135,20 @@ async function viteBuild(
     sourcemapServer,
   }: ViteBuildOptions
 ) {
-  let viteConfig = await resolveViteConfig({ configFile, mode, root });
+  let viteUserConfig: Vite.UserConfig = {};
+  let viteConfig = await resolveViteConfig({
+    configFile,
+    mode,
+    root,
+    plugins: [
+      {
+        name: "react-router:extract-vite-user-config",
+        config(config) {
+          viteUserConfig = config;
+        },
+      },
+    ],
+  });
   let ctx = await extractPluginContext(viteConfig);
 
   if (!ctx) {
@@ -182,6 +196,10 @@ async function viteBuild(
     buildManifest,
     "build"
   );
+  let environmentsOptions = resolveEnvironmentsOptions(
+    environmentOptionsResolvers,
+    { viteUserConfig }
+  );
 
   await cleanBuildDirectory(viteConfig, ctx);
 
@@ -189,13 +207,13 @@ async function viteBuild(
   await buildEnvironment("client");
 
   // Then run Vite SSR builds in parallel
-  let serverEnvironments = serverBundles
+  let serverEnvironmentNames = serverBundles
     ? getServerBundleEnvironmentKeys(environmentOptionsResolvers)
     : (["ssr"] as const);
 
-  await Promise.all(serverEnvironments.map(buildEnvironment));
+  await Promise.all(serverEnvironmentNames.map(buildEnvironment));
 
-  await cleanViteManifests(viteConfig, ctx);
+  await cleanViteManifests(environmentsOptions, ctx);
 
   await reactRouterConfig.buildEnd?.({
     buildManifest,

@@ -90,9 +90,9 @@ interface FutureConfig {
    */
   unstable_splitRouteModules?: boolean | "enforce";
   /**
-   * Use Vite's builder (experimental) to orchestrate the build process
+   * Use Vite Environment API (experimental)
    */
-  unstable_viteBuilder?: boolean;
+  unstable_viteEnvironmentApi?: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -492,8 +492,8 @@ async function resolveConfig({
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:
       reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
-    unstable_viteBuilder:
-      reactRouterUserConfig.future?.unstable_viteBuilder ?? false,
+    unstable_viteEnvironmentApi:
+      reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({

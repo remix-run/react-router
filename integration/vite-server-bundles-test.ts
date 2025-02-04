@@ -117,8 +117,8 @@ test.describe("Server bundles", () => {
   let cwd: string;
   let port: number;
 
-  [false, true].forEach((viteBuilder) => {
-    test.describe(`viteBuilder enabled: ${viteBuilder}`, () => {
+  [false, true].forEach((viteEnvironmentApi) => {
+    test.describe(`viteEnvironmentApi enabled: ${viteEnvironmentApi}`, () => {
       test.beforeAll(async () => {
         port = await getPort();
         cwd = await createProject(
@@ -126,7 +126,7 @@ test.describe("Server bundles", () => {
             "react-router.config.ts": dedent(js`
               export default {
                 future: {
-                  unstable_viteBuilder: ${viteBuilder},
+                  unstable_viteEnvironmentApi: ${viteEnvironmentApi},
                 },
                 buildEnd: async ({ buildManifest }) => {
                   let fs = await import("node:fs");
@@ -225,12 +225,13 @@ test.describe("Server bundles", () => {
           stdout = buildResult.stdout.toString();
         });
 
-        test("Vite builder message", () => {
-          let viteBuilderMessage = "Using Vite builder (experimental)";
-          if (viteBuilder) {
-            expect(stdout).toContain(viteBuilderMessage);
+        test("Vite Environment API message", () => {
+          let viteEnvironmentApiMessage =
+            "Using Vite Environment API (experimental)";
+          if (viteEnvironmentApi) {
+            expect(stdout).toContain(viteEnvironmentApiMessage);
           } else {
-            expect(stdout).not.toContain(viteBuilderMessage);
+            expect(stdout).not.toContain(viteEnvironmentApiMessage);
           }
         });
 
