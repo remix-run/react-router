@@ -5,13 +5,16 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
   Params,
+  unstable_RouterContext,
   ShouldRevalidateFunction,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
+import type { AppLoadContext } from "../../server-runtime/data";
 import type { SerializeFrom } from "../../types/route-data";
 
 export interface RouteModules {
@@ -24,6 +27,10 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  unstable_clientMiddleware?: unstable_MiddlewareFunction<
+    unstable_RouterContext,
+    undefined
+  >[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -41,6 +48,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
+  unstable_middleware?: unstable_MiddlewareFunction<AppLoadContext, Response>[];
 }
 
 /**
@@ -53,7 +61,7 @@ export type ClientActionFunction = (
 /**
  * Arguments passed to a route `clientAction` function
  */
-export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
+export type ClientActionFunctionArgs = ActionFunctionArgs & {
   serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
@@ -69,7 +77,7 @@ export type ClientLoaderFunction = ((
 /**
  * Arguments passed to a route `clientLoader` function
  */
-export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
+export type ClientLoaderFunctionArgs = LoaderFunctionArgs & {
   serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 

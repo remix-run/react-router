@@ -1,7 +1,10 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
-import type { Router as DataRouter } from "../../router/router";
-import { isResponse } from "../../router/router";
+import type {
+  Router as DataRouter,
+  MiddlewareError,
+} from "../../router/router";
+import { isResponse, runMiddlewarePipeline } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -17,8 +20,9 @@ import {
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
-import type { RouteModules } from "./routeModules";
+import type { RouteModule, RouteModules } from "./routeModules";
 import invariant from "./invariant";
+import type { EntryRoute } from "./routes";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -131,30 +135,82 @@ export function StreamTransfer({
   }
 }
 
+function middlewareErrorHandler(
+  e: MiddlewareError,
+  keyedResults: Record<string, DataStrategyResult>
+) {
+  // we caught an error running the middleware, copy that overtop any
+  // non-error result for the route
+  Object.assign(keyedResults, {
+    [e.routeId]: { type: "error", result: e.error },
+  });
+}
+
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   getRouter: () => DataRouter
 ): DataStrategyFunction {
-  return async ({ request, matches, fetcherKey }) => {
+  return async (args) => {
+    let { request, matches, fetcherKey } = args;
+
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
-      return singleFetchActionStrategy(request, matches);
+      return runMiddlewarePipeline(
+        args,
+        matches.findIndex((m) => m.shouldLoad),
+        false,
+        async (keyedResults) => {
+          let results = await singleFetchActionStrategy(request, matches);
+          Object.assign(keyedResults, results);
+        },
+        middlewareErrorHandler
+      ) as Promise<Record<string, DataStrategyResult>>;
     }
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return singleFetchLoaderFetcherStrategy(request, matches);
+      return runMiddlewarePipeline(
+        args,
+        matches.findIndex((m) => m.shouldLoad),
+        false,
+        async (keyedResults) => {
+          let results = await singleFetchLoaderFetcherStrategy(
+            request,
+            matches
+          );
+          Object.assign(keyedResults, results);
+        },
+        middlewareErrorHandler
+      ) as Promise<Record<string, DataStrategyResult>>;
     }
 
     // Navigational loads are more complex...
-    return singleFetchLoaderNavigationStrategy(
+
+    // Determine how deep to run middleware
+    let lowestLoadingIndex = getLowestLoadingIndex(
       manifest,
       routeModules,
       getRouter(),
-      request,
       matches
     );
+
+    return runMiddlewarePipeline(
+      args,
+      lowestLoadingIndex,
+      false,
+      async (keyedResults) => {
+        let results = await singleFetchLoaderNavigationStrategy(
+          manifest,
+          routeModules,
+          getRouter(),
+          request,
+          matches
+        );
+        Object.assign(keyedResults, results);
+      },
+      middlewareErrorHandler
+    ) as Promise<Record<string, DataStrategyResult>>;
   };
 }
 
@@ -193,6 +249,42 @@ async function singleFetchActionStrategy(
       result: data(result.result, actionStatus),
     },
   };
+}
+
+function isOptedOut(
+  manifestRoute: EntryRoute | undefined,
+  routeModule: RouteModule | undefined,
+  match: DataStrategyMatch,
+  router: DataRouter
+) {
+  return (
+    match.route.id in router.state.loaderData &&
+    manifestRoute &&
+    manifestRoute.hasLoader &&
+    routeModule &&
+    routeModule.shouldRevalidate
+  );
+}
+
+function getLowestLoadingIndex(
+  manifest: AssetsManifest,
+  routeModules: RouteModules,
+  router: DataRouter,
+  matches: DataStrategyFunctionArgs["matches"]
+) {
+  let tailIdx = [...matches]
+    .reverse()
+    .findIndex(
+      (m) =>
+        m.shouldLoad ||
+        !isOptedOut(
+          manifest.routes[m.route.id],
+          routeModules[m.route.id],
+          m,
+          router
+        )
+    );
+  return tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
 }
 
 // Loaders are trickier since we only want to hit the server once, so we
@@ -236,6 +328,9 @@ async function singleFetchLoaderNavigationStrategy(
 
         let manifestRoute = manifest.routes[m.route.id];
 
+        // Note: If this logic changes for routes that should not participate
+        // in Single Fetch, make sure you update getLowestLoadingIndex above
+        // as well
         if (!m.shouldLoad) {
           // If we're not yet initialized and this is the initial load, respect
           // `shouldLoad` because we're only dealing with `clientLoader.hydrate`
@@ -247,12 +342,7 @@ async function singleFetchLoaderNavigationStrategy(
           // Otherwise, we opt out if we currently have data, a `loader`, and a
           // `shouldRevalidate` function.  This implies that the user opted out
           // via `shouldRevalidate`
-          if (
-            m.route.id in router.state.loaderData &&
-            manifestRoute &&
-            manifestRoute.hasLoader &&
-            routeModules[m.route.id]?.shouldRevalidate
-          ) {
+          if (isOptedOut(manifestRoute, routeModules[m.route.id], m, router)) {
             foundOptOutRoute = true;
             return;
           }

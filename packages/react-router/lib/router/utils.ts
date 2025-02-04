@@ -111,6 +111,16 @@ export type Submission =
     };
 
 /**
+ * An object of unknown type for client-side loaders and actions provided by the
+ * `createBrowserRouter` `context` option.  This is defined as an empty interface
+ * specifically so apps can leverage declaration merging to augment this type
+ * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+ */
+export interface unstable_RouterContext {
+  [key: string]: unknown;
+}
+
+/**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
@@ -118,34 +128,50 @@ export type Submission =
 interface DataFunctionArgs<Context> {
   request: Request;
   params: Params;
-  context?: Context;
+  context: Context;
 }
+
+/**
+ * Route middleware function arguments
+ */
+export type unstable_MiddlewareFunctionArgs<
+  Context = unstable_RouterContext,
+  Result = unknown
+> = DataFunctionArgs<Context> & { next: () => Promise<Result> };
+
+/**
+ * Route middleware function signature
+ */
+export type unstable_MiddlewareFunction<
+  Context = unstable_RouterContext,
+  Result = unknown
+> = (
+  args: unstable_MiddlewareFunctionArgs<Context, Result>
+) => Result | Promise<Result>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
+export interface LoaderFunctionArgs<Context = unstable_RouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
+export interface ActionFunctionArgs<Context = unstable_RouterContext>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
 type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = any> = {
+export type LoaderFunction<Context = unstable_RouterContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -155,7 +181,7 @@ export type LoaderFunction<Context = any> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = any> {
+export interface ActionFunction<Context = unstable_RouterContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -202,7 +228,7 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = any>
+export interface DataStrategyFunctionArgs<Context = unstable_RouterContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   fetcherKey: string | null;
@@ -216,8 +242,10 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = unstable_RouterContext> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
@@ -291,6 +319,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  unstable_middleware?: unstable_MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
