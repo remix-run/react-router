@@ -2101,7 +2101,11 @@ function isSpaModeEnabled(
   // It's now a MPA and we can prerender down past the root, which unlocks the
   // ability to use loaders on any routes and prerender the UI with build-time
   // loaderData
-  return reactRouterConfig.ssr === false && !reactRouterConfig.prerender;
+  return (
+    reactRouterConfig.ssr === false &&
+    (reactRouterConfig.prerender == null ||
+      reactRouterConfig.prerender === false)
+  );
 }
 
 async function getPrerenderBuildAndHandler(

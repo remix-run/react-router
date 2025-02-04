@@ -911,13 +911,14 @@ test.describe("SPA Mode", () => {
             html
           );
           expect(matches?.length).toBe(2);
+          let useIdValue = matches?.[1];
 
           // We should hydrate the same useId value in HydrateFallback
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/?slow");
           await page.waitForSelector("[data-hydrated]");
           expect(await page.locator("[data-use-id]").textContent()).toBe(
-            matches?.[1]
+            useIdValue
           );
 
           // Once hydrated, we should get a different useId value from the root Component
@@ -926,7 +927,7 @@ test.describe("SPA Mode", () => {
             "Index"
           );
           expect(await page.locator("[data-use-id]").textContent()).not.toBe(
-            matches?.[1]
+            useIdValue
           );
         });
 
