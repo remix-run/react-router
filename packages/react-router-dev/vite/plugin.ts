@@ -143,24 +143,31 @@ function isSeverBundleEnvironmentName(
   return name.startsWith(SSR_BUNDLE_PREFIX);
 }
 
-function getServerBundleEnvironmentEntries<T>(
-  record: Record<string, T>
+function getServerEnvironmentEntries<T>(
+  record: Record<string, T>,
+  buildManifest: BuildManifest
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
-    isSeverBundleEnvironmentName(name)
+    buildManifest.serverBundles
+      ? isSeverBundleEnvironmentName(name)
+      : name === "ssr"
   ) as [SsrEnvironmentName, T][];
 }
 
-export function getServerBundleEnvironmentKeys(
-  record: Record<string, unknown>
+export function getServerEnvironmentKeys(
+  record: Record<string, unknown>,
+  buildManifest: BuildManifest
 ): SsrEnvironmentName[] {
-  return getServerBundleEnvironmentEntries(record).map(([key]) => key);
+  return getServerEnvironmentEntries(record, buildManifest).map(([key]) => key);
 }
 
-export function getServerBundleEnvironmentValues<T>(
-  record: Record<string, T>
+export function getServerEnvironmentValues<T>(
+  record: Record<string, T>,
+  buildManifest: BuildManifest
 ): T[] {
-  return getServerBundleEnvironmentEntries(record).map(([, value]) => value);
+  return getServerEnvironmentEntries(record, buildManifest).map(
+    ([, value]) => value
+  );
 }
 
 const isRouteEntryModuleId = (id: string): boolean => {
@@ -963,8 +970,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           { viteUserConfig }
         );
 
-        let serverEnvironment =
-          getServerBundleEnvironmentValues(environments)[0] ?? environments.ssr;
+        let serverEnvironment = getServerEnvironmentValues(
+          environments,
+          buildManifest
+        )[0];
         invariant(serverEnvironment);
 
         let clientEnvironment = environments.client;
@@ -1063,15 +1072,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     );
 
                     let { reactRouterConfig } = ctx;
-                    let { serverBundles } = buildManifest;
 
                     await cleanBuildDirectory(viteConfig, ctx);
 
                     await builder.build(builder.environments.client);
 
-                    let serverEnvironments = serverBundles
-                      ? getServerBundleEnvironmentValues(builder.environments)
-                      : [builder.environments.ssr];
+                    let serverEnvironments = getServerEnvironmentValues(
+                      builder.environments,
+                      buildManifest
+                    );
 
                     await Promise.all(serverEnvironments.map(builder.build));
 

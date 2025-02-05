@@ -12,7 +12,7 @@ import {
   getBuildManifest,
   getEnvironmentOptionsResolvers,
   resolveEnvironmentsOptions,
-  getServerBundleEnvironmentKeys,
+  getServerEnvironmentKeys,
 } from "./plugin";
 import invariant from "../invariant";
 import { preloadVite, getVite } from "./vite";
@@ -190,7 +190,6 @@ async function viteBuild(
 
   let { reactRouterConfig } = ctx;
   let buildManifest = await getBuildManifest(ctx);
-  let { serverBundles } = buildManifest;
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
     buildManifest,
@@ -207,9 +206,10 @@ async function viteBuild(
   await buildEnvironment("client");
 
   // Then run Vite SSR builds in parallel
-  let serverEnvironmentNames = serverBundles
-    ? getServerBundleEnvironmentKeys(environmentOptionsResolvers)
-    : (["ssr"] as const);
+  let serverEnvironmentNames = getServerEnvironmentKeys(
+    environmentOptionsResolvers,
+    buildManifest
+  );
 
   await Promise.all(serverEnvironmentNames.map(buildEnvironment));
 
