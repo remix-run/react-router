@@ -776,6 +776,8 @@ test.describe("Prerendering", () => {
           ssr: false, // turn off fog of war since we're serving with a static server
           prerender: ["/", "/slug"],
         }),
+        // Just bring in the root instead of all `files` since we can't have
+        // loaders in non-prerendered routes
         "app/root.tsx": files["app/root.tsx"],
         "app/routes/$slug.tsx": js`
           import * as React  from "react";
