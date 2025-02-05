@@ -5,6 +5,7 @@ import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { preloadVite, getVite } from "./vite";
+import { type ResolvedReactRouterConfig, loadConfig } from "../config/config";
 
 let serverBuildId = "virtual:react-router/server-build";
 
@@ -43,9 +44,11 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
   let { getLoadContext, ...restOptions } = options;
   const workerdConditions = ["workerd", "worker"];
 
+  let future: ResolvedReactRouterConfig["future"];
+
   return {
     name: PLUGIN_NAME,
-    config: async () => {
+    config: async (config) => {
       await preloadVite();
       const vite = getVite();
       // This is a compatibility layer for Vite 5. Default conditions were
@@ -60,6 +63,16 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
         ...(vite.defaultServerConditions ?? []),
       ];
 
+      let configResult = await loadConfig({
+        rootDirectory: config.root ?? process.cwd(),
+      });
+
+      if (!configResult.ok) {
+        throw new Error(configResult.error);
+      }
+
+      future = configResult.value.future;
+
       return {
         ssr: {
           resolve: {
@@ -69,6 +82,10 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       };
     },
     configEnvironment: async (name, options) => {
+      if (!future.unstable_viteEnvironmentApi) {
+        return;
+      }
+
       if (name !== "client") {
         options.resolve = options.resolve ?? {};
         options.resolve.externalConditions = [

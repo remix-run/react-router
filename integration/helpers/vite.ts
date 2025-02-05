@@ -133,7 +133,7 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName =
+export type TemplateName =
   | "vite-5-template"
   | "vite-6-template"
   | "vite-cloudflare-template";

@@ -1046,6 +1046,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
                 environments,
+                build: {
+                  // This isn't honored by the SSR environment config (which seems
+                  // to be a Vite bug?) so we set it here too.
+                  ssrEmitAssets: true,
+                },
                 builder: {
                   sharedConfigBuild: true,
                   sharedPlugins: true,
@@ -2954,9 +2959,10 @@ export async function getEnvironmentOptionsResolvers(
     for (let [serverBundleId, routes] of Object.entries(
       getRoutesByServerBundleId(buildManifest)
     )) {
-      environmentOptionsResolvers[`${SSR_BUNDLE_PREFIX}${serverBundleId}`] = ({
-        viteUserConfig,
-      }) =>
+      environmentOptionsResolvers[
+        // Note: Hyphens are not valid in Vite environment names
+        `${SSR_BUNDLE_PREFIX}${serverBundleId.replaceAll("-", "_")}`
+      ] = ({ viteUserConfig }) =>
         mergeEnvironmentOptions(getBaseServerOptions({ viteUserConfig }), {
           build: {
             outDir: getServerBuildDirectory(ctx, { serverBundleId }),
