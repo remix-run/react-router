@@ -60,7 +60,7 @@ function publishBuild(packageName, tag, releaseBranch) {
   console.log();
   console.log(`  pnpm publish ${buildDir} --tag ${tag} --access public`);
   console.log();
-  execSync(`pnpm publish ${buildDir} ${args.join(" ")}`, {
+  execSync(`pnpm publish  ${buildDir} ${args.join(" ")}`, {
     stdio: "inherit",
   });
 }
