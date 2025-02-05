@@ -26,226 +26,226 @@ test.describe("Build", () => {
         cwd = await createProject(
           {
             ".env": `
-            ENV_VAR_FROM_DOTENV_FILE=true
-          `,
+              ENV_VAR_FROM_DOTENV_FILE=true
+            `,
             "react-router.config.ts": reactRouterConfig({ viteEnvironmentApi }),
             "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { reactRouter } from "@react-router/dev/vite";
-            import mdx from "@mdx-js/rollup";
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+              import mdx from "@mdx-js/rollup";
 
-            export default defineConfig({
-              ${await viteConfig.server({ port })}
-              build: {
-                // force emitting asset files instead of inlined as data-url
-                assetsInlineLimit: 0,
-              },
-              plugins: [
-                mdx(),
-                reactRouter(),
-              ],
-            });
-          `,
+              export default defineConfig({
+                ${await viteConfig.server({ port })}
+                build: {
+                  // force emitting asset files instead of inlined as data-url
+                  assetsInlineLimit: 0,
+                },
+                plugins: [
+                  mdx(),
+                  reactRouter(),
+                ],
+              });
+            `,
             "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "react-router";
+              import { Links, Meta, Outlet, Scripts } from "react-router";
 
-            export default function Root() {
-              return (
-                <html lang="en">
-                  <head>
-                    <Meta />
-                    <Links />
-                  </head>
-                  <body>
-                    <div id="content">
-                      <h1>Root</h1>
-                      <Outlet />
-                    </div>
-                    <Scripts />
-                  </body>
-                </html>
-              );
-            }
-          `,
+              export default function Root() {
+                return (
+                  <html lang="en">
+                    <head>
+                      <Meta />
+                      <Links />
+                    </head>
+                    <body>
+                      <div id="content">
+                        <h1>Root</h1>
+                        <Outlet />
+                      </div>
+                      <Scripts />
+                    </body>
+                  </html>
+                );
+              }
+            `,
             "app/routes/_index.tsx": js`
-            import { useState, useEffect } from "react";
+              import { useState, useEffect } from "react";
 
-            import { serverOnly1, serverOnly2 } from "../utils.server";
+              import { serverOnly1, serverOnly2 } from "../utils.server";
 
-            export const loader = () => {
-              return { serverOnly1 }
-            }
+              export const loader = () => {
+                return { serverOnly1 }
+              }
 
-            export const action = () => {
-              console.log(serverOnly2)
-              return null
-            }
+              export const action = () => {
+                console.log(serverOnly2)
+                return null
+              }
 
-            export default function() {
-              const [mounted, setMounted] = useState(false);
-              useEffect(() => {
-                setMounted(true);
-              }, []);
+              export default function() {
+                const [mounted, setMounted] = useState(false);
+                useEffect(() => {
+                  setMounted(true);
+                }, []);
 
-              return (
-                <>
-                  <h2>Index</h2>
-                  {!mounted ? <h3>Loading...</h3> : <h3 data-mounted>Mounted</h3>}
-                </>
-              );
-            }
-          `,
+                return (
+                  <>
+                    <h2>Index</h2>
+                    {!mounted ? <h3>Loading...</h3> : <h3 data-mounted>Mounted</h3>}
+                  </>
+                );
+              }
+            `,
             "app/utils.server.ts": js`
-            export const serverOnly1 = "SERVER_ONLY_1"
-            export const serverOnly2 = "SERVER_ONLY_2"
-          `,
+              export const serverOnly1 = "SERVER_ONLY_1"
+              export const serverOnly2 = "SERVER_ONLY_2"
+            `,
             "app/routes/resource.ts": js`
-            import { serverOnly1, serverOnly2 } from "../utils.server";
+              import { serverOnly1, serverOnly2 } from "../utils.server";
 
-            export const loader = () => {
-              return { serverOnly1 }
-            }
+              export const loader = () => {
+                return { serverOnly1 }
+              }
 
-            export const action = () => {
-              console.log(serverOnly2)
-              return null
-            }
-          `,
+              export const action = () => {
+                console.log(serverOnly2)
+                return null
+              }
+            `,
             "app/routes/mdx.mdx": js`
-            import { useEffect, useState } from "react";
-            import { useLoaderData } from "react-router";
+              import { useEffect, useState } from "react";
+              import { useLoaderData } from "react-router";
 
-            import { serverOnly1, serverOnly2 } from "../utils.server";
+              import { serverOnly1, serverOnly2 } from "../utils.server";
 
-            export const loader = () => {
-              return {
-                serverOnly1,
-                content: "MDX route content from loader",
+              export const loader = () => {
+                return {
+                  serverOnly1,
+                  content: "MDX route content from loader",
+                }
               }
-            }
 
-            export const action = () => {
-              console.log(serverOnly2)
-              return null
-            }
+              export const action = () => {
+                console.log(serverOnly2)
+                return null
+              }
 
-            export function MdxComponent() {
-              const [mounted, setMounted] = useState(false);
-              useEffect(() => {
-                setMounted(true);
-              }, []);
-              const { content } = useLoaderData();
-              const text = content + (mounted
-                ? ": mounted"
-                : ": not mounted");
-              return <div data-mdx-route>{text}</div>
-            }
+              export function MdxComponent() {
+                const [mounted, setMounted] = useState(false);
+                useEffect(() => {
+                  setMounted(true);
+                }, []);
+                const { content } = useLoaderData();
+                const text = content + (mounted
+                  ? ": mounted"
+                  : ": not mounted");
+                return <div data-mdx-route>{text}</div>
+              }
 
-            ## MDX Route
+              ## MDX Route
 
-            <MdxComponent />
-          `,
+              <MdxComponent />
+            `,
             "app/routes/code-split1.tsx": js`
-            import { CodeSplitComponent } from "../code-split-component";
+              import { CodeSplitComponent } from "../code-split-component";
 
-            export default function CodeSplit1Route() {
-              return <div id="code-split1"><CodeSplitComponent /></div>;
-            }
-          `,
-            "app/routes/code-split2.tsx": js`
-            import { CodeSplitComponent } from "../code-split-component";
-
-            export default function CodeSplit2Route() {
-              return <div id="code-split2"><CodeSplitComponent /></div>;
-            }
-          `,
-            "app/code-split-component.tsx": js`
-            import classes from "./code-split.module.css";
-
-            export function CodeSplitComponent() {
-              return <span className={classes.test}>ok</span>
-            }
-          `,
-            "app/code-split.module.css": js`
-            .test {
-              background-color: rgb(255, 170, 0);
-            }
-          `,
-            "app/routes/dotenv.tsx": js`
-            import { useLoaderData } from "react-router";
-
-            export const loader = () => {
-              return {
-                loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE ?? '.env file was NOT loaded, which is a good thing',
+              export default function CodeSplit1Route() {
+                return <div id="code-split1"><CodeSplitComponent /></div>;
               }
-            }
+            `,
+            "app/routes/code-split2.tsx": js`
+              import { CodeSplitComponent } from "../code-split-component";
 
-            export default function DotenvRoute() {
-              const { loaderContent } = useLoaderData();
+              export default function CodeSplit2Route() {
+                return <div id="code-split2"><CodeSplitComponent /></div>;
+              }
+            `,
+            "app/code-split-component.tsx": js`
+              import classes from "./code-split.module.css";
 
-              return <div data-dotenv-route-loader-content>{loaderContent}</div>;
-            }
-          `,
+              export function CodeSplitComponent() {
+                return <span className={classes.test}>ok</span>
+              }
+            `,
+            "app/code-split.module.css": js`
+              .test {
+                background-color: rgb(255, 170, 0);
+              }
+            `,
+            "app/routes/dotenv.tsx": js`
+              import { useLoaderData } from "react-router";
+
+              export const loader = () => {
+                return {
+                  loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE ?? '.env file was NOT loaded, which is a good thing',
+                }
+              }
+
+              export default function DotenvRoute() {
+                const { loaderContent } = useLoaderData();
+
+                return <div data-dotenv-route-loader-content>{loaderContent}</div>;
+              }
+            `,
 
             "app/assets/test.txt": "test",
             "app/routes/ssr-only-assets.tsx": js`
-            import txtUrl from "../assets/test.txt?url";
-            import { useLoaderData } from "react-router"
+              import txtUrl from "../assets/test.txt?url";
+              import { useLoaderData } from "react-router"
 
-            export const loader: LoaderFunction = () => {
-              return { txtUrl };
-            };
+              export const loader: LoaderFunction = () => {
+                return { txtUrl };
+              };
 
-            export default function SsrOnlyAssetsRoute() {
-              const loaderData = useLoaderData();
-              return (
-                <div>
-                  <a href={loaderData.txtUrl}>txtUrl</a>
-                </div>
-              );
-            }
-          `,
+              export default function SsrOnlyAssetsRoute() {
+                const loaderData = useLoaderData();
+                return (
+                  <div>
+                    <a href={loaderData.txtUrl}>txtUrl</a>
+                  </div>
+                );
+              }
+            `,
 
             "app/assets/test.css": ".test{color:red}",
             "app/routes/ssr-only-css-url-files.tsx": js`
-            import cssUrl from "../assets/test.css?url";
-            import { useLoaderData } from "react-router"
+              import cssUrl from "../assets/test.css?url";
+              import { useLoaderData } from "react-router"
 
-            export const loader: LoaderFunction = () => {
-              return { cssUrl };
-            };
+              export const loader: LoaderFunction = () => {
+                return { cssUrl };
+              };
 
-            export default function SsrOnlyCssUrlFilesRoute() {
-              const loaderData = useLoaderData();
-              return (
-                <div>
-                  <a href={loaderData.cssUrl}>cssUrl</a>
-                </div>
-              );
-            }
-          `,
+              export default function SsrOnlyCssUrlFilesRoute() {
+                const loaderData = useLoaderData();
+                return (
+                  <div>
+                    <a href={loaderData.cssUrl}>cssUrl</a>
+                  </div>
+                );
+              }
+            `,
 
             "app/routes/ssr-code-split.tsx": js`
-            import { useLoaderData } from "react-router"
+              import { useLoaderData } from "react-router"
 
-            export const loader: LoaderFunction = async () => {
-              const lib = await import("../ssr-code-split-lib");
-              return lib.ssrCodeSplitTest();
-            };
+              export const loader: LoaderFunction = async () => {
+                const lib = await import("../ssr-code-split-lib");
+                return lib.ssrCodeSplitTest();
+              };
 
-            export default function SsrCodeSplitRoute() {
-              const loaderData = useLoaderData();
-              return (
-                <div data-ssr-code-split>{loaderData}</div>
-              );
-            }
-          `,
+              export default function SsrCodeSplitRoute() {
+                const loaderData = useLoaderData();
+                return (
+                  <div data-ssr-code-split>{loaderData}</div>
+                );
+              }
+            `,
 
             "app/ssr-code-split-lib.ts": js`
-            export function ssrCodeSplitTest() {
-              return "ssrCodeSplitTest";
-            }
-          `,
+              export function ssrCodeSplitTest() {
+                return "ssrCodeSplitTest";
+              }
+            `,
           },
           viteEnvironmentApi ? "vite-6-template" : "vite-5-template"
         );
