@@ -110,7 +110,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let normalizedPath = url.pathname
       .replace(/\.data$/, "")
       .replace(/^\/_root$/, "/")
-      .replace(/\/$/, "");
+      .replace(/(.)\/$/, "$1");
     let params: RouteMatch<ServerRoute>["params"] = {};
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -135,6 +135,20 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       !_build.prerender.includes(normalizedPath) &&
       !_build.prerender.includes(normalizedPath + "/")
     ) {
+      errorHandler(
+        new ErrorResponseImpl(
+          404,
+          "Not Found",
+          `Refusing to SSR the path \`${normalizedPath}\` because \`ssr:false\` is ` +
+            "set and the path is not included in the `prerender` config, so in " +
+            "production the path will be a 404."
+        ),
+        {
+          context: loadContext,
+          params,
+          request,
+        }
+      );
       return new Response("Not Found", {
         status: 404,
         statusText: "Not Found",

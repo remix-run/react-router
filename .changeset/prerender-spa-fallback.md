@@ -10,3 +10,4 @@ Generate a "SPA fallback" HTML file for scenarios where applications are prerend
   - The generated HTML would include the root index route which prevented hydration for any other paths
   - With this change, we now generate a "SPA Mode" file in `__spa-fallback__.html` that will allow you to hydrate for any non-prerendered paths
   - You can serve this file from your static file server for any paths that would otherwise 404 if you only want to pre-render _some_ routes in your `ssr:false` app and serve the others as a SPA
+  - `npx sirv-cli build/client --single __spa-fallback__.html`
