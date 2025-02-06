@@ -37,6 +37,14 @@
         "default": "./dist/development/index.js"
       }
     },
+    "./types": {
+      "import": {
+        "types": "./dist/development/lib/types/index.d.mts"
+      },
+      "default": {
+        "types": "./dist/development/lib/types/index.d.ts"
+      }
+    },
     "./route-module": {
       "import": {
         "types": "./dist/development/lib/types/route-module.d.mts"
