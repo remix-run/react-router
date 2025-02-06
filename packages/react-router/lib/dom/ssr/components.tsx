@@ -683,6 +683,7 @@ ${matches
     let {
       clientActionModule,
       clientLoaderModule,
+      clientMiddlewareModule,
       hydrateFallbackModule,
       module,
     } = manifestEntry;
@@ -701,6 +702,14 @@ ${matches
             {
               module: clientLoaderModule,
               varName: `${routeVarName}_clientLoader`,
+            },
+          ]
+        : []),
+      ...(clientMiddlewareModule
+        ? [
+            {
+              module: clientMiddlewareModule,
+              varName: `${routeVarName}_clientMiddleware`,
             },
           ]
         : []),
