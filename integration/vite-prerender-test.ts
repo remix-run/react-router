@@ -29,7 +29,7 @@ let files = {
   `,
   "app/root.tsx": js`
     import * as React from "react";
-    import { Form, Link, Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
+    import { Link, Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
 
     export function meta({ data }) {
       return [{
@@ -72,7 +72,11 @@ let files = {
         error.message;
       return <p data-error>{msg}</p>;
     }
-  `,
+
+    export function HydrateFallback() {
+      return <p>Loading...</p>;
+    }
+    `,
   "app/routes/_index.tsx": js`
     import * as React  from "react";
     import { useLoaderData } from "react-router";
@@ -210,8 +214,8 @@ test.describe("Prerendering", () => {
 
     expect(buildOutput).toContain(
       [
-        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`.",
-        "You may want to use the `prerender()` API to prerender the following paths:",
+        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`. " +
+          "You may want to use the `prerender()` API to prerender the following paths:",
         "  - :slug",
         "  - *",
       ].join("\n")
@@ -244,6 +248,56 @@ test.describe("Prerendering", () => {
     expect(html).toMatch("<h1>Root</h1>");
     expect(html).toMatch('<h2 data-route="true">About</h2>');
     expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
+  });
+
+  test("Warns on parameterized routes with prerender:true + ssr:false", async () => {
+    let buildStdio = new PassThrough();
+    fixture = await createFixture({
+      buildStdio,
+      prerender: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: true,
+        }),
+        "vite.config.ts": files["vite.config.ts"],
+        "app/root.tsx": files["app/root.tsx"],
+        "app/routes/_index.tsx": files["app/routes/_index.tsx"],
+        "app/routes/$slug.tsx": js`
+          import { Outlet } from 'react-router'
+          export default function Component() {
+            return <Outlet/>
+          }
+        `,
+        "app/routes/$.tsx": js`
+          import { Outlet } from 'react-router'
+          export default function Component() {
+            return <Outlet/>
+          }
+        `,
+      },
+    });
+
+    let buildOutput: string;
+    let chunks: Buffer[] = [];
+    buildOutput = await new Promise<string>((resolve, reject) => {
+      buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      buildStdio.on("error", (err) => reject(err));
+      buildStdio.on("end", () =>
+        resolve(Buffer.concat(chunks).toString("utf8"))
+      );
+    });
+
+    expect(buildOutput).toContain(
+      [
+        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`. " +
+          "You may want to use the `prerender()` API to prerender the following paths:",
+        "  - :slug",
+        "  - *",
+      ].join("\n")
+    );
+    // Only logs once
+    expect(buildOutput.match(/with dynamic\/splat params/g)?.length).toBe(1);
   });
 
   test("Prerenders a static array of routes", async () => {
@@ -421,6 +475,53 @@ test.describe("Prerendering", () => {
         data: "Hello, world",
       },
     });
+  });
+
+  test("Prerenders a spa fallback with prerender:['/'] + ssr:false", async () => {
+    let buildStdio = new PassThrough();
+    fixture = await createFixture({
+      buildStdio,
+      prerender: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+          prerender: ["/"],
+        }),
+        "vite.config.ts": files["vite.config.ts"],
+        "app/root.tsx": files["app/root.tsx"],
+        "app/routes/_index.tsx": files["app/routes/_index.tsx"],
+        "app/routes/page.tsx": js`
+          export function clientLoader() {
+            return "PAGE DATA"
+          }
+          export default function Page({ loaderData }) {
+            return <p>{loaderData}</p>
+          }
+        `,
+      },
+    });
+
+    appFixture = await createAppFixture(fixture);
+
+    let clientDir = path.join(fixture.projectDir, "build", "client");
+    expect(listAllFiles(clientDir).sort()).toEqual([
+      "__spa-fallback__.html",
+      "_root.data",
+      "favicon.ico",
+      "index.html",
+    ]);
+
+    let res = await fixture.requestDocument("/");
+    let html = await res.text();
+    expect(html).toMatch("<title>Index Title: Index Loader Data</title>");
+    expect(html).toMatch("<h1>Root</h1>");
+    expect(html).toMatch('<h2 data-route="true">Index</h2>');
+    expect(html).toMatch('<p data-loader-data="true">Index Loader Data</p>');
+    expect(html).not.toMatch("<p>Loading...</p>");
+
+    res = await fixture.requestDocument("/page");
+    html = await res.text();
+    expect(html).toMatch("<p>Loading...</p>");
   });
 
   test("Adds leading slashes if omitted in config", async () => {

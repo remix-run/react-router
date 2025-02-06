@@ -167,7 +167,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-                "prerendering the `/` path."
+                "prerendering your `index.html` file."
             );
             expect(stderr).toMatch("<h1>Loading...</h1>");
           });
@@ -187,8 +187,8 @@ test.describe("SPA Mode", () => {
             let result = build({ cwd });
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
-              "SPA Mode: Did you forget to include <Scripts/> in your root route? " +
-                "Your pre-rendered HTML files cannot hydrate without `<Scripts />`."
+              "SPA Mode: Did you forget to include `<Scripts/>` in your root route? " +
+                "Your pre-rendered HTML cannot hydrate without `<Scripts />`."
             );
           });
         });

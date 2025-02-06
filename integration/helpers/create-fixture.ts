@@ -94,9 +94,16 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       prerender: init.prerender,
       requestDocument(href: string) {
         let file = new URL(href, "test://test").pathname + "/index.html";
-        let html = fse.readFileSync(
-          path.join(projectDir, "build/client" + file)
+        let mainPath = path.join(projectDir, "build", "client", file);
+        let fallbackPath = path.join(
+          projectDir,
+          "build",
+          "client",
+          "__spa-fallback__.html"
         );
+        let html = fse.existsSync(mainPath)
+          ? fse.readFileSync(mainPath)
+          : fse.readFileSync(fallbackPath);
         return new Response(html, {
           headers: {
             "Content-Type": "text/html",
