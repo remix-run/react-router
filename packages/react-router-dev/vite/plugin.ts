@@ -2490,6 +2490,23 @@ export async function getPrerenderPaths(
   return prerenderPaths;
 }
 
+// Note: Duplicated from react-router/lib/server-runtime
+function groupRoutesByParentId(manifest: GenericRouteManifest) {
+  let routes: Record<string, Omit<RouteManifestEntry, "file">[]> = {};
+
+  Object.values(manifest).forEach((route) => {
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
+    }
+  });
+
+  return routes;
+}
+
 // Create a skeleton route tree of paths
 function createPrerenderRoutes(
   manifest: GenericRouteManifest,
@@ -2514,23 +2531,6 @@ function createPrerenderRoutes(
       ...commonRoute,
     };
   });
-}
-
-// Note: Duplicated from react-router/lib/server-runtime
-function groupRoutesByParentId(manifest: GenericRouteManifest) {
-  let routes: Record<string, Omit<RouteManifestEntry, "file">[]> = {};
-
-  Object.values(manifest).forEach((route) => {
-    if (route) {
-      let parentId = route.parentId || "";
-      if (!routes[parentId]) {
-        routes[parentId] = [];
-      }
-      routes[parentId].push(route);
-    }
-  });
-
-  return routes;
 }
 
 function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {

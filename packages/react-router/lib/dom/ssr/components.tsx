@@ -199,9 +199,6 @@ function getActiveMatches(
     return [matches[0]];
   }
 
-  // TODO: If we're in `ssr:false` + `prerender` mode and this path is not pre-rendered,
-  // only render to the root to disable SSR for the route
-
   if (errors) {
     let errorIdx = matches.findIndex((m) => errors[m.route.id] !== undefined);
     return matches.slice(0, errorIdx + 1);
