@@ -18,7 +18,7 @@ import type { Config } from "@react-router/dev/config";
 
 const require = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -29,6 +29,7 @@ export const reactRouterConfig = ({
   prerender,
   appDirectory,
   splitRouteModules,
+  viteEnvironmentApi,
 }: {
   ssr?: boolean;
   basename?: string;
@@ -37,6 +38,7 @@ export const reactRouterConfig = ({
   splitRouteModules?: NonNullable<
     Config["future"]
   >["unstable_splitRouteModules"];
+  viteEnvironmentApi?: boolean;
 }) => {
   let config: Config = {
     ssr,
@@ -45,6 +47,7 @@ export const reactRouterConfig = ({
     appDirectory,
     future: {
       unstable_splitRouteModules: splitRouteModules,
+      unstable_viteEnvironmentApi: viteEnvironmentApi,
     },
   };
 
@@ -130,7 +133,7 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName =
+export type TemplateName =
   | "vite-5-template"
   | "vite-6-template"
   | "vite-cloudflare-template";
