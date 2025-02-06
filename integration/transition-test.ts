@@ -257,7 +257,7 @@ test.describe("rendering", () => {
     });
     const decoded = await decodeViaTurboStream(body, global);
 
-    expect(Object.keys(decoded.value as Record<string, unknown>)).toEqual([
+    expect(Object.keys(decoded as Record<string, unknown>)).toEqual([
       "routes/page.child",
     ]);
 

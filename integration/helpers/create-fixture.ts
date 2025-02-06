@@ -118,7 +118,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
           status: 200,
           statusText: "OK",
           headers: new Headers(),
-          data: (await decodeViaTurboStream(stream, global)).value,
+          data: (await decodeViaTurboStream(stream, global)),
         };
       },
       postDocument: () => {
@@ -160,7 +160,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       statusText: response.statusText,
       headers: response.headers,
       data: response.body
-        ? (await decodeViaTurboStream(response.body!, global)).value
+        ? (await decodeViaTurboStream(response.body!, global))
         : null,
     };
   };

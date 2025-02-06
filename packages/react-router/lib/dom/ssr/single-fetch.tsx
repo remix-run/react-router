@@ -445,8 +445,8 @@ async function fetchAndDecode(
   invariant(res.body, "No response body to decode");
 
   try {
-    let decoded = await decodeViaTurboStream(res.body, window);
-    return { status: res.status, data: decoded.value };
+    let decoded: any = await decodeViaTurboStream(res.body, window);
+    return { status: res.status, data: decoded };
   } catch (e) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
@@ -464,28 +464,9 @@ export function decodeViaTurboStream(
   body: ReadableStream<Uint8Array>,
   global: Window | typeof globalThis
 ) {
-  return decode(body, {
+  return decode(body.pipeThrough(new TextDecoderStream()), {
     plugins: [
       (type: string, ...rest: unknown[]) => {
-        // Decode Errors back into Error instances using the right type and with
-        // the right (potentially undefined) stacktrace
-        if (type === "SanitizedError") {
-          let [name, message, stack] = rest as [
-            string,
-            string,
-            string | undefined
-          ];
-          let Constructor = Error;
-          // @ts-expect-error
-          if (name && name in global && typeof global[name] === "function") {
-            // @ts-expect-error
-            Constructor = global[name];
-          }
-          let error = new Constructor(message);
-          error.stack = stack;
-          return { value: error };
-        }
-
         if (type === "ErrorResponse") {
           let [data, status, statusText] = rest as [
             unknown,
@@ -499,14 +480,6 @@ export function decodeViaTurboStream(
 
         if (type === "SingleFetchRedirect") {
           return { value: { [SingleFetchRedirectSymbol]: rest[0] } };
-        }
-
-        if (type === "SingleFetchClassInstance") {
-          return { value: rest[0] };
-        }
-
-        if (type === "SingleFetchFallback") {
-          return { value: undefined };
         }
       },
     ],
