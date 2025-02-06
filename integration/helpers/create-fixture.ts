@@ -291,15 +291,18 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       return new Promise(async (accept) => {
         let port = await getPort();
         let app = express();
-        app.use(express.static(path.join(fixture.projectDir, "build/client")));
+        app.use(
+          express.static(path.join(fixture.projectDir, "build", "client"))
+        );
         app.get("*", (req, res, next) => {
+          let dir = path.join(fixture.projectDir, "build", "client");
           let file = req.path.endsWith(".data")
             ? req.path
             : req.path + "/index.html";
-          res.sendFile(
-            path.join(fixture.projectDir, "build/client", file),
-            next
-          );
+          if (file.endsWith(".html") && !fse.existsSync(path.join(dir, file))) {
+            file = "__spa-fallback__.html";
+          }
+          res.sendFile(path.join(dir, file), next);
         });
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });

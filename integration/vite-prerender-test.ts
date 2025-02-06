@@ -76,7 +76,7 @@ let files = {
     export function HydrateFallback() {
       return <p>Loading...</p>;
     }
-    `,
+  `,
   "app/routes/_index.tsx": js`
     import * as React  from "react";
     import { useLoaderData } from "react-router";
@@ -201,25 +201,6 @@ test.describe("Prerendering", () => {
         `,
       },
     });
-
-    let buildOutput: string;
-    let chunks: Buffer[] = [];
-    buildOutput = await new Promise<string>((resolve, reject) => {
-      buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-      buildStdio.on("error", (err) => reject(err));
-      buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
-      );
-    });
-
-    expect(buildOutput).toContain(
-      [
-        "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`. " +
-          "You may want to use the `prerender()` API to prerender the following paths:",
-        "  - :slug",
-        "  - *",
-      ].join("\n")
-    );
 
     appFixture = await createAppFixture(fixture);
 
@@ -603,6 +584,59 @@ test.describe("Prerendering", () => {
     await app.clickLink("/about");
     await page.waitForSelector("[data-route]:has-text('About')");
     expect(requests).toEqual(["/about.data"]);
+  });
+
+  test("Hydrates into a navigable app from the spa fallback", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      prerender: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false, // turn off fog of war since we're serving with a static server
+          prerender: ["/"],
+        }),
+        "vite.config.ts": files["vite.config.ts"],
+        "app/root.tsx": files["app/root.tsx"],
+        "app/routes/_index.tsx": files["app/routes/_index.tsx"],
+        "app/routes/page.tsx": js`
+          import { Link } from 'react-router';
+          export async function clientLoader() {
+            await new Promise(r => setTimeout(r, 1000));
+            return "PAGE DATA"
+          }
+          export default function Page({ loaderData }) {
+            return (
+              <>
+                <p data-page>{loaderData}</p>
+                <Link to="/page2">Go to page2</Link>
+              </>
+            );
+          }
+        `,
+        "app/routes/page2.tsx": js`
+          export function clientLoader() {
+            return "PAGE2 DATA"
+          }
+          export default function Page({ loaderData }) {
+            return <p data-page2>{loaderData}</p>
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let app = new PlaywrightFixture(appFixture, page);
+    // Load a path we didn't prerender, ensure it starts with the root fallback,
+    // hydrates, and then lets you navigate
+    await app.goto("/page");
+    expect(await page.getByText("Loading...")).toBeVisible();
+    await page.waitForSelector("[data-page]");
+    await app.clickLink("/page2");
+    await page.waitForSelector("[data-page2]");
+    expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
+      "PAGE2 DATA"
+    );
   });
 
   test("Serves the prerendered HTML file alongside runtime routes", async ({

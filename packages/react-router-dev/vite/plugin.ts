@@ -555,6 +555,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let prerenderPaths = await getPrerenderPaths(
       ctx.reactRouterConfig.prerender,
+      ctx.reactRouterConfig.ssr,
       routes
     );
 
@@ -2457,6 +2458,7 @@ export interface GenericRouteManifest {
 
 export async function getPrerenderPaths(
   prerender: ResolvedReactRouterConfig["prerender"],
+  ssr: ResolvedReactRouterConfig["ssr"],
   routes: GenericRouteManifest
 ): Promise<string[]> {
   let prerenderPaths: string[] = [];
@@ -2464,7 +2466,7 @@ export async function getPrerenderPaths(
     let prerenderRoutes = createPrerenderRoutes(routes);
     if (prerender === true) {
       let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
-      if (paramRoutes.length > 0) {
+      if (!ssr && paramRoutes.length > 0) {
         console.warn(
           colors.yellow(
             [
