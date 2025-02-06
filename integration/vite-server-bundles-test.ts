@@ -178,7 +178,7 @@ test.describe("Server bundles", () => {
             `),
             ...files,
           },
-          "vite-6-template"
+          viteEnvironmentApi ? "vite-6-template" : "vite-5-template"
         );
       });
 
