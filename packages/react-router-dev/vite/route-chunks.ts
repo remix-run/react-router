@@ -964,7 +964,7 @@ const routeChunkQueryStrings: Record<RouteChunkName, RouteChunkQueryString> = {
   main: `${routeChunkQueryStringPrefix}main`,
   clientAction: `${routeChunkQueryStringPrefix}clientAction`,
   clientLoader: `${routeChunkQueryStringPrefix}clientLoader`,
-  clientMiddleware: `${routeChunkQueryStringPrefix}clientMiddleware`,
+  unstable_clientMiddleware: `${routeChunkQueryStringPrefix}unstable_clientMiddleware`,
   HydrateFallback: `${routeChunkQueryStringPrefix}HydrateFallback`,
 };
 
