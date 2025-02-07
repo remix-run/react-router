@@ -1,14 +1,19 @@
 import fs from "node:fs";
 
+import tsx from "dedent";
 import * as Path from "pathe";
 import pc from "picocolors";
 import type vite from "vite";
 
 import { createConfigLoader } from "../config/config";
+import type { RouteManifestEntry } from "../config/routes";
+import * as Babel from "../vite/babel";
 
 import { generate } from "./generate";
 import type { Context } from "./context";
 import { getTypesDir, getTypesPath } from "./paths";
+
+const { t } = Babel;
 
 export async function run(rootDirectory: string) {
   const ctx = await createContext({ rootDirectory, watch: false });
@@ -81,4 +86,105 @@ async function writeAll(ctx: Context): Promise<void> {
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });
+
+  Object.values(ctx.config.routes).map((route) =>
+    t.tsPropertySignature(
+      t.stringLiteral(route.id),
+      t.tsTypeAnnotation(
+        t.tsTypeLiteral([
+          t.tsPropertySignature(
+            t.identifier("parentId"),
+            t.tsTypeAnnotation(
+              route.parentId
+                ? t.tsLiteralType(t.stringLiteral(route.parentId))
+                : t.tsUndefinedKeyword()
+            )
+          ),
+          t.tsPropertySignature(
+            t.identifier("path"),
+            t.tsTypeAnnotation(
+              route.path
+                ? t.tsLiteralType(t.stringLiteral(route.path))
+                : t.tsUndefinedKeyword()
+            )
+          ),
+          t.tsPropertySignature(
+            t.identifier("module"),
+            t.tsTypeAnnotation(
+              t.tsTypeQuery(t.tsImportType(t.stringLiteral(route.file)))
+            )
+          ),
+        ])
+      )
+    )
+  );
+  const registerPath = Path.join(typegenDir, "+register.ts");
+  fs.writeFileSync(registerPath, register(ctx));
+}
+
+function register(ctx: Context) {
+  const routes = Babel.generate(
+    t.tsTypeAliasDeclaration(
+      t.identifier("Routes"),
+      null,
+      t.tsTypeLiteral(
+        Object.values(ctx.config.routes).map((route) =>
+          t.tsPropertySignature(
+            t.stringLiteral(route.id),
+            t.tsTypeAnnotation(
+              t.tsTypeLiteral([
+                t.tsPropertySignature(
+                  t.identifier("parentId"),
+                  t.tsTypeAnnotation(
+                    route.parentId
+                      ? t.tsLiteralType(t.stringLiteral(route.parentId))
+                      : t.tsUndefinedKeyword()
+                  )
+                ),
+                t.tsPropertySignature(
+                  t.identifier("path"),
+                  t.tsTypeAnnotation(
+                    route.path
+                      ? t.tsLiteralType(t.stringLiteral(route.path))
+                      : t.tsUndefinedKeyword()
+                  )
+                ),
+                t.tsPropertySignature(
+                  t.identifier("module"),
+                  t.tsTypeAnnotation(
+                    t.tsTypeQuery(
+                      t.tsImportType(
+                        t.stringLiteral(compiledModulePath(ctx, route))
+                      )
+                    )
+                  )
+                ),
+              ])
+            )
+          )
+        )
+      )
+    )
+  ).code;
+  const registerTypes = tsx`
+    import "react-router/types";
+
+    declare module "react-router/types" {
+      interface Register {
+        routes: Routes;
+      }
+    }
+  `;
+
+  return [registerTypes, routes].join("\n\n");
+}
+
+function compiledModulePath(ctx: Context, route: RouteManifestEntry) {
+  return (
+    "./" +
+    Path.relative(
+      ctx.rootDirectory,
+      Path.join(ctx.config.appDirectory, route.file)
+    ).replace(/\.(js|ts)x?$/, ".js")
+  );
 }

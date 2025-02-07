@@ -31,22 +31,18 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
     // ${route.file}
 
     import type * as T from "react-router/route-module"
+    import type { Routes } from "react-router/types"
 
     ${parentTypeImports}
 
-    type Module = typeof import("../${Pathe.filename(route.file)}.js")
+    type RouteId = "${route.id}"
 
-    export type Info = {
+    export type Info = Routes[RouteId] & {
       parents: [${parents.map((_, i) => `Parent${i}`).join(", ")}],
-      id: "${route.id}"
-      file: "${route.file}"
-      path: "${route.path}"
+      id: RouteId
       params: {${formatParamProperties(
         urlpath
       )}} & { [key: string]: string | undefined }
-      module: Module
-      loaderData: T.CreateLoaderData<Module>
-      actionData: T.CreateActionData<Module>
     }
 
     export namespace Route {
