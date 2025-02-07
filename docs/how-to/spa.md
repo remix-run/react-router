@@ -11,7 +11,7 @@ There are two ways to ship a single page app with React Router
 
 ## 1. Disable Server Rendering
 
-Server rendering is enabled by default. Set the ssr flag to false in `react-router.config.ts` to disable it.
+Server rendering is enabled by default. Set the `ssr` flag to `false` in `react-router.config.ts` to disable it.
 
 ```ts filename=react-router.config.ts lines=[4]
 import { type Config } from "@react-router/dev/config";
@@ -65,10 +65,11 @@ If you're getting 404s at valid routes for your app, it's likely you need to con
 
 Typical Single Pages apps send a mostly blank `index.html` template with little more than an empty `<div id="root"></div>`.
 
-In contrast `react-router build` (with server rendering disabled) pre-renders your root and index routes. This means you can:
+In contrast `react-router build` (with server rendering disabled) pre-renders your root route at build time. This means you can:
 
 - Send more than an empty div
-- Use React components to generate the initial page users see
+- Use a root `loader` to load data for your application shell
+- Use React components to generate the initial page users see (root `HydrateFallback`)
 - Re-enable server rendering later without changing anything about your UI
 
-React Router will still server render your index route to generate that `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.
+Therefore, setting `ssr:false` disables _runtime server rendering_. React Router will still server render your index route at _build time_ to generate that `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.
