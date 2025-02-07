@@ -955,7 +955,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           process.env,
           vite.loadEnv(
             viteConfigEnv.mode,
-            ctx.rootDirectory,
+            viteUserConfig.envDir ?? ctx.rootDirectory,
             // We override default prefix of "VITE_" with a blank string since
             // we're targeting the server, so we want to load all environment
             // variables, not just those explicitly marked for the client
