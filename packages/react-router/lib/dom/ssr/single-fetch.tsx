@@ -134,9 +134,55 @@ export function StreamTransfer({
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   getRouter: () => DataRouter
 ): DataStrategyFunction {
   return async ({ request, matches, fetcherKey }) => {
+    if (!ssr) {
+      // If we get here for an `ssr:false` app, we know it's a `prerender`
+      // scenario because we don't even have a `dataStrategy` in SPA mode.
+      // We specifically keep single fetch enabled for `ssr:false` + `prerender`
+      // apps because we can prerender the `.data` files at build time and load
+      // them from a static file server/CDN at runtime.
+      //
+      // However, with the SPA Fallback logic, we can have SPA routes operating
+      // within a pre-rendered application and even if all the children have
+      // `clientLoaders`, if the root route has a `loader` then the default
+      // behavior would be to make the single fetch `.data` request on
+      // navigation to get the updated root `loader` data.
+      //
+      // We need to detect these scenarios because if it's a non-prerendered
+      // route being handled by SPA mode, then the `.data` file won't have been
+      // pre-generated and it'll cause a 404.  Thankfully, we can do this
+      // without knowing the prerender'd paths and can just do loader detection
+      // from the manifest:
+      // - We only allow loaders on prerendered routes at build time
+      // - We always let the root route have a loader which will be called at
+      //   build time for _all_ of our prerendered pages and the SPA Fallback
+      // - The root loader data will be static so since we already have it in
+      //   the client we never need to revalidate it
+      // - So the only time we need to make the request is if we find a loader
+      //   _below_ the root
+      // - If we find this, we know the route must have been pre-rendered at
+      //   build time since the loader would have errored otherwise
+      // - So it's safe to make the call knowing there will be a .data file on
+      //   the other end
+      let foundLoaderBelowRoot = matches.some(
+        (m) => m.route.id !== "root" && manifest.routes[m.route.id]?.hasLoader
+      );
+      if (!foundLoaderBelowRoot) {
+        // Skip single fetch and just call the loaders in parallel when this is
+        // a SPA mode navigation
+        let matchesToLoad = matches.filter((m) => m.shouldLoad);
+        let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
+        return results.reduce(
+          (acc, result, i) =>
+            Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
+          {}
+        );
+      }
+    }
+
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
       return singleFetchActionStrategy(request, matches);

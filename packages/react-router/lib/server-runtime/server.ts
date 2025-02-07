@@ -109,8 +109,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let url = new URL(request.url);
     let normalizedPath = url.pathname
       .replace(/\.data$/, "")
-      .replace(/^\/_root$/, "/")
-      .replace(/(.)\/$/, "$1");
+      .replace(/^\/_root$/, "/");
+    if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+      normalizedPath = normalizedPath.slice(0, -1);
+    }
     let params: RouteMatch<ServerRoute>["params"] = {};
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {

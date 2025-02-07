@@ -639,6 +639,105 @@ test.describe("Prerendering", () => {
     );
   });
 
+  test("Doesn't make single fetch .data calls for SPA routes when a root loader exists", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      prerender: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false, // turn off fog of war since we're serving with a static server
+          prerender: ["/", "/page"],
+        }),
+        "vite.config.ts": files["vite.config.ts"],
+        "app/root.tsx": js`
+          import * as React from "react";
+          import { Outlet, Scripts } from "react-router";
+
+          export function loader() {
+            return "ROOT DATA";
+          }
+
+          export function Layout({ children }) {
+            return (
+              <html lang="en">
+                <head />
+                <body>
+                  {children}
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export default function Root({ loaderData }) {
+            return (
+              <>
+                <p data-root>{loaderData}</p>
+                <Outlet />
+              </>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          import { Link } from 'react-router';
+          export default function Index() {
+            return <Link to="/page">Go to page</Link>
+          }
+        `,
+        "app/routes/page.tsx": js`
+          import { Link } from 'react-router';
+          export async function loader() {
+            return "PAGE DATA"
+          }
+          export default function Page({ loaderData }) {
+            return (
+              <>
+                <p data-page>{loaderData}</p>
+                <Link to="/page2">Go to page2</Link>
+              </>
+            );
+          }
+        `,
+        "app/routes/page2.tsx": js`
+          export function clientLoader() {
+            return "PAGE2 DATA"
+          }
+          export default function Page({ loaderData }) {
+            return <p data-page2>{loaderData}</p>
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let requests: string[] = [];
+    page.on("request", (request) => {
+      let pathname = new URL(request.url()).pathname;
+      if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
+        requests.push(pathname);
+      }
+    });
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    await page.waitForSelector("[data-root]");
+    expect(await (await page.$("[data-root]"))?.innerText()).toBe("ROOT DATA");
+
+    await app.clickLink("/page");
+    await page.waitForSelector("[data-page]");
+    expect(await (await page.$("[data-page]"))?.innerText()).toBe("PAGE DATA");
+
+    await app.clickLink("/page2");
+    await page.waitForSelector("[data-page2]");
+    expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
+      "PAGE2 DATA"
+    );
+
+    // Only the prerendered route with the loader should reach out
+    expect(requests).toEqual(["/page.data"]);
+  });
+
   test("Serves the prerendered HTML file alongside runtime routes", async ({
     page,
   }) => {

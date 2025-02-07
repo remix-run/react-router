@@ -180,6 +180,7 @@ function createHydratedRouter(): DataRouter {
       : getSingleFetchDataStrategy(
           ssrInfo.manifest,
           ssrInfo.routeModules,
+          ssrInfo.context.ssr,
           () => router
         ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
