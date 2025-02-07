@@ -2158,9 +2158,7 @@ async function handleSpaMode(
   // If the user prerendered `/`, then we write this out to a separate file
   // they can serve.  Otherwise it can be the main entry point.
   let isPrerenderSpaFallback = build.prerender.includes("/");
-  let filename = isPrerenderSpaFallback
-    ? "__spa-fallback__.html"
-    : "index.html";
+  let filename = isPrerenderSpaFallback ? "__spa-fallback.html" : "index.html";
   if (response.status !== 200) {
     if (isPrerenderSpaFallback) {
       throw new Error(
@@ -2191,8 +2189,13 @@ async function handleSpaMode(
   await fse.writeFile(path.join(clientBuildDirectory, filename), html);
   let prettyDir = path.relative(process.cwd(), clientBuildDirectory);
   let prettyPath = path.join(prettyDir, filename);
-  let prefix = isPrerenderSpaFallback ? "Prerender" : "SPA Mode";
-  viteConfig.logger.info(`${prefix}: Generated \`${prettyPath}\``);
+  if (build.prerender.length > 0) {
+    viteConfig.logger.info(
+      `Prerender (html): SPA Fallback -> ${colors.bold(prettyPath)}`
+    );
+  } else {
+    viteConfig.logger.info(`SPA Mode: Generated ${colors.bold(prettyPath)}`);
+  }
 }
 
 async function handlePrerender(
@@ -2367,7 +2370,7 @@ async function prerenderData(
 
   if (response.status !== 200) {
     throw new Error(
-      `Prerender: Received a ${response.status} status code from ` +
+      `Prerender (data): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${path}\` ` +
         `path.\n${normalizedPath}`
     );
@@ -2379,7 +2382,7 @@ async function prerenderData(
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, data);
   viteConfig.logger.info(
-    `Prerender Data: ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (data): ${prerenderPath} -> ${colors.bold(outfile)}`
   );
   return data;
 }
@@ -2402,7 +2405,7 @@ async function prerenderRoute(
 
   if (response.status !== 200) {
     throw new Error(
-      `Prerender: Received a ${response.status} status code from ` +
+      `Prerender (html): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
         `path.\n${html}`
     );
@@ -2414,7 +2417,7 @@ async function prerenderRoute(
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, html);
   viteConfig.logger.info(
-    `Prerender: ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (html): ${prerenderPath} -> ${colors.bold(outfile)}`
   );
 }
 
@@ -2435,7 +2438,7 @@ async function prerenderResourceRoute(
 
   if (response.status !== 200) {
     throw new Error(
-      `Prerender: Received a ${response.status} status code from ` +
+      `Prerender (resource): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
         `path.\n${text}`
     );
@@ -2447,7 +2450,7 @@ async function prerenderResourceRoute(
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, text);
   viteConfig.logger.info(
-    `Prerender: ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
   );
 }
 

@@ -486,7 +486,7 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
-      "__spa-fallback__.html",
+      "__spa-fallback.html",
       "_root.data",
       "favicon.ico",
       "index.html",
@@ -639,7 +639,7 @@ test.describe("Prerendering", () => {
     );
   });
 
-  test("Doesn't make single fetch .data calls for SPA routes when a root loader exists", async ({
+  test("Properly navigates across SPA and prerender pages with ssr:false when a root loader exists", async ({
     page,
   }) => {
     fixture = await createFixture({
@@ -686,25 +686,52 @@ test.describe("Prerendering", () => {
           }
         `,
         "app/routes/page.tsx": js`
-          import { Link } from 'react-router';
+          import { Link, Form } from 'react-router';
           export async function loader() {
             return "PAGE DATA"
           }
-          export default function Page({ loaderData }) {
+          let count = 0;
+          export function clientAction() {
+            return "PAGE ACTION " + (++count)
+          }
+          export default function Page({ loaderData, actionData }) {
             return (
               <>
                 <p data-page>{loaderData}</p>
+                {actionData ? <p data-page-action>{actionData}</p> : null}
                 <Link to="/page2">Go to page2</Link>
+                <Form method="post" action="/page">
+                  <button type="submit">Submit</button>
+                </Form>
+                <Form method="post" action="/page2">
+                  <button type="submit">Submit /page2</button>
+                </Form>
               </>
             );
           }
         `,
         "app/routes/page2.tsx": js`
+          import { Form } from 'react-router';
           export function clientLoader() {
             return "PAGE2 DATA"
           }
-          export default function Page({ loaderData }) {
-            return <p data-page2>{loaderData}</p>
+          let count = 0;
+          export function clientAction() {
+            return "PAGE2 ACTION " + (++count)
+          }
+          export default function Page({ loaderData, actionData }) {
+            return (
+              <>
+                <p data-page2>{loaderData}</p>
+                {actionData ? <p data-page2-action>{actionData}</p> : null}
+                <Form method="post" action="/page">
+                  <button type="submit">Submit</button>
+                </Form>
+                <Form method="post" action="/page2">
+                  <button type="submit">Submit /page2</button>
+                </Form>
+              </>
+            );
           }
         `,
       },
@@ -728,14 +755,42 @@ test.describe("Prerendering", () => {
     await page.waitForSelector("[data-page]");
     expect(await (await page.$("[data-page]"))?.innerText()).toBe("PAGE DATA");
 
+    await app.clickSubmitButton("/page");
+    await page.waitForSelector("[data-page-action]");
+    expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
+      "PAGE ACTION 1"
+    );
+
     await app.clickLink("/page2");
     await page.waitForSelector("[data-page2]");
     expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
       "PAGE2 DATA"
     );
 
-    // Only the prerendered route with the loader should reach out
-    expect(requests).toEqual(["/page.data"]);
+    await app.clickSubmitButton("/page2");
+    await page.waitForSelector("[data-page2-action]");
+    expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
+      "PAGE2 ACTION 1"
+    );
+
+    await app.clickSubmitButton("/page");
+    await page.waitForSelector("[data-page-action]");
+    expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
+      "PAGE ACTION 2"
+    );
+
+    await app.clickSubmitButton("/page2");
+    await page.waitForSelector("[data-page2-action]");
+    expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
+      "PAGE2 ACTION 2"
+    );
+
+    // We should only make this call when navigating to the prerendered route
+    // 3 calls:
+    // - Initial navigation
+    // - Revalidation on submission to self
+    // - Revalidation after submission back from /page
+    expect(requests).toEqual(["/page.data", "/page.data", "/page.data"]);
   });
 
   test("Serves the prerendered HTML file alongside runtime routes", async ({

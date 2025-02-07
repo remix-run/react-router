@@ -138,6 +138,11 @@ export function getSingleFetchDataStrategy(
   getRouter: () => DataRouter
 ): DataStrategyFunction {
   return async ({ request, matches, fetcherKey }) => {
+    // Actions are simple and behave the same for navigations and fetchers
+    if (request.method !== "GET") {
+      return singleFetchActionStrategy(request, matches);
+    }
+
     if (!ssr) {
       // If we get here for an `ssr:false` app, we know it's a `prerender`
       // scenario because we don't even have a `dataStrategy` in SPA mode.
@@ -181,11 +186,6 @@ export function getSingleFetchDataStrategy(
           {}
         );
       }
-    }
-
-    // Actions are simple and behave the same for navigations and fetchers
-    if (request.method !== "GET") {
-      return singleFetchActionStrategy(request, matches);
     }
 
     // Fetcher loads are singular calls to one loader

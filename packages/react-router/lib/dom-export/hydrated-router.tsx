@@ -102,6 +102,7 @@ function createHydratedRouter(): DataRouter {
     ssrInfo.manifest.routes,
     ssrInfo.routeModules,
     ssrInfo.context.state,
+    ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode
   );
 

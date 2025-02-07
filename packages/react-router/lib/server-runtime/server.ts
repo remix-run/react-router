@@ -133,6 +133,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     if (
       !_build.ssr &&
       _build.prerender.length > 0 &&
+      normalizedPath !== "/" &&
       // Look with/without the trailing slash to be sure
       !_build.prerender.includes(normalizedPath) &&
       !_build.prerender.includes(normalizedPath + "/")

@@ -99,7 +99,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
           projectDir,
           "build",
           "client",
-          "__spa-fallback__.html"
+          "__spa-fallback.html"
         );
         let html = fse.existsSync(mainPath)
           ? fse.readFileSync(mainPath)
@@ -300,7 +300,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
             ? req.path
             : req.path + "/index.html";
           if (file.endsWith(".html") && !fse.existsSync(path.join(dir, file))) {
-            file = "__spa-fallback__.html";
+            file = "__spa-fallback.html";
           }
           res.sendFile(path.join(dir, file), next);
         });
