@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.1.5",
+  "version": "0.0.0-experimental-a2c4d7fad",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
