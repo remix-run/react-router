@@ -327,7 +327,7 @@ export function encodeViaTurboStream(
 
   return encode(data, {
     signal: controller.signal,
-    redactErrors: serverMode === ServerMode.Production,
+    redactErrors: serverMode === ServerMode.Development ? false : "Unexpected Server Error",
     plugins: [
       (value) => {
         if (value instanceof ErrorResponseImpl) {
