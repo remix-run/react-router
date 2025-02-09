@@ -2821,11 +2821,14 @@ export async function getBuildManifest(
 
 function mergeEnvironmentOptions(
   base: EnvironmentOptions,
-  overrides: EnvironmentOptions
+  ...overrides: EnvironmentOptions[]
 ): EnvironmentOptions {
   let vite = getVite();
 
-  return vite.mergeConfig(base, overrides, false);
+  return overrides.reduce(
+    (merged, override) => vite.mergeConfig(merged, override, false),
+    base
+  );
 }
 
 export async function getEnvironmentOptionsResolvers(
@@ -2968,20 +2971,27 @@ export async function getEnvironmentOptionsResolvers(
     for (let [serverBundleId, routes] of Object.entries(
       getRoutesByServerBundleId(buildManifest)
     )) {
-      environmentOptionsResolvers[
-        // Note: Hyphens are not valid in Vite environment names
-        `${SSR_BUNDLE_PREFIX}${serverBundleId.replaceAll("-", "_")}`
-      ] = ({ viteUserConfig }) =>
-        mergeEnvironmentOptions(getBaseServerOptions({ viteUserConfig }), {
-          build: {
-            outDir: getServerBuildDirectory(ctx, { serverBundleId }),
-            rollupOptions: {
-              input: `${virtual.serverBuild.id}?route-ids=${Object.keys(
-                routes
-              ).join(",")}`,
+      // Note: Hyphens are not valid in Vite environment names
+      const serverBundleEnvironmentId = serverBundleId.replaceAll("-", "_");
+      const environmentName =
+        `${SSR_BUNDLE_PREFIX}${serverBundleEnvironmentId}` as const;
+      environmentOptionsResolvers[environmentName] = ({ viteUserConfig }) =>
+        mergeEnvironmentOptions(
+          getBaseServerOptions({ viteUserConfig }),
+          {
+            build: {
+              outDir: getServerBuildDirectory(ctx, { serverBundleId }),
+              rollupOptions: {
+                input: `${virtual.serverBuild.id}?route-ids=${Object.keys(
+                  routes
+                ).join(",")}`,
+              },
             },
           },
-        });
+          // Ensure server bundle environments extend the user's SSR
+          // environment config if it exists
+          viteUserConfig.environments?.ssr ?? {}
+        );
     }
   } else {
     environmentOptionsResolvers.ssr = ({ viteUserConfig }) =>
