@@ -8,7 +8,6 @@ import { getTypesPath } from "./paths";
 
 export function generate(ctx: Context, route: RouteManifestEntry): string {
   const lineage = getRouteLineage(ctx.config.routes, route);
-  const urlpath = lineage.map((route) => route.path).join("/");
   const typesPath = getTypesPath(ctx, route);
 
   const parents = lineage.slice(0, -1);
@@ -31,22 +30,15 @@ export function generate(ctx: Context, route: RouteManifestEntry): string {
     // ${route.file}
 
     import type * as T from "react-router/route-module"
+    import type { Routes } from "react-router/types"
 
     ${parentTypeImports}
 
-    type Module = typeof import("../${Pathe.filename(route.file)}.js")
+    type RouteId = "${route.id}"
 
-    export type Info = {
+    export type Info = Routes[RouteId] & {
       parents: [${parents.map((_, i) => `Parent${i}`).join(", ")}],
-      id: "${route.id}"
-      file: "${route.file}"
-      path: "${route.path}"
-      params: {${formatParamProperties(
-        urlpath
-      )}} & { [key: string]: string | undefined }
-      module: Module
-      loaderData: T.CreateLoaderData<Module>
-      actionData: T.CreateActionData<Module>
+      id: RouteId
     }
 
     export namespace Route {
@@ -83,40 +75,5 @@ function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
     route = routes[route.parentId];
   }
   result.reverse();
-  return result;
-}
-
-function formatParamProperties(urlpath: string) {
-  const params = parseParams(urlpath);
-  const properties = Object.entries(params).map(([name, values]) => {
-    if (values.length === 1) {
-      const isOptional = values[0];
-      return isOptional ? `"${name}"?: string` : `"${name}": string`;
-    }
-    const items = values.map((isOptional) =>
-      isOptional ? "string | undefined" : "string"
-    );
-    return `"${name}": [${items.join(", ")}]`;
-  });
-  return properties.join("; ");
-}
-
-function parseParams(urlpath: string) {
-  const result: Record<string, boolean[]> = {};
-
-  let segments = urlpath.split("/");
-  segments.forEach((segment) => {
-    const match = segment.match(/^:([\w-]+)(\?)?/);
-    if (!match) return;
-    const param = match[1];
-    const isOptional = match[2] !== undefined;
-
-    result[param] ??= [];
-    result[param].push(isOptional);
-    return;
-  });
-
-  const hasSplat = segments.at(-1) === "*";
-  if (hasSplat) result["*"] = [false];
   return result;
 }
