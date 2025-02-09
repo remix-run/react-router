@@ -58,8 +58,14 @@ export const reactRouterConfig = ({
   `;
 };
 
+type ViteConfigArgs = {
+  port: number;
+  fsAllow?: string[];
+  envDir?: string;
+};
+
 export const viteConfig = {
-  server: async (args: { port: number; fsAllow?: string[] }) => {
+  server: async (args: ViteConfigArgs) => {
     let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
@@ -72,7 +78,7 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: { port: number; fsAllow?: string[] }) => {
+  basic: async (args: ViteConfigArgs) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -80,6 +86,7 @@ export const viteConfig = {
 
       export default {
         ${await viteConfig.server(args)}
+        envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
           envOnlyMacros(),
