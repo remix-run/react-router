@@ -3000,7 +3000,9 @@ export async function getEnvironmentOptionsResolvers(
           outDir: getServerBuildDirectory(ctx),
           rollupOptions: {
             input:
-              viteUserConfig.build?.rollupOptions?.input ??
+              (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+                ? viteUserConfig.environments?.ssr?.build?.rollupOptions?.input
+                : viteUserConfig.build?.rollupOptions?.input) ??
               virtual.serverBuild.id,
           },
         },
