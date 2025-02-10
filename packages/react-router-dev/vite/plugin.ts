@@ -1579,7 +1579,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
+              invariant(viteConfig);
               validateSsrFalseExports(
+                viteConfig,
                 ctx,
                 reactRouterManifest,
                 viteChildCompiler
@@ -2452,14 +2454,15 @@ export interface GenericRouteManifest {
 export async function getPrerenderPaths(
   prerender: ResolvedReactRouterConfig["prerender"],
   ssr: ResolvedReactRouterConfig["ssr"],
-  routes: GenericRouteManifest
+  routes: GenericRouteManifest,
+  logWarning = false
 ): Promise<string[]> {
   let prerenderPaths: string[] = [];
   if (prerender != null && prerender !== false) {
     let prerenderRoutes = createPrerenderRoutes(routes);
     if (prerender === true) {
       let { paths, paramRoutes } = getStaticPrerenderPaths(prerenderRoutes);
-      if (!ssr && paramRoutes.length > 0) {
+      if (logWarning && !ssr && paramRoutes.length > 0) {
         console.warn(
           colors.yellow(
             [
@@ -2527,6 +2530,7 @@ function createPrerenderRoutes(
 }
 
 async function validateSsrFalseExports(
+  viteConfig: Vite.ResolvedConfig,
   ctx: ReactRouterPluginContext,
   manifest: ReactRouterManifest,
   viteChildCompiler: Vite.ViteDevServer | null
@@ -2536,7 +2540,8 @@ async function validateSsrFalseExports(
   let prerenderPaths = await getPrerenderPaths(
     ctx.reactRouterConfig.prerender,
     ctx.reactRouterConfig.ssr,
-    manifest.routes
+    manifest.routes,
+    true
   );
 
   for (let path of prerenderPaths) {
@@ -2585,7 +2590,7 @@ async function validateSsrFalseExports(
     }
   }
   if (errors.length > 0) {
-    console.log(colors.red(errors.join("\n")));
+    viteConfig.logger.error(colors.red(errors.join("\n")));
     throw new Error(
       "Invalid route exports found when prerendering with `ssr:false`"
     );
