@@ -59,6 +59,7 @@ export {
 export {
   data,
   generatePath,
+  href,
   isRouteErrorResponse,
   matchPath,
   matchRoutes,
@@ -262,6 +263,8 @@ export type {
   SessionStorage,
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
+
+export type { Register } from "./lib/types/register";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

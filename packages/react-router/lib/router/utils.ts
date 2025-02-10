@@ -1,3 +1,4 @@
+import type { Register } from "../types/register";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -1470,4 +1471,25 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.internal === "boolean" &&
     "data" in error
   );
+}
+
+type AnyParams = Record<string, Record<string, string | undefined>>;
+type HrefParams = Register extends {
+  params: infer TParams extends AnyParams;
+}
+  ? TParams
+  : AnyParams;
+
+type HrefArgs = {
+  [K in keyof HrefParams]:
+    | [HrefParams[K]]
+    | (Partial<HrefParams[K]> extends HrefParams[K] ? [] : never);
+};
+
+export function href<Path extends keyof HrefArgs>(
+  path: Path,
+  ...args: HrefArgs[Path]
+): string {
+  // TODO: implement this
+  return "";
 }
