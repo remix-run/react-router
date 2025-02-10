@@ -72,4 +72,4 @@ In contrast `react-router build` (with server rendering disabled) pre-renders yo
 - Use React components to generate the initial page users see (root `HydrateFallback`)
 - Re-enable server rendering later without changing anything about your UI
 
-Therefore, setting `ssr:false` disables _runtime server rendering_. React Router will still server render your index route at _build time_ to generate that `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.
+Therefore, setting `ssr:false` only disables _runtime server rendering_. React Router will still server render your index route at _build time_ to generate the `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.
