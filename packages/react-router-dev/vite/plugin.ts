@@ -1580,7 +1580,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
               invariant(viteConfig);
-              validateSsrFalseExports(
+              validateSsrFalsePrerenderExports(
                 viteConfig,
                 ctx,
                 reactRouterManifest,
@@ -2529,14 +2529,12 @@ function createPrerenderRoutes(
   });
 }
 
-async function validateSsrFalseExports(
+async function validateSsrFalsePrerenderExports(
   viteConfig: Vite.ResolvedConfig,
   ctx: ReactRouterPluginContext,
   manifest: ReactRouterManifest,
   viteChildCompiler: Vite.ViteDevServer | null
 ) {
-  let prerenderRoutes = createPrerenderRoutes(manifest.routes);
-  let prerenderedRoutes = new Set<string>();
   let prerenderPaths = await getPrerenderPaths(
     ctx.reactRouterConfig.prerender,
     ctx.reactRouterConfig.ssr,
@@ -2544,6 +2542,13 @@ async function validateSsrFalseExports(
     true
   );
 
+  if (prerenderPaths.length === 0) {
+    return;
+  }
+
+  // Identify all routes used by a prerender path
+  let prerenderRoutes = createPrerenderRoutes(manifest.routes);
+  let prerenderedRoutes = new Set<string>();
   for (let path of prerenderPaths) {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(
@@ -2557,6 +2562,7 @@ async function validateSsrFalseExports(
     matches.forEach((m) => prerenderedRoutes.add(m.route.id));
   }
 
+  // Identify invalid exports
   let errors: string[] = [];
   let routeExports = await getRouteManifestModuleExports(
     viteChildCompiler,
