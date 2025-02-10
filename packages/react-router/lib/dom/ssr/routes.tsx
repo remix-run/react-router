@@ -315,23 +315,12 @@ export function createClientRoutes(
         ...dataRoute,
         ...getRouteComponents(route, routeModule, isSpaMode),
         handle: routeModule.handle,
-        shouldRevalidate:
-          // When ssr is false and the root route has a `loader` without a
-          // `clientLoader`, the `loader` data is static because it was rendered
-          // at build time so we can just turn off revalidations.  That way when
-          // submitting to a clientAction on a non-prerendered path, we don't
-          // try to reach out for a non-existent `.data` file which would have
-          // the "revalidated" root data
-          !ssr &&
-          route.id === "root" &&
-          route.hasLoader &&
-          !route.hasClientLoader
-            ? () => false
-            : getShouldRevalidateFunction(
-                routeModule,
-                route.id,
-                needsRevalidation
-              ),
+        shouldRevalidate: getShouldRevalidateFunction(
+          routeModule,
+          route,
+          ssr,
+          needsRevalidation
+        ),
       });
 
       let hasInitialData =
@@ -548,7 +537,8 @@ export function createClientRoutes(
           hasErrorBoundary: lazyRoute.hasErrorBoundary,
           shouldRevalidate: getShouldRevalidateFunction(
             lazyRoute,
-            route.id,
+            route,
+            ssr,
             needsRevalidation
           ),
           handle: lazyRoute.handle,
@@ -577,21 +567,37 @@ export function createClientRoutes(
 
 function getShouldRevalidateFunction(
   route: Partial<DataRouteObject>,
-  routeId: string,
+  manifestRoute: Omit<EntryRoute, "children">,
+  ssr: boolean,
   needsRevalidation: Set<string> | undefined
 ) {
   // During HDR we force revalidation for updated routes
   if (needsRevalidation) {
     return wrapShouldRevalidateForHdr(
-      routeId,
+      manifestRoute.id,
       route.shouldRevalidate,
       needsRevalidation
     );
   }
 
+  // When ssr is false and the root route has a `loader` without a
+  // `clientLoader`, the `loader` data is static because it was rendered
+  // at build time so we can just turn off revalidations.  That way when
+  // submitting to a clientAction on a non-pre-rendered path, we don't
+  // try to reach out for a non-existent `.data` file which would have
+  // the "revalidated" root data
+  if (
+    !ssr &&
+    manifestRoute.id === "root" &&
+    manifestRoute.hasLoader &&
+    !manifestRoute.hasClientLoader
+  ) {
+    return () => false;
+  }
+
   // Single fetch revalidates by default, so override the RR default value which
   // matches the multi-fetch behavior with `true`
-  if (route.shouldRevalidate) {
+  if (ssr && route.shouldRevalidate) {
     let fn = route.shouldRevalidate;
     return (opts: ShouldRevalidateFunctionArgs) =>
       fn({ ...opts, defaultShouldRevalidate: true });

@@ -126,36 +126,39 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     };
 
-    // With SSR disabled and this path not included in prerender, we serve a
-    // 404 to match what would happen in a production build/deploy.  This is only
-    // applicable in dev mode since we won't be using the server-runtime in prod
-    // with ssr:false
-    if (
-      !_build.ssr &&
-      _build.prerender.length > 0 &&
-      normalizedPath !== "/" &&
-      // Look with/without the trailing slash to be sure
-      !_build.prerender.includes(normalizedPath) &&
-      !_build.prerender.includes(normalizedPath + "/")
-    ) {
-      errorHandler(
-        new ErrorResponseImpl(
-          404,
-          "Not Found",
-          `Refusing to SSR the path \`${normalizedPath}\` because \`ssr:false\` is ` +
-            "set and the path is not included in the `prerender` config, so in " +
-            "production the path will be a 404."
-        ),
-        {
-          context: loadContext,
-          params,
-          request,
+    // When runtime SSR is disabled, make our dev server behave like the deployed
+    // pre-rendered site would
+    if (!_build.ssr) {
+      if (_build.prerender.length === 0) {
+        // Add the header if we're in SPA mode
+        request.headers.set("X-React-Router-SPA-Mode", "yes");
+      } else if (
+        !_build.prerender.includes(normalizedPath) &&
+        !_build.prerender.includes(normalizedPath + "/")
+      ) {
+        if (url.pathname.endsWith(".data")) {
+          // 404 on non-pre-rendered `.data` requests
+          errorHandler(
+            new ErrorResponseImpl(
+              404,
+              "Not Found",
+              `Refusing to SSR the path \`${normalizedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`
+            ),
+            {
+              context: loadContext,
+              params,
+              request,
+            }
+          );
+          return new Response("Not Found", {
+            status: 404,
+            statusText: "Not Found",
+          });
+        } else {
+          // Serve a SPA fallback for non-pre-rendered document requests
+          request.headers.set("X-React-Router-SPA-Mode", "yes");
         }
-      );
-      return new Response("Not Found", {
-        status: 404,
-        statusText: "Not Found",
-      });
+      }
     }
 
     // Manifest request for fog of war

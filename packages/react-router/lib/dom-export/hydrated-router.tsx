@@ -174,16 +174,12 @@ function createHydratedRouter(): DataRouter {
     basename: ssrInfo.context.basename,
     hydrationData,
     mapRouteProperties,
-    // Single fetch doesn't apply in SPA mode because there's no running server
-    // to fetch `.data` requests from and no prerendered `.data` files to serve
-    dataStrategy: ssrInfo.context.isSpaMode
-      ? undefined
-      : getSingleFetchDataStrategy(
-          ssrInfo.manifest,
-          ssrInfo.routeModules,
-          ssrInfo.context.ssr,
-          () => router
-        ),
+    dataStrategy: getSingleFetchDataStrategy(
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
+      ssrInfo.context.ssr,
+      () => router
+    ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,

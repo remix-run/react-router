@@ -144,11 +144,14 @@ export function getSingleFetchDataStrategy(
     }
 
     if (!ssr) {
-      // If we get here for an `ssr:false` app, we know it's a `prerender`
-      // scenario because we don't even have a `dataStrategy` in SPA mode.
-      // We specifically keep single fetch enabled for `ssr:false` + `prerender`
-      // apps because we can prerender the `.data` files at build time and load
-      // them from a static file server/CDN at runtime.
+      // If this is SPA mode, there won't be any loaders below root and we'll
+      // disable single fetch.  We have to keep the `dataStrategy` defined for
+      // SPA mode because we may load a SPA fallback page but then navigate into
+      // a pre-rendered path and need to fetch the pre-rendered `.data` file.
+      //
+      // If this is `ssr:false` with a `prerender` config, we need to keep single
+      // fetch enabled because we can prerender the `.data` files at build time
+      // and load them from a static file server/CDN at runtime.
       //
       // However, with the SPA Fallback logic, we can have SPA routes operating
       // within a pre-rendered application and even if all the children have
@@ -156,14 +159,14 @@ export function getSingleFetchDataStrategy(
       // behavior would be to make the single fetch `.data` request on
       // navigation to get the updated root `loader` data.
       //
-      // We need to detect these scenarios because if it's a non-prerendered
+      // We need to detect these scenarios because if it's a non-pre-rendered
       // route being handled by SPA mode, then the `.data` file won't have been
       // pre-generated and it'll cause a 404.  Thankfully, we can do this
       // without knowing the prerender'd paths and can just do loader detection
       // from the manifest:
-      // - We only allow loaders on prerendered routes at build time
+      // - We only allow loaders on pre-rendered routes at build time
       // - We always let the root route have a loader which will be called at
-      //   build time for _all_ of our prerendered pages and the SPA Fallback
+      //   build time for _all_ of our pre-rendered pages and the SPA Fallback
       // - The root loader data will be static so since we already have it in
       //   the client we never need to revalidate it
       // - So the only time we need to make the request is if we find a loader
@@ -197,6 +200,7 @@ export function getSingleFetchDataStrategy(
     return singleFetchLoaderNavigationStrategy(
       manifest,
       routeModules,
+      ssr,
       getRouter(),
       request,
       matches
@@ -246,6 +250,7 @@ async function singleFetchActionStrategy(
 async function singleFetchLoaderNavigationStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   router: DataRouter,
   request: Request,
   matches: DataStrategyFunctionArgs["matches"]
@@ -369,7 +374,7 @@ async function singleFetchLoaderNavigationStrategy(
       // When one or more routes have opted out, we add a _routes param to
       // limit the loaders to those that have a server loader and did not
       // opt out
-      if (foundOptOutRoute && routesParams.size > 0) {
+      if (ssr && foundOptOutRoute && routesParams.size > 0) {
         url.searchParams.set(
           "_routes",
           matches

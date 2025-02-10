@@ -1557,6 +1557,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   ).reactRouterServerManifest
                 : await getReactRouterManifestForDev();
 
+            // Check for invalid APIs when SSR is disabled
+            if (!ctx.reactRouterConfig.ssr) {
+              validateSsrFalseExports(
+                ctx,
+                reactRouterManifest,
+                viteChildCompiler
+              );
+            }
+
             return `export default ${jsesc(reactRouterManifest, {
               es6: true,
             })};`;
@@ -2212,7 +2221,6 @@ async function handlePrerender(
   );
 
   let routes = createPrerenderRoutes(build.routes);
-  let prerenderedRoutes = new Set<string>();
   let headers = {
     // Header that can be used in the loader to know if you're running at
     // build time or runtime
@@ -2225,7 +2233,6 @@ async function handlePrerender(
       matches,
       `Unable to prerender path because it does not match any routes: ${path}`
     );
-    matches.forEach((m) => prerenderedRoutes.add(m.route.id));
     let hasLoaders = matches.some(
       (m) => build.assets.routes[m.route.id]?.hasLoader
     );
@@ -2278,43 +2285,6 @@ async function handlePrerender(
               },
             }
           : { headers }
-      );
-    }
-  }
-
-  // When `ssr:false` is set, we want to error if users are using invalid APIs
-  if (reactRouterConfig.ssr === false) {
-    let errors: string[] = [];
-    for (let [routeId, route] of Object.entries(build.routes)) {
-      let invalidApis: string[] = [];
-      if (route) {
-        // `headers`/`action` are never valid without SSR
-        if (route.module.headers) invalidApis.push("headers");
-        if (route.module.action) invalidApis.push("action");
-        if (invalidApis.length > 0) {
-          errors.push(
-            `Prerender: ${invalidApis.length} invalid route export(s) in ` +
-              `\`${route.id}\` when prerendering with \`ssr:false\`: ` +
-              `${invalidApis.join(", ")}.  ` +
-              "See https://reactrouter.com/how-to/spa for more information."
-          );
-        }
-
-        // `loader` is only valid if the route is matched by a `prerender` path
-        if (route.module.loader && !prerenderedRoutes.has(routeId)) {
-          errors.push(
-            `Prerender: 1 invalid route export in \`${route.id}\` when ` +
-              "using `ssr:false` with `prerender` because the route is never " +
-              "prerendered so the loader will never be called.  " +
-              "See https://reactrouter.com/how-to/spa for more information."
-          );
-        }
-      }
-    }
-    if (errors.length > 0) {
-      viteConfig.logger.error(errors.join("\n"));
-      throw new Error(
-        "Invalid route exports found when prerendering with `ssr:false`"
       );
     }
   }
@@ -2534,6 +2504,72 @@ function createPrerenderRoutes(
       ...commonRoute,
     };
   });
+}
+
+async function validateSsrFalseExports(
+  ctx: ReactRouterPluginContext,
+  manifest: ReactRouterManifest,
+  viteChildCompiler: Vite.ViteDevServer | null
+) {
+  let prerenderRoutes = createPrerenderRoutes(manifest.routes);
+  let prerenderedRoutes = new Set<string>();
+  let prerenderPaths = await getPrerenderPaths(
+    ctx.reactRouterConfig.prerender,
+    ctx.reactRouterConfig.ssr,
+    manifest.routes
+  );
+
+  for (let path of prerenderPaths) {
+    // Ensure we have a leading slash for matching
+    let matches = matchRoutes(
+      prerenderRoutes,
+      `/${path}/`.replace(/^\/\/+/, "/")
+    );
+    invariant(
+      matches,
+      `Unable to prerender path because it does not match any routes: ${path}`
+    );
+    matches.forEach((m) => prerenderedRoutes.add(m.route.id));
+  }
+
+  let errors: string[] = [];
+  let routeExports = await getRouteManifestModuleExports(
+    viteChildCompiler,
+    ctx
+  );
+  for (let [routeId, route] of Object.entries(manifest.routes)) {
+    let invalidApis: string[] = [];
+    invariant(route, "Expected a route object in validateSsrFalseExports");
+    let exports = routeExports[route.id];
+
+    // `headers`/`action` are never valid without SSR
+    if (exports.includes("headers")) invalidApis.push("headers");
+    if (exports.includes("action")) invalidApis.push("action");
+    if (invalidApis.length > 0) {
+      errors.push(
+        `Prerender: ${invalidApis.length} invalid route export(s) in ` +
+          `\`${route.id}\` when prerendering with \`ssr:false\`: ` +
+          `${invalidApis.join(", ")}.  ` +
+          "See https://reactrouter.com/how-to/spa for more information."
+      );
+    }
+
+    // `loader` is only valid if the route is matched by a `prerender` path
+    if (exports.includes("loader") && !prerenderedRoutes.has(routeId)) {
+      errors.push(
+        `Prerender: 1 invalid route export in \`${route.id}\` when ` +
+          "using `ssr:false` with `prerender` because the route is never " +
+          "prerendered so the loader will never be called.  " +
+          "See https://reactrouter.com/how-to/spa for more information."
+      );
+    }
+  }
+  if (errors.length > 0) {
+    console.log(colors.red(errors.join("\n")));
+    throw new Error(
+      "Invalid route exports found when prerendering with `ssr:false`"
+    );
+  }
 }
 
 function getAddressableRoutes(routes: RouteManifest): RouteManifestEntry[] {
