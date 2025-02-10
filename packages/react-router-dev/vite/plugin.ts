@@ -201,6 +201,21 @@ let invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
   });
 };
 
+let invalidateRouteModules = (
+  viteDevServer: Vite.ViteDevServer,
+  reactRouterConfig: ResolvedReactRouterConfig
+) => {
+  // invalidate route modules if the SSR value flips from true->false
+  // so we can error on any now-invalid exports
+  for (let route of Object.values(reactRouterConfig.routes)) {
+    let moduleId = path.join(reactRouterConfig.appDirectory, route.file);
+    let mod = viteDevServer.moduleGraph.getModuleById(moduleId);
+    if (mod) {
+      viteDevServer.moduleGraph.invalidateModule(mod);
+    }
+  }
+};
+
 const getHash = (source: BinaryLike, maxLength?: number): string => {
   let hash = createHash("sha256").update(source).digest("hex");
   return typeof maxLength === "number" ? hash.slice(0, maxLength) : hash;
@@ -1181,6 +1196,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         reactRouterConfigLoader.onChange(
           async ({
+            lastConfig,
             result,
             configCodeUpdated,
             configChanged,
@@ -1211,6 +1227,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
             if (configChanged) {
               invalidateVirtualModules(viteDevServer);
+
+              if (lastConfig.ssr && !result.value.ssr) {
+                invalidateRouteModules(viteDevServer, ctx.reactRouterConfig);
+              }
             }
           }
         );
