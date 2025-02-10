@@ -93,8 +93,8 @@ export function createStaticHandlerDataRoutes(
                   controller.close();
                 },
               });
-              let decoded = await decodeViaTurboStream(stream, global);
-              let data = decoded.value as SingleFetchResults;
+              let decoded: any = await decodeViaTurboStream(stream, global);
+              let data = decoded as SingleFetchResults;
               invariant(
                 data && route.id in data,
                 "Unable to decode prerendered data"
