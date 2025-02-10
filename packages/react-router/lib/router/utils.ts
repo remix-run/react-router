@@ -1481,15 +1481,30 @@ type HrefParams = Register extends {
   : AnyParams;
 
 type HrefArgs = {
-  [K in keyof HrefParams]:
-    | [HrefParams[K]]
-    | (Partial<HrefParams[K]> extends HrefParams[K] ? [] : never);
+  [K in keyof HrefParams]: ToHrefArgs<HrefParams[K]>;
 };
+
+// prettier-ignore
+type ToHrefArgs<T> =
+  Equal<T, {}> extends true ? [] :
+  Partial<T> extends T ? [T] | [] :
+  [T];
 
 export function href<Path extends keyof HrefArgs>(
   path: Path,
   ...args: HrefArgs[Path]
 ): string {
-  // TODO: implement this
-  return "";
+  let params = args[0];
+  return path
+    .split("/")
+    .map((segment) => {
+      const match = segment.match(/^:([\w-]+)(\?)?/);
+      if (!match) return segment;
+      const param = match[1];
+      if (params === undefined) {
+        throw Error(`Path '${path}' requires params but none were provided`);
+      }
+      return params[param];
+    })
+    .join("/");
 }

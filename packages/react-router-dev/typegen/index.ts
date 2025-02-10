@@ -101,31 +101,42 @@ function register(ctx: Context) {
   `;
 
   const { t } = Babel;
+
   const typeParams = t.tsTypeAliasDeclaration(
     t.identifier("Params"),
     null,
     t.tsTypeLiteral(
-      Object.values(ctx.config.routes).map((route) => {
-        // TODO: filter out layout (pathless) routes?
-        const lineage = getRouteLineage(ctx.config.routes, route);
-        const fullpath = lineage.map((route) => route.path).join("/");
-        const params = parseParams(fullpath);
-        return t.tsPropertySignature(
-          t.stringLiteral(fullpath),
-          t.tsTypeAnnotation(
-            t.tsTypeLiteral(
-              Object.entries(params).map(([param, isRequired]) => {
-                const property = t.tsPropertySignature(
-                  t.stringLiteral(param),
-                  t.tsTypeAnnotation(t.tsStringKeyword())
-                );
-                property.optional = !isRequired;
-                return property;
-              })
+      Object.values(ctx.config.routes)
+        .map((route) => {
+          // filter out pathless (layout) routes
+          if (route.id !== "root" && !route.path) return undefined;
+
+          const lineage = getRouteLineage(ctx.config.routes, route);
+          const fullpath =
+            route.id === "root"
+              ? "/"
+              : lineage
+                  .map((route) => route.path)
+                  .filter((path) => path !== undefined)
+                  .join("/");
+          const params = parseParams(fullpath);
+          return t.tsPropertySignature(
+            t.stringLiteral(fullpath),
+            t.tsTypeAnnotation(
+              t.tsTypeLiteral(
+                Object.entries(params).map(([param, isRequired]) => {
+                  const property = t.tsPropertySignature(
+                    t.stringLiteral(param),
+                    t.tsTypeAnnotation(t.tsStringKeyword())
+                  );
+                  property.optional = !isRequired;
+                  return property;
+                })
+              )
             )
-          )
-        );
-      })
+          );
+        })
+        .filter((x): x is Babel.Babel.TSPropertySignature => x !== undefined)
     )
   );
 
