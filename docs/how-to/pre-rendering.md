@@ -4,9 +4,10 @@ title: Pre-Rendering
 
 # Pre-Rendering
 
-Pre-rendering allows you to render pages at build time instead of on a runtime server to speed up page loads for static content.
+Pre-rendering allows you to speed up page loads for static content by rendering pages at build time instead of either:
 
-In some cases, you'll serve these pages _alongside_ a runtime SSR server. If you wish to pre-render pages and deploy them _without_ a runtime SSR server, please see the [Pre-rendering with `ssr:false`](#pre-rendering-without-a-runtime-ssr-server) section below.
+- on a server at request time (`ssr:true`)
+- client-side after hydration (`ssr:false`)
 
 ## Pre-rendering alongside a runtime SSR server
 
