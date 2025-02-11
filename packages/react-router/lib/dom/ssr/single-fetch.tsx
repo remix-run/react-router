@@ -108,7 +108,7 @@ export function StreamTransfer({
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
-            __html: `window.__reactRouterContext.streamController.close();`,
+            __html: `window.__reactRouterContext.streamDone=true;window.__reactRouterContext.streamController.close();`,
           }}
         />
       </>

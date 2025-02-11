@@ -374,6 +374,10 @@ async function handleDocumentRequest(
     context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
+  let renderMeta: {
+    didRenderScripts?: boolean;
+  } = {};
+
   // Server UI state to send to the client.
   // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
   // - Otherwise it's stringified into `serverHandoffString`
@@ -400,7 +404,7 @@ async function handleDocumentRequest(
       build.entry.module.streamTimeout,
       serverMode
     ),
-    renderMeta: {},
+    renderMeta,
     future: build.future,
     ssr: build.ssr,
     isSpaMode: build.isSpaMode,
@@ -408,8 +412,11 @@ async function handleDocumentRequest(
   };
 
   let handleDocumentRequestFunction = build.entry.module.default;
+
+  let response: Response;
+
   try {
-    return await handleDocumentRequestFunction(
+    response = await handleDocumentRequestFunction(
       request,
       context.statusCode,
       headers,
@@ -472,11 +479,11 @@ async function handleDocumentRequest(
         build.entry.module.streamTimeout,
         serverMode
       ),
-      renderMeta: {},
+      renderMeta,
     };
 
     try {
-      return await handleDocumentRequestFunction(
+      response = await handleDocumentRequestFunction(
         request,
         context.statusCode,
         headers,
@@ -485,9 +492,33 @@ async function handleDocumentRequest(
       );
     } catch (error: any) {
       handleError(error);
-      return returnLastResortErrorResponse(error, serverMode);
+      response = returnLastResortErrorResponse(error, serverMode);
     }
   }
+
+  return new Response(
+    response.body?.pipeThrough(
+      new TransformStream({
+        flush(controller) {
+          // If we render scripts, react's render might be aborted leaving the stream transfer
+          // open in the browser causing promises to never resolve. This will error the stream
+          // in the browser and allow the promises to settle.
+          if (renderMeta.didRenderScripts){
+            controller.enqueue(
+              new TextEncoder().encode(
+                '<script>if (!window.__reactRouterContext.streamDone)window.__reactRouterContext.streamController.error(new Error("Server aborted."));</script>'
+              )
+            );
+          }
+        },
+      })
+    ),
+    {
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    }
+  );
 }
 
 async function handleResourceRequest(

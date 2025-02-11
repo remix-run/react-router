@@ -83,8 +83,7 @@ function createHydratedRouter(): DataRouter {
     ssrInfo.context.stream = undefined;
     ssrInfo.stateDecodingPromise = decodeViaTurboStream(stream, window)
       .then((value) => {
-        ssrInfo!.context.state =
-          value as typeof localSsrInfo.context.state;
+        ssrInfo!.context.state = value as typeof localSsrInfo.context.state;
         localSsrInfo.stateDecodingPromise!.value = true;
       })
       .catch((e) => {

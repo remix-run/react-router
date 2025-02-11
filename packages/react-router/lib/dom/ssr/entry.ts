@@ -31,6 +31,7 @@ export interface FrameworkContextObject {
         error?: unknown;
       }
     >;
+    streamFinished?: boolean;
   };
 }
 

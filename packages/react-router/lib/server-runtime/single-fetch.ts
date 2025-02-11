@@ -327,7 +327,8 @@ export function encodeViaTurboStream(
 
   return encode(data, {
     signal: controller.signal,
-    redactErrors: serverMode === ServerMode.Development ? false : "Unexpected Server Error",
+    redactErrors:
+      serverMode === ServerMode.Development ? false : "Unexpected Server Error",
     plugins: [
       (value) => {
         if (value instanceof ErrorResponseImpl) {
@@ -335,10 +336,11 @@ export function encodeViaTurboStream(
           return ["ErrorResponse", data, status, statusText];
         }
 
-        if (
-          SingleFetchRedirectSymbol in (value as any)
-        ) {
-          return ["SingleFetchRedirect", (value as any)[SingleFetchRedirectSymbol]];
+        if (SingleFetchRedirectSymbol in (value as any)) {
+          return [
+            "SingleFetchRedirect",
+            (value as any)[SingleFetchRedirectSymbol],
+          ];
         }
       },
     ],
