@@ -6,6 +6,7 @@ import type { ModuleNode, ViteDevServer } from "vite";
 import type { ResolvedReactRouterConfig } from "../config/config";
 import { resolveFileUrl } from "./resolve-file-url";
 import { getVite } from "./vite";
+import { loadModule } from "./plugin";
 
 type ServerRouteManifest = ServerBuild["routes"];
 type ServerRoute = ServerRouteManifest[string];
@@ -111,7 +112,8 @@ const getStylesForFiles = async ({
         let css = isCssModulesFile(dep.file)
           ? cssModulesManifest[dep.file]
           : (
-              await viteDevServer.ssrLoadModule(
+              await loadModule(
+                viteDevServer,
                 // We need the ?inline query in Vite v6 when loading CSS in SSR
                 // since it does not expose the default export for CSS in a
                 // server environment. This is to align with non-SSR

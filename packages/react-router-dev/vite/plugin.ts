@@ -1922,7 +1922,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (route) {
           // invalidate manifest on route exports change
           let serverManifest = (
-            await server.ssrLoadModule(virtual.serverManifest.id)
+            await loadModule(server, virtual.serverManifest.id)
           ).default as ReactRouterManifest;
 
           let oldRouteMetadata = serverManifest.routes[route.id];
