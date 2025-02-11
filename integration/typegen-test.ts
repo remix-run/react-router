@@ -388,4 +388,52 @@ test.describe("typegen", () => {
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
   });
+
+  test("href", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import path from "node:path";
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("no-params", "routes/no-params.tsx"),
+          route("required-param/:req", "routes/required-param.tsx"),
+          route("optional-param/:opt?", "routes/optional-param.tsx"),
+          route("some-other-route", "routes/some-other-route.tsx"),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/no-params.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/required-param.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/optional-param.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/some-other-route.tsx": tsx`
+        import { href } from "react-router"
+
+        // @ts-expect-error
+        href("/does-not-exist")
+
+        href("/no-params")
+
+        // @ts-expect-error
+        href("/required-param/:req")
+        href("/required-param/:req", { req: "hello" })
+
+        href("/optional-param/:opt?")
+        href("/optional-param/:opt?", { opt: "hello" })
+
+        export default function Component() {}
+      `,
+    });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
 });
