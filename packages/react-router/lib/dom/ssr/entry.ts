@@ -32,6 +32,7 @@ export interface FrameworkContextObject {
       }
     >;
     streamFinished?: boolean;
+    nonce?: string;
   };
 }
 

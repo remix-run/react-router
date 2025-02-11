@@ -3579,7 +3579,7 @@ test.describe("single-fetch", () => {
         expect(await script.getAttribute("nonce")).toEqual("the-nonce");
       }
     }
-    expect(remixScriptsCount).toBe(4);
+    expect(remixScriptsCount).toBe(5);
   });
 
   test("supports loaders that return undefined", async ({ page }) => {

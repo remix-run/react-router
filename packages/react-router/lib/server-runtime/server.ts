@@ -380,6 +380,7 @@ async function handleDocumentRequest(
 
   let renderMeta: {
     didRenderScripts?: boolean;
+    nonce?: string;
   } = {};
 
   // Server UI state to send to the client.
@@ -512,9 +513,10 @@ async function handleDocumentRequest(
           // open in the browser causing promises to never resolve. This will error the stream
           // in the browser and allow the promises to settle.
           if (renderMeta.didRenderScripts){
+            const script = renderMeta.nonce ? `<script nonce="${renderMeta.nonce}">` : '<script>';
             controller.enqueue(
               new TextEncoder().encode(
-                '<script>if (!window.__reactRouterContext.streamDone)window.__reactRouterContext.streamController.error(new Error("Server aborted."));</script>'
+                `${script}if (!window.__reactRouterContext.streamDone)window.__reactRouterContext.streamController.error(new Error("Server aborted."));</script>`
               )
             );
           }
