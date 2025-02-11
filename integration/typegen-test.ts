@@ -82,16 +82,42 @@ test.describe("typegen", () => {
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
           export default [
-            route("repeated-params/:id/:id?/:id", "routes/repeated-params.tsx")
+            route("only-required/:id/:id", "routes/only-required.tsx"),
+            route("only-optional/:id?/:id?", "routes/only-optional.tsx"),
+            route("optional-then-required/:id?/:id", "routes/optional-then-required.tsx"),
+            route("required-then-optional/:id/:id?", "routes/required-then-optional.tsx"),
           ] satisfies RouteConfig;
         `,
-        "app/routes/repeated-params.tsx": tsx`
+        "app/routes/only-required.tsx": tsx`
           import type { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/repeated-params"
+          import type { Route } from "./+types/only-required"
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params.id, string>>
+            return null
+          }
+        `,
+        "app/routes/only-optional.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/only-optional"
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params.id, string | undefined>>
+            return null
+          }
+        `,
+        "app/routes/optional-then-required.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/optional-then-required"
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params.id, string>>
+            return null
+          }
+        `,
+        "app/routes/required-then-optional.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/required-then-optional"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Expected = [string, string | undefined, string]
-            type Test = Expect<Equal<typeof params.id, Expected>>
+            type Test = Expect<Equal<typeof params.id, string>>
             return null
           }
         `,

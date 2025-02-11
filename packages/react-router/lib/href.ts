@@ -8,10 +8,10 @@ type Params = Register extends {
   ? RegisteredParams
   : AnyParams;
 
-type HrefArgs = { [K in keyof Params]: ToHrefArgs<Params[K]> };
+type Args = { [K in keyof Params]: ToArgs<Params[K]> };
 
 // prettier-ignore
-type ToHrefArgs<T> =
+type ToArgs<T> =
   // path without params -> no `params` arg
   Equal<T, {}> extends true ? [] :
   // path with only optional params -> optional `params` arg
@@ -29,9 +29,9 @@ type ToHrefArgs<T> =
   <Link to={href("/products/:id", { id: "abc123" })} />
   ```
  */
-export function href<Path extends keyof HrefArgs>(
+export function href<Path extends keyof Args>(
   path: Path,
-  ...args: HrefArgs[Path]
+  ...args: Args[Path]
 ): string {
   let params = args[0];
   return path

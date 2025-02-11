@@ -11,7 +11,8 @@ import * as Babel from "../vite/babel";
 import { generate } from "./generate";
 import type { Context } from "./context";
 import { getTypesDir, getTypesPath } from "./paths";
-import type { RouteManifest, RouteManifestEntry } from "../config/routes";
+import * as Params from "./params";
+import * as Route from "./route";
 
 export async function run(rootDirectory: string) {
   const ctx = await createContext({ rootDirectory, watch: false });
@@ -111,15 +112,9 @@ function register(ctx: Context) {
           // filter out pathless (layout) routes
           if (route.id !== "root" && !route.path) return undefined;
 
-          const lineage = getRouteLineage(ctx.config.routes, route);
-          const fullpath =
-            route.id === "root"
-              ? "/"
-              : lineage
-                  .map((route) => route.path)
-                  .filter((path) => path !== undefined)
-                  .join("/");
-          const params = parseParams(fullpath);
+          const lineage = Route.lineage(ctx.config.routes, route);
+          const fullpath = Route.fullpath(lineage);
+          const params = Params.parse(fullpath);
           return t.tsPropertySignature(
             t.stringLiteral(fullpath),
             t.tsTypeAnnotation(
@@ -141,34 +136,4 @@ function register(ctx: Context) {
   );
 
   return [register, Babel.generate(typeParams).code].join("\n\n");
-}
-
-function parseParams(fullpath: string) {
-  const result: Record<string, boolean> = {};
-
-  let segments = fullpath.split("/");
-  segments.forEach((segment) => {
-    const match = segment.match(/^:([\w-]+)(\?)?/);
-    if (!match) return;
-    const param = match[1];
-    const isRequired = match[2] === undefined;
-
-    result[param] ||= isRequired;
-    return;
-  });
-
-  const hasSplat = segments.at(-1) === "*";
-  if (hasSplat) result["*"] = true;
-  return result;
-}
-
-function getRouteLineage(routes: RouteManifest, route: RouteManifestEntry) {
-  const result: RouteManifestEntry[] = [];
-  while (route) {
-    result.push(route);
-    if (!route.parentId) break;
-    route = routes[route.parentId];
-  }
-  result.reverse();
-  return result;
 }
