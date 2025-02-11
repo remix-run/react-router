@@ -122,15 +122,10 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName =
-  | "client"
-  | SsrEnvironmentName
-  | typeof HELPER_ENVIRONMENT_NAME;
+export type EnvironmentName = "client" | SsrEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
-
-const HELPER_ENVIRONMENT_NAME = "__react_router_helper__";
 
 type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
@@ -919,6 +914,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       routes,
     };
   };
+
+  const HELPER_ENVIRONMENT_NAME = "__react_router_helper__";
 
   const loadModule: LoadModule = (viteDevServer, url) => {
     if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
@@ -3185,8 +3182,6 @@ export async function getEnvironmentOptionsResolvers(
         },
       });
   }
-
-  environmentOptionsResolvers[HELPER_ENVIRONMENT_NAME] = () => ({});
 
   return environmentOptionsResolvers;
 }
