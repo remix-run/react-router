@@ -140,7 +140,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       Object.assign(params, matches[0].params);
     }
 
-    let response: Response;
+    let response: Response | undefined;
     if (url.pathname.endsWith(".data")) {
       let handlerUrl = new URL(request.url);
       handlerUrl.pathname = handlerUrl.pathname
@@ -228,6 +228,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         handleError,
         criticalCss
       );
+    }
+
+    if (!response) {
+      return new Response("Unknown Server Error", { status: 500 });
     }
 
     if (request.method === "HEAD") {
@@ -494,6 +498,10 @@ async function handleDocumentRequest(
       handleError(error);
       response = returnLastResortErrorResponse(error, serverMode);
     }
+  }
+
+  if (!response) {
+    return undefined;
   }
 
   return new Response(
