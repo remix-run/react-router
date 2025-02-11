@@ -6,7 +6,7 @@ import type { ModuleNode, ViteDevServer } from "vite";
 import type { ResolvedReactRouterConfig } from "../config/config";
 import { resolveFileUrl } from "./resolve-file-url";
 import { getVite } from "./vite";
-import { loadModule } from "./plugin";
+import type { LoadModule } from "./plugin";
 
 type ServerRouteManifest = ServerBuild["routes"];
 type ServerRoute = ServerRouteManifest[string];
@@ -58,11 +58,13 @@ const getStylesForFiles = async ({
   rootDirectory,
   cssModulesManifest,
   files,
+  loadModule,
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
   cssModulesManifest: Record<string, string>;
   files: string[];
+  loadModule: LoadModule;
 }): Promise<string | undefined> => {
   let vite = getVite();
   let viteMajor = parseInt(vite.version.split(".")[0], 10);
@@ -226,6 +228,7 @@ export const getStylesForUrl = async ({
   cssModulesManifest,
   build,
   url,
+  loadModule,
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
@@ -234,6 +237,7 @@ export const getStylesForUrl = async ({
   cssModulesManifest: Record<string, string>;
   build: ServerBuild;
   url: string | undefined;
+  loadModule: LoadModule;
 }): Promise<string | undefined> => {
   if (url === undefined || url.includes("?_data=")) {
     return undefined;
@@ -256,6 +260,7 @@ export const getStylesForUrl = async ({
       // Then include any styles from the matched routes
       ...documentRouteFiles,
     ],
+    loadModule,
   });
 
   return styles;

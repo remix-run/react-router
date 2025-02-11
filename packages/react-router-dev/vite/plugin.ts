@@ -64,6 +64,11 @@ import {
 } from "../config/config";
 import * as WithProps from "./with-props";
 
+export type LoadModule = (
+  viteDevServer: Vite.ViteDevServer,
+  url: string
+) => Promise<any>;
+
 export async function resolveViteConfig({
   configFile,
   mode,
@@ -117,10 +122,15 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName = "client" | SsrEnvironmentName;
+export type EnvironmentName =
+  | "client"
+  | SsrEnvironmentName
+  | typeof HELPER_ENVIRONMENT_NAME;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
+
+const HELPER_ENVIRONMENT_NAME = "__react_router_helper__";
 
 type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
@@ -910,6 +920,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     };
   };
 
+  const loadModule: LoadModule = (viteDevServer, url) => {
+    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+      const vite = getVite();
+      const helperEnvironment =
+        viteDevServer.environments?.[HELPER_ENVIRONMENT_NAME];
+
+      invariant(
+        helperEnvironment && vite.isRunnableDevEnvironment(helperEnvironment),
+        "Missing helper environment"
+      );
+
+      return helperEnvironment.runner.import(url);
+    }
+
+    return viteDevServer.ssrLoadModule(url);
+  };
+
   return [
     {
       name: "react-router",
@@ -1061,10 +1088,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
-                environments: {
-                  ...environments,
-                  __react_router_helper__: {},
-                },
+                environments,
                 build: {
                   // This isn't honored by the SSR environment config (which seems
                   // to be a Vite bug?) so we set it here too.
@@ -1246,6 +1270,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               cssModulesManifest,
               build,
               url,
+              loadModule,
             });
           },
           // If an error is caught within the request handler, let Vite fix the
@@ -3161,6 +3186,8 @@ export async function getEnvironmentOptionsResolvers(
       });
   }
 
+  environmentOptionsResolvers[HELPER_ENVIRONMENT_NAME] = () => ({});
+
   return environmentOptionsResolvers;
 }
 
@@ -3196,13 +3223,4 @@ async function getEnvironmentsOptions(
 
 function isNonNullable<T>(x: T): x is NonNullable<T> {
   return x != null;
-}
-
-export function loadModule(viteDevServer: Vite.ViteDevServer, url: string) {
-  const vite = getVite();
-  const helperEnvironment = viteDevServer.environments?.__react_router_helper__;
-
-  return helperEnvironment && vite.isRunnableDevEnvironment(helperEnvironment)
-    ? helperEnvironment.runner.import(url)
-    : viteDevServer.ssrLoadModule(url);
 }
