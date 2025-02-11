@@ -46,7 +46,7 @@ export default function App() {
 }
 ```
 
-Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose, and access the data via the optional `HydrateFallback` `loaderData` prop. You cannot include a loader in any other routes in your app when using SPA Mode.
+Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose, and access the data via the optional `HydrateFallback` `loaderData` prop.
 
 ```tsx filename=root.tsx lines=[3,7,10]
 export async function loader() {
@@ -64,6 +64,8 @@ export function HydrateFallback({ loaderData }) {
   );
 }
 ```
+
+You cannot include a loader in any other routes in your app when using SPA Mode unless you are [pre-rendering those pages](./pre-rendering).
 
 ## 3. Use client loaders and client actions
 
