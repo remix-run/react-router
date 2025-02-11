@@ -1169,6 +1169,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
+          cacheDir: "node_modules/.vite-child-compiler",
           mode: viteConfig.mode,
           server: {
             watch: viteConfig.command === "build" ? null : undefined,
