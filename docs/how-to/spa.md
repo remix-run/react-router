@@ -30,7 +30,6 @@ SPA Mode will generate an `index.html` file at build-time that you can serve as 
 To provide a better/faster loading UI, you can add a `HydrateFallback` component to your root route to render your loading UI into the `index.html` at build time. This way, it will be shown to users immediately while the SPA is loading/hydrating.
 
 ```tsx filename=root.tsx
-import { Route } from "./+types/root";
 import AwesomeSpinner from "./components/spinner";
 
 export function Layout() {
@@ -48,6 +47,23 @@ export default function App() {
 ```
 
 Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose, and access the data via the optional `HydrateFallback` `loaderData` prop. You cannot include a loader in any other routes in your app when using SPA Mode.
+
+```tsx filename=root.tsx lines=[3,7,10]
+export async function loader() {
+  return {
+    version: await getVersion(),
+  };
+}
+
+export function HydrateFallback({ loaderData }) {
+  return (
+    <div>
+      <h1>Loading version {loaderData.version}...</h1>
+      <AwesomeSpinner />
+    </div>
+  );
+}
+```
 
 ## 3. Use client loaders and client actions
 
