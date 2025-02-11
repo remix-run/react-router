@@ -23,7 +23,33 @@ export default {
 
 With this set to false, the server build will no longer be generated.
 
-## 2. Use client loaders and client actions
+## 2. Add a `HydrateFallback` to your root route
+
+SPA Mode will generate an `index.html` file at build-time that you can serve as the entry point for your SPA. This will only render the root route so that it is capable of hydrating at runtime for any path in your application.
+
+To provide a better/faster loading UI, you can add a `HydrateFallback` component to your root route to render your loading UI into the `index.html` at build time. This way, it will be shown to users immediately while the SPA is loading/hydrating.
+
+```tsx filename=root.tsx
+import { Route } from "./+types/root";
+import AwesomeSpinner from "./components/spinner";
+
+export function Layout() {
+  return <html>{/*...*/}</html>;
+}
+
+// Server-rendered at build time into `index.html` (inside `<Layout>`)
+export function HydrateFallback() {
+  return <AwesomeSpinner />;
+}
+
+export default function App() {
+  return <Outlet />;
+}
+```
+
+Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose, and access the data via the optional `HydrateFallback` `loaderData` prop. You cannot in include a loader in any other routes in your app when using SPA Mode.
+
+## 3. Use client loaders and client actions
 
 With server rendering disabled, you can still use `clientLoader` and `clientAction` to manage route data and mutations.
 
@@ -45,11 +71,11 @@ export async function clientAction({
 }
 ```
 
-## 3. Pre-rendering
+## 4. Pre-rendering
 
 Pre-rendering can be configured for paths with static data known at build time for faster initial page loads. Refer to [Pre-rendering](./pre-rendering) to set it up.
 
-## 4. Direct all URLs to index.html
+## 5. Direct all URLs to index.html
 
 After running `react-router build`, deploy the `build/client` directory to whatever static host you prefer.
 

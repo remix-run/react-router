@@ -745,7 +745,8 @@ test.describe("Prerendering", () => {
       let stderr = result.stderr.toString("utf8");
       expect(stderr).toMatch(
         "Prerender: 2 invalid route export(s) in `routes/a` when prerendering " +
-          "with `ssr:false`: headers, action.  See https://reactrouter.com/how-to/spa for more information."
+          "with `ssr:false`: headers, action.  " +
+          "See https://reactrouter.com/how-to/pre-rendering for more information."
       );
     });
 
@@ -773,8 +774,8 @@ test.describe("Prerendering", () => {
       expect(stderr).toMatch(
         "Prerender: 1 invalid route export in `routes/b` when using `ssr:false` " +
           "with `prerender` because the route is never prerendered so the loader " +
-          "will never be called.  See https://reactrouter.com/how-to/spa for more " +
-          "information."
+          "will never be called.  See https://reactrouter.com/how-to/pre-rendering " +
+          "for more information."
       );
     });
 

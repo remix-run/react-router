@@ -6,9 +6,9 @@ title: Pre-Rendering
 
 Pre-rendering allows you to render pages at build time instead of on a runtime server to speed up page loads for static content.
 
-In some cases, you'll serve these pages _alongside_ a runtime SSR server. If you wish to pre-render pages and deploy them _without_ a runtime SSR server, please see the [Pre-rendering with `ssr:false`](#Pre-rendering-with-ssrfalse) section below.
+In some cases, you'll serve these pages _alongside_ a runtime SSR server. If you wish to pre-render pages and deploy them _without_ a runtime SSR server, please see the [Pre-rendering with `ssr:false`](#pre-rendering-without-a-runtime-ssr-server) section below.
 
-## Pre-rendering with ssr:true
+## Pre-rendering alongside a runtime SSR server
 
 ### Configuration
 
@@ -82,7 +82,7 @@ Prerender: Generated build/client/blog/my-first-post/index.html
 
 During development, pre-rendering doesn't save the rendered results to the public directory, this only happens for `react-router build`.
 
-## Pre-rendering with `ssr:false`
+## Pre-rendering without a runtime SSR server
 
 The above examples assume you are deploying a runtime server, but are pre-rendering some static pages in order to serve them faster and avoid hitting the server.
 
@@ -99,7 +99,7 @@ export default {
 
 If you specify `ssr:false` without a `prerender` config, React Router refers to that as [SPA Mode](./spa). In SPA Mode, we render a single HTML file that is capable of hydrating for _any_ of your application paths. It can do this because it only renders the `root` route into the HTML file and then determines which child routes to load based on the browser URL during hydration. This means you can use a `loader` on the root route, but not on any other routes because we don't know which routes to load until hydration in the browser.
 
-If you want to pre-render paths with `ssr:false`, those matched routes _can_ have loaders because we'll pre-render all of the matched routes for those paths, not just the root. Usually, with `prerender:true`, you'll be pre-rendering all of your application routes into a full SSG setup.
+If you want to pre-render paths with `ssr:false`, those matched routes _can_ have loaders because we'll pre-render all of the matched routes for those paths, not just the root. You cannot include `actions` or `headers` functions in any routes when `ssr:false` is set because there will be no runtime server to run them on.
 
 ### Pre-rendering with a SPA Fallback
 
@@ -126,10 +126,12 @@ export default {
 } satisfies Config;
 ```
 
-You can configure your deployment server to serve this file for any path that otherwise would 404.
-
-Here's an example of how you can do this with the [`sirv-cli`](https://www.npmjs.com/package/sirv-cli#user-content-single-page-applications) tool:
+You can configure your deployment server to serve this file for any path that otherwise would 404. Here's an example of how you can do this with the [`sirv-cli`](https://www.npmjs.com/package/sirv-cli#user-content-single-page-applications) tool:
 
 ```sh
+# If you did not pre-render the `/` route
+sirv-cli build/client --single index.html
+
+# If you pre-rendered the `/` route
 sirv-cli build/client --single __spa-fallback.html
 ```
