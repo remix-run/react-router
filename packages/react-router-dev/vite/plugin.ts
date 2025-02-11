@@ -122,7 +122,10 @@ export type EnvironmentName = "client" | SsrEnvironmentName;
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
 
-type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
+type EnvironmentOptions = Pick<
+  Vite.EnvironmentOptions,
+  "build" | "resolve" | "optimizeDeps"
+>;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -3155,6 +3158,23 @@ export async function getEnvironmentOptionsResolvers(
               virtual.serverBuild.id,
           },
         },
+        optimizeDeps:
+          viteUserConfig.environments?.ssr?.optimizeDeps?.noDiscovery === false
+            ? {
+                entries: [
+                  vite.normalizePath(ctx.entryServerFilePath),
+                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
+                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
+                  ),
+                ],
+                include: [
+                  "react",
+                  "react/jsx-dev-runtime",
+                  "react-dom/server",
+                  "react-router",
+                ],
+              }
+            : undefined,
       });
   }
 
