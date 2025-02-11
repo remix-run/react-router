@@ -520,7 +520,6 @@ async function resolveConfig({
 type ChokidarEventName = ChokidarEmitArgs[0];
 
 type ChangeHandler = (args: {
-  lastConfig: ResolvedReactRouterConfig;
   result: Result<ResolvedReactRouterConfig>;
   configCodeUpdated: boolean;
   configChanged: boolean;
@@ -623,7 +622,6 @@ export async function createConfigLoader({
 
             for (let handler of changeHandlers) {
               handler({
-                lastConfig,
                 result,
                 configCodeUpdated,
                 configChanged,
