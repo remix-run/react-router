@@ -2340,20 +2340,23 @@ async function handlePrerender(
     let leafRoute = matches ? matches[matches.length - 1].route : null;
     let manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
     let isResourceRoute =
-      manifestRoute &&
-      !manifestRoute.default &&
-      !manifestRoute.ErrorBoundary &&
-      manifestRoute.loader;
+      manifestRoute && !manifestRoute.default && !manifestRoute.ErrorBoundary;
 
     if (isResourceRoute) {
-      await prerenderResourceRoute(
-        handler,
-        path,
-        clientBuildDirectory,
-        reactRouterConfig,
-        viteConfig,
-        { headers }
-      );
+      if (manifestRoute?.loader) {
+        await prerenderResourceRoute(
+          handler,
+          path,
+          clientBuildDirectory,
+          reactRouterConfig,
+          viteConfig,
+          { headers }
+        );
+      } else {
+        viteConfig.logger.warn(
+          `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute?.id}`
+        );
+      }
     } else {
       await prerenderRoute(
         handler,
