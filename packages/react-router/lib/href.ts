@@ -40,10 +40,16 @@ export function href<Path extends keyof Args>(
       const match = segment.match(/^:([\w-]+)(\?)?/);
       if (!match) return segment;
       const param = match[1];
-      if (params === undefined) {
-        throw Error(`Path '${path}' requires params but none were provided`);
+      const value = params ? params[param] : undefined;
+
+      const isRequired = match[2] === undefined;
+      if (isRequired && value === undefined) {
+        throw Error(
+          `Path '${path}' requires param '${param}' but it was not provided`
+        );
       }
-      return params[param];
+      return value;
     })
+    .filter((segment) => segment !== undefined)
     .join("/");
 }
