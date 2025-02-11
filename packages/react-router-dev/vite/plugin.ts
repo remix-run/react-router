@@ -1061,7 +1061,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
-                environments,
+                environments: {
+                  ...environments,
+                  __react_router_helper__: {},
+                },
                 build: {
                   // This isn't honored by the SSR environment config (which seems
                   // to be a Vite bug?) so we set it here too.
@@ -3193,4 +3196,13 @@ async function getEnvironmentsOptions(
 
 function isNonNullable<T>(x: T): x is NonNullable<T> {
   return x != null;
+}
+
+export function loadModule(viteDevServer: Vite.ViteDevServer, url: string) {
+  const vite = getVite();
+  const helperEnvironment = viteDevServer.environments?.__react_router_helper__;
+
+  return helperEnvironment && vite.isRunnableDevEnvironment(helperEnvironment)
+    ? helperEnvironment.runner.import(url)
+    : viteDevServer.ssrLoadModule(url);
 }
