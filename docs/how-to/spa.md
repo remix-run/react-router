@@ -47,7 +47,7 @@ export default function App() {
 }
 ```
 
-Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose, and access the data via the optional `HydrateFallback` `loaderData` prop. You cannot in include a loader in any other routes in your app when using SPA Mode.
+Because the root route is server-rendered at build time, you can also use a `loader` in your root route if you choose, and access the data via the optional `HydrateFallback` `loaderData` prop. You cannot include a loader in any other routes in your app when using SPA Mode.
 
 ## 3. Use client loaders and client actions
 

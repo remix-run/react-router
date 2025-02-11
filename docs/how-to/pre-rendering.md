@@ -29,7 +29,7 @@ export default {
   prerender: ["/", "/blog", "/blog/popular-post"],
 
   // async function for dependencies like a CMS
-  async pre-render({ getStaticPaths }) {
+  async prerender({ getStaticPaths }) {
     let posts = await fakeGetPostsFromCMS();
     return ["/", "/blog"].concat(
       posts.map((post) => post.href)
