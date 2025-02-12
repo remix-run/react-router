@@ -921,7 +921,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
       const vite = getVite();
       const helperEnvironment =
-        viteDevServer.environments?.[HELPER_ENVIRONMENT_NAME];
+        viteDevServer.environments[HELPER_ENVIRONMENT_NAME];
 
       invariant(
         helperEnvironment && vite.isRunnableDevEnvironment(helperEnvironment),
@@ -1085,7 +1085,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
-                environments,
+                environments: {
+                  ...environments,
+                  [HELPER_ENVIRONMENT_NAME]: {},
+                },
                 build: {
                   // This isn't honored by the SSR environment config (which seems
                   // to be a Vite bug?) so we set it here too.
