@@ -1,6 +1,6 @@
 ---
-"@react-router/dev": patch
-"react-router": patch
+"@react-router/dev": minor
+"react-router": minor
 ---
 
 New type-safe `href` utility that guarantees links point to actual paths in your app
