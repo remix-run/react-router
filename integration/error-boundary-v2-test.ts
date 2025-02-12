@@ -40,6 +40,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         "app/routes/parent.tsx": js`
+          import { useEffect } from "react";
           import {
             Link,
             Outlet,
@@ -48,11 +49,25 @@ test.describe("ErrorBoundary", () => {
             useRouteError,
           } from "react-router";
 
-          export function loader() {
-            return "PARENT LOADER";
+          export function loader({ request }) {
+            const url = new URL(request.url);
+            return {message: "PARENT LOADER", error: url.searchParams.has('error') };
           }
 
-          export default function Component() {
+          export default function Component({ loaderData }) {
+            useEffect(() => {
+              let ogFetch = window.fetch;
+              if (loaderData.error) {
+                window.fetch = async (...args) => {
+                  return new Response('CDN Error!', { status: 500 });
+                };
+
+                return () => {
+                  window.fetch = ogFetch;
+                };
+              }
+            }, [loaderData.error]);
+
             return (
               <div>
                 <nav>
@@ -66,7 +81,7 @@ test.describe("ErrorBoundary", () => {
                     <li><Link to="/parent/child-without-boundary?type=render">Link</Link></li>
                   </ul>
                 </nav>
-                <p id="parent-data">{useLoaderData()}</p>
+                <p id="parent-data">{loaderData.message}</p>
                 <Outlet />
               </div>
             )
@@ -166,19 +181,16 @@ test.describe("ErrorBoundary", () => {
     test("Network errors that never reach the Remix server", async ({
       page,
     }) => {
+      let app = new PlaywrightFixture(appFixture, page);
       // Cause a .data request to trigger an HTTP error that never reaches the
       // Remix server, and ensure we properly handle it at the ErrorBoundary
-      await page.route(/\/parent\/child-with-boundary\.data$/, (route) => {
-        route.fulfill({ status: 500, body: "CDN Error!" });
-      });
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/parent");
+      await app.goto("/parent?error");
       await app.clickLink("/parent/child-with-boundary");
       await waitForAndAssert(
         page,
         app,
         "#parent-error",
-        "Unable to decode turbo-stream response"
+        "500"
       );
     });
   });
