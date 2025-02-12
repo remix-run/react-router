@@ -24,5 +24,20 @@
     "@playground/split-route-modules": "0.0.0",
     "@playground/split-route-modules-spa": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-buses-pay",
+    "fast-olives-invent",
+    "fresh-buttons-sit",
+    "late-nails-hear",
+    "prerender-invalid-exports",
+    "prerender-spa-fallback",
+    "rotten-numbers-bathe",
+    "slimy-suns-play",
+    "spa-mode-root-loader",
+    "stale-ways-ring",
+    "stupid-mirrors-prove",
+    "thin-rockets-fly",
+    "unlucky-dolphins-chew",
+    "young-stingrays-begin"
+  ]
 }
