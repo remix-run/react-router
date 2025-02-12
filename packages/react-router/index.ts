@@ -263,6 +263,7 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
+export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
 
