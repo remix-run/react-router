@@ -266,6 +266,8 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
+export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any

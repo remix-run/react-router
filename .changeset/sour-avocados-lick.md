@@ -1,5 +1,5 @@
 ---
-"react-router": minor
+"react-router": patch
 ---
 
-Add `SerializesTo` brand type.
+Add `unstable_SerializesTo` brand type for library authors to register types serializable by React Router's streaming format (`turbo-stream`)
