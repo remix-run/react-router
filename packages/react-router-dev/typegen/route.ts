@@ -16,8 +16,11 @@ export function lineage(
 
 export function fullpath(lineage: RouteManifestEntry[]) {
   if (lineage.length === 1 && lineage[0].id === "root") return "/";
-  return lineage
-    .map((route) => route.path)
-    .filter((path) => path !== undefined)
-    .join("/");
+  return (
+    "/" +
+    lineage
+      .map((route) => route.path?.replace(/^\//, "")?.replace(/\/$/, ""))
+      .filter((path) => path !== undefined && path !== "")
+      .join("/")
+  );
 }

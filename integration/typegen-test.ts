@@ -401,6 +401,7 @@ test.describe("typegen", () => {
           route("no-params", "routes/no-params.tsx"),
           route("required-param/:req", "routes/required-param.tsx"),
           route("optional-param/:opt?", "routes/optional-param.tsx"),
+          route("/leading-and-trailing-slash/", "routes/leading-and-trailing-slash.tsx"),
           route("some-other-route", "routes/some-other-route.tsx"),
         ] satisfies RouteConfig;
       `,
@@ -411,6 +412,9 @@ test.describe("typegen", () => {
         export default function Component() {}
       `,
       "app/routes/optional-param.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/leading-and-trailing-slash.tsx": tsx`
         export default function Component() {}
       `,
       "app/routes/some-other-route.tsx": tsx`
@@ -427,6 +431,10 @@ test.describe("typegen", () => {
 
         href("/optional-param/:opt?")
         href("/optional-param/:opt?", { opt: "hello" })
+
+        href("/leading-and-trailing-slash")
+        // @ts-expect-error
+        href("/leading-and-trailing-slash/")
 
         export default function Component() {}
       `,
