@@ -126,7 +126,7 @@ Forms with `<Form method="post" />` will also navigate to the action prop but wi
 
 ## redirect
 
-Inside of route loaders and actions, you can `redirect` to another URL.
+Inside of route loaders and actions, you can `redirect` to another URL. Note: the `return` statement is mandatory.
 
 ```tsx
 import { redirect } from "react-router";
