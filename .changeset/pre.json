@@ -26,8 +26,10 @@
   },
   "changesets": [
     "afraid-buses-pay",
+    "dull-balloons-boil",
     "fast-olives-invent",
     "fresh-buttons-sit",
+    "khaki-rocks-cover",
     "late-nails-hear",
     "prerender-invalid-exports",
     "prerender-spa-fallback",
@@ -37,6 +39,7 @@
     "stale-ways-ring",
     "stupid-mirrors-prove",
     "thin-rockets-fly",
+    "three-eyes-flow",
     "unlucky-dolphins-chew",
     "young-stingrays-begin"
   ]
