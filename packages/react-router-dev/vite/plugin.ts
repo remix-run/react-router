@@ -1197,6 +1197,25 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   plugin.name !== "react-router:route-exports" &&
                   plugin.name !== "react-router:hmr-updates"
               ),
+            {
+              name: "react-router:override-optimize-deps",
+              config(userConfig) {
+                if (
+                  ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+                  userConfig.environments
+                ) {
+                  for (const environmentName of Object.keys(
+                    userConfig.environments
+                  )) {
+                    userConfig.environments[environmentName].optimizeDeps = {
+                      noDiscovery: true,
+                    };
+                  }
+                } else {
+                  userConfig.optimizeDeps = { noDiscovery: true };
+                }
+              },
+            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
