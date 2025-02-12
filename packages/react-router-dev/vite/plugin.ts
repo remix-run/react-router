@@ -3179,6 +3179,7 @@ export async function getEnvironmentOptionsResolvers(
           },
         },
         optimizeDeps:
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
           viteUserConfig.environments?.ssr?.optimizeDeps?.noDiscovery === false
             ? {
                 entries: [
