@@ -191,7 +191,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
               result,
               request.signal,
               _build.entry.module.streamTimeout,
-              serverMode
+              serverMode,
+              _build.future.turboV3 ?? false
             ),
             {
               status: SINGLE_FETCH_REDIRECT_STATUS,
@@ -328,7 +329,8 @@ async function handleSingleFetchRequest(
       result,
       request.signal,
       build.entry.module.streamTimeout,
-      serverMode
+      serverMode,
+      build.future.turboV3 ?? false
     ),
     {
       status: status || 200,
@@ -407,7 +409,8 @@ async function handleDocumentRequest(
       state,
       request.signal,
       build.entry.module.streamTimeout,
-      serverMode
+      serverMode,
+      build.future.turboV3 ?? false
     ),
     renderMeta,
     future: build.future,
@@ -482,7 +485,8 @@ async function handleDocumentRequest(
         state,
         request.signal,
         build.entry.module.streamTimeout,
-        serverMode
+        serverMode,
+        build.future.turboV3 ?? false
       ),
       renderMeta,
     };
@@ -512,8 +516,10 @@ async function handleDocumentRequest(
           // If we render scripts, react's render might be aborted leaving the stream transfer
           // open in the browser causing promises to never resolve. This will error the stream
           // in the browser and allow the promises to settle.
-          if (renderMeta.didRenderScripts){
-            const script = renderMeta.nonce ? `<script nonce="${renderMeta.nonce}">` : '<script>';
+          if (renderMeta.didRenderScripts) {
+            const script = renderMeta.nonce
+              ? `<script nonce="${renderMeta.nonce}">`
+              : "<script>";
             controller.enqueue(
               new TextEncoder().encode(
                 `${script}if (!window.__reactRouterContext.streamDone)window.__reactRouterContext.streamController.error(new Error("Server aborted."));</script>`

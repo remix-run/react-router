@@ -31,6 +31,7 @@ export interface FixtureInit {
   spaMode?: boolean;
   prerender?: boolean;
   port?: number;
+  turboV3?: boolean;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -48,6 +49,8 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let buildPath = url.pathToFileURL(
     path.join(projectDir, "build/server/index.js")
   ).href;
+
+  const turboV3 = init.turboV3 ?? false;
 
   let getBrowserAsset = async (asset: string) => {
     return fse.readFile(
@@ -118,7 +121,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
           status: 200,
           statusText: "OK",
           headers: new Headers(),
-          data: await decodeViaTurboStream(stream, global),
+          data: await decodeViaTurboStream(stream, global, turboV3),
         };
       },
       postDocument: () => {
@@ -160,7 +163,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       statusText: response.statusText,
       headers: response.headers,
       data: response.body
-        ? await decodeViaTurboStream(response.body!, global)
+        ? await decodeViaTurboStream(response.body!, global, turboV3)
         : null,
     };
   };
@@ -385,6 +388,7 @@ export async function createFixtureProject(
         : {
             "react-router.config.ts": reactRouterConfig({
               ssr: !spaMode,
+              turboV3: init.turboV3,
             }),
           }),
       ...init.files,

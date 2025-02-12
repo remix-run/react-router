@@ -93,7 +93,11 @@ export function createStaticHandlerDataRoutes(
                   controller.close();
                 },
               });
-              let decoded: any = await decodeViaTurboStream(stream, global);
+              let decoded: any = await decodeViaTurboStream(
+                stream,
+                global,
+                future.turboV3 ?? false
+              );
               let data = decoded as SingleFetchResults;
               invariant(
                 data && route.id in data,

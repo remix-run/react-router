@@ -81,7 +81,11 @@ function createHydratedRouter(): DataRouter {
     let stream = ssrInfo.context.stream;
     invariant(stream, "No stream found for single fetch decoding");
     ssrInfo.context.stream = undefined;
-    ssrInfo.stateDecodingPromise = decodeViaTurboStream(stream, window)
+    ssrInfo.stateDecodingPromise = decodeViaTurboStream(
+      stream,
+      window,
+      ssrInfo.context.future.turboV3 ?? false
+    )
       .then((value) => {
         ssrInfo!.context.state = value as typeof localSsrInfo.context.state;
         localSsrInfo.stateDecodingPromise!.value = true;
@@ -170,7 +174,8 @@ function createHydratedRouter(): DataRouter {
     dataStrategy: getSingleFetchDataStrategy(
       ssrInfo.manifest,
       ssrInfo.routeModules,
-      () => router
+      () => router,
+      ssrInfo.context.future.turboV3 ?? false
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
@@ -250,6 +255,12 @@ export function HydratedRouter() {
     ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode
   );
+
+  if (ssrInfo.context.future.turboV3) {
+    import("turbo-stream");
+  } else {
+    import("../../vendor/turbo-stream-v2/turbo-stream.js");
+  }
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
   // boundary also throws and we need to bubble up outside of the router entirely.

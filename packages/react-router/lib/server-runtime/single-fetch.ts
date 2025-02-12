@@ -24,6 +24,8 @@ import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
 
+import { encode as encodeV2 } from "../../vendor/turbo-stream-v2/turbo-stream";
+
 export type { SingleFetchResult, SingleFetchResults };
 export { SingleFetchRedirectSymbol };
 
@@ -309,7 +311,8 @@ export function encodeViaTurboStream(
   data: any,
   requestSignal: AbortSignal,
   streamTimeout: number | undefined,
-  serverMode: ServerMode
+  serverMode: ServerMode,
+  turboV3: boolean
 ) {
   let controller = new AbortController();
   // How long are we willing to wait for all of the promises in `data` to resolve
@@ -325,24 +328,71 @@ export function encodeViaTurboStream(
   );
   requestSignal.addEventListener("abort", () => clearTimeout(timeoutId));
 
-  return encode(data, {
+  if (turboV3) {
+    return encode(data, {
+      signal: controller.signal,
+      redactErrors:
+        serverMode === ServerMode.Development
+          ? false
+          : "Unexpected Server Error",
+      plugins: [
+        (value) => {
+          if (value instanceof ErrorResponseImpl) {
+            let { data, status, statusText } = value;
+            return ["ErrorResponse", data, status, statusText];
+          }
+
+          if (SingleFetchRedirectSymbol in (value as any)) {
+            return [
+              "SingleFetchRedirect",
+              (value as any)[SingleFetchRedirectSymbol],
+            ];
+          }
+        },
+      ],
+    }).pipeThrough(new TextEncoderStream());
+  }
+
+  return encodeV2(data, {
     signal: controller.signal,
-    redactErrors:
-      serverMode === ServerMode.Development ? false : "Unexpected Server Error",
     plugins: [
       (value) => {
+        // Even though we sanitized errors on context.errors prior to responding,
+        // we still need to handle this for any deferred data that rejects with an
+        // Error - as those will not be sanitized yet
+        if (value instanceof Error) {
+          let { name, message, stack } =
+            serverMode === ServerMode.Production
+              ? sanitizeError(value, serverMode)
+              : value;
+          return ["SanitizedError", name, message, stack];
+        }
+
         if (value instanceof ErrorResponseImpl) {
           let { data, status, statusText } = value;
           return ["ErrorResponse", data, status, statusText];
         }
 
-        if (SingleFetchRedirectSymbol in (value as any)) {
-          return [
-            "SingleFetchRedirect",
-            (value as any)[SingleFetchRedirectSymbol],
-          ];
+        if (
+          value &&
+          typeof value === "object" &&
+          SingleFetchRedirectSymbol in value
+        ) {
+          return ["SingleFetchRedirect", value[SingleFetchRedirectSymbol]];
         }
       },
     ],
-  }).pipeThrough(new TextEncoderStream());
+    postPlugins: [
+      (value) => {
+        if (!value) return;
+        if (typeof value !== "object") return;
+
+        return [
+          "SingleFetchClassInstance",
+          Object.fromEntries(Object.entries(value)),
+        ];
+      },
+      () => ["SingleFetchFallback"],
+    ],
+  });
 }

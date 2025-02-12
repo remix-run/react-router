@@ -29,6 +29,7 @@ export const reactRouterConfig = ({
   prerender,
   appDirectory,
   splitRouteModules,
+  turboV3,
 }: {
   ssr?: boolean;
   basename?: string;
@@ -37,6 +38,7 @@ export const reactRouterConfig = ({
   splitRouteModules?: NonNullable<
     Config["future"]
   >["unstable_splitRouteModules"];
+  turboV3?: boolean;
 }) => {
   let config: Config = {
     ssr,
@@ -44,6 +46,7 @@ export const reactRouterConfig = ({
     prerender,
     appDirectory,
     future: {
+      turboV3,
       unstable_splitRouteModules: splitRouteModules,
     },
   };
