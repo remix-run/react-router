@@ -23,7 +23,7 @@ export async function clientAction({
   request,
 }: Route.ClientActionArgs) {
   let formData = await request.formData();
-  let title = await formData.get("title");
+  let title = formData.get("title");
   let project = await someApi.updateProject({ title });
   return project;
 }
@@ -60,7 +60,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   let formData = await request.formData();
-  let title = await formData.get("title");
+  let title = formData.get("title");
   let project = await fakeDb.updateProject({ title });
   return project;
 }

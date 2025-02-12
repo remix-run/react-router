@@ -200,6 +200,8 @@ export type {
   ClientActionFunctionArgs,
   ClientLoaderFunction,
   ClientLoaderFunctionArgs,
+  HeadersArgs,
+  HeadersFunction,
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
@@ -251,11 +253,6 @@ export type {
   LinkDescriptor,
 } from "./lib/router/links";
 
-export type {
-  HeadersArgs,
-  HeadersFunction,
-} from "./lib/server-runtime/routeModules";
-
 export type { RequestHandler } from "./lib/server-runtime/server";
 
 export type {
@@ -267,6 +264,8 @@ export type {
 } from "./lib/server-runtime/sessions";
 
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
+export type { Register } from "./lib/types/register";
+export { href } from "./lib/href";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

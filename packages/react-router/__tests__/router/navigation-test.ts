@@ -1,3 +1,5 @@
+import { JSDOM } from "jsdom";
+import { createBrowserRouter } from "../../lib/dom/lib";
 import type { HydrationState } from "../../lib/router/router";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
@@ -58,6 +60,13 @@ function initializeTest(init?: {
     },
     ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
+}
+
+function getWindowImpl(initialUrl: string, isHash = false): Window {
+  // Need to use our own custom DOM in order to get a working history
+  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
+  dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
+  return dom.window as unknown as Window;
 }
 
 describe("navigations", () => {
@@ -429,6 +438,49 @@ describe("navigations", () => {
         root: "ROOT",
         foo: "A",
       });
+    });
+
+    it("does not use fog of war partial matches for hash change only navigations", async () => {
+      let router = createBrowserRouter(
+        [
+          {
+            path: "/",
+            children: [
+              {
+                path: "*",
+              },
+            ],
+          },
+        ],
+        {
+          window: getWindowImpl("/"),
+          // This is what enables the partialMatches logic
+          patchRoutesOnNavigation: () => {},
+        }
+      );
+      expect(router.state.location).toMatchObject({
+        pathname: "/",
+        hash: "",
+      });
+      expect(router.state.matches).toMatchObject([{ route: { path: "/" } }]);
+      await router.navigate("/foo");
+      expect(router.state.location).toMatchObject({
+        pathname: "/foo",
+        hash: "",
+      });
+      expect(router.state.matches).toMatchObject([
+        { route: { path: "/" } },
+        { route: { path: "*" } },
+      ]);
+      await router.navigate("/foo#bar");
+      expect(router.state.location).toMatchObject({
+        pathname: "/foo",
+        hash: "#bar",
+      });
+      expect(router.state.matches).toMatchObject([
+        { route: { path: "/" } },
+        { route: { path: "*" } },
+      ]);
     });
 
     it("redirects from loaders (throw)", async () => {

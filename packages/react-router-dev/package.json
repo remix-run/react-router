@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.1.1",
+  "version": "7.1.5",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -31,6 +31,12 @@
     },
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#module-sync-enabled": {
+      "module-sync": "./module-sync-enabled/true.mjs",
+      "default": "./module-sync-enabled/false.cjs"
+    }
+  },
   "bin": {
     "react-router": "bin.js"
   },
@@ -44,6 +50,7 @@
       "files": [
         "cli/**",
         "config/**",
+        "module-sync-enabled/**",
         "typegen/**",
         "vite/**",
         "*.ts",
@@ -140,6 +147,7 @@
   },
   "files": [
     "dist/",
+    "module-sync-enabled/",
     "bin.js",
     "CHANGELOG.md",
     "LICENSE.md",

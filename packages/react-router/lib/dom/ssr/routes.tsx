@@ -12,7 +12,7 @@ import { ErrorResponseImpl } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
 import type { FutureConfig } from "./entry";
-import { prefetchStyleLinks } from "./links";
+import { prefetchRouteCss, prefetchStyleLinks } from "./links";
 import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
@@ -36,6 +36,9 @@ export interface EntryRoute extends Route {
   imports?: string[];
   css?: string[];
   module: string;
+  clientActionModule: string | undefined;
+  clientLoaderModule: string | undefined;
+  hydrateFallbackModule: string | undefined;
   parentId?: string;
 }
 
@@ -170,13 +173,14 @@ export function createClientRoutesWithHMRRevalidationOptOut(
   manifest: RouteManifest<EntryRoute>,
   routeModulesCache: RouteModules,
   initialState: HydrationState,
-  future: FutureConfig,
+  ssr: boolean,
   isSpaMode: boolean
 ) {
   return createClientRoutes(
     manifest,
     routeModulesCache,
     initialState,
+    ssr,
     isSpaMode,
     "",
     groupRoutesByParentId(manifest),
@@ -196,14 +200,14 @@ function preventInvalidServerHandlerCall(
     throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
 
-  let fn = type === "action" ? "serverAction()" : "serverLoader()";
-  let msg =
-    `You are trying to call ${fn} on a route that does not have a server ` +
-    `${type} (routeId: "${route.id}")`;
   if (
     (type === "loader" && !route.hasLoader) ||
     (type === "action" && !route.hasAction)
   ) {
+    let fn = type === "action" ? "serverAction()" : "serverLoader()";
+    let msg =
+      `You are trying to call ${fn} on a route that does not have a server ` +
+      `${type} (routeId: "${route.id}")`;
     console.error(msg);
     throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
@@ -225,6 +229,7 @@ export function createClientRoutes(
   manifest: RouteManifest<EntryRoute>,
   routeModulesCache: RouteModules,
   initialState: HydrationState | null,
+  ssr: boolean,
   isSpaMode: boolean,
   parentId: string = "",
   routesByParentId: Record<
@@ -254,6 +259,30 @@ export function createClientRoutes(
         throw noActionDefinedError("action", route.id);
       }
       return fetchServerHandler(singleFetch);
+    }
+
+    function prefetchModule(modulePath: string) {
+      import(
+        /* @vite-ignore */
+        /* webpackIgnore: true */
+        modulePath
+      );
+    }
+
+    function prefetchRouteModuleChunks(route: EntryRoute) {
+      // We fetch the client action module first since the loader function we
+      // create internally already handles the client loader. This function is
+      // most useful in cases where only the client action is splittable, but is
+      // also useful for prefetching the client loader module if a client action
+      // is triggered from another route.
+      if (route.clientActionModule) {
+        prefetchModule(route.clientActionModule);
+      }
+      // Also prefetch the client loader module if it exists
+      // since it's called after the client action
+      if (route.clientLoaderModule) {
+        prefetchModule(route.clientLoaderModule);
+      }
     }
 
     async function prefetchStylesAndCallHandler(
@@ -288,7 +317,8 @@ export function createClientRoutes(
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
           routeModule,
-          route.id,
+          route,
+          ssr,
           needsRevalidation
         ),
       });
@@ -320,7 +350,6 @@ export function createClientRoutes(
               "No `routeModule` available for critical-route loader"
             );
             if (!routeModule.clientLoader) {
-              if (isSpaMode) return null;
               // Call the server when no client loader exists
               return fetchServerLoader(singleFetch);
             }
@@ -397,9 +426,27 @@ export function createClientRoutes(
           singleFetch?: unknown
         ) =>
           prefetchStylesAndCallHandler(() => {
-            if (isSpaMode) return Promise.resolve(null);
             return fetchServerLoader(singleFetch);
           });
+      } else if (route.clientLoaderModule) {
+        dataRoute.loader = async (
+          args: LoaderFunctionArgs,
+          singleFetch?: unknown
+        ) => {
+          invariant(route.clientLoaderModule);
+          let { clientLoader } = await import(
+            /* @vite-ignore */
+            /* webpackIgnore: true */
+            route.clientLoaderModule
+          );
+          return clientLoader({
+            ...args,
+            async serverLoader() {
+              preventInvalidServerHandlerCall("loader", route, isSpaMode);
+              return fetchServerLoader(singleFetch);
+            },
+          });
+        };
       }
       if (!route.hasClientAction) {
         dataRoute.action = (
@@ -412,14 +459,46 @@ export function createClientRoutes(
             }
             return fetchServerAction(singleFetch);
           });
+      } else if (route.clientActionModule) {
+        dataRoute.action = async (
+          args: ActionFunctionArgs,
+          singleFetch?: unknown
+        ) => {
+          invariant(route.clientActionModule);
+          prefetchRouteModuleChunks(route);
+          let { clientAction } = await import(
+            /* @vite-ignore */
+            /* webpackIgnore: true */
+            route.clientActionModule
+          );
+          return clientAction({
+            ...args,
+            async serverAction() {
+              preventInvalidServerHandlerCall("action", route, isSpaMode);
+              return fetchServerAction(singleFetch);
+            },
+          });
+        };
       }
 
       // Load all other modules via route.lazy()
       dataRoute.lazy = async () => {
-        let mod = await loadRouteModuleWithBlockingLinks(
+        if (route.clientLoaderModule || route.clientActionModule) {
+          // If a client loader/action chunk is present, we push the loading of
+          // the main route chunk to the next tick to ensure the downloading of
+          // loader/action chunks takes precedence. This can be seen via their
+          // order in the network tab. Also note that since this is happening
+          // within `route.lazy`, this imperceptible delay only happens on the
+          // first load of this route.
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+
+        let modPromise = loadRouteModuleWithBlockingLinks(
           route,
           routeModulesCache
         );
+        prefetchRouteModuleChunks(route);
+        let mod = await modPromise;
 
         let lazyRoute: Partial<DataRouteObject> = { ...mod };
         if (mod.clientLoader) {
@@ -458,7 +537,8 @@ export function createClientRoutes(
           hasErrorBoundary: lazyRoute.hasErrorBoundary,
           shouldRevalidate: getShouldRevalidateFunction(
             lazyRoute,
-            route.id,
+            route,
+            ssr,
             needsRevalidation
           ),
           handle: lazyRoute.handle,
@@ -474,6 +554,7 @@ export function createClientRoutes(
       manifest,
       routeModulesCache,
       initialState,
+      ssr,
       isSpaMode,
       route.id,
       routesByParentId,
@@ -486,21 +567,37 @@ export function createClientRoutes(
 
 function getShouldRevalidateFunction(
   route: Partial<DataRouteObject>,
-  routeId: string,
+  manifestRoute: Omit<EntryRoute, "children">,
+  ssr: boolean,
   needsRevalidation: Set<string> | undefined
 ) {
   // During HDR we force revalidation for updated routes
   if (needsRevalidation) {
     return wrapShouldRevalidateForHdr(
-      routeId,
+      manifestRoute.id,
       route.shouldRevalidate,
       needsRevalidation
     );
   }
 
+  // When ssr is false and the root route has a `loader` without a
+  // `clientLoader`, the `loader` data is static because it was rendered
+  // at build time so we can just turn off revalidations.  That way when
+  // submitting to a clientAction on a non-pre-rendered path, we don't
+  // try to reach out for a non-existent `.data` file which would have
+  // the "revalidated" root data
+  if (
+    !ssr &&
+    manifestRoute.id === "root" &&
+    manifestRoute.hasLoader &&
+    !manifestRoute.hasClientLoader
+  ) {
+    return () => false;
+  }
+
   // Single fetch revalidates by default, so override the RR default value which
   // matches the multi-fetch behavior with `true`
-  if (route.shouldRevalidate) {
+  if (ssr && route.shouldRevalidate) {
     let fn = route.shouldRevalidate;
     return (opts: ShouldRevalidateFunctionArgs) =>
       fn({ ...opts, defaultShouldRevalidate: true });
@@ -533,8 +630,16 @@ async function loadRouteModuleWithBlockingLinks(
   route: EntryRoute,
   routeModules: RouteModules
 ) {
-  let routeModule = await loadRouteModule(route, routeModules);
-  await prefetchStyleLinks(route, routeModule);
+  // Ensure the route module and its static CSS links are loaded in parallel as
+  // soon as possible before blocking on the route module
+  let routeModulePromise = loadRouteModule(route, routeModules);
+  let prefetchRouteCssPromise = prefetchRouteCss(route);
+
+  let routeModule = await routeModulePromise;
+  await Promise.all([
+    prefetchRouteCssPromise,
+    prefetchStyleLinks(route, routeModule),
+  ]);
 
   // Include all `browserSafeRouteExports` fields, except `HydrateFallback`
   // since those aren't used on lazily loaded routes

@@ -23,6 +23,18 @@ import { flatRoutes } from "@react-router/fs-routes";
 export default flatRoutes() satisfies RouteConfig;
 ```
 
+Any modules in the `app/routes` directory will become routes in your application by default.
+The `ignoredRouteFiles` option allows you to specify files that should not be included as routes:
+
+```tsx filename=app/routes.ts
+import { type RouteConfig } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default flatRoutes({
+  ignoredRouteFiles: ["home.tsx"],
+}) satisfies RouteConfig;
+```
+
 This will look for routes in the `app/routes` directory by default, but this can be configured via the `rootDirectory` option which is relative to your app directory:
 
 ```tsx filename=app/routes.ts
@@ -38,7 +50,7 @@ The rest of this guide will assume you're using the default `app/routes` directo
 
 ## Basic Routes
 
-Any modules in the `app/routes` directory will become routes in your application. The filename maps to the route's URL pathname, except for `_index.tsx` which is the [index route][index_route] for the [root route][root_route]. You can use `.js`, `.jsx`, `.ts` or `.tsx` file extensions.
+The filename maps to the route's URL pathname, except for `_index.tsx` which is the [index route][index_route] for the [root route][root_route]. You can use `.js`, `.jsx`, `.ts` or `.tsx` file extensions.
 
 ```text lines=[3-4]
 app/

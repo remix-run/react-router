@@ -135,7 +135,7 @@ interface DOMRouterOpts {
 }
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export function createBrowserRouter(
   routes: RouteObject[],
@@ -155,7 +155,7 @@ export function createBrowserRouter(
 }
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export function createHashRouter(
   routes: RouteObject[],
@@ -251,7 +251,7 @@ export interface BrowserRouterProps {
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function BrowserRouter({
   basename,
@@ -301,7 +301,7 @@ export interface HashRouterProps {
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
@@ -350,7 +350,7 @@ export interface HistoryRouterProps {
  * version of the history library that React Router uses internally.
  *
  * @name unstable_HistoryRouter
- * @category Router Components
+ * @category Component Routers
  */
 export function HistoryRouter({
   basename,

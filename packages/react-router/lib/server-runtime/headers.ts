@@ -98,8 +98,11 @@ function prependCookies(parentHeaders: Headers, childHeaders: Headers): void {
 
   if (parentSetCookieString) {
     let cookies = splitCookiesString(parentSetCookieString);
+    let childCookies = new Set(childHeaders.getSetCookie());
     cookies.forEach((cookie) => {
-      childHeaders.append("Set-Cookie", cookie);
+      if (!childCookies.has(cookie)) {
+        childHeaders.append("Set-Cookie", cookie);
+      }
     });
   }
 }

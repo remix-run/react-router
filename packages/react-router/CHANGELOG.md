@@ -1,6 +1,47 @@
 # `react-router`
 
+## 7.1.5
+
+### Patch Changes
+
+- Fix regression introduced in `7.1.4` via [#12800](https://github.com/remix-run/react-router/pull/12800) that caused issues navigating to hash routes inside splat routes for applications using Lazy Route Discovery (`patchRoutesOnNavigation`) ([#12927](https://github.com/remix-run/react-router/pull/12927))
+
+## 7.1.4
+
+### Patch Changes
+
+- Internal reorg to clean up some duplicated route module types ([#12799](https://github.com/remix-run/react-router/pull/12799))
+- Properly handle status codes that cannot have a body in single fetch responses (204, etc.) ([#12760](https://github.com/remix-run/react-router/pull/12760))
+- Stop erroring on resource routes that return raw strings/objects and instead serialize them as `text/plain` or `application/json` responses ([#12848](https://github.com/remix-run/react-router/pull/12848))
+  - This only applies when accessed as a resource route without the `.data` extension
+  - When accessed from a Single Fetch `.data` request, they will still be encoded via `turbo-stream`
+- Optimize Lazy Route Discovery path discovery to favor a single `querySelectorAll` call at the `body` level instead of many calls at the sub-tree level ([#12731](https://github.com/remix-run/react-router/pull/12731))
+- Properly bubble headers as `errorHeaders` when throwing a `data()` result ([#12846](https://github.com/remix-run/react-router/pull/12846))
+  - Avoid duplication of `Set-Cookie` headers could be duplicated if also returned from `headers`
+- Optimize route matching by skipping redundant `matchRoutes` calls when possible ([#12800](https://github.com/remix-run/react-router/pull/12800))
+
+## 7.1.3
+
+_No changes_
+
+## 7.1.2
+
+### Patch Changes
+
+- Fix issue with fetcher data cleanup in the data layer on fetcher unmount ([#12681](https://github.com/remix-run/react-router/pull/12681))
+- Do not rely on `symbol` for filtering out `redirect` responses from loader data ([#12694](https://github.com/remix-run/react-router/pull/12694))
+
+  Previously, some projects were getting type checking errors like:
+
+  ```ts
+  error TS4058: Return type of exported function has or is using name 'redirectSymbol' from external module "node_modules/..." but cannot be named.
+  ```
+
+  Now that `symbol`s are not used for the `redirect` response type, these errors should no longer be present.
+
 ## 7.1.1
+
+_No changes_
 
 ## 7.1.0
 
@@ -22,6 +63,8 @@
   To align our generated types more closely to the runtime behavior, we now generate more permissive, wider types when accessing child route information.
 
 ## 7.0.1
+
+_No changes_
 
 ## 7.0.0
 
