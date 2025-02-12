@@ -15,6 +15,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v7.2.0](#v720)
     - [What's Changed](#whats-changed)
+      - [Type-safe `href` utility](#type-safe-href-utility)
       - [Prerendering with a SPA Fallback](#prerendering-with-a-spa-fallback)
       - [Allow a root `loader` in SPA Mode](#allow-a-root-loader-in-spa-mode)
     - [Minor Changes](#minor-changes)
@@ -287,6 +288,36 @@ Date: 2025-02-13
 
 ### What's Changed
 
+#### Type-safe `href` utility
+
+In framework mode, we now provide you with a fully type-safe `href` utility to give you all the warm and fuzzy feelings of path auto-completion and param validation for links in your application:
+
+```tsx
+import { href } from "react-router";
+
+export default function Component() {
+  const link = href("/blog/:slug", { slug: "my-first-post" });
+  //                ^ type-safe!     ^ Also type-safe!
+
+  return (
+    <main>
+      <Link to={href("/products/:id", { id: "asdf" })} />
+      <NavLink to={href("/:lang?/about", { lang: "en" })} />
+    </main>
+  );
+}
+```
+
+You'll now get type errors if you pass a path path value or a bad param value:
+
+```ts
+const badPath = href("/not/a/valid/path");
+//                   ^ Error!
+
+const badParam = href("/blog/:slug", { oops: "bad param" });
+//                                     ^ Error!
+```
+
 #### Prerendering with a SPA Fallback
 
 This release enhances the ability to use a combination of pre-rendered paths alongside other paths that operate in "SPA Mode" when pre-rendering with `ssr:false`.
@@ -309,6 +340,7 @@ In order to use your build-time loader data during pre-rendering, we now also ex
 
 ### Minor Changes
 
+- `react-router` - New type-safe `href` utility that guarantees links point to actual paths in your app ([#13012](https://github.com/remix-run/react-router/pull/13012))
 - `@react-router/dev` - Generate a "SPA fallback" HTML file when pre-rendering the `/` route with `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
 - `@react-router/dev` - Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
   - `Route.HydrateFallbackProps` now also receives `loaderData`
@@ -334,6 +366,14 @@ In order to use your build-time loader data during pre-rendering, we now also ex
     - When using `ssr:false` without a `prerender` config, only the `root` route can have a `loader`
     - When using `ssr:false` with a `prerender` config, only routes matched by a `prerender` path can have a `loader`
 - `@react-router/dev` - Limit prerendered resource route `.data` files to only the target route ([#13004](https://github.com/remix-run/react-router/pull/13004))
+- `@react-router/dev` - Fix typegen for repeated params ([#13012](https://github.com/remix-run/react-router/pull/13012))
+  - In React Router, path parameters are keyed by their name, so for a path pattern like `/a/:id/b/:id?/c/:id`, the last `:id` will set the value for `id` in `useParams` and the `params` prop
+    - For example, `/a/1/b/2/c/3` will result in the value `{ id: 3 }` at runtime
+  - Previously, generated types for params incorrectly modeled repeated params with an array
+    - For example, `/a/1/b/2/c/3` generated a type like `{ id: [1,2,3] }`.
+  - To be consistent with runtime behavior, the generated types now correctly model the "last one wins" semantics of path parameters.
+    - For example, `/a/1/b/2/c/3` now generates a type like `{ id: 3 }`.
+- `@react-router/dev` - Fix path to load `package.json` for `react-router --version` ([#13012](https://github.com/remix-run/react-router/pull/13012))
 
 ### Unstable Changes
 
