@@ -18,7 +18,7 @@ import {
   TYPE_SYMBOL,
   TYPE_URL,
   type ThisEncode,
-} from "./utils.js";
+} from "./utils";
 
 export function flatten(this: ThisEncode, input: unknown): number | [number] {
   const { indices } = this;

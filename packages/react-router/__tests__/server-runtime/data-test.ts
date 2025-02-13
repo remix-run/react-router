@@ -22,6 +22,8 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
+      prerender: [],
+      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -34,7 +36,7 @@ describe("loaders", () => {
 
     let res = await handler(request);
     if (!res.body) throw new Error("No body");
-    const decoded = await decodeViaTurboStream(res.body, global);
+    const decoded = await decodeViaTurboStream(res.body, global, false);
     expect((decoded as any)[routeId].data).toEqual("/random");
   });
 });

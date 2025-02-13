@@ -19,7 +19,7 @@ import {
   TYPE_SYMBOL,
   TYPE_URL,
   type ThisDecode,
-} from "./utils.js";
+} from "./utils";
 
 const globalObj = (
   typeof window !== "undefined"

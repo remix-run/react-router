@@ -105,11 +105,17 @@ function createHydratedRouter(): DataRouter {
     ssrInfo.manifest.routes,
     ssrInfo.routeModules,
     ssrInfo.context.state,
+    ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode
   );
 
   let hydrationData: HydrationState | undefined = undefined;
-  if (!ssrInfo.context.isSpaMode) {
+  let loaderData = ssrInfo.context.state.loaderData;
+  if (ssrInfo.context.isSpaMode) {
+    // In SPA mode we hydrate in any build-time loader data which should be
+    // limited to the root route
+    hydrationData = { loaderData };
+  } else {
     // Create a shallow clone of `loaderData` we can mutate for partial hydration.
     // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
     // render the fallback so we need the client to do the same for hydration.
@@ -118,7 +124,7 @@ function createHydratedRouter(): DataRouter {
     // `createBrowserRouter` so it initializes and runs the client loaders.
     hydrationData = {
       ...ssrInfo.context.state,
-      loaderData: { ...ssrInfo.context.state.loaderData },
+      loaderData: { ...loaderData },
     };
     let initialMatches = matchRoutes(
       routes,
@@ -175,6 +181,7 @@ function createHydratedRouter(): DataRouter {
       ssrInfo.manifest,
       ssrInfo.routeModules,
       () => router,
+      ssrInfo.context.ssr,
       ssrInfo.context.future.turboV3 ?? false
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
@@ -259,7 +266,8 @@ export function HydratedRouter() {
   if (ssrInfo.context.future.turboV3) {
     import("turbo-stream");
   } else {
-    import("../../vendor/turbo-stream-v2/turbo-stream.js");
+    // @ts-expect-error - bad tsconfig
+    import("../../vendor/turbo-stream-v2/turbo-stream");
   }
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
