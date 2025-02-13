@@ -1,5 +1,28 @@
 # `react-router`
 
+## 7.2.0-pre.2
+
+### Patch Changes
+
+- Properly handle revalidations to across a prerender/SPA boundary ([#13021](https://github.com/remix-run/react-router/pull/13021))
+
+  - In "hybrid" applications where some routes are pre-rendered and some are served from a SPA fallback, we need to avoid making `.data` requests if the path wasn't pre-rendered because the request will 404
+  - We don't know all the pre-rendered paths client-side, however:
+    - All `loader` data in `ssr:false` mode is static because it's generated at build time
+    - A route must use a `clientLoader` to do anything dynamic
+    - Therefore, if a route only has a `loader` and not a `clientLoader`, we disable revalidation by default because there is no new data to retrieve
+    - We short circuit and skip single fetch `.data` request logic if there are no server loaders with `shouldLoad=true` in our single fetch `dataStrategy`
+    - This ensures that the route doesn't cause a `.data` request that would 404 after a submission
+
+- Error at build time in `ssr:false` + `prerender` apps for the edge case scenario of: ([#13021](https://github.com/remix-run/react-router/pull/13021))
+
+  - A parent route has only a `loader` (does not have a `clientLoader`)
+  - The parent route is pre-rendered
+  - The parent route has children routes which are not prerendered
+  - This means that when the child paths are loaded via the SPA fallback, the parent won't have any `loaderData` because there is no server on which to run the `loader`
+  - This can be resolved by either adding a parent `clientLoader` or pre-rendering the child paths
+  - If you add a `clientLoader`, calling the `serverLoader()` on non-prerendered paths will throw a 404
+
 ## 7.2.0-pre.1
 
 ### Minor Changes
