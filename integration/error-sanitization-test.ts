@@ -258,14 +258,12 @@ test.describe("Error Sanitization", () => {
 
     test("returns deferred data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data");
-      // @ts-expect-error
       expect(await data["routes/defer"].data.lazy).toEqual("RESOLVED");
     });
 
     test("sanitizes loader errors in deferred data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
-        // @ts-expect-error
         await data["routes/defer"].data.lazy;
         expect(true).toBe(false);
       } catch (e) {
@@ -418,14 +416,12 @@ test.describe("Error Sanitization", () => {
 
     test("returns deferred data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data");
-      // @ts-expect-error
       expect(await data["routes/defer"].data.lazy).toEqual("RESOLVED");
     });
 
     test("does not sanitize loader errors in deferred data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
-        // @ts-expect-error
         await data["routes/defer"].data.lazy;
         expect(true).toBe(false);
       } catch (e) {
@@ -666,14 +662,12 @@ test.describe("Error Sanitization", () => {
 
     test("returns deferred data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data");
-      // @ts-expect-error
       expect(await data["routes/defer"].data.lazy).toBe("RESOLVED");
     });
 
     test("sanitizes loader errors in deferred data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
-        // @ts-expect-error
         await data["routes/defer"].data.lazy;
         expect(true).toBe(false);
       } catch (e) {
@@ -844,14 +838,12 @@ test.describe("Error Sanitization turboV3", () => {
 
     test("returns deferred data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data");
-      // @ts-expect-error
       expect(await data["routes/defer"].data.lazy).toEqual("RESOLVED");
     });
 
     test("sanitizes loader errors in deferred data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
-        // @ts-expect-error
         await data["routes/defer"].data.lazy;
         expect(true).toBe(false);
       } catch (e) {
@@ -1005,14 +997,12 @@ test.describe("Error Sanitization turboV3", () => {
 
     test("returns deferred data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data");
-      // @ts-expect-error
       expect(await data["routes/defer"].data.lazy).toEqual("RESOLVED");
     });
 
     test("does not sanitize loader errors in deferred data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
-        // @ts-expect-error
         await data["routes/defer"].data.lazy;
         expect(true).toBe(false);
       } catch (e) {
@@ -1254,14 +1244,12 @@ test.describe("Error Sanitization turboV3", () => {
 
     test("returns deferred data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data");
-      // @ts-expect-error
       expect(await data["routes/defer"].data.lazy).toBe("RESOLVED");
     });
 
     test("sanitizes loader errors in deferred data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
-        // @ts-expect-error
         await data["routes/defer"].data.lazy;
         expect(true).toBe(false);
       } catch (e) {
