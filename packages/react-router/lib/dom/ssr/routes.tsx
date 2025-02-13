@@ -190,16 +190,8 @@ export function createClientRoutesWithHMRRevalidationOptOut(
 
 function preventInvalidServerHandlerCall(
   type: "action" | "loader",
-  route: Omit<EntryRoute, "children">,
-  isSpaMode: boolean
+  route: Omit<EntryRoute, "children">
 ) {
-  if (isSpaMode) {
-    let fn = type === "action" ? "serverAction()" : "serverLoader()";
-    let msg = `You cannot call ${fn} in SPA Mode (routeId: "${route.id}")`;
-    console.error(msg);
-    throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
-  }
-
   if (
     (type === "loader" && !route.hasLoader) ||
     (type === "action" && !route.hasAction)
@@ -358,7 +350,7 @@ export function createClientRoutes(
               request,
               params,
               async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route, isSpaMode);
+                preventInvalidServerHandlerCall("loader", route);
 
                 // On the first call, resolve with the server result
                 if (isHydrationRequest) {
@@ -410,7 +402,7 @@ export function createClientRoutes(
             request,
             params,
             async serverAction() {
-              preventInvalidServerHandlerCall("action", route, isSpaMode);
+              preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);
             },
           });
@@ -442,7 +434,7 @@ export function createClientRoutes(
           return clientLoader({
             ...args,
             async serverLoader() {
-              preventInvalidServerHandlerCall("loader", route, isSpaMode);
+              preventInvalidServerHandlerCall("loader", route);
               return fetchServerLoader(singleFetch);
             },
           });
@@ -474,7 +466,7 @@ export function createClientRoutes(
           return clientAction({
             ...args,
             async serverAction() {
-              preventInvalidServerHandlerCall("action", route, isSpaMode);
+              preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);
             },
           });
@@ -510,7 +502,7 @@ export function createClientRoutes(
             clientLoader({
               ...args,
               async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route, isSpaMode);
+                preventInvalidServerHandlerCall("loader", route);
                 return fetchServerLoader(singleFetch);
               },
             });
@@ -525,7 +517,7 @@ export function createClientRoutes(
             clientAction({
               ...args,
               async serverAction() {
-                preventInvalidServerHandlerCall("action", route, isSpaMode);
+                preventInvalidServerHandlerCall("action", route);
                 return fetchServerAction(singleFetch);
               },
             });
@@ -580,19 +572,20 @@ function getShouldRevalidateFunction(
     );
   }
 
-  // When ssr is false and the root route has a `loader` without a
-  // `clientLoader`, the `loader` data is static because it was rendered
-  // at build time so we can just turn off revalidations.  That way when
-  // submitting to a clientAction on a non-pre-rendered path, we don't
-  // try to reach out for a non-existent `.data` file which would have
-  // the "revalidated" root data
-  if (
-    !ssr &&
-    manifestRoute.id === "root" &&
-    manifestRoute.hasLoader &&
-    !manifestRoute.hasClientLoader
-  ) {
-    return () => false;
+  // When prerendering is enabled with `ssr:false`, any `loader` data is
+  // statically generated at build time so if we have a `loader` but not a
+  // `clientLoader`, we disable revalidation by default since we can't be sure
+  // if a `.data` file was pre-rendered.  If users are somehow re-generating
+  // updated versions of these on the backend they can still opt-into
+  // revalidation which will make the `.data` request
+  if (!ssr && manifestRoute.hasLoader && !manifestRoute.hasClientLoader) {
+    if (route.shouldRevalidate) {
+      let fn = route.shouldRevalidate;
+      return (opts: ShouldRevalidateFunctionArgs) =>
+        fn({ ...opts, defaultShouldRevalidate: false });
+    } else {
+      return () => false;
+    }
   }
 
   // Single fetch revalidates by default, so override the RR default value which

@@ -2670,15 +2670,37 @@ async function validateSsrFalsePrerenderExports(
     }
 
     // `loader` is only valid if the route is matched by a `prerender` path
-    if (exports.includes("loader") && !prerenderedRoutes.has(routeId)) {
-      errors.push(
-        `Prerender: 1 invalid route export in \`${route.id}\` when ` +
-          "using `ssr:false` with `prerender` because the route is never " +
-          "prerendered so the loader will never be called.  " +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
-      );
+    if (!prerenderedRoutes.has(routeId)) {
+      if (exports.includes("loader")) {
+        errors.push(
+          `Prerender: 1 invalid route export in \`${route.id}\` when ` +
+            "using `ssr:false` with `prerender` because the route is never " +
+            "prerendered so the loader will never be called.  " +
+            "See https://reactrouter.com/how-to/pre-rendering for more information."
+        );
+      }
+
+      let parentRoute = route.parentId ? manifest.routes[route.parentId] : null;
+      while (parentRoute && parentRoute.id !== "root") {
+        if (parentRoute.hasLoader && !parentRoute.hasClientLoader) {
+          errors.push(
+            `Prerender: 1 invalid route export in \`${parentRoute.id}\` when using ` +
+              "`ssr:false` with `prerender`: `loader`. This is because the route " +
+              "has non-pre-rendered children paths and does not have it's own " +
+              "`clientLoader` to be used when those paths are hydrated as a SPA. " +
+              "You can fix this error by adding a `clientLoader` to the route or " +
+              "by pre-rendering the children paths. " +
+              "See https://reactrouter.com/how-to/pre-rendering for more information."
+          );
+        }
+        parentRoute =
+          parentRoute.parentId && parentRoute.parentId !== "root"
+            ? manifest.routes[parentRoute.parentId]
+            : null;
+      }
     }
   }
+
   if (errors.length > 0) {
     viteConfig.logger.error(colors.red(errors.join("\n")));
     throw new Error(
