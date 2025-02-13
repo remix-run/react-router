@@ -19,7 +19,7 @@ import type {
   LazyRouteFunction,
   TrackedPromise,
 } from "./router/utils";
-import { ViewTransitionOptions } from "./dom/global";
+import type { ViewTransitionOptions } from "./dom/global";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router

@@ -1,5 +1,5 @@
 // viewTransitionRegistry.test.ts
-import { ViewTransitionOptions } from "../../lib/dom/global";
+import type { ViewTransitionOptions } from "../../lib/dom/global";
 import type { AppliedViewTransitionMap } from "../../lib/router/router";
 import {
   restoreAppliedTransitions,

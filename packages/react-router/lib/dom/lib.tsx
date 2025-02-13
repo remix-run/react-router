@@ -90,7 +90,7 @@ import {
   useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
-import { ViewTransitionOptions } from "./global";
+import type { ViewTransitionOptions } from "./global";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff

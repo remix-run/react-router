@@ -2,7 +2,7 @@ import { warning } from "../router/history";
 import type { RelativeRoutingType } from "../router/router";
 import type { FormEncType, HTMLFormMethod } from "../router/utils";
 import { stripBasename } from "../router/utils";
-import { ViewTransitionOptions } from "./global";
+import type { ViewTransitionOptions } from "./global";
 
 export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";

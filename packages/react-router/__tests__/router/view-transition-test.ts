@@ -1,4 +1,4 @@
-import { ViewTransitionOptions } from "../../lib/dom/global";
+import type { ViewTransitionOptions } from "../../lib/dom/global";
 import { IDLE_NAVIGATION } from "../../lib/router/router";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
