@@ -988,164 +988,6 @@ test.describe("Prerendering", () => {
       );
     });
 
-    test("Properly navigates across SPA/prerender pages when starting from a prerendered page and a root loader exists", async ({
-      page,
-    }) => {
-      fixture = await createFixture({
-        prerender: true,
-        files: {
-          "react-router.config.ts": reactRouterConfig({
-            ssr: false, // turn off fog of war since we're serving with a static server
-            prerender: ["/", "/page"],
-          }),
-          "vite.config.ts": files["vite.config.ts"],
-          "app/root.tsx": js`
-            import * as React from "react";
-            import { Outlet, Scripts } from "react-router";
-
-            export function loader() {
-              return "ROOT DATA";
-            }
-
-            export function Layout({ children }) {
-              return (
-                <html lang="en">
-                  <head />
-                  <body>
-                    {children}
-                    <Scripts />
-                  </body>
-                </html>
-              );
-            }
-
-            export default function Root({ loaderData }) {
-              return (
-                <>
-                  <p data-root>{loaderData}</p>
-                  <Outlet />
-                </>
-              );
-            }
-          `,
-          "app/routes/_index.tsx": js`
-            import { Link } from 'react-router';
-            export default function Index() {
-              return <Link to="/page">Go to page</Link>
-            }
-          `,
-          "app/routes/page.tsx": js`
-            import { Link, Form } from 'react-router';
-            export async function loader() {
-              return "PAGE DATA"
-            }
-            let count = 0;
-            export function clientAction() {
-              return "PAGE ACTION " + (++count)
-            }
-            export default function Page({ loaderData, actionData }) {
-              return (
-                <>
-                  <p data-page>{loaderData}</p>
-                  {actionData ? <p data-page-action>{actionData}</p> : null}
-                  <Link to="/page2">Go to page2</Link>
-                  <Form method="post" action="/page">
-                    <button type="submit">Submit</button>
-                  </Form>
-                  <Form method="post" action="/page2">
-                    <button type="submit">Submit /page2</button>
-                  </Form>
-                </>
-              );
-            }
-          `,
-          "app/routes/page2.tsx": js`
-            import { Form } from 'react-router';
-            export function clientLoader() {
-              return "PAGE2 DATA"
-            }
-            let count = 0;
-            export function clientAction() {
-              return "PAGE2 ACTION " + (++count)
-            }
-            export default function Page({ loaderData, actionData }) {
-              return (
-                <>
-                  <p data-page2>{loaderData}</p>
-                  {actionData ? <p data-page2-action>{actionData}</p> : null}
-                  <Form method="post" action="/page">
-                    <button type="submit">Submit</button>
-                  </Form>
-                  <Form method="post" action="/page2">
-                    <button type="submit">Submit /page2</button>
-                  </Form>
-                </>
-              );
-            }
-          `,
-        },
-      });
-      appFixture = await createAppFixture(fixture);
-
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/", true);
-      await page.waitForSelector("[data-root]");
-      expect(await (await page.$("[data-root]"))?.innerText()).toBe(
-        "ROOT DATA"
-      );
-
-      await app.clickLink("/page");
-      await page.waitForSelector("[data-page]");
-      expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
-      );
-
-      await app.clickSubmitButton("/page");
-      await page.waitForSelector("[data-page-action]");
-      expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 1"
-      );
-
-      await app.clickLink("/page2");
-      await page.waitForSelector("[data-page2]");
-      expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
-        "PAGE2 DATA"
-      );
-
-      await app.clickSubmitButton("/page2");
-      await page.waitForSelector("[data-page2-action]");
-      expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 1"
-      );
-
-      await app.clickSubmitButton("/page");
-      await page.waitForSelector("[data-page-action]");
-      expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 2"
-      );
-
-      await app.clickSubmitButton("/page2");
-      await page.waitForSelector("[data-page2-action]");
-      expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 2"
-      );
-
-      // We should only make this call when navigating to the prerendered route
-      // 3 calls:
-      // - Initial navigation
-      // - Revalidation on submission to self
-      // - Revalidation after submission back from /page
-      expect(requests).toEqual(["/page.data", "/page.data", "/page.data"]);
-    });
-
     test("Properly navigates across SPA/prerender pages when starting from a SPA page", async ({
       page,
     }) => {
@@ -1285,11 +1127,11 @@ test.describe("Prerendering", () => {
       );
 
       // We should only make this call when navigating to the prerendered route
-      // 3 calls:
-      // - Initial navigation
-      // - Revalidation on submission to self
-      // - Revalidation after submission back from /page
-      expect(requests).toEqual(["/page.data", "/page.data", "/page.data"]);
+      // 2 calls (no revalidation after submission to self):
+      // - ✅ Initial navigation
+      // - ❌ No revalidation after submission to self
+      // - ✅ After submission back from /page
+      expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
     test("Properly navigates across SPA/prerender pages when starting from a prerendered page", async ({
@@ -1431,11 +1273,11 @@ test.describe("Prerendering", () => {
       );
 
       // We should only make this call when navigating to the prerendered route
-      // 3 calls:
-      // - Initial navigation
-      // - Revalidation on submission to self
-      // - Revalidation after submission back from /page
-      expect(requests).toEqual(["/page.data", "/page.data", "/page.data"]);
+      // 2 calls (no revalidation after submission to self):
+      // - ✅ Initial navigation
+      // - ❌ No revalidation after submission to self
+      // - ✅ After submission back from /page
+      expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
     test("Properly navigates across SPA/prerender pages when starting from a SPA page and a root loader exists", async ({
@@ -1589,13 +1431,318 @@ test.describe("Prerendering", () => {
       );
 
       // We should only make this call when navigating to the prerendered route
-      // 3 calls:
-      // - Initial navigation
-      // - Revalidation on submission to self
-      // - Revalidation after submission back from /page
-      expect(requests).toEqual(["/page.data", "/page.data", "/page.data"]);
+      // 2 calls (no revalidation after submission to self):
+      // - ✅ Initial navigation
+      // - ❌ No revalidation after submission to self
+      // - ✅ After submission back from /page
+      expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
+    test("Properly navigates across SPA/prerender pages when starting from a prerendered page and a root loader exists", async ({
+      page,
+    }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false, // turn off fog of war since we're serving with a static server
+            prerender: ["/", "/page"],
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import * as React from "react";
+            import { Outlet, Scripts } from "react-router";
+
+            export function loader() {
+              return "ROOT DATA";
+            }
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root({ loaderData }) {
+              return (
+                <>
+                  <p data-root>{loaderData}</p>
+                  <Outlet />
+                </>
+              );
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router';
+            export default function Index() {
+              return <Link to="/page">Go to page</Link>
+            }
+          `,
+          "app/routes/page.tsx": js`
+            import { Link, Form } from 'react-router';
+            export async function loader() {
+              return "PAGE DATA"
+            }
+            let count = 0;
+            export function clientAction() {
+              return "PAGE ACTION " + (++count)
+            }
+            export default function Page({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-page>{loaderData}</p>
+                  {actionData ? <p data-page-action>{actionData}</p> : null}
+                  <Link to="/page2">Go to page2</Link>
+                  <Form method="post" action="/page">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/page2">
+                    <button type="submit">Submit /page2</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+          "app/routes/page2.tsx": js`
+            import { Form } from 'react-router';
+            export function clientLoader() {
+              return "PAGE2 DATA"
+            }
+            let count = 0;
+            export function clientAction() {
+              return "PAGE2 ACTION " + (++count)
+            }
+            export default function Page({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-page2>{loaderData}</p>
+                  {actionData ? <p data-page2-action>{actionData}</p> : null}
+                  <Form method="post" action="/page">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/page2">
+                    <button type="submit">Submit /page2</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let requests: string[] = [];
+      page.on("request", (request) => {
+        let pathname = new URL(request.url()).pathname;
+        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
+          requests.push(pathname);
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      await page.waitForSelector("[data-root]");
+      expect(await (await page.$("[data-root]"))?.innerText()).toBe(
+        "ROOT DATA"
+      );
+
+      await app.clickLink("/page");
+      await page.waitForSelector("[data-page]");
+      expect(await (await page.$("[data-page]"))?.innerText()).toBe(
+        "PAGE DATA"
+      );
+
+      await app.clickSubmitButton("/page");
+      await page.waitForSelector("[data-page-action]");
+      expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
+        "PAGE ACTION 1"
+      );
+
+      await app.clickLink("/page2");
+      await page.waitForSelector("[data-page2]");
+      expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
+        "PAGE2 DATA"
+      );
+
+      await app.clickSubmitButton("/page2");
+      await page.waitForSelector("[data-page2-action]");
+      expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
+        "PAGE2 ACTION 1"
+      );
+
+      await app.clickSubmitButton("/page");
+      await page.waitForSelector("[data-page-action]");
+      expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
+        "PAGE ACTION 2"
+      );
+
+      await app.clickSubmitButton("/page2");
+      await page.waitForSelector("[data-page2-action]");
+      expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
+        "PAGE2 ACTION 2"
+      );
+
+      // We should only make this call when navigating to the prerendered route
+      // 2 calls (no revalidation after submission to self):
+      // - ✅ Initial navigation
+      // - ❌ No revalidation after submission to self
+      // - ✅ After submission back from /page
+      expect(requests).toEqual(["/page.data", "/page.data"]);
+    });
+
+    test("Properly navigates from prerendered parent to child SPA route", async ({
+      page,
+    }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+            prerender: ["/parent"],
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import * as React from "react";
+            import { Outlet, Scripts } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root({ loaderData }) {
+              return <Outlet />
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router';
+            export default function Index() {
+              return <Link to="/page">Go to page</Link>
+            }
+          `,
+          "app/routes/page.tsx": js`
+            import { Link, Form } from 'react-router';
+            export async function loader() {
+              return "PAGE DATA"
+            }
+            let count = 0;
+            export function clientAction() {
+              return "PAGE ACTION " + (++count)
+            }
+            export default function Page({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-page>{loaderData}</p>
+                  {actionData ? <p data-page-action>{actionData}</p> : null}
+                  <Link to="/page2">Go to page2</Link>
+                  <Form method="post" action="/page">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/page2">
+                    <button type="submit">Submit /page2</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+          "app/routes/page2.tsx": js`
+            import { Form } from 'react-router';
+            export function clientLoader() {
+              return "PAGE2 DATA"
+            }
+            let count = 0;
+            export function clientAction() {
+              return "PAGE2 ACTION " + (++count)
+            }
+            export default function Page({ loaderData, actionData }) {
+              return (
+                <>
+                  <p data-page2>{loaderData}</p>
+                  {actionData ? <p data-page2-action>{actionData}</p> : null}
+                  <Form method="post" action="/page">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Form method="post" action="/page2">
+                    <button type="submit">Submit /page2</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let requests: string[] = [];
+      page.on("request", (request) => {
+        let pathname = new URL(request.url()).pathname;
+        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
+          requests.push(pathname);
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      await page.waitForSelector('a[href="/page"]');
+
+      await app.clickLink("/page");
+      await page.waitForSelector("[data-page]");
+      expect(await (await page.$("[data-page]"))?.innerText()).toBe(
+        "PAGE DATA"
+      );
+
+      await app.clickSubmitButton("/page");
+      await page.waitForSelector("[data-page-action]");
+      expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
+        "PAGE ACTION 1"
+      );
+
+      await app.clickLink("/page2");
+      await page.waitForSelector("[data-page2]");
+      expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
+        "PAGE2 DATA"
+      );
+
+      await app.clickSubmitButton("/page2");
+      await page.waitForSelector("[data-page2-action]");
+      expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
+        "PAGE2 ACTION 1"
+      );
+
+      await app.clickSubmitButton("/page");
+      await page.waitForSelector("[data-page-action]");
+      expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
+        "PAGE ACTION 2"
+      );
+
+      await app.clickSubmitButton("/page2");
+      await page.waitForSelector("[data-page2-action]");
+      expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
+        "PAGE2 ACTION 2"
+      );
+
+      // We should only make this call when navigating to the prerendered route
+      // 2 calls (no revalidation after submission to self):
+      // - ✅ Initial navigation
+      // - ❌ No revalidation after submission to self
+      // - ✅ After submission back from /page
+      expect(requests).toEqual(["/page.data", "/page.data"]);
+    });
+    // Can route from prerendered parent to SPA child
+    // Can route from SPA parent to SPA child
     test("Handles 404s on data requests", async ({ page }) => {
       fixture = await createFixture({
         prerender: true,

@@ -154,31 +154,32 @@ export function getSingleFetchDataStrategy(
       // and load them from a static file server/CDN at runtime.
       //
       // However, with the SPA Fallback logic, we can have SPA routes operating
-      // within a pre-rendered application and even if all the children have
-      // `clientLoaders`, if the root route has a `loader` then the default
-      // behavior would be to make the single fetch `.data` request on
-      // navigation to get the updated root `loader` data.
+      // alongside pre-rendered routes.  If any pre-rendered routes have a
+      // `loader` then the default behavior would be to make the single fetch
+      // `.data` request on navigation to get the updated root/parent route
+      // `loader` data.
       //
       // We need to detect these scenarios because if it's a non-pre-rendered
       // route being handled by SPA mode, then the `.data` file won't have been
       // pre-generated and it'll cause a 404.  Thankfully, we can do this
       // without knowing the prerender'd paths and can just do loader detection
       // from the manifest:
+      //
       // - We only allow loaders on pre-rendered routes at build time
-      // - We always let the root route have a loader which will be called at
-      //   build time for _all_ of our pre-rendered pages and the SPA Fallback
-      // - The root loader data will be static so since we already have it in
-      //   the client we never need to revalidate it
-      // - So the only time we need to make the request is if we find a loader
-      //   _below_ the root
-      // - If we find this, we know the route must have been pre-rendered at
-      //   build time since the loader would have errored otherwise
-      // - So it's safe to make the call knowing there will be a .data file on
+      // - We opt out of revalidation automatically for routes with a `loader`
+      //   and no `clientLoader` because the data is static
+      // - So if no routes with a server `loader` need to revalidate we can just
+      //   call the normal resolve functions and short circuit any single fetch
+      //   behavior
+      // - If we find this a loader that needs to be called, we know the route must
+      //   have been pre-rendered at build time since the loader would have
+      //   errored otherwise
+      // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      let foundLoaderBelowRoot = matches.some(
-        (m) => m.route.id !== "root" && manifest.routes[m.route.id]?.hasLoader
+      let foundRevalidatingLoader = matches.some(
+        (m) => manifest.routes[m.route.id]?.hasLoader && m.shouldLoad
       );
-      if (!foundLoaderBelowRoot) {
+      if (!foundRevalidatingLoader) {
         // Skip single fetch and just call the loaders in parallel when this is
         // a SPA mode navigation
         let matchesToLoad = matches.filter((m) => m.shouldLoad);
