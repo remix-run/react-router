@@ -1067,4 +1067,100 @@ test.describe("SPA Mode", () => {
       });
     });
   });
+
+  test("only imports top-level route modules when SSRing index.html", async ({ page }) => {
+    let fixture = await createFixture({
+      spaMode: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+        }),
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [reactRouter()],
+          });
+        `,
+        "app/routeImportTracker.ts": js`
+          // this is kinda silly, but this way we can track imports
+          // that happen during SSR and during CSR
+          export async function logImport(url: string) {
+            try {
+              const fs = await import("node:fs");
+              const path = await import("node:path");
+              fs.appendFileSync(path.join(process.cwd(), "ssr-route-imports.txt"), url + "\n");
+            }
+            catch (e) {
+              (window.csrRouteImports ??= []).push(url);
+            }
+          }
+        `,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          import { logImport } from "./routeImportTracker";
+          logImport("app/root.tsx");
+
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  hello world
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          import { logImport } from "../routeImportTracker";
+          logImport("app/routes/_index.tsx");
+
+          export default function Component() {
+            return "index";
+          }
+        `,
+        "app/routes/about.tsx": js`
+          import * as React  from "react";
+          import { logImport } from "../routeImportTracker";
+          logImport("app/routes/about.tsx");
+
+          export default function Component() {
+            const [mounted, setMounted] = React.useState(false);
+            React.useEffect(() => setMounted(true), []);
+
+            return (
+              <>
+                {!mounted ? <span>Unmounted</span> : <span data-mounted>Mounted</span>}
+              </>
+            );
+          }
+        `,
+      },
+    });
+
+    let importedRoutes = (await fs.promises.readFile(path.join(fixture.projectDir, "ssr-route-imports.txt"), "utf-8")).trim().split("\n");
+    expect(importedRoutes).toStrictEqual([
+      "app/root.tsx",
+      "app/routes/_index.tsx"
+      // we should NOT have imported app/routes/about.tsx
+    ]);
+
+    appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/about");
+    await page.waitForSelector("[data-mounted]");
+    // @ts-expect-error
+    expect(await page.evaluate(() => window.csrRouteImports)).toStrictEqual([
+      "app/root.tsx",
+      "app/routes/about.tsx"
+    ]);
+  });
 });

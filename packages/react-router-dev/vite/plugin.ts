@@ -621,6 +621,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       routes
     );
 
+    let isSpaMode =
+      !ctx.reactRouterConfig.ssr && ctx.reactRouterConfig.prerender == null;
+
+    let routeIdsToImport = new Set(Object.keys(routes));
+    if (isSpaMode) {
+      // In SPA mode, we only pre-render the top-level index route; for all
+      // other routes we stub out their imports, as they (and their deps) may
+      // not be compatible with server-side rendering. This also helps keep
+      // the build fast
+      routeIdsToImport = getRootRouteIds(routes);
+    }
+
     return `
     import * as entryServer from ${JSON.stringify(
       resolveFileUrl(ctx, ctx.entryServerFilePath)
@@ -628,12 +640,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     ${Object.keys(routes)
       .map((key, index) => {
         let route = routes[key]!;
-        return `import * as route${index} from ${JSON.stringify(
-          resolveFileUrl(
-            ctx,
-            resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          )
-        )};`;
+        if (routeIdsToImport.has(key)) {
+          return `import * as route${index} from ${JSON.stringify(
+            resolveFileUrl(
+              ctx,
+              resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
+            )
+          )};`;
+        } else {
+          // we're not importing the route since we won't be rendering
+          // it via SSR; just stub it out
+          return `const route${index} = { default: () => null };`;
+        }
       })
       .join("\n")}
       export { default as assets } from ${JSON.stringify(
@@ -650,7 +668,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
       export const ssr = ${ctx.reactRouterConfig.ssr};
-      export const isSpaMode = ${isSpaModeEnabled(ctx.reactRouterConfig)};
+      export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
@@ -1503,7 +1521,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
             // If we have prerender routes, that takes precedence over SPA mode
-            // which is ssr:false and only the rot route being rendered
+            // which is ssr:false and only the root route being rendered
             await handlePrerender(
               viteConfig,
               ctx.reactRouterConfig,
@@ -2677,6 +2695,17 @@ function groupRoutesByParentId(manifest: GenericRouteManifest) {
   });
 
   return routes;
+}
+
+/**
+ * Return the route ids associated with the top-level index route
+ *
+ * i.e. "root", the top-level index route's id, and (if applicable) the ids of
+ * any top-level layout/path-less routes in between
+ */
+function getRootRouteIds(manifest: GenericRouteManifest): Set<string> {
+  const matches = matchRoutes(createPrerenderRoutes(manifest), "/");
+  return new Set(matches?.filter(Boolean).map((m) => m.route.id) || []);
 }
 
 // Create a skeleton route tree of paths
