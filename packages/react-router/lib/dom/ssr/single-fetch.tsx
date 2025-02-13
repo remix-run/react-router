@@ -603,7 +603,7 @@ export async function decodeViaTurboStream(
         }
       },
     ],
-  }).then((res) => res.value);
+  }).then((res: { value: unknown }) => res.value);
 }
 
 function unwrapSingleFetchResults(
