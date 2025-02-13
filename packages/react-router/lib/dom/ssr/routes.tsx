@@ -190,16 +190,8 @@ export function createClientRoutesWithHMRRevalidationOptOut(
 
 function preventInvalidServerHandlerCall(
   type: "action" | "loader",
-  route: Omit<EntryRoute, "children">,
-  isSpaMode: boolean
+  route: Omit<EntryRoute, "children">
 ) {
-  if (isSpaMode) {
-    let fn = type === "action" ? "serverAction()" : "serverLoader()";
-    let msg = `You cannot call ${fn} in SPA Mode (routeId: "${route.id}")`;
-    console.error(msg);
-    throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
-  }
-
   if (
     (type === "loader" && !route.hasLoader) ||
     (type === "action" && !route.hasAction)
@@ -358,7 +350,7 @@ export function createClientRoutes(
               request,
               params,
               async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route, isSpaMode);
+                preventInvalidServerHandlerCall("loader", route);
 
                 // On the first call, resolve with the server result
                 if (isHydrationRequest) {
@@ -410,7 +402,7 @@ export function createClientRoutes(
             request,
             params,
             async serverAction() {
-              preventInvalidServerHandlerCall("action", route, isSpaMode);
+              preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);
             },
           });
@@ -442,7 +434,7 @@ export function createClientRoutes(
           return clientLoader({
             ...args,
             async serverLoader() {
-              preventInvalidServerHandlerCall("loader", route, isSpaMode);
+              preventInvalidServerHandlerCall("loader", route);
               return fetchServerLoader(singleFetch);
             },
           });
@@ -474,7 +466,7 @@ export function createClientRoutes(
           return clientAction({
             ...args,
             async serverAction() {
-              preventInvalidServerHandlerCall("action", route, isSpaMode);
+              preventInvalidServerHandlerCall("action", route);
               return fetchServerAction(singleFetch);
             },
           });
@@ -510,7 +502,7 @@ export function createClientRoutes(
             clientLoader({
               ...args,
               async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route, isSpaMode);
+                preventInvalidServerHandlerCall("loader", route);
                 return fetchServerLoader(singleFetch);
               },
             });
@@ -525,7 +517,7 @@ export function createClientRoutes(
             clientAction({
               ...args,
               async serverAction() {
-                preventInvalidServerHandlerCall("action", route, isSpaMode);
+                preventInvalidServerHandlerCall("action", route);
                 return fetchServerAction(singleFetch);
               },
             });

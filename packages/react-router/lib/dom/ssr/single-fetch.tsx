@@ -176,10 +176,13 @@ export function getSingleFetchDataStrategy(
       //   errored otherwise
       // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      let foundRevalidatingLoader = matches.some(
-        (m) => manifest.routes[m.route.id]?.hasLoader && m.shouldLoad
+      let foundRevalidatingServerLoader = matches.some(
+        (m) =>
+          m.shouldLoad &&
+          manifest.routes[m.route.id]?.hasLoader &&
+          !manifest.routes[m.route.id]?.hasClientLoader
       );
-      if (!foundRevalidatingLoader) {
+      if (!foundRevalidatingServerLoader) {
         // Skip single fetch and just call the loaders in parallel when this is
         // a SPA mode navigation
         let matchesToLoad = matches.filter((m) => m.shouldLoad);

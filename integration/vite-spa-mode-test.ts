@@ -1039,7 +1039,7 @@ test.describe("SPA Mode", () => {
           await app.clickLink("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You cannot call serverLoader() in SPA Mode (routeId: "routes/error")'
+            'Error: You are trying to call serverLoader() on a route that does not have a server loader (routeId: "routes/error")'
           );
         });
 
@@ -1053,7 +1053,7 @@ test.describe("SPA Mode", () => {
           await app.clickSubmitButton("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You cannot call serverAction() in SPA Mode (routeId: "routes/error")'
+            'Error: You are trying to call serverAction() on a route that does not have a server action (routeId: "routes/error")'
           );
         });
 
