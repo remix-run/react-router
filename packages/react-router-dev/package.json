@@ -111,7 +111,7 @@
     "@types/prettier": "^2.7.3",
     "@types/set-cookie-parser": "^2.4.1",
     "dotenv": "^16.0.0",
-    "esbuild-register": "^3.3.2",
+    "esbuild-register": "^3.6.0",
     "execa": "5.1.1",
     "express": "^4.19.2",
     "fast-glob": "3.2.11",
