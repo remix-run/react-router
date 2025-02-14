@@ -4,43 +4,45 @@ title: Pre-Rendering
 
 # Pre-Rendering
 
-Pre-rendering allows you to render pages at build time instead of on a runtime server to speed up page loads for static content.
+Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime. Pre-rendering is enabled via the `prerender` config in `react-router.config.ts` and can be used in two ways based on the `ssr` config value:
 
-In some cases, you'll serve these pages _alongside_ a runtime SSR server. If you wish to pre-render pages and deploy them _without_ a runtime SSR server, please see the [Pre-rendering with `ssr:false`](#pre-rendering-without-a-runtime-ssr-server) section below.
+- Alongside a runtime SSR server ith `ssr:true` (the default value)
+- Deployed to a static file server with `ssr:false`
 
-## Pre-rendering alongside a runtime SSR server
+## Pre-rendering with `ssr:true`
 
 ### Configuration
 
 Add the `prerender` option to your config, there are three signatures:
 
-```ts filename=react-router.config.ts lines=[7-09,11-12,14-20]
+```ts filename=react-router.config.ts lines=[7-8,10-11,13-21]
 import type { Config } from "@react-router/dev/config";
 
 export default {
   // Can be omitted - defaults to true
   ssr: true,
 
-  // all static route paths
-  // (no dynamic segments like "/post/:slug")
+  // all static paths (no dynamic segments like "/post/:slug")
   prerender: true,
 
-  // any url
+  // specific paths
   prerender: ["/", "/blog", "/blog/popular-post"],
 
   // async function for dependencies like a CMS
-  async pre-render({ getStaticPaths }) {
+  async prerender({ getStaticPaths }) {
     let posts = await fakeGetPostsFromCMS();
-    return ["/", "/blog"].concat(
-      posts.map((post) => post.href)
-    );
+    return [
+      "/",
+      "/blog",
+      ...posts.map((post) => post.href),
+    ];
   },
 } satisfies Config;
 ```
 
 ### Data Loading and Pre-rendering
 
-There is no extra application API for pre-rendering. Pre-rendering uses the same route loaders as server rendering:
+There is no extra application API for pre-rendering. Routes being pre-rendered use the same route `loader` functions as server rendering:
 
 ```tsx
 export async function loader({ request, params }) {
@@ -82,18 +84,18 @@ Prerender: Generated build/client/blog/my-first-post/index.html
 
 During development, pre-rendering doesn't save the rendered results to the public directory, this only happens for `react-router build`.
 
-## Pre-rendering without a runtime SSR server
+## Pre-rendering with `ssr:false`
 
 The above examples assume you are deploying a runtime server, but are pre-rendering some static pages in order to serve them faster and avoid hitting the server.
 
-To disable runtime SSR, you can set the `ssr:false` config flag:
+To disable runtime SSR and configure pre-rendering to be served from a static file server, you can set the `ssr:false` config flag:
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
 
 export default {
   ssr: false, // disable runtime server rendering
-  prerender: true, // pre-render static routes
+  prerender: true, // pre-render all static routes
 } satisfies Config;
 ```
 
@@ -126,7 +128,19 @@ export default {
 } satisfies Config;
 ```
 
-You can configure your deployment server to serve this file for any path that otherwise would 404. Here's an example of how you can do this with the [`sirv-cli`](https://www.npmjs.com/package/sirv-cli#user-content-single-page-applications) tool:
+You can configure your deployment server to serve this file for any path that otherwise would 404. Some hosts do this by default, but others don't. As an example, a host may support a `_redirects` file to do this:
+
+```
+# If you did not pre-render the `/` route
+/*    /index.html   200
+
+# If you pre-rendered the `/` route
+/*    /__spa-fallback.html   200
+```
+
+If you're getting 404s at valid routes for your app, it's likely you need to configure your host.
+
+Here's another example of how you can do this with the [`sirv-cli`](https://www.npmjs.com/package/sirv-cli#user-content-single-page-applications) tool:
 
 ```sh
 # If you did not pre-render the `/` route

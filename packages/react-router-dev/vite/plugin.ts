@@ -2345,21 +2345,6 @@ async function handlePrerender(
       matches,
       `Unable to prerender path because it does not match any routes: ${path}`
     );
-    let hasLoaders = matches.some(
-      (m) => build.assets.routes[m.route.id]?.hasLoader
-    );
-    let data: string | undefined;
-    if (hasLoaders) {
-      data = await prerenderData(
-        handler,
-        path,
-        clientBuildDirectory,
-        reactRouterConfig,
-        viteConfig,
-        { headers }
-      );
-    }
-
     // When prerendering a resource route, we don't want to pass along the
     // `.data` file since we want to prerender the raw Response returned from
     // the loader.  Presumably this is for routes where a file extension is
@@ -2368,21 +2353,53 @@ async function handlePrerender(
     let leafRoute = matches ? matches[matches.length - 1].route : null;
     let manifestRoute = leafRoute ? build.routes[leafRoute.id]?.module : null;
     let isResourceRoute =
-      manifestRoute &&
-      !manifestRoute.default &&
-      !manifestRoute.ErrorBoundary &&
-      manifestRoute.loader;
+      manifestRoute && !manifestRoute.default && !manifestRoute.ErrorBoundary;
 
     if (isResourceRoute) {
-      await prerenderResourceRoute(
-        handler,
-        path,
-        clientBuildDirectory,
-        reactRouterConfig,
-        viteConfig,
-        { headers }
-      );
+      invariant(leafRoute);
+      invariant(manifestRoute);
+      if (manifestRoute.loader) {
+        // Prerender a .data file for turbo-stream consumption
+        await prerenderData(
+          handler,
+          path,
+          [leafRoute.id],
+          clientBuildDirectory,
+          reactRouterConfig,
+          viteConfig,
+          { headers }
+        );
+        // Prerender a raw file for external consumption
+        await prerenderResourceRoute(
+          handler,
+          path,
+          clientBuildDirectory,
+          reactRouterConfig,
+          viteConfig,
+          { headers }
+        );
+      } else {
+        viteConfig.logger.warn(
+          `⚠️ Skipping prerendering for resource route without a loader: ${leafRoute?.id}`
+        );
+      }
     } else {
+      let hasLoaders = matches.some(
+        (m) => build.assets.routes[m.route.id]?.hasLoader
+      );
+      let data: string | undefined;
+      if (!isResourceRoute && hasLoaders) {
+        data = await prerenderData(
+          handler,
+          path,
+          null,
+          clientBuildDirectory,
+          reactRouterConfig,
+          viteConfig,
+          { headers }
+        );
+      }
+
       await prerenderRoute(
         handler,
         path,
@@ -2436,6 +2453,7 @@ function getStaticPrerenderPaths(routes: DataRouteObject[]) {
 async function prerenderData(
   handler: RequestHandler,
   prerenderPath: string,
+  onlyRoutes: string[] | null,
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
@@ -2446,7 +2464,11 @@ async function prerenderData(
       ? "/_root.data"
       : `${prerenderPath.replace(/\/$/, "")}.data`
   }`.replace(/\/\/+/g, "/");
-  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  let url = new URL(`http://localhost${normalizedPath}`);
+  if (onlyRoutes?.length) {
+    url.searchParams.set("_routes", onlyRoutes.join(","));
+  }
+  let request = new Request(url, requestInit);
   let response = await handler(request);
   let data = await response.text();
 

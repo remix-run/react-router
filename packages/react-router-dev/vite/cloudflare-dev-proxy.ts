@@ -108,12 +108,15 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       }
     },
     configureServer: async (viteDevServer) => {
-      let { getPlatformProxy } = await importWrangler();
-      // Do not include `dispose` in Cloudflare context
-      let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
-        restOptions
-      );
-      let context = { cloudflare };
+      let context: Awaited<ReturnType<typeof getContext>>;
+      let getContext = async () => {
+        let { getPlatformProxy } = await importWrangler();
+        // Do not include `dispose` in Cloudflare context
+        let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
+          restOptions
+        );
+        return { cloudflare };
+      };
       return () => {
         if (!viteDevServer.config.server.middlewareMode) {
           viteDevServer.middlewares.use(async (nodeReq, nodeRes, next) => {
@@ -124,6 +127,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
               let handler = createRequestHandler(build, "development");
               let req = fromNodeRequest(nodeReq, nodeRes);
+              context ??= await getContext();
               let loadContext = getLoadContext
                 ? await getLoadContext({ request: req, context })
                 : context;
