@@ -73,7 +73,7 @@ export const createReadableStreamFromReadable = (
 
 class StreamPump {
   public highWaterMark: number;
-  public accumalatedSize: number;
+  public accumulatedSize: number;
   private stream: Stream & {
     readableHighWaterMark?: number;
     readable?: boolean;
@@ -95,7 +95,7 @@ class StreamPump {
     this.highWaterMark =
       stream.readableHighWaterMark ||
       new Stream.Readable().readableHighWaterMark;
-    this.accumalatedSize = 0;
+    this.accumulatedSize = 0;
     this.stream = stream;
     this.enqueue = this.enqueue.bind(this);
     this.error = this.error.bind(this);
