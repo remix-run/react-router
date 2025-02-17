@@ -381,6 +381,7 @@ In order to use your build-time loader data during pre-rendering, we now also ex
   - This can be resolved by either adding a parent `clientLoader` or pre-rendering the child paths
   - If you add a `clientLoader`, calling the `serverLoader()` on non-prerendered paths will throw a 404
 - `@react-router/dev` - Limit prerendered resource route `.data` files to only the target route ([#13004](https://github.com/remix-run/react-router/pull/13004))
+- `@react-router/dev` - Fix pre-rendering of binary files ([#13039](https://github.com/remix-run/react-router/pull/13039))
 - `@react-router/dev` - Fix typegen for repeated params ([#13012](https://github.com/remix-run/react-router/pull/13012))
   - In React Router, path parameters are keyed by their name, so for a path pattern like `/a/:id/b/:id?/c/:id`, the last `:id` will set the value for `id` in `useParams` and the `params` prop
     - For example, `/a/1/b/2/c/3` will result in the value `{ id: 3 }` at runtime
