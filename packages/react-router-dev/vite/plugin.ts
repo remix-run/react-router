@@ -918,7 +918,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   // We use a separate environment for loading the server manifest and inlined
   // CSS during development. This is because "ssrLoadModule" isn't available if
   // the "ssr" environment has been defined by another plugin (e.g.
-  // vite-plugin-cloudflare) as a Vite.DevEnvironment rather than a
+  // vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
   // Vite.RunnableDevEnvironment:
   // https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
   const HELPER_ENVIRONMENT_NAME = "__react_router_helper__";
