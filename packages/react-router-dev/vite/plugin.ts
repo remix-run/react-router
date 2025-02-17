@@ -122,7 +122,10 @@ export type EnvironmentName = "client" | SsrEnvironmentName;
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
 
-type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
+type EnvironmentOptions = Pick<
+  Vite.EnvironmentOptions,
+  "build" | "resolve" | "optimizeDeps"
+>;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -1166,6 +1169,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
+          // Ensure child compiler cannot overwrite the default cache directory
+          cacheDir: "node_modules/.vite-child-compiler",
           mode: viteConfig.mode,
           server: {
             watch: viteConfig.command === "build" ? null : undefined,
@@ -1193,6 +1198,26 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   plugin.name !== "react-router:route-exports" &&
                   plugin.name !== "react-router:hmr-updates"
               ),
+            {
+              name: "react-router:override-optimize-deps",
+              config(userConfig) {
+                // Prevent unnecessary dependency optimization in the child compiler
+                if (
+                  ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+                  userConfig.environments
+                ) {
+                  for (const environmentName of Object.keys(
+                    userConfig.environments
+                  )) {
+                    userConfig.environments[environmentName].optimizeDeps = {
+                      noDiscovery: true,
+                    };
+                  }
+                } else {
+                  userConfig.optimizeDeps = { noDiscovery: true };
+                }
+              },
+            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
@@ -3177,6 +3202,24 @@ export async function getEnvironmentOptionsResolvers(
               virtual.serverBuild.id,
           },
         },
+        optimizeDeps:
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+          viteUserConfig.environments?.ssr?.optimizeDeps?.noDiscovery === false
+            ? {
+                entries: [
+                  vite.normalizePath(ctx.entryServerFilePath),
+                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
+                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
+                  ),
+                ],
+                include: [
+                  "react",
+                  "react/jsx-dev-runtime",
+                  "react-dom/server",
+                  "react-router",
+                ],
+              }
+            : undefined,
       });
   }
 
