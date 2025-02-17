@@ -1,5 +1,7 @@
 # `create-react-router`
 
+## 7.2.0-pre.3
+
 ## 7.2.0-pre.2
 
 ## 7.2.0-pre.1
