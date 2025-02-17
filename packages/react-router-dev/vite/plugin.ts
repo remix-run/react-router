@@ -1169,6 +1169,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
+          // Ensure child compiler cannot overwrite the default cache directory
           cacheDir: "node_modules/.vite-child-compiler",
           mode: viteConfig.mode,
           server: {
@@ -1200,6 +1201,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             {
               name: "react-router:override-optimize-deps",
               config(userConfig) {
+                // Prevent unnecessary dependency optimization in the child compiler
                 if (
                   ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
                   userConfig.environments
