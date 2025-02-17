@@ -2510,13 +2510,13 @@ async function prerenderResourceRoute(
     .replace(/\/$/g, "");
   let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
-  let text = await response.text();
+  let content = Buffer.from(await response.arrayBuffer());
 
   if (response.status !== 200) {
     throw new Error(
       `Prerender (resource): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${text}`
+        `path.\n${content.toString('utf8')}`
     );
   }
 
@@ -2524,7 +2524,7 @@ async function prerenderResourceRoute(
   let outdir = path.relative(process.cwd(), clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
-  await fse.outputFile(outfile, text);
+  await fse.outputFile(outfile, content);
   viteConfig.logger.info(
     `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
   );
