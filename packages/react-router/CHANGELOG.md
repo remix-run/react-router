@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.2.0-pre.3
+
+### Patch Changes
+
+- Add `unstable_SerializesTo` brand type for library authors to register types serializable by React Router's streaming format (`turbo-stream`) ([`ab5b05b02`](https://github.com/remix-run/react-router/commit/ab5b05b02f99f062edb3c536c392197c88eb6c77))
+
 ## 7.2.0-pre.2
 
 ### Patch Changes
