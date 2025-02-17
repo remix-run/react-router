@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.2.0-pre.4
+
+### Patch Changes
+
+- Fix prerendering of binary files ([#13039](https://github.com/remix-run/react-router/pull/13039))
+- Updated dependencies:
+  - `react-router@7.2.0-pre.4`
+  - `@react-router/node@7.2.0-pre.4`
+  - `@react-router/serve@7.2.0-pre.4`
+
 ## 7.2.0-pre.3
 
 ### Patch Changes
