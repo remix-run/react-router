@@ -51,7 +51,8 @@
     "./dist/install.mjs"
   ],
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {

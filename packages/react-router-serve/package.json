@@ -18,7 +18,8 @@
     "react-router-serve": "bin.js"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {

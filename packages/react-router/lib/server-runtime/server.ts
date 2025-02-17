@@ -1,4 +1,4 @@
-import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import type { StaticHandler } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
 import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
 import {
@@ -29,7 +29,6 @@ import {
   SINGLE_FETCH_REDIRECT_STATUS,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
-import invariant from "./invariant";
 import type { EntryRoute } from "../dom/ssr/routes";
 
 export type RequestHandler = (
