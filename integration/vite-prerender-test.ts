@@ -399,6 +399,18 @@ test.describe("Prerendering", () => {
             });
           }
         `,
+          "app/routes/image[.png].tsx": js`
+            export function loader() {
+              return new Response(
+                Buffer.from('R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', 'base64'),
+                {
+                  headers: {
+                    'Content-Type': 'image/png',
+                  }
+                },
+              );
+            }
+          `,
         },
       });
       appFixture = await createAppFixture(fixture);
@@ -409,6 +421,8 @@ test.describe("Prerendering", () => {
         "about.data",
         "about/index.html",
         "favicon.ico",
+        "image.png",
+        "image.png.data",
         "index.html",
         "json.json",
         "json.json.data",
@@ -437,6 +451,11 @@ test.describe("Prerendering", () => {
           data: "Hello, world",
         },
       });
+
+      res = await fixture.requestResource("/image.png");
+      expect(Buffer.from(await res.arrayBuffer()).toString("base64")).toBe(
+        "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+      );
     });
 
     test("Adds leading slashes if omitted in config", async () => {
