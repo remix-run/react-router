@@ -344,6 +344,42 @@ test.describe("Prerendering", () => {
       expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
     });
 
+    test("Skips action-only resource routes prerender:true", async () => {
+      let buildStdio = new PassThrough();
+      fixture = await createFixture({
+        buildStdio,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            prerender: true,
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": files["app/root.tsx"],
+          "app/routes/_index.tsx": files["app/routes/_index.tsx"],
+          "app/routes/action.tsx": js`
+            export function action() {
+              return null
+            }
+          `,
+        },
+      });
+
+      let buildOutput: string;
+      let chunks: Buffer[] = [];
+      buildOutput = await new Promise<string>((resolve, reject) => {
+        buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        buildStdio.on("error", (err) => reject(err));
+        buildStdio.on("end", () =>
+          resolve(Buffer.concat(chunks).toString("utf8"))
+        );
+      });
+
+      expect(buildOutput).toContain(
+        "⚠️ Skipping prerendering for resource route without a loader: routes/action"
+      );
+      // Only logs once
+      expect(buildOutput.match(/routes\/action/g)?.length).toBe(1);
+    });
+
     test("Pre-renders resource routes with file extensions", async () => {
       fixture = await createFixture({
         prerender: true,
@@ -385,9 +421,6 @@ test.describe("Prerendering", () => {
 
       let dataRes = await fixture.requestSingleFetchData("/json.json.data");
       expect(dataRes.data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/json[.json]": {
           data: {
             hello: "world",
@@ -400,9 +433,6 @@ test.describe("Prerendering", () => {
 
       dataRes = await fixture.requestSingleFetchData("/text.txt.data");
       expect(dataRes.data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/text[.txt]": {
           data: "Hello, world",
         },
