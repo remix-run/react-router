@@ -381,6 +381,8 @@ test.describe("Prerendering", () => {
     });
 
     test("Pre-renders resource routes with file extensions", async () => {
+      const base64Png =
+        "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";
       fixture = await createFixture({
         prerender: true,
         files: {
@@ -402,7 +404,7 @@ test.describe("Prerendering", () => {
           "app/routes/image[.png].tsx": js`
             export function loader() {
               return new Response(
-                Buffer.from('R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', 'base64'),
+                Buffer.from("${base64Png}", 'base64'),
                 {
                   headers: {
                     'Content-Type': 'image/png',
@@ -430,6 +432,16 @@ test.describe("Prerendering", () => {
         "text.txt.data",
       ]);
 
+      expect(
+        await fs.promises.readFile(path.join(clientDir, "json.json"), "utf8")
+      ).toEqual('{"hello":"world"}');
+      expect(
+        await fs.promises.readFile(path.join(clientDir, "text.txt"), "utf8")
+      ).toEqual("Hello, world");
+      expect(
+        await fs.promises.readFile(path.join(clientDir, "image.png"), "base64")
+      ).toEqual(base64Png);
+
       let res = await fixture.requestResource("/json.json");
       expect(await res.json()).toEqual({ hello: "world" });
 
@@ -454,7 +466,7 @@ test.describe("Prerendering", () => {
 
       res = await fixture.requestResource("/image.png");
       expect(Buffer.from(await res.arrayBuffer()).toString("base64")).toBe(
-        "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+        base64Png
       );
     });
 
