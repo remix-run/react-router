@@ -137,7 +137,7 @@ type ClientDataFunctionArgs<T extends RouteInfo> = {
   params: T["params"];
 };
 
-type ServerDataFunctionArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
+type ServerDataFunctionArgs<T extends RouteInfo> = {
   /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
   request: Request;
   /**
