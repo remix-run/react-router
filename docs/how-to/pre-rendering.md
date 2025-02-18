@@ -149,3 +149,14 @@ sirv-cli build/client --single index.html
 # If you pre-rendered the `/` route
 sirv-cli build/client --single __spa-fallback.html
 ```
+
+### Invalid Exports
+
+When pre-rendering with `ssr:false`, React Router will error at build time if you have invalid exports to help prevent some mistakes that can be easily overlooked.
+
+- `headers`/`action` functions are prohibited in all routes because there will be no runtime server on which to run them
+- When using `ssr:false` without a `prerender` config (SPA Mode), a `loader` is permitted on the root route only
+- When using `ssr:false` with a `prerender` config, a `loader` is permitted on any route matched by a `prerender` path
+  - If you are using a `loader` on a pre-rendered route that has child routes, you will need to make sure the parent `loaderData` can be determined at run-time properly by either:
+    - Pre-rendering all child routes so that the parent `loader` can be called at build-time for each child route path and rendered into a `.data` file, or
+    - Use a `clientLoader` on the parent that can be called at run-time for non-pre-rendered child paths
