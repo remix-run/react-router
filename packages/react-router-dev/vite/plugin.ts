@@ -64,10 +64,10 @@ import {
 } from "../config/config";
 import * as WithProps from "./with-props";
 
-export type LoadModule = (
+export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
-  url: string
-) => Promise<any>;
+  mod: Vite.ModuleNode
+) => Promise<string>;
 
 export async function resolveViteConfig({
   configFile,
@@ -122,10 +122,23 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName = "client" | SsrEnvironmentName;
+export type EnvironmentName =
+  | "client"
+  | SsrEnvironmentName
+  | CssDevHelperEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
+
+// We use a separate environment for loading the critical CSS during
+// development. This is because "ssrLoadModule" isn't available if the "ssr"
+// environment has been defined by another plugin (e.g.
+// vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
+// Vite.RunnableDevEnvironment:
+// https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
+const CSS_DEV_HELPER_ENVIRONMENT_NAME =
+  "__react_router_css_dev_helper__" as const;
+type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
 
 type EnvironmentOptions = Pick<
   Vite.EnvironmentOptions,
@@ -476,6 +489,9 @@ let getServerBuildDirectory = (
 
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
   path.join(reactRouterConfig.buildDirectory, "client");
+
+const injectQuery = (url: string, query: string) =>
+  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
 
 let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
@@ -834,6 +850,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   // In dev, the server and browser manifests are the same
+  let currentReactRouterManifestForDev: ReactRouterManifest | null = null;
   let getReactRouterManifestForDev = async (): Promise<ReactRouterManifest> => {
     let routes: ReactRouterManifest["routes"] = {};
 
@@ -901,7 +918,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       };
     }
 
-    return {
+    let reactRouterManifestForDev = {
       version: String(Math.random()),
       url: combineURLs(ctx.publicPath, virtual.browserManifest.url),
       hmr: {
@@ -916,31 +933,59 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
       routes,
     };
+
+    currentReactRouterManifestForDev = reactRouterManifestForDev;
+
+    return reactRouterManifestForDev;
   };
 
-  // We use a separate environment for loading the server manifest and inlined
-  // CSS during development. This is because "ssrLoadModule" isn't available if
-  // the "ssr" environment has been defined by another plugin (e.g.
-  // vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
-  // Vite.RunnableDevEnvironment:
-  // https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
-  const HELPER_ENVIRONMENT_NAME = "__react_router_helper__";
+  const loadCssContents: LoadCssContents = async (viteDevServer, dep) => {
+    invariant(
+      viteCommand === "serve",
+      "loadCssContents is only available in dev mode"
+    );
 
-  const loadModule: LoadModule = (viteDevServer, url) => {
-    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
-      const vite = getVite();
-      const helperEnvironment =
-        viteDevServer.environments[HELPER_ENVIRONMENT_NAME];
-
-      invariant(
-        helperEnvironment && vite.isRunnableDevEnvironment(helperEnvironment),
-        "Missing helper environment"
-      );
-
-      return helperEnvironment.runner.import(url);
+    if (dep.file && isCssModulesFile(dep.file)) {
+      return cssModulesManifest[dep.file];
     }
 
-    return viteDevServer.ssrLoadModule(url);
+    const vite = getVite();
+    const viteMajor = parseInt(vite.version.split(".")[0], 10);
+
+    const url =
+      viteMajor >= 6
+        ? // We need the ?inline query in Vite v6 when loading CSS in SSR
+          // since it does not expose the default export for CSS in a
+          // server environment. This is to align with non-SSR
+          // environments. For backwards compatibility with v5 we keep
+          // using the URL without ?inline query because the HMR code was
+          // relying on the implicit SSR-client module graph relationship.
+          injectQuery(dep.url, "inline")
+        : dep.url;
+
+    let cssMod: unknown;
+    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+      const cssDevHelperEnvironment =
+        viteDevServer.environments[CSS_DEV_HELPER_ENVIRONMENT_NAME];
+      invariant(
+        cssDevHelperEnvironment &&
+          vite.isRunnableDevEnvironment(cssDevHelperEnvironment),
+        "Missing CSS dev helper environment"
+      );
+      cssMod = await cssDevHelperEnvironment.runner.import(url);
+    } else {
+      cssMod = await viteDevServer.ssrLoadModule(url);
+    }
+
+    invariant(
+      typeof cssMod === "object" &&
+        cssMod !== null &&
+        "default" in cssMod &&
+        typeof cssMod.default === "string",
+      `Failed to load CSS for ${dep.url}`
+    );
+
+    return cssMod.default;
   };
 
   return [
@@ -1094,10 +1139,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
-                environments: {
-                  ...environments,
-                  [HELPER_ENVIRONMENT_NAME]: {},
-                },
+                environments,
                 build: {
                   // This isn't honored by the SSR environment config (which seems
                   // to be a Vite bug?) so we set it here too.
@@ -1298,10 +1340,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               entryClientFilePath: ctx.entryClientFilePath,
               reactRouterConfig: ctx.reactRouterConfig,
               viteDevServer,
-              cssModulesManifest,
+              loadCssContents,
               build,
               url,
-              loadModule,
             });
           },
           // If an error is caught within the request handler, let Vite fix the
@@ -1977,11 +2018,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (route) {
           // invalidate manifest on route exports change
-          let serverManifest = (
-            await loadModule(server, virtual.serverManifest.id)
-          ).default as ReactRouterManifest;
-
-          let oldRouteMetadata = serverManifest.routes[route.id];
+          let oldRouteMetadata =
+            currentReactRouterManifestForDev?.routes[route.id];
           let newRouteMetadata = await getRouteMetadata(
             cache,
             ctx,
@@ -3255,6 +3293,13 @@ export async function getEnvironmentOptionsResolvers(
               }
             : undefined,
       });
+  }
+
+  if (
+    ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+    viteCommand === "serve"
+  ) {
+    environmentOptionsResolvers[CSS_DEV_HELPER_ENVIRONMENT_NAME] = () => ({});
   }
 
   return environmentOptionsResolvers;
