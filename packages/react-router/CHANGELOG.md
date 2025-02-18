@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.2.0-pre.5
+
+### Patch Changes
+
+- [REMOVE] Fix prerender calls to serverLoader from clientLoader ([#13047](https://github.com/remix-run/react-router/pull/13047))
+
 ## 7.2.0-pre.4
 
 ## 7.2.0-pre.3
