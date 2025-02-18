@@ -2516,7 +2516,7 @@ async function prerenderResourceRoute(
     throw new Error(
       `Prerender (resource): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${content.toString('utf8')}`
+        `path.\n${content.toString("utf8")}`
     );
   }
 
@@ -2662,10 +2662,10 @@ async function validateSsrFalsePrerenderExports(
     if (exports.includes("action")) invalidApis.push("action");
     if (invalidApis.length > 0) {
       errors.push(
-        `Prerender: ${invalidApis.length} invalid route export(s) in ` +
-          `\`${route.id}\` when prerendering with \`ssr:false\`: ` +
-          `${invalidApis.join(", ")}.  ` +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
+        `Prerender: ${invalidApis.length} invalid route export(s) in \`${route.id}\` ` +
+          "when pre-rendering with `ssr:false`: " +
+          `${invalidApis.map((a) => `\`${a}\``).join(", ")}.  ` +
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
       );
     }
 
@@ -2673,10 +2673,9 @@ async function validateSsrFalsePrerenderExports(
     if (!prerenderedRoutes.has(routeId)) {
       if (exports.includes("loader")) {
         errors.push(
-          `Prerender: 1 invalid route export in \`${route.id}\` when ` +
-            "using `ssr:false` with `prerender` because the route is never " +
-            "prerendered so the loader will never be called.  " +
-            "See https://reactrouter.com/how-to/pre-rendering for more information."
+          `Prerender: 1 invalid route export in \`${route.id}\` ` +
+            "when pre-rendering with `ssr:false`: `loader`. " +
+            "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
         );
       }
 
@@ -2684,13 +2683,9 @@ async function validateSsrFalsePrerenderExports(
       while (parentRoute && parentRoute.id !== "root") {
         if (parentRoute.hasLoader && !parentRoute.hasClientLoader) {
           errors.push(
-            `Prerender: 1 invalid route export in \`${parentRoute.id}\` when using ` +
-              "`ssr:false` with `prerender`: `loader`. This is because the route " +
-              "has non-pre-rendered children paths and does not have it's own " +
-              "`clientLoader` to be used when those paths are hydrated as a SPA. " +
-              "You can fix this error by adding a `clientLoader` to the route or " +
-              "by pre-rendering the children paths. " +
-              "See https://reactrouter.com/how-to/pre-rendering for more information."
+            `Prerender: 1 invalid route export in \`${parentRoute.id}\` when ` +
+              "pre-rendering with `ssr:false`: `loader`. " +
+              "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
           );
         }
         parentRoute =

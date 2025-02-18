@@ -820,9 +820,9 @@ test.describe("Prerendering", () => {
       let result = build({ cwd });
       let stderr = result.stderr.toString("utf8");
       expect(stderr).toMatch(
-        "Prerender: 2 invalid route export(s) in `routes/a` when prerendering " +
-          "with `ssr:false`: headers, action.  " +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
+        "Prerender: 2 invalid route export(s) in `routes/a` when pre-rendering " +
+          "with `ssr:false`: `headers`, `action`.  " +
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
       );
     });
 
@@ -848,10 +848,9 @@ test.describe("Prerendering", () => {
       let result = build({ cwd });
       let stderr = result.stderr.toString("utf8");
       expect(stderr).toMatch(
-        "Prerender: 1 invalid route export in `routes/b` when using `ssr:false` " +
-          "with `prerender` because the route is never prerendered so the loader " +
-          "will never be called.  See https://reactrouter.com/how-to/pre-rendering " +
-          "for more information."
+        "Prerender: 1 invalid route export in `routes/b` when pre-rendering " +
+          "with `ssr:false`: `loader`. " +
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
       );
     });
 
@@ -875,12 +874,9 @@ test.describe("Prerendering", () => {
       let result = build({ cwd });
       let stderr = result.stderr.toString("utf8");
       expect(stderr).toMatch(
-        "Prerender: 1 invalid route export in `routes/a` when using `ssr:false` " +
-          "with `prerender`: `loader`. This is because the route has non-pre-rendered " +
-          "children paths and does not have it's own `clientLoader` to be used " +
-          "when those paths are hydrated as a SPA. You can fix this error by adding " +
-          "a `clientLoader` to the route or by pre-rendering the children paths. " +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
+        "Prerender: 1 invalid route export in `routes/a` when pre-rendering " +
+          "with `ssr:false`: `loader`. " +
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
       );
     });
 
