@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { PassThrough } from "node:stream";
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 
 import {
   createAppFixture,
@@ -784,6 +784,20 @@ test.describe("Prerendering", () => {
   });
 
   test.describe("ssr: false", () => {
+    function captureRequests(page: Page) {
+      let requests: string[] = [];
+      page.on("request", (request) => {
+        let url = new URL(request.url());
+        if (
+          url.pathname.endsWith(".data") ||
+          url.pathname.endsWith("__manifest")
+        ) {
+          requests.push(url.pathname + url.search);
+        }
+      });
+      return requests;
+    }
+
     test("Errors on headers/action functions in any route", async () => {
       let cwd = await createProject({
         "react-router.config.ts": reactRouterConfig({
@@ -979,14 +993,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector("[data-mounted]");
@@ -1048,7 +1055,7 @@ test.describe("Prerendering", () => {
       );
     });
 
-    test("Properly navigates across SPA/prerender pages when starting from a SPA page", async ({
+    test("Navigates across SPA/prerender pages when starting from a SPA page", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -1138,14 +1145,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       await page.waitForSelector('a[href="/page"]');
@@ -1194,7 +1194,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
-    test("Properly navigates across SPA/prerender pages when starting from a prerendered page", async ({
+    test("Navigates across SPA/prerender pages when starting from a prerendered page", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -1284,14 +1284,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       await page.waitForSelector('a[href="/page"]');
@@ -1340,7 +1333,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
-    test("Properly navigates across SPA/prerender pages when starting from a SPA page and a root loader exists", async ({
+    test("Navigates across SPA/prerender pages when starting from a SPA page and a root loader exists", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -1439,14 +1432,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       await page.waitForSelector("[data-root]");
@@ -1498,7 +1484,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
-    test("Properly navigates across SPA/prerender pages when starting from a prerendered page and a root loader exists", async ({
+    test("Navigates across SPA/prerender pages when starting from a prerendered page and a root loader exists", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -1597,14 +1583,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       await page.waitForSelector("[data-root]");
@@ -1656,7 +1635,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual(["/page.data", "/page.data"]);
     });
 
-    test("Properly navigates between prerendered parent and child SPA route", async ({
+    test("Navigates between prerendered parent and child SPA route", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -1743,14 +1722,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/parent", true);
       await expect(page.getByText("PARENT DATA")).toBeVisible();
@@ -1796,7 +1768,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual([]);
     });
 
-    test("Properly navigates between SPA parent and prerendered child route", async ({
+    test("Navigates between SPA parent and prerendered child route", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -1880,14 +1852,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/parent", true);
       await expect(page.getByText("PARENT DATA")).toBeVisible();
@@ -1911,7 +1876,7 @@ test.describe("Prerendering", () => {
 
       // Initial navigation and submission from /parent
       expect(requests).toEqual(["/parent/child.data", "/parent/child.data"]);
-      requests = [];
+      while (requests.length) requests.pop();
 
       await app.goto("/parent/child", true);
       await expect(page.getByText("PARENT DATA")).toBeVisible();
@@ -1935,7 +1900,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual(["/parent/child.data"]);
     });
 
-    test("Properly navigates between prerendered parent and child SPA route (with a root loader)", async ({
+    test("Navigates between prerendered parent and child SPA route (with a root loader)", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -2035,14 +2000,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/parent", true);
       await expect(page.getByText("ROOT DATA")).toBeVisible();
@@ -2090,7 +2048,7 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual([]);
     });
 
-    test("Properly navigates between SPA parent and prerendered child route (with a root loader)", async ({
+    test("Navigates between SPA parent and prerendered child route (with a root loader)", async ({
       page,
     }) => {
       fixture = await createFixture({
@@ -2183,14 +2141,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/parent", true);
       await expect(page.getByText("ROOT DATA")).toBeVisible();
@@ -2215,7 +2166,7 @@ test.describe("Prerendering", () => {
 
       // Initial navigation and submission from /parent
       expect(requests).toEqual(["/parent/child.data", "/parent/child.data"]);
-      requests = [];
+      while (requests.length) requests.pop();
 
       await app.goto("/parent/child", true);
       await expect(page.getByText("PARENT DATA")).toBeVisible();
@@ -2237,6 +2188,77 @@ test.describe("Prerendering", () => {
 
       // Submission from /parent
       expect(requests).toEqual(["/parent/child.data"]);
+    });
+
+    test("Navigates to prerendered parent with clientLoader calling loader", async ({
+      page,
+    }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+            prerender: ["/", "/parent"],
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import * as React from "react";
+            import { Link, Outlet, Scripts } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root({ loaderData }) {
+              return (
+                <>
+                  <Link to="/parent">Go to parent</Link>
+                  <Outlet/>
+                </>
+              );
+            }
+
+            export function HydrateFallback() {
+              return <p>Loading...</p>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Form, Outlet } from 'react-router';
+            export async function loader() {
+              return "PARENT DATA"
+            }
+            export async function clientLoader({ serverLoader }) {
+              let str = await serverLoader();
+              return str + " - CLIENT"
+            }
+            export function clientAction() {
+              return "PARENT ACTION"
+            }
+            export default function Parent({ loaderData, actionData }) {
+              return <p data-parent>{loaderData}</p>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let requests = captureRequests(page);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      await expect(page.getByText("Go to parent")).toBeVisible();
+
+      await app.clickLink("/parent");
+      await expect(page.getByText("PARENT DATA - CLIENT")).toBeVisible();
+
+      expect(requests).toEqual(["/parent.data?_routes=routes%2Fparent"]);
     });
 
     test("Handles 404s on data requests", async ({ page }) => {
@@ -2266,14 +2288,7 @@ test.describe("Prerendering", () => {
       });
       appFixture = await createAppFixture(fixture);
 
-      let requests: string[] = [];
-      page.on("request", (request) => {
-        let pathname = new URL(request.url()).pathname;
-        if (pathname.endsWith(".data")) {
-          requests.push(pathname);
-        }
-      });
-
+      let requests = captureRequests(page);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await page.waitForSelector("[data-mounted]");
