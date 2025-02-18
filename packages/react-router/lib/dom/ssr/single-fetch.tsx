@@ -186,12 +186,27 @@ export function getSingleFetchDataStrategy(
         // Skip single fetch and just call the loaders in parallel when this is
         // a SPA mode navigation
         let matchesToLoad = matches.filter((m) => m.shouldLoad);
-        let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
-        return results.reduce(
-          (acc, result, i) =>
-            Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
-          {}
+        let url = stripIndexParam(singleFetchUrl(request.url));
+        let init = await createRequestInit(request);
+        let results: Record<string, DataStrategyResult> = {};
+        await Promise.all(
+          matchesToLoad.map((m) =>
+            m.resolve(async (handler) => {
+              try {
+                // Need to pass through a `singleFetch` override handler so
+                // clientLoader's can still call server loaders through `.data`
+                // requests
+                let result = manifest.routes[m.route.id]?.hasClientLoader
+                  ? await fetchSingleLoader(handler, url, init, m.route.id)
+                  : await handler();
+                results[m.route.id] = { type: "data", result };
+              } catch (e) {
+                results[m.route.id] = { type: "error", result: e };
+              }
+            })
+          )
         );
+        return results;
       }
     }
 
