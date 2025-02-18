@@ -134,12 +134,80 @@ export function StreamTransfer({
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   getRouter: () => DataRouter
 ): DataStrategyFunction {
   return async ({ request, matches, fetcherKey }) => {
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
       return singleFetchActionStrategy(request, matches);
+    }
+
+    if (!ssr) {
+      // If this is SPA mode, there won't be any loaders below root and we'll
+      // disable single fetch.  We have to keep the `dataStrategy` defined for
+      // SPA mode because we may load a SPA fallback page but then navigate into
+      // a pre-rendered path and need to fetch the pre-rendered `.data` file.
+      //
+      // If this is `ssr:false` with a `prerender` config, we need to keep single
+      // fetch enabled because we can prerender the `.data` files at build time
+      // and load them from a static file server/CDN at runtime.
+      //
+      // However, with the SPA Fallback logic, we can have SPA routes operating
+      // alongside pre-rendered routes.  If any pre-rendered routes have a
+      // `loader` then the default behavior would be to make the single fetch
+      // `.data` request on navigation to get the updated root/parent route
+      // `loader` data.
+      //
+      // We need to detect these scenarios because if it's a non-pre-rendered
+      // route being handled by SPA mode, then the `.data` file won't have been
+      // pre-generated and it'll cause a 404.  Thankfully, we can do this
+      // without knowing the prerender'd paths and can just do loader detection
+      // from the manifest:
+      //
+      // - We only allow loaders on pre-rendered routes at build time
+      // - We opt out of revalidation automatically for routes with a `loader`
+      //   and no `clientLoader` because the data is static
+      // - So if no routes with a server `loader` need to revalidate we can just
+      //   call the normal resolve functions and short circuit any single fetch
+      //   behavior
+      // - If we find this a loader that needs to be called, we know the route must
+      //   have been pre-rendered at build time since the loader would have
+      //   errored otherwise
+      // - So it's safe to make the call knowing there will be a `.data` file on
+      //   the other end
+      let foundRevalidatingServerLoader = matches.some(
+        (m) =>
+          m.shouldLoad &&
+          manifest.routes[m.route.id]?.hasLoader &&
+          !manifest.routes[m.route.id]?.hasClientLoader
+      );
+      if (!foundRevalidatingServerLoader) {
+        // Skip single fetch and just call the loaders in parallel when this is
+        // a SPA mode navigation
+        let matchesToLoad = matches.filter((m) => m.shouldLoad);
+        let url = stripIndexParam(singleFetchUrl(request.url));
+        let init = await createRequestInit(request);
+        let results: Record<string, DataStrategyResult> = {};
+        await Promise.all(
+          matchesToLoad.map((m) =>
+            m.resolve(async (handler) => {
+              try {
+                // Need to pass through a `singleFetch` override handler so
+                // clientLoader's can still call server loaders through `.data`
+                // requests
+                let result = manifest.routes[m.route.id]?.hasClientLoader
+                  ? await fetchSingleLoader(handler, url, init, m.route.id)
+                  : await handler();
+                results[m.route.id] = { type: "data", result };
+              } catch (e) {
+                results[m.route.id] = { type: "error", result: e };
+              }
+            })
+          )
+        );
+        return results;
+      }
     }
 
     // Fetcher loads are singular calls to one loader
@@ -151,6 +219,7 @@ export function getSingleFetchDataStrategy(
     return singleFetchLoaderNavigationStrategy(
       manifest,
       routeModules,
+      ssr,
       getRouter(),
       request,
       matches
@@ -200,6 +269,7 @@ async function singleFetchActionStrategy(
 async function singleFetchLoaderNavigationStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   router: DataRouter,
   request: Request,
   matches: DataStrategyFunctionArgs["matches"]
@@ -323,7 +393,7 @@ async function singleFetchLoaderNavigationStrategy(
       // When one or more routes have opted out, we add a _routes param to
       // limit the loaders to those that have a server loader and did not
       // opt out
-      if (foundOptOutRoute && routesParams.size > 0) {
+      if (ssr && foundOptOutRoute && routesParams.size > 0) {
         url.searchParams.set(
           "_routes",
           matches

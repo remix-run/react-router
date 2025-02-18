@@ -11,6 +11,7 @@ import {
   reactRouterServe,
   customDev,
   EXPRESS_SERVER,
+  reactRouterConfig,
   viteConfig,
   viteMajorTemplates,
 } from "./helpers/vite.js";
@@ -178,6 +179,9 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
+              "react-router.config.ts": reactRouterConfig({
+                viteEnvironmentApi: templateName === "vite-6-template",
+              }),
               "vite.config.ts": await VITE_CONFIG(port),
               ...files,
             },

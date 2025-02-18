@@ -51,10 +51,15 @@ type MetaMatches<T extends RouteInfo[]> =
     : Array<MetaMatch<RouteInfo> | undefined>;
 
 export type CreateMetaArgs<T extends RouteInfo> = {
+  /** This is the current router `Location` object. This is useful for generating tags for routes at specific paths or query parameters. */
   location: Location;
+  /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
   params: T["params"];
+  /** The return value for this route's server loader function */
   data: T["loaderData"];
+  /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
   error?: unknown;
+  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
   matches: MetaMatches<[...T["parents"], T]>;
 };
 export type MetaDescriptors = MetaDescriptor[];
@@ -109,11 +114,52 @@ type _CreateActionData<ServerActionData, ClientActionData> = Awaited<
 >
 
 type ClientDataFunctionArgs<T extends RouteInfo> = {
+  /**
+   * A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the URL, the method, the "content-type" header, and the request body from the request.
+   *
+   * @note Because client data functions are called before a network request is made, the Request object does not include the headers which the browser automatically adds. React Router infers the "content-type" header from the enc-type of the form that performed the submission.
+   **/
   request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function clientLoader({
+   *   params,
+   * }: Route.ClientLoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
   params: T["params"];
 };
 
-type ServerDataFunctionArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
+type ServerDataFunctionArgs<T extends RouteInfo> = {
+  /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
+  request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function loader({
+   *   params,
+   * }: Route.LoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
+  params: T["params"];
+  /**
+   * This is the context passed in to your server adapter's getLoadContext() function.
+   * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
+   * It is only applicable if you are using a custom server adapter.
+   */
   context: AppLoadContext;
 };
 
@@ -122,6 +168,7 @@ export type CreateServerLoaderArgs<T extends RouteInfo> =
 
 export type CreateClientLoaderArgs<T extends RouteInfo> =
   ClientDataFunctionArgs<T> & {
+    /** This is an asynchronous function to get the data from the server loader for this route. On client-side navigations, this will make a {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API fetch} call to the React Router server loader. If you opt-into running your clientLoader on hydration, then this function will return the data that was already loaded on the server (via Promise.resolve). */
     serverLoader: () => Promise<ServerDataFrom<T["module"]["loader"]>>;
   };
 
@@ -130,11 +177,14 @@ export type CreateServerActionArgs<T extends RouteInfo> =
 
 export type CreateClientActionArgs<T extends RouteInfo> =
   ClientDataFunctionArgs<T> & {
+    /** This is an asynchronous function that makes the {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API fetch} call to the React Router server action for this route. */
     serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
   };
 
 export type CreateHydrateFallbackProps<T extends RouteInfo> = {
   params: T["params"];
+  loaderData?: T["loaderData"];
+  actionData?: T["actionData"];
 };
 
 type Match<T extends RouteInfo> = Pretty<
@@ -152,13 +202,44 @@ type Matches<T extends RouteInfo[]> =
     : Array<Match<RouteInfo> | undefined>;
 
 export type CreateComponentProps<T extends RouteInfo> = {
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export default function Component({
+   *   params,
+   * }: Route.ComponentProps) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
   params: T["params"];
+  /** The data returned from the `loader` or `clientLoader` */
   loaderData: T["loaderData"];
+  /** The data returned from the `action` or `clientAction` following an action submission. */
   actionData?: T["actionData"];
+  /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
   matches: Matches<[...T["parents"], T]>;
 };
 
 export type CreateErrorBoundaryProps<T extends RouteInfo> = {
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function ErrorBoundary({
+   *   params,
+   * }: Route.ErrorBoundaryProps) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
   params: T["params"];
   error: unknown;
   loaderData?: T["loaderData"];

@@ -26,8 +26,8 @@ const discoveredPaths = new Set<string>();
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
-export function isFogOfWarEnabled(isSpaMode: boolean) {
-  return !isSpaMode;
+export function isFogOfWarEnabled(ssr: boolean) {
+  return ssr === true;
 }
 
 export function getPartialManifest(
@@ -70,14 +70,15 @@ export function getPartialManifest(
 export function getPatchRoutesOnNavigationFunction(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (!isFogOfWarEnabled(isSpaMode)) {
+  if (!isFogOfWarEnabled(ssr)) {
     return undefined;
   }
 
-  return async ({ path, patch }) => {
+  return async ({ path, patch, signal }) => {
     if (discoveredPaths.has(path)) {
       return;
     }
@@ -85,9 +86,11 @@ export function getPatchRoutesOnNavigationFunction(
       [path],
       manifest,
       routeModules,
+      ssr,
       isSpaMode,
       basename,
-      patch
+      patch,
+      signal
     );
   };
 }
@@ -96,14 +99,12 @@ export function useFogOFWarDiscovery(
   router: DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   isSpaMode: boolean
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
-    if (
-      !isFogOfWarEnabled(isSpaMode) ||
-      navigator.connection?.saveData === true
-    ) {
+    if (!isFogOfWarEnabled(ssr) || navigator.connection?.saveData === true) {
       return;
     }
 
@@ -150,6 +151,7 @@ export function useFogOFWarDiscovery(
           lazyPaths,
           manifest,
           routeModules,
+          ssr,
           isSpaMode,
           router.basename,
           router.patchRoutes
@@ -176,16 +178,18 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [isSpaMode, manifest, routeModules, router]);
+  }, [ssr, isSpaMode, manifest, routeModules, router]);
 }
 
 export async function fetchAndApplyManifestPatches(
   paths: string[],
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined,
-  patchRoutes: DataRouter["patchRoutes"]
+  patchRoutes: DataRouter["patchRoutes"],
+  signal?: AbortSignal
 ): Promise<void> {
   let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
     /\/+/g,
@@ -203,15 +207,21 @@ export async function fetchAndApplyManifestPatches(
     return;
   }
 
-  let res = await fetch(url);
+  let serverPatches: AssetsManifest["routes"];
+  try {
+    let res = await fetch(url, { signal });
 
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}`);
-  } else if (res.status >= 400) {
-    throw new Error(await res.text());
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    } else if (res.status >= 400) {
+      throw new Error(await res.text());
+    }
+
+    serverPatches = (await res.json()) as AssetsManifest["routes"];
+  } catch (e) {
+    if (signal?.aborted) return;
+    throw e;
   }
-
-  let serverPatches = (await res.json()) as AssetsManifest["routes"];
 
   // Patch routes we don't know about yet into the manifest
   let knownRoutes = new Set(Object.keys(manifest.routes));
@@ -237,7 +247,7 @@ export async function fetchAndApplyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, isSpaMode, parentId)
+      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId)
     )
   );
 }

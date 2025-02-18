@@ -1273,4 +1273,59 @@ test.describe("Fog of War", () => {
       ),
     ]);
   });
+
+  test("handles interruptions from back to back navigations", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/a.tsx": js`
+          import { Link, Outlet, useLoaderData, useNavigate } from "react-router";
+          export function loader({ request }) {
+            return { message: "A LOADER" };
+          }
+          export default function Index() {
+            let data = useLoaderData();
+            let navigate = useNavigate();
+            return (
+              <>
+                <h1 id="a">A: {data.message}</h1>
+                <button data-link onClick={async () => {
+                  navigate('/a/b');
+                  setTimeout(() => navigate('/a/b'), 0)
+                }}>
+                  /a/b
+                </button>
+                <Outlet/>
+              </>
+            )
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/a", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual(["root", "routes/a", "routes/_index"]);
+
+    // /a/b gets discovered on click
+    await app.clickElement("[data-link]");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    expect(await (await page.$("body"))?.textContent()).not.toContain(
+      "Not Found"
+    );
+    await page.waitForSelector("#b");
+
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual(["root", "routes/a", "routes/_index", "routes/a.b"]);
+  });
 });

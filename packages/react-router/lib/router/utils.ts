@@ -116,8 +116,28 @@ export type Submission =
  * this as a private implementation detail in case they diverge in the future.
  */
 interface DataFunctionArgs<Context> {
+  /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function loader({
+   *   params,
+   * }: Route.LoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
   params: Params;
+  /**
+   * This is the context passed in to your server adapter's getLoadContext() function.
+   * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
+   * It is only applicable if you are using a custom server adapter.
+   */
   context?: Context;
 }
 
@@ -166,18 +186,56 @@ export interface ActionFunction<Context = any> {
  * Arguments passed to shouldRevalidate function
  */
 export interface ShouldRevalidateFunctionArgs {
+  /** This is the url the navigation started from. You can compare it with `nextUrl` to decide if you need to revalidate this route's data. */
   currentUrl: URL;
+  /** These are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params} from the URL that can be compared to the `nextParams` to decide if you need to reload or not. Perhaps you're using only a partial piece of the param for data loading, you don't need to revalidate if a superfluous part of the param changed. */
   currentParams: AgnosticDataRouteMatch["params"];
+  /** In the case of navigation, this the URL the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentUrl. */
   nextUrl: URL;
+  /** In the case of navigation, these are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params}  from the next location the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentParams. */
   nextParams: AgnosticDataRouteMatch["params"];
+  /** The method (probably `"GET"` or `"POST"`) used in the form submission that triggered the revalidation. */
   formMethod?: Submission["formMethod"];
+  /** The form action (`<Form action="/somewhere">`) that triggered the revalidation. */
   formAction?: Submission["formAction"];
+  /** The form encType (`<Form encType="application/x-www-form-urlencoded">) used in the form submission that triggered the revalidation*/
   formEncType?: Submission["formEncType"];
+  /** The form submission data when the form's encType is `text/plain` */
   text?: Submission["text"];
+  /** The form submission data when the form's encType is `application/x-www-form-urlencoded` or `multipart/form-data` */
   formData?: Submission["formData"];
+  /** The form submission data when the form's encType is `application/json` */
   json?: Submission["json"];
+  /** The status code of the action response */
   actionStatus?: number;
+  /**
+   * When a submission causes the revalidation this will be the result of the action—either action data or an error if the action failed. It's common to include some information in the action result to instruct shouldRevalidate to revalidate or not.
+   *
+   * @example
+   * export async function action() {
+   *   await saveSomeStuff();
+   *   return { ok: true };
+   * }
+   *
+   * export function shouldRevalidate({
+   *   actionResult,
+   * }) {
+   *   if (actionResult?.ok) {
+   *     return false;
+   *   }
+   *   return true;
+   * }
+   */
   actionResult?: any;
+  /**
+   * By default, React Router doesn't call every loader all the time. There are reliable optimizations it can make by default. For example, only loaders with changing params are called. Consider navigating from the following URL to the one below it:
+   *
+   * /projects/123/tasks/abc
+   * /projects/123/tasks/def
+   * React Router will only call the loader for tasks/def because the param for projects/123 didn't change.
+   *
+   * It's safest to always return defaultShouldRevalidate after you've done your specific optimizations that return false, otherwise your UI might get out of sync with your data on the server.
+   */
   defaultShouldRevalidate: boolean;
 }
 
@@ -224,6 +282,7 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = {
+  signal: AbortSignal;
   path: string;
   matches: M[];
   patch: (routeId: string | null, children: O[]) => void;
@@ -555,8 +614,13 @@ export function matchRoutesImpl<
 export interface UIMatch<Data = unknown, Handle = unknown> {
   id: string;
   pathname: string;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
+   **/
   params: AgnosticRouteMatch["params"];
+  /** The return value from the matched route's loader or clientLoader */
   data: Data;
+  /** The {@link https://reactrouter.com/start/framework/route-module#handle handle object} exported from the matched route module */
   handle: Handle;
 }
 

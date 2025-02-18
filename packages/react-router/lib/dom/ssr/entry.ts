@@ -16,6 +16,7 @@ export interface FrameworkContextObject {
   criticalCss?: string;
   serverHandoffString?: string;
   future: FutureConfig;
+  ssr: boolean;
   isSpaMode: boolean;
   serializeError?(error: Error): SerializedError;
   renderMeta?: {

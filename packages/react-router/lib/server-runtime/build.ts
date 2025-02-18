@@ -20,7 +20,12 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
+  ssr: boolean;
+  /**
+   * @deprecated This is now done via a custom header during prerendering
+   */
   isSpaMode: boolean;
+  prerender: string[];
 }
 
 export interface HandleDocumentRequestFunction {
