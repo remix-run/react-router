@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.2.0-pre.6
+
+### Patch Changes
+
+- [REMOVE] Update invalid route export messages ([#13049](https://github.com/remix-run/react-router/pull/13049))
+- Updated dependencies:
+  - `react-router@7.2.0-pre.6`
+  - `@react-router/node@7.2.0-pre.6`
+  - `@react-router/serve@7.2.0-pre.6`
+
 ## 7.2.0-pre.5
 
 ### Patch Changes
