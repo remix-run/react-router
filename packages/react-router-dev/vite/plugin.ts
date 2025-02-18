@@ -64,6 +64,11 @@ import {
 } from "../config/config";
 import * as WithProps from "./with-props";
 
+export type LoadModule = (
+  viteDevServer: Vite.ViteDevServer,
+  url: string
+) => Promise<any>;
+
 export async function resolveViteConfig({
   configFile,
   mode,
@@ -913,6 +918,31 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     };
   };
 
+  // We use a separate environment for loading the server manifest and inlined
+  // CSS during development. This is because "ssrLoadModule" isn't available if
+  // the "ssr" environment has been defined by another plugin (e.g.
+  // vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
+  // Vite.RunnableDevEnvironment:
+  // https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
+  const HELPER_ENVIRONMENT_NAME = "__react_router_helper__";
+
+  const loadModule: LoadModule = (viteDevServer, url) => {
+    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+      const vite = getVite();
+      const helperEnvironment =
+        viteDevServer.environments[HELPER_ENVIRONMENT_NAME];
+
+      invariant(
+        helperEnvironment && vite.isRunnableDevEnvironment(helperEnvironment),
+        "Missing helper environment"
+      );
+
+      return helperEnvironment.runner.import(url);
+    }
+
+    return viteDevServer.ssrLoadModule(url);
+  };
+
   return [
     {
       name: "react-router",
@@ -1064,7 +1094,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           ...(ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? {
-                environments,
+                environments: {
+                  ...environments,
+                  [HELPER_ENVIRONMENT_NAME]: {},
+                },
                 build: {
                   // This isn't honored by the SSR environment config (which seems
                   // to be a Vite bug?) so we set it here too.
@@ -1268,6 +1301,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               cssModulesManifest,
               build,
               url,
+              loadModule,
             });
           },
           // If an error is caught within the request handler, let Vite fix the
@@ -1944,7 +1978,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (route) {
           // invalidate manifest on route exports change
           let serverManifest = (
-            await server.ssrLoadModule(virtual.serverManifest.id)
+            await loadModule(server, virtual.serverManifest.id)
           ).default as ReactRouterManifest;
 
           let oldRouteMetadata = serverManifest.routes[route.id];
