@@ -979,7 +979,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         cssMod !== null &&
         "default" in cssMod &&
         typeof cssMod.default === "string",
-      `Failed to load CSS for ${dep.url}`
+      `Failed to load CSS for ${dep.file ?? dep.url}`
     );
 
     return cssMod.default;

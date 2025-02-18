@@ -102,11 +102,9 @@ const getStylesForFiles = async ({
       !isCssUrlWithoutSideEffects(dep.url) // Ignore styles that resolved as URLs, inline or raw. These shouldn't get injected.
     ) {
       try {
-        let css = await loadCssContents(viteDevServer, dep);
-
-        styles[dep.url] = css;
+        styles[dep.url] = await loadCssContents(viteDevServer, dep);
       } catch {
-        console.warn(`Could not load ${dep.file}`);
+        console.warn(`Failed to load CSS for ${dep.file}`);
         // this can happen with dynamically imported modules, I think
         // because the Vite module graph doesn't distinguish between
         // static and dynamic imports? TODO investigate, submit fix
