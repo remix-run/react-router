@@ -1,6 +1,6 @@
 {
   "name": "@react-router/express",
-  "version": "7.1.5",
+  "version": "0.0.0-nightly-6df9b21a9-20250218",
   "description": "Express server request handler for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
