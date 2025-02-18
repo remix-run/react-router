@@ -1,55 +1,25 @@
 # `@react-router/dev`
 
-## 7.2.0-pre.6
-
-### Patch Changes
-
-- [REMOVE] Update invalid route export messages ([#13049](https://github.com/remix-run/react-router/pull/13049))
-- Updated dependencies:
-  - `react-router@7.2.0-pre.6`
-  - `@react-router/node@7.2.0-pre.6`
-  - `@react-router/serve@7.2.0-pre.6`
-
-## 7.2.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.5`
-  - `@react-router/node@7.2.0-pre.5`
-  - `@react-router/serve@7.2.0-pre.5`
-
-## 7.2.0-pre.4
-
-### Patch Changes
-
-- Fix prerendering of binary files ([#13039](https://github.com/remix-run/react-router/pull/13039))
-- Updated dependencies:
-  - `react-router@7.2.0-pre.4`
-  - `@react-router/node@7.2.0-pre.4`
-  - `@react-router/serve@7.2.0-pre.4`
-
-## 7.2.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.3`
-  - `@react-router/node@7.2.0-pre.3`
-  - `@react-router/serve@7.2.0-pre.3`
-
-## 7.2.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.2`
-  - `@react-router/node@7.2.0-pre.2`
-  - `@react-router/serve@7.2.0-pre.2`
-
-## 7.2.0-pre.1
+## 7.2.0
 
 ### Minor Changes
+
+- Generate a "SPA fallback" HTML file for scenarios where applications are prerendering the `/` route with `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
+
+  - If you specify `ssr:false` without a `prerender` config, this is considered "SPA Mode" and the generated `index.html` file will only render down to the root route and will be able to hydrate for any valid application path
+  - If you specify `ssr:false` with a `prerender` config but _do not_ include the `/` path (i.e., `prerender: ['/blog/post']`), then we still generate a "SPA Mode" `index.html` file that can hydrate for any path in the application
+  - However, previously if you specified `ssr:false` and included the `/` path in your `prerender` config, we would prerender the `/` route into `index.html` as a non-SPA page
+    - The generated HTML would include the root index route which prevented hydration for any other paths
+    - With this change, we now generate a "SPA Mode" file in `__spa-fallback.html` that will allow you to hydrate for any non-prerendered paths
+    - You can serve this file from your static file server for any paths that would otherwise 404 if you only want to pre-render _some_ routes in your `ssr:false` app and serve the others as a SPA
+    - `npx sirv-cli build/client --single __spa-fallback.html`
+
+- Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
+
+  - `Route.HydrateFallbackProps` now also receives `loaderData`
+    - This will be defined so long as the `HydrateFallback` is rendering while _children_ routes are loading
+    - This will be `undefined` if the `HydrateFallback` is rendering because the route has it's own hydrating `clientLoader`
+    - In SPA mode, this will allow you to render loader root data into the SPA `index.html`
 
 - New type-safe `href` utility that guarantees links point to actual paths in your app ([#13012](https://github.com/remix-run/react-router/pull/13012))
 
@@ -69,6 +39,8 @@
 
 ### Patch Changes
 
+- Handle custom `envDir` in Vite config ([#12969](https://github.com/remix-run/react-router/pull/12969))
+
 - Fix typegen for repeated params ([#13012](https://github.com/remix-run/react-router/pull/13012))
 
   In React Router, path parameters are keyed by their name.
@@ -81,37 +53,12 @@
   To be consistent with runtime behavior, the generated types now correctly model the "last one wins" semantics of path parameters.
   So `/a/1/b/2/c/3` now generates a type like `{ id: 3 }`.
 
-- Fix `ArgError: unknown or unexpected option: --version` when running `react-router --version` ([#13012](https://github.com/remix-run/react-router/pull/13012))
-- Updated dependencies:
-  - `react-router@7.2.0-pre.1`
-  - `@react-router/node@7.2.0-pre.1`
-  - `@react-router/serve@7.2.0-pre.1`
-
-## 7.2.0-pre.0
-
-### Minor Changes
-
-- Generate a "SPA fallback" HTML file for scenarios where applications are prerendering the `/` route with `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
-
-  - If you specify `ssr:false` without a `prerender` config, this is considered "SPA Mode" and the generated `index.html` file will only render down to the root route and will be able to hydrate for any valid application path
-  - If you specify `ssr:false` with a `prerender` config but _do not_ include the `/` path (i.e., `prerender: ['/blog/post']`), then we still generate a "SPA Mode" `index.html` file that can hydrate for any path in the application
-  - However, previously if you specified `ssr:false` and included the `/` path in your `prerender` config, we would prerender the `/` route into `index.html` as a non-SPA page
-    - The generated HTML would include the root index route which prevented hydration for any other paths
-    - With this change, we now generate a "SPA Mode" file in `__spa-fallback.html` that will allow you to hydrate for any non-prerendered paths
-    - You can serve this file from your static file server for any paths that would otherwise 404 if you only want to pre-render _some_ routes in your `ssr:false` app and serve the others as a SPA
-    - `npx sirv-cli build/client --single __spa-fallback.html`
-
-- - Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
-  - `Route.HydrateFallbackProps` now also receives `loaderData`
-    - This will be defined so long as the `HydrateFallback` is rendering while _children_ routes are loading
-    - This will be `undefined` if the `HydrateFallback` is rendering because the route has it's own hydrating `clientLoader`
-    - In SPA mode, this will allow you to render loader root data into the SPA `index.html`
-
-### Patch Changes
-
-- Handle custom `envDir` in Vite config ([#12969](https://github.com/remix-run/react-router/pull/12969))
 - Fix CLI parsing to allow argumentless `npx react-router` usage ([#12925](https://github.com/remix-run/react-router/pull/12925))
+
+- Fix `ArgError: unknown or unexpected option: --version` when running `react-router --version` ([#13012](https://github.com/remix-run/react-router/pull/13012))
+
 - Skip action-only resource routes when using `prerender:true` ([#13004](https://github.com/remix-run/react-router/pull/13004))
+
 - Enhance invalid export detection when using `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
 
   - `headers`/`action` are prohibited in all routes with `ssr:false` because there will be no runtime server on which to run them
@@ -122,17 +69,22 @@
       - Exporting a `loader` from a route that is never matched by a `prerender` path will throw a build time error because there will be no runtime server to ever run the loader
 
 - Limit prerendered resource route `.data` files to only the target route ([#13004](https://github.com/remix-run/react-router/pull/13004))
+
 - Add unstable support for splitting route modules in framework mode via `future.unstable_splitRouteModules` ([#11871](https://github.com/remix-run/react-router/pull/11871))
+
+- Fix prerendering of binary files ([#13039](https://github.com/remix-run/react-router/pull/13039))
+
 - Add `future.unstable_viteEnvironmentApi` flag to enable experimental Vite Environment API support ([#12936](https://github.com/remix-run/react-router/pull/12936))
+
 - Disable Lazy Route Discovery for all `ssr:false` apps and not just "SPA Mode" because there is no runtime server to serve the search-param-configured `__manifest` requests ([#12894](https://github.com/remix-run/react-router/pull/12894))
 
   - We previously only disabled this for "SPA Mode" which is `ssr:false` and no `prerender` config but we realized it should apply to all `ssr:false` apps, including those prerendering multiple pages
   - In those `prerender` scenarios we would prerender the `/__manifest` file assuming the static file server would serve it but that makes some unneccesary assumptions about the static file server behaviors
 
 - Updated dependencies:
-  - `react-router@7.2.0-pre.0`
-  - `@react-router/node@7.2.0-pre.0`
-  - `@react-router/serve@7.2.0-pre.0`
+  - `react-router@7.2.0`
+  - `@react-router/node@7.2.0`
+  - `@react-router/serve@7.2.0`
 
 ## 7.1.5
 
