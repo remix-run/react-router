@@ -2569,13 +2569,13 @@ async function prerenderResourceRoute(
     .replace(/\/$/g, "");
   let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
-  let text = await response.text();
+  let content = Buffer.from(await response.arrayBuffer());
 
   if (response.status !== 200) {
     throw new Error(
       `Prerender (resource): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${text}`
+        `path.\n${content.toString("utf8")}`
     );
   }
 
@@ -2583,7 +2583,7 @@ async function prerenderResourceRoute(
   let outdir = path.relative(process.cwd(), clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
-  await fse.outputFile(outfile, text);
+  await fse.outputFile(outfile, content);
   viteConfig.logger.info(
     `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
   );
@@ -2721,23 +2721,40 @@ async function validateSsrFalsePrerenderExports(
     if (exports.includes("action")) invalidApis.push("action");
     if (invalidApis.length > 0) {
       errors.push(
-        `Prerender: ${invalidApis.length} invalid route export(s) in ` +
-          `\`${route.id}\` when prerendering with \`ssr:false\`: ` +
-          `${invalidApis.join(", ")}.  ` +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
+        `Prerender: ${invalidApis.length} invalid route export(s) in \`${route.id}\` ` +
+          "when pre-rendering with `ssr:false`: " +
+          `${invalidApis.map((a) => `\`${a}\``).join(", ")}.  ` +
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
       );
     }
 
     // `loader` is only valid if the route is matched by a `prerender` path
-    if (exports.includes("loader") && !prerenderedRoutes.has(routeId)) {
-      errors.push(
-        `Prerender: 1 invalid route export in \`${route.id}\` when ` +
-          "using `ssr:false` with `prerender` because the route is never " +
-          "prerendered so the loader will never be called.  " +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
-      );
+    if (!prerenderedRoutes.has(routeId)) {
+      if (exports.includes("loader")) {
+        errors.push(
+          `Prerender: 1 invalid route export in \`${route.id}\` ` +
+            "when pre-rendering with `ssr:false`: `loader`. " +
+            "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+        );
+      }
+
+      let parentRoute = route.parentId ? manifest.routes[route.parentId] : null;
+      while (parentRoute && parentRoute.id !== "root") {
+        if (parentRoute.hasLoader && !parentRoute.hasClientLoader) {
+          errors.push(
+            `Prerender: 1 invalid route export in \`${parentRoute.id}\` when ` +
+              "pre-rendering with `ssr:false`: `loader`. " +
+              "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+          );
+        }
+        parentRoute =
+          parentRoute.parentId && parentRoute.parentId !== "root"
+            ? manifest.routes[parentRoute.parentId]
+            : null;
+      }
     }
   }
+
   if (errors.length > 0) {
     viteConfig.logger.error(colors.red(errors.join("\n")));
     throw new Error(

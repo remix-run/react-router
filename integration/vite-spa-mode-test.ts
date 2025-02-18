@@ -637,6 +637,61 @@ test.describe("SPA Mode", () => {
           expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
           expect(html.match(/💿 Hey developer 👋/g)?.length).toBe(1);
         });
+
+        test("does not inherit single fetch revalidation behavior", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            spaMode: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                splitRouteModules,
+              }),
+              "app/routes/_index.tsx": js`
+                import { Link } from 'react-router';
+                export default function Component() {
+                  return <Link to="/parent">Go to parent</Link>;
+                }
+              `,
+              "app/routes/parent.tsx": js`
+                import { Link, Outlet } from 'react-router';
+                let count = 0;
+                export function clientLoader() {
+                  return ++count;
+                }
+                export default function Component({ loaderData }) {
+                  return (
+                    <>
+                      <h1>Parent: {loaderData}</h1>
+                      <Link to="./child">Go to child</Link>
+                      <Outlet />
+                    </>
+                  )
+                }
+              `,
+              "app/routes/parent.child.tsx": js`
+                import { Link } from 'react-router';
+                export default function Component({ loaderData }) {
+                  return <h2>Child</h2>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/", true);
+          await page.waitForSelector('a[href="/parent"]');
+          await app.clickLink("/parent");
+          await page.waitForSelector("h1");
+          expect(await page.locator("h1").textContent()).toBe("Parent: 1");
+
+          await app.clickLink("/parent/child");
+          await page.waitForSelector("h2");
+          expect(await page.locator("h1").textContent()).toBe("Parent: 1");
+          expect(await page.locator("h2").textContent()).toBe("Child");
+        });
       });
 
       test.describe("normal apps", () => {
@@ -984,7 +1039,7 @@ test.describe("SPA Mode", () => {
           await app.clickLink("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You cannot call serverLoader() in SPA Mode (routeId: "routes/error")'
+            'Error: You are trying to call serverLoader() on a route that does not have a server loader (routeId: "routes/error")'
           );
         });
 
@@ -998,7 +1053,7 @@ test.describe("SPA Mode", () => {
           await app.clickSubmitButton("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You cannot call serverAction() in SPA Mode (routeId: "routes/error")'
+            'Error: You are trying to call serverAction() on a route that does not have a server action (routeId: "routes/error")'
           );
         });
 
