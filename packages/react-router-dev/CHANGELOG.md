@@ -14,7 +14,8 @@
     - You can serve this file from your static file server for any paths that would otherwise 404 if you only want to pre-render _some_ routes in your `ssr:false` app and serve the others as a SPA
     - `npx sirv-cli build/client --single __spa-fallback.html`
 
-- - Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
+- Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
+
   - `Route.HydrateFallbackProps` now also receives `loaderData`
     - This will be defined so long as the `HydrateFallback` is rendering while _children_ routes are loading
     - This will be `undefined` if the `HydrateFallback` is rendering because the route has it's own hydrating `clientLoader`
@@ -79,8 +80,6 @@
 
   - We previously only disabled this for "SPA Mode" which is `ssr:false` and no `prerender` config but we realized it should apply to all `ssr:false` apps, including those prerendering multiple pages
   - In those `prerender` scenarios we would prerender the `/__manifest` file assuming the static file server would serve it but that makes some unneccesary assumptions about the static file server behaviors
-
-- \[REMOVE] Update invalid route export messages ([#13049](https://github.com/remix-run/react-router/pull/13049))
 
 - Updated dependencies:
   - `react-router@7.2.0`
@@ -204,7 +203,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 

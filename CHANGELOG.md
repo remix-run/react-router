@@ -284,7 +284,7 @@ Date: YYYY-MM-DD
 
 ## v7.2.0
 
-Date: 2025-02-13
+Date: 2025-02-18
 
 ### What's Changed
 

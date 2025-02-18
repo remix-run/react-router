@@ -55,8 +55,6 @@
   - This can be resolved by either adding a parent `clientLoader` or pre-rendering the child paths
   - If you add a `clientLoader`, calling the `serverLoader()` on non-prerendered paths will throw a 404
 
-- \[REMOVE] Fix prerender calls to serverLoader from clientLoader ([#13047](https://github.com/remix-run/react-router/pull/13047))
-
 - Add unstable support for splitting route modules in framework mode via `future.unstable_splitRouteModules` ([#11871](https://github.com/remix-run/react-router/pull/11871))
 
 - Add `unstable_SerializesTo` brand type for library authors to register types serializable by React Router's streaming format (`turbo-stream`) ([`ab5b05b02`](https://github.com/remix-run/react-router/commit/ab5b05b02f99f062edb3c536c392197c88eb6c77))
@@ -159,7 +157,7 @@ _No changes_
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
