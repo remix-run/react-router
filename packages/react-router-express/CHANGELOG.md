@@ -1,60 +1,12 @@
 # `@react-router/express`
 
-## 7.2.0-pre.6
+## 7.2.0
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.2.0-pre.6`
-  - `@react-router/node@7.2.0-pre.6`
-
-## 7.2.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.5`
-  - `@react-router/node@7.2.0-pre.5`
-
-## 7.2.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.4`
-  - `@react-router/node@7.2.0-pre.4`
-
-## 7.2.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.3`
-  - `@react-router/node@7.2.0-pre.3`
-
-## 7.2.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.2`
-  - `@react-router/node@7.2.0-pre.2`
-
-## 7.2.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.1`
-  - `@react-router/node@7.2.0-pre.1`
-
-## 7.2.0-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.2.0-pre.0`
-  - `@react-router/node@7.2.0-pre.0`
+  - `react-router@7.2.0`
+  - `@react-router/node@7.2.0`
 
 ## 7.1.5
 
@@ -124,7 +76,7 @@
 
 ### Major Changes
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
