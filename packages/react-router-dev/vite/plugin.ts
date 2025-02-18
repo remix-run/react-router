@@ -967,11 +967,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
       const cssDevHelperEnvironment =
         viteDevServer.environments[CSS_DEV_HELPER_ENVIRONMENT_NAME];
-      invariant(
-        cssDevHelperEnvironment &&
-          vite.isRunnableDevEnvironment(cssDevHelperEnvironment),
-        "Missing CSS dev helper environment"
-      );
+      invariant(cssDevHelperEnvironment, "Missing CSS dev helper environment");
+      invariant(vite.isRunnableDevEnvironment(cssDevHelperEnvironment));
       cssMod = await cssDevHelperEnvironment.runner.import(url);
     } else {
       cssMod = await viteDevServer.ssrLoadModule(url);
