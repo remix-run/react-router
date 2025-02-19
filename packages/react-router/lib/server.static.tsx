@@ -4,6 +4,8 @@ import { createStaticRouter, StaticRouterProvider } from "./dom/server";
 import type { ServerPayload } from "./server";
 
 export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
+  if (payload.type !== "render") return null;
+
   const context = {
     actionData: payload.actionData,
     actionHeaders: {},

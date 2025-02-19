@@ -26,7 +26,7 @@ export type ServerRouteObject = { id: string; path?: string } & (
     action?: ActionFunction;
     clientAction?: ClientActionFunction;
     clientLoader?: ClientLoaderFunction;
-    Component?: React.ComponentType<any>;
+    default?: React.ComponentType<any>;
     ErrorBoundary?: React.ComponentType<any>;
     handle?: any;
     HydrateFallback?: React.ComponentType<any>;
@@ -37,7 +37,7 @@ export type ServerRouteObject = { id: string; path?: string } & (
     shouldRevalidate?: ShouldRevalidateFunction;
   };
 
-export type ServerRouteMatch = {
+export type ServerRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
   Component?: React.ComponentType;
@@ -51,14 +51,22 @@ export type ServerRouteMatch = {
   Layout?: React.ComponentType;
   links?: LinksFunction;
   meta?: MetaFunction;
-  params: Params;
   path?: string;
-  pathname: string;
-  pathnameBase: string;
   shouldRevalidate?: ShouldRevalidateFunction;
 };
 
-export type ServerPayload = {
+export type ServerRouteManifestTree = ServerRouteManifest & {
+  children?: ServerRouteManifestTree[];
+};
+
+export type ServerRouteMatch = ServerRouteManifest & {
+  params: Params;
+  pathname: string;
+  pathnameBase: string;
+};
+
+export type ServerRenderPayload = {
+  type: "render";
   actionData: Record<string, any> | null;
   basename?: string;
   deepestRenderedBoundaryId?: string;
@@ -69,16 +77,66 @@ export type ServerPayload = {
   nonce?: string;
 };
 
+export type ServerManifestPayload = {
+  type: "manifest";
+  routes: ServerRouteManifestTree[];
+};
+
+export type ServerPayload = ServerRenderPayload | ServerManifestPayload;
+
 export type ServerMatch = {
   statusCode: number;
   headers: Headers;
   payload: ServerPayload;
 };
 
+function makeServerRouteManifestTree(
+  routes: ServerRouteObject[]
+): ServerRouteManifestTree[] {
+  return routes.map((route) => {
+    return {
+      clientAction: route.clientAction,
+      clientLoader: route.clientLoader,
+      Component: route.default,
+      ErrorBoundary: route.ErrorBoundary,
+      handle: route.handle,
+      hasAction: !!route.action,
+      hasLoader: !!route.loader,
+      HydrateFallback: route.HydrateFallback,
+      id: route.id,
+      index: "index" in route ? route.index : undefined,
+      Layout: route.Layout,
+      links: route.links,
+      meta: route.meta,
+      path: route.path,
+      shouldRevalidate: route.shouldRevalidate,
+      children:
+        "children" in route && route.children
+          ? makeServerRouteManifestTree(route.children)
+          : undefined,
+    };
+  });
+}
+
 export async function matchServerRequest(
   request: Request,
   routes: ServerRouteObject[]
 ): Promise<ServerMatch | Response> {
+  const url = new URL(request.url);
+  if (url.pathname === "/__manifest") {
+    return {
+      statusCode: 200,
+      headers: new Headers({
+        "Content-Type": "text/x-component",
+        Vary: "Content-Type",
+      }),
+      payload: {
+        type: "manifest",
+        routes: makeServerRouteManifestTree(routes),
+      } satisfies ServerManifestPayload,
+    };
+  }
+
   const handler = createStaticHandler(routes);
   const result = await handler.query(request);
 
@@ -101,6 +159,7 @@ export async function matchServerRequest(
     : result.errors;
 
   const payload = {
+    type: "render",
     actionData: result.actionData,
     deepestRenderedBoundaryId: result._deepestRenderedBoundaryId ?? undefined,
     errors,
@@ -126,7 +185,7 @@ export async function matchServerRequest(
       pathnameBase: match.pathnameBase,
       shouldRevalidate: (match.route as any).shouldRevalidate,
     })),
-  } satisfies ServerPayload;
+  } satisfies ServerRenderPayload;
 
   return {
     statusCode: result.statusCode,
@@ -162,7 +221,7 @@ export async function routeServerRequest(
 
   const serverResponse = await requestServer(serverRequest);
 
-  if (isDataRequest) {
+  if (isDataRequest || isManifestRequest(url)) {
     return serverResponse;
   }
 
@@ -189,4 +248,8 @@ export async function routeServerRequest(
 
 export function isReactServerRequest(url: URL) {
   return url.pathname.endsWith(".rsc");
+}
+
+export function isManifestRequest(url: URL) {
+  return url.pathname === "/__manifest";
 }

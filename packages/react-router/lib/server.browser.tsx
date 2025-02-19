@@ -6,6 +6,8 @@ import { createRouter } from "./router/router";
 import type { ServerPayload } from "./server";
 
 export function ServerBrowserRouter({ payload }: { payload: ServerPayload }) {
+  if (payload.type !== "render") return null;
+
   // TODO: Implement this
   const routes = payload.matches.reduceRight((previous, match) => {
     const route: DataRouteObject = {
