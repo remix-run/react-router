@@ -1,6 +1,5 @@
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
-import { injectRSCPayload } from "rsc-html-stream/server";
 
 // @ts-expect-error
 import { renderToReadableStream } from "react-server-dom-parcel/server.edge";
@@ -17,6 +16,9 @@ import { PrerenderRouter } from "./react-router.ssr" with {
 };
 
 import { matchServerRequest, type ServerPayload } from "react-router";
+import { routeServerRequest } from "react-router" with {
+	env: "react-client",
+};
 
 import { routes } from "./routes";
 
@@ -28,56 +30,32 @@ app.use(express.static("dist"));
 
 app.use(
 	createRequestListener(async (request) => {
-		let serverRequest = request;
-		const serverURL = new URL(request.url);
-		const isDataRequest = serverURL.pathname.endsWith(".data");
-		if (isDataRequest) {
-			serverURL.pathname = serverURL.pathname.replace(/\.data$/, "");
-			serverRequest = new Request(serverURL, {
-				body: request.body,
-				duplex: request.body ? "half" : undefined,
-				headers: request.headers,
-				method: request.method,
-				signal: request.signal,
-			} as RequestInit & { duplex?: "half" });
-		}
-		const serverResponse = await matchServerRequest(serverRequest, _routes);
+		return routeServerRequest(
+			request,
+			async (request) => {
+				const match = await matchServerRequest(request, _routes);
+				if (match instanceof Response) {
+					return match;
+				}
 
-		if (serverResponse instanceof Response) {
-			return serverResponse;
-		}
-
-		const body = renderToReadableStream(serverResponse.payload);
-
-		if (isDataRequest) {
-			const headers = new Headers(serverResponse.headers);
-			headers.set("Content-Type", "application/json");
-			return new Response(body, {
-				status: serverResponse.statusCode,
-				headers,
-			});
-		}
-		
-		const [rscStreamA, rscStreamB] = body.tee();
-
-		const payload: ServerPayload = await createFromReadableStream(rscStreamA);
-
-		const htmlStream = await renderHTMLToReadableStream(
-			<PrerenderRouter payload={payload} />,
-			{
-				bootstrapScriptContent: (
-					routes as unknown as { bootstrapScript: string }
-				).bootstrapScript,
+				return new Response(renderToReadableStream(match.payload), {
+					status: match.statusCode,
+					headers: match.headers,
+				});
 			},
+			async (response) => {
+				const payload: ServerPayload = await createFromReadableStream(response.body);
+
+				return await renderHTMLToReadableStream(
+					<PrerenderRouter payload={payload} />,
+					{
+						bootstrapScriptContent: (
+							routes as unknown as { bootstrapScript: string }
+						).bootstrapScript,
+					},
+				);
+			}
 		);
-
-		const headers = new Headers(serverResponse.headers);
-		headers.set("Content-Type", "text/html");
-
-		return new Response(htmlStream.pipeThrough(injectRSCPayload(rscStreamB)), {
-			status: serverResponse.statusCode,
-			headers,
-		});
 	}),
 );
 
