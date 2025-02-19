@@ -1,3 +1,5 @@
+// https://github.com/devongovett/rsc-html-stream/blob/main/server.js
+
 const encoder = new TextEncoder();
 const trailer = "</body></html>";
 

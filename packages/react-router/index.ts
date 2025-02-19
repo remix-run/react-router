@@ -360,3 +360,6 @@ export {
   matchServerRequest,
   routeServerRequest,
 } from "./lib/server";
+export { ServerBrowserRouter } from "./lib/server.browser";
+export { ServerStaticRouter } from "./lib/server.static";
+export { getServerStream } from "./lib/html-stream/browser";

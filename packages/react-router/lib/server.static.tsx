@@ -1,12 +1,9 @@
-import {
-  createStaticRouter,
-  StaticRouterProvider,
-  type DataRouteObject,
-} from "react-router";
+import * as React from "react";
+import type { DataRouteObject } from "./context";
+import { createStaticRouter, StaticRouterProvider } from "./dom/server";
+import type { ServerPayload } from "./server";
 
-import type { ServerPayload } from "react-router";
-
-export function PrerenderRouter({ payload }: { payload: ServerPayload }) {
+export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
   const context = {
     actionData: payload.actionData,
     actionHeaders: {},

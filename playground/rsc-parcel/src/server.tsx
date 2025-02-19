@@ -11,12 +11,9 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge" w
 import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge" with {
 	env: "react-client",
 };
-import { PrerenderRouter } from "./react-router.ssr" with {
-	env: "react-client",
-};
 
 import { matchServerRequest, type ServerPayload } from "react-router";
-import { routeServerRequest } from "react-router" with {
+import { routeServerRequest, ServerStaticRouter } from "react-router" with {
 	env: "react-client",
 };
 
@@ -47,7 +44,7 @@ app.use(
 				const payload: ServerPayload = await createFromReadableStream(response.body);
 
 				return await renderHTMLToReadableStream(
-					<PrerenderRouter payload={payload} />,
+					<ServerStaticRouter payload={payload} />,
 					{
 						bootstrapScriptContent: (
 							routes as unknown as { bootstrapScript: string }

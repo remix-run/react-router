@@ -32,8 +32,7 @@
 		"react": "0.0.0-experimental-93b58361-20250209",
 		"react-dom": "0.0.0-experimental-93b58361-20250209",
 		"react-router": "workspace:*",
-		"react-server-dom-parcel": "0.0.0-experimental-93b58361-20250209",
-		"rsc-html-stream": "0.0.4"
+		"react-server-dom-parcel": "0.0.0-experimental-93b58361-20250209"
 	},
 	"pnpm": {
 		"overrides": {

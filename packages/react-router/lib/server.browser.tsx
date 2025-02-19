@@ -1,13 +1,12 @@
-import {
-  UNSAFE_createRouter,
-  RouterProvider,
-  type DataRouteObject,
-  UNSAFE_createBrowserHistory,
-} from "react-router";
+import * as React from "react";
+import { RouterProvider } from "./components";
+import type { DataRouteObject } from "./context";
+import { createBrowserHistory } from "./router/history";
+import { createRouter } from "./router/router";
+import type { ServerPayload } from "./server";
 
-import type { ServerPayload } from "react-router";
-
-export function BrowserRouter({ payload }: { payload: ServerPayload }) {
+export function ServerBrowserRouter({ payload }: { payload: ServerPayload }) {
+  // TODO: Implement this
   const routes = payload.matches.reduceRight((previous, match) => {
     const route: DataRouteObject = {
       id: match.id,
@@ -28,9 +27,9 @@ export function BrowserRouter({ payload }: { payload: ServerPayload }) {
     return [route];
   }, [] as DataRouteObject[]);
 
-  const router = UNSAFE_createRouter({
+  const router = createRouter({
     basename: payload.basename,
-    history: UNSAFE_createBrowserHistory(),
+    history: createBrowserHistory(),
     hydrationData: {
       actionData: payload.actionData,
       errors: payload.errors,

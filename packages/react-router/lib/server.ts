@@ -4,6 +4,7 @@ import type {
   LinksFunction,
   MetaFunction,
 } from "./dom/ssr/routeModules";
+import { injectRSCPayload } from "./html-stream/server";
 import type { Location } from "./router/history";
 import { createStaticHandler } from "./router/router";
 import {
@@ -137,7 +138,6 @@ export async function matchServerRequest(
   };
 }
 
-import { injectRSCPayload } from "./html-stream/server";
 export async function routeServerRequest(
   request: Request,
   requestServer: (request: Request) => Promise<Response>,
