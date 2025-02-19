@@ -2127,20 +2127,6 @@ function uniqueNodes(
   return unique;
 }
 
-function findConfig(
-  dir: string,
-  basename: string,
-  extensions: string[]
-): string | undefined {
-  for (let ext of extensions) {
-    let name = basename + ext;
-    let file = path.join(dir, name);
-    if (fse.existsSync(file)) return file;
-  }
-
-  return undefined;
-}
-
 function addRefreshWrapper(
   reactRouterConfig: ResolvedReactRouterConfig,
   code: string,

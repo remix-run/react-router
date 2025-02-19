@@ -905,7 +905,7 @@ test.describe("SPA Mode", () => {
           appFixture.close();
         });
 
-        test("renders the root HydrateFallback initially with access to the root loader data", async ({}) => {
+        test("renders the root HydrateFallback initially with access to the root loader data", async () => {
           let res = await fixture.requestDocument("/");
           let html = await res.text();
           expect(html).toMatch('<h1 data-loading="true">Loading SPA...</h1>');
