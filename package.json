@@ -124,6 +124,8 @@
       "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
     },
     "overrides": {
+      "react": "0.0.0-experimental-93b58361-20250209",
+      "react-dom": "0.0.0-experimental-93b58361-20250209",
       "workerd": "1.20240614.0"
     }
   }
