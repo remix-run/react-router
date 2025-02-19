@@ -1068,7 +1068,9 @@ test.describe("SPA Mode", () => {
     });
   });
 
-  test("only imports top-level route modules when SSRing index.html", async ({ page }) => {
+  test("only imports the root route in the server build when SSRing index.html", async ({
+    page,
+  }) => {
     let fixture = await createFixture({
       spaMode: true,
       files: {
@@ -1123,6 +1125,9 @@ test.describe("SPA Mode", () => {
           import { logImport } from "../routeImportTracker";
           logImport("app/routes/_index.tsx");
 
+          // This should not cause an error on SSr because the module is not loaded
+          console.log(window);
+
           export default function Component() {
             return "index";
           }
@@ -1131,6 +1136,9 @@ test.describe("SPA Mode", () => {
           import * as React  from "react";
           import { logImport } from "../routeImportTracker";
           logImport("app/routes/about.tsx");
+
+          // This should not cause an error on SSr because the module is not loaded
+          console.log(window);
 
           export default function Component() {
             const [mounted, setMounted] = React.useState(false);
@@ -1146,11 +1154,18 @@ test.describe("SPA Mode", () => {
       },
     });
 
-    let importedRoutes = (await fs.promises.readFile(path.join(fixture.projectDir, "ssr-route-imports.txt"), "utf-8")).trim().split("\n");
+    let importedRoutes = (
+      await fs.promises.readFile(
+        path.join(fixture.projectDir, "ssr-route-imports.txt"),
+        "utf-8"
+      )
+    )
+      .trim()
+      .split("\n");
     expect(importedRoutes).toStrictEqual([
       "app/root.tsx",
-      "app/routes/_index.tsx"
-      // we should NOT have imported app/routes/about.tsx
+      // we should not have imported app/routes/_index.tsx
+      // we should not have imported app/routes/about.tsx
     ]);
 
     appFixture = await createAppFixture(fixture);
@@ -1160,7 +1175,7 @@ test.describe("SPA Mode", () => {
     // @ts-expect-error
     expect(await page.evaluate(() => window.csrRouteImports)).toStrictEqual([
       "app/root.tsx",
-      "app/routes/about.tsx"
+      "app/routes/about.tsx",
     ]);
   });
 });
