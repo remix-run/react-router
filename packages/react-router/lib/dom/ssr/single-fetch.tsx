@@ -188,7 +188,7 @@ export function getSingleFetchDataStrategy(
         // Skip single fetch and just call the loaders in parallel when this is
         // a SPA mode navigation
         let matchesToLoad = matches.filter((m) => m.shouldLoad);
-        let url = stripIndexParam(singleFetchUrl(request.url));
+        let url = stripIndexParam(singleFetchUrl(request.url, basename));
         let init = await createRequestInit(request);
         let results: Record<string, DataStrategyResult> = {};
         await Promise.all(
