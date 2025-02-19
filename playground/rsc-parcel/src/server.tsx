@@ -2,8 +2,6 @@ import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
 
 // @ts-expect-error
-import { renderToReadableStream } from "react-server-dom-parcel/server.edge";
-// @ts-expect-error
 import { createFromReadableStream } from "react-server-dom-parcel/client.edge" with {
 	env: "react-client",
 };
@@ -12,16 +10,13 @@ import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/
 	env: "react-client",
 };
 
-import { matchServerRequest, type ServerPayload } from "react-router";
-import { routeServerRequest, ServerStaticRouter } from "react-router" with {
+import { routeServerRequest, ServerStaticRouter,type ServerPayload } from "react-router" with {
 	env: "react-client",
 };
 
-import { routes } from "./routes" with {
+import { callServer } from "./react-server" with {
 	env: "react-server",
 };
-
-const _routes = routes();
 
 const app = express();
 
@@ -31,17 +26,7 @@ app.use(
 	createRequestListener(async (request) => {
 		return routeServerRequest(
 			request,
-			async (request) => {
-				const match = await matchServerRequest(request, _routes);
-				if (match instanceof Response) {
-					return match;
-				}
-
-				return new Response(renderToReadableStream(match.payload), {
-					status: match.statusCode,
-					headers: match.headers,
-				});
-			},
+			callServer,
 			async (response) => {
 				const payload: ServerPayload = await createFromReadableStream(response.body);
 
@@ -49,7 +34,7 @@ app.use(
 					<ServerStaticRouter payload={payload} />,
 					{
 						bootstrapScriptContent: (
-							routes as unknown as { bootstrapScript: string }
+							callServer as unknown as { bootstrapScript: string }
 						).bootstrapScript,
 					},
 				);

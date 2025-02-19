@@ -1,7 +1,3 @@
-"use server-entry";
-
-import "./browser";
-
 import type { ServerRouteObject } from "react-router";
 
 import * as home from "./routes/home/home";
