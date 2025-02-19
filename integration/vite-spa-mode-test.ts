@@ -1125,7 +1125,7 @@ test.describe("SPA Mode", () => {
           import { logImport } from "../routeImportTracker";
           logImport("app/routes/_index.tsx");
 
-          // This should not cause an error on SSr because the module is not loaded
+          // This should not cause an error on SSR because the module is not loaded
           console.log(window);
 
           export default function Component() {
@@ -1137,7 +1137,7 @@ test.describe("SPA Mode", () => {
           import { logImport } from "../routeImportTracker";
           logImport("app/routes/about.tsx");
 
-          // This should not cause an error on SSr because the module is not loaded
+          // This should not cause an error on SSR because the module is not loaded
           console.log(window);
 
           export default function Component() {
