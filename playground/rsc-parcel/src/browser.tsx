@@ -1,6 +1,6 @@
 "use client-entry";
 
-import { startTransition, StrictMode, type ReactElement } from "react";
+import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 // @ts-expect-error
 import { createFromReadableStream } from "react-server-dom-parcel/client";
@@ -11,7 +11,7 @@ import {
   ServerBrowserRouter,
 } from "react-router";
 
-createFromReadableStream<ReactElement>(getServerStream()).then(
+createFromReadableStream(getServerStream()).then(
   (payload: ServerPayload) => {
     startTransition(() => {
       hydrateRoot(
