@@ -308,7 +308,7 @@ export default function Component() {
 }
 ```
 
-You'll now get type errors if you pass a path path value or a bad param value:
+You'll now get type errors if you pass a bad path value or a bad param value:
 
 ```ts
 const badPath = href("/not/a/valid/path");
