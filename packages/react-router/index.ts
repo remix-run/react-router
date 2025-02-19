@@ -348,3 +348,19 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 /** @internal */
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
+
+import type { ServerRouteObject, ServerMatch } from "./server";
+export type {
+  ServerMatch,
+  ServerPayload,
+  ServerRouteMatch,
+  ServerRouteObject,
+} from "./server";
+export async function matchServerRequest(
+  request: Request,
+  routes: ServerRouteObject[]
+): Promise<ServerMatch | Response> {
+  throw new Error(
+    "matchServerRequest is not available in client runtimes. Module resolution must enable the react-server condition."
+  );
+}

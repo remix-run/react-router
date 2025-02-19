@@ -1247,8 +1247,8 @@ importers:
         specifier: 0.0.0-experimental-93b58361-20250209
         version: 0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209)
       react-router:
-        specifier: 0.0.0-experimental-1ebb6d403
-        version: 0.0.0-experimental-1ebb6d403(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)
+        specifier: workspace:*
+        version: link:../../packages/react-router
       react-server-dom-parcel:
         specifier: 0.0.0-experimental-93b58361-20250209
         version: 0.0.0-experimental-93b58361-20250209(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)
@@ -7782,16 +7782,6 @@ packages:
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
     engines: {node: '>=0.10.0'}
-
-  react-router@0.0.0-experimental-1ebb6d403:
-    resolution: {integrity: sha512-GqXmiGT94oWp/w5JjQO5e5dFBSu3qiOrBfwf9YkfpRitJ/RiXgAOuHciRpy8DBBpKxyvrH5Mf28QugqL+wxDBg==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      react: 0.0.0-experimental-93b58361-20250209
-      react-dom: 0.0.0-experimental-93b58361-20250209
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
 
   react-server-dom-parcel@0.0.0-experimental-93b58361-20250209:
     resolution: {integrity: sha512-ASAqPoho6m+5fb9SuJY8hcA7Il9QV72og4ZhA8Q3SYM8yZnE1PxvUpt84cipNg0RmmT6BiRX1FpbxhtfhPCyGQ==}
@@ -17095,16 +17085,6 @@ snapshots:
   react-is@18.2.0: {}
 
   react-refresh@0.14.0: {}
-
-  react-router@0.0.0-experimental-1ebb6d403(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209):
-    dependencies:
-      '@types/cookie': 0.6.0
-      cookie: 1.0.1
-      react: 0.0.0-experimental-93b58361-20250209
-      set-cookie-parser: 2.6.0
-      turbo-stream: 2.4.0
-    optionalDependencies:
-      react-dom: 0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209)
 
   react-server-dom-parcel@0.0.0-experimental-93b58361-20250209(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209):
     dependencies:

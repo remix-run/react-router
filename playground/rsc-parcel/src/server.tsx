@@ -3,6 +3,8 @@ import express from "express";
 import { injectRSCPayload } from "rsc-html-stream/server";
 
 // @ts-expect-error
+import { renderToReadableStream } from "react-server-dom-parcel/server.edge";
+// @ts-expect-error
 import { createFromReadableStream } from "react-server-dom-parcel/client.edge" with {
 	env: "react-client",
 };
@@ -14,7 +16,7 @@ import { PrerenderRouter } from "./react-router.ssr" with {
 	env: "react-client",
 };
 
-import { handleRequest, type ServerPayload } from "./react-router.server";
+import { matchServerRequest, type ServerPayload } from "react-router";
 
 import { routes } from "./routes";
 
@@ -39,17 +41,24 @@ app.use(
 				signal: request.signal,
 			} as RequestInit & { duplex?: "half" });
 		}
-		const serverResponse = await handleRequest(serverRequest, _routes);
+		const serverResponse = await matchServerRequest(serverRequest, _routes);
 
-		if (isDataRequest || serverResponse.headers.has("x-react-router-error")) {
+		if (serverResponse instanceof Response) {
 			return serverResponse;
 		}
 
-		if (!serverResponse.body) {
-			throw new Error("No body in server response");
-		}
+		const body = renderToReadableStream(serverResponse.payload);
 
-		const [rscStreamA, rscStreamB] = serverResponse.body.tee();
+		if (isDataRequest) {
+			const headers = new Headers(serverResponse.headers);
+			headers.set("Content-Type", "application/json");
+			return new Response(body, {
+				status: serverResponse.statusCode,
+				headers,
+			});
+		}
+		
+		const [rscStreamA, rscStreamB] = body.tee();
 
 		const payload: ServerPayload = await createFromReadableStream(rscStreamA);
 
@@ -66,7 +75,7 @@ app.use(
 		headers.set("Content-Type", "text/html");
 
 		return new Response(htmlStream.pipeThrough(injectRSCPayload(rscStreamB)), {
-			status: serverResponse.status,
+			status: serverResponse.statusCode,
 			headers,
 		});
 	}),
