@@ -17,7 +17,9 @@ import { routeServerRequest, ServerStaticRouter } from "react-router" with {
 	env: "react-client",
 };
 
-import { routes } from "./routes";
+import { routes } from "./routes" with {
+	env: "react-server",
+};
 
 const _routes = routes();
 
