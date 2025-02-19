@@ -64,6 +64,11 @@ import {
 } from "../config/config";
 import * as WithProps from "./with-props";
 
+export type LoadCssContents = (
+  viteDevServer: Vite.ViteDevServer,
+  mod: Vite.ModuleNode
+) => Promise<string>;
+
 export async function resolveViteConfig({
   configFile,
   mode,
@@ -117,12 +122,28 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName = "client" | SsrEnvironmentName;
+export type EnvironmentName =
+  | "client"
+  | SsrEnvironmentName
+  | CssDevHelperEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
 
-type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
+// We use a separate environment for loading the critical CSS during
+// development. This is because "ssrLoadModule" isn't available if the "ssr"
+// environment has been defined by another plugin (e.g.
+// vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
+// Vite.RunnableDevEnvironment:
+// https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
+const CSS_DEV_HELPER_ENVIRONMENT_NAME =
+  "__react_router_css_dev_helper__" as const;
+type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
+
+type EnvironmentOptions = Pick<
+  Vite.EnvironmentOptions,
+  "build" | "resolve" | "optimizeDeps"
+>;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -468,6 +489,9 @@ let getServerBuildDirectory = (
 
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
   path.join(reactRouterConfig.buildDirectory, "client");
+
+const injectQuery = (url: string, query: string) =>
+  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
 
 let defaultEntriesDir = path.resolve(
   path.dirname(require.resolve("@react-router/dev/package.json")),
@@ -826,6 +850,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   // In dev, the server and browser manifests are the same
+  let currentReactRouterManifestForDev: ReactRouterManifest | null = null;
   let getReactRouterManifestForDev = async (): Promise<ReactRouterManifest> => {
     let routes: ReactRouterManifest["routes"] = {};
 
@@ -893,7 +918,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       };
     }
 
-    return {
+    let reactRouterManifestForDev = {
       version: String(Math.random()),
       url: combineURLs(ctx.publicPath, virtual.browserManifest.url),
       hmr: {
@@ -908,6 +933,56 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       },
       routes,
     };
+
+    currentReactRouterManifestForDev = reactRouterManifestForDev;
+
+    return reactRouterManifestForDev;
+  };
+
+  const loadCssContents: LoadCssContents = async (viteDevServer, dep) => {
+    invariant(
+      viteCommand === "serve",
+      "loadCssContents is only available in dev mode"
+    );
+
+    if (dep.file && isCssModulesFile(dep.file)) {
+      return cssModulesManifest[dep.file];
+    }
+
+    const vite = getVite();
+    const viteMajor = parseInt(vite.version.split(".")[0], 10);
+
+    const url =
+      viteMajor >= 6
+        ? // We need the ?inline query in Vite v6 when loading CSS in SSR
+          // since it does not expose the default export for CSS in a
+          // server environment. This is to align with non-SSR
+          // environments. For backwards compatibility with v5 we keep
+          // using the URL without ?inline query because the HMR code was
+          // relying on the implicit SSR-client module graph relationship.
+          injectQuery(dep.url, "inline")
+        : dep.url;
+
+    let cssMod: unknown;
+    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+      const cssDevHelperEnvironment =
+        viteDevServer.environments[CSS_DEV_HELPER_ENVIRONMENT_NAME];
+      invariant(cssDevHelperEnvironment, "Missing CSS dev helper environment");
+      invariant(vite.isRunnableDevEnvironment(cssDevHelperEnvironment));
+      cssMod = await cssDevHelperEnvironment.runner.import(url);
+    } else {
+      cssMod = await viteDevServer.ssrLoadModule(url);
+    }
+
+    invariant(
+      typeof cssMod === "object" &&
+        cssMod !== null &&
+        "default" in cssMod &&
+        typeof cssMod.default === "string",
+      `Failed to load CSS for ${dep.file ?? dep.url}`
+    );
+
+    return cssMod.default;
   };
 
   return [
@@ -1166,6 +1241,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
+          // Ensure child compiler cannot overwrite the default cache directory
+          cacheDir: "node_modules/.vite-child-compiler",
           mode: viteConfig.mode,
           server: {
             watch: viteConfig.command === "build" ? null : undefined,
@@ -1193,6 +1270,26 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   plugin.name !== "react-router:route-exports" &&
                   plugin.name !== "react-router:hmr-updates"
               ),
+            {
+              name: "react-router:override-optimize-deps",
+              config(userConfig) {
+                // Prevent unnecessary dependency optimization in the child compiler
+                if (
+                  ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+                  userConfig.environments
+                ) {
+                  for (const environmentName of Object.keys(
+                    userConfig.environments
+                  )) {
+                    userConfig.environments[environmentName].optimizeDeps = {
+                      noDiscovery: true,
+                    };
+                  }
+                } else {
+                  userConfig.optimizeDeps = { noDiscovery: true };
+                }
+              },
+            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
@@ -1240,7 +1337,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               entryClientFilePath: ctx.entryClientFilePath,
               reactRouterConfig: ctx.reactRouterConfig,
               viteDevServer,
-              cssModulesManifest,
+              loadCssContents,
               build,
               url,
             });
@@ -1296,9 +1393,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           if (!viteDevServer.config.server.middlewareMode) {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
-                let build = (await viteDevServer.ssrLoadModule(
-                  virtual.serverBuild.id
-                )) as ServerBuild;
+                let build: ServerBuild;
+                if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+                  let vite = getVite();
+                  let ssrEnvironment = viteDevServer.environments.ssr;
+                  if (!vite.isRunnableDevEnvironment(ssrEnvironment)) {
+                    return;
+                  }
+                  build = (await ssrEnvironment.runner.import(
+                    virtual.serverBuild.id
+                  )) as ServerBuild;
+                } else {
+                  build = (await viteDevServer.ssrLoadModule(
+                    virtual.serverBuild.id
+                  )) as ServerBuild;
+                }
 
                 let handler = createRequestHandler(build, "development");
                 let nodeHandler: NodeRequestHandler = async (
@@ -1918,11 +2027,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         if (route) {
           // invalidate manifest on route exports change
-          let serverManifest = (
-            await server.ssrLoadModule(virtual.serverManifest.id)
-          ).default as ReactRouterManifest;
-
-          let oldRouteMetadata = serverManifest.routes[route.id];
+          let oldRouteMetadata =
+            currentReactRouterManifestForDev?.routes[route.id];
           let newRouteMetadata = await getRouteMetadata(
             cache,
             ctx,
@@ -2510,13 +2616,13 @@ async function prerenderResourceRoute(
     .replace(/\/$/g, "");
   let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
-  let text = await response.text();
+  let content = Buffer.from(await response.arrayBuffer());
 
   if (response.status !== 200) {
     throw new Error(
       `Prerender (resource): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${text}`
+        `path.\n${content.toString("utf8")}`
     );
   }
 
@@ -2524,7 +2630,7 @@ async function prerenderResourceRoute(
   let outdir = path.relative(process.cwd(), clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
-  await fse.outputFile(outfile, text);
+  await fse.outputFile(outfile, content);
   viteConfig.logger.info(
     `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
   );
@@ -2662,23 +2768,40 @@ async function validateSsrFalsePrerenderExports(
     if (exports.includes("action")) invalidApis.push("action");
     if (invalidApis.length > 0) {
       errors.push(
-        `Prerender: ${invalidApis.length} invalid route export(s) in ` +
-          `\`${route.id}\` when prerendering with \`ssr:false\`: ` +
-          `${invalidApis.join(", ")}.  ` +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
+        `Prerender: ${invalidApis.length} invalid route export(s) in \`${route.id}\` ` +
+          "when pre-rendering with `ssr:false`: " +
+          `${invalidApis.map((a) => `\`${a}\``).join(", ")}.  ` +
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
       );
     }
 
     // `loader` is only valid if the route is matched by a `prerender` path
-    if (exports.includes("loader") && !prerenderedRoutes.has(routeId)) {
-      errors.push(
-        `Prerender: 1 invalid route export in \`${route.id}\` when ` +
-          "using `ssr:false` with `prerender` because the route is never " +
-          "prerendered so the loader will never be called.  " +
-          "See https://reactrouter.com/how-to/pre-rendering for more information."
-      );
+    if (!prerenderedRoutes.has(routeId)) {
+      if (exports.includes("loader")) {
+        errors.push(
+          `Prerender: 1 invalid route export in \`${route.id}\` ` +
+            "when pre-rendering with `ssr:false`: `loader`. " +
+            "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+        );
+      }
+
+      let parentRoute = route.parentId ? manifest.routes[route.parentId] : null;
+      while (parentRoute && parentRoute.id !== "root") {
+        if (parentRoute.hasLoader && !parentRoute.hasClientLoader) {
+          errors.push(
+            `Prerender: 1 invalid route export in \`${parentRoute.id}\` when ` +
+              "pre-rendering with `ssr:false`: `loader`. " +
+              "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+          );
+        }
+        parentRoute =
+          parentRoute.parentId && parentRoute.parentId !== "root"
+            ? manifest.routes[parentRoute.parentId]
+            : null;
+      }
     }
   }
+
   if (errors.length > 0) {
     viteConfig.logger.error(colors.red(errors.join("\n")));
     throw new Error(
@@ -3177,7 +3300,32 @@ export async function getEnvironmentOptionsResolvers(
               virtual.serverBuild.id,
           },
         },
+        optimizeDeps:
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+          viteUserConfig.environments?.ssr?.optimizeDeps?.noDiscovery === false
+            ? {
+                entries: [
+                  vite.normalizePath(ctx.entryServerFilePath),
+                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
+                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
+                  ),
+                ],
+                include: [
+                  "react",
+                  "react/jsx-dev-runtime",
+                  "react-dom/server",
+                  "react-router",
+                ],
+              }
+            : undefined,
       });
+  }
+
+  if (
+    ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+    viteCommand === "serve"
+  ) {
+    environmentOptionsResolvers[CSS_DEV_HELPER_ENVIRONMENT_NAME] = () => ({});
   }
 
   return environmentOptionsResolvers;
