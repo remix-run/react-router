@@ -112,19 +112,18 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     let url = new URL(request.url);
 
+    let normalizedBasename = _build.basename || "/";
     let normalizedPath = url.pathname;
-    if (normalizedPath === "/_root.data") {
-      normalizedPath = "/";
-    } else if (
-      _build.basename &&
-      stripBasename(normalizedPath, _build.basename) === "/_root.data"
-    ) {
-      normalizedPath = _build.basename;
+    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+      normalizedPath = normalizedBasename;
     } else if (normalizedPath.endsWith(".data")) {
       normalizedPath = normalizedPath.replace(/\.data$/, "");
     }
 
-    if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+    if (
+      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
+      normalizedPath.endsWith("/")
+    ) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
 
@@ -177,10 +176,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     // Manifest request for fog of war
-    let manifestUrl = `${_build.basename ?? "/"}/__manifest`.replace(
-      /\/+/g,
-      "/"
-    );
+    let manifestUrl = `${normalizedBasename}/__manifest`.replace(/\/+/g, "/");
     if (url.pathname === manifestUrl) {
       try {
         let res = await handleManifestRequest(_build, routes, url);
