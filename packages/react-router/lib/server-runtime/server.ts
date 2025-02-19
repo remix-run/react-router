@@ -1,6 +1,10 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
-import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  ErrorResponseImpl,
+  stripBasename,
+} from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
@@ -107,13 +111,23 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let url = new URL(request.url);
-    let basebane = `/${_build.basename || ''}/`.replace(/\/+/g,'/')
-    let normalizedPath = url.pathname
-      .replace(/\.data$/, "")
-      .replace(new RegExp(`^${basebane}_root$`), basebane);
+
+    let normalizedPath = url.pathname;
+    if (normalizedPath === "/_root.data") {
+      normalizedPath = "/";
+    } else if (
+      _build.basename &&
+      stripBasename(normalizedPath, _build.basename) === "/_root.data"
+    ) {
+      normalizedPath = _build.basename;
+    } else if (normalizedPath.endsWith(".data")) {
+      normalizedPath = normalizedPath.replace(/\.data$/, "");
+    }
+
     if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
+
     let params: RouteMatch<ServerRoute>["params"] = {};
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
