@@ -1393,9 +1393,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           if (!viteDevServer.config.server.middlewareMode) {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
-                let build = (await viteDevServer.ssrLoadModule(
-                  virtual.serverBuild.id
-                )) as ServerBuild;
+                let build: ServerBuild;
+                if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+                  let vite = getVite();
+                  let ssrEnvironment = viteDevServer.environments.ssr;
+                  if (!vite.isRunnableDevEnvironment(ssrEnvironment)) {
+                    return;
+                  }
+                  build = (await ssrEnvironment.runner.import(
+                    virtual.serverBuild.id
+                  )) as ServerBuild;
+                } else {
+                  build = (await viteDevServer.ssrLoadModule(
+                    virtual.serverBuild.id
+                  )) as ServerBuild;
+                }
 
                 let handler = createRequestHandler(build, "development");
                 let nodeHandler: NodeRequestHandler = async (
