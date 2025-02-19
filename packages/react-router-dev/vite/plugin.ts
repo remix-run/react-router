@@ -631,7 +631,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       .map((key, index) => {
         let route = routes[key]!;
         if (isSpaMode && key !== "root") {
-          // In SPA mode, we only pre-render to the root route and it's `HydrateFallback`.
+          // In SPA mode, we only pre-render the root route and its `HydrateFallback`.
           // Therefore, we can stub all other routes with an empty module as they
           // (and their deps) may not be compatible with server-side rendering.
           // This also helps keep the build fast.
