@@ -78,13 +78,13 @@ export function getPatchRoutesOnNavigationFunction(
     return undefined;
   }
 
-  return async ({ path, patch, signal }) => {
+  return async ({ path, patch, signal, fetcherKey }) => {
     if (discoveredPaths.has(path)) {
       return;
     }
     await fetchAndApplyManifestPatches(
       [path],
-      true,
+      fetcherKey ? window.location.href : path,
       manifest,
       routeModules,
       ssr,
@@ -150,7 +150,7 @@ export function useFogOFWarDiscovery(
       try {
         await fetchAndApplyManifestPatches(
           lazyPaths,
-          false,
+          null,
           manifest,
           routeModules,
           ssr,
@@ -185,7 +185,7 @@ export function useFogOFWarDiscovery(
 
 export async function fetchAndApplyManifestPatches(
   paths: string[],
-  reloadOnVersionMismatch: boolean,
+  errorReloadPath: string | null,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
@@ -220,22 +220,22 @@ export async function fetchAndApplyManifestPatches(
       res.status === 204 &&
       res.headers.has("X-Remix-Reload-Document")
     ) {
-      if (reloadOnVersionMismatch) {
-        // TODO: If this was a fetcher call we don't want to navigate - can we
-        // detect and hard reload instead?
-        window.location.href = paths[0];
+      if (errorReloadPath) {
+        // This will hard reload the destination path on navigations, or the
+        // current path on fetcher calls
+        window.location.href = errorReloadPath;
         throw new Error("Detected manifest version mismatch, reloading...");
       } else {
         // No-op during eager route discovery so we will trigger a hard reload
         // of the destination during the next navigation instead of reloading
-        // while the user is sitting on the current page.  Works almost seamlessly
-        // on navigations, but may be slightly more disruptive on fetcher calls.
-        // Still better than the `React.useContext` error that occurs without
-        // this detection though...
+        // while the user is sitting on the current page.  Slightly more
+        // disruptive on fetcher calls because we reload the current page, but
+        // it's better than the `React.useContext` error that occurs without
+        // this detection.
         console.warn(
           "Detected a manifest version mismatch during eager route discovery. " +
-            "The next navigation will result in a new document navigation to sync " +
-            "up with the latest manifest."
+            "The next navigation/fetch to an undiscovered route will result in " +
+            "a new document navigation to sync up with the latest manifest."
         );
         return;
       }
