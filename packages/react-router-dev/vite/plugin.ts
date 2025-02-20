@@ -1401,7 +1401,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         );
 
-        return () => {
+        if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
             if (reqPathname === "/@react-router/critical.css") {
@@ -1423,7 +1423,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               next();
             }
           });
+        }
 
+        return () => {
           // Let user servers handle SSR requests in middleware mode,
           // otherwise the Vite plugin will handle the request
           if (!viteDevServer.config.server.middlewareMode) {
