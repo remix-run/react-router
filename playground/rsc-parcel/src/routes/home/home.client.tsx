@@ -2,6 +2,8 @@
 
 import { type ClientLoaderFunctionArgs, useLoaderData } from "react-router";
 
+import { Counter } from "../../counter";
+
 export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
   const res = await serverLoader<typeof import("./home").loader>();
 
@@ -15,8 +17,11 @@ export default function Home() {
   const { client, message } = useLoaderData<typeof clientLoader>();
 
   return (
-    <h1>
-      {message} {client}
-    </h1>
+    <main>
+      <h1>
+        {message} {String(client)}
+      </h1>
+      <Counter />
+    </main>
   );
 }

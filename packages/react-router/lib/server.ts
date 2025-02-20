@@ -10,45 +10,53 @@ import { createStaticHandler } from "./router/router";
 import {
   isRouteErrorResponse,
   type ActionFunction,
+  type AgnosticRouteObject,
+  type LazyRouteFunction,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
 } from "./router/utils";
 
-export type ServerRouteObject = { id: string; path?: string } & (
-  | {
-      index: true;
-    }
-  | {
-      children?: ServerRouteObject[];
-    }
-) & {
-    action?: ActionFunction;
-    clientAction?: ClientActionFunction;
-    clientLoader?: ClientLoaderFunction;
-    default?: React.ComponentType<any>;
-    ErrorBoundary?: React.ComponentType<any>;
-    handle?: any;
-    HydrateFallback?: React.ComponentType<any>;
-    Layout?: React.ComponentType<any>;
-    links?: LinksFunction;
-    loader?: LoaderFunction;
-    meta?: MetaFunction;
-    shouldRevalidate?: ShouldRevalidateFunction;
-  };
+type ServerRouteObjectBase = {
+  action?: ActionFunction;
+  clientAction?: ClientActionFunction;
+  clientLoader?: ClientLoaderFunction;
+  default?: React.ComponentType<any>;
+  ErrorBoundary?: React.ComponentType<any>;
+  handle?: any;
+  HydrateFallback?: React.ComponentType<any>;
+  Layout?: React.ComponentType<any>;
+  links?: LinksFunction;
+  loader?: LoaderFunction;
+  meta?: MetaFunction;
+  shouldRevalidate?: ShouldRevalidateFunction;
+};
+
+export type ServerRouteObject = ServerRouteObjectBase & {
+  id: string;
+  path?: string;
+  lazy?: LazyRouteFunction<ServerRouteObjectBase>;
+} & (
+    | {
+        index: true;
+      }
+    | {
+        children?: ServerRouteObject[];
+      }
+  );
 
 export type ServerRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  Component?: React.ComponentType;
-  ErrorBoundary?: React.ComponentType;
+  Component?: React.ComponentType<any>;
+  ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   hasAction: boolean;
   hasLoader: boolean;
-  HydrateFallback?: React.ComponentType;
+  HydrateFallback?: React.ComponentType<any>;
   id: string;
   index?: boolean;
-  Layout?: React.ComponentType;
+  Layout?: React.ComponentType<any>;
   links?: LinksFunction;
   meta?: MetaFunction;
   path?: string;
@@ -137,7 +145,7 @@ export async function matchServerRequest(
     };
   }
 
-  const handler = createStaticHandler(routes);
+  const handler = createStaticHandler(routes as AgnosticRouteObject[]);
   const result = await handler.query(request);
 
   if (result instanceof Response) {

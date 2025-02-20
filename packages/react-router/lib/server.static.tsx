@@ -3,6 +3,20 @@ import type { DataRouteObject } from "./context";
 import { createStaticRouter, StaticRouterProvider } from "./dom/server";
 import type { ServerPayload } from "./server";
 
+export function RouteWrapper({
+  Component,
+  Layout,
+}: {
+  Component?: React.ComponentType<any>;
+  Layout?: React.ComponentType<any>;
+}) {
+  return Layout ? (
+    <Layout>{Component ? <Component /> : null}</Layout>
+  ) : Component ? (
+    <Component />
+  ) : null;
+}
+
 export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
   if (payload.type !== "render") return null;
 
@@ -38,7 +52,9 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
       const route: DataRouteObject = {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
-        Component: match.Component,
+        element: (
+          <RouteWrapper Component={match.Component} Layout={match.Layout} />
+        ),
         ErrorBoundary: match.ErrorBoundary,
         handle: match.handle,
         hasErrorBoundary: !!match.ErrorBoundary,

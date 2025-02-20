@@ -4,6 +4,7 @@ import type { DataRouteObject } from "./context";
 import { createBrowserHistory } from "./router/history";
 import { createRouter } from "./router/router";
 import type { ServerPayload } from "./server";
+import { RouteWrapper } from "./server.static";
 
 export function ServerBrowserRouter({ payload }: { payload: ServerPayload }) {
   if (payload.type !== "render") return null;
@@ -13,7 +14,9 @@ export function ServerBrowserRouter({ payload }: { payload: ServerPayload }) {
     const route: DataRouteObject = {
       id: match.id,
       action: match.hasAction || !!match.clientAction,
-      Component: match.Component,
+      element: (
+        <RouteWrapper Component={match.Component} Layout={match.Layout} />
+      ),
       ErrorBoundary: match.ErrorBoundary,
       handle: match.handle,
       hasErrorBoundary: !!match.ErrorBoundary,
