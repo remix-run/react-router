@@ -42,9 +42,9 @@ const files = {
             <Links />
           </head>
           <body>
-            <Link to="/">Home</Link><br/>
-            <Link to="/data">Data</Link><br/>
-            <Link to="/a/b/c">/a/b/c</Link><br/>
+            <Link to="/">Go to Home</Link><br/>
+            <Link to="/data">Go to Data</Link><br/>
+            <Link to="/a/b/c">Go to /a/b/c</Link><br/>
             <Form method="post" action="/data">
               <button type="submit" name="key" value="value">
                 Submit
@@ -101,7 +101,7 @@ const files = {
       let actionData = useActionData();
       return (
         <>
-          <h1 id="heading">Data</h1>
+          <h1 id="heading">Data Route</h1>
           <p id="message">{data.message}</p>
           <p id="date">{data.date.toISOString()}</p>
           {actionData ? <p id="action-data">{actionData.key}</p> : null}
@@ -1373,6 +1373,45 @@ test.describe("single-fetch", () => {
     await app.clickSubmitButton("/data");
     await page.waitForSelector("#target");
     expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("supports a basename", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        "vite.config.ts": js`
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default {
+            base: "/base/",
+            plugins: [reactRouter()]
+          }
+        `,
+        "react-router.config.ts": reactRouterConfig({
+          basename: "/base/",
+        }),
+        ...files,
+      },
+      useReactRouterServe: true,
+    });
+
+    let appFixture = await createAppFixture(fixture);
+
+    let requests: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (url.pathname.endsWith(".data")) {
+        requests.push(url.pathname + url.search);
+      }
+    });
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/base/");
+    await app.clickLink("/base/data");
+    await expect(page.getByText("Data Route")).toBeVisible();
+    await app.clickLink("/base/");
+    await expect(page.getByText("Index")).toBeVisible();
+
+    expect(requests).toEqual(["/base/data.data", "/base/_root.data"]);
   });
 
   test("processes redirects when a basename is present", async ({ page }) => {

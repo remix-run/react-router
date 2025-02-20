@@ -178,6 +178,7 @@ function createHydratedRouter(): DataRouter {
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
+      ssrInfo.context.basename,
       () => router
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(

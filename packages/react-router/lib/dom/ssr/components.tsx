@@ -325,6 +325,7 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
+  let { basename } = useDataRouterContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -387,7 +388,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page);
+    let url = singleFetchUrl(page, basename);
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -403,6 +404,7 @@ function PrefetchPageLinksImpl({
 
     return [url.pathname + url.search];
   }, [
+    basename,
     loaderData,
     location,
     manifest,

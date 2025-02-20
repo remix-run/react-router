@@ -32,7 +32,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {
@@ -62,7 +63,7 @@
     "wireit": "0.14.9"
   },
   "peerDependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.1 || ^5",
     "react-router": "workspace:*",
     "typescript": "^5.1.0"
   },

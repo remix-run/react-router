@@ -1,6 +1,10 @@
-import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import type { StaticHandler } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
-import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  ErrorResponseImpl,
+  stripBasename,
+} from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
@@ -29,7 +33,6 @@ import {
   SINGLE_FETCH_REDIRECT_STATUS,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
-import invariant from "./invariant";
 import type { EntryRoute } from "../dom/ssr/routes";
 
 export type RequestHandler = (
@@ -107,12 +110,22 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let url = new URL(request.url);
-    let normalizedPath = url.pathname
-      .replace(/\.data$/, "")
-      .replace(/^\/_root$/, "/");
-    if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+
+    let normalizedBasename = _build.basename || "/";
+    let normalizedPath = url.pathname;
+    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+      normalizedPath = normalizedBasename;
+    } else if (normalizedPath.endsWith(".data")) {
+      normalizedPath = normalizedPath.replace(/\.data$/, "");
+    }
+
+    if (
+      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
+      normalizedPath.endsWith("/")
+    ) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
+
     let params: RouteMatch<ServerRoute>["params"] = {};
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -162,10 +175,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     // Manifest request for fog of war
-    let manifestUrl = `${_build.basename ?? "/"}/__manifest`.replace(
-      /\/+/g,
-      "/"
-    );
+    let manifestUrl = `${normalizedBasename}/__manifest`.replace(/\/+/g, "/");
     if (url.pathname === manifestUrl) {
       try {
         let res = await handleManifestRequest(_build, routes, url);
