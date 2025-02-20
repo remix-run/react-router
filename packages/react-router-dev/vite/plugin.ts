@@ -621,6 +621,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       routes
     );
 
+    let isSpaMode = isSpaModeEnabled(ctx.reactRouterConfig);
+
     return `
     import * as entryServer from ${JSON.stringify(
       resolveFileUrl(ctx, ctx.entryServerFilePath)
@@ -628,12 +630,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     ${Object.keys(routes)
       .map((key, index) => {
         let route = routes[key]!;
-        return `import * as route${index} from ${JSON.stringify(
-          resolveFileUrl(
-            ctx,
-            resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          )
-        )};`;
+        if (isSpaMode && key !== "root") {
+          // In SPA mode, we only pre-render the root route and its `HydrateFallback`.
+          // Therefore, we can stub all other routes with an empty module as they
+          // (and their deps) may not be compatible with server-side rendering.
+          // This also helps keep the build fast.
+          return `const route${index} = { default: () => null };`;
+        } else {
+          return `import * as route${index} from ${JSON.stringify(
+            resolveFileUrl(
+              ctx,
+              resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
+            )
+          )};`;
+        }
       })
       .join("\n")}
       export { default as assets } from ${JSON.stringify(
@@ -650,7 +660,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
       export const ssr = ${ctx.reactRouterConfig.ssr};
-      export const isSpaMode = ${isSpaModeEnabled(ctx.reactRouterConfig)};
+      export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
@@ -1503,7 +1513,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
             // If we have prerender routes, that takes precedence over SPA mode
-            // which is ssr:false and only the rot route being rendered
+            // which is ssr:false and only the root route being rendered
             await handlePrerender(
               viteConfig,
               ctx.reactRouterConfig,
