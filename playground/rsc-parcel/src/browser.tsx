@@ -11,15 +11,13 @@ import {
   ServerBrowserRouter,
 } from "react-router";
 
-createFromReadableStream(getServerStream()).then(
-  (payload: ServerPayload) => {
-    startTransition(() => {
-      hydrateRoot(
-        document,
-        <StrictMode>
-          <ServerBrowserRouter payload={payload} />
-        </StrictMode>
-      );
-    });
-  }
-);
+createFromReadableStream(getServerStream()).then((payload: ServerPayload) => {
+  startTransition(() => {
+    hydrateRoot(
+      document,
+      <StrictMode>
+        <ServerBrowserRouter payload={payload} />
+      </StrictMode>
+    );
+  });
+});
