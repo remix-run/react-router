@@ -183,6 +183,8 @@ export function useFogOFWarDiscovery(
   }, [ssr, isSpaMode, manifest, routeModules, router]);
 }
 
+const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
+
 export async function fetchAndApplyManifestPatches(
   paths: string[],
   errorReloadPath: string | null,
@@ -220,12 +222,7 @@ export async function fetchAndApplyManifestPatches(
       res.status === 204 &&
       res.headers.has("X-Remix-Reload-Document")
     ) {
-      if (errorReloadPath) {
-        // This will hard reload the destination path on navigations, or the
-        // current path on fetcher calls
-        window.location.href = errorReloadPath;
-        throw new Error("Detected manifest version mismatch, reloading...");
-      } else {
+      if (!errorReloadPath) {
         // No-op during eager route discovery so we will trigger a hard reload
         // of the destination during the next navigation instead of reloading
         // while the user is sitting on the current page.  Slightly more
@@ -239,10 +236,30 @@ export async function fetchAndApplyManifestPatches(
         );
         return;
       }
+
+      // This will hard reload the destination path on navigations, or the
+      // current path on fetcher calls
+      if (
+        sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
+        manifest.version
+      ) {
+        // We've already tried fixing for this version, don' try again to
+        // avoid loops - just let this navigation/fetch 404
+        console.error(
+          "Unable to discover routes due to manifest version mismatch."
+        );
+        return;
+      }
+
+      sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
+      window.location.href = errorReloadPath;
+      throw new Error("Detected manifest version mismatch, reloading...");
     } else if (res.status >= 400) {
       throw new Error(await res.text());
     }
 
+    // Reset loop-detection on a successful response
+    sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
     serverPatches = (await res.json()) as AssetsManifest["routes"];
   } catch (e) {
     if (signal?.aborted) return;
