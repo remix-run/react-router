@@ -3248,7 +3248,10 @@ export async function getEnvironmentOptionsResolvers(
                 let routeChunkSuffix = routeChunkName
                   ? `-${kebabCase(routeChunkName)}`
                   : "";
-                return `assets/[name]${routeChunkSuffix}-[hash].js`;
+                return path.posix.join(
+                  viteUserConfig.build?.assetsDir ?? "assets",
+                  `[name]${routeChunkSuffix}-[hash].js`
+                );
               },
             },
           },
