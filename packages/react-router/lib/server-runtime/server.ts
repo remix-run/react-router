@@ -1,6 +1,10 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import type { ErrorResponse } from "../router/utils";
-import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  ErrorResponseImpl,
+  stripBasename,
+} from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
@@ -30,7 +34,6 @@ import {
   NO_BODY_STATUS_CODES,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
-import invariant from "./invariant";
 import type { EntryRoute } from "../dom/ssr/routes";
 
 export type RequestHandler = (
@@ -97,6 +100,22 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let url = new URL(request.url);
+
+    let normalizedBasename = _build.basename || "/";
+    let normalizedPath = url.pathname;
+    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+      normalizedPath = normalizedBasename;
+    } else if (normalizedPath.endsWith(".data")) {
+      normalizedPath = normalizedPath.replace(/\.data$/, "");
+    }
+
+    if (
+      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
+      normalizedPath.endsWith("/")
+    ) {
+      normalizedPath = normalizedPath.slice(0, -1);
+    }
+
     let params: RouteMatch<ServerRoute>["params"] = {};
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -110,11 +129,43 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     };
 
+    // When runtime SSR is disabled, make our dev server behave like the deployed
+    // pre-rendered site would
+    if (!_build.ssr) {
+      if (_build.prerender.length === 0) {
+        // Add the header if we're in SPA mode
+        request.headers.set("X-React-Router-SPA-Mode", "yes");
+      } else if (
+        !_build.prerender.includes(normalizedPath) &&
+        !_build.prerender.includes(normalizedPath + "/")
+      ) {
+        if (url.pathname.endsWith(".data")) {
+          // 404 on non-pre-rendered `.data` requests
+          errorHandler(
+            new ErrorResponseImpl(
+              404,
+              "Not Found",
+              `Refusing to SSR the path \`${normalizedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`
+            ),
+            {
+              context: loadContext,
+              params,
+              request,
+            }
+          );
+          return new Response("Not Found", {
+            status: 404,
+            statusText: "Not Found",
+          });
+        } else {
+          // Serve a SPA fallback for non-pre-rendered document requests
+          request.headers.set("X-React-Router-SPA-Mode", "yes");
+        }
+      }
+    }
+
     // Manifest request for fog of war
-    let manifestUrl = `${_build.basename ?? "/"}/__manifest`.replace(
-      /\/+/g,
-      "/"
-    );
+    let manifestUrl = `${normalizedBasename}/__manifest`.replace(/\/+/g, "/");
     if (url.pathname === manifestUrl) {
       try {
         let res = await handleManifestRequest(_build, routes, url);
@@ -133,9 +184,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let response: Response;
     if (url.pathname.endsWith(".data")) {
       let handlerUrl = new URL(request.url);
-      handlerUrl.pathname = handlerUrl.pathname
-        .replace(/\.data$/, "")
-        .replace(/^\/_root$/, "/");
+      handlerUrl.pathname = normalizedPath;
 
       let singleFetchMatches = matchServerRoutes(
         routes,
@@ -306,23 +355,24 @@ async function handleDocumentRequest(
   handleError: (err: unknown) => void,
   criticalCss?: string
 ) {
+  let isSpaMode = request.headers.has("X-React-Router-SPA-Mode");
   try {
     let response = await staticHandler.query(request, {
       requestContext: loadContext,
       unstable_respond: build.future.unstable_middleware
-        ? renderHtml
+        ? (ctx) => renderHtml(ctx, isSpaMode)
         : undefined,
     });
     // while middleware is still unstable, we don't run the middleware pipeline
     // if no routes have middleware, so we still might need to convert context
     // to a response here
-    return isResponse(response) ? response : renderHtml(response);
+    return isResponse(response) ? response : renderHtml(response, isSpaMode);
   } catch (error: unknown) {
     handleError(error);
     return new Response(null, { status: 500 });
   }
 
-  async function renderHtml(context: StaticHandlerContext) {
+  async function renderHtml(context: StaticHandlerContext, isSpaMode: boolean) {
     if (isResponse(context)) {
       return context;
     }
@@ -363,7 +413,7 @@ async function handleDocumentRequest(
         criticalCss,
         future: build.future,
         ssr: build.ssr,
-        isSpaMode: build.isSpaMode,
+        isSpaMode,
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,
@@ -374,7 +424,7 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
-      isSpaMode: build.isSpaMode,
+      isSpaMode,
       serializeError: (err) => serializeError(err, serverMode),
     };
 
@@ -435,7 +485,7 @@ async function handleDocumentRequest(
           basename: build.basename,
           future: build.future,
           ssr: build.ssr,
-          isSpaMode: build.isSpaMode,
+          isSpaMode,
         }),
         serverHandoffStream: encodeViaTurboStream(
           state,

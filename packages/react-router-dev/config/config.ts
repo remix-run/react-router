@@ -17,7 +17,6 @@ import isEqual from "lodash/isEqual";
 import {
   type RouteManifest,
   type RouteManifestEntry,
-  type RouteConfig,
   setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
@@ -72,7 +71,7 @@ type DefaultBuildManifest = BaseBuildManifest & {
   routeIdToServerBundleId?: never;
 };
 
-export type ServerBundlesBuildManifest = BaseBuildManifest & {
+type ServerBundlesBuildManifest = BaseBuildManifest & {
   serverBundles: {
     [serverBundleId: string]: {
       id: string;
@@ -86,7 +85,7 @@ type ServerModuleFormat = "esm" | "cjs";
 
 interface FutureConfig {
   /**
-   * Automatically split route modules into multiple chunks when possible.
+   * Enable route middleware
    */
   unstable_middleware: boolean;
   unstable_optimizeDeps: boolean;
@@ -94,6 +93,10 @@ interface FutureConfig {
    * Automatically split route modules into multiple chunks when possible.
    */
   unstable_splitRouteModules: boolean | "enforce";
+  /**
+   * Use Vite Environment API (experimental)
+   */
+  unstable_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -495,6 +498,8 @@ async function resolveConfig({
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:
       reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
+    unstable_viteEnvironmentApi:
+      reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
   };
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({

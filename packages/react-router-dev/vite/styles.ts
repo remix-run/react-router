@@ -4,8 +4,8 @@ import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
 import type { ResolvedReactRouterConfig } from "../config/config";
+import type { LoadCssContents } from "./plugin";
 import { resolveFileUrl } from "./resolve-file-url";
-import { getVite } from "./vite";
 
 type ServerRouteManifest = ServerBuild["routes"];
 type ServerRoute = ServerRouteManifest[string];
@@ -49,23 +49,17 @@ export const isCssUrlWithoutSideEffects = (url: string) => {
   return false;
 };
 
-const injectQuery = (url: string, query: string) =>
-  url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
-
 const getStylesForFiles = async ({
   viteDevServer,
   rootDirectory,
-  cssModulesManifest,
+  loadCssContents,
   files,
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  cssModulesManifest: Record<string, string>;
+  loadCssContents: LoadCssContents;
   files: string[];
 }): Promise<string | undefined> => {
-  let vite = getVite();
-  let viteMajor = parseInt(vite.version.split(".")[0], 10);
-
   let styles: Record<string, string> = {};
   let deps = new Set<ModuleNode>();
 
@@ -108,27 +102,9 @@ const getStylesForFiles = async ({
       !isCssUrlWithoutSideEffects(dep.url) // Ignore styles that resolved as URLs, inline or raw. These shouldn't get injected.
     ) {
       try {
-        let css = isCssModulesFile(dep.file)
-          ? cssModulesManifest[dep.file]
-          : (
-              await viteDevServer.ssrLoadModule(
-                // We need the ?inline query in Vite v6 when loading CSS in SSR
-                // since it does not expose the default export for CSS in a
-                // server environment. This is to align with non-SSR
-                // environments. For backwards compatibility with v5 we keep
-                // using the URL without ?inline query because the HMR code was
-                // relying on the implicit SSR-client module graph relationship.
-                viteMajor >= 6 ? injectQuery(dep.url, "inline") : dep.url
-              )
-            ).default;
-
-        if (css === undefined) {
-          throw new Error();
-        }
-
-        styles[dep.url] = css;
+        styles[dep.url] = await loadCssContents(viteDevServer, dep);
       } catch {
-        console.warn(`Could not load ${dep.file}`);
+        console.warn(`Failed to load CSS for ${dep.file}`);
         // this can happen with dynamically imported modules, I think
         // because the Vite module graph doesn't distinguish between
         // static and dynamic imports? TODO investigate, submit fix
@@ -221,7 +197,7 @@ export const getStylesForUrl = async ({
   rootDirectory,
   reactRouterConfig,
   entryClientFilePath,
-  cssModulesManifest,
+  loadCssContents,
   build,
   url,
 }: {
@@ -229,7 +205,7 @@ export const getStylesForUrl = async ({
   rootDirectory: string;
   reactRouterConfig: Pick<ResolvedReactRouterConfig, "appDirectory" | "routes">;
   entryClientFilePath: string;
-  cssModulesManifest: Record<string, string>;
+  loadCssContents: LoadCssContents;
   build: ServerBuild;
   url: string | undefined;
 }): Promise<string | undefined> => {
@@ -247,7 +223,7 @@ export const getStylesForUrl = async ({
   let styles = await getStylesForFiles({
     viteDevServer,
     rootDirectory,
-    cssModulesManifest,
+    loadCssContents,
     files: [
       // Always include the client entry file when crawling the module graph for CSS
       path.relative(rootDirectory, entryClientFilePath),

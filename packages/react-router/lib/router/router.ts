@@ -1552,6 +1552,23 @@ export function createRouter(init: RouterInit): Router {
         : matchRoutes(routesToUse, location, basename);
     let flushSync = (opts && opts.flushSync) === true;
 
+    // Short circuit if it's only a hash change and not a revalidation or
+    // mutation submission.
+    //
+    // Ignore on initial page loads because since the initial hydration will always
+    // be "same hash".  For example, on /page#hash and submit a <Form method="post">
+    // which will default to a navigation to /page
+    if (
+      matches &&
+      state.initialized &&
+      !isRevalidationRequired &&
+      isHashChangeOnly(state.location, location) &&
+      !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
+    ) {
+      completeNavigation(location, { matches }, { flushSync });
+      return;
+    }
+
     let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
     if (fogOfWar.active && fogOfWar.matches) {
       matches = fogOfWar.matches;
@@ -1573,22 +1590,6 @@ export function createRouter(init: RouterInit): Router {
         },
         { flushSync }
       );
-      return;
-    }
-
-    // Short circuit if it's only a hash change and not a revalidation or
-    // mutation submission.
-    //
-    // Ignore on initial page loads because since the initial hydration will always
-    // be "same hash".  For example, on /page#hash and submit a <Form method="post">
-    // which will default to a navigation to /page
-    if (
-      state.initialized &&
-      !isRevalidationRequired &&
-      isHashChangeOnly(state.location, location) &&
-      !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
-    ) {
-      completeNavigation(location, { matches }, { flushSync });
       return;
     }
 

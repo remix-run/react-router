@@ -30,6 +30,7 @@ node_modules/
 .eslintcache
 .tmp
 tsup.config.bundled_*.mjs
+build.utils.d.ts
 /.env
 /NOTES.md
 
