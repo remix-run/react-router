@@ -9,6 +9,7 @@ import type { Location } from "./router/history";
 import { createStaticHandler } from "./router/router";
 import {
   isRouteErrorResponse,
+  matchRoutes,
   type ActionFunction,
   type AgnosticRouteObject,
   type LazyRouteFunction,
@@ -63,10 +64,6 @@ export type ServerRouteManifest = {
   shouldRevalidate?: ShouldRevalidateFunction;
 };
 
-export type ServerRouteManifestTree = ServerRouteManifest & {
-  children?: ServerRouteManifestTree[];
-};
-
 export type ServerRouteMatch = ServerRouteManifest & {
   params: Params;
   pathname: string;
@@ -87,7 +84,7 @@ export type ServerRenderPayload = {
 
 export type ServerManifestPayload = {
   type: "manifest";
-  routes: ServerRouteManifestTree[];
+  matches: ServerRouteManifest[];
 };
 
 export type ServerPayload = ServerRenderPayload | ServerManifestPayload;
@@ -98,40 +95,20 @@ export type ServerMatch = {
   payload: ServerPayload;
 };
 
-function makeServerRouteManifestTree(
-  routes: ServerRouteObject[]
-): ServerRouteManifestTree[] {
-  return routes.map((route) => {
-    return {
-      clientAction: route.clientAction,
-      clientLoader: route.clientLoader,
-      Component: route.default,
-      ErrorBoundary: route.ErrorBoundary,
-      handle: route.handle,
-      hasAction: !!route.action,
-      hasLoader: !!route.loader,
-      HydrateFallback: route.HydrateFallback,
-      id: route.id,
-      index: "index" in route ? route.index : undefined,
-      Layout: route.Layout,
-      links: route.links,
-      meta: route.meta,
-      path: route.path,
-      shouldRevalidate: route.shouldRevalidate,
-      children:
-        "children" in route && route.children
-          ? makeServerRouteManifestTree(route.children)
-          : undefined,
-    };
-  });
-}
-
 export async function matchServerRequest(
   request: Request,
   routes: ServerRouteObject[]
 ): Promise<ServerMatch | Response> {
   const url = new URL(request.url);
-  if (url.pathname === "/__manifest") {
+
+  if (isManifestRequest(url)) {
+    const matches = matchRoutes(
+      routes as AgnosticRouteObject[],
+      url.pathname.replace(/\.manifest$/, "")
+    );
+    if (!matches?.length) {
+      return new Response("Not found", { status: 404 });
+    }
     return {
       statusCode: 200,
       headers: new Headers({
@@ -140,7 +117,33 @@ export async function matchServerRequest(
       }),
       payload: {
         type: "manifest",
-        routes: makeServerRouteManifestTree(routes),
+        matches: await Promise.all(
+          matches.map(async (match) => {
+            let route = match.route as ServerRouteObject;
+            if ("lazy" in route && route.lazy) {
+              route = {
+                ...route,
+                ...((await route.lazy()) as any),
+              };
+            }
+            return {
+              clientAction: route.clientAction,
+              clientLoader: route.clientLoader,
+              Component: route.default,
+              ErrorBoundary: route.ErrorBoundary,
+              handle: route.handle,
+              hasAction: !!route.action,
+              hasLoader: !!route.loader,
+              HydrateFallback: route.HydrateFallback,
+              id: route.id,
+              path: route.path,
+              index: "index" in route ? route.index : undefined,
+              Layout: route.Layout,
+              links: route.links,
+              meta: route.meta,
+            };
+          })
+        ),
       } satisfies ServerManifestPayload,
     };
   }
@@ -259,5 +262,5 @@ export function isReactServerRequest(url: URL) {
 }
 
 export function isManifestRequest(url: URL) {
-  return url.pathname === "/__manifest";
+  return url.pathname.endsWith(".manifest");
 }

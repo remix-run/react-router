@@ -16,7 +16,10 @@ createFromReadableStream(getServerStream()).then((payload: ServerPayload) => {
     hydrateRoot(
       document,
       <StrictMode>
-        <ServerBrowserRouter payload={payload} />
+        <ServerBrowserRouter
+          decode={createFromReadableStream}
+          payload={payload}
+        />
       </StrictMode>
     );
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Outlet, useLoaderData } from "react-router";
+import { Link, Outlet, useLoaderData } from "react-router";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -20,6 +20,14 @@ export default function Root() {
   return (
     <>
       <h1>{message}</h1>
+      <ul>
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/about">About</Link>
+        </li>
+      </ul>
       {counter}
       <Outlet />
     </>
