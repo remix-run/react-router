@@ -199,6 +199,28 @@ const isRouteVirtualModule = (id: string): boolean => {
   return isRouteEntryModuleId(id) || isRouteChunkModuleId(id);
 };
 
+const isServerBuildVirtualModuleId = (id: string): boolean => {
+  return id.split("?")[0] === virtual.serverBuild.id;
+};
+
+const getServerBuildFile = (viteManifest: Vite.Manifest): string => {
+  let serverBuildIds = Object.keys(viteManifest).filter(
+    isServerBuildVirtualModuleId
+  );
+
+  invariant(
+    serverBuildIds.length <= 1,
+    "Multiple server build files found in manifest"
+  );
+
+  invariant(
+    serverBuildIds.length === 1,
+    "Server build file not found in manifest"
+  );
+
+  return viteManifest[serverBuildIds[0]].file;
+};
+
 export type ServerBundleBuildConfig = {
   routes: RouteManifest;
   serverBundleId: string;
@@ -1518,7 +1540,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
-              ssrViteManifest[virtual.serverBuild.id].file,
+              getServerBuildFile(ssrViteManifest),
               clientBuildDirectory
             );
           }
@@ -1531,7 +1553,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
-              ssrViteManifest[virtual.serverBuild.id].file,
+              getServerBuildFile(ssrViteManifest),
               clientBuildDirectory
             );
           }
@@ -2406,7 +2428,17 @@ async function handlePrerender(
     serverBuildPath
   );
 
-  let routes = createPrerenderRoutes(build.routes);
+  let routes = createPrerenderRoutes(reactRouterConfig.routes);
+  for (let path of build.prerender) {
+    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
+    if (!matches) {
+      throw new Error(
+        `Unable to prerender path because it does not match any routes: ${path}`
+      );
+    }
+  }
+
+  let buildRoutes = createPrerenderRoutes(build.routes);
   let headers = {
     // Header that can be used in the loader to know if you're running at
     // build time or runtime
@@ -2414,11 +2446,10 @@ async function handlePrerender(
   };
   for (let path of build.prerender) {
     // Ensure we have a leading slash for matching
-    let matches = matchRoutes(routes, `/${path}/`.replace(/^\/\/+/, "/"));
-    invariant(
-      matches,
-      `Unable to prerender path because it does not match any routes: ${path}`
-    );
+    let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
+    if (!matches) {
+      continue;
+    }
     // When prerendering a resource route, we don't want to pass along the
     // `.data` file since we want to prerender the raw Response returned from
     // the loader.  Presumably this is for routes where a file extension is
