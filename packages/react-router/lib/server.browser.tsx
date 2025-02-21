@@ -22,21 +22,7 @@ export function ServerBrowserRouter({
   // TODO: Make this a singleton? Re-create this when the payload changes?
   // At a minimum, update the singleton with new state when the payload changes.
   const routes = payload.matches.reduceRight((previous, match) => {
-    const route: DataRouteObject = {
-      id: match.id,
-      action: match.hasAction || !!match.clientAction,
-      element: (
-        <RouteWrapper Component={match.Component} Layout={match.Layout} />
-      ),
-      ErrorBoundary: match.ErrorBoundary,
-      handle: match.handle,
-      hasErrorBoundary: !!match.ErrorBoundary,
-      HydrateFallback: match.HydrateFallback,
-      index: match.index,
-      loader: match.hasLoader || !!match.clientLoader,
-      path: match.path,
-      shouldRevalidate: match.shouldRevalidate,
-    };
+    const route: DataRouteObject = createRouteFromServerManifest(match);
     if (previous.length > 0) {
       route.children = previous;
     }
@@ -65,22 +51,7 @@ export function ServerBrowserRouter({
 
       let lastMatch: ServerRouteManifest | undefined;
       for (const match of payload.matches) {
-        const route: DataRouteObject = {
-          id: match.id,
-          action: match.hasAction || !!match.clientAction,
-          element: (
-            <RouteWrapper Component={match.Component} Layout={match.Layout} />
-          ),
-          ErrorBoundary: match.ErrorBoundary,
-          handle: match.handle,
-          hasErrorBoundary: !!match.ErrorBoundary,
-          HydrateFallback: match.HydrateFallback,
-          index: match.index,
-          loader: match.hasLoader || !!match.clientLoader,
-          path: match.path,
-          shouldRevalidate: match.shouldRevalidate,
-        };
-        patch(lastMatch?.id ?? null, [route]);
+        patch(lastMatch?.id ?? null, [createRouteFromServerManifest(match)]);
         lastMatch = match;
       }
     },
@@ -105,22 +76,9 @@ export function ServerBrowserRouter({
 
       let lastMatch: ServerRouteManifest | undefined;
       for (const match of payload.matches) {
-        const route: DataRouteObject = {
-          id: match.id,
-          action: match.hasAction || !!match.clientAction,
-          element: (
-            <RouteWrapper Component={match.Component} Layout={match.Layout} />
-          ),
-          ErrorBoundary: match.ErrorBoundary,
-          handle: match.handle,
-          hasErrorBoundary: !!match.ErrorBoundary,
-          HydrateFallback: match.HydrateFallback,
-          index: match.index,
-          loader: match.hasLoader || !!match.clientLoader,
-          path: match.path,
-          shouldRevalidate: match.shouldRevalidate,
-        };
-        router.patchRoutes(lastMatch?.id ?? null, [route]);
+        router.patchRoutes(lastMatch?.id ?? null, [
+          createRouteFromServerManifest(match),
+        ]);
         lastMatch = match;
       }
 
@@ -141,4 +99,22 @@ export function ServerBrowserRouter({
   }));
 
   return <RouterProvider router={router} />;
+}
+
+function createRouteFromServerManifest(
+  match: ServerRouteManifest
+): DataRouteObject {
+  return {
+    id: match.id,
+    action: match.hasAction || !!match.clientAction,
+    element: <RouteWrapper Component={match.Component} Layout={match.Layout} />,
+    ErrorBoundary: match.ErrorBoundary,
+    handle: match.handle,
+    hasErrorBoundary: !!match.ErrorBoundary,
+    HydrateFallback: match.HydrateFallback,
+    index: match.index,
+    loader: match.hasLoader || !!match.clientLoader,
+    path: match.path,
+    shouldRevalidate: match.shouldRevalidate,
+  };
 }
