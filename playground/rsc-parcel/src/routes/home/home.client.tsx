@@ -4,8 +4,10 @@ import { type ClientLoaderFunctionArgs, useLoaderData } from "react-router";
 
 import { Counter } from "../../counter";
 
+import type { loader } from "./home";
+
 export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
-  const res = await serverLoader<typeof import("./home").loader>();
+  const res = await serverLoader<typeof loader>();
 
   return {
     client: true,

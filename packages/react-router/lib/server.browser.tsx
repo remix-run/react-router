@@ -10,6 +10,8 @@ export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
 ) => Promise<ServerPayload>;
 
+let router: ReturnType<typeof createRouter> | undefined;
+
 export function ServerBrowserRouter({
   decode,
   payload,
@@ -29,7 +31,7 @@ export function ServerBrowserRouter({
     return [route];
   }, [] as DataRouteObject[]);
 
-  const router = ((window as any).__router = createRouter({
+  router ??= createRouter({
     basename: payload.basename,
     history: createBrowserHistory(),
     hydrationData: {
@@ -45,8 +47,7 @@ export function ServerBrowserRouter({
       }
       const payload = await decode(response.body);
       if (payload.type !== "manifest") {
-        console.error("Failed to patch routes on navigation");
-        return;
+        throw new Error("Failed to patch routes on navigation");
       }
 
       let lastMatch: ServerRouteManifest | undefined;
@@ -56,6 +57,10 @@ export function ServerBrowserRouter({
       }
     },
     async dataStrategy({ matches, request }) {
+      if (!router) {
+        throw new Error("No router");
+      }
+
       // TODO: Implement this
       const url = new URL(request.url);
       url.pathname += ".rsc";
@@ -86,17 +91,29 @@ export function ServerBrowserRouter({
         request.method === "GET" || request.method === "HEAD"
           ? "loaderData"
           : "actionData";
-      return Object.fromEntries(
-        Object.entries(payload[dataKey] ?? {}).map(([key, value]) => [
-          key,
+
+      const res = Object.fromEntries([
+        ...Object.entries(payload[dataKey] ?? {}).map(([id, value]) => [
+          id,
           {
             type: "data",
             result: value,
           },
-        ])
-      );
+        ]),
+        ...(await Promise.all(
+          matches.map(async (match) => {
+            const result = await match.resolve(async () => {
+              return payload[dataKey]?.[match.route.id];
+            });
+
+            return [match.route.id, result];
+          })
+        )),
+      ]);
+
+      return res;
     },
-  }));
+  }).initialize();
 
   return <RouterProvider router={router} />;
 }
