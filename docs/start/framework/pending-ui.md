@@ -111,7 +111,7 @@ function Task({ task }) {
 
   let isComplete = task.status === "complete";
   if (fetcher.formData) {
-    isComplete = fetcher.formData.get("status");
+    isComplete = fetcher.formData.get("status") === "complete";
   }
 
   return (
