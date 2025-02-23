@@ -102,13 +102,13 @@ test("Maintains correct order of Map objects when hydrating", async ({
   let app = new PlaywrightFixture(appFixture, page);
   // You can test any request your app might get using `fixture`.
   let response = await fixture.requestDocument("/map");
-  expect(await response.text()).toMatch("[[1,1],[2,2],[3,3]]");
+  expect(await response.text()).toMatch("<div>[[1,1],[2,2],[3,3]]</div>");
 
   // If you need to test interactivity use the `app`
   await app.goto("/map", true);
 
   let html = await app.getHtml();
-  expect(html).toMatch("[[1,1],[2,2],[3,3]]");
+  expect(html).toMatch("<div>[[1,1],[2,2],[3,3]]</div>");
 
   // If you're not sure what's going on, you can "poke" the app, it'll
   // automatically open up in your browser for 20 seconds, so be quick!
@@ -122,12 +122,12 @@ test("Maintains correct order of Set objects when hydrating", async ({
 }) => {
   let app = new PlaywrightFixture(appFixture, page);
   let response = await fixture.requestDocument("/set");
-  expect(await response.text()).toMatch("[1,2,3]");
+  expect(await response.text()).toMatch("<div>[1,2,3]</div>");
 
   await app.goto("/set", true);
 
   let html = await app.getHtml();
-  expect(html).toMatch("[1,2,3]");
+  expect(html).toMatch("<div>[1,2,3]</div>");
 });
 
 ////////////////////////////////////////////////////////////////////////////////
