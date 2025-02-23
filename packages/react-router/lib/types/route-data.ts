@@ -25,7 +25,9 @@ type Serialize<T> =
 
   // Map & Set
   T extends Map<infer K, infer V> ? Map<Serialize<K>, Serialize<V>> :
+  T extends ReadonlyMap<infer K, infer V> ? ReadonlyMap<Serialize<K>, Serialize<V>> :
   T extends Set<infer U> ? Set<Serialize<U>> :
+  T extends ReadonlySet<infer U> ? ReadonlySet<Serialize<U>> :
 
   // Array
   T extends [] ? [] :
