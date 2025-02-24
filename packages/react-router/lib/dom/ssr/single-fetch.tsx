@@ -218,28 +218,23 @@ export function getSingleFetchDataStrategy(
       if (!foundRevalidatingServerLoader) {
         // Skip single fetch and just call the loaders in parallel when this is
         // a SPA mode navigation
-        let matchesToLoad = matches.filter((m) => m.shouldLoad);
-        let url = stripIndexParam(singleFetchUrl(request.url, basename));
-        let init = await createRequestInit(request);
-        let results: Record<string, DataStrategyResult> = {};
-        await Promise.all(
-          matchesToLoad.map((m) =>
-            m.resolve(async (handler) => {
-              try {
-                // Need to pass through a `singleFetch` override handler so
-                // clientLoader's can still call server loaders through `.data`
-                // requests
-                let result = manifest.routes[m.route.id]?.hasClientLoader
-                  ? await fetchSingleLoader(handler, url, init, m.route.id)
-                  : await handler();
-                results[m.route.id] = { type: "data", result };
-              } catch (e) {
-                results[m.route.id] = { type: "error", result: e };
-              }
-            })
-          )
-        );
-        return results;
+        let tailIdx = [...matches].reverse().findIndex((m) => m.shouldLoad);
+        let lowestLoadingIndex = tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
+        return runMiddlewarePipeline(
+          args,
+          lowestLoadingIndex,
+          false,
+          async (keyedResults) => {
+            let results = await nonSsrStrategy(
+              manifest,
+              request,
+              matches,
+              basename
+            );
+            Object.assign(keyedResults, results);
+          },
+          middlewareErrorHandler
+        ) as Promise<Record<string, DataStrategyResult>>;
       }
     }
 
@@ -328,6 +323,37 @@ async function singleFetchActionStrategy(
       result: data(result.result, actionStatus),
     },
   };
+}
+
+// We want to opt-out of Single Fetch when we aren't in SSR mode
+async function nonSsrStrategy(
+  manifest: AssetsManifest,
+  request: Request,
+  matches: DataStrategyFunctionArgs["matches"],
+  basename: string | undefined
+) {
+  let matchesToLoad = matches.filter((m) => m.shouldLoad);
+  let url = stripIndexParam(singleFetchUrl(request.url, basename));
+  let init = await createRequestInit(request);
+  let results: Record<string, DataStrategyResult> = {};
+  await Promise.all(
+    matchesToLoad.map((m) =>
+      m.resolve(async (handler) => {
+        try {
+          // Need to pass through a `singleFetch` override handler so
+          // clientLoader's can still call server loaders through `.data`
+          // requests
+          let result = manifest.routes[m.route.id]?.hasClientLoader
+            ? await fetchSingleLoader(handler, url, init, m.route.id)
+            : await handler();
+          results[m.route.id] = { type: "data", result };
+        } catch (e) {
+          results[m.route.id] = { type: "error", result: e };
+        }
+      })
+    )
+  );
+  return results;
 }
 
 function isOptedOut(

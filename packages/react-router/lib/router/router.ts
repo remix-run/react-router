@@ -5090,7 +5090,6 @@ async function callDataStrategyImpl(
     // will be fixed before stable release by adding a new async middleware API
     // allowing us to load middleware sin a split route module.
     await Promise.all(loadRouteDefinitionsPromises);
-
   }
 
   let dsMatches = matches.map((match, i) => {
