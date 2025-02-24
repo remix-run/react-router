@@ -198,7 +198,7 @@ describe("context/middleware", () => {
 
   describe("middleware - client side", () => {
     function getOrderMiddleware(name: string): unstable_MiddlewareFunction {
-      return async ({ context, next }) => {
+      return async ({ context }, next) => {
         context.order?.push(`${name} middleware - before next()`);
         await tick(); // Force async to ensure ordering is correct
         await next();
@@ -344,11 +344,11 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   context.parent1 = await next();
                   return "NOPE";
                 },
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   context.parent2 = await next();
                   return "NOPE";
                 },
@@ -361,11 +361,11 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   unstable_middleware: [
-                    async ({ context, next }) => {
+                    async ({ context }, next) => {
                       context.child1 = await next();
                       return "NOPE";
                     },
-                    async ({ context, next }) => {
+                    async ({ context }, next) => {
                       context.child2 = await next();
                       return "NOPE";
                     },
@@ -403,7 +403,7 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                ({ context, next }) => {
+                ({ context }, next) => {
                   context.parent = "PARENT MIDDLEWARE";
                 },
               ],
@@ -415,7 +415,7 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   unstable_middleware: [
-                    ({ context, next }) => {
+                    ({ context }, next) => {
                       context.child = "CHILD MIDDLEWARE";
                     },
                   ],
@@ -454,7 +454,7 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                async ({ next }) => {
+                async (_, next) => {
                   await next();
                   await next();
                 },
@@ -573,10 +573,10 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   context.parent1 = "PARENT 1";
                 },
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   throw new Error("PARENT 2");
                 },
               ],
@@ -588,7 +588,7 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   unstable_middleware: [
-                    async ({ context, next }) => {
+                    async ({ context }, next) => {
                       context.child = "CHILD";
                       await next();
                     },
@@ -621,7 +621,7 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   context.parent = "PARENT DOWN";
                   await next();
                   context.parent = "PARENT UP";
@@ -635,7 +635,7 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   unstable_middleware: [
-                    async ({ context, next }) => {
+                    async ({ context }, next) => {
                       context.child = "CHILD DOWN";
                       await next();
                       throw new Error("CHILD UP");
@@ -676,7 +676,7 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                async ({ request, context, next }) => {
+                async ({ request, context }, next) => {
                   if (request.method !== "GET") {
                     context.order?.push("parent action start");
                     await next();
@@ -697,7 +697,7 @@ describe("context/middleware", () => {
                   path: "child",
                   hasErrorBoundary: true,
                   unstable_middleware: [
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 1 start - throwing");
                         throw new Error("child 1 action error");
@@ -707,7 +707,7 @@ describe("context/middleware", () => {
                         context.order?.push("child 1 loader end");
                       }
                     },
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 2 start");
                         await next();
@@ -772,7 +772,7 @@ describe("context/middleware", () => {
               id: "parent",
               path: "/parent",
               unstable_middleware: [
-                async ({ request, context, next }) => {
+                async ({ request, context }, next) => {
                   if (request.method !== "GET") {
                     context.order?.push("parent action start");
                     await next();
@@ -793,7 +793,7 @@ describe("context/middleware", () => {
                   path: "child",
                   hasErrorBoundary: true,
                   unstable_middleware: [
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 1 start");
                         await next();
@@ -804,7 +804,7 @@ describe("context/middleware", () => {
                         context.order?.push("child 1 loader end");
                       }
                     },
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 2 start");
                         await next();
@@ -867,7 +867,7 @@ describe("context/middleware", () => {
               path: "/parent",
               hasErrorBoundary: true,
               unstable_middleware: [
-                async ({ request, context, next }) => {
+                async ({ request, context }, next) => {
                   if (request.method !== "GET") {
                     context.order?.push("parent action start");
                     await next();
@@ -887,7 +887,7 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   unstable_middleware: [
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 1 start - throwing");
                         throw new Error("child 1 action error");
@@ -897,7 +897,7 @@ describe("context/middleware", () => {
                         context.order?.push("child 1 loader end");
                       }
                     },
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 2 start");
                         await next();
@@ -949,7 +949,7 @@ describe("context/middleware", () => {
               path: "/parent",
               hasErrorBoundary: true,
               unstable_middleware: [
-                async ({ request, context, next }) => {
+                async ({ request, context }, next) => {
                   if (request.method !== "GET") {
                     context.order?.push("parent action start");
                     await next();
@@ -969,7 +969,7 @@ describe("context/middleware", () => {
                   id: "child",
                   path: "child",
                   unstable_middleware: [
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 1 start");
                         await next();
@@ -980,7 +980,7 @@ describe("context/middleware", () => {
                         context.order?.push("child 1 loader end");
                       }
                     },
-                    async ({ request, context, next }) => {
+                    async ({ request, context }, next) => {
                       if (request.method !== "GET") {
                         context.order?.push("child 2 start");
                         await next();
@@ -1034,7 +1034,7 @@ describe("context/middleware", () => {
             {
               path: "/parent",
               unstable_middleware: [
-                async ({ next }) => {
+                async (_, next) => {
                   throw redirect("/target");
                 },
               ],
@@ -1069,7 +1069,7 @@ describe("context/middleware", () => {
             {
               path: "/parent",
               unstable_middleware: [
-                async ({ next }) => {
+                async (_, next) => {
                   await next();
                   throw redirect("/target");
                 },
@@ -1099,7 +1099,7 @@ describe("context/middleware", () => {
 
   describe("middleware - handler.query", () => {
     function getOrderMiddleware(name: string): unstable_MiddlewareFunction {
-      return async ({ context, next }) => {
+      return async ({ context }, next) => {
         context.order?.push(`${name} middleware - before next()`);
         await tick(); // Force async to ensure ordering is correct
         let res = await next();
@@ -1118,12 +1118,12 @@ describe("context/middleware", () => {
           id: "parent",
           path: "/parent",
           unstable_middleware: [
-            async ({ next }) => {
+            async (_, next) => {
               let res = (await next()) as Response;
               res.headers.set("parent1", "yes");
               return res;
             },
-            async ({ next }) => {
+            async (_, next) => {
               let res = (await next()) as Response;
               res.headers.set("parent2", "yes");
               return res;
@@ -1137,12 +1137,12 @@ describe("context/middleware", () => {
               id: "child",
               path: "child",
               unstable_middleware: [
-                async ({ next }) => {
+                async (_, next) => {
                   let res = (await next()) as Response;
                   res.headers.set("child1", "yes");
                   return res;
                 },
-                async ({ next }) => {
+                async (_, next) => {
                   let res = (await next()) as Response;
                   res.headers.set("child2", "yes");
                   return res;
@@ -1304,7 +1304,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              ({ context, next }) => {
+              ({ context }, next) => {
                 context.parent = "PARENT MIDDLEWARE";
               },
             ],
@@ -1316,7 +1316,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  ({ context, next }) => {
+                  ({ context }, next) => {
                     context.child = "CHILD MIDDLEWARE";
                   },
                 ],
@@ -1357,7 +1357,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ next }) => {
+              async (_, next) => {
                 await next();
                 await next();
               },
@@ -1392,10 +1392,10 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ context, next }) => {
+              async ({ context }, next) => {
                 context.parent1 = "PARENT 1";
               },
-              async ({ context, next }) => {
+              async ({ context }, next) => {
                 throw new Error("PARENT 2");
               },
             ],
@@ -1407,7 +1407,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ context, next }) => {
+                  async ({ context }, next) => {
                     context.child = "CHILD";
                     await next();
                   },
@@ -1445,7 +1445,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ context, next }) => {
+              async ({ context }, next) => {
                 context.parent = "PARENT DOWN";
                 await next();
                 context.parent = "PARENT UP";
@@ -1459,7 +1459,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ context, next }) => {
+                  async ({ context }, next) => {
                     context.child = "CHILD DOWN";
                     await next();
                     throw new Error("CHILD UP");
@@ -1501,7 +1501,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -1517,11 +1517,11 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start - throwing");
                     throw new Error("child 1 error");
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end");
@@ -1573,7 +1573,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -1589,12 +1589,12 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start");
                     await next();
                     context.order?.push("child 1 end");
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end - throwing");
@@ -1648,7 +1648,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -1663,11 +1663,11 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start - throwing");
                     throw new Error("child 1 error");
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end");
@@ -1714,7 +1714,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -1729,13 +1729,13 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start");
                     let res = await next();
                     context.order?.push("child 1 end");
                     return res;
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end - throwing");
@@ -1787,7 +1787,7 @@ describe("context/middleware", () => {
           {
             path: "/parent",
             unstable_middleware: [
-              async ({ next }) => {
+              async (_, next) => {
                 throw redirect("/target");
               },
             ],
@@ -1817,7 +1817,7 @@ describe("context/middleware", () => {
           {
             path: "/parent",
             unstable_middleware: [
-              async ({ next }) => {
+              async (_, next) => {
                 await next();
                 throw redirect("/target");
               },
@@ -1844,7 +1844,7 @@ describe("context/middleware", () => {
 
   describe("middleware - handler.queryRoute", () => {
     function getOrderMiddleware(name: string): unstable_MiddlewareFunction {
-      return async ({ context, next }) => {
+      return async ({ context }, next) => {
         context.order?.push(`${name} middleware - before next()`);
         await tick(); // Force async to ensure ordering is correct
         let res = await next();
@@ -1863,12 +1863,12 @@ describe("context/middleware", () => {
           id: "parent",
           path: "/parent",
           unstable_middleware: [
-            async ({ context, next }) => {
+            async ({ context }, next) => {
               let res = (await next()) as Response;
               res.headers.set("parent1", "yes");
               return res;
             },
-            async ({ context, next }) => {
+            async ({ context }, next) => {
               let res = (await next()) as Response;
               res.headers.set("parent2", "yes");
               return res;
@@ -1882,12 +1882,12 @@ describe("context/middleware", () => {
               id: "child",
               path: "child",
               unstable_middleware: [
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   let res = (await next()) as Response;
                   res.headers.set("child1", "yes");
                   return res;
                 },
-                async ({ context, next }) => {
+                async ({ context }, next) => {
                   let res = (await next()) as Response;
                   res.headers.set("child2", "yes");
                   return res;
@@ -2041,7 +2041,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              ({ context, next }) => {
+              ({ context }, next) => {
                 context.parent = "PARENT MIDDLEWARE";
               },
             ],
@@ -2053,7 +2053,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  ({ context, next }) => {
+                  ({ context }, next) => {
                     context.child = "CHILD MIDDLEWARE";
                   },
                 ],
@@ -2087,7 +2087,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ next }) => {
+              async (_, next) => {
                 await next();
                 await next();
               },
@@ -2121,10 +2121,10 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ context, next }) => {
+              async ({ context }, next) => {
                 context.parent1 = "PARENT 1";
               },
-              async ({ context, next }) => {
+              async ({ context }, next) => {
                 throw new Error("PARENT 2");
               },
             ],
@@ -2136,7 +2136,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ context, next }) => {
+                  async ({ context }, next) => {
                     context.child = "CHILD";
                     return next();
                   },
@@ -2173,7 +2173,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ context, next }) => {
+              async ({ context }, next) => {
                 context.parent = "PARENT DOWN";
                 let res = await next();
                 context.parent = "PARENT UP";
@@ -2188,7 +2188,7 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ context, next }) => {
+                  async ({ context }, next) => {
                     context.child = "CHILD DOWN";
                     let res = await next();
                     throw new Error("CHILD UP");
@@ -2227,7 +2227,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -2243,11 +2243,11 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start - throwing");
                     throw new Error("child 1 error");
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     await next();
                     context.order?.push("child 2 end");
@@ -2293,7 +2293,7 @@ describe("context/middleware", () => {
             id: "parent",
             path: "/parent",
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -2309,13 +2309,13 @@ describe("context/middleware", () => {
                 path: "child",
                 hasErrorBoundary: true,
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start");
                     let res = await next();
                     context.order?.push("child 1 end");
                     return res;
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end - throwing");
@@ -2363,7 +2363,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent action start");
                 let res = await next();
                 context.order?.push("parent action end");
@@ -2378,11 +2378,11 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start - throwing");
                     throw new Error("child 1 action error");
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end");
@@ -2425,7 +2425,7 @@ describe("context/middleware", () => {
             path: "/parent",
             hasErrorBoundary: true,
             unstable_middleware: [
-              async ({ request, context, next }) => {
+              async ({ request, context }, next) => {
                 context.order?.push("parent start");
                 let res = await next();
                 context.order?.push("parent end");
@@ -2440,13 +2440,13 @@ describe("context/middleware", () => {
                 id: "child",
                 path: "child",
                 unstable_middleware: [
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 1 start");
                     let res = await next();
                     context.order?.push("child 1 end");
                     return res;
                   },
-                  async ({ request, context, next }) => {
+                  async ({ request, context }, next) => {
                     context.order?.push("child 2 start");
                     let res = await next();
                     context.order?.push("child 2 end - throwing");
@@ -2492,7 +2492,7 @@ describe("context/middleware", () => {
           {
             path: "/parent",
             unstable_middleware: [
-              async ({ next }) => {
+              async (_, next) => {
                 throw redirect("/target");
               },
             ],
@@ -2522,7 +2522,7 @@ describe("context/middleware", () => {
           {
             path: "/parent",
             unstable_middleware: [
-              async ({ next }) => {
+              async (_, next) => {
                 await next();
                 throw redirect("/target");
               },

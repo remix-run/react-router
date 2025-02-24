@@ -39,6 +39,7 @@ import type {
   unstable_RouterContext,
   unstable_MiddlewareFunction,
   unstable_MiddlewareFunctionArgs,
+  unstable_MiddlewareNextFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -5032,7 +5033,7 @@ async function callRouteMiddleware(
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
-  let next: unstable_MiddlewareFunctionArgs["next"] = async () => {
+  let next: unstable_MiddlewareNextFunction = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
@@ -5050,12 +5051,14 @@ async function callRouteMiddleware(
   };
 
   try {
-    let result = await middleware({
-      request: args.request,
-      params: args.params,
-      context: args.context,
-      next,
-    });
+    let result = await middleware(
+      {
+        request: args.request,
+        params: args.params,
+        context: args.context,
+      },
+      next
+    );
     return nextCalled ? result : next();
   } catch (e) {
     if (e instanceof MiddlewareError) {
