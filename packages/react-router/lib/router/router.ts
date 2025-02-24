@@ -1987,8 +1987,10 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders to run
+    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
+    // since they may have different revalidation rules (i.e., single fetch)
     if (
+      !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
       revalidatingFetchers.length === 0
     ) {
@@ -4176,8 +4178,9 @@ export function createStaticHandler(
       });
     }
 
-    // Short circuit if we have no loaders to run (query())
-    if (!dsMatches.some((m) => m.shouldLoad)) {
+    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
+    // since they may have different revalidation rules (i.e., single fetch)
+    if (!dataStrategy && !dsMatches.some((m) => m.shouldLoad)) {
       return {
         matches,
         // Add a null for all matched routes for proper revalidation on the client
