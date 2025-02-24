@@ -154,10 +154,17 @@ interface DataFunctionArgs<Context> {
 /**
  * Route middleware function arguments
  */
-export type unstable_MiddlewareFunctionArgs<
-  Context = unstable_RouterContext,
-  Result = unknown
-> = DataFunctionArgs<Context> & { next: () => Promise<Result> };
+export interface unstable_MiddlewareFunctionArgs<
+  Context = unstable_RouterContext
+> extends DataFunctionArgs<Context> {}
+
+/**
+ * Route middleware `next` function to call downstream handlers and then complete
+ * middlewares from the bottom-up
+ */
+export interface unstable_MiddlewareNextFunction<Result = unknown> {
+  (): Result | Promise<Result>;
+}
 
 /**
  * Route middleware function signature
@@ -166,7 +173,8 @@ export type unstable_MiddlewareFunction<
   Context = unstable_RouterContext,
   Result = unknown
 > = (
-  args: unstable_MiddlewareFunctionArgs<Context, Result>
+  args: unstable_MiddlewareFunctionArgs<Context>,
+  next: unstable_MiddlewareNextFunction<Result>
 ) => Result | Promise<Result>;
 
 /**

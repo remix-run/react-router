@@ -1,7 +1,7 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
 import type {
-  unstable_MiddlewareFunctionArgs,
+  unstable_MiddlewareNextFunction,
   unstable_RouterContext,
 } from "../router/utils";
 import type { AppLoadContext } from "../server-runtime/data";
@@ -171,18 +171,15 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
   context: AppLoadContext;
 };
 
-export type CreateServerMiddlewareArgs<T extends RouteInfo> =
-  ServerDataFunctionArgs<T> & {
-    next: unstable_MiddlewareFunctionArgs<AppLoadContext, Response>["next"];
-  };
+export type CreateServerMiddlewareFunction<T extends RouteInfo> = (
+  args: ServerDataFunctionArgs<T>,
+  next: unstable_MiddlewareNextFunction<Response>
+) => Response | Promise<Response>;
 
-export type CreateClientMiddlewareArgs<T extends RouteInfo> =
-  ClientDataFunctionArgs<T> & {
-    next: unstable_MiddlewareFunctionArgs<
-      unstable_RouterContext,
-      undefined
-    >["next"];
-  };
+export type CreateClientMiddlewareFunction<T extends RouteInfo> = (
+  args: ClientDataFunctionArgs<T>,
+  next: unstable_MiddlewareNextFunction<undefined>
+) => Response | Promise<Response>;
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =
   ServerDataFunctionArgs<T>;
