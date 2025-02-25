@@ -11,13 +11,21 @@ import {
   ServerBrowserRouter,
 } from "react-router";
 
-createFromReadableStream(getServerStream()).then((payload: ServerPayload) => {
+createFromReadableStream(
+  getServerStream(),
+  { assets: "manifest" },
+  {
+    temporaryReferences: {
+      clientId: () => <div>Client ID</div>,
+    },
+  }
+).then((payload: ServerPayload) => {
   startTransition(() => {
     hydrateRoot(
       document,
       <StrictMode>
         <ServerBrowserRouter
-          decode={createFromReadableStream}
+          decode={(payload) => createFromReadableStream(payload, manifest)}
           payload={payload}
         />
       </StrictMode>

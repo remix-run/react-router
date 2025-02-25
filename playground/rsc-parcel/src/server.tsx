@@ -27,9 +27,8 @@ app.use(
 		return routeServerRequest(
 			request,
 			callServer,
-			async (response) => {
-				const payload: ServerPayload = await createFromReadableStream(response.body);
-
+			createFromReadableStream,
+			async (payload) => {
 				return await renderHTMLToReadableStream(
 					<ServerStaticRouter payload={payload} />,
 					{

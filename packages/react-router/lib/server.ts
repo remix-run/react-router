@@ -211,8 +211,9 @@ export async function matchServerRequest(
 export async function routeServerRequest(
   request: Request,
   requestServer: (request: Request) => Promise<Response>,
+  decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>,
   renderHTML: (
-    response: Response
+    payload: ServerPayload
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>
 ) {
   const url = new URL(request.url);
@@ -245,16 +246,27 @@ export async function routeServerRequest(
     throw new Error("Failed to clone server response");
   }
 
-  const html = await renderHTML(serverResponse);
-  const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
+  const payload = (await decode(serverResponse.body)) as ServerRenderPayload;
 
-  const headers = new Headers(serverResponse.headers);
-  headers.set("Content-Type", "text/html");
+  const html = await renderHTML(payload);
 
-  return new Response(body, {
-    status: serverResponse.status,
-    headers,
-  });
+  try {
+    const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
+
+    const headers = new Headers(serverResponse.headers);
+    headers.set("Content-Type", "text/html");
+
+    return new Response(body, {
+      status: serverResponse.status,
+      headers,
+    });
+  } catch (reason) {
+    throw reason;
+    // TODO: Track deepest rendered boundary and re-try
+    // Figure out how / if we need to transport the error,
+    // or if we can just re-try on the client to reach
+    // the correct boundary.
+  }
 }
 
 export function isReactServerRequest(url: URL) {
