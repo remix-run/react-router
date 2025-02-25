@@ -128,7 +128,14 @@ export type EnvironmentName =
   | CssDevHelperEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
-type SsrEnvironmentName = "ssr" | `${typeof SSR_BUNDLE_PREFIX}${string}`;
+type SsrBundleEnvironmentName = `${typeof SSR_BUNDLE_PREFIX}${string}`;
+type SsrEnvironmentName = "ssr" | SsrBundleEnvironmentName;
+
+function isSsrBundleEnvironmentName(
+  name: string
+): name is SsrBundleEnvironmentName {
+  return name.startsWith(SSR_BUNDLE_PREFIX);
+}
 
 // We use a separate environment for loading the critical CSS during
 // development. This is because "ssrLoadModule" isn't available if the "ssr"
@@ -512,6 +519,36 @@ let getServerBuildDirectory = (
 let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
   path.join(reactRouterConfig.buildDirectory, "client");
 
+let getServerBundleRouteIds = (
+  vitePluginContext: Vite.Rollup.PluginContext,
+  {
+    ctx,
+    buildManifest,
+  }: {
+    ctx: ReactRouterPluginContext;
+    buildManifest: BuildManifest;
+  }
+): string[] | undefined => {
+  let environmentName = ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+    ? vitePluginContext.environment.name
+    : ctx.environmentBuildContext?.name;
+
+  if (!environmentName || !isSsrBundleEnvironmentName(environmentName)) {
+    return undefined;
+  }
+
+  let serverBundleId = environmentName.replace(SSR_BUNDLE_PREFIX, "");
+  let routesByServerBundleId = getRoutesByServerBundleId(buildManifest);
+  let serverBundleRoutes = routesByServerBundleId[serverBundleId];
+
+  invariant(
+    serverBundleRoutes,
+    `Routes not found for server bundle "${serverBundleId}"`
+  );
+
+  return Object.keys(serverBundleRoutes);
+};
+
 const injectQuery = (url: string, query: string) =>
   url.includes("?") ? url.replace("?", `?${query}&`) : `${url}?${query}`;
 
@@ -669,9 +706,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       })
       .join("\n")}
       export { default as assets } from ${JSON.stringify(
-        `${virtual.serverManifest.id}${
-          routeIds ? `?route-ids=${routeIds.join(",")}` : ""
-        }`
+        `${virtual.serverManifest.id}`
       )};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
@@ -1791,24 +1826,25 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       name: "react-router:virtual-modules",
       enforce: "pre",
       resolveId(id) {
-        let [baseId, queryString] = id.split("?");
-        const vmod = Object.values(virtual).find((vmod) => vmod.id === baseId);
-        if (vmod)
-          return vmod.resolvedId + (queryString ? `?${queryString}` : "");
+        const vmod = Object.values(virtual).find((vmod) => vmod.id === id);
+        if (vmod) return vmod.resolvedId;
       },
       async load(id) {
-        let [baseId, queryString] = id.split("?");
-        switch (baseId) {
+        switch (id) {
           case virtual.serverBuild.resolvedId: {
-            let searchParams = new URLSearchParams(queryString);
-            let routeIds =
-              searchParams.get("route-ids")?.split(",") || undefined;
+            invariant(buildManifest);
+            let routeIds = getServerBundleRouteIds(this, {
+              ctx,
+              buildManifest,
+            });
             return await getServerEntry({ routeIds });
           }
           case virtual.serverManifest.resolvedId: {
-            let searchParams = new URLSearchParams(queryString);
-            let routeIds =
-              searchParams.get("route-ids")?.split(",") || undefined;
+            invariant(buildManifest);
+            let routeIds = getServerBundleRouteIds(this, {
+              ctx,
+              buildManifest,
+            });
             let reactRouterManifest =
               viteCommand === "build"
                 ? (
@@ -2915,8 +2951,10 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
-function hasServerBundles(buildManifest: BuildManifest) {
-  return Object.keys(buildManifest.serverBundles ?? {}).length > 0;
+function getServerBundleIds(buildManifest: BuildManifest) {
+  return buildManifest.serverBundles
+    ? Object.keys(buildManifest.serverBundles)
+    : undefined;
 }
 
 function getRoutesByServerBundleId(
@@ -3153,10 +3191,19 @@ export async function getBuildManifest(
       if (typeof serverBundleId !== "string") {
         throw new Error(`The "serverBundles" function must return a string`);
       }
-      if (!/^[a-zA-Z0-9-_]+$/.test(serverBundleId)) {
-        throw new Error(
-          `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
-        );
+      if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+        // Server bundle IDs must be valid Vite environment names, so hyphens are not allowed
+        if (!/^[a-zA-Z0-9_]+$/.test(serverBundleId)) {
+          throw new Error(
+            `The "serverBundles" function must only return strings containing alphanumeric characters and underscores.`
+          );
+        }
+      } else {
+        if (!/^[a-zA-Z0-9-_]+$/.test(serverBundleId)) {
+          throw new Error(
+            `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
+          );
+        }
       }
       buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
@@ -3276,6 +3323,11 @@ export async function getEnvironmentOptionsResolvers(
         ssrEmitAssets: true,
         copyPublicDir: false, // Assets in the public directory are only used by the client
         rollupOptions: {
+          input:
+            (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+              ? viteUserConfig.environments?.ssr?.build?.rollupOptions?.input
+              : viteUserConfig.build?.rollupOptions?.input) ??
+            virtual.serverBuild.id,
           output: {
             entryFileNames: serverBuildFile,
             format: serverModuleFormat,
@@ -3344,25 +3396,16 @@ export async function getEnvironmentOptionsResolvers(
       }),
   };
 
-  if (hasServerBundles(buildManifest)) {
-    for (let [serverBundleId, routes] of Object.entries(
-      getRoutesByServerBundleId(buildManifest)
-    )) {
-      // Note: Hyphens are not valid in Vite environment names
-      const serverBundleEnvironmentId = serverBundleId.replaceAll("-", "_");
-      const environmentName =
-        `${SSR_BUNDLE_PREFIX}${serverBundleEnvironmentId}` as const;
+  let serverBundleIds = getServerBundleIds(buildManifest);
+  if (serverBundleIds) {
+    for (let serverBundleId of serverBundleIds) {
+      const environmentName = `${SSR_BUNDLE_PREFIX}${serverBundleId}` as const;
       environmentOptionsResolvers[environmentName] = ({ viteUserConfig }) =>
         mergeEnvironmentOptions(
           getBaseServerOptions({ viteUserConfig }),
           {
             build: {
               outDir: getServerBuildDirectory(ctx, { serverBundleId }),
-              rollupOptions: {
-                input: `${virtual.serverBuild.id}?route-ids=${Object.keys(
-                  routes
-                ).join(",")}`,
-              },
             },
           },
           // Ensure server bundle environments extend the user's SSR
@@ -3375,13 +3418,6 @@ export async function getEnvironmentOptionsResolvers(
       mergeEnvironmentOptions(getBaseServerOptions({ viteUserConfig }), {
         build: {
           outDir: getServerBuildDirectory(ctx),
-          rollupOptions: {
-            input:
-              (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
-                ? viteUserConfig.environments?.ssr?.build?.rollupOptions?.input
-                : viteUserConfig.build?.rollupOptions?.input) ??
-              virtual.serverBuild.id,
-          },
         },
         optimizeDeps:
           ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
