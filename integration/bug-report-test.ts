@@ -40,8 +40,7 @@ let appFixture: AppFixture;
 // Now try running this test:
 //
 //    ```
-//    pnpm test:integration bug-report --project chromium
-//    ```
+//    pnpm test:integration bug-report --project chromium ```
 //
 // You can add `--watch` to the end to have it re-run on file changes:
 //
@@ -64,18 +63,18 @@ test.beforeAll(async () => {
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
     files: {
-      "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
-
-        export function loader() {
-          return "pizza";
+      "api/auth/me": js`
+        export const loader = async () => {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return { user: { name: "Michael" } };
         }
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
 
         export default function Index() {
-          let data = useLoaderData();
           return (
             <div>
-              {data}
               <Link to="/burgers">Other Route</Link>
             </div>
           )
@@ -83,8 +82,17 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/burgers.tsx": js`
+        import * as React from "react";
+        import { useFetcher } from "react-router";
+
         export default function Index() {
-          return <div>cheeseburger</div>;
+          const fetcher = useFetcher();
+          React.useEffect(() => {
+            if (fetcher.state === "idle") {
+              fetcher.load("/api/auth/me");
+            }
+          }, []);
+          return (<h1>{fetcher.data ? fetcher.data.user.name : "loading..."}</h1>);
         }
       `,
     },
@@ -103,16 +111,19 @@ test.afterAll(() => {
 // add a good description for what you expect React Router to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
+test("I expect this page to not 404", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
+  // let response = await fixture.requestDocument("/");
 
   // If you need to test interactivity use the `app`
   await app.goto("/");
   await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
+
+  // expect that the page will not 404
+  expect(await page.textContent("h1")).not.toBe("404 Not Found");
+
+  // await page.waitForSelector("text=Michael");
 
   // If you're not sure what's going on, you can "poke" the app, it'll
   // automatically open up in your browser for 20 seconds, so be quick!
