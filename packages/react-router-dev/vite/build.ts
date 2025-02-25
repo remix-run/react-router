@@ -168,6 +168,7 @@ async function viteBuild(
     let environmentBuildContext: EnvironmentBuildContext = {
       name: environmentName,
       resolveOptions,
+      buildManifest,
     };
 
     await vite.build({

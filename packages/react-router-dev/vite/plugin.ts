@@ -163,6 +163,7 @@ type EnvironmentOptionsResolvers = Partial<
 export type EnvironmentBuildContext = {
   name: EnvironmentName;
   resolveOptions: EnvironmentOptionsResolver;
+  buildManifest: BuildManifest;
 };
 
 function isSeverBundleEnvironmentName(
@@ -236,6 +237,7 @@ export type ServerBundleBuildConfig = {
 type ResolvedEnvironmentBuildContext = {
   name: EnvironmentName;
   options: EnvironmentOptions;
+  buildManifest: BuildManifest;
 };
 
 type ReactRouterPluginContext = {
@@ -501,6 +503,7 @@ const resolveEnvironmentBuildContext = ({
   let resolvedBuildContext: ResolvedEnvironmentBuildContext = {
     name: buildContext.name,
     options: buildContext.resolveOptions({ viteUserConfig }),
+    buildManifest: buildContext.buildManifest,
   };
 
   return resolvedBuildContext;
@@ -1113,7 +1116,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         await updatePluginContext();
-        buildManifest = await getBuildManifest(ctx);
+        buildManifest = ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+          ? await getBuildManifest(ctx)
+          : ctx.environmentBuildContext?.buildManifest;
+        invariant(buildManifest);
 
         Object.assign(
           process.env,
