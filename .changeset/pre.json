@@ -8,5 +8,8 @@
     "react-router-native": "6.29.0",
     "@remix-run/router": "1.22.0"
   },
-  "changesets": []
+  "changesets": [
+    "tokyo-manifest-drift",
+    "witty-birds-fetch"
+  ]
 }
