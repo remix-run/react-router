@@ -35,12 +35,15 @@ export type {
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
+  unstable_MiddlewareFunctionArgs,
   ParamParseKey,
   Params,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  unstable_RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
@@ -85,6 +88,7 @@ export type {
   AwaitProps,
   IndexRouteProps,
   LayoutRouteProps,
+  MemoryRouterOpts,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -94,7 +98,6 @@ export type {
   RouterProviderProps,
   RoutesProps,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
 export {
   Await,
   MemoryRouter,
@@ -109,6 +112,7 @@ export {
   createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
+export type { NavigateFunction } from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -136,6 +140,7 @@ export {
 // Expose old RR DOM API
 export type {
   BrowserRouterProps,
+  DOMRouterOpts,
   HashRouterProps,
   HistoryRouterProps,
   LinkProps,

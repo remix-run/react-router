@@ -1,5 +1,9 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
+import type {
+  unstable_MiddlewareNextFunction,
+  unstable_RouterContext,
+} from "../router/utils";
 import type { AppLoadContext } from "../server-runtime/data";
 
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
@@ -135,6 +139,10 @@ type ClientDataFunctionArgs<T extends RouteInfo> = {
    * }
    **/
   params: T["params"];
+  /**
+   * This is the context passed in to HydratedRouter/createBrowserRouter
+   */
+  context: unstable_RouterContext;
 };
 
 type ServerDataFunctionArgs<T extends RouteInfo> = {
@@ -162,6 +170,16 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
    */
   context: AppLoadContext;
 };
+
+export type CreateServerMiddlewareFunction<T extends RouteInfo> = (
+  args: ServerDataFunctionArgs<T>,
+  next: unstable_MiddlewareNextFunction<Response>
+) => Response | Promise<Response>;
+
+export type CreateClientMiddlewareFunction<T extends RouteInfo> = (
+  args: ClientDataFunctionArgs<T>,
+  next: unstable_MiddlewareNextFunction<undefined>
+) => Response | Promise<Response>;
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =
   ServerDataFunctionArgs<T>;

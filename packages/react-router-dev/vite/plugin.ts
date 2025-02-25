@@ -102,18 +102,27 @@ export async function extractPluginContext(viteConfig: Vite.ResolvedConfig) {
     | undefined;
 }
 
-const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
-const CLIENT_ROUTE_EXPORTS = [
+const SERVER_ONLY_ROUTE_EXPORTS = [
+  "loader",
+  "action",
+  "unstable_middleware",
+  "headers",
+];
+const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
+  "unstable_clientMiddleware",
+  "handle",
+  "meta",
+  "links",
+  "shouldRevalidate",
+];
+const CLIENT_ROUTE_EXPORTS = [
+  ...CLIENT_NON_COMPONENT_EXPORTS,
   "default",
   "ErrorBoundary",
-  "handle",
   "HydrateFallback",
   "Layout",
-  "links",
-  "meta",
-  "shouldRevalidate",
 ];
 
 /** This is used to manage a build optimization to remove unused route exports
@@ -2203,16 +2212,7 @@ function addRefreshWrapper(
   id: string
 ): string {
   let route = getRoute(reactRouterConfig, id);
-  let acceptExports = route
-    ? [
-        "clientAction",
-        "clientLoader",
-        "handle",
-        "meta",
-        "links",
-        "shouldRevalidate",
-      ]
-    : [];
+  let acceptExports = route ? CLIENT_NON_COMPONENT_EXPORTS : [];
   return (
     REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
     code +

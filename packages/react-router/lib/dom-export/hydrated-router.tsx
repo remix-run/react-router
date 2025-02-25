@@ -5,6 +5,7 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   DataRouter,
   HydrationState,
+  unstable_RouterContext,
 } from "react-router";
 import {
   UNSAFE_invariant as invariant,
@@ -60,7 +61,11 @@ function initSsrInfo(): void {
   }
 }
 
-function createHydratedRouter(): DataRouter {
+function createHydratedRouter({
+  unstable_context,
+}: {
+  unstable_context?: unstable_RouterContext;
+}): DataRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
@@ -172,8 +177,12 @@ function createHydratedRouter(): DataRouter {
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
+    unstable_context,
     hydrationData,
     mapRouteProperties,
+    future: {
+      unstable_middleware: ssrInfo.context.future.unstable_middleware,
+    },
     dataStrategy: getSingleFetchDataStrategy(
       ssrInfo.manifest,
       ssrInfo.routeModules,
@@ -207,12 +216,23 @@ function createHydratedRouter(): DataRouter {
   return router;
 }
 
+interface HydratedRouterProps {
+  /**
+   * Context object to passed through to `createBrowserRouter` and made available
+   * to `clientLoader`/`clientActon` functions
+   */
+  unstable_context?: unstable_RouterContext;
+}
+
 /**
+ * Framework-mode router component to be used in `entry.client.tsx` to hydrate a
+ * router from a `ServerRouter`
+ *
  * @category Component Routers
  */
-export function HydratedRouter() {
+export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
-    router = createHydratedRouter();
+    router = createHydratedRouter({ unstable_context: props.unstable_context });
   }
 
   // Critical CSS can become stale after code changes, e.g. styles might be

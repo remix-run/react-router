@@ -30,6 +30,7 @@ import type {
   FormEncType,
   HTMLFormMethod,
   UIMatch,
+  unstable_RouterContext,
 } from "../router/utils";
 import {
   ErrorResponseImpl,
@@ -125,24 +126,61 @@ try {
 //#region Routers
 ////////////////////////////////////////////////////////////////////////////////
 
-interface DOMRouterOpts {
+/**
+ * @category Routers
+ */
+export interface DOMRouterOpts {
+  /**
+   * Basename path for the application.
+   */
   basename?: string;
+  /**
+   * Router context singleton that will be passed to loader/action functions.
+   */
+  unstable_context?: unstable_RouterContext;
+  /**
+   * Future flags to enable for the router.
+   */
   future?: Partial<FutureConfig>;
+  /**
+   * Hydration data to initialize the router with if you have already performed
+   * data loading on the server.
+   */
   hydrationData?: HydrationState;
+  /**
+   * Override the default data strategy of loading in parallel.
+   * Only intended for advanced usage.
+   */
   dataStrategy?: DataStrategyFunction;
+  /**
+   * Lazily define portions of the route tree on navigations.
+   */
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+  /**
+   * Window object override - defaults to the global `window` instance.
+   */
   window?: Window;
 }
 
 /**
+ * Create a new data router that manages the application path via `history.pushState`
+ * and `history.replaceState`.
+ *
  * @category Data Routers
  */
 export function createBrowserRouter(
+  /**
+   * Application routes
+   */
   routes: RouteObject[],
+  /**
+   * Router options
+   */
   opts?: DOMRouterOpts
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_context: opts?.unstable_context,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
@@ -155,6 +193,8 @@ export function createBrowserRouter(
 }
 
 /**
+ * Create a new data router that manages the application path via the URL hash
+ *
  * @category Data Routers
  */
 export function createHashRouter(
@@ -163,6 +203,7 @@ export function createHashRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_context: opts?.unstable_context,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
