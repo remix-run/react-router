@@ -18,6 +18,7 @@ rm -rf packages/react-router-remix-routes-option-adapter/
 rm -rf packages/react-router-serve/
 rm -rf packages/react-router/.wireit/
 rm -rf integration/
+rm -rf playground/
 rm -rf playground-local/
 set +x
 
