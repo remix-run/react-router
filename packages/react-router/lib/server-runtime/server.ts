@@ -250,6 +250,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         }
       }
     } else if (
+      !request.headers.has("X-React-Router-SPA-Mode") &&
       matches &&
       matches[matches.length - 1].route.module.default == null &&
       matches[matches.length - 1].route.module.ErrorBoundary == null
