@@ -1531,6 +1531,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   let vite = getVite();
                   let ssrEnvironment = viteDevServer.environments.ssr;
                   if (!vite.isRunnableDevEnvironment(ssrEnvironment)) {
+                    next();
                     return;
                   }
                   build = (await ssrEnvironment.runner.import(
