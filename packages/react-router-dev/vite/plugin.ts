@@ -615,21 +615,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     }
 
     // This `injectedPluginContext` logic is so we can support injecting an
-    // already-resolved plugin context into the build. This is so we can resolve
-    // the plugin context once for the entire build process and avoid resolving
-    // it every time the Vite config is resolved. This is most important for
-    // resolving the `buildManifest` object since it involves executing the
-    // `serverBundles` function, which we want to avoid doing multiple times.
-    // Note that this logic is redundant when using the Vite Environment API
-    // since our plugin is instantiated once and shared across all builds.
+    // already-resolved plugin context into the build in case we want to re-use
+    // any resolved values. Currently this is used so that we can re-use the
+    // `buildManifest` object across multiple builds without having to
+    // re-execute the `serverBundles` function.
     let injectedPluginContext =
       !reactRouterConfig.future.unstable_viteEnvironmentApi &&
       viteCommand === "build"
         ? extractPluginContext(viteUserConfig)
         : undefined;
-    if (injectedPluginContext) {
-      ctx = injectedPluginContext;
-    }
 
     let { entryClientFilePath, entryServerFilePath } = await resolveEntryFiles({
       rootDirectory,
@@ -658,7 +652,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let buildManifest =
       viteCommand === "build"
-        ? await getBuildManifest({ reactRouterConfig, rootDirectory })
+        ? injectedPluginContext?.buildManifest ??
+          (await getBuildManifest({ reactRouterConfig, rootDirectory }))
         : null;
 
     let environmentBuildContext: ResolvedEnvironmentBuildContext | null =
