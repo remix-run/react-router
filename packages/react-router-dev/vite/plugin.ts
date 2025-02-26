@@ -524,15 +524,15 @@ let getServerBundleRouteIds = (
   vitePluginContext: Vite.Rollup.PluginContext,
   ctx: ReactRouterPluginContext
 ): string[] | undefined => {
+  if (!ctx.buildManifest) {
+    return undefined;
+  }
+
   let environmentName = ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
     ? vitePluginContext.environment.name
     : ctx.environmentBuildContext?.name;
 
-  if (
-    !ctx.buildManifest ||
-    !environmentName ||
-    !isSsrBundleEnvironmentName(environmentName)
-  ) {
+  if (!environmentName || !isSsrBundleEnvironmentName(environmentName)) {
     return undefined;
   }
 
