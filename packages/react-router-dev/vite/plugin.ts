@@ -1116,9 +1116,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         await updatePluginContext();
-        buildManifest = ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
-          ? await getBuildManifest(ctx)
-          : ctx.environmentBuildContext?.buildManifest;
+        buildManifest =
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi ||
+          viteCommand === "serve"
+            ? await getBuildManifest(ctx)
+            : ctx.environmentBuildContext?.buildManifest;
         invariant(buildManifest);
 
         Object.assign(
