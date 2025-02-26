@@ -160,10 +160,7 @@ const CSS_DEV_HELPER_ENVIRONMENT_NAME =
   "__react_router_css_dev_helper__" as const;
 type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
 
-type EnvironmentOptions = Pick<
-  Vite.EnvironmentOptions,
-  "build" | "resolve" | "optimizeDeps"
->;
+type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -1294,6 +1291,32 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     : clientEnvironment.build),
               }),
         };
+      },
+      configEnvironment(name, options) {
+        if (
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+          name === "ssr" &&
+          options.optimizeDeps?.noDiscovery === false
+        ) {
+          const vite = getVite();
+
+          return {
+            optimizeDeps: {
+              entries: [
+                vite.normalizePath(ctx.entryServerFilePath),
+                ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
+                  resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
+                ),
+              ],
+              include: [
+                "react",
+                "react/jsx-dev-runtime",
+                "react-dom/server",
+                "react-router",
+              ],
+            },
+          };
+        }
       },
       async configResolved(resolvedViteConfig) {
         await initEsModuleLexer;
@@ -3436,24 +3459,6 @@ export async function getEnvironmentOptionsResolvers(
         build: {
           outDir: getServerBuildDirectory(ctx.reactRouterConfig),
         },
-        optimizeDeps:
-          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-          viteUserConfig.environments?.ssr?.optimizeDeps?.noDiscovery === false
-            ? {
-                entries: [
-                  vite.normalizePath(ctx.entryServerFilePath),
-                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
-                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-                  ),
-                ],
-                include: [
-                  "react",
-                  "react/jsx-dev-runtime",
-                  "react-dom/server",
-                  "react-router",
-                ],
-              }
-            : undefined,
       });
   }
 
