@@ -727,7 +727,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       })
       .join("\n")}
       export { default as assets } from ${JSON.stringify(
-        `${virtual.serverManifest.id}`
+        virtual.serverManifest.id
       )};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
