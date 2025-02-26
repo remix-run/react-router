@@ -9,7 +9,6 @@ import {
   extractPluginContext,
   cleanBuildDirectory,
   cleanViteManifests,
-  getBuildManifest,
   getEnvironmentOptionsResolvers,
   resolveEnvironmentsOptions,
   getServerEnvironmentKeys,
@@ -149,7 +148,7 @@ async function viteBuild(
       },
     ],
   });
-  let ctx = await extractPluginContext(viteConfig);
+  let ctx = extractPluginContext(viteConfig);
 
   if (!ctx) {
     console.error(
@@ -168,7 +167,6 @@ async function viteBuild(
     let environmentBuildContext: EnvironmentBuildContext = {
       name: environmentName,
       resolveOptions,
-      buildManifest,
     };
 
     await vite.build({
@@ -185,11 +183,16 @@ async function viteBuild(
       optimizeDeps: { force },
       clearScreen,
       logLevel,
-      ...{ __reactRouterEnvironmentBuildContext: environmentBuildContext },
+      ...{
+        __reactRouterPluginContext: ctx,
+        __reactRouterEnvironmentBuildContext: environmentBuildContext,
+      },
     });
   }
 
   let { reactRouterConfig, buildManifest } = ctx;
+  invariant(buildManifest, "Expected build manifest to be present");
+
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
     "build"
@@ -206,8 +209,8 @@ async function viteBuild(
 
   // Then run Vite SSR builds in parallel
   let serverEnvironmentNames = getServerEnvironmentKeys(
-    environmentOptionsResolvers,
-    buildManifest
+    ctx,
+    environmentOptionsResolvers
   );
 
   await Promise.all(serverEnvironmentNames.map(buildEnvironment));
