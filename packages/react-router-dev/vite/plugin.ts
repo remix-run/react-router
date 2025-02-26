@@ -601,20 +601,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
   /** Mutates `ctx` as a side-effect */
   let updatePluginContext = async (): Promise<void> => {
-    // This `injectedPluginContext` logic is so we can support injecting an
-    // already-resolved plugin context into the build. This is so we can resolve
-    // the plugin context once for the entire build process and avoid resolving
-    // it every time the Vite config is resolved. This is most important for
-    // resolving the `buildManifest` object since it involves executing the
-    // `serverBundles` function, which we want to avoid doing multiple times.
-    let injectedPluginContext =
-      viteCommand === "build"
-        ? extractPluginContext(viteUserConfig)
-        : undefined;
-    if (injectedPluginContext) {
-      ctx = injectedPluginContext;
-    }
-
     let reactRouterConfig: ResolvedReactRouterConfig;
     let reactRouterConfigResult = await reactRouterConfigLoader.getConfig();
 
@@ -626,6 +612,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         process.exit(1);
       }
       return;
+    }
+
+    // This `injectedPluginContext` logic is so we can support injecting an
+    // already-resolved plugin context into the build. This is so we can resolve
+    // the plugin context once for the entire build process and avoid resolving
+    // it every time the Vite config is resolved. This is most important for
+    // resolving the `buildManifest` object since it involves executing the
+    // `serverBundles` function, which we want to avoid doing multiple times.
+    // Note that this logic is redundant when using the Vite Environment API
+    // since our plugin is instantiated once and shared across all builds.
+    let injectedPluginContext =
+      !reactRouterConfig.future.unstable_viteEnvironmentApi &&
+      viteCommand === "build"
+        ? extractPluginContext(viteUserConfig)
+        : undefined;
+    if (injectedPluginContext) {
+      ctx = injectedPluginContext;
     }
 
     let { entryClientFilePath, entryServerFilePath } = await resolveEntryFiles({
