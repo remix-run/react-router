@@ -5,13 +5,16 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  unstable_createContext,
 } from "react-router";
 import type { Route } from "./+types/root";
+
+export const rootContext = unstable_createContext<string>();
 
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
   async ({ context }, next) => {
     console.log("start root middleware");
-    context.root = "ROOT";
+    context.set(rootContext, "ROOT");
     let res = await next();
     console.log("end root middleware");
     return res;

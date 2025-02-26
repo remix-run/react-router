@@ -26,6 +26,7 @@ import type {
   DataStrategyFunction,
   LazyRouteFunction,
   TrackedPromise,
+  unstable_InitialContext,
   unstable_RouterContext,
 } from "./router/utils";
 import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
@@ -139,7 +140,7 @@ export interface MemoryRouterOpts {
   /**
    * Router context singleton that will be passed to loader/action functions.
    */
-  unstable_context?: unstable_RouterContext;
+  unstable_getContext?: () => unstable_InitialContext;
   /**
    * Future flags to enable for the router.
    */
@@ -186,7 +187,7 @@ export function createMemoryRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
-    unstable_context: opts?.unstable_context,
+    unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,

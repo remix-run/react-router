@@ -110,14 +110,60 @@ export type Submission =
       text: string;
     };
 
+export interface unstable_RouterContext<T = unknown> {
+  defaultValue?: T;
+}
+
 /**
- * An object of unknown type for client-side loaders and actions provided by the
- * `createBrowserRouter` `context` option.  This is defined as an empty interface
- * specifically so apps can leverage declaration merging to augment this type
- * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+ * Creates a context object that may be used to store and retrieve arbitrary values.
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()` when no value has been
+ * set for the context. Otherwise reading this context when no value has been set will throw an
+ * error.
+ *
+ * @param defaultValue The default value for the context
+ * @returns A context object
  */
-export interface unstable_RouterContext {
-  [key: string]: unknown;
+export function unstable_createContext<T>(
+  defaultValue?: T
+): unstable_RouterContext<T> {
+  return { defaultValue };
+}
+
+export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
+
+/**
+ * Provides methods for writing/reading values in application context in a typesafe way.
+ */
+export class unstable_RouterContextProvider {
+  #map = new Map<unstable_RouterContext, unknown>();
+
+  constructor(init?: unstable_InitialContext) {
+    if (init) {
+      for (let [context, value] of init) {
+        this.set(context, value);
+      }
+    }
+  }
+
+  get<T>(context: unstable_RouterContext<T>): T {
+    if (this.#map.has(context)) {
+      return this.#map.get(context) as T;
+    }
+
+    if (context.defaultValue !== undefined) {
+      return context.defaultValue;
+    }
+
+    throw new Error("No value found for context");
+  }
+
+  set<C extends unstable_RouterContext>(
+    context: C,
+    value: C extends unstable_RouterContext<infer T> ? T : never
+  ): void {
+    this.#map.set(context, value);
+  }
 }
 
 /**
@@ -152,13 +198,6 @@ interface DataFunctionArgs<Context> {
 }
 
 /**
- * Route middleware function arguments
- */
-export interface unstable_MiddlewareFunctionArgs<
-  Context = unstable_RouterContext
-> extends DataFunctionArgs<Context> {}
-
-/**
  * Route middleware `next` function to call downstream handlers and then complete
  * middlewares from the bottom-up
  */
@@ -167,26 +206,26 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
 }
 
 /**
- * Route middleware function signature
+ * Route middleware function signature.  Receives the same "data" arguments as a
+ * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
+ * a `next` function as the second parameter which will call downstream handlers
+ * and then complete middlewares from the bottom-up
  */
-export type unstable_MiddlewareFunction<
-  Context = unstable_RouterContext,
-  Result = unknown
-> = (
-  args: unstable_MiddlewareFunctionArgs<Context>,
+export type unstable_MiddlewareFunction<Context = any, Result = unknown> = (
+  args: DataFunctionArgs<Context>,
   next: unstable_MiddlewareNextFunction<Result>
 ) => Result | Promise<Result>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = unstable_RouterContext>
+export interface LoaderFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = unstable_RouterContext>
+export interface ActionFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {}
 
 /**
@@ -199,7 +238,7 @@ type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = unstable_RouterContext> = {
+export type LoaderFunction<Context = any> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -209,7 +248,7 @@ export type LoaderFunction<Context = unstable_RouterContext> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = unstable_RouterContext> {
+export interface ActionFunction<Context = any> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -294,7 +333,7 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = unstable_RouterContext>
+export interface DataStrategyFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   fetcherKey: string | null;
@@ -308,7 +347,7 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction<Context = unstable_RouterContext> {
+export interface DataStrategyFunction<Context = any> {
   (args: DataStrategyFunctionArgs<Context>): Promise<
     Record<string, DataStrategyResult>
   >;

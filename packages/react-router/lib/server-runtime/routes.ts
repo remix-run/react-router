@@ -4,6 +4,7 @@ import type {
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
   unstable_MiddlewareFunction,
+  unstable_RouterContextProvider,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
@@ -75,7 +76,7 @@ export function createStaticHandlerDataRoutes(
       path: route.path,
       unstable_middleware: route.module
         .unstable_middleware as unknown as unstable_MiddlewareFunction<
-        any,
+        unstable_RouterContextProvider,
         unknown
       >[],
       // Need to use RR's version in the param typed here to permit the optional

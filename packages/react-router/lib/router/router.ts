@@ -36,10 +36,9 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   ActionFunction,
-  unstable_RouterContext,
   unstable_MiddlewareFunction,
-  unstable_MiddlewareFunctionArgs,
   unstable_MiddlewareNextFunction,
+  unstable_InitialContext,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -55,6 +54,7 @@ import {
   matchRoutesImpl,
   resolveTo,
   stripBasename,
+  unstable_RouterContextProvider,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +375,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  unstable_context?: unstable_RouterContext;
+  unstable_getContext?: () => unstable_InitialContext;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -830,9 +830,6 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
-  let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
-  let routerContext =
-    typeof init.unstable_context !== "undefined" ? init.unstable_context : {};
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -861,7 +858,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
 
-  if (initialMatches == null && !patchRoutesOnNavigationImpl) {
+  if (initialMatches == null && !init.patchRoutesOnNavigation) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the error boundary to take over
     let error = getInternalRouterError(404, {
@@ -1602,9 +1599,10 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission
     );
-    // Create a new context per navigation that has references to all global
-    // contextual fields
-    let scopedContext = { ...routerContext };
+    // Create a new context per navigation
+    let scopedContext = new unstable_RouterContextProvider(
+      init.unstable_getContext?.()
+    );
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -1718,7 +1716,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
-    scopedContext: unstable_RouterContext,
+    scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
@@ -1862,7 +1860,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
-    scopedContext: unstable_RouterContext,
+    scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
     overrideNavigation?: Navigation,
     submission?: Submission,
@@ -2178,9 +2176,10 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let match = getTargetMatch(matches, path);
-    // Create a new context per fetch that has references to all global
-    // contextual fields
-    let scopedContext = { ...routerContext };
+    // Create a new context per fetch
+    let scopedContext = new unstable_RouterContextProvider(
+      init.unstable_getContext?.()
+    );
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
@@ -2224,7 +2223,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
-    scopedContext: unstable_RouterContext,
+    scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
@@ -2526,7 +2525,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
-    scopedContext: unstable_RouterContext,
+    scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
@@ -2776,7 +2775,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
-    scopedContext: unstable_RouterContext,
+    scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
@@ -2834,7 +2833,7 @@ export function createRouter(init: RouterInit): Router {
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
-    scopedContext: unstable_RouterContext
+    scopedContext: unstable_RouterContextProvider
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
@@ -3166,7 +3165,7 @@ export function createRouter(init: RouterInit): Router {
     routesToUse: AgnosticDataRouteObject[],
     pathname: string
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
-    if (patchRoutesOnNavigationImpl) {
+    if (init.patchRoutesOnNavigation) {
       if (!matches) {
         let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
           routesToUse,
@@ -3215,7 +3214,7 @@ export function createRouter(init: RouterInit): Router {
     pathname: string,
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
-    if (!patchRoutesOnNavigationImpl) {
+    if (!init.patchRoutesOnNavigation) {
       return { type: "success", matches };
     }
 
@@ -3225,7 +3224,7 @@ export function createRouter(init: RouterInit): Router {
       let routesToUse = inFlightDataRoutes || dataRoutes;
       let localManifest = manifest;
       try {
-        await patchRoutesOnNavigationImpl({
+        await init.patchRoutesOnNavigation({
           signal,
           path: pathname,
           matches: partialMatches,
@@ -3434,6 +3433,10 @@ export function createStaticHandler(
     let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
+    requestContext =
+      requestContext != null
+        ? requestContext
+        : new unstable_RouterContextProvider();
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD") {
@@ -3475,6 +3478,11 @@ export function createStaticHandler(
     }
 
     if (respond && matches.some((m) => m.route.unstable_middleware)) {
+      invariant(
+        requestContext instanceof unstable_RouterContextProvider,
+        "When using middleware in `staticHandler.query()`, any provided " +
+          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+      );
       try {
         // Run middleware as far deep as the deepest loader to be executed
         let tailIdx = [...matches]
@@ -3488,7 +3496,9 @@ export function createStaticHandler(
             request,
             matches,
             params: matches[0].params,
-            context: requestContext,
+            // If we're calling middleware then it must be enabled so we can cast
+            // this to the proper type knowing it's not an `AppLoadContext`
+            context: requestContext as unstable_RouterContextProvider,
           },
           lowestLoadingIdx,
           true,
@@ -3643,6 +3653,10 @@ export function createStaticHandler(
     let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
+    requestContext =
+      requestContext != null
+        ? requestContext
+        : new unstable_RouterContextProvider();
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
@@ -3666,12 +3680,19 @@ export function createStaticHandler(
     }
 
     if (respond && matches.some((m) => m.route.unstable_middleware)) {
+      invariant(
+        requestContext instanceof unstable_RouterContextProvider,
+        "When using middleware in `staticHandler.queryRoute()`, any provided " +
+          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+      );
       let response = await runMiddlewarePipeline(
         {
           request,
           matches,
           params: matches[0].params,
-          context: requestContext,
+          // If we're calling middleware then it must be enabled so we can cast
+          // this to the proper type knowing it's not an `AppLoadContext`
+          context: requestContext as unstable_RouterContextProvider,
         },
         matches.length - 1,
         true,
@@ -4906,7 +4927,7 @@ async function defaultDataStrategy(
 // Middleware-enabled implementation of `dataStrategy` which calls middleware
 // and fetches all loaders in parallel
 async function defaultDataStrategyWithMiddleware(
-  args: DataStrategyFunctionArgs<unknown>
+  args: DataStrategyFunctionArgs<unstable_RouterContextProvider>
 ): ReturnType<DataStrategyFunction<unknown>> {
   // Short circuit all the middleware logic if we have no middlewares
   if (!args.matches.some((m) => m.route.unstable_middleware)) {
@@ -4953,7 +4974,10 @@ export async function runMiddlewarePipeline(
     params,
     context,
     matches,
-  }: (LoaderFunctionArgs<unknown> | ActionFunctionArgs<unknown>) & {
+  }: (
+    | LoaderFunctionArgs<unstable_RouterContextProvider>
+    | ActionFunctionArgs<unstable_RouterContextProvider>
+  ) & {
     matches: AgnosticDataRouteMatch[];
   },
   lastIndex: number,
@@ -4976,7 +5000,10 @@ export async function runMiddlewarePipeline(
           m.route.unstable_middleware
             ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
             : []
-        ) as [string, unstable_MiddlewareFunction<unknown>][],
+        ) as [
+        string,
+        unstable_MiddlewareFunction<unstable_RouterContextProvider, unknown>
+      ][],
       0,
       { request, params, context },
       middlewareState,
@@ -5008,9 +5035,14 @@ export class MiddlewareError {
 }
 
 async function callRouteMiddleware(
-  middlewares: [string, unstable_MiddlewareFunction<unknown>][],
+  middlewares: [
+    string,
+    unstable_MiddlewareFunction<unstable_RouterContextProvider, unknown>
+  ][],
   idx: number,
-  args: LoaderFunctionArgs<unknown> | ActionFunctionArgs<unknown>,
+  args:
+    | LoaderFunctionArgs<unstable_RouterContextProvider>
+    | ActionFunctionArgs<unstable_RouterContextProvider>,
   middlewareState: MutableMiddlewareState,
   handler: (r: Record<string, DataStrategyResult>) => void
 ): Promise<unknown> {

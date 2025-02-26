@@ -8,6 +8,7 @@ import type {
   RouteManifest,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
+  unstable_RouterContextProvider,
 } from "../../router/utils";
 import { ErrorResponseImpl } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
@@ -526,7 +527,7 @@ export function createClientRoutes(
           ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
           unstable_middleware:
             mod.unstable_clientMiddleware as unknown as unstable_MiddlewareFunction<
-              any,
+              unstable_RouterContextProvider,
               unknown
             >[],
           hasErrorBoundary: lazyRoute.hasErrorBoundary,

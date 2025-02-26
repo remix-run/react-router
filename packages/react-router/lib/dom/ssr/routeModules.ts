@@ -7,14 +7,13 @@ import type {
   LoaderFunctionArgs,
   unstable_MiddlewareFunction,
   Params,
-  unstable_RouterContext,
   ShouldRevalidateFunction,
+  unstable_RouterContextProvider,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
-import type { AppLoadContext } from "../../server-runtime/data";
 import type { SerializeFrom } from "../../types/route-data";
 
 export interface RouteModules {
@@ -28,7 +27,7 @@ export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
   unstable_clientMiddleware?: unstable_MiddlewareFunction<
-    unstable_RouterContext,
+    unstable_RouterContextProvider,
     undefined
   >[];
   ErrorBoundary?: ErrorBoundaryComponent;
@@ -48,7 +47,10 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
-  unstable_middleware?: unstable_MiddlewareFunction<AppLoadContext, Response>[];
+  unstable_middleware?: unstable_MiddlewareFunction<
+    unstable_RouterContextProvider,
+    Response
+  >[];
 }
 
 /**

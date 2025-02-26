@@ -1,5 +1,6 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse } from "../router/utils";
+import type { ErrorResponse, unstable_InitialContext } from "../router/utils";
+import { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
@@ -35,10 +36,13 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
+import type { MiddlewareEnabled } from "../types/future";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: AppLoadContext
+  loadContext?: MiddlewareEnabled extends true
+    ? unstable_RouterContextProvider
+    : AppLoadContext
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -83,8 +87,15 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
 
-  return async function requestHandler(request, loadContext = {}) {
+  return async function requestHandler(request, _loadContext) {
     _build = typeof build === "function" ? await build() : build;
+
+    // TODO: Accept `initialContext` from `getLoadContext` when the flag is enabled
+    let loadContext: AppLoadContext = _build.future.unstable_middleware
+      ? // @ts-expect-error This type changes when middleware is enabled
+        (new unstable_RouterContextProvider() as AppLoadContext)
+      : _loadContext ?? {};
+
     if (typeof build === "function") {
       let derived = derive(_build, mode);
       routes = derived.routes;
