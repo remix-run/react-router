@@ -1,6 +1,8 @@
 import * as React from "react";
 import { RouterProvider } from "./components";
 import type { DataRouteObject } from "./context";
+import { FrameworkContext } from "./dom/ssr/components";
+import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createBrowserHistory } from "./router/history";
 import { createRouter } from "./router/router";
 import type { ServerPayload, ServerRouteManifest } from "./server";
@@ -115,7 +117,32 @@ export function ServerBrowserRouter({
     },
   }).initialize();
 
-  return <RouterProvider router={router} />;
+  const frameworkContext: FrameworkContextObject = {
+    future: {},
+    isSpaMode: true,
+    ssr: true,
+    criticalCss: "",
+    manifest: {
+      routes: {
+        // root: {
+        //   css: []
+        // },
+      },
+      version: "1",
+      url: "",
+      entry: {
+        module: "",
+        imports: [],
+      },
+    },
+    routeModules: {},
+  };
+
+  return (
+    <FrameworkContext.Provider value={frameworkContext}>
+      <RouterProvider router={router} />
+    </FrameworkContext.Provider>
+  );
 }
 
 function createRouteFromServerManifest(

@@ -25,7 +25,7 @@ createFromReadableStream(
       document,
       <StrictMode>
         <ServerBrowserRouter
-          decode={(payload) => createFromReadableStream(payload, manifest)}
+          decode={createFromReadableStream}
           payload={payload}
         />
       </StrictMode>

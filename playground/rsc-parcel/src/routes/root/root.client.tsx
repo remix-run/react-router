@@ -1,6 +1,14 @@
 "use client";
 
-import { Link, Outlet, useLoaderData } from "react-router";
+import {
+  Link,
+  Links,
+  Outlet,
+  ScrollRestoration,
+  useLoaderData,
+} from "react-router";
+
+import type { loader } from "./root";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,14 +17,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>React Server</title>
+        <Links />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ScrollRestoration />
+      </body>
     </html>
   );
 }
 
 export default function Root() {
-  const { counter, message } = useLoaderData<typeof import("./root").loader>();
+  const { counter, message } = useLoaderData<typeof loader>();
   return (
     <>
       <h1>{message}</h1>

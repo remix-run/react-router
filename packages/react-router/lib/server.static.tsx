@@ -1,5 +1,7 @@
 import * as React from "react";
 import type { DataRouteObject } from "./context";
+import { FrameworkContext } from "./dom/ssr/components";
+import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "./dom/server";
 import type { ServerPayload } from "./server";
 
@@ -72,12 +74,35 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
     context
   );
 
+  const frameworkContext: FrameworkContextObject = {
+    future: {},
+    isSpaMode: false,
+    ssr: false,
+    criticalCss: "",
+    manifest: {
+      routes: {
+        // root: {
+        //   css: []
+        // },
+      },
+      version: "1",
+      url: "",
+      entry: {
+        module: "",
+        imports: [],
+      },
+    },
+    routeModules: {},
+  };
+
   return (
-    <StaticRouterProvider
-      context={context}
-      router={router}
-      hydrate={false}
-      nonce={payload.nonce}
-    />
+    <FrameworkContext.Provider value={frameworkContext}>
+      <StaticRouterProvider
+        context={context}
+        router={router}
+        hydrate={false}
+        nonce={payload.nonce}
+      />
+    </FrameworkContext.Provider>
   );
 }
