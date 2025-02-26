@@ -189,11 +189,9 @@ async function viteBuild(
     });
   }
 
-  let { reactRouterConfig } = ctx;
-  let buildManifest = await getBuildManifest(ctx);
+  let { reactRouterConfig, buildManifest } = ctx;
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
-    buildManifest,
     "build"
   );
   let environmentsOptions = resolveEnvironmentsOptions(

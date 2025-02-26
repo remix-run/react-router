@@ -248,6 +248,7 @@ type ReactRouterPluginContext = {
   publicPath: string;
   reactRouterConfig: ResolvedReactRouterConfig;
   viteManifestEnabled: boolean;
+  buildManifest: BuildManifest;
 };
 
 let virtualHmrRuntime = VirtualModule.create("hmr-runtime");
@@ -510,11 +511,11 @@ const resolveEnvironmentBuildContext = ({
 };
 
 let getServerBuildDirectory = (
-  ctx: ReactRouterPluginContext,
+  reactRouterConfig: ResolvedReactRouterConfig,
   { serverBundleId }: { serverBundleId?: string } = {}
 ) =>
   path.join(
-    ctx.reactRouterConfig.buildDirectory,
+    reactRouterConfig.buildDirectory,
     "server",
     ...(serverBundleId ? [serverBundleId] : [])
   );
@@ -649,6 +650,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ? resolveEnvironmentBuildContext({ viteCommand, viteUserConfig })
         : null;
 
+    buildManifest =
+      ctx?.buildManifest ??
+      ctx?.environmentBuildContext?.buildManifest ??
+      (await getBuildManifest({ reactRouterConfig, rootDirectory }));
+
     firstLoad = false;
 
     ctx = {
@@ -659,6 +665,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       entryServerFilePath,
       publicPath,
       viteManifestEnabled,
+      buildManifest,
     };
   };
 
@@ -1116,12 +1123,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         await updatePluginContext();
-        buildManifest =
-          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi ||
-          viteCommand === "serve"
-            ? await getBuildManifest(ctx)
-            : ctx.environmentBuildContext?.buildManifest;
-        invariant(buildManifest);
 
         Object.assign(
           process.env,
@@ -1135,16 +1136,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           )
         );
 
-        let environments = await getEnvironmentsOptions(
-          ctx,
-          buildManifest,
-          viteCommand,
-          { viteUserConfig }
-        );
+        let environments = await getEnvironmentsOptions(ctx, viteCommand, {
+          viteUserConfig,
+        });
 
         let serverEnvironment = getServerEnvironmentValues(
           environments,
-          buildManifest
+          ctx.buildManifest
         )[0];
         invariant(serverEnvironment);
 
@@ -1564,7 +1562,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let serverBuildDirectory = future.unstable_viteEnvironmentApi
             ? this.environment.config?.build?.outDir
             : ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx);
+              getServerBuildDirectory(ctx.reactRouterConfig);
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
@@ -3156,23 +3154,27 @@ export async function cleanViteManifests(
   );
 }
 
-export async function getBuildManifest(
-  ctx: ReactRouterPluginContext
-): Promise<BuildManifest> {
-  let { routes, serverBundles, appDirectory } = ctx.reactRouterConfig;
+export async function getBuildManifest({
+  reactRouterConfig,
+  rootDirectory,
+}: {
+  reactRouterConfig: ResolvedReactRouterConfig;
+  rootDirectory: string;
+}): Promise<BuildManifest> {
+  let { routes, serverBundles, appDirectory } = reactRouterConfig;
 
   if (!serverBundles) {
     return { routes };
   }
 
   let { normalizePath } = await import("vite");
-  let serverBuildDirectory = getServerBuildDirectory(ctx);
-  let resolvedAppDirectory = path.resolve(ctx.rootDirectory, appDirectory);
+  let serverBuildDirectory = getServerBuildDirectory(reactRouterConfig);
+  let resolvedAppDirectory = path.resolve(rootDirectory, appDirectory);
   let rootRelativeRoutes = Object.fromEntries(
     Object.entries(routes).map(([id, route]) => {
       let filePath = path.join(resolvedAppDirectory, route.file);
       let rootRelativeFilePath = normalizePath(
-        path.relative(ctx.rootDirectory, filePath)
+        path.relative(rootDirectory, filePath)
       );
       return [id, { ...route, file: rootRelativeFilePath }];
     })
@@ -3199,7 +3201,7 @@ export async function getBuildManifest(
       if (typeof serverBundleId !== "string") {
         throw new Error(`The "serverBundles" function must return a string`);
       }
-      if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
+      if (reactRouterConfig.future.unstable_viteEnvironmentApi) {
         // Server bundle IDs must be valid Vite environment names, so hyphens are not allowed
         if (!/^[a-zA-Z0-9_]+$/.test(serverBundleId)) {
           throw new Error(
@@ -3220,10 +3222,10 @@ export async function getBuildManifest(
         file: normalizePath(
           path.join(
             path.relative(
-              ctx.rootDirectory,
+              rootDirectory,
               path.join(serverBuildDirectory, serverBundleId)
             ),
-            ctx.reactRouterConfig.serverBuildFile
+            reactRouterConfig.serverBuildFile
           )
         ),
       };
@@ -3247,7 +3249,6 @@ function mergeEnvironmentOptions(
 
 export async function getEnvironmentOptionsResolvers(
   ctx: ReactRouterPluginContext,
-  buildManifest: BuildManifest,
   viteCommand: Vite.ResolvedConfig["command"]
 ): Promise<EnvironmentOptionsResolvers> {
   let { serverBuildFile, serverModuleFormat } = ctx.reactRouterConfig;
@@ -3404,7 +3405,7 @@ export async function getEnvironmentOptionsResolvers(
       }),
   };
 
-  let serverBundleIds = getServerBundleIds(buildManifest);
+  let serverBundleIds = getServerBundleIds(ctx.buildManifest);
   if (serverBundleIds) {
     for (let serverBundleId of serverBundleIds) {
       const environmentName = `${SSR_BUNDLE_PREFIX}${serverBundleId}` as const;
@@ -3413,7 +3414,9 @@ export async function getEnvironmentOptionsResolvers(
           getBaseServerOptions({ viteUserConfig }),
           {
             build: {
-              outDir: getServerBuildDirectory(ctx, { serverBundleId }),
+              outDir: getServerBuildDirectory(ctx.reactRouterConfig, {
+                serverBundleId,
+              }),
             },
           },
           // Ensure server bundle environments extend the user's SSR
@@ -3425,7 +3428,7 @@ export async function getEnvironmentOptionsResolvers(
     environmentOptionsResolvers.ssr = ({ viteUserConfig }) =>
       mergeEnvironmentOptions(getBaseServerOptions({ viteUserConfig }), {
         build: {
-          outDir: getServerBuildDirectory(ctx),
+          outDir: getServerBuildDirectory(ctx.reactRouterConfig),
         },
         optimizeDeps:
           ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
@@ -3473,13 +3476,11 @@ export function resolveEnvironmentsOptions(
 
 async function getEnvironmentsOptions(
   ctx: ReactRouterPluginContext,
-  buildManifest: BuildManifest,
   viteCommand: Vite.ResolvedConfig["command"],
   resolverOptions: Parameters<EnvironmentOptionsResolver>[0]
 ): Promise<Record<string, EnvironmentOptions>> {
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
-    buildManifest,
     viteCommand
   );
   return resolveEnvironmentsOptions(
