@@ -1,5 +1,17 @@
 # `react-router-dom`
 
+## 6.30.0
+
+### Minor Changes
+
+- Add `fetcherKey` as a parameter to `patchRoutesOnNavigation` ([#13109](https://github.com/remix-run/react-router/pull/13109))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.23.0`
+  - `react-router@6.30.0`
+
 ## 6.29.0
 
 ### Minor Changes

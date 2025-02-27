@@ -1,5 +1,12 @@
 # `react-router-native`
 
+## 6.30.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.30.0`
+
 ## 6.29.0
 
 ### Patch Changes
