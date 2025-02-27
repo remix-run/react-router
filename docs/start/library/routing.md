@@ -181,7 +181,7 @@ You can make a route segment optional by adding a `?` to the end of the segment.
 You can have optional static segments, too:
 
 ```tsx
-<Route path="users/:userId/edit?" component={<User />} />
+<Route path="users/:userId/edit?" element={<User />} />
 ```
 
 ## Splats
