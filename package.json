@@ -126,7 +126,7 @@
     "overrides": {
       "react": "0.0.0-experimental-93b58361-20250209",
       "react-dom": "0.0.0-experimental-93b58361-20250209",
-      "workerd": "1.20240614.0"
+      "workerd": "1.20250224.0"
     }
   }
 }

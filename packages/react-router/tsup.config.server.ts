@@ -6,12 +6,14 @@ import { createBanner } from "../../build.utils.js";
 import pkg from "./package.json";
 
 const entry = ["server.ts"];
+const external = ["react-router/client"];
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
     {
       clean: false,
       entry,
+      external,
       format: ["cjs"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
@@ -28,6 +30,7 @@ const config = (enableDevWarnings: boolean) =>
     {
       clean: false,
       entry,
+      external,
       format: ["esm"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,

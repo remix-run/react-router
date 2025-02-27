@@ -52,6 +52,21 @@
         "default": "./dist/development/index.js"
       }
     },
+    "./client": {
+      "node": {
+        "types": "./dist/development/index.d.ts",
+        "module-sync": "./dist/development/index.mjs",
+        "default": "./dist/development/index.js"
+      },
+      "import": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
+      },
+      "default": {
+        "types": "./dist/development/index.d.ts",
+        "default": "./dist/development/index.js"
+      }
+    },
     "./route-module": {
       "import": {
         "types": "./dist/development/lib/types/route-module.d.mts"
