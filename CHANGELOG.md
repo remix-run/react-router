@@ -978,7 +978,6 @@ Date: 2025-02-27
 
 **Full Changelog**: [`v6.29.0...v6.30.0`](https://github.com/remix-run/react-router/compare/react-router@6.29.0...react-router@6.30.0)
 
-
 ## v6.29.0
 
 Date: 2025-01-30
