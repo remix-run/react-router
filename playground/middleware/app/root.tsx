@@ -5,11 +5,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  unstable_createContext,
 } from "react-router";
 import type { Route } from "./+types/root";
-
-export const rootContext = unstable_createContext<string>();
+import { rootContext } from "./contexts";
 
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
   async ({ context }, next) => {
@@ -20,6 +18,16 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
     return res;
   },
 ];
+
+export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[] =
+  [
+    async ({ context }, next) => {
+      console.log("start root middleware");
+      context.set(rootContext, "ROOT");
+      await next();
+      console.log("end root middleware");
+    },
+  ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -35,16 +43,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <nav>
           <ul>
             <li>
+              <Link to="/">Go to /</Link>
+            </li>
+            <li>
               Server middleware routes:
               <ul>
-                <li>
-                  <Link to="/">Go to /</Link>
-                </li>
                 <li>
                   <Link to="/server/a">Go to /server/a</Link>
                 </li>
                 <li>
                   <Link to="/server/a/b">Go to /server/a/b</Link>
+                </li>
+              </ul>
+            </li>
+            <li>
+              Client middleware routes:
+              <ul>
+                <li>
+                  <Link to="/client/a">Go to /client/a</Link>
+                </li>
+                <li>
+                  <Link to="/client/a/b">Go to /client/a/b</Link>
                 </li>
               </ul>
             </li>

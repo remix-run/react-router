@@ -1,9 +1,6 @@
 import { Outlet, unstable_createContext } from "react-router";
 import type { Route } from "./+types/server.a";
-import { rootContext } from "~/root";
-import { bContext } from "./server.a.b";
-
-export const aContext = unstable_createContext<string>();
+import { aContext, rootContext } from "~/contexts";
 
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
   async ({ context }, next) => {

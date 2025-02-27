@@ -1,18 +1,18 @@
 import { Outlet, unstable_createContext } from "react-router";
-import type { Route } from "./+types/server.a.b";
+import type { Route } from "./+types/client.a.b";
 import { aContext, bContext, rootContext } from "~/contexts";
 
-export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
-  async ({ context }, next) => {
-    console.log("start b middleware");
-    context.set(bContext, "B");
-    let res = await next();
-    console.log("end b middleware");
-    return res;
-  },
-];
+export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[] =
+  [
+    async ({ context }, next) => {
+      console.log("start b middleware");
+      context.set(bContext, "B");
+      await next();
+      console.log("end b middleware");
+    },
+  ];
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function clientLoader({ context }: Route.LoaderArgs) {
   await new Promise((r) => setTimeout(r, 200));
   return JSON.stringify({
     root: context.get(rootContext),
