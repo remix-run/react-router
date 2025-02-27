@@ -13,7 +13,7 @@ type SerializedError = {
 export interface FrameworkContextObject {
   manifest: AssetsManifest;
   routeModules: RouteModules;
-  criticalCss?: string;
+  criticalCss?: CriticalCss;
   serverHandoffString?: string;
   future: FutureConfig;
   ssr: boolean;
@@ -44,6 +44,8 @@ export interface EntryContext extends FrameworkContextObject {
 export interface FutureConfig {
   unstable_middleware: boolean;
 }
+
+export type CriticalCss = string | { rel: "stylesheet"; href: string };
 
 export interface AssetsManifest {
   entry: {

@@ -285,6 +285,60 @@ test.describe("Prerendering", () => {
       expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
     });
 
+    test("Prerenders a static array of routes with server bundles", async () => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          ...files,
+          "react-router.config.ts": js`
+          let counter = 1;
+          export default {
+            serverBundles: () => "server" + counter++,
+            async prerender() {
+              await new Promise(r => setTimeout(r, 1));
+              return ['/', '/about'];
+            },
+          }
+        `,
+          "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter()
+            ],
+          });
+        `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let clientDir = path.join(fixture.projectDir, "build", "client");
+      expect(listAllFiles(clientDir).sort()).toEqual([
+        "_root.data",
+        "about.data",
+        "about/index.html",
+        "favicon.ico",
+        "index.html",
+      ]);
+
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+      expect(html).toMatch("<title>Index Title: Index Loader Data</title>");
+      expect(html).toMatch("<h1>Root</h1>");
+      expect(html).toMatch('<h2 data-route="true">Index</h2>');
+      expect(html).toMatch('<p data-loader-data="true">Index Loader Data</p>');
+
+      res = await fixture.requestDocument("/about");
+      html = await res.text();
+      expect(html).toMatch("<title>About Title: About Loader Data</title>");
+      expect(html).toMatch("<h1>Root</h1>");
+      expect(html).toMatch('<h2 data-route="true">About</h2>');
+      expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
+    });
+
     test("Prerenders a dynamic array of routes based on the static routes", async () => {
       fixture = await createFixture({
         files: {
