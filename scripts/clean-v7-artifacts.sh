@@ -20,6 +20,7 @@ rm -rf packages/react-router/.wireit/
 rm -rf integration/
 rm -rf playground/
 rm -rf playground-local/
+rm -rf public/dev/ # v7 API docs
 set +x
 
 echo "Installing and building..."
