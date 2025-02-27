@@ -2,16 +2,16 @@ import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
 import type {
   unstable_MiddlewareNextFunction,
-  unstable_RouterContext,
   unstable_RouterContextProvider,
 } from "../router/utils";
 import type { AppLoadContext } from "../server-runtime/data";
-import { MiddlewareEnabled } from "./future";
+import type { MiddlewareEnabled } from "./future";
 
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
 import type { Equal, Expect, Func, Pretty } from "./utils";
 
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
+type MaybePromise<T> = T | Promise<T>;
 
 type RouteModule = {
   meta?: Func;
@@ -189,12 +189,12 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
 export type CreateServerMiddlewareFunction<T extends RouteInfo> = (
   args: ServerDataFunctionArgs<T>,
   next: unstable_MiddlewareNextFunction<Response>
-) => Response | Promise<Response>;
+) => MaybePromise<Response>;
 
 export type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T>,
   next: unstable_MiddlewareNextFunction<undefined>
-) => Response | Promise<Response>;
+) => MaybePromise<undefined>;
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =
   ServerDataFunctionArgs<T>;
