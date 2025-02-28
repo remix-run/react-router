@@ -5071,6 +5071,7 @@ async function callRouteMiddleware(
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
+  let nextResult = undefined;
   let next: unstable_MiddlewareNextFunction = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
@@ -5084,7 +5085,8 @@ async function callRouteMiddleware(
       handler
     );
     if (middlewareState.propagateResult) {
-      return result;
+      nextResult = result;
+      return nextResult;
     }
   };
 
@@ -5097,7 +5099,18 @@ async function callRouteMiddleware(
       },
       next
     );
-    return nextCalled ? result : next();
+    if (nextCalled) {
+      if (result === undefined) {
+        // If they called next() but didn't return the response, we can bubble
+        // it for them. This lets folks do things like grab the response and
+        // add a header without then re-returning it
+        return nextResult;
+      } else {
+        return result;
+      }
+    } else {
+      return next();
+    }
   } catch (e) {
     if (e instanceof MiddlewareError) {
       throw e;
