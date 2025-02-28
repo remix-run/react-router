@@ -23,7 +23,6 @@ import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
-import invariant from "./invariant";
 
 export type { SingleFetchResult, SingleFetchResults };
 export { SingleFetchRedirectSymbol };

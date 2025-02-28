@@ -42,16 +42,25 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
+            import { orderContext } from '../context'
 
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.order = ['a']; },
-              ({ context }) => { context.order.push('b'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'a']);
+              },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export async function clientLoader({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -64,16 +73,19 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/about.tsx": js`
+            import { orderContext } from '../context'
+
             export const unstable_clientMiddleware = [
               ({ context }) => {
-                context.order = []; // reset order from hydration
-                context.order.push('c');
+                context.set(orderContext, [...context.get(orderContext), 'c']);
               },
-              ({ context }) => { context.order.push('d'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'd']);
+              },
             ];
 
             export async function clientLoader({ context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -118,20 +130,29 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Form } from 'react-router'
+            import { orderContext } from '../context';
 
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.order = ['a']; },
-              ({ context }) => { context.order.push('b'); }
+              ({ request, context }) => {
+                context.set(orderContext, ['a']);
+              },
+              ({ request, context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export async function clientAction({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export async function clientLoader({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData, actionData }) {
@@ -422,6 +443,10 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
@@ -430,12 +455,15 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.a = true; },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'a']);
+              },
             ];
 
             export function clientLoader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -444,8 +472,11 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.b = true; },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              }
             ];
 
             export default function Component() {
@@ -453,8 +484,9 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/a.b.c.tsx": js`
+            import { orderContext } from '../context';
             export function clientLoader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -470,9 +502,9 @@ test.describe("Middleware", () => {
       await app.goto("/", true);
       (await page.$('a[href="/a/b/c"]'))?.click();
       await page.waitForSelector("h4");
-      expect(await page.innerText("h2")).toBe('A: {"a":true,"b":true}');
+      expect(await page.innerText("h2")).toBe("A: a,b");
       expect(await page.innerText("h3")).toBe("B");
-      expect(await page.innerText("h4")).toBe('C: {"a":true,"b":true}');
+      expect(await page.innerText("h4")).toBe("C: a,b");
 
       appFixture.close();
     });
@@ -494,16 +526,25 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
+            import { orderContext } from "../context";;
 
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.order = ['a']; },
-              ({ context }) => { context.order.push('b'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'a']);
+              },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export async function clientLoader({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -516,16 +557,18 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/about.tsx": js`
+            import { orderContext } from "../context";;
             export const unstable_clientMiddleware = [
               ({ context }) => {
-                context.order = []; // reset order from hydration
-                context.order.push('c');
+                context.set(orderContext, ['c']); // reset order from hydration
               },
-              ({ context }) => { context.order.push('d'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'd']);
+              },
             ];
 
             export async function clientLoader({ context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -568,20 +611,29 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Form } from 'react-router'
+            import { orderContext } from "../context";;
 
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.order = ['a']; },
-              ({ context }) => { context.order.push('b'); }
+              ({ context }) => {
+                context.set(orderContext, ['a']);
+              },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export async function clientAction({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export async function clientLoader({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData, actionData }) {
@@ -864,6 +916,10 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
@@ -872,12 +928,13 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.a = true; },
+              ({ context }) => { context.set(orderContext, ['a']); }
             ];
 
             export function clientLoader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -886,8 +943,11 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.b = true; },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export default function Component() {
@@ -895,8 +955,9 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/a.b.c.tsx": js`
+            import { orderContext } from '../context';
             export function clientLoader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -912,9 +973,9 @@ test.describe("Middleware", () => {
       await app.goto("/");
       (await page.$('a[href="/a/b/c"]'))?.click();
       await page.waitForSelector("h4");
-      expect(await page.innerText("h2")).toBe('A: {"a":true,"b":true}');
+      expect(await page.innerText("h2")).toBe("A: a,b");
       expect(await page.innerText("h3")).toBe("B");
-      expect(await page.innerText("h4")).toBe('C: {"a":true,"b":true}');
+      expect(await page.innerText("h4")).toBe("C: a,b");
 
       appFixture.close();
     });
@@ -936,21 +997,11 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
-          "app/entry.client.tsx": js`
-            import { HydratedRouter } from "react-router/dom";
-            import { startTransition, StrictMode } from "react";
-            import { hydrateRoot } from "react-dom/client";
-
-            startTransition(() => {
-              hydrateRoot(
-                document,
-                <StrictMode>
-                  <HydratedRouter unstable_context={{
-                    parent: { value: 0 },
-                    child: { value: 0 }
-                  }} />
-                </StrictMode>
-              );
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const countContext = unstable_createContext({
+              parent: 0,
+              child: 0,
             });
           `,
           "app/routes/_index.tsx": js`
@@ -960,18 +1011,19 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/parent.tsx": js`
+            import { countContext } from '../context';
             import { Outlet } from 'react-router';
             export function loader() {
               return 'PARENT'
             }
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.parent.value++ },
+              ({ context }) => { context.get(countContext).parent++ },
             ];
 
             export async function clientLoader({ serverLoader, context }) {
               return {
                 serverData: await serverLoader(),
-                context
+                context: context.get(countContext)
               }
             }
 
@@ -985,17 +1037,18 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/parent.child.tsx": js`
+            import { countContext } from '../context';
             export function loader() {
               return 'CHILD'
             }
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.child.value++ },
+              ({ context }) => { context.get(countContext).child++ },
             ];
 
             export async function clientLoader({ serverLoader, context }) {
               return {
                 serverData: await serverLoader(),
-                context
+                context: context.get(countContext)
               }
             }
 
@@ -1033,16 +1086,16 @@ test.describe("Middleware", () => {
       expect(JSON.parse(json)).toEqual({
         serverData: "PARENT",
         context: {
-          parent: { value: 1 },
-          child: { value: 1 },
+          parent: 1,
+          child: 1,
         },
       });
       json = (await page.locator("[data-child]").textContent()) as string;
       expect(JSON.parse(json)).toEqual({
         serverData: "CHILD",
         context: {
-          parent: { value: 1 },
-          child: { value: 1 },
+          parent: 1,
+          child: 1,
         },
       });
 
@@ -1066,22 +1119,12 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
-          "app/entry.client.tsx": js`
-            import { HydratedRouter } from "react-router/dom";
-            import { startTransition, StrictMode } from "react";
-            import { hydrateRoot } from "react-dom/client";
-
-            startTransition(() => {
-              hydrateRoot(
-                document,
-                <StrictMode>
-                  <HydratedRouter unstable_context={{
-                    parent: { value: 0 },
-                    child: { value: 0 },
-                    index: { value: 0 }
-                  }} />
-                </StrictMode>
-              );
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const countContext = unstable_createContext({
+              parent: 0,
+              child: 0,
+              index: 0,
             });
           `,
           "app/routes/_index.tsx": js`
@@ -1092,11 +1135,12 @@ test.describe("Middleware", () => {
           `,
           "app/routes/parent.tsx": js`
             import { Outlet } from 'react-router';
+            import { countContext } from '../context';
             export function loader() {
               return 'PARENT'
             }
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.parent.value++ },
+              ({ context }) => { context.get(countContext).parent++ },
             ];
             export default function Component({ loaderData }) {
               return (
@@ -1112,11 +1156,12 @@ test.describe("Middleware", () => {
           `,
           "app/routes/parent.child.tsx": js`
             import { Outlet } from 'react-router';
+            import { countContext } from '../context';
             export function loader() {
               return 'CHILD'
             }
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.child.value++ },
+              ({ context }) => { context.get(countContext).child++ },
             ];
             export default function Component({ loaderData }) {
               return (
@@ -1129,6 +1174,7 @@ test.describe("Middleware", () => {
           `,
           "app/routes/parent.child._index.tsx": js`
             import { Form } from 'react-router';
+            import { countContext } from '../context';
             export function action() {
               return 'INDEX ACTION'
             }
@@ -1136,12 +1182,12 @@ test.describe("Middleware", () => {
               return 'INDEX'
             }
             export const unstable_clientMiddleware = [
-              ({ context }) => { context.index.value++ },
+              ({ context }) => { context.get(countContext).index++ },
             ];
             export async function clientLoader({ serverLoader, context }) {
               return {
                 serverData: await serverLoader(),
-                context
+                context: context.get(countContext)
               }
             }
             export default function Component({ loaderData, actionData }) {
@@ -1179,9 +1225,9 @@ test.describe("Middleware", () => {
       ).toEqual({
         serverData: "INDEX",
         context: {
-          parent: { value: 1 },
-          child: { value: 1 },
-          index: { value: 1 },
+          parent: 1,
+          child: 1,
+          index: 1,
         },
       });
 
@@ -1209,9 +1255,9 @@ test.describe("Middleware", () => {
       ).toEqual({
         serverData: "INDEX",
         context: {
-          parent: { value: 3 },
-          child: { value: 3 },
-          index: { value: 3 },
+          parent: 3,
+          child: 3,
+          index: 3,
         },
       });
 
@@ -1235,16 +1281,25 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
+            import { orderContext } from "../context";;
 
             export const unstable_middleware = [
-              ({ context }) => { context.order = ['a']; },
-              ({ context }) => { context.order.push('b'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'a']);
+              },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export async function loader({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -1257,16 +1312,18 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/about.tsx": js`
+            import { orderContext } from "../context";;
             export const unstable_middleware = [
               ({ context }) => {
-                context.order = [];
-                context.order.push('c');
+                context.set(orderContext, ['c']);
               },
-              ({ context }) => { context.order.push('d'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'd']);
+              }
             ];
 
             export async function loader({ context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -1309,20 +1366,29 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Form } from 'react-router'
+            import { orderContext } from "../context";;
 
             export const unstable_middleware = [
-              ({ context }) => { context.order = ['a']; },
-              ({ context }) => { context.order.push('b'); }
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'a']);
+              },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export async function action({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export async function loader({ request, context }) {
-              return context.order.join(',');
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData, actionData }) {
@@ -1740,7 +1806,6 @@ test.describe("Middleware", () => {
 
               export const unstable_middleware = [
                 async ({ context }, next) => {
-                  context.a = true;
                   let res = await next();
                   res.headers.set('x-a', 'true');
                   return res;
@@ -1820,7 +1885,6 @@ test.describe("Middleware", () => {
 
               export const unstable_middleware = [
                 async ({ context }, next) => {
-                  context.a = true;
                   let res = await next();
                   res.headers.set('x-a', 'true');
                   return res;
@@ -1969,6 +2033,10 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
@@ -1977,14 +2045,13 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_middleware = [
-              ({ context }) => {
-                context.a = true;
-              },
+              ({ context }) => { context.set(orderContext, ['a']); },
             ];
 
             export async function loader({ context }) {
-              return JSON.stringify(context);
+              return context.get(orderContext).join(',');
             }
 
             // Force a granular call for this route
@@ -2003,14 +2070,15 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_middleware = [
               ({ context }) => {
-                context.b = true;
+                context.set(orderContext, [...context.get(orderContext), 'b']);
               },
             ];
 
             export async function loader({ context }) {
-              return JSON.stringify(context);
+              return context.get(orderContext).join(',');
             }
 
             // Force a granular call for this route
@@ -2033,12 +2101,8 @@ test.describe("Middleware", () => {
 
       (await page.$('a[href="/a/b"]'))?.click();
       await page.waitForSelector("[data-b]");
-      expect(await page.locator("[data-a]").textContent()).toBe(
-        'A: {"a":true}'
-      );
-      expect(await page.locator("[data-b]").textContent()).toBe(
-        'B: {"a":true,"b":true}'
-      );
+      expect(await page.locator("[data-a]").textContent()).toBe("A: a");
+      expect(await page.locator("[data-b]").textContent()).toBe("B: a,b");
 
       appFixture.close();
     });
@@ -2060,6 +2124,10 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
@@ -2068,12 +2136,13 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_middleware = [
-              ({ context }) => { context.a = true; },
+              ({ context }) => { context.set(orderContext, ['a']); }
             ];
 
             export function loader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -2082,8 +2151,11 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_middleware = [
-              ({ context }) => { context.b = true; },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export default function Component() {
@@ -2091,8 +2163,9 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/a.b.c.tsx": js`
+            import { orderContext } from '../context';
             export function loader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -2106,9 +2179,9 @@ test.describe("Middleware", () => {
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/a/b/c");
-      expect(await page.innerText("h2")).toBe('A: {"a":true,"b":true}');
+      expect(await page.innerText("h2")).toBe("A: a,b");
       expect(await page.innerText("h3")).toBe("B");
-      expect(await page.innerText("h4")).toBe('C: {"a":true,"b":true}');
+      expect(await page.innerText("h4")).toBe("C: a,b");
 
       appFixture.close();
     });
@@ -2130,6 +2203,10 @@ test.describe("Middleware", () => {
               plugins: [reactRouter()],
             });
           `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
+          `,
           "app/routes/_index.tsx": js`
             import { Link } from 'react-router'
             export default function Component({ loaderData }) {
@@ -2138,12 +2215,13 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_middleware = [
-              ({ context }) => { context.a = true; },
+              ({ context }) => { context.set(orderContext, ['a']); }
             ];
 
             export function loader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -2152,8 +2230,11 @@ test.describe("Middleware", () => {
           `,
           "app/routes/a.b.tsx": js`
             import { Outlet } from 'react-router'
+            import { orderContext } from '../context';
             export const unstable_middleware = [
-              ({ context }) => { context.b = true; },
+              ({ context }) => {
+                context.set(orderContext, [...context.get(orderContext), 'b']);
+              },
             ];
 
             export default function Component() {
@@ -2161,8 +2242,9 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/a.b.c.tsx": js`
+            import { orderContext } from '../context';
             export function loader({ context }) {
-              return JSON.stringify(context)
+              return context.get(orderContext).join(',');
             }
 
             export default function Component({ loaderData }) {
@@ -2178,9 +2260,9 @@ test.describe("Middleware", () => {
       await app.goto("/");
       (await page.$('a[href="/a/b/c"]'))?.click();
       await page.waitForSelector("h4");
-      expect(await page.innerText("h2")).toBe('A: {"a":true,"b":true}');
+      expect(await page.innerText("h2")).toBe("A: a,b");
       expect(await page.innerText("h3")).toBe("B");
-      expect(await page.innerText("h4")).toBe('C: {"a":true,"b":true}');
+      expect(await page.innerText("h4")).toBe("C: a,b");
 
       appFixture.close();
     });
@@ -2199,6 +2281,10 @@ test.describe("Middleware", () => {
               build: { manifest: true, minify: false },
               plugins: [reactRouter()],
             });
+          `,
+          "app/context.ts": js`
+            import { unstable_createContext } from 'react-router'
+            export const orderContext = unstable_createContext([]);
           `,
           "app/routes/_index.tsx": js`
             import * as React from 'react'
@@ -2231,9 +2317,10 @@ test.describe("Middleware", () => {
             }
           `,
           "app/routes/a.tsx": js`
+            import { orderContext } from '../context';
             export const unstable_middleware = [
               async ({ context }, next) => {
-                context.a = true;
+                context.set(orderContext, ['a']);
                 let res = await next();
                 res.headers.set('x-a', 'true');
                 return res;
@@ -2241,9 +2328,10 @@ test.describe("Middleware", () => {
             ];
           `,
           "app/routes/a.b.tsx": js`
+            import { orderContext } from '../context';
             export const unstable_middleware = [
               async ({ context }, next) => {
-                context.b = true;
+                context.set(orderContext, [...context.get(orderContext), 'b']);
                 let res = await next();
                 res.headers.set('x-b', 'true');
                 return res;
@@ -2251,7 +2339,7 @@ test.describe("Middleware", () => {
             ];
 
             export async function loader({ request, context }) {
-              let data = JSON.stringify(context);
+              let data = context.get(orderContext).join(',');
               let isRaw = new URL(request.url).searchParams.has('raw');
               return isRaw ? new Response(data) : data;
             }
@@ -2278,17 +2366,13 @@ test.describe("Middleware", () => {
 
       (await page.$("#fetcher"))?.click();
       await page.waitForSelector("[data-fetcher]");
-      expect(await page.locator("[data-fetcher]").textContent()).toBe(
-        '{"a":true,"b":true}'
-      );
+      expect(await page.locator("[data-fetcher]").textContent()).toBe("a,b");
       expect(fetcherHeaders!["x-a"]).toBe("true");
       expect(fetcherHeaders!["x-b"]).toBe("true");
 
       (await page.$("#fetch"))?.click();
       await page.waitForSelector("[data-fetch]");
-      expect(await page.locator("[data-fetch]").textContent()).toBe(
-        '{"a":true,"b":true}'
-      );
+      expect(await page.locator("[data-fetch]").textContent()).toBe("a,b");
       expect(fetchHeaders!["x-a"]).toBe("true");
       expect(fetchHeaders!["x-b"]).toBe("true");
 

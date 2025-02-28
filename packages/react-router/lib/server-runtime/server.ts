@@ -1,5 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse, unstable_InitialContext } from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,

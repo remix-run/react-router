@@ -27,7 +27,6 @@ import type {
   LazyRouteFunction,
   TrackedPromise,
   unstable_InitialContext,
-  unstable_RouterContext,
 } from "./router/utils";
 import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
 
