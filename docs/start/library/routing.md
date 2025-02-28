@@ -162,7 +162,7 @@ You can have multiple dynamic segments in one route path:
 ```tsx filename=app/category-product.tsx
 import { useParams } from "react-router";
 
-export default function Team() {
+export default function CategoryProduct() {
   let { categoryId, productId } = useParams();
   // ...
 }
