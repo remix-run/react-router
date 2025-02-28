@@ -6,6 +6,7 @@ import type {
   DataRouter,
   HydrationState,
   unstable_InitialContext,
+  RouterInit,
 } from "react-router";
 import {
   UNSAFE_invariant as invariant,
@@ -64,7 +65,7 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   unstable_getContext,
 }: {
-  unstable_getContext?: () => unstable_InitialContext;
+  unstable_getContext?: RouterInit["unstable_getContext"];
 }): DataRouter {
   initSsrInfo();
 
@@ -221,7 +222,7 @@ interface HydratedRouterProps {
    * Context object to passed through to `createBrowserRouter` and made available
    * to `clientLoader`/`clientActon` functions
    */
-  unstable_getContext?: () => unstable_InitialContext;
+  unstable_getContext?: RouterInit["unstable_getContext"];
 }
 
 /**

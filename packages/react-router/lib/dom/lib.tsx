@@ -23,6 +23,7 @@ import type {
   HydrationState,
   RelativeRoutingType,
   Router as DataRouter,
+  RouterInit,
 } from "../router/router";
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
@@ -30,7 +31,6 @@ import type {
   FormEncType,
   HTMLFormMethod,
   UIMatch,
-  unstable_InitialContext,
 } from "../router/utils";
 import {
   ErrorResponseImpl,
@@ -135,9 +135,9 @@ export interface DOMRouterOpts {
    */
   basename?: string;
   /**
-   * Router context singleton that will be passed to loader/action functions.
+   * Function to provide the initial context values for all client side navigations/fetches
    */
-  unstable_getContext?: () => unstable_InitialContext;
+  unstable_getContext?: RouterInit["unstable_getContext"];
   /**
    * Future flags to enable for the router.
    */

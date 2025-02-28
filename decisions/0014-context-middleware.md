@@ -22,64 +22,46 @@ We've done a lot of work since then to get us to a place where we could ship a m
 
 ## Decision
 
-### Lean on existing `context` parameter for initial implementation
+### Leverage a new type-safe `context` API
 
-During our experiments we realized that we could offload type-safe context to an external package. This would result in a simpler implementation within React Router and avoid the need to try to patch on type-safety to our existing `context` API which was designed as a quick escape hatch to cross the bridge from your server (i.e., `express` `req`/`res`) to the Remix handlers.
+We originally considered leaning on our existing `context` value we pass to server-side `loader` and `action` functions, and implementing a similar client-side equivalent for parity. However, the type story around `AppLoadContext` isn't great, so that would mean implementing a new API client side that we knew we weren't happy with from day one. And then likely replacing it with a better version fairly soon after.
 
-Therefore, our recommendation for proper type-safe context for usage within middlewares and route handlers will be the [`@ryanflorence/async-provider`][async-provider] package.
-
-If you don't want to adopt an extra package, or don't care about 100% type-safety and are happy with the module augmentation approach used by `AppLoadContext`, then you can use the existing `context` parameter passed to loaders and actions.
+Instead, when the flag is enabled, we'll be removing `AppLoadContext` in favor of a type-safe `context` API that is similar in usage to the `React.createContext` API:
 
 ```ts
-declare module "react-router" {
-  interface AppLoadContext {
-    user: User | null;
-  }
-}
+let userContext = createContext<User>();
 
-// root.tsx
-function userMiddleware({ request, context }: Route.MiddlewareArgs) {
-  context.user = getUser(request);
-}
+async function userMiddleware({ context, request }) {
+  context.set(userContext, await getUser(request));
+} satisfies Route.MiddlewareFunction;
 
 export const middleware = [userMiddleware];
-n;
 
 // In some other route
 export async function loader({ context }: Route.LoaderArgs) {
-  let posts = await getPostsForUser(context.user);
+  let user = context.get(userContext);
+  let posts = await getPosts(user);
   return { posts };
 }
 ```
 
 #### Client Side Context
 
-In order to support the same API on the client, we will need to add support for a client-side `context` value which is already a [long requested feature][client-context]. We can do so just like the server and let users use module augmentation to define their context shape. This will default to an empty object like the server, and can be passed to `createBrowserRouter` in library mode or `<HydratedRouter>` in framework mode to provide up-front singleton values.
+In order to support the same API on the client, we will also add support for a client-side `context` value which is already a [long requested feature][client-context]. If you need to provide initial values (similar to `getLoadContext` on the server), you can do so with a new `getContext` method which returns a `Map<RouterContext, unknown>`:
 
 ```ts
-declare module "react-router" {
-  interface RouterContext {
-    logger(...args: unknown[]): void
-  }
+function getContext() {
+  return new Map([[loggerContext, (...args) => console.log(...args)]])
 }
 
-// Singleton fields that don't change and are always available
-let globalContext: RouterContext = { logger: getLogger() };
-
 // library mode
-let router = createBrowserRouter(routes, { context: globalContext });
+let router = createBrowserRouter(routes, { getContext })
 
 // framework mode
-return <HydratedRouter context={globalContext}>
+return <HydratedRouter getContext={getContext}>
 ```
 
-`context` on the server has the advantage of auto-cleanup since it's scoped to a request and thus automatically cleaned up after the request completes. In order to mimic this behavior on the client, we'll create a new object per navigation/fetch and spread in the properties from the global singleton context. Therefore, the context object you receive in your handlers will be:
-
-```ts
-let scopedContext = { ...globalContext };
-```
-
-This way, singleton values will always be there, but any new fields added to that object in middleware will only exist for that specific navigation or fetcher call and it will disappear once the request is complete.
+`context` on the server has the advantage of auto-cleanup since it's scoped to a request and thus automatically cleaned up after the request completes. In order to mimic this behavior on the client, we'll create a new object per navigation/fetch.
 
 ### API
 

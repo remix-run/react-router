@@ -61,6 +61,8 @@ import {
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
 
+type MaybePromise<T> = T | Promise<T>;
+
 /**
  * A Router instance manages all navigation and data loading/mutations
  */
@@ -375,7 +377,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  unstable_getContext?: () => unstable_InitialContext;
+  unstable_getContext?: () => MaybePromise<unstable_InitialContext>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -415,7 +417,7 @@ export interface StaticHandler {
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_respond?: (
         staticContext: StaticHandlerContext
-      ) => Response | Promise<Response>;
+      ) => MaybePromise<Response>;
     }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -424,7 +426,7 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (res: Response) => Response | Promise<Response>;
+      unstable_respond?: (res: Response) => MaybePromise<Response>;
     }
   ): Promise<any>;
 }
@@ -1601,7 +1603,7 @@ export function createRouter(init: RouterInit): Router {
     );
     // Create a new context per navigation
     let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext?.()
+      init.unstable_getContext ? await init.unstable_getContext() : undefined
     );
     let pendingActionResult: PendingActionResult | undefined;
 
@@ -2178,7 +2180,7 @@ export function createRouter(init: RouterInit): Router {
     let match = getTargetMatch(matches, path);
     // Create a new context per fetch
     let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext?.()
+      init.unstable_getContext ? await init.unstable_getContext() : undefined
     );
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 

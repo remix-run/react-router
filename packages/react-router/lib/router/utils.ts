@@ -130,6 +130,10 @@ export function unstable_createContext<T>(
   return { defaultValue };
 }
 
+/**
+ * A Map of RouterContext objects to their initial values - used to populate a
+ * fresh `context` value per request/navigation/fetch
+ */
 export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
 
 /**
