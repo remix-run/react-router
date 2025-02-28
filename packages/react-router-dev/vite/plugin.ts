@@ -41,6 +41,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
+import { ssrExternals } from "./ssr-externals";
 import {
   type RouteChunkName,
   type RouteChunkExportName,
@@ -59,7 +60,6 @@ import {
   type ConfigLoader,
   createConfigLoader,
   resolveEntryFiles,
-  ssrExternals,
   configRouteToBranchRoute,
 } from "../config/config";
 import * as WithProps from "./with-props";
