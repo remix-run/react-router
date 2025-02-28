@@ -156,7 +156,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 5.2.0-canary-662957cc-20250221(eslint@8.57.0)
+        version: 5.2.0-canary-d55cc79b-20250228(eslint@8.57.0)
       fs-extra:
         specifier: ^10.1.0
         version: 10.1.0
@@ -225,13 +225,13 @@ importers:
         version: 3.1.1
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-env-only:
         specifier: ^3.0.1
-        version: 3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       vite-tsconfig-paths:
         specifier: ^4.2.2
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   integration:
     dependencies:
@@ -261,7 +261,7 @@ importers:
         version: 1.14.2
       '@vanilla-extract/vite-plugin':
         specifier: ^3.9.2
-        version: 3.9.5(@types/node@20.11.30)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 3.9.5(@types/node@20.11.30)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       cheerio:
         specifier: ^1.0.0-rc.12
         version: 1.0.0
@@ -336,13 +336,13 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-env-only:
         specifier: ^3.0.1
-        version: 3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       vite-tsconfig-paths:
         specifier: ^4.2.2
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       wait-on:
         specifier: ^7.0.1
         version: 7.2.0
@@ -391,7 +391,7 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       wrangler:
         specifier: ^3.109.2
         version: 3.109.2(@cloudflare/workers-types@4.20250214.0)
@@ -479,7 +479,7 @@ importers:
         version: 1.14.2
       '@vanilla-extract/vite-plugin':
         specifier: ^3.9.2
-        version: 3.9.5(@types/node@20.11.30)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 3.9.5(@types/node@20.11.30)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -522,13 +522,13 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-env-only:
         specifier: ^3.0.1
-        version: 3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   integration/helpers/vite-plugin-cloudflare-template:
     dependencies:
@@ -553,7 +553,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^0.1.1
-        version: 0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
+        version: 0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
       '@cloudflare/workers-types':
         specifier: ^4.20250214.0
         version: 4.20250214.0
@@ -580,10 +580,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       wrangler:
         specifier: ^3.109.2
         version: 3.109.2(@cloudflare/workers-types@4.20250214.0)
@@ -656,7 +656,7 @@ importers:
         version: 1.3.3
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -693,7 +693,7 @@ importers:
         version: 6.0.1
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -733,7 +733,7 @@ importers:
         version: link:../react-router
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -751,7 +751,7 @@ importers:
         version: link:../react-router
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -847,7 +847,7 @@ importers:
         version: 0.41.0(typescript@5.4.5)
       vite-node:
         specifier: 3.0.0-beta.2
-        version: 3.0.0-beta.2(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 3.0.0-beta.2(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -899,7 +899,7 @@ importers:
         version: 16.4.5
       esbuild-register:
         specifier: ^3.6.0
-        version: 3.6.0(esbuild@0.25.0)
+        version: 3.6.0(esbuild@0.17.19)
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -920,13 +920,13 @@ importers:
         version: 1.3.3
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       wireit:
         specifier: 0.14.9
         version: 0.14.9
@@ -948,7 +948,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -985,7 +985,7 @@ importers:
         version: 6.3.4
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1004,7 +1004,7 @@ importers:
         version: link:../react-router-dev
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1035,7 +1035,7 @@ importers:
         version: link:../react-router
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1050,7 +1050,7 @@ importers:
         version: link:../react-router-dev
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1099,7 +1099,7 @@ importers:
         version: 0.5.10
       tsup:
         specifier: ^8.3.0
-        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0)
+        version: 8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0)
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1142,10 +1142,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   playground/framework-express:
     dependencies:
@@ -1203,10 +1203,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   playground/framework-spa:
     dependencies:
@@ -1240,10 +1240,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   playground/framework-vite-5:
     dependencies:
@@ -1287,15 +1287,27 @@ importers:
 
   playground/middleware:
     dependencies:
+      '@react-router/express':
+        specifier: workspace:*
+        version: link:../../packages/react-router-express
       '@react-router/node':
         specifier: workspace:*
         version: link:../../packages/react-router-node
-      '@react-router/serve':
-        specifier: workspace:*
-        version: link:../../packages/react-router-serve
+      compression:
+        specifier: ^1.7.4
+        version: 1.7.4
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      express:
+        specifier: ^4.19.2
+        version: 4.19.2
       isbot:
         specifier: ^5.1.11
         version: 5.1.11
+      morgan:
+        specifier: ^1.10.0
+        version: 1.10.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -1312,21 +1324,39 @@ importers:
       '@react-router/fs-routes':
         specifier: workspace:*
         version: link:../../packages/react-router-fs-routes
+      '@types/compression':
+        specifier: ^1.7.5
+        version: 1.7.5
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.21
+      '@types/express-serve-static-core':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/morgan':
+        specifier: ^1.9.9
+        version: 1.9.9
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.11.30
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
+      tsx:
+        specifier: ^4.19.3
+        version: 4.19.3
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
       vite:
         specifier: ^6.0.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   playground/split-route-modules:
     dependencies:
@@ -1363,10 +1393,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
   playground/split-route-modules-spa:
     dependencies:
@@ -1400,10 +1430,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
 
 packages:
 
@@ -3729,6 +3759,9 @@ packages:
   '@types/express-serve-static-core@4.17.43':
     resolution: {integrity: sha512-oaYtiBirUOPQGSWNGPWnzyAFJ0BP3cwvN4oWZQY+zUBwpVIGsKUkpBpSztp74drYcjavs7SKFZ4DX1V2QeN8rg==}
 
+  '@types/express-serve-static-core@5.0.6':
+    resolution: {integrity: sha512-3xhRnjJPkULekpSzgtoNYYcTWgEZkp4myc+Saevii5JPnHNvHMRlBSHDbs7Bh1iPPoVTERHEZXyhyLbMEsExsA==}
+
   '@types/express@4.17.21':
     resolution: {integrity: sha512-ejlPM315qwLpaQlQDTjPdsUFSc6ZsP4AN6AlWnogPjQ7CVi7PYF3YVz+CY3jE2pwYf7E/7HlDAN0rV2GxTG0HQ==}
 
@@ -5183,9 +5216,9 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@5.2.0-canary-662957cc-20250221:
-    resolution: {integrity: sha512-iSo49ZfZg6qPLM9P1aRR2IWrMFtXsTCzRRT/OGRin/8Xd/Tz+pXm/G0bT9cmA/YLV0K9SZZ9H9LEX0rz4baxIQ==}
-    engines: {node: '>=10'}
+  eslint-plugin-react-hooks@5.2.0-canary-d55cc79b-20250228:
+    resolution: {integrity: sha512-JvRvmGXpim8CrRO17j9EC/V5zZtyQ4fyZLgFaBShiRyTfTfHot1b5tI0HUtQ3yhNz4Tuetiv6Ge5zUsDhrHoag==}
+    engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
 
@@ -5499,6 +5532,9 @@ packages:
   get-symbol-description@1.0.2:
     resolution: {integrity: sha512-g0QYk1dZBxGwk+Ngc+ltRH2IBp2f7zBkBMBJZCDerh6EhlhSR6+9irMCuT/09zD6qkarHUSn529sK/yL4S27mg==}
     engines: {node: '>= 0.4'}
+
+  get-tsconfig@4.10.0:
+    resolution: {integrity: sha512-kGzZ3LWWQcGIAmg6iWvXn0ei6WDtV26wzHRMwDSzmAbcXrTEXxHy6IehI6/4eT6VRKyMP1eF1VqwrVUmE/LR7A==}
 
   get-uri@6.0.3:
     resolution: {integrity: sha512-BzUrJBS9EcUb4cFol8r4W3v1cPsSyajLSthNkz5BxbpDcHN5tIrM10E2eNvfnvBn3DaT3DUgx0OpsBKkaOpanw==}
@@ -7491,6 +7527,9 @@ packages:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
     engines: {node: '>=8'}
 
+  resolve-pkg-maps@1.0.0:
+    resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
+
   resolve.exports@2.0.2:
     resolution: {integrity: sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==}
     engines: {node: '>=10'}
@@ -8071,6 +8110,11 @@ packages:
     engines: {node: '>= 6'}
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
+
+  tsx@4.19.3:
+    resolution: {integrity: sha512-4H8vUNGNjQ4V2EOoGw005+c+dGuPSnhpPBPHBtsZdGZBk/iJb4kguGlPWaZTZ3q5nMtFOEsY0nRDlh9PJyd6SQ==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   tty-table@4.1.6:
     resolution: {integrity: sha512-kRj5CBzOrakV4VRRY5kUWbNYvo/FpOsz65DzI5op9P+cHov3+IqPbo1JE1ZnQGkHdZgNFDsrEjrfqqy/Ply9fw==}
@@ -9704,13 +9748,13 @@ snapshots:
     optionalDependencies:
       workerd: 1.20241230.0
 
-  '@cloudflare/vite-plugin@0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))':
+  '@cloudflare/vite-plugin@0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))':
     dependencies:
       '@cloudflare/unenv-preset': 1.1.1(unenv@2.0.0-rc.1)(workerd@1.20241230.0)
       '@hattip/adapter-node': 0.0.49
       miniflare: 3.20250204.1
       unenv: 2.0.0-rc.1
-      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       wrangler: 3.109.2(@cloudflare/workers-types@4.20250214.0)
       ws: 8.18.0
     transitivePeerDependencies:
@@ -10123,7 +10167,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.7
+      debug: 4.4.0
       espree: 9.6.1
       globals: 13.24.0
       ignore: 5.3.1
@@ -10173,7 +10217,7 @@ snapshots:
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.3.7
+      debug: 4.4.0
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -10544,7 +10588,7 @@ snapshots:
       '@open-draft/until': 1.0.3
       '@types/debug': 4.1.12
       '@xmldom/xmldom': 0.8.10
-      debug: 4.3.7
+      debug: 4.4.0
       headers-polyfill: 3.2.5
       outvariant: 1.4.3
       strict-event-emitter: 0.2.8
@@ -11046,6 +11090,13 @@ snapshots:
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
 
+  '@types/express-serve-static-core@5.0.6':
+    dependencies:
+      '@types/node': 20.11.30
+      '@types/qs': 6.9.14
+      '@types/range-parser': 1.2.7
+      '@types/send': 0.17.4
+
   '@types/express@4.17.21':
     dependencies:
       '@types/body-parser': 1.19.5
@@ -11505,13 +11556,13 @@ snapshots:
       - terser
       - ts-node
 
-  '@vanilla-extract/vite-plugin@3.9.5(@types/node@20.11.30)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))':
+  '@vanilla-extract/vite-plugin@3.9.5(@types/node@20.11.30)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))':
     dependencies:
       '@vanilla-extract/integration': 6.5.0(@types/node@20.11.30)(terser@5.15.0)
       outdent: 0.8.0
       postcss: 8.4.49
       postcss-load-config: 4.0.2(postcss@8.4.49)
-      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -11575,7 +11626,7 @@ snapshots:
 
   agent-base@7.1.1:
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -12628,6 +12679,13 @@ snapshots:
       is-date-object: 1.0.5
       is-symbol: 1.0.4
 
+  esbuild-register@3.6.0(esbuild@0.17.19):
+    dependencies:
+      debug: 4.4.0
+      esbuild: 0.17.19
+    transitivePeerDependencies:
+      - supports-color
+
   esbuild-register@3.6.0(esbuild@0.25.0):
     dependencies:
       debug: 4.4.0
@@ -12952,7 +13010,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@5.2.0-canary-662957cc-20250221(eslint@8.57.0):
+  eslint-plugin-react-hooks@5.2.0-canary-d55cc79b-20250228(eslint@8.57.0):
     dependencies:
       eslint: 8.57.0
 
@@ -13368,6 +13426,10 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.2.4
 
+  get-tsconfig@4.10.0:
+    dependencies:
+      resolve-pkg-maps: 1.0.0
+
   get-uri@6.0.3:
     dependencies:
       basic-ftp: 5.0.5
@@ -13607,7 +13669,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -13621,7 +13683,7 @@ snapshots:
   https-proxy-agent@7.0.5:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -15516,7 +15578,7 @@ snapshots:
     dependencies:
       '@tootallnate/quickjs-emscripten': 0.23.0
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
       get-uri: 6.0.3
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.5
@@ -15683,12 +15745,13 @@ snapshots:
     optionalDependencies:
       postcss: 8.4.49
 
-  postcss-load-config@6.0.1(jiti@1.21.0)(postcss@8.5.3)(yaml@2.6.0):
+  postcss-load-config@6.0.1(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(yaml@2.6.0):
     dependencies:
       lilconfig: 3.1.1
     optionalDependencies:
       jiti: 1.21.0
       postcss: 8.5.3
+      tsx: 4.19.3
       yaml: 2.6.0
 
   postcss-nested@6.0.1(postcss@8.4.49):
@@ -16048,6 +16111,8 @@ snapshots:
 
   resolve-from@5.0.0: {}
 
+  resolve-pkg-maps@1.0.0: {}
+
   resolve.exports@2.0.2: {}
 
   resolve@1.22.8:
@@ -16355,7 +16420,7 @@ snapshots:
   socks-proxy-agent@8.0.4:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
       socks: 2.8.3
     transitivePeerDependencies:
       - supports-color
@@ -16563,7 +16628,7 @@ snapshots:
     dependencies:
       component-emitter: 1.3.0
       cookiejar: 2.1.4
-      debug: 4.3.7
+      debug: 4.4.0
       fast-safe-stringify: 2.1.1
       form-data: 4.0.0
       formidable: 2.1.2
@@ -16743,7 +16808,7 @@ snapshots:
 
   tsscmp@1.0.6: {}
 
-  tsup@8.3.0(jiti@1.21.0)(postcss@8.5.3)(typescript@5.4.5)(yaml@2.6.0):
+  tsup@8.3.0(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.6.0):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.1)
       cac: 6.7.14
@@ -16754,7 +16819,7 @@ snapshots:
       execa: 5.1.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.5.3)(yaml@2.6.0)
+      postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.3)(yaml@2.6.0)
       resolve-from: 5.0.0
       rollup: 4.24.0
       source-map: 0.8.0-beta.0
@@ -16774,6 +16839,13 @@ snapshots:
     dependencies:
       tslib: 1.14.1
       typescript: 5.4.5
+
+  tsx@4.19.3:
+    dependencies:
+      esbuild: 0.25.0
+      get-tsconfig: 4.10.0
+    optionalDependencies:
+      fsevents: 2.3.3
 
   tty-table@4.1.6:
     dependencies:
@@ -17091,7 +17163,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-env-only@3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)):
+  vite-env-only@3.0.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)):
     dependencies:
       '@babel/core': 7.24.3
       '@babel/generator': 7.24.1
@@ -17100,7 +17172,7 @@ snapshots:
       '@babel/types': 7.24.0
       babel-dead-code-elimination: 1.0.6
       micromatch: 4.0.5
-      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -17121,13 +17193,13 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@3.0.0-beta.2(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0):
+  vite-node@3.0.0-beta.2(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.0
       es-module-lexer: 1.5.4
       pathe: 1.1.2
-      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -17153,13 +17225,13 @@ snapshots:
       - supports-color
       - typescript
 
-  vite-tsconfig-paths@4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)):
+  vite-tsconfig-paths@4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)):
     dependencies:
       debug: 4.3.7
       globrex: 0.1.2
       tsconfck: 3.0.3(typescript@5.4.5)
     optionalDependencies:
-      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -17174,7 +17246,7 @@ snapshots:
       fsevents: 2.3.3
       terser: 5.15.0
 
-  vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0):
+  vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0):
     dependencies:
       esbuild: 0.24.2
       postcss: 8.5.3
@@ -17183,6 +17255,7 @@ snapshots:
       '@types/node': 20.11.30
       fsevents: 2.3.3
       jiti: 1.21.0
+      tsx: 4.19.3
       yaml: 2.6.0
 
   w3c-xmlserializer@4.0.0:

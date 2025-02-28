@@ -1,6 +1,6 @@
 import { Outlet, unstable_createContext } from "react-router";
 import type { Route } from "./+types/server.a";
-import { aContext, rootContext } from "~/contexts";
+import { aContext, expressContext, rootContext } from "~/contexts";
 
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
   async ({ context }, next) => {
@@ -14,6 +14,7 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
 
 export function loader({ context }: Route.LoaderArgs) {
   return JSON.stringify({
+    express: context.get(expressContext),
     root: context.get(rootContext),
     a: context.get(aContext),
   });

@@ -1,6 +1,6 @@
 import { Outlet, unstable_createContext } from "react-router";
 import type { Route } from "./+types/server.a.b";
-import { aContext, bContext, rootContext } from "~/contexts";
+import { aContext, bContext, expressContext, rootContext } from "~/contexts";
 
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
   async ({ context }, next) => {
@@ -15,6 +15,7 @@ export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
 export async function loader({ context }: Route.LoaderArgs) {
   await new Promise((r) => setTimeout(r, 200));
   return JSON.stringify({
+    express: context.get(expressContext),
     root: context.get(rootContext),
     a: context.get(aContext),
     b: context.get(bContext),

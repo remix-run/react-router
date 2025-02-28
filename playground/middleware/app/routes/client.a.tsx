@@ -1,4 +1,4 @@
-import { Outlet, unstable_createContext } from "react-router";
+import { Outlet } from "react-router";
 import type { Route } from "./+types/client.a";
 import { aContext, rootContext } from "~/contexts";
 
@@ -12,7 +12,7 @@ export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[
     },
   ];
 
-export function clientLoader({ context }: Route.LoaderArgs) {
+export function clientLoader({ context }: Route.ClientLoaderArgs) {
   return JSON.stringify({
     root: context.get(rootContext),
     a: context.get(aContext),

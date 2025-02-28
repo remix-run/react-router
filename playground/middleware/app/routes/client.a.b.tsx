@@ -12,7 +12,7 @@ export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[
     },
   ];
 
-export async function clientLoader({ context }: Route.LoaderArgs) {
+export async function clientLoader({ context }: Route.ClientLoaderArgs) {
   await new Promise((r) => setTimeout(r, 200));
   return JSON.stringify({
     root: context.get(rootContext),
