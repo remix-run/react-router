@@ -396,6 +396,10 @@ In order to use your build-time loader data during pre-rendering, we now also ex
 
 ### Unstable Changes
 
+> [!WARNING]
+>
+> [Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use
+
 - `react-router` - Add `unstable_SerializesTo` brand type for library authors to register types serializable by React Router's streaming format (`turbo-stream`) ([#12264](https://github.com/remix-run/react-router/pull/12264))
 - `@react-router/dev` - Add unstable support for splitting route modules in framework mode via `future.unstable_splitRouteModules` ([#11871](https://github.com/remix-run/react-router/pull/11871))
 - `@react-router/dev` - Add `future.unstable_viteEnvironmentApi` flag to enable experimental Vite Environment API support ([#12936](https://github.com/remix-run/react-router/pull/12936))
