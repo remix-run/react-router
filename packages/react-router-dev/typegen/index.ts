@@ -117,6 +117,7 @@ function register(ctx: Context) {
         .map((route) => {
           // filter out pathless (layout) routes
           if (route.id !== "root" && !route.path) return undefined;
+
           // filter out layout routes that have a corresponding index
           if (!route.index && indexPaths.has(route.path)) return undefined;
 
