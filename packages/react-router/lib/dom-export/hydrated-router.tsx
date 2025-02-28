@@ -5,7 +5,6 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   DataRouter,
   HydrationState,
-  unstable_InitialContext,
   RouterInit,
 } from "react-router";
 import {

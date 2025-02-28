@@ -20,7 +20,6 @@ import type {
   Router as DataRouter,
   RouterState,
   RouterSubscriber,
-  Router,
   RouterInit,
 } from "./router/router";
 import { createRouter } from "./router/router";
@@ -28,7 +27,6 @@ import type {
   DataStrategyFunction,
   LazyRouteFunction,
   TrackedPromise,
-  unstable_InitialContext,
 } from "./router/utils";
 import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
 
