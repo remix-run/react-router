@@ -269,6 +269,11 @@ Date: YYYY-MM-DD
 
 ### Patch Changes
 
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+
 ### Changes by Package
 
 - [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.X.Y/packages/create-react-router/CHANGELOG.md#7XY)
