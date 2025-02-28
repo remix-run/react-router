@@ -48,7 +48,10 @@ const routes = [
 Here's a simple example of a client-side logging middleware that can be placed on the root route:
 
 ```tsx
-async function clientLogger({ request }, next) {
+const clientLogger: Route.unstable_ClientMiddlewareFunction = async (
+  { request },
+  next
+) => {
   let start = performance.now();
 
   // Run the remaining middlewares and all route loaders
@@ -56,7 +59,7 @@ async function clientLogger({ request }, next) {
 
   let duration = performance.now() - start;
   console.log(`Navigated to ${request.url} (${duration}ms)`);
-} satisfies Route.ClientMiddlewareFunction;
+};
 ```
 
 Note that in the above example, the `next`/`middleware` functions don't return anything. This is by design as on the client there is no "response" to send over the network like there would be for middlewares running on the server. The data is all handled behind the scenes by the stateful `router`.
@@ -64,7 +67,10 @@ Note that in the above example, the `next`/`middleware` functions don't return a
 For a server-side middleware, the `next` function will return the HTTP `Response` that React Router will be sending across the wire, thus giving you a chance to make changes as needed. You may throw a new response to short circuit and respond immediately, or you may return a new or altered response to override the default returned by `next()`.
 
 ```tsx
-async function serverLogger({ request, params, context }, next) {
+const serverLogger: Route.unstable_MiddlewareFunction = async (
+  { request, params, context },
+  next
+) => {
   let start = performance.now();
 
   // 👇 Grab the response here
@@ -75,21 +81,24 @@ async function serverLogger({ request, params, context }, next) {
 
   // 👇 And return it here
   return res;
-} satisfies Route.MiddlewareFunction;
+};
 ```
 
 You can throw a `redirect` from a middleware to short circuit any remaining processing:
 
 ```tsx
 import { sessionContext } from "../context";
-function serverAuth({ request, params, context }, next) {
+const serverAuth: Route.unstable_MiddlewareFunction = (
+  { request, params, context },
+  next
+) => {
   let session = context.get(sessionContext);
   let user = session.get("user");
   if (!user) {
     session.set("returnTo", request.url);
     throw redirect("/login", 302);
   }
-} satisfies Route.MiddlewareFunction;
+};
 ```
 
 _Note that in cases like this where you don't need to do any post-processing you don't need to call the `next` function or return a `Response`._
@@ -97,7 +106,10 @@ _Note that in cases like this where you don't need to do any post-processing you
 Here's another example of using a server middleware to detect 404s and check the CMS for a redirect:
 
 ```tsx
-async function redirects({ request, next }: Route.MiddlewareArgs) {
+const redirects: Route.unstable_MiddlewareFunction = async ({
+  request,
+  next,
+}) => {
   // attempt to handle the request
   let res = await next();
 
@@ -111,7 +123,7 @@ async function redirects({ request, next }: Route.MiddlewareArgs) {
   }
 
   return res;
-}
+};
 ```
 
 **`context` parameter**
@@ -126,22 +138,28 @@ import { getSession } from "./sessions.server";
 
 let sessionContext = unstable_createContext<Session>();
 
-export function sessionMiddleware({ context, request }) {
+const sessionMiddleware: Route.unstable_MiddlewareFunction = ({
+  context,
+  request,
+}) => {
   let session = await getSession(request);
   context.set(sessionContext, session);
-} satisfies Route.MiddlewareFunction;
+};
 
 // ... then in some downstream middleware
-export function loggerMiddleware({ context, request }) {
+const loggerMiddleware: Route.unstable_MiddlewareFunction = ({
+  context,
+  request,
+}) => {
   let session = context.get(sessionContext);
   // ^ typeof Session
   console.log(session.get("userId"), request.method, request.url);
-} satisfies Route.MiddlewareFunction;
+};
 
 // ... or some downstream loader
 export function loader({ context }: Route.LoaderArgs) {
   let session = context.get(sessionContext);
-  let profile = await getProfile(session.get('userId'));
+  let profile = await getProfile(session.get("userId"));
   return { profile };
 }
 ```

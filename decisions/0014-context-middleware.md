@@ -31,9 +31,12 @@ Instead, when the flag is enabled, we'll be removing `AppLoadContext` in favor o
 ```ts
 let userContext = createContext<User>();
 
-async function userMiddleware({ context, request }) {
+const userMiddleware: Route.unstable_MiddlewareFunction = async ({
+  context,
+  request,
+}) => {
   context.set(userContext, await getUser(request));
-} satisfies Route.MiddlewareFunction;
+};
 
 export const middleware = [userMiddleware];
 
@@ -74,7 +77,10 @@ We wanted our middleware API to meet a handful of criteria:
 The middleware API we landed on to ship looks as follows:
 
 ```ts
-async function myMiddleware({ request, context }, next) {
+const myMiddleware: Route.unstable_MiddlewareFunction = async (
+  { request, context },
+  next
+) => {
   // Do stuff before the handlers are called
   context.user = await getUser(request);
   // Call handlers and generate the Response
@@ -83,7 +89,7 @@ async function myMiddleware({ request, context }, next) {
   res.headers.set("X-Whatever", "stuff");
   // Propagate the response up the middleware chain
   return res;
-} satisfies Route.MiddlewareFunction;
+};
 
 // Export an array of middlewares per-route which will run left-to-right on
 // the server
@@ -91,9 +97,12 @@ export const middleware = [myMiddleware];
 
 // You can also export an array of client middlewares that run before/after
 // `clientLoader`/`clientAction`
-async function myClientMiddleware({ context }, next) {
+const myClientMiddleware: Route.unstable_ClientMiddlewareFunction = (
+  { context },
+  next
+) => {
   //...
-} satisfies Route.ClientMiddlewareFunction;
+};
 
 export const clientMiddleware = [myClientSideMiddleware];
 ```
@@ -101,10 +110,13 @@ export const clientMiddleware = [myClientSideMiddleware];
 If you only want to perform logic _before_ the request, you can skip calling the `next` function and it'll be called and the response propagated upwards for you automatically:
 
 ```ts
-async function myMiddleware({ request, context }) {
+const myMiddleware: Route.unstable_MiddlewareFunction = async ({
+  request,
+  context,
+}) => {
   context.user = await getUser(request);
   // Look ma, no next!
-} satisfies Route.MiddlewareFunction;
+};
 ```
 
 The only nuance between server and client middleware is that on the server, we want to propagate a `Response` back up the middleware chain, so `next` must call the handlers _and_ generate the final response. In document requests, this will be the rendered HTML document, and in data requests this will be the `turbo-stream` `Response`.
