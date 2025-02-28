@@ -103,6 +103,12 @@ function register(ctx: Context) {
 
   const { t } = Babel;
 
+  const indexPaths = new Set(
+    Object.values(ctx.config.routes)
+      .filter((route) => route.index)
+      .map((route) => route.path)
+  );
+
   const typeParams = t.tsTypeAliasDeclaration(
     t.identifier("Params"),
     null,
@@ -111,6 +117,9 @@ function register(ctx: Context) {
         .map((route) => {
           // filter out pathless (layout) routes
           if (route.id !== "root" && !route.path) return undefined;
+
+          // filter out layout routes that have a corresponding index
+          if (!route.index && indexPaths.has(route.path)) return undefined;
 
           const lineage = Route.lineage(ctx.config.routes, route);
           const fullpath = Route.fullpath(lineage);
