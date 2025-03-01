@@ -163,3 +163,15 @@ export function loader({ context }: Route.LoaderArgs) {
   return { profile };
 }
 ```
+
+If you are using a custom server with a `getLoadContext` function, the return value for initial context values passed from the server adapter layere is no longer an object and should now be a `Map<RouterContext, unknown>`:
+
+```ts
+let adapterContext = unstable_createContext<MyAdapterContext>();
+
+function getLoadContext(req, res) {
+  let map = new Map();
+  map.set(adapterContext, getAdapterContext(req));
+  return map;
+}
+```
