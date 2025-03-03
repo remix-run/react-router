@@ -22,7 +22,6 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
-import { isReactRouterRepo } from "./is-react-router-repo";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -552,10 +551,6 @@ export async function createConfigLoader({
   let viteNodeContext = await ViteNode.createContext({
     root,
     mode: watch ? "development" : "production",
-    server: !watch ? { watch: null } : {},
-    ssr: {
-      external: ssrExternals,
-    },
   });
 
   let reactRouterConfigFile = findEntry(root, "react-router.config", {
@@ -737,22 +732,6 @@ export async function resolveEntryFiles({
 
   return { entryClientFilePath, entryServerFilePath };
 }
-
-export const ssrExternals = isReactRouterRepo()
-  ? [
-      // This is only needed within this repo because these packages
-      // are linked to a directory outside of node_modules so Vite
-      // treats them as internal code by default.
-      "react-router",
-      "react-router-dom",
-      "@react-router/architect",
-      "@react-router/cloudflare",
-      "@react-router/dev",
-      "@react-router/express",
-      "@react-router/node",
-      "@react-router/serve",
-    ]
-  : undefined;
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 
