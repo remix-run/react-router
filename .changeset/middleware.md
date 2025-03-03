@@ -23,7 +23,7 @@ export default {
 } satisfies Config;
 ```
 
-⚠️ Middleware is unstable and should not be adopted in production. There is at least one known de-optimization in route module loading for `clientMiddlware` usage that will very likely slow down your application navigations. We will be addressing this before a stable release.
+⚠️ Middleware is unstable and should not be adopted in production. There is at least one known de-optimization in route module loading for `clientMiddleware` that we will be addressing this before a stable release.
 
 ⚠️ Enabling middleware contains a breaking change to the `context` parameter passed to your `loader`/`action` functions - see below for more information.
 
@@ -31,13 +31,14 @@ Once enabled, routes can define an array of middleware functions that will run s
 
 ```tsx
 // Framework mode
-export const unstable_middleware = [serverLogger, serverAuth];
-export const unstable_clientMiddleware = [clientLogger];
+export const unstable_middleware = [serverLogger, serverAuth]; // server
+export const unstable_clientMiddleware = [clientLogger]; // client
 
 // Library mode
 const routes = [
   {
     path: "/",
+    // Middlewares are client-side for library mode SPA's
     unstable_middleware: [clientLogger, clientAuth],
     loader: rootLoader,
     Component: Root,
@@ -79,7 +80,7 @@ const serverLogger: Route.unstable_MiddlewareFunction = async (
   let duration = performance.now() - start;
   console.log(`Navigated to ${request.url} (${duration}ms)`);
 
-  // 👇 And return it here
+  // 👇 And return it here (optional if you don't modify the response)
   return res;
 };
 ```
@@ -144,6 +145,7 @@ const sessionMiddleware: Route.unstable_MiddlewareFunction = ({
 }) => {
   let session = await getSession(request);
   context.set(sessionContext, session);
+  //                          ^ must be of type Session
 };
 
 // ... then in some downstream middleware
@@ -152,7 +154,7 @@ const loggerMiddleware: Route.unstable_MiddlewareFunction = ({
   request,
 }) => {
   let session = context.get(sessionContext);
-  // ^ typeof Session
+  //  ^ typeof Session
   console.log(session.get("userId"), request.method, request.url);
 };
 

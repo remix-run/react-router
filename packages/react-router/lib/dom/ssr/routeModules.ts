@@ -8,7 +8,6 @@ import type {
   unstable_MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
-  unstable_RouterContextProvider,
 } from "../../router/utils";
 
 import type { EntryRoute } from "./routes";
@@ -26,10 +25,7 @@ export interface RouteModules {
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  unstable_clientMiddleware?: unstable_MiddlewareFunction<
-    unstable_RouterContextProvider,
-    undefined
-  >[];
+  unstable_clientMiddleware?: unstable_MiddlewareFunction<undefined>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -47,10 +43,7 @@ export interface ServerRouteModule extends RouteModule {
   action?: ActionFunction;
   headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
-  unstable_middleware?: unstable_MiddlewareFunction<
-    unstable_RouterContextProvider,
-    Response
-  >[];
+  unstable_middleware?: unstable_MiddlewareFunction<Response>[];
 }
 
 /**

@@ -4,7 +4,6 @@ import type {
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
   unstable_MiddlewareFunction,
-  unstable_RouterContextProvider,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
@@ -74,11 +73,9 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
-      unstable_middleware: route.module
-        .unstable_middleware as unknown as unstable_MiddlewareFunction<
-        unstable_RouterContextProvider,
-        unknown
-      >[],
+      unstable_middleware: route.module.unstable_middleware as unknown as
+        | unstable_MiddlewareFunction[]
+        | undefined,
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix
       loader: route.module.loader

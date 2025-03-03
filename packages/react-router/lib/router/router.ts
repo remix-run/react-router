@@ -5006,10 +5006,7 @@ export async function runMiddlewarePipeline(
           m.route.unstable_middleware
             ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
             : []
-        ) as [
-        string,
-        unstable_MiddlewareFunction<unstable_RouterContextProvider, unknown>
-      ][],
+        ) as [string, unstable_MiddlewareFunction][],
       0,
       { request, params, context },
       middlewareState,
@@ -5041,10 +5038,7 @@ export class MiddlewareError {
 }
 
 async function callRouteMiddleware(
-  middlewares: [
-    string,
-    unstable_MiddlewareFunction<unstable_RouterContextProvider, unknown>
-  ][],
+  middlewares: [string, unstable_MiddlewareFunction][],
   idx: number,
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>

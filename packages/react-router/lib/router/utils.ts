@@ -215,8 +215,8 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  * a `next` function as the second parameter which will call downstream handlers
  * and then complete middlewares from the bottom-up
  */
-export type unstable_MiddlewareFunction<Context = any, Result = unknown> = (
-  args: DataFunctionArgs<Context>,
+export type unstable_MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<unstable_RouterContextProvider>,
   next: unstable_MiddlewareNextFunction<Result>
 ) => Result | Promise<Result>;
 
