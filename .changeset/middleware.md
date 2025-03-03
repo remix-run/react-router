@@ -128,7 +128,7 @@ const redirects: Route.unstable_MiddlewareFunction = async ({
 
 **`context` parameter**
 
-When middleware is enabled, your application wil use a different type of `context` parameter in your loaders and actions to provide better type safety. `context` will now be an instance of `ContextProvider` that you use with type-safe contexts (similar to `React.createContext`):
+When middleware is enabled, your application will use a different type of `context` parameter in your loaders and actions to provide better type safety. Instead of `AppLoadContext`, `context` will now be an instance of `ContextProvider` that you can use with type-safe contexts (similar to `React.createContext`):
 
 ```ts
 import { unstable_createContext } from "react-router";
@@ -164,12 +164,12 @@ export function loader({ context }: Route.LoaderArgs) {
 }
 ```
 
-If you are using a custom server with a `getLoadContext` function, the return value for initial context values passed from the server adapter layere is no longer an object and should now be a `Map<RouterContext, unknown>`:
+If you are using a custom server with a `getLoadContext` function, the return value for initial context values passed from the server adapter layer is no longer an object and should now return an `unstable_InitialContext` (`Map<RouterContext, unknown>`):
 
 ```ts
 let adapterContext = unstable_createContext<MyAdapterContext>();
 
-function getLoadContext(req, res) {
+function getLoadContext(req, res): unstable_InitialContext {
   let map = new Map();
   map.set(adapterContext, getAdapterContext(req));
   return map;

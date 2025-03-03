@@ -6,6 +6,7 @@ import {
   isRedirectStatusCode,
   isResponse,
 } from "../router/router";
+import type { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
@@ -51,7 +52,7 @@ export async function singleFetchAction(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void
 ): Promise<Response> {
   try {
@@ -151,7 +152,7 @@ export async function singleFetchLoaders(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void
 ): Promise<Response> {
   try {

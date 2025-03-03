@@ -87,15 +87,14 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
 
-  return async function requestHandler(request, _loadContext) {
+  return async function requestHandler(request, initialContext) {
     _build = typeof build === "function" ? await build() : build;
 
-    let loadContext: AppLoadContext = _build.future.unstable_middleware
-      ? // @ts-expect-error This type changes when middleware is enabled
-        (new unstable_RouterContextProvider(
-          _loadContext as unknown as unstable_InitialContext
-        ) as AppLoadContext)
-      : _loadContext || {};
+    let loadContext = _build.future.unstable_middleware
+      ? new unstable_RouterContextProvider(
+          initialContext as unknown as unstable_InitialContext
+        )
+      : initialContext || {};
 
     if (typeof build === "function") {
       let derived = derive(_build, mode);
@@ -348,7 +347,7 @@ async function handleSingleFetchRequest(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void
 ): Promise<Response> {
   let response =
@@ -380,7 +379,7 @@ async function handleDocumentRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void,
   criticalCss?: CriticalCss
 ) {
@@ -464,7 +463,9 @@ async function handleDocumentRequest(
         context.statusCode,
         headers,
         entryContext,
-        loadContext
+        loadContext as MiddlewareEnabled extends true
+          ? unstable_RouterContextProvider
+          : AppLoadContext
       );
     } catch (error: unknown) {
       handleError(error);
@@ -531,7 +532,9 @@ async function handleDocumentRequest(
           context.statusCode,
           headers,
           entryContext,
-          loadContext
+          loadContext as MiddlewareEnabled extends true
+            ? unstable_RouterContextProvider
+            : AppLoadContext
         );
       } catch (error: any) {
         handleError(error);
@@ -547,7 +550,7 @@ async function handleResourceRequest(
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void
 ) {
   try {
