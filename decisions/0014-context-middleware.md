@@ -26,10 +26,10 @@ We've done a lot of work since then to get us to a place where we could ship a m
 
 We originally considered leaning on our existing `context` value we pass to server-side `loader` and `action` functions, and implementing a similar client-side equivalent for parity. However, the type story around `AppLoadContext` isn't great, so that would mean implementing a new API client side that we knew we weren't happy with from day one. And then likely replacing it with a better version fairly soon after.
 
-Instead, when the flag is enabled, we'll be removing `AppLoadContext` in favor of a type-safe `context` API that is similar in usage to the `React.createContext` API:
+Instead, when the flag is enabled, we'll be replacing `AppLoadContext` with a new type-safe `context` API that is similar in usage to the `React.createContext` API:
 
 ```ts
-let userContext = createContext<User>();
+let userContext = unstable_createContext<User>();
 
 const userMiddleware: Route.unstable_MiddlewareFunction = async ({
   context,
@@ -58,10 +58,10 @@ function getContext() {
 }
 
 // library mode
-let router = createBrowserRouter(routes, { getContext })
+let router = createBrowserRouter(routes, { unstable_getContext: getContext })
 
 // framework mode
-return <HydratedRouter getContext={getContext}>
+return <HydratedRouter unstable_getContext={getContext}>
 ```
 
 `context` on the server has the advantage of auto-cleanup since it's scoped to a request and thus automatically cleaned up after the request completes. In order to mimic this behavior on the client, we'll create a new object per navigation/fetch.
@@ -141,13 +141,13 @@ async function dataStrategy({ request, matches, defaultMiddleware }) {
 One consequence of implementing middleware as part of `dataStrategy` is that on client-side submission requests it will run once for the action and again for the loaders. We went back and forth on this a bit and decided this was the right approach because it mimics the current behavior of SPA navigations in a full-stack React Router app since actions and revalidations are separate HTTP requests and thus run the middleware chains independently. We don't expect this to be an issue except in expensive middlewares - and in those cases the context will be shared between the action/loader chains and the second execution can be skipped if necessary:
 
 ```ts
-async function expensiveMiddleware({
+const expensiveMiddleware: Route.unstable_ClientMiddleware = async function ({
   request,
   context,
-}: Route.ClientMiddlewareArgs) {
+}) {
   // Guard this such that we use the existing value if it exists from the action pass
   context.something = context.something ?? (await getExpensiveValue());
-}
+};
 ```
 
 **Note:** This will make more sense after reading the next section, but it's worth noting that client middlewares _have_ to be run as part of `dataStrategy` to avoid running middlewares for loaders which have opted out of revalidation. The `shouldRevalidate` function decodes which loaders to run and does so using the `actionResult` as an input. so it's impossible to decide which loaders will be _prior_ to running the action. So we need to run middleware once for the action and again for the chosen loaders.
