@@ -407,6 +407,182 @@ In order to use your build-time loader data during pre-rendering, we now also ex
 - `@react-router/dev` - Add unstable support for splitting route modules in framework mode via `future.unstable_splitRouteModules` ([#11871](https://github.com/remix-run/react-router/pull/11871))
 - `@react-router/dev` - Add `future.unstable_viteEnvironmentApi` flag to enable experimental Vite Environment API support ([#12936](https://github.com/remix-run/react-router/pull/12936))
 
+#### Split Route Modules (unstable)
+
+> ⚠️ This feature is currently [unstable](https://reactrouter.com/community/api-development-strategy#unstable-flags), enabled by the `future.unstable_splitRouteModules` flag. We’d love any interested users to play with it locally and provide feedback, but we do not recommend using it in production yet.
+>
+> If you do choose to adopt this flag in production, please ensure you do sufficient testing against your production build to ensure that the optimization is working as expected.
+
+One of the conveniences of the [Route Module API](https://reactrouter.com/start/framework/route-module) is that everything a route needs is in a single file. Unfortunately this comes with a performance cost in some cases when using the `clientLoader`, `clientAction`, and `HydrateFallback` APIs.
+
+As a basic example, consider this route module:
+
+```tsx filename=routes/example.tsx
+import { MassiveComponent } from "~/components";
+
+export async function clientLoader() {
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+
+export default function Component({ loaderData }) {
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+In this example we have a minimal `clientLoader` export that makes a basic fetch call, whereas the default component export is much larger. This is a problem for performance because it means that if we want to navigate to this route client-side, the entire route module must be downloaded before the client loader can start running.
+
+To visualize this as a timeline:
+
+<docs-info>In the following timeline diagrams, different characters are used within the Route Module bars to denote the different Route Module APIs being exported.</docs-info>
+
+```
+Get Route Module:  |--=======|
+Run clientLoader:            |-----|
+Render:                            |-|
+```
+
+Instead, we want to optimize this to the following:
+
+```
+Get clientLoader:  |--|
+Get Component:     |=======|
+Run clientLoader:     |-----|
+Render:                     |-|
+```
+
+To achieve this optimization, React Router will split the route module into multiple smaller modules during the production build process. In this case, we'll end up with two separate [virtual modules](https://vite.dev/guide/api-plugin#virtual-modules-convention) — one for the client loader and one for the component and its dependencies.
+
+```tsx filename=routes/example.tsx?route-chunk=clientLoader
+export async function clientLoader() {
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+```
+
+```tsx filename=routes/example.tsx?route-chunk=main
+import { MassiveComponent } from "~/components";
+
+export default function Component({ loaderData }) {
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+> 💡 This optimization is automatically applied in framework mode, but you can also implement it in library mode via `route.lazy` and authoring your route in multiple files as covered in our blog post on [lazy loading route modules.](https://remix.run/blog/lazy-loading-routes#advanced-usage-and-optimizations)
+
+Now that these are available as separate modules, the client loader and the component can be downloaded in parallel. This means that the client loader can be executed as soon as it's ready without having to wait for the component.
+
+This optimization is even more pronounced when more Route Module APIs are used. For example, when using `clientLoader`, `clientAction` and `HydrateFallback`, the timeline for a single route module during a client-side navigation might look like this:
+
+```
+Get Route Module:     |--~~++++=======|
+Run clientLoader:                     |-----|
+Render:                                     |-|
+```
+
+This would instead be optimized to the following:
+
+```
+Get clientLoader:     |--|
+Get clientAction:     |~~|
+Get HydrateFallback:  SKIPPED
+Get Component:        |=======|
+Run clientLoader:        |-----|
+Render:                        |-|
+```
+
+Note that this optimization only works when the Route Module APIs being split don't share code within the same file. For example, the following route module can't be split:
+
+```tsx filename=routes/example.tsx
+import { MassiveComponent } from "~/components";
+
+const shared = () => console.log("hello");
+
+export async function clientLoader() {
+  shared();
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+
+export default function Component({ loaderData }) {
+  shared();
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+This route will still work, but since both the client loader and the component depend on the `shared` function defined within the same file, it will be de-optimized into a single route module.
+
+To avoid this, you can extract any code shared between exports into a separate file. For example:
+
+```tsx filename=routes/example/shared.tsx
+export const shared = () => console.log("hello");
+```
+
+You can then import this shared code in your route module without triggering the de-optimization:
+
+```tsx filename=routes/example/route.tsx
+import { MassiveComponent } from "~/components";
+import { shared } from "./shared";
+
+export async function clientLoader() {
+  shared();
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+
+export default function Component({ loaderData }) {
+  shared();
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+Since the shared code is in its own module, React Router is now able to split this route module into two separate virtual modules:
+
+```tsx filename=routes/example/route.tsx?route-chunk=clientLoader
+import { shared } from "./shared";
+
+export async function clientLoader() {
+  shared();
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+```
+
+```tsx filename=routes/example/route.tsx?route-chunk=main
+import { MassiveComponent } from "~/components";
+import { shared } from "./shared";
+
+export default function Component({ loaderData }) {
+  shared();
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+If your project is particularly performance sensitive, you can set the `unstable_splitRouteModules` future flag to `"enforce"`:
+
+```tsx filename=react-router-config.ts
+export default {
+  future: {
+    unstable_splitRouteModules: "enforce",
+  },
+};
+```
+
+This setting will raise an error if any route modules can't be split:
+
+```
+Error splitting route module: routes/example/route.tsx
+
+- clientLoader
+
+This export could not be split into its own chunk because it shares code with other exports. You should extract any shared code into its own module and then import it within the route module.
+```
+
 ### Changes by Package
 
 - [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.2.0/packages/create-react-router/CHANGELOG.md#720)
