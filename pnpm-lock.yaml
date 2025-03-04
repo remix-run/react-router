@@ -1341,6 +1341,64 @@ importers:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
 
+  playground/vite-plugin-cloudflare:
+    dependencies:
+      express:
+        specifier: ^4.19.2
+        version: 4.19.2
+      isbot:
+        specifier: ^5.1.11
+        version: 5.1.11
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      react-router:
+        specifier: workspace:*
+        version: link:../../packages/react-router
+      serialize-javascript:
+        specifier: ^6.0.1
+        version: 6.0.2
+    devDependencies:
+      '@cloudflare/vite-plugin':
+        specifier: ^0.1.1
+        version: 0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
+      '@cloudflare/workers-types':
+        specifier: ^4.20250214.0
+        version: 4.20250214.0
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../../packages/react-router-dev
+      '@react-router/fs-routes':
+        specifier: workspace:*
+        version: link:../../packages/react-router-fs-routes
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.11.30
+      '@types/react':
+        specifier: ^18.2.18
+        version: 18.2.18
+      '@types/react-dom':
+        specifier: ^18.2.7
+        version: 18.2.7
+      eslint:
+        specifier: ^8.38.0
+        version: 8.57.0
+      typescript:
+        specifier: ^5.1.6
+        version: 5.4.5
+      vite:
+        specifier: ^6.1.0
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+      vite-tsconfig-paths:
+        specifier: ^4.2.1
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+      wrangler:
+        specifier: ^3.109.2
+        version: 3.109.2(@cloudflare/workers-types@4.20250214.0)
+
 packages:
 
   '@aashutoshrathi/word-wrap@1.2.6':
