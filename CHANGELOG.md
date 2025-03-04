@@ -18,6 +18,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
       - [Middleware (unstable)](#middleware-unstable)
+        - [Middleware `context` parameter](#middleware-context-parameter)
       - [Client-side `context` (unstable)](#client-side-context-unstable)
       - [`unstable_SerializesTo`](#unstable_serializesto)
     - [Changes by Package](#changes-by-package)
@@ -466,7 +467,7 @@ const redirects: Route.unstable_MiddlewareFunction = async ({
 };
 ```
 
-**`context` parameter**
+##### Middleware `context` parameter
 
 When middleware is enabled, your application will use a different type of `context` parameter in your loaders and actions to provide better type safety. Instead of `AppLoadContext`, `context` will now be an instance of `ContextProvider` that you can use with type-safe contexts (similar to `React.createContext`):
 
