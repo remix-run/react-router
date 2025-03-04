@@ -9,7 +9,6 @@ import type {
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
-  unstable_RouterContext,
 } from "../../../lib/router/utils";
 import { createRouter, IDLE_FETCHER } from "../../../lib/router/router";
 import {
@@ -145,7 +144,6 @@ type SetupOpts = {
   initialIndex?: number;
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
-  context?: unstable_RouterContext;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -201,7 +199,6 @@ export function setup({
   initialIndex,
   hydrationData,
   dataStrategy,
-  context,
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -339,7 +336,6 @@ export function setup({
   jest.spyOn(history, "replace");
   currentRouter = createRouter({
     basename,
-    context,
     history,
     routes: enhanceRoutes(routes),
     hydrationData,

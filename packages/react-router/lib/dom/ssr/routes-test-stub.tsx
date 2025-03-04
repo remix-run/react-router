@@ -2,7 +2,7 @@ import * as React from "react";
 import type {
   ActionFunction,
   LoaderFunction,
-  unstable_RouterContext,
+  unstable_InitialContext,
 } from "../../router/utils";
 import type {
   DataRouteObject,
@@ -13,7 +13,6 @@ import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
 import { convertRoutesToDataRoutes } from "../../router/utils";
-import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
@@ -87,7 +86,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  unstable_context: unstable_RouterContext = {}
+  unstable_getContext?: () => unstable_InitialContext
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -124,7 +123,7 @@ export function createRoutesStub(
         remixContextRef.current.routeModules
       );
       routerRef.current = createMemoryRouter(patched, {
-        unstable_context,
+        unstable_getContext,
         initialEntries,
         initialIndex,
         hydrationData,

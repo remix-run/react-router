@@ -32,11 +32,11 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  unstable_InitialContext,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   unstable_MiddlewareFunction,
-  unstable_MiddlewareFunctionArgs,
   ParamParseKey,
   Params,
   PathMatch,
@@ -47,6 +47,10 @@ export type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
+} from "./lib/router/utils";
+export {
+  unstable_createContext,
+  unstable_RouterContextProvider,
 } from "./lib/router/utils";
 
 export {
@@ -267,6 +271,14 @@ export type {
   SessionStorage,
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
+
+export type {
+  Future,
+  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
+} from "./lib/types/future.ts";
+export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
+export type { Register } from "./lib/types/register";
+export { href } from "./lib/href";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

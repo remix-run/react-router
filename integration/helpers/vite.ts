@@ -18,7 +18,7 @@ import type { Config } from "@react-router/dev/config";
 
 const require = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -29,6 +29,8 @@ export const reactRouterConfig = ({
   prerender,
   appDirectory,
   splitRouteModules,
+  viteEnvironmentApi,
+  middleware,
 }: {
   ssr?: boolean;
   basename?: string;
@@ -37,6 +39,8 @@ export const reactRouterConfig = ({
   splitRouteModules?: NonNullable<
     Config["future"]
   >["unstable_splitRouteModules"];
+  viteEnvironmentApi?: boolean;
+  middleware?: boolean;
 }) => {
   let config: Config = {
     ssr,
@@ -45,6 +49,8 @@ export const reactRouterConfig = ({
     appDirectory,
     future: {
       unstable_splitRouteModules: splitRouteModules,
+      unstable_viteEnvironmentApi: viteEnvironmentApi,
+      unstable_middleware: middleware,
     },
   };
 
@@ -55,8 +61,14 @@ export const reactRouterConfig = ({
   `;
 };
 
+type ViteConfigArgs = {
+  port: number;
+  fsAllow?: string[];
+  envDir?: string;
+};
+
 export const viteConfig = {
-  server: async (args: { port: number; fsAllow?: string[] }) => {
+  server: async (args: ViteConfigArgs) => {
     let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
@@ -69,7 +81,7 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: { port: number; fsAllow?: string[] }) => {
+  basic: async (args: ViteConfigArgs) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -77,6 +89,7 @@ export const viteConfig = {
 
       export default {
         ${await viteConfig.server(args)}
+        envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
           envOnlyMacros(),
@@ -130,10 +143,11 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName =
+export type TemplateName =
   | "vite-5-template"
   | "vite-6-template"
-  | "vite-cloudflare-template";
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
@@ -356,7 +370,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "vite-cloudflare-template"
+        "cloudflare-dev-proxy-template"
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
