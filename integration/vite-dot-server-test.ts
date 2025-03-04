@@ -142,7 +142,7 @@ test.describe("Vite / route / server-only module referenced by client", () => {
         `    '${specifier}' imported by route 'app/routes/_index.tsx'`,
 
         "  React Router automatically removes server-code from these exports:",
-        "    `loader`, `action`, `headers`",
+        "    `loader`, `action`, `unstable_middleware`, `headers`",
 
         `  But other route exports in 'app/routes/_index.tsx' depend on '${specifier}'.`,
 

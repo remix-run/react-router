@@ -19,7 +19,9 @@ function getHandler(routeModule = {}, entryServerModule = {}) {
     entry: {
       module: {
         handleError: handleErrorSpy,
-        default() {},
+        default() {
+          return new Response("<html><body>Dummy document</body></html>");
+        },
         ...entryServerModule,
       },
     },
