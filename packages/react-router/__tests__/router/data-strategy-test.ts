@@ -28,6 +28,155 @@ describe("router dataStrategy", () => {
     );
   }
 
+  it.only("POC: lets dataStrategy handle shouldRevalidate", async () => {
+    let t = setup({
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          loader: true,
+          action: true,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              loader: true,
+            },
+          ],
+        },
+      ],
+      async dataStrategy({ matches, shouldRevalidateArgs }) {
+        let keyedResults: Record<string, DataStrategyResult> = {};
+        let matchesToLoad = matches.filter((m) => m.shouldCallHandler());
+        for (let m of matchesToLoad) {
+          let result = await m.resolve();
+          keyedResults[m.route.id] = result;
+        }
+        return keyedResults;
+      },
+    });
+
+    let A = await t.navigate("/parent");
+    await A.loaders.parent.resolve("PARENT");
+    expect(t.router.state).toMatchObject({
+      location: { pathname: "/parent" },
+      loaderData: {
+        parent: "PARENT",
+      },
+      errors: null,
+    });
+
+    let B = await t.navigate("/parent/child");
+    await B.loaders.child.resolve("CHILD");
+    expect(t.router.state).toMatchObject({
+      location: { pathname: "/parent/child" },
+      loaderData: {
+        parent: "PARENT",
+        child: "CHILD",
+      },
+      errors: null,
+    });
+  });
+
+  it.only("POC: single fetch - lets dataStrategy handle shouldRevalidate", async () => {
+    let t = setup({
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          loader: true,
+          action: true,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              loader: true,
+            },
+          ],
+        },
+      ],
+      async dataStrategy({ request, matches, shouldRevalidateArgs }) {
+        let keyedResults: Record<string, DataStrategyResult> = {};
+        let matchesToLoad = matches.filter((m) => {
+          if (request.method === "GET") {
+            // On GET navigations we default to revalidation unless it was an
+            // action error
+            let isActionError =
+              (shouldRevalidateArgs?.actionStatus ?? 0) >= 400;
+            return m.shouldCallHandler(!isActionError);
+          } else {
+            // USe the default behavior on POST navigations
+            return m.shouldCallHandler();
+          }
+        });
+
+        for (let m of matchesToLoad) {
+          let result = await m.resolve();
+          keyedResults[m.route.id] = result;
+        }
+        return keyedResults;
+      },
+    });
+
+    let A = await t.navigate("/parent");
+    await A.loaders.parent.resolve("PARENT");
+    expect(t.router.state).toMatchObject({
+      location: { pathname: "/parent" },
+      loaderData: {
+        parent: "PARENT",
+      },
+      errors: null,
+    });
+
+    debugger;
+    let B = await t.navigate("/parent/child");
+    await B.loaders.parent.resolve("PARENT2");
+    await B.loaders.child.resolve("CHILD");
+    expect(t.router.state).toMatchObject({
+      location: { pathname: "/parent/child" },
+      loaderData: {
+        parent: "PARENT2",
+        child: "CHILD",
+      },
+      errors: null,
+    });
+
+    // We want to revalidate by default on GET navigations
+    let C = await t.navigate("/parent");
+    await C.loaders.parent.resolve("PARENT3");
+    expect(t.router.state).toMatchObject({
+      location: { pathname: "/parent" },
+      loaderData: {
+        parent: "PARENT3",
+      },
+      errors: null,
+    });
+
+    // But the default behavior is not to revalidate after an acton 4xx/5xx response
+    let D = await t.navigate("/parent", {
+      formMethod: "post",
+      formData: createFormData({}),
+    });
+    await D.actions.parent.resolve(new Response("ACTION", { status: 400 }));
+    await D.loaders.parent.resolve("NOOOOO");
+    expect(t.router.state).toMatchObject({
+      location: { pathname: "/parent" },
+      actionData: {
+        parent: "ACTION",
+      },
+      loaderData: {
+        parent: "PARENT3",
+      },
+      errors: null,
+    });
+  });
+
   describe("loaders", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
