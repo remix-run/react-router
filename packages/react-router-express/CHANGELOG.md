@@ -1,5 +1,14 @@
 # `@react-router/express`
 
+## 7.3.0-pre.0
+
+### Patch Changes
+
+- Update `express` `peerDependency` to include v5 (https://github.com/remix-run/react-router/pull/13064) ([#12961](https://github.com/remix-run/react-router/pull/12961))
+- Updated dependencies:
+  - `react-router@7.3.0-pre.0`
+  - `@react-router/node@7.3.0-pre.0`
+
 ## 7.2.0
 
 ### Patch Changes

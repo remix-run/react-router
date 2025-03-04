@@ -26,5 +26,25 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-tigers-promise",
+    "cool-pillows-sing",
+    "dry-impalas-live",
+    "gold-insects-remain",
+    "hip-jars-hunt",
+    "lucky-icons-tap",
+    "middleware",
+    "modern-forks-ring",
+    "new-houses-hug",
+    "ninety-otters-repeat",
+    "orange-meals-repair",
+    "pretty-flies-crash",
+    "real-adults-protect",
+    "sharp-sloths-swim",
+    "short-comics-fly",
+    "slow-coats-arrive",
+    "spa-context",
+    "tough-rats-sparkle",
+    "yellow-glasses-sort"
+  ]
 }
