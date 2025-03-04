@@ -13,7 +13,7 @@ Consider a login form component that relies on `useActionData`
 import { useActionData } from "react-router";
 
 export function LoginForm() {
-  const errors = useActionData()?.errors;
+  const { errors } = useActionData();
   return (
     <Form method="post">
       <label>
