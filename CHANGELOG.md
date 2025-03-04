@@ -19,6 +19,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Unstable Changes](#unstable-changes)
       - [Middleware (unstable)](#middleware-unstable)
       - [Client-side `context` (unstable)](#client-side-context-unstable)
+      - [`unstable_SerializesTo`](#unstable_serializesto)
     - [Changes by Package](#changes-by-package)
   - [v7.2.0](#v720)
     - [What's Changed](#whats-changed)
@@ -333,26 +334,12 @@ Date: 2025-03-06
 - `react-router` - Support middleware on routes (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
   - See below for more information
 - `react-router` - Add `context` support to client side data routers (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
+  - See below for more information
+- `react-router` - Fix types for `loaderData` and `actionData` that contained `Record`s ([#13139](https://github.com/remix-run/react-router/pull/13139))
+  - ⚠️ This is a breaking change for users who have already adopted `unstable_SerializesTo`
+  - See below for more information
 - `@react-router/dev` - Fix errors with `future.unstable_viteEnvironmentApi` when the `ssr` environment has been configured by another plugin to be a custom `Vite.DevEnvironment` rather than the default `Vite.RunnableDevEnvironment` ([#13008](https://github.com/remix-run/react-router/pull/13008))
 - `@react-router/dev` - When `future.unstable_viteEnvironmentApi` is enabled and the `ssr` environment has `optimizeDeps.noDiscovery` disabled, define `optimizeDeps.entries` and `optimizeDeps.include` ([#13007](https://github.com/remix-run/react-router/pull/13007))
-- Fix types for `loaderData` and `actionData` that contained `Record`s ([#13139](https://github.com/remix-run/react-router/pull/13139))
-
-  - ⚠️ This is a breaking change for users who have already adopted `unstable_SerializesTo`
-  - `unstable_SerializesTo` added a way to register custom serialization types in Single Fetch for other library and framework authors like Apollo
-  - It was implemented with branded type whose branded property that was made optional so that casting arbitrary values was easy:
-
-    ```ts
-    // without the brand being marked as optional
-    let x1 = 42 as unknown as unstable_SerializesTo<number>;
-    //          ^^^^^^^^^^
-
-    // with the brand being marked as optional
-    let x2 = 42 as unstable_SerializesTo<number>;
-    ```
-
-  - However, this broke type inference in `loaderData` and `actionData` for any `Record` types as those would now (incorrectly) match `unstable_SerializesTo` - this affected all users, not just those that depended on `unstable_SerializesTo`
-  - To fix this, the branded property of `unstable_SerializesTo` is marked as required instead of optional
-  - For library and framework authors using `unstable_SerializesTo`, you may need to add `as unknown` casts before casting to `unstable_SerializesTo`
 
 #### Middleware (unstable)
 
@@ -578,6 +565,23 @@ function unstable_getContext() {
   return map;
 }
 ```
+
+#### `unstable_SerializesTo`
+
+`unstable_SerializesTo` added a way to register custom serialization types in Single Fetch for other library and framework authors like Apollo. It was implemented with branded type whose branded property that was made optional so that casting arbitrary values was easy:
+
+```ts
+// without the brand being marked as optional
+let x1 = 42 as unknown as unstable_SerializesTo<number>;
+//          ^^^^^^^^^^
+
+// with the brand being marked as optional
+let x2 = 42 as unstable_SerializesTo<number>;
+```
+
+However, this broke type inference in `loaderData` and `actionData` for any `Record` types as those would now (incorrectly) match `unstable_SerializesTo`. This affected all users, not just those that depended on `unstable_SerializesTo`. To fix this, the branded property of `unstable_SerializesTo` is marked as required instead of optional.
+
+For library and framework authors using `unstable_SerializesTo`, you may need to add `as unknown` casts before casting to `unstable_SerializesTo`.
 
 ### Changes by Package
 
