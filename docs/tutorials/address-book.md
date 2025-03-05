@@ -472,7 +472,7 @@ import type { Route } from "./+types/root";
 // existing imports & exports
 
 export default function App({
-  loaderData,
+  loaderData = { contacts: [] },
 }: Route.ComponentProps) {
   const { contacts } = loaderData;
 
