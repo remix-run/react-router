@@ -2,6 +2,7 @@
 // context but want to use Vite's ESM build to avoid deprecation warnings
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
+import * as fs from "node:fs";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
@@ -289,7 +290,6 @@ let virtual = {
   serverBuild: VirtualModule.create("server-build"),
   serverManifest: VirtualModule.create("server-manifest"),
   browserManifest: VirtualModule.create("browser-manifest"),
-  sriManifest: VirtualModule.create("sri-manifest"),
 };
 
 let invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
@@ -817,6 +817,39 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     return new Set([...cssUrlPaths, ...chunkAssetPaths]);
   };
 
+  let generateSriManifest = async (ctx: ReactRouterPluginContext) => {
+    let clientBuildDirectory = getClientBuildDirectory(ctx.reactRouterConfig);
+    // walk the client build directory and generate SRI hashes for all .js files
+    let entries = fs.readdirSync(clientBuildDirectory, {
+      withFileTypes: true,
+      recursive: true,
+    });
+    let sriManifest: ReactRouterManifest["sri"] = {};
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith(".js")) {
+        let contents;
+        try {
+          contents = await fse.readFile(
+            path.join(entry.path, entry.name),
+            "utf-8"
+          );
+        } catch (e) {
+          logger.error(`Failed to read file for SRI generation: ${entry.name}`);
+          throw e;
+        }
+        let hash = createHash("sha384")
+          .update(contents)
+          .digest()
+          .toString("base64");
+        let filepath = getVite().normalizePath(
+          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+        );
+        sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
+      }
+    }
+    return sriManifest;
+  };
+
   let generateReactRouterManifestsForBuild = async ({
     routeIds,
   }: {
@@ -939,6 +972,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let reactRouterBrowserManifest: ReactRouterManifest = {
       ...fingerprintedValues,
       ...nonFingerprintedValues,
+      sri: undefined,
     };
 
     // Write the browser manifest to disk as part of the build process
@@ -949,12 +983,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};`
     );
 
+    let sri: ReactRouterManifest["sri"] = undefined;
+    if (ctx.reactRouterConfig.future.unstable_subResourceIntegrity) {
+      sri = await generateSriManifest(ctx);
+    }
+
     // The server manifest is the same as the browser manifest, except for
     // server bundle builds which only includes routes for the current bundle,
     // otherwise the server and client have the same routes
     let reactRouterServerManifest: ReactRouterManifest = {
       ...reactRouterBrowserManifest,
       routes: serverRoutes,
+      sri,
     };
 
     return {
@@ -1032,6 +1072,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       };
     }
 
+    let sri: ReactRouterManifest["sri"] = undefined;
+
     let reactRouterManifestForDev = {
       version: String(Math.random()),
       url: combineURLs(ctx.publicPath, virtual.browserManifest.url),
@@ -1045,6 +1087,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ),
         imports: [],
       },
+      sri,
       routes,
     };
 
@@ -1863,36 +1906,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           case virtual.serverBuild.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
             return await getServerEntry({ routeIds });
-          }
-          case virtual.sriManifest.resolvedId: {
-            let environmentName = ctx.reactRouterConfig.future
-              .unstable_viteEnvironmentApi
-              ? this.environment.name
-              : ctx.environmentBuildContext?.name;
-            if (
-              viteCommand !== "build" ||
-              !environmentName ||
-              (environmentName !== "ssr" &&
-                !isSsrBundleEnvironmentName(environmentName))
-            ) {
-              return `export default {};`;
-            }
-
-            let viteManifest = await loadViteManifest(
-              getClientBuildDirectory(ctx.reactRouterConfig)
-            );
-            let clientBuildDirectory = getClientBuildDirectory(
-              ctx.reactRouterConfig
-            );
-
-            let integrityMap = createSubResourceIntegrityMap(
-              viteManifest,
-              "sha384",
-              clientBuildDirectory,
-              ctx.publicPath
-            );
-
-            return `export default ${jsesc(integrityMap, { es6: true })};`;
           }
           case virtual.serverManifest.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
