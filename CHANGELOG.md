@@ -520,7 +520,7 @@ function getLoadContext(req, res): unstable_InitialContext {
 
 #### Client-side `context` (unstable)
 
-Your application `loader` and `action` functions on the client will now receive a `context` parameter. This is an instance of `unstable_RouterContextProvider` that you use with type-safe contexts (similar to `React.createContext`) and is most useful with the corresponding `middleware`/`clientMiddleware` API's:
+Your application `clientLoader`/`clientAction` functions (or `loader`/`action` in library mode) will now receive a `context` parameter on the client. This is an instance of `unstable_RouterContextProvider` that you use with type-safe contexts (similar to `React.createContext`) and is most useful with the corresponding `unstable_clientMiddleware` API:
 
 ```ts
 import { unstable_createContext } from "react-router";
@@ -529,17 +529,18 @@ type User = {
   /*...*/
 };
 
-let userContext = unstable_createContext<User>();
+const userContext = unstable_createContext<User>();
 
-function sessionMiddleware({ context }) {
+const sessionMiddleware: Route.unstable_ClientMiddlewareFunction = async ({
+  context,
+}) => {
   let user = await getUser();
   context.set(userContext, user);
-}
+};
 
 export const unstable_clientMiddleware = [sessionMiddleware];
 
-// ... then in some downstream loader
-function loader({ context }) {
+export function clientLoader({ context }: Route.ClientLoaderArgs) {
   let user = context.get(userContext);
   let profile = await getProfile(user.id);
   return { profile };
