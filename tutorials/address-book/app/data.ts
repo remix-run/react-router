@@ -311,6 +311,9 @@ export async function deleteContact(id: string) {
 ].forEach((contact) => {
   fakeContacts.create({
     ...contact,
-    id: `${contact.first.toLowerCase()}-${contact.last.toLocaleLowerCase()}`,
+    id: `${contact.first
+      .toLowerCase()
+      .split(" ")
+      .join("_")}-${contact.last.toLocaleLowerCase()}`,
   });
 });

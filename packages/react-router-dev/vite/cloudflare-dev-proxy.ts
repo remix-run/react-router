@@ -1,5 +1,10 @@
 import { createRequestHandler } from "react-router";
-import { type AppLoadContext, type ServerBuild } from "react-router";
+import {
+  type AppLoadContext,
+  type ServerBuild,
+  type UNSAFE_MiddlewareEnabled,
+  type unstable_InitialContext,
+} from "react-router";
 import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
@@ -8,6 +13,8 @@ import { preloadVite, getVite } from "./vite";
 import { type ResolvedReactRouterConfig, loadConfig } from "../config/config";
 
 let serverBuildId = "virtual:react-router/server-build";
+
+type MaybePromise<T> = T | Promise<T>;
 
 type CfProperties = Record<string, unknown>;
 
@@ -18,7 +25,9 @@ type LoadContext<Env, Cf extends CfProperties> = {
 type GetLoadContext<Env, Cf extends CfProperties> = (args: {
   request: Request;
   context: LoadContext<Env, Cf>;
-}) => AppLoadContext | Promise<AppLoadContext>;
+}) => UNSAFE_MiddlewareEnabled extends true
+  ? MaybePromise<unstable_InitialContext>
+  : MaybePromise<AppLoadContext>;
 
 function importWrangler() {
   try {
@@ -108,12 +117,15 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       }
     },
     configureServer: async (viteDevServer) => {
-      let { getPlatformProxy } = await importWrangler();
-      // Do not include `dispose` in Cloudflare context
-      let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
-        restOptions
-      );
-      let context = { cloudflare };
+      let context: Awaited<ReturnType<typeof getContext>>;
+      let getContext = async () => {
+        let { getPlatformProxy } = await importWrangler();
+        // Do not include `dispose` in Cloudflare context
+        let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
+          restOptions
+        );
+        return { cloudflare };
+      };
       return () => {
         if (!viteDevServer.config.server.middlewareMode) {
           viteDevServer.middlewares.use(async (nodeReq, nodeRes, next) => {
@@ -124,6 +136,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
               let handler = createRequestHandler(build, "development");
               let req = fromNodeRequest(nodeReq, nodeRes);
+              context ??= await getContext();
               let loadContext = getLoadContext
                 ? await getLoadContext({ request: req, context })
                 : context;

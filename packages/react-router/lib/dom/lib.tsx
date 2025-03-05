@@ -23,6 +23,7 @@ import type {
   HydrationState,
   RelativeRoutingType,
   Router as DataRouter,
+  RouterInit,
 } from "../router/router";
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
@@ -125,24 +126,61 @@ try {
 //#region Routers
 ////////////////////////////////////////////////////////////////////////////////
 
-interface DOMRouterOpts {
+/**
+ * @category Routers
+ */
+export interface DOMRouterOpts {
+  /**
+   * Basename path for the application.
+   */
   basename?: string;
+  /**
+   * Function to provide the initial context values for all client side navigations/fetches
+   */
+  unstable_getContext?: RouterInit["unstable_getContext"];
+  /**
+   * Future flags to enable for the router.
+   */
   future?: Partial<FutureConfig>;
+  /**
+   * Hydration data to initialize the router with if you have already performed
+   * data loading on the server.
+   */
   hydrationData?: HydrationState;
+  /**
+   * Override the default data strategy of loading in parallel.
+   * Only intended for advanced usage.
+   */
   dataStrategy?: DataStrategyFunction;
+  /**
+   * Lazily define portions of the route tree on navigations.
+   */
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+  /**
+   * Window object override - defaults to the global `window` instance.
+   */
   window?: Window;
 }
 
 /**
+ * Create a new data router that manages the application path via `history.pushState`
+ * and `history.replaceState`.
+ *
  * @category Data Routers
  */
 export function createBrowserRouter(
+  /**
+   * Application routes
+   */
   routes: RouteObject[],
+  /**
+   * Router options
+   */
   opts?: DOMRouterOpts
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
@@ -155,6 +193,8 @@ export function createBrowserRouter(
 }
 
 /**
+ * Create a new data router that manages the application path via the URL hash
+ *
  * @category Data Routers
  */
 export function createHashRouter(
@@ -163,6 +203,7 @@ export function createHashRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),

@@ -4,11 +4,15 @@ import type {
 } from "../dom/ssr/routeModules";
 import type { DataWithResponseInit } from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
+import type { unstable_SerializesTo } from "./serializes-to";
 import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
 
 // prettier-ignore
 type Serialize<T> =
-  // First, let type stay as-is if its already serializable...
+  // If type has a `SerializesTo` brand, use that type
+  T extends unstable_SerializesTo<infer To> ? To :
+
+  // Then, let type stay as-is if its already serializable...
   T extends Serializable ? T :
 
   // ...then don't allow functions to be serialized...
@@ -69,8 +73,15 @@ type __tests = [
   Expect<Equal<ServerDataFrom<any>, undefined>>,
   Expect<
     Equal<
-      ServerDataFrom<() => { a: string; b: Date; c: () => boolean }>,
-      { a: string; b: Date; c: undefined }
+      ServerDataFrom<
+        () => {
+          a: string;
+          b: Date;
+          c: () => boolean;
+          d: unstable_SerializesTo<number>;
+        }
+      >,
+      { a: string; b: Date; c: undefined; d: number }
     >
   >,
   Expect<
@@ -78,12 +89,22 @@ type __tests = [
       Pretty<
         ServerDataFrom<
           () =>
-            | { json: string; b: Date; c: () => boolean }
-            | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
+            | {
+                json: string;
+                b: Date;
+                c: () => boolean;
+                d: unstable_SerializesTo<number>;
+              }
+            | DataWithResponseInit<{
+                data: string;
+                b: Date;
+                c: () => boolean;
+                d: unstable_SerializesTo<number>;
+              }>
         >
       >,
-      | { json: string; b: Date; c: undefined }
-      | { data: string; b: Date; c: undefined }
+      | { json: string; b: Date; c: undefined; d: number }
+      | { data: string; b: Date; c: undefined; d: number }
     >
   >,
   Expect<Equal<ServerDataFrom<() => { a: string } | Response>, { a: string }>>,

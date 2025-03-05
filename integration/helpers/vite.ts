@@ -28,6 +28,7 @@ export const reactRouterConfig = ({
   appDirectory,
   splitRouteModules,
   viteEnvironmentApi,
+  middleware,
 }: {
   ssr?: boolean;
   basename?: string;
@@ -37,6 +38,7 @@ export const reactRouterConfig = ({
     Config["future"]
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
+  middleware?: boolean;
 }) => {
   let config: Config = {
     ssr,
@@ -46,6 +48,7 @@ export const reactRouterConfig = ({
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
+      unstable_middleware: middleware,
     },
   };
 
@@ -141,7 +144,8 @@ export const EXPRESS_SERVER = (args: {
 export type TemplateName =
   | "vite-5-template"
   | "vite-6-template"
-  | "vite-cloudflare-template";
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
@@ -388,7 +392,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "vite-cloudflare-template"
+        "cloudflare-dev-proxy-template"
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);

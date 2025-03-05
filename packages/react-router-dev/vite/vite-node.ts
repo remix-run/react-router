@@ -4,6 +4,7 @@ import { installSourcemapsSupport } from "vite-node/source-map";
 import type * as Vite from "vite";
 
 import { preloadVite, getVite } from "./vite";
+import { ssrExternals } from "./ssr-externals";
 
 export type Context = {
   devServer: Vite.ViteDevServer;
@@ -11,29 +12,34 @@ export type Context = {
   runner: ViteNodeRunner;
 };
 
-export async function createContext(
-  viteConfig: Vite.InlineConfig = {}
-): Promise<Context> {
+export async function createContext({
+  root,
+  mode,
+}: {
+  root: Vite.UserConfig["root"];
+  mode: Vite.ConfigEnv["mode"];
+}): Promise<Context> {
   await preloadVite();
   const vite = getVite();
 
-  const devServer = await vite.createServer(
-    vite.mergeConfig(
-      {
-        server: {
-          preTransformRequests: false,
-          hmr: false,
-        },
-        optimizeDeps: {
-          noDiscovery: true,
-        },
-        configFile: false,
-        envFile: false,
-        plugins: [],
-      },
-      viteConfig
-    )
-  );
+  const devServer = await vite.createServer({
+    root,
+    mode,
+    server: {
+      preTransformRequests: false,
+      hmr: false,
+      watch: null,
+    },
+    ssr: {
+      external: ssrExternals,
+    },
+    optimizeDeps: {
+      noDiscovery: true,
+    },
+    configFile: false,
+    envFile: false,
+    plugins: [],
+  });
   await devServer.pluginContainer.buildStart({});
 
   const server = new ViteNodeServer(devServer);

@@ -6,7 +6,7 @@ title: Pre-Rendering
 
 Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime. Pre-rendering is enabled via the `prerender` config in `react-router.config.ts` and can be used in two ways based on the `ssr` config value:
 
-- Alongside a runtime SSR server ith `ssr:true` (the default value)
+- Alongside a runtime SSR server with `ssr:true` (the default value)
 - Deployed to a static file server with `ssr:false`
 
 ## Pre-rendering with `ssr:true`
@@ -86,7 +86,7 @@ During development, pre-rendering doesn't save the rendered results to the publi
 
 ## Pre-rendering with `ssr:false`
 
-The above examples assume you are deploying a runtime server, but are pre-rendering some static pages in order to serve them faster and avoid hitting the server.
+The above examples assume you are deploying a runtime server but are pre-rendering some static pages to avoid hitting the server, resulting in faster loads.
 
 To disable runtime SSR and configure pre-rendering to be served from a static file server, you can set the `ssr:false` config flag:
 
@@ -149,3 +149,14 @@ sirv-cli build/client --single index.html
 # If you pre-rendered the `/` route
 sirv-cli build/client --single __spa-fallback.html
 ```
+
+### Invalid Exports
+
+When pre-rendering with `ssr:false`, React Router will error at build time if you have invalid exports to help prevent some mistakes that can be easily overlooked.
+
+- `headers`/`action` functions are prohibited in all routes because there will be no runtime server on which to run them
+- When using `ssr:false` without a `prerender` config (SPA Mode), a `loader` is permitted on the root route only
+- When using `ssr:false` with a `prerender` config, a `loader` is permitted on any route matched by a `prerender` path
+  - If you are using a `loader` on a pre-rendered route that has child routes, you will need to make sure the parent `loaderData` can be determined at run-time properly by either:
+    - Pre-rendering all child routes so that the parent `loader` can be called at build-time for each child route path and rendered into a `.data` file, or
+    - Use a `clientLoader` on the parent that can be called at run-time for non-pre-rendered child paths
