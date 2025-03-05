@@ -618,7 +618,9 @@ export type ScriptsProps = Omit<
   | "noModule"
   | "dangerouslySetInnerHTML"
   | "suppressHydrationWarning"
->;
+> & {
+  integrity?: Record<string, string>;
+};
 
 /**
   Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.
@@ -642,7 +644,7 @@ export type ScriptsProps = Omit<
 
   @category Components
  */
-export function Scripts(props: ScriptsProps) {
+export function Scripts({ integrity, ...props }: ScriptsProps) {
   let { manifest, serverHandoffString, isSpaMode, ssr, renderMeta } =
     useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
@@ -795,6 +797,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         rel="modulepreload"
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
+        integrity={integrity?.[manifest.entry.module]}
       />
       {dedupe(preloads).map((path) => (
         <link
@@ -802,6 +805,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           rel="modulepreload"
           href={path}
           crossOrigin={props.crossOrigin}
+          integrity={integrity?.[path]}
         />
       ))}
       {initialScripts}

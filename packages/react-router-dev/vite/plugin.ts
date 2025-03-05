@@ -289,6 +289,7 @@ let virtual = {
   serverBuild: VirtualModule.create("server-build"),
   serverManifest: VirtualModule.create("server-manifest"),
   browserManifest: VirtualModule.create("browser-manifest"),
+  sriManifest: VirtualModule.create("sri-manifest"),
 };
 
 let invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
@@ -1862,6 +1863,36 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           case virtual.serverBuild.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
             return await getServerEntry({ routeIds });
+          }
+          case virtual.sriManifest.resolvedId: {
+            let environmentName = ctx.reactRouterConfig.future
+              .unstable_viteEnvironmentApi
+              ? this.environment.name
+              : ctx.environmentBuildContext?.name;
+            if (
+              viteCommand !== "build" ||
+              !environmentName ||
+              (environmentName !== "ssr" &&
+                !isSsrBundleEnvironmentName(environmentName))
+            ) {
+              return `export default {};`;
+            }
+
+            let viteManifest = await loadViteManifest(
+              getClientBuildDirectory(ctx.reactRouterConfig)
+            );
+            let clientBuildDirectory = getClientBuildDirectory(
+              ctx.reactRouterConfig
+            );
+
+            let integrityMap = createSubResourceIntegrityMap(
+              viteManifest,
+              "sha384",
+              clientBuildDirectory,
+              ctx.publicPath
+            );
+
+            return `export default ${jsesc(integrityMap, { es6: true })};`;
           }
           case virtual.serverManifest.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
@@ -3496,4 +3527,22 @@ async function getEnvironmentsOptions(
 
 function isNonNullable<T>(x: T): x is NonNullable<T> {
   return x != null;
+}
+
+function createSubResourceIntegrityMap(
+  viteManifest: Vite.Manifest,
+  algorithm: string,
+  outdir: string,
+  publicPath: string
+) {
+  let map: Record<string, string> = {};
+  for (let value of Object.values(viteManifest)) {
+    let file = path.resolve(outdir, value.file);
+    if (!fse.existsSync(file)) continue;
+    let source = fse.readFileSync(file);
+    let hash = createHash("sha384").update(source).digest().toString("base64");
+    let url = `${publicPath}${value.file}`;
+    map[url] = `${algorithm.toLowerCase()}-${hash}`;
+  }
+  return map;
 }
