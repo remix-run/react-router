@@ -467,6 +467,8 @@ const redirects: Route.unstable_MiddlewareFunction = async ({
 };
 ```
 
+For more information on the `middleware` API/design, please see the [decision doc](https://github.com/remix-run/react-router/blob/release-next/decisions/0014-context-middleware.md).
+
 ##### Middleware `context` parameter
 
 When middleware is enabled, your application will use a different type of `context` parameter in your loaders and actions to provide better type safety. Instead of `AppLoadContext`, `context` will now be an instance of `ContextProvider` that you can use with type-safe contexts (similar to `React.createContext`):
