@@ -81,8 +81,9 @@ const noExtension = (path: string) =>
 
 function formatParamProperties(fullpath: string) {
   const params = Params.parse(fullpath);
-  const properties = Object.entries(params).map(([name, isRequired]) =>
-    isRequired ? `"${name}": string` : `"${name}"?: string`
+  const properties = Object.entries(params).map(
+    ([name, { type, isRequired }]) =>
+      isRequired ? `"${name}": ${type}` : `"${name}"?: ${type}`
   );
   return properties.join("; ");
 }

@@ -131,10 +131,14 @@ function register(ctx: Context) {
             t.stringLiteral(fullpath),
             t.tsTypeAnnotation(
               t.tsTypeLiteral(
-                Object.entries(params).map(([param, isRequired]) => {
+                Object.entries(params).map(([param, { type, isRequired }]) => {
                   const property = t.tsPropertySignature(
                     t.stringLiteral(param),
-                    t.tsTypeAnnotation(t.tsStringKeyword())
+                    t.tsTypeAnnotation(
+                      type === "string"
+                        ? t.tsStringKeyword()
+                        : t.tsBooleanKeyword()
+                    )
                   );
                   property.optional = !isRequired;
                   return property;
