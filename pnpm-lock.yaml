@@ -884,7 +884,7 @@ importers:
         version: 2.4.7
       esbuild-register:
         specifier: ^3.6.0
-        version: 3.6.0(esbuild@0.17.19)
+        version: 3.6.0(esbuild@0.25.0)
       execa:
         specifier: 5.1.1
         version: 5.1.1
@@ -1437,7 +1437,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^0.1.1
-        version: 0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
+        version: 0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
       '@cloudflare/workers-types':
         specifier: ^4.20250214.0
         version: 4.20250214.0
@@ -1464,10 +1464,10 @@ importers:
         version: 5.4.5
       vite:
         specifier: ^6.1.0
-        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0)
+        version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(yaml@2.6.0))
+        version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       wrangler:
         specifier: ^3.109.2
         version: 3.109.2(@cloudflare/workers-types@4.20250214.0)
@@ -12704,13 +12704,6 @@ snapshots:
       is-callable: 1.2.7
       is-date-object: 1.0.5
       is-symbol: 1.0.4
-
-  esbuild-register@3.6.0(esbuild@0.17.19):
-    dependencies:
-      debug: 4.4.0
-      esbuild: 0.17.19
-    transitivePeerDependencies:
-      - supports-color
 
   esbuild-register@3.6.0(esbuild@0.25.0):
     dependencies:
