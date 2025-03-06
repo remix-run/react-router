@@ -60,5 +60,5 @@ export interface AssetsManifest {
     timestamp?: number;
     runtime: string;
   };
-  sri?: Record<string, string>;
+  sri?: Record<string, string> | true;
 }

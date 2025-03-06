@@ -776,21 +776,28 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   let preloads = isHydrated
     ? []
-    : manifest.entry.imports.concat(
-        getModuleLinkHrefs(matches, manifest, {
-          includeHydrateFallback: true,
-        })
+    : dedupe(
+        manifest.entry.imports.concat(
+          getModuleLinkHrefs(matches, manifest, {
+            includeHydrateFallback: true,
+          })
+        )
       );
+
+  let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
   return isHydrated ? null : (
     <>
       {manifest.sri ? (
         <script
           type="importmap"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              integrity: manifest.sri,
-            }),
+            __html: sri
+              ? JSON.stringify({
+                  integrity: sri,
+                })
+              : "",
           }}
         />
       ) : null}
@@ -799,22 +806,22 @@ import(${JSON.stringify(manifest.entry.module)});`;
           rel="modulepreload"
           href={manifest.url}
           crossOrigin={props.crossOrigin}
-          integrity={manifest.sri?.[manifest.url]}
+          integrity={sri[manifest.url]}
         />
       ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
-        integrity={manifest.sri?.[manifest.entry.module]}
+        integrity={sri[manifest.entry.module]}
       />
-      {dedupe(preloads).map((path) => (
+      {preloads.map((path) => (
         <link
           key={path}
           rel="modulepreload"
           href={path}
           crossOrigin={props.crossOrigin}
-          integrity={manifest.sri?.[path]}
+          integrity={sri[path]}
         />
       ))}
       {initialScripts}
