@@ -762,6 +762,10 @@ describe("context/middleware", () => {
           "parent action start",
           "child 1 start - throwing",
           "parent loader start",
+          "child 1 loader start",
+          "child 2 loader start",
+          "child 2 loader end",
+          "child 1 loader end",
           "parent loader end",
         ]);
         expect(router.state.loaderData).toMatchInlineSnapshot(`
@@ -897,6 +901,10 @@ describe("context/middleware", () => {
           "child 2 start",
           "child 2 end - throwing",
           "parent loader start",
+          "child 1 loader start",
+          "child 2 loader start",
+          "child 2 loader end",
+          "child 1 loader end",
           "parent loader end",
         ]);
         expect(router.state.loaderData).toEqual({
