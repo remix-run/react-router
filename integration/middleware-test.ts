@@ -2016,7 +2016,7 @@ test.describe("Middleware", () => {
       appFixture.close();
     });
 
-    test("only calls middleware as deep as needed for granular data requests", async ({
+    test("still calls middleware for all matches on granular data requests", async ({
       page,
     }) => {
       let fixture = await createFixture({
@@ -2101,7 +2101,7 @@ test.describe("Middleware", () => {
 
       (await page.$('a[href="/a/b"]'))?.click();
       await page.waitForSelector("[data-b]");
-      expect(await page.locator("[data-a]").textContent()).toBe("A: a");
+      expect(await page.locator("[data-a]").textContent()).toBe("A: a,b");
       expect(await page.locator("[data-b]").textContent()).toBe("B: a,b");
 
       appFixture.close();

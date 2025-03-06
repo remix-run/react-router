@@ -136,17 +136,6 @@ export function StreamTransfer({
   }
 }
 
-function middlewareErrorHandler(
-  e: MiddlewareError,
-  keyedResults: Record<string, DataStrategyResult>
-) {
-  // we caught an error running the middleware, copy that overtop any
-  // non-error result for the route
-  Object.assign(keyedResults, {
-    [e.routeId]: { type: "error", result: e.error },
-  });
-}
-
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
@@ -161,17 +150,9 @@ export function getSingleFetchDataStrategy(
     if (request.method !== "GET") {
       return runMiddlewarePipeline(
         args,
-        matches.findIndex((m) => m.shouldLoad),
         false,
-        async (keyedResults) => {
-          let results = await singleFetchActionStrategy(
-            request,
-            matches,
-            basename
-          );
-          Object.assign(keyedResults, results);
-        },
-        middlewareErrorHandler
+        () => singleFetchActionStrategy(request, matches, basename),
+        (e) => ({ [e.routeId]: { type: "error", result: e.error } })
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
@@ -216,24 +197,11 @@ export function getSingleFetchDataStrategy(
           !manifest.routes[m.route.id]?.hasClientLoader
       );
       if (!foundRevalidatingServerLoader) {
-        // Skip single fetch and just call the loaders in parallel when this is
-        // a SPA mode navigation
-        let tailIdx = [...matches].reverse().findIndex((m) => m.shouldLoad);
-        let lowestLoadingIndex = tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
         return runMiddlewarePipeline(
           args,
-          lowestLoadingIndex,
           false,
-          async (keyedResults) => {
-            let results = await nonSsrStrategy(
-              manifest,
-              request,
-              matches,
-              basename
-            );
-            Object.assign(keyedResults, results);
-          },
-          middlewareErrorHandler
+          () => nonSsrStrategy(manifest, request, matches, basename),
+          (e) => ({ [e.routeId]: { type: "error", result: e.error } })
         ) as Promise<Record<string, DataStrategyResult>>;
       }
     }
@@ -242,36 +210,18 @@ export function getSingleFetchDataStrategy(
     if (fetcherKey) {
       return runMiddlewarePipeline(
         args,
-        matches.findIndex((m) => m.shouldLoad),
         false,
-        async (keyedResults) => {
-          let results = await singleFetchLoaderFetcherStrategy(
-            request,
-            matches,
-            basename
-          );
-          Object.assign(keyedResults, results);
-        },
-        middlewareErrorHandler
+        () => singleFetchLoaderFetcherStrategy(request, matches, basename),
+        (e) => ({ [e.routeId]: { type: "error", result: e.error } })
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
     // Navigational loads are more complex...
-
-    // Determine how deep to run middleware
-    let lowestLoadingIndex = getLowestLoadingIndex(
-      manifest,
-      routeModules,
-      getRouter(),
-      matches
-    );
-
     return runMiddlewarePipeline(
       args,
-      lowestLoadingIndex,
       false,
-      async (keyedResults) => {
-        let results = await singleFetchLoaderNavigationStrategy(
+      () =>
+        singleFetchLoaderNavigationStrategy(
           manifest,
           routeModules,
           ssr,
@@ -279,10 +229,8 @@ export function getSingleFetchDataStrategy(
           request,
           matches,
           basename
-        );
-        Object.assign(keyedResults, results);
-      },
-      middlewareErrorHandler
+        ),
+      (e) => ({ [e.routeId]: { type: "error", result: e.error } })
     ) as Promise<Record<string, DataStrategyResult>>;
   };
 }
@@ -369,27 +317,6 @@ function isOptedOut(
     routeModule &&
     routeModule.shouldRevalidate
   );
-}
-
-function getLowestLoadingIndex(
-  manifest: AssetsManifest,
-  routeModules: RouteModules,
-  router: DataRouter,
-  matches: DataStrategyFunctionArgs["matches"]
-) {
-  let tailIdx = [...matches]
-    .reverse()
-    .findIndex(
-      (m) =>
-        m.shouldLoad ||
-        !isOptedOut(
-          manifest.routes[m.route.id],
-          routeModules[m.route.id],
-          m,
-          router
-        )
-    );
-  return tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
 }
 
 // Loaders are trickier since we only want to hit the server once, so we
