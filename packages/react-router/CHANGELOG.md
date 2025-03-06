@@ -1,13 +1,6 @@
 # `react-router`
 
-## 7.3.0-pre.1
-
-### Patch Changes
-
-- Fix jsdoc types for `context` ([#13170](https://github.com/remix-run/react-router/pull/13170))
-- [REMOVE] Remove middleware depth logic and always call middlware for all matches ([#13172](https://github.com/remix-run/react-router/pull/13172))
-
-## 7.3.0-pre.0
+## 7.3.0
 
 ### Minor Changes
 
@@ -20,6 +13,9 @@
 ### Patch Changes
 
 - Skip resource route flow in dev server in SPA mode ([#13113](https://github.com/remix-run/react-router/pull/13113))
+
+- Fix jsdoc types for `context` ([#13170](https://github.com/remix-run/react-router/pull/13170))
+
 - Support middleware on routes (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
 
   Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router-config.ts` file:
@@ -218,7 +214,10 @@
 
   For library and framework authors using `unstable_SerializesTo`, you may need to add `as unknown` casts before casting to `unstable_SerializesTo`.
 
+- \[REMOVE] Remove middleware depth logic and always call middlware for all matches ([#13172](https://github.com/remix-run/react-router/pull/13172))
+
 - Fix single fetch `_root.data` requests when a `basename` is used ([#12898](https://github.com/remix-run/react-router/pull/12898))
+
 - Add `context` support to client side data routers (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
 
   Your application `loader` and `action` functions on the client will now receive a `context` parameter. This is an instance of `unstable_RouterContextProvider` that you use with type-safe contexts (similar to `React.createContext`) and is most useful with the corresponding `middleware`/`clientMiddleware` API's:
@@ -423,7 +422,7 @@ _No changes_
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
