@@ -26,11 +26,11 @@ We've done a lot of work since then to get us to a place where we could ship a m
 
 We originally considered leaning on our existing `context` (`type AppLoadContext`) value we pass to server-side `loader` and `action` functions as the `context` for middleware functions. Using this would make for an easier adoption of middleware for apps that use `AppLoadContext` today. However, there were a few downsides to that approach.
 
-First, the type story is lacking because it's just a global interface you augment via declaration merging so it's not true type safety and is more of a "trust me on this" scenario. We've always known it wasn't a great typed API and have always assumed we'd enhance it at some point via a breaking change behind a future flag. The introduction of middleware should result in much _more_ usage of `context` than exists today since it'll open up to user of `react-router-serve` as well, so it made more sense to ship the breaking change flag now for the smaller surface area of `context`-enabled apps users, ionstead of later for a much larger surface area of apps.
+First, the type story is lacking because it's just a global interface you augment via declaration merging so it's not true type safety and is more of a "trust me on this" scenario. We've always known it wasn't a great typed API and have always assumed we'd enhance it at some point via a breaking change behind a future flag. The introduction of middleware should result in much _more_ usage of `context` than exists today since it'll open up to user of `react-router-serve` as well. For this reason it made more sense to ship the breaking change flag now for the smaller surface area of `context`-enabled apps users, instead of later for a much larger surface area of apps.
 
-Second, in order to implement client-side middleware, we need to introduce a new `context` concept on the client - and we would like that to be the same API as we have on the server. So, if we chose to stick with `AppLoadContext`, we'd then have to implement a brand new `ClientAppLoadContext` which would suffer the same type issues out of the gate. So it felt lazy to ship a known-subpar-API to the client. Furthermore, even iof we did ship it - we'd _still_ want to enhance it later - so we'd be shipping a mediocre client `context` API _knowing_ that we would be breaking shortly after with a better typed API.
+Second, in order to implement client-side middleware, we need to introduce a new `context` concept on the client - and we would like that to be the same API as we have on the server. So, if we chose to stick with `AppLoadContext`, we'd then have to implement a brand new `ClientAppLoadContext` which would suffer the same type issues out of the gate. It felt lazy to ship a known-subpar-API to the client. Furthermore, even if we did ship it - we'd _still_ want to enhance it later - so we'd be shipping a mediocre client `context` API _knowing_ that we would be breaking shortly after with a better typed API.
 
-So, we decided to rip the band-aid off and include the breaking `context` change with the initial release of middleware. When the flag is enabled, we'll be replacing `AppLoadContext` with a new type-safe `context` API that is similar in usage to the `React.createContext` API:
+That is why we decided to rip the band-aid off and include the breaking `context` change with the initial release of middleware. When the flag is enabled, we'll be replacing `AppLoadContext` with a new type-safe `context` API that is similar in usage to the `React.createContext` API:
 
 ```ts
 let userContext = unstable_createContext<User>();
@@ -52,7 +52,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 ```
 
-If you have an app already using `AppLoadContext`, you don't need to split that out and can just stick that object into it's own context value and maintain the same shape:
+If you have an app already using `AppLoadContext`, you don't need to split that out, and can instead stick that object into it's own context value and maintain the same shape:
 
 ```diff
 + let appContext = unstable_createContext<AppLoadContext>()
