@@ -1,5 +1,12 @@
 # `react-router`
 
+## 7.3.0-pre.1
+
+### Patch Changes
+
+- Fix jsdoc types for `context` ([#13170](https://github.com/remix-run/react-router/pull/13170))
+- [REMOVE] Remove middleware depth logic and always call middlware for all matches ([#13172](https://github.com/remix-run/react-router/pull/13172))
+
 ## 7.3.0-pre.0
 
 ### Minor Changes
