@@ -143,10 +143,11 @@ type ClientDataFunctionArgs<T extends RouteInfo> = {
   params: T["params"];
   /**
    * When `future.unstable_middleware` is not enabled, this is undefined.
+   *
    * When `future.unstable_middleware` is enabled, this is an instance of
-   * `{@link unstable_RouterContextProvider}` and can be used to access context values
+   * `unstable_RouterContextProvider` and can be used to access context values
    * from your route middlewares.  You may pass in initial context values in your
-   * `{@link unstable_getContext}` function passed tp `{@link HydratedRouter}`
+   * `<HydratedRouter unstable_getContext>` prop
    */
   context: unstable_RouterContextProvider;
 };
@@ -171,15 +172,15 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
   params: T["params"];
   /**
    * Without `future.unstable_middleware` enabled, this is the context passed in
-   * to your server adapter's `{@link getLoadContext}` function. It's a way to bridge the
+   * to your server adapter's `getLoadContext` function. It's a way to bridge the
    * gap between the adapter's request/response API with your React Router app.
    * It is only applicable if you are using a custom server adapter.
    *
    * With `future.unstable_middleware` enabled, this is an instance of
-   * `{@link unstable_RouterContextProvider}` and can be used for type-safe access to
+   * `unstable_RouterContextProvider` and can be used for type-safe access to
    * context value set in your route middlewares.  If you are using a custom
    * server adapter, you may provide an initial set of context values from your
-   * `{@link getLoadContext}` function.
+   * `getLoadContext` function.
    */
   context: MiddlewareEnabled extends true
     ? unstable_RouterContextProvider
