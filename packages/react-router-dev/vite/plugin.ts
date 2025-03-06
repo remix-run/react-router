@@ -3541,21 +3541,3 @@ async function getEnvironmentsOptions(
 function isNonNullable<T>(x: T): x is NonNullable<T> {
   return x != null;
 }
-
-function createSubResourceIntegrityMap(
-  viteManifest: Vite.Manifest,
-  algorithm: string,
-  outdir: string,
-  publicPath: string
-) {
-  let map: Record<string, string> = {};
-  for (let value of Object.values(viteManifest)) {
-    let file = path.resolve(outdir, value.file);
-    if (!fse.existsSync(file)) continue;
-    let source = fse.readFileSync(file);
-    let hash = createHash("sha384").update(source).digest().toString("base64");
-    let url = `${publicPath}${value.file}`;
-    map[url] = `${algorithm.toLowerCase()}-${hash}`;
-  }
-  return map;
-}
