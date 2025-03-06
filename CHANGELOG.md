@@ -17,9 +17,9 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
+      - [Client-side `context` (unstable)](#client-side-context-unstable)
       - [Middleware (unstable)](#middleware-unstable)
         - [Middleware `context` parameter](#middleware-context-parameter)
-      - [Client-side `context` (unstable)](#client-side-context-unstable)
       - [`unstable_SerializesTo`](#unstable_serializesto)
     - [Changes by Package](#changes-by-package)
   - [v7.2.0](#v720)
@@ -315,6 +315,8 @@ Date: 2025-03-06
   - On `fetcher` calls to undiscovered routes, this mismatch will trigger a document reload of the current path
 - `react-router` - Skip resource route flow in dev server in SPA mode ([#13113](https://github.com/remix-run/react-router/pull/13113))
 - `react-router` - Fix single fetch `_root.data` requests when a `basename` is used ([#12898](https://github.com/remix-run/react-router/pull/12898))
+- `react-router` - Fix types for `loaderData` and `actionData` that contained `Record`s ([#13139](https://github.com/remix-run/react-router/pull/13139))
+  - ⚠️ This is a breaking change for users who have already adopted `unstable_SerializesTo` - see the note in the `Unstable Changes` section below for more information
 - `@react-router/dev` - Fix support for custom client `build.rollupOptions.output.entryFileNames` ([#13098](https://github.com/remix-run/react-router/pull/13098))
 - `@react-router/dev` - Fix usage of `prerender` option when `serverBundles` option has been configured or provided by a preset, e.g. `vercelPreset` from `@vercel/react-router` ([#13082](https://github.com/remix-run/react-router/pull/13082))
 - `@react-router/dev` - Fix support for custom `build.assetsDir` ([#13077](https://github.com/remix-run/react-router/pull/13077))
@@ -332,15 +334,60 @@ Date: 2025-03-06
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- `react-router` - Support middleware on routes (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
-  - See below for more information
 - `react-router` - Add `context` support to client side data routers (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
-  - See below for more information
-- `react-router` - Fix types for `loaderData` and `actionData` that contained `Record`s ([#13139](https://github.com/remix-run/react-router/pull/13139))
-  - ⚠️ This is a breaking change for users who have already adopted `unstable_SerializesTo`
-  - See below for more information
+- `react-router` - Support middleware on routes (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
 - `@react-router/dev` - Fix errors with `future.unstable_viteEnvironmentApi` when the `ssr` environment has been configured by another plugin to be a custom `Vite.DevEnvironment` rather than the default `Vite.RunnableDevEnvironment` ([#13008](https://github.com/remix-run/react-router/pull/13008))
 - `@react-router/dev` - When `future.unstable_viteEnvironmentApi` is enabled and the `ssr` environment has `optimizeDeps.noDiscovery` disabled, define `optimizeDeps.entries` and `optimizeDeps.include` ([#13007](https://github.com/remix-run/react-router/pull/13007))
+
+#### Client-side `context` (unstable)
+
+Your application `clientLoader`/`clientAction` functions (or `loader`/`action` in library mode) will now receive a `context` parameter on the client. This is an instance of `unstable_RouterContextProvider` that you use with type-safe contexts (similar to `React.createContext`) and is most useful with the corresponding `unstable_clientMiddleware` API:
+
+```ts
+import { unstable_createContext } from "react-router";
+
+type User = {
+  /*...*/
+};
+
+const userContext = unstable_createContext<User>();
+
+const sessionMiddleware: Route.unstable_ClientMiddlewareFunction = async ({
+  context,
+}) => {
+  let user = await getUser();
+  context.set(userContext, user);
+};
+
+export const unstable_clientMiddleware = [sessionMiddleware];
+
+export function clientLoader({ context }: Route.ClientLoaderArgs) {
+  let user = context.get(userContext);
+  let profile = await getProfile(user.id);
+  return { profile };
+}
+```
+
+Similar to server-side requests, a fresh `context` will be created per navigation (or `fetcher` call). If you have initial data you'd like to populate in the context for every request, you can provide an `unstable_getContext` function at the root of your app:
+
+- Library mode - `createBrowserRouter(routes, { unstable_getContext })`
+- Framework mode - `<HydratedRouter unstable_getContext>`
+
+This function should return an value of type `unstable_InitialContext` which is a `Map<unstable_RouterContext, unknown>` of context's and initial values:
+
+```ts
+const loggerContext = unstable_createContext<(...args: unknown[]) => void>();
+
+function logger(...args: unknown[]) {
+  console.log(new Date.toISOString(), ...args);
+}
+
+function unstable_getContext() {
+  let map = new Map();
+  map.set(loggerContext, logger);
+  return map;
+}
+```
 
 #### Middleware (unstable)
 
@@ -516,56 +563,6 @@ let adapterContext = unstable_createContext<MyAdapterContext>();
 function getLoadContext(req, res): unstable_InitialContext {
   let map = new Map();
   map.set(adapterContext, getAdapterContext(req));
-  return map;
-}
-```
-
-#### Client-side `context` (unstable)
-
-Your application `clientLoader`/`clientAction` functions (or `loader`/`action` in library mode) will now receive a `context` parameter on the client. This is an instance of `unstable_RouterContextProvider` that you use with type-safe contexts (similar to `React.createContext`) and is most useful with the corresponding `unstable_clientMiddleware` API:
-
-```ts
-import { unstable_createContext } from "react-router";
-
-type User = {
-  /*...*/
-};
-
-const userContext = unstable_createContext<User>();
-
-const sessionMiddleware: Route.unstable_ClientMiddlewareFunction = async ({
-  context,
-}) => {
-  let user = await getUser();
-  context.set(userContext, user);
-};
-
-export const unstable_clientMiddleware = [sessionMiddleware];
-
-export function clientLoader({ context }: Route.ClientLoaderArgs) {
-  let user = context.get(userContext);
-  let profile = await getProfile(user.id);
-  return { profile };
-}
-```
-
-Similar to server-side requests, a fresh `context` will be created per navigation (or `fetcher` call). If you have initial data you'd like to populate in the context for every request, you can provide an `unstable_getContext` function at the root of your app:
-
-- Library mode - `createBrowserRouter(routes, { unstable_getContext })`
-- Framework mode - `<HydratedRouter unstable_getContext>`
-
-This function should return an value of type `unstable_InitialContext` which is a `Map<unstable_RouterContext, unknown>` of context's and initial values:
-
-```ts
-const loggerContext = unstable_createContext<(...args: unknown[]) => void>();
-
-function logger(...args: unknown[]) {
-  console.log(new Date.toISOString(), ...args);
-}
-
-function unstable_getContext() {
-  let map = new Map();
-  map.set(loggerContext, logger);
   return map;
 }
 ```
