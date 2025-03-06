@@ -14,8 +14,6 @@
 
 - Skip resource route flow in dev server in SPA mode ([#13113](https://github.com/remix-run/react-router/pull/13113))
 
-- Fix jsdoc types for `context` ([#13170](https://github.com/remix-run/react-router/pull/13170))
-
 - Support middleware on routes (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
 
   Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router-config.ts` file:
@@ -422,7 +420,7 @@ _No changes_
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 
