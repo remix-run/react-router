@@ -17,7 +17,7 @@ describe("href", () => {
     );
   });
 
-  it("works with optional segments", () => {
+  it("works with optional static segments", () => {
     expect(href("/a/b?/:c", { c: "hello" })).toBe("/a/hello");
     expect(href("/a/b?/:c", { b: true, c: "hello" })).toBe("/a/b/hello");
   });
