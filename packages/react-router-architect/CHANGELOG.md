@@ -1,20 +1,12 @@
 # `@react-router/architect`
 
-## 7.3.0-pre.1
+## 7.3.0
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.3.0-pre.1`
-  - `@react-router/node@7.3.0-pre.1`
-
-## 7.3.0-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.3.0-pre.0`
-  - `@react-router/node@7.3.0-pre.0`
+  - `react-router@7.3.0`
+  - `@react-router/node@7.3.0`
 
 ## 7.2.0
 
