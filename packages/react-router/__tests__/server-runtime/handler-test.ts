@@ -3,6 +3,7 @@ import { createRequestHandler } from "../../lib/server-runtime/server";
 describe("createRequestHandler", () => {
   it("retains request headers when stripping body off for loaders", async () => {
     let handler = createRequestHandler({
+      ssr: true,
       routes: {
         root: {
           id: "routes/test",

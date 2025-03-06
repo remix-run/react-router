@@ -27,6 +27,7 @@ function spyConsole() {
 describe.skip("server", () => {
   let routeId = "root";
   let build: ServerBuild = {
+    ssr: true,
     entry: {
       module: {
         default: async (request) => {

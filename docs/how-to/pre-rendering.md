@@ -6,7 +6,7 @@ title: Pre-Rendering
 
 Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime. Pre-rendering is enabled via the `prerender` config in `react-router.config.ts` and can be used in two ways based on the `ssr` config value:
 
-- Alongside a runtime SSR server ith `ssr:true` (the default value)
+- Alongside a runtime SSR server with `ssr:true` (the default value)
 - Deployed to a static file server with `ssr:false`
 
 ## Pre-rendering with `ssr:true`
@@ -86,7 +86,7 @@ During development, pre-rendering doesn't save the rendered results to the publi
 
 ## Pre-rendering with `ssr:false`
 
-The above examples assume you are deploying a runtime server, but are pre-rendering some static pages in order to serve them faster and avoid hitting the server.
+The above examples assume you are deploying a runtime server but are pre-rendering some static pages to avoid hitting the server, resulting in faster loads.
 
 To disable runtime SSR and configure pre-rendering to be served from a static file server, you can set the `ssr:false` config flag:
 

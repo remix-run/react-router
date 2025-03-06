@@ -110,6 +110,66 @@ export type Submission =
       text: string;
     };
 
+export interface unstable_RouterContext<T = unknown> {
+  defaultValue?: T;
+}
+
+/**
+ * Creates a context object that may be used to store and retrieve arbitrary values.
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()` when no value has been
+ * set for the context. Otherwise reading this context when no value has been set will throw an
+ * error.
+ *
+ * @param defaultValue The default value for the context
+ * @returns A context object
+ */
+export function unstable_createContext<T>(
+  defaultValue?: T
+): unstable_RouterContext<T> {
+  return { defaultValue };
+}
+
+/**
+ * A Map of RouterContext objects to their initial values - used to populate a
+ * fresh `context` value per request/navigation/fetch
+ */
+export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
+
+/**
+ * Provides methods for writing/reading values in application context in a typesafe way.
+ */
+export class unstable_RouterContextProvider {
+  #map = new Map<unstable_RouterContext, unknown>();
+
+  constructor(init?: unstable_InitialContext) {
+    if (init) {
+      for (let [context, value] of init) {
+        this.set(context, value);
+      }
+    }
+  }
+
+  get<T>(context: unstable_RouterContext<T>): T {
+    if (this.#map.has(context)) {
+      return this.#map.get(context) as T;
+    }
+
+    if (context.defaultValue !== undefined) {
+      return context.defaultValue;
+    }
+
+    throw new Error("No value found for context");
+  }
+
+  set<C extends unstable_RouterContext>(
+    context: C,
+    value: C extends unstable_RouterContext<infer T> ? T : never
+  ): void {
+    this.#map.set(context, value);
+  }
+}
+
 /**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
@@ -138,8 +198,27 @@ interface DataFunctionArgs<Context> {
    * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
    * It is only applicable if you are using a custom server adapter.
    */
-  context?: Context;
+  context: Context;
 }
+
+/**
+ * Route middleware `next` function to call downstream handlers and then complete
+ * middlewares from the bottom-up
+ */
+export interface unstable_MiddlewareNextFunction<Result = unknown> {
+  (): Result | Promise<Result>;
+}
+
+/**
+ * Route middleware function signature.  Receives the same "data" arguments as a
+ * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
+ * a `next` function as the second parameter which will call downstream handlers
+ * and then complete middlewares from the bottom-up
+ */
+export type unstable_MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  next: unstable_MiddlewareNextFunction<Result>
+) => Result | Promise<Result>;
 
 /**
  * Arguments passed to loader functions
@@ -154,11 +233,9 @@ export interface ActionFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
 type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 
@@ -274,8 +351,10 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = any> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
@@ -285,6 +364,7 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   signal: AbortSignal;
   path: string;
   matches: M[];
+  fetcherKey: string | undefined;
   patch: (routeId: string | null, children: O[]) => void;
 };
 
@@ -349,6 +429,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  unstable_middleware?: unstable_MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
