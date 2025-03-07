@@ -1304,10 +1304,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 // `ssrExternals` config inadvertently overrides this. This doesn't
                 // impact consumers because for them `ssrExternals` is undefined and
                 // Cloudflare's "noExternal: true" config remains intact.
-                // This does not apply in build as dependencies are not pre-bundled.
-                viteCommand === "serve" && options.resolve?.noExternal === true
-                  ? undefined
-                  : ssrExternals,
+                options.resolve?.noExternal === true ? undefined : ssrExternals,
             },
             optimizeDeps:
               options.optimizeDeps?.noDiscovery === false
