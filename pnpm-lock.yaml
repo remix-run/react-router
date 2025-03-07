@@ -552,8 +552,8 @@ importers:
         version: 6.0.2
     devDependencies:
       '@cloudflare/vite-plugin':
-        specifier: ^0.1.1
-        version: 0.1.1(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
+        specifier: ^0.1.9
+        version: 0.1.9(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))
       '@cloudflare/workers-types':
         specifier: ^4.20250214.0
         version: 4.20250214.0
@@ -2287,6 +2287,12 @@ packages:
 
   '@cloudflare/vite-plugin@0.1.1':
     resolution: {integrity: sha512-1M4vXIJ5726rlNjC8gpnk7jGRCWIs/Tkt/4U+ApAmy7Bhgp1w28uiF4V6KaugktkkbfcYSsXBHeovUM+ccvqsw==}
+    peerDependencies:
+      vite: ^6.1.0
+      wrangler: ^3.101.0
+
+  '@cloudflare/vite-plugin@0.1.9':
+    resolution: {integrity: sha512-ymOf8tQ9eGDWB9LRgk+plJ6tfkkJGuGbeKXZxZLwuCm6mFOhr/hVOhs0kAfmNph894CQ6vLnLSjsNeAVCfcaDQ==}
     peerDependencies:
       vite: ^6.1.0
       wrangler: ^3.101.0
@@ -5425,6 +5431,14 @@ packages:
       picomatch:
         optional: true
 
+  fdir@6.4.3:
+    resolution: {integrity: sha512-PMXmW2y1hDDfTSRc9gaXIuCCRpuoz3Kaz8cUelp3smouvfT632ozg2vrT6lJsHKKOF59YLbOGfAWGUcKEfRMQw==}
+    peerDependencies:
+      picomatch: ^3 || ^4
+    peerDependenciesMeta:
+      picomatch:
+        optional: true
+
   figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
@@ -6772,6 +6786,11 @@ packages:
     engines: {node: '>=16.13'}
     hasBin: true
 
+  miniflare@3.20250224.0:
+    resolution: {integrity: sha512-DyLxzhHCQ9UWDceqEsT7tmw8ZTSAhb1yKUqUi5VDmSxsIocKi4y5kvMijw9ELK8+tq/CiCp/RQxwRNZRJD8Xbg==}
+    engines: {node: '>=16.13'}
+    hasBin: true
+
   minimatch@10.0.1:
     resolution: {integrity: sha512-ethXTt3SGGR+95gudmqJ1eNhRO7eGEGIgYA9vnPatK4/etz2MEVDno5GMCibdMTuBMyElzIlgxMna3K94XDIDQ==}
     engines: {node: 20 || >=22}
@@ -8029,6 +8048,10 @@ packages:
 
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
+
+  tinyglobby@0.2.12:
+    resolution: {integrity: sha512-qkf4trmKSIiMTs/E63cxH+ojC2unam7rJ0WrauAzpT3ECNTxGRMlaXxVbfxMUC/w0LaYk6jQ4y/nGR9uBO3tww==}
+    engines: {node: '>=12.0.0'}
 
   tinyglobby@0.2.9:
     resolution: {integrity: sha512-8or1+BGEdk1Zkkw2ii16qSS7uVrQJPre5A9o/XkWPATkk23FZh/15BKFxPnlTy6vkljZxLqYCzzBMj30ZrSvjw==}
@@ -9783,6 +9806,21 @@ snapshots:
       '@cloudflare/unenv-preset': 1.1.1(unenv@2.0.0-rc.1)(workerd@1.20241230.0)
       '@hattip/adapter-node': 0.0.49
       miniflare: 3.20250204.1
+      unenv: 2.0.0-rc.1
+      vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
+      wrangler: 3.109.2(@cloudflare/workers-types@4.20250214.0)
+      ws: 8.18.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - workerd
+
+  '@cloudflare/vite-plugin@0.1.9(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))(workerd@1.20241230.0)(wrangler@3.109.2(@cloudflare/workers-types@4.20250214.0))':
+    dependencies:
+      '@cloudflare/unenv-preset': 1.1.1(unenv@2.0.0-rc.1)(workerd@1.20241230.0)
+      '@hattip/adapter-node': 0.0.49
+      miniflare: 3.20250224.0
+      tinyglobby: 0.2.12
       unenv: 2.0.0-rc.1
       vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
       wrangler: 3.109.2(@cloudflare/workers-types@4.20250214.0)
@@ -13297,6 +13335,10 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.2
 
+  fdir@6.4.3(picomatch@4.0.2):
+    optionalDependencies:
+      picomatch: 4.0.2
+
   figures@3.2.0:
     dependencies:
       escape-string-regexp: 1.0.5
@@ -15266,6 +15308,23 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  miniflare@3.20250224.0:
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      acorn: 8.14.0
+      acorn-walk: 8.3.2
+      exit-hook: 2.2.1
+      glob-to-regexp: 0.4.1
+      stoppable: 1.1.0
+      undici: 5.28.5
+      workerd: 1.20241230.0
+      ws: 8.18.0
+      youch: 3.2.3
+      zod: 3.22.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   minimatch@10.0.1:
     dependencies:
       brace-expansion: 2.0.1
@@ -16757,6 +16816,11 @@ snapshots:
   through@2.3.8: {}
 
   tiny-invariant@1.3.3: {}
+
+  tinyglobby@0.2.12:
+    dependencies:
+      fdir: 6.4.3(picomatch@4.0.2)
+      picomatch: 4.0.2
 
   tinyglobby@0.2.9:
     dependencies:

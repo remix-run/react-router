@@ -160,10 +160,7 @@ const CSS_DEV_HELPER_ENVIRONMENT_NAME =
   "__react_router_css_dev_helper__" as const;
 type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
 
-type EnvironmentOptions = Pick<
-  Vite.EnvironmentOptions,
-  "build" | "resolve" | "optimizeDeps"
->;
+type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
 type EnvironmentOptionsResolver = (options: {
   viteUserConfig: Vite.UserConfig;
@@ -178,19 +175,13 @@ export type EnvironmentBuildContext = {
   resolveOptions: EnvironmentOptionsResolver;
 };
 
-function isSeverBundleEnvironmentName(
-  name: string
-): name is SsrEnvironmentName {
-  return name.startsWith(SSR_BUNDLE_PREFIX);
-}
-
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
     ctx.buildManifest?.serverBundles
-      ? isSeverBundleEnvironmentName(name)
+      ? isSsrBundleEnvironmentName(name)
       : name === "ssr"
   ) as [SsrEnvironmentName, T][];
 }
@@ -1295,6 +1286,50 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               }),
         };
       },
+      configEnvironment(name, options) {
+        if (
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
+          (ctx.buildManifest?.serverBundles
+            ? isSsrBundleEnvironmentName(name)
+            : name === "ssr")
+        ) {
+          const vite = getVite();
+
+          return {
+            resolve: {
+              external:
+                // This check is required to honor the "noExternal: true" config
+                // provided by vite-plugin-cloudflare within this repo. When compiling
+                // for Cloudflare, all server dependencies are pre-bundled, but our
+                // `ssrExternals` config inadvertently overrides this. This doesn't
+                // impact consumers because for them `ssrExternals` is undefined and
+                // Cloudflare's "noExternal: true" config remains intact.
+                options.resolve?.noExternal === true ? undefined : ssrExternals,
+            },
+            optimizeDeps:
+              options.optimizeDeps?.noDiscovery === false
+                ? {
+                    entries: [
+                      vite.normalizePath(ctx.entryServerFilePath),
+                      ...Object.values(ctx.reactRouterConfig.routes).map(
+                        (route) =>
+                          resolveRelativeRouteFilePath(
+                            route,
+                            ctx.reactRouterConfig
+                          )
+                      ),
+                    ],
+                    include: [
+                      "react",
+                      "react/jsx-dev-runtime",
+                      "react-dom/server",
+                      "react-router",
+                    ],
+                  }
+                : undefined,
+          };
+        }
+      },
       async configResolved(resolvedViteConfig) {
         await initEsModuleLexer;
 
@@ -1531,6 +1566,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   let vite = getVite();
                   let ssrEnvironment = viteDevServer.environments.ssr;
                   if (!vite.isRunnableDevEnvironment(ssrEnvironment)) {
+                    next();
                     return;
                   }
                   build = (await ssrEnvironment.runner.import(
@@ -3315,14 +3351,8 @@ export async function getEnvironmentOptionsResolvers(
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
       resolve: {
         external:
-          // This check is required to honor the "noExternal: true" config
-          // provided by vite-plugin-cloudflare within this repo. When compiling
-          // for Cloudflare, all server dependencies are externalized, but our
-          // `ssrExternals` config inadvertently overrides this. This doesn't
-          // impact consumers because for them `ssrExternals` is undefined and
-          // Cloudflare's "noExternal: true" config remains intact.
-          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-          viteUserConfig.environments?.ssr?.resolve?.noExternal === true
+          // If `unstable_viteEnvironmentApi` is `true`, `resolve.external` is set in the `configEnvironment` hook
+          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? undefined
             : ssrExternals,
         conditions,
@@ -3435,24 +3465,6 @@ export async function getEnvironmentOptionsResolvers(
         build: {
           outDir: getServerBuildDirectory(ctx.reactRouterConfig),
         },
-        optimizeDeps:
-          ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-          viteUserConfig.environments?.ssr?.optimizeDeps?.noDiscovery === false
-            ? {
-                entries: [
-                  vite.normalizePath(ctx.entryServerFilePath),
-                  ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
-                    resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-                  ),
-                ],
-                include: [
-                  "react",
-                  "react/jsx-dev-runtime",
-                  "react-dom/server",
-                  "react-router",
-                ],
-              }
-            : undefined,
       });
   }
 
