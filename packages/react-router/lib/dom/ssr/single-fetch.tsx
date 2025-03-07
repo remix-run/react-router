@@ -1,9 +1,6 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
-import type {
-  Router as DataRouter,
-  MiddlewareError,
-} from "../../router/router";
+import type { Router as DataRouter } from "../../router/router";
 import { isResponse, runMiddlewarePipeline } from "../../router/router";
 import type {
   DataStrategyFunction,
@@ -136,6 +133,10 @@ export function StreamTransfer({
   }
 }
 
+function handleMiddlewareError(error: unknown, routeId: string) {
+  return { [routeId]: { type: "error", result: error } };
+}
+
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
@@ -152,7 +153,7 @@ export function getSingleFetchDataStrategy(
         args,
         false,
         () => singleFetchActionStrategy(request, matches, basename),
-        (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+        handleMiddlewareError
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
@@ -201,7 +202,7 @@ export function getSingleFetchDataStrategy(
           args,
           false,
           () => nonSsrStrategy(manifest, request, matches, basename),
-          (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+          handleMiddlewareError
         ) as Promise<Record<string, DataStrategyResult>>;
       }
     }
@@ -212,7 +213,7 @@ export function getSingleFetchDataStrategy(
         args,
         false,
         () => singleFetchLoaderFetcherStrategy(request, matches, basename),
-        (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+        handleMiddlewareError
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
@@ -230,7 +231,7 @@ export function getSingleFetchDataStrategy(
           matches,
           basename
         ),
-      (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+      handleMiddlewareError
     ) as Promise<Record<string, DataStrategyResult>>;
   };
 }
