@@ -175,19 +175,13 @@ export type EnvironmentBuildContext = {
   resolveOptions: EnvironmentOptionsResolver;
 };
 
-function isSeverBundleEnvironmentName(
-  name: string
-): name is SsrEnvironmentName {
-  return name.startsWith(SSR_BUNDLE_PREFIX);
-}
-
 function getServerEnvironmentEntries<T>(
   ctx: ReactRouterPluginContext,
   record: Record<string, T>
 ): [SsrEnvironmentName, T][] {
   return Object.entries(record).filter(([name]) =>
     ctx.buildManifest?.serverBundles
-      ? isSeverBundleEnvironmentName(name)
+      ? isSsrBundleEnvironmentName(name)
       : name === "ssr"
   ) as [SsrEnvironmentName, T][];
 }
