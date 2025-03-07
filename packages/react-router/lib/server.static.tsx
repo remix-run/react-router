@@ -54,7 +54,7 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
       const route: DataRouteObject = {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
-        element: (
+        element: match.element ?? (
           <RouteWrapper Component={match.Component} Layout={match.Layout} />
         ),
         ErrorBoundary: match.ErrorBoundary,

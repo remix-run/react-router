@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
-import { renderToReadableStream } from "framework/server";
+import { renderToReadableStream } from "../../framework/server";
+
 import { matchServerRequest } from "react-router";
 
 import { routes } from "../routes";

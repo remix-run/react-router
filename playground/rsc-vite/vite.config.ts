@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 import { cloudflare } from "@cloudflare/vite-plugin";
 import reactServerDOM from "@jacob-ebey/vite-react-server-dom";
 import { defineConfig } from "vite";
@@ -20,6 +22,12 @@ export default defineConfig({
         },
       },
     },
+    ssr: {
+      resolve: { noExternal: true },
+    },
+    server: {
+      resolve: { noExternal: true },
+    },
   },
   plugins: [
     tsconfigPaths({ configNames: ["tsconfig.client.json"] }),
@@ -29,13 +37,13 @@ export default defineConfig({
       ssrEnvironments: ["ssr"],
       runtime: {
         browser: {
-          importFrom: "framework/references.browser",
+          importFrom: path.resolve("./framework/references.browser.ts"),
         },
         server: {
-          importFrom: "framework/references.server",
+          importFrom: path.resolve("./framework/references.server.ts"),
         },
         ssr: {
-          importFrom: "framework/references.ssr",
+          importFrom: path.resolve("./framework/references.ssr.ts"),
         },
       },
     }),

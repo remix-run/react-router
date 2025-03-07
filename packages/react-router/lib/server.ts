@@ -1,3 +1,5 @@
+import { createElement } from "react";
+
 import type {
   ClientActionFunction,
   ClientLoaderFunction,
@@ -50,6 +52,7 @@ export type ServerRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
   Component?: React.ComponentType<any>;
+  element?: React.ReactElement | null;
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   hasAction: boolean;
@@ -126,10 +129,13 @@ export async function matchServerRequest(
                 ...((await route.lazy()) as any),
               };
             }
+
+            const componentIsClientReference = isClientReference(route.default);
+
             return {
               clientAction: route.clientAction,
               clientLoader: route.clientLoader,
-              Component: route.default,
+              Component: componentIsClientReference ? route.default : undefined,
               ErrorBoundary: route.ErrorBoundary,
               handle: route.handle,
               hasAction: !!route.action,
@@ -176,26 +182,41 @@ export async function matchServerRequest(
     errors,
     loaderData: result.loaderData,
     location: result.location,
-    matches: result.matches.map((match) => ({
-      clientAction: (match.route as any).clientAction,
-      clientLoader: (match.route as any).clientLoader,
-      Component: (match.route as any).default,
-      ErrorBoundary: (match.route as any).ErrorBoundary,
-      handle: (match.route as any).handle,
-      hasAction: !!match.route.action,
-      hasLoader: !!match.route.loader,
-      HydrateFallback: (match.route as any).HydrateFallback,
-      id: match.route.id,
-      index: match.route.index,
-      Layout: (match.route as any).Layout,
-      links: (match.route as any).links,
-      meta: (match.route as any).meta,
-      params: match.params,
-      path: match.route.path,
-      pathname: match.pathname,
-      pathnameBase: match.pathnameBase,
-      shouldRevalidate: (match.route as any).shouldRevalidate,
-    })),
+    matches: result.matches.map((match) => {
+      const componentIsClientReference = isClientReference(
+        (match.route as any).default
+      );
+
+      return {
+        clientAction: (match.route as any).clientAction,
+        clientLoader: (match.route as any).clientLoader,
+        Component: componentIsClientReference
+          ? (match.route as any).default
+          : undefined,
+        element:
+          (match.route as any).default && !componentIsClientReference
+            ? createElement((match.route as any).default, {
+                actionData: result.actionData?.[match.route.id],
+                loaderData: result.loaderData[match.route.id],
+              })
+            : null,
+        ErrorBoundary: (match.route as any).ErrorBoundary,
+        handle: (match.route as any).handle,
+        hasAction: !!match.route.action,
+        hasLoader: !!match.route.loader,
+        HydrateFallback: (match.route as any).HydrateFallback,
+        id: match.route.id,
+        index: match.route.index,
+        Layout: (match.route as any).Layout,
+        links: (match.route as any).links,
+        meta: (match.route as any).meta,
+        params: match.params,
+        path: match.route.path,
+        pathname: match.pathname,
+        pathnameBase: match.pathnameBase,
+        shouldRevalidate: (match.route as any).shouldRevalidate,
+      };
+    }),
   } satisfies ServerRenderPayload;
 
   return {
@@ -275,4 +296,15 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+const CLIENT_REFERENCE_TAG = Symbol.for("react.client.reference");
+
+function isClientReference(obj: unknown) {
+  return (
+    obj &&
+    (typeof obj === "object" || typeof obj === "function") &&
+    "$$typeof" in obj &&
+    obj.$$typeof === CLIENT_REFERENCE_TAG
+  );
 }

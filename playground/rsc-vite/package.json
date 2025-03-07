@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "node dist/server.js"
+    "start": "node server.js"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

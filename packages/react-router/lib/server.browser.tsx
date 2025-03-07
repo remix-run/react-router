@@ -151,7 +151,9 @@ function createRouteFromServerManifest(
   return {
     id: match.id,
     action: match.hasAction || !!match.clientAction,
-    element: <RouteWrapper Component={match.Component} Layout={match.Layout} />,
+    element: match.element ?? (
+      <RouteWrapper Component={match.Component} Layout={match.Layout} />
+    ),
     ErrorBoundary: match.ErrorBoundary,
     handle: match.handle,
     hasErrorBoundary: !!match.ErrorBoundary,

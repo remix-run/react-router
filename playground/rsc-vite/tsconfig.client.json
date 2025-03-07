@@ -6,7 +6,6 @@
     "rootDir": ".",
     "paths": {
       "~/*": ["./src/app/*"],
-      "framework/*": ["./framework/*"]
     },
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
