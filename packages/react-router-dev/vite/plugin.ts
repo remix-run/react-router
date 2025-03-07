@@ -1349,6 +1349,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         }
 
+        const childCompilerPlugins = await asyncFlatten(
+          childCompilerConfigFile.config.plugins ?? []
+        );
+
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
           // Ensure child compiler cannot overwrite the default cache directory
@@ -1362,8 +1366,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           configFile: false,
           envFile: false,
           plugins: [
-            ...(childCompilerConfigFile.config.plugins ?? [])
-              .flat()
+            childCompilerPlugins
               // Exclude this plugin from the child compiler to prevent an
               // infinite loop (plugin creates a child compiler with the same
               // plugin that creates another child compiler, repeat ad
@@ -1372,14 +1375,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               // production build because the child compiler is a Vite dev
               // server and will generate incorrect manifests.
               .filter(
-                (plugin) =>
+                (plugin): plugin is Vite.Plugin =>
                   typeof plugin === "object" &&
                   plugin !== null &&
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
                   plugin.name !== "react-router:route-exports" &&
                   plugin.name !== "react-router:hmr-updates"
-              ),
+              )
+              // Remove server hooks to avoid conflicts with main dev server
+              .map((plugin) => ({
+                ...plugin,
+                configureServer: undefined,
+                configurePreviewServer: undefined,
+              })),
             {
               name: "react-router:override-optimize-deps",
               config(userConfig) {
@@ -3496,4 +3505,18 @@ async function getEnvironmentsOptions(
 
 function isNonNullable<T>(x: T): x is NonNullable<T> {
   return x != null;
+}
+
+// Type and function copied from Vite
+type AsyncFlatten<T extends unknown[]> = T extends (infer U)[]
+  ? Exclude<Awaited<U>, U[]>[]
+  : never;
+
+async function asyncFlatten<T extends unknown[]>(
+  arr: T
+): Promise<AsyncFlatten<T>> {
+  do {
+    arr = (await Promise.all(arr)).flat(Infinity) as any;
+  } while (arr.some((v: any) => v?.then));
+  return arr as unknown[] as AsyncFlatten<T>;
 }
