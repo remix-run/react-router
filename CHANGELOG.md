@@ -391,7 +391,7 @@ function unstable_getContext() {
 
 #### Middleware (unstable)
 
-Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router-config.ts` file:
+Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router.config.ts` file:
 
 ```ts
 import type { Config } from "@react-router/dev/config";
