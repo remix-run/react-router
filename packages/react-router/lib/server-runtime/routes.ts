@@ -81,7 +81,7 @@ export function createStaticHandlerDataRoutes(
       loader: route.module.loader
         ? async (args: RRLoaderFunctionArgs) => {
             // If we're prerendering, use the data passed in from prerendering
-            // the .data route so we dom't call loaders twice
+            // the .data route so we don't call loaders twice
             if (args.request.headers.has("X-React-Router-Prerender-Data")) {
               const preRenderedData = args.request.headers.get(
                 "X-React-Router-Prerender-Data"
