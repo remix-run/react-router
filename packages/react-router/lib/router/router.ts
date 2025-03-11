@@ -2681,7 +2681,10 @@ export function createRouter(init: RouterInit): Router {
       new URL(request.url),
       basename
     );
+    let serializedState = redirect.response.headers.get("State");
+    let redirectState = serializedState ? JSON.parse(serializedState) : {};
     let redirectLocation = createLocation(state.location, location, {
+      ...redirectState,
       _isRedirect: true,
     });
 
