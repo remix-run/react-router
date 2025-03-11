@@ -4,7 +4,7 @@ import { Counter } from "../../counter";
 
 export function loader() {
   return {
-    message: "Hello Home!",
+    message: "Hello Home!" + "!".repeat(Math.floor(Math.random() * 10)),
   };
 }
 
