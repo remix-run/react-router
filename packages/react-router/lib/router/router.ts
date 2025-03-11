@@ -811,6 +811,7 @@ export function createRouter(init: RouterInit): Router {
     manifest
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
+  let routesPatched = false;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategy;
   let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
@@ -1187,6 +1188,10 @@ export function createRouter(init: RouterInit): Router {
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>,
     { flushSync }: { flushSync?: boolean } = {}
   ): void {
+    if (routesPatched) {
+      newState.matches = matchRoutes(dataRoutes, location) ?? newState.matches;
+    }
+
     // Deduce if we're in a loading/actionReload state:
     // - We have committed actionData in the store
     // - The current navigation was a mutation submission
@@ -3264,6 +3269,8 @@ export function createRouter(init: RouterInit): Router {
       mapRouteProperties
     );
 
+    routesPatched = true;
+
     // If we are not in the middle of an HMR revalidation and we changed the
     // routes, provide a new identity and trigger a reflow via `updateState`
     // to re-run memoized `router.routes` dependencies.
@@ -4480,64 +4487,20 @@ function patchRoutesImpl(
     childrenToPatch = routesToUse;
   }
 
-  // Don't patch in routes we already know about so that `patch` is idempotent
-  // to simplify user-land code. This is useful because we re-call the
-  // `patchRoutesOnNavigation` function for matched routes with params.
-  let uniqueChildren = children.filter(
-    (newRoute) =>
-      !childrenToPatch.some((existingRoute) =>
-        isSameRoute(newRoute, existingRoute)
-      )
-  );
-
   let newRoutes = convertRoutesToDataRoutes(
-    uniqueChildren,
+    children,
     mapRouteProperties,
     [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
     manifest
   );
+  const newIds = new Set(newRoutes.map((r) => r.id));
+  for (let i = childrenToPatch.length - 1; i >= 0; i--) {
+    if (newIds.has(childrenToPatch[i].id)) {
+      childrenToPatch.splice(i, 1);
+    }
+  }
 
   childrenToPatch.push(...newRoutes);
-}
-
-function isSameRoute(
-  newRoute: AgnosticRouteObject,
-  existingRoute: AgnosticRouteObject
-): boolean {
-  // Most optimal check is by id
-  if (
-    "id" in newRoute &&
-    "id" in existingRoute &&
-    newRoute.id === existingRoute.id
-  ) {
-    return true;
-  }
-
-  // Second is by pathing differences
-  if (
-    !(
-      newRoute.index === existingRoute.index &&
-      newRoute.path === existingRoute.path &&
-      newRoute.caseSensitive === existingRoute.caseSensitive
-    )
-  ) {
-    return false;
-  }
-
-  // Pathless layout routes are trickier since we need to check children.
-  // If they have no children then they're the same as far as we can tell
-  if (
-    (!newRoute.children || newRoute.children.length === 0) &&
-    (!existingRoute.children || existingRoute.children.length === 0)
-  ) {
-    return true;
-  }
-
-  // Otherwise, we look to see if every child in the new route is already
-  // represented in the existing route's children
-  return newRoute.children!.every((aChild, i) =>
-    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
-  );
 }
 
 /**

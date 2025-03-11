@@ -1,5 +1,7 @@
 export { clientLoader } from "./home.client";
 
+import { Counter } from "../../counter";
+
 export function loader() {
   return {
     message: "Hello Home!",
@@ -7,9 +9,14 @@ export function loader() {
 }
 
 export default function Home({
-  loaderData,
+  loaderData: { message },
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
-  return <h1>{loaderData.message}</h1>;
+  return (
+    <main>
+      <h1>{message}</h1>
+      <Counter />
+    </main>
+  );
 }

@@ -147,13 +147,18 @@ export function ServerBrowserRouter({
 
 function createRouteFromServerManifest(
   match: ServerRouteManifest
-): DataRouteObject {
+): DataRouteObject & {
+  rendered: { Component: any; element: any; Layout: any };
+} {
   return {
     id: match.id,
     action: match.hasAction || !!match.clientAction,
-    element: match.element ?? (
-      <RouteWrapper Component={match.Component} Layout={match.Layout} />
-    ),
+    rendered: {
+      Component: match.Component,
+      element: match.element,
+      Layout: match.Layout,
+    },
+    element: <RouteWrapper id={match.id} />,
     ErrorBoundary: match.ErrorBoundary,
     handle: match.handle,
     hasErrorBoundary: !!match.ErrorBoundary,

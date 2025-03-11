@@ -1,22 +1,27 @@
 import * as React from "react";
-import type { DataRouteObject } from "./context";
+import { RouteContext, type DataRouteObject } from "./context";
 import { FrameworkContext } from "./dom/ssr/components";
 import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "./dom/server";
 import type { ServerPayload } from "./server";
 
-export function RouteWrapper({
-  Component,
-  Layout,
-}: {
-  Component?: React.ComponentType<any>;
-  Layout?: React.ComponentType<any>;
-}) {
+export function RouteWrapper({ id }: { id: string }) {
+  const ctx = React.useContext(RouteContext);
+  const match = ctx.matches.find((match) => match.route.id === id);
+
+  if (!match) {
+    throw new Error(`No match found for route with id "${id}"`);
+  }
+
+  const { Component, element, Layout } = (match as any).route.rendered as any;
+
   return Layout ? (
-    <Layout>{Component ? <Component /> : null}</Layout>
+    <Layout>{Component ? <Component /> : element}</Layout>
   ) : Component ? (
     <Component />
-  ) : null;
+  ) : (
+    element
+  );
 }
 
 export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
@@ -51,12 +56,17 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
 
   const router = createStaticRouter(
     payload.matches.reduceRight((previous, match) => {
-      const route: DataRouteObject = {
+      const route: DataRouteObject & {
+        rendered: { Component: any; element: any; Layout: any };
+      } = {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
-        element: match.element ?? (
-          <RouteWrapper Component={match.Component} Layout={match.Layout} />
-        ),
+        rendered: {
+          Component: match.Component,
+          element: match.element,
+          Layout: match.Layout,
+        },
+        element: <RouteWrapper id={match.id} />,
         ErrorBoundary: match.ErrorBoundary,
         handle: match.handle,
         hasErrorBoundary: !!match.ErrorBoundary,

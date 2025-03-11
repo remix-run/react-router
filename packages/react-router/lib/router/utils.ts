@@ -520,11 +520,6 @@ export function convertRoutesToDataRoutes(
       route.index !== true || !route.children,
       `Cannot specify children on an index route`
     );
-    invariant(
-      !manifest[id],
-      `Found a route id collision on id "${id}".  Route ` +
-        "id's must be globally unique within Data Router usages"
-    );
 
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
