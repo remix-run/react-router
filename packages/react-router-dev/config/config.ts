@@ -673,7 +673,7 @@ export async function createConfigLoader({
             absolute: true,
           });
           let routeConfigCodeChanged =
-            typeof routeConfigFile === "string" &&
+            routeConfigFile !== undefined &&
             isEntryFileDependency(
               viteNodeContext.devServer.moduleGraph,
               routeConfigFile,

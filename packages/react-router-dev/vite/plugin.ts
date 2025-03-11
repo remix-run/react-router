@@ -1477,13 +1477,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return;
             }
 
-            let message = (() => {
-              if (configChanged) return "Config changed.";
-              if (routeConfigChanged) return "Route config changed.";
-              if (configCodeChanged) return "Config saved.";
-              if (routeConfigCodeChanged) return "Route config saved.";
-              return "Config saved.";
-            })();
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
 
             logger.info(colors.green(message), {
               clear: true,
