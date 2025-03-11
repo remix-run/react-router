@@ -3,7 +3,8 @@ import { ViteNodeRunner } from "vite-node/client";
 import { installSourcemapsSupport } from "vite-node/source-map";
 import type * as Vite from "vite";
 
-import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
+import { ssrExternals } from "./ssr-externals";
 
 export type Context = {
   devServer: Vite.ViteDevServer;
@@ -11,29 +12,37 @@ export type Context = {
   runner: ViteNodeRunner;
 };
 
-export async function createContext(
-  viteConfig: Vite.InlineConfig = {}
-): Promise<Context> {
-  await preloadViteEsm();
-  const vite = importViteEsmSync();
+export async function createContext({
+  root,
+  mode,
+  customLogger,
+}: {
+  root: Vite.UserConfig["root"];
+  mode: Vite.ConfigEnv["mode"];
+  customLogger: Vite.UserConfig["customLogger"];
+}): Promise<Context> {
+  await preloadVite();
+  const vite = getVite();
 
-  const devServer = await vite.createServer(
-    vite.mergeConfig(
-      {
-        server: {
-          preTransformRequests: false,
-          hmr: false,
-        },
-        optimizeDeps: {
-          noDiscovery: true,
-        },
-        configFile: false,
-        envFile: false,
-        plugins: [],
-      },
-      viteConfig
-    )
-  );
+  const devServer = await vite.createServer({
+    root,
+    mode,
+    customLogger,
+    server: {
+      preTransformRequests: false,
+      hmr: false,
+      watch: null,
+    },
+    ssr: {
+      external: ssrExternals,
+    },
+    optimizeDeps: {
+      noDiscovery: true,
+    },
+    configFile: false,
+    envFile: false,
+    plugins: [],
+  });
   await devServer.pluginContainer.buildStart({});
 
   const server = new ViteNodeServer(devServer);

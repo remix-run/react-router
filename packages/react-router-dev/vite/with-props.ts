@@ -3,9 +3,9 @@ import dedent from "dedent";
 
 import type { Babel, NodePath, ParseResult } from "./babel";
 import { traverse, t } from "./babel";
-import * as VirtualModule from "./vmod";
+import * as VirtualModule from "./virtual-module";
 
-const vmodId = VirtualModule.id("with-props");
+const vmod = VirtualModule.create("with-props");
 
 const NAMED_COMPONENT_EXPORTS = ["HydrateFallback", "ErrorBoundary"];
 
@@ -13,10 +13,10 @@ export const plugin: Plugin = {
   name: "react-router-with-props",
   enforce: "pre",
   resolveId(id) {
-    if (id === vmodId) return VirtualModule.resolve(vmodId);
+    if (id === vmod.id) return vmod.resolvedId;
   },
   async load(id) {
-    if (id !== VirtualModule.resolve(vmodId)) return;
+    if (id !== vmod.resolvedId) return;
     return dedent`
       import { createElement as h } from "react";
       import { useActionData, useLoaderData, useMatches, useParams, useRouteError } from "react-router";
@@ -37,6 +37,8 @@ export const plugin: Plugin = {
         return function Wrapped() {
           const props = {
             params: useParams(),
+            loaderData: useLoaderData(),
+            actionData: useActionData(),
           };
           return h(HydrateFallback, props);
         };
@@ -126,7 +128,7 @@ export const transform = (ast: ParseResult<Babel.File>) => {
         hocs.map(([name, identifier]) =>
           t.importSpecifier(identifier, t.identifier(name))
         ),
-        t.stringLiteral(vmodId)
+        t.stringLiteral(vmod.id)
       )
     );
   }

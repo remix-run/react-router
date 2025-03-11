@@ -51,7 +51,7 @@ test.describe("typegen", () => {
         ] satisfies RouteConfig;
       `,
       "app/routes/product.tsx": tsx`
-        import { Expect, Equal } from "../expect-type"
+        import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/product"
 
         export function loader({ params }: Route.LoaderArgs) {
@@ -82,16 +82,42 @@ test.describe("typegen", () => {
           import { type RouteConfig, route } from "@react-router/dev/routes";
 
           export default [
-            route("repeated-params/:id/:id?/:id", "routes/repeated-params.tsx")
+            route("only-required/:id/:id", "routes/only-required.tsx"),
+            route("only-optional/:id?/:id?", "routes/only-optional.tsx"),
+            route("optional-then-required/:id?/:id", "routes/optional-then-required.tsx"),
+            route("required-then-optional/:id/:id?", "routes/required-then-optional.tsx"),
           ] satisfies RouteConfig;
         `,
-        "app/routes/repeated-params.tsx": tsx`
-          import { Expect, Equal } from "../expect-type"
-          import type { Route } from "./+types/repeated-params"
+        "app/routes/only-required.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/only-required"
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params.id, string>>
+            return null
+          }
+        `,
+        "app/routes/only-optional.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/only-optional"
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params.id, string | undefined>>
+            return null
+          }
+        `,
+        "app/routes/optional-then-required.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/optional-then-required"
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params.id, string>>
+            return null
+          }
+        `,
+        "app/routes/required-then-optional.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/required-then-optional"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Expected = [string, string | undefined, string]
-            type Test = Expect<Equal<typeof params.id, Expected>>
+            type Test = Expect<Equal<typeof params.id, string>>
             return null
           }
         `,
@@ -114,7 +140,7 @@ test.describe("typegen", () => {
           ] satisfies RouteConfig;
         `,
         "app/routes/splat.tsx": tsx`
-          import { Expect, Equal } from "../expect-type"
+          import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/splat"
 
           export function loader({ params }: Route.LoaderArgs) {
@@ -142,7 +168,7 @@ test.describe("typegen", () => {
           ] satisfies RouteConfig;
         `,
         "app/routes/param-with-ext.tsx": tsx`
-          import { Expect, Equal } from "../expect-type"
+          import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
@@ -151,7 +177,7 @@ test.describe("typegen", () => {
           }
         `,
         "app/routes/optional-param-with-ext.tsx": tsx`
-          import { Expect, Equal } from "../expect-type"
+          import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/optional-param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
@@ -172,7 +198,7 @@ test.describe("typegen", () => {
       "vite.config.ts": viteConfig,
       "app/expect-type.ts": expectType,
       "app/routes/_index.tsx": tsx`
-        import { Expect, Equal } from "../expect-type"
+        import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/_index"
 
         export function loader() {
@@ -202,6 +228,7 @@ test.describe("typegen", () => {
 
   test("custom app dir", async () => {
     const cwd = await createProject({
+      "vite.config.ts": viteConfig,
       "react-router.config.ts": tsx`
         export default {
           appDirectory: "src/myapp",
@@ -209,7 +236,7 @@ test.describe("typegen", () => {
       `,
       "app/expect-type.ts": expectType,
       "app/routes/products.$id.tsx": tsx`
-        import { Expect, Equal } from "../expect-type"
+        import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/products.$id"
 
         export function loader({ params }: Route.LoaderArgs) {
@@ -279,7 +306,7 @@ test.describe("typegen", () => {
         }
       `,
       "app/routes/current.tsx": tsx`
-        import { Expect, Equal } from "../expect-type"
+        import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/current"
 
         export function loader() {
@@ -341,7 +368,7 @@ test.describe("typegen", () => {
         ] satisfies RouteConfig;
       `,
       "app/routes/absolute.tsx": tsx`
-        import { Expect, Equal } from "../expect-type"
+        import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/absolute"
 
         export function loader({ params }: Route.LoaderArgs) {
@@ -360,5 +387,104 @@ test.describe("typegen", () => {
     expect(proc.stdout.toString()).toBe("");
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
+  });
+
+  test("href", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import path from "node:path";
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+
+        export default [
+          route("no-params", "routes/no-params.tsx"),
+          route("required-param/:req", "routes/required-param.tsx"),
+          route("optional-param/:opt?", "routes/optional-param.tsx"),
+          route("/leading-and-trailing-slash/", "routes/leading-and-trailing-slash.tsx"),
+          route("some-other-route", "routes/some-other-route.tsx"),
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/no-params.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/required-param.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/optional-param.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/leading-and-trailing-slash.tsx": tsx`
+        export default function Component() {}
+      `,
+      "app/routes/some-other-route.tsx": tsx`
+        import { href } from "react-router"
+
+        // @ts-expect-error
+        href("/does-not-exist")
+
+        href("/no-params")
+
+        // @ts-expect-error
+        href("/required-param/:req")
+        href("/required-param/:req", { req: "hello" })
+
+        href("/optional-param/:opt?")
+        href("/optional-param/:opt?", { opt: "hello" })
+
+        href("/leading-and-trailing-slash")
+        // @ts-expect-error
+        href("/leading-and-trailing-slash/")
+
+        export default function Component() {}
+      `,
+    });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
+
+  test.describe("virtual:react-router/server-build", async () => {
+    test("static import matches 'createRequestHandler' argument type", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          import * as serverBuild from "virtual:react-router/server-build";
+          export default createRequestHandler(serverBuild);
+        `,
+      });
+
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
+
+    test("dynamic import matches 'createRequestHandler' function argument type", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          export default createRequestHandler(
+            () => import("virtual:react-router/server-build")
+          );
+        `,
+      });
+
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
   });
 });

@@ -153,6 +153,7 @@ describe("<ServerRouter>", () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
       new Request("http://localhost/")
     );
+
     invariant(
       !(staticHandlerContext instanceof Response),
       "Expected a context"

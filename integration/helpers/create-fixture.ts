@@ -94,9 +94,16 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       prerender: init.prerender,
       requestDocument(href: string) {
         let file = new URL(href, "test://test").pathname + "/index.html";
-        let html = fse.readFileSync(
-          path.join(projectDir, "build/client" + file)
+        let mainPath = path.join(projectDir, "build", "client", file);
+        let fallbackPath = path.join(
+          projectDir,
+          "build",
+          "client",
+          "__spa-fallback.html"
         );
+        let html = fse.existsSync(mainPath)
+          ? fse.readFileSync(mainPath)
+          : fse.readFileSync(fallbackPath);
         return new Response(html, {
           headers: {
             "Content-Type": "text/html",
@@ -192,6 +199,13 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   };
 }
 
+/**
+ * @deprecated Use `integration/helpers/vite.ts`'s `test` instead
+ *
+ * This implementation sometimes runs a request handler in memory, forcing tests to manually manage stdout/stderr
+ * which has caused many integration tests to leak noisy logs for expected errors.
+ * It also means that sometimes the CLI is skipped over in those tests, missing out on code paths that should be tested.
+ */
 export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
   let startAppServer = async (): Promise<{
     port: number;
@@ -210,6 +224,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           ],
           {
             env: {
+              ...process.env,
               NODE_ENV: mode || "production",
               PORT: port.toFixed(0),
             },
@@ -276,15 +291,18 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       return new Promise(async (accept) => {
         let port = await getPort();
         let app = express();
-        app.use(express.static(path.join(fixture.projectDir, "build/client")));
+        app.use(
+          express.static(path.join(fixture.projectDir, "build", "client"))
+        );
         app.get("*", (req, res, next) => {
+          let dir = path.join(fixture.projectDir, "build", "client");
           let file = req.path.endsWith(".data")
             ? req.path
             : req.path + "/index.html";
-          res.sendFile(
-            path.join(fixture.projectDir, "build/client", file),
-            next
-          );
+          if (file.endsWith(".html") && !fse.existsSync(path.join(dir, file))) {
+            file = "__spa-fallback.html";
+          }
+          res.sendFile(path.join(dir, file), next);
         });
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });
@@ -344,7 +362,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = "vite-template";
+  let template = "vite-5-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);

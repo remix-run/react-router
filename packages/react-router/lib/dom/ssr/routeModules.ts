@@ -5,6 +5,7 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
   Params,
   ShouldRevalidateFunction,
 } from "../../router/utils";
@@ -18,9 +19,13 @@ export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
 }
 
+/**
+ * The shape of a route module shipped to the client
+ */
 export interface RouteModule {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  unstable_clientMiddleware?: unstable_MiddlewareFunction<undefined>[];
   ErrorBoundary?: ErrorBoundaryComponent;
   HydrateFallback?: HydrateFallbackComponent;
   Layout?: LayoutComponent;
@@ -29,6 +34,16 @@ export interface RouteModule {
   links?: LinksFunction;
   meta?: MetaFunction;
   shouldRevalidate?: ShouldRevalidateFunction;
+}
+
+/**
+ * The shape of a route module on the server
+ */
+export interface ServerRouteModule extends RouteModule {
+  action?: ActionFunction;
+  headers?: HeadersFunction | { [name: string]: string };
+  loader?: LoaderFunction;
+  unstable_middleware?: unstable_MiddlewareFunction<Response>[];
 }
 
 /**
@@ -41,7 +56,7 @@ export type ClientActionFunction = (
 /**
  * Arguments passed to a route `clientAction` function
  */
-export type ClientActionFunctionArgs = ActionFunctionArgs<undefined> & {
+export type ClientActionFunctionArgs = ActionFunctionArgs & {
   serverAction: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
@@ -57,7 +72,7 @@ export type ClientLoaderFunction = ((
 /**
  * Arguments passed to a route `clientLoader` function
  */
-export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
+export type ClientLoaderFunctionArgs = LoaderFunctionArgs & {
   serverLoader: <T = unknown>() => Promise<SerializeFrom<T>>;
 };
 
@@ -65,6 +80,21 @@ export type ClientLoaderFunctionArgs = LoaderFunctionArgs<undefined> & {
  * ErrorBoundary to display for this route
  */
 export type ErrorBoundaryComponent = ComponentType;
+
+export type HeadersArgs = {
+  loaderHeaders: Headers;
+  parentHeaders: Headers;
+  actionHeaders: Headers;
+  errorHeaders: Headers | undefined;
+};
+
+/**
+ * A function that returns HTTP headers to be used for a route. These headers
+ * will be merged with (and take precedence over) headers from parent routes.
+ */
+export interface HeadersFunction {
+  (args: HeadersArgs): Headers | HeadersInit;
+}
 
 /**
  * `<Route HydrateFallback>` component to render on initial loads

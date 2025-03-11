@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import path from "node:path";
+import path from "pathe";
 import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
@@ -18,7 +18,7 @@ import type { Config } from "@react-router/dev/config";
 
 const require = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -28,17 +28,30 @@ export const reactRouterConfig = ({
   basename,
   prerender,
   appDirectory,
+  splitRouteModules,
+  viteEnvironmentApi,
+  middleware,
 }: {
   ssr?: boolean;
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
+  splitRouteModules?: NonNullable<
+    Config["future"]
+  >["unstable_splitRouteModules"];
+  viteEnvironmentApi?: boolean;
+  middleware?: boolean;
 }) => {
   let config: Config = {
     ssr,
     basename,
     prerender,
     appDirectory,
+    future: {
+      unstable_splitRouteModules: splitRouteModules,
+      unstable_viteEnvironmentApi: viteEnvironmentApi,
+      unstable_middleware: middleware,
+    },
   };
 
   return dedent`
@@ -48,8 +61,14 @@ export const reactRouterConfig = ({
   `;
 };
 
+type ViteConfigArgs = {
+  port: number;
+  fsAllow?: string[];
+  envDir?: string;
+};
+
 export const viteConfig = {
-  server: async (args: { port: number; fsAllow?: string[] }) => {
+  server: async (args: ViteConfigArgs) => {
     let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
@@ -62,7 +81,7 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: { port: number; fsAllow?: string[] }) => {
+  basic: async (args: ViteConfigArgs) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -70,6 +89,7 @@ export const viteConfig = {
 
       export default {
         ${await viteConfig.server(args)}
+        envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
           envOnlyMacros(),
@@ -123,11 +143,23 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName = "vite-template" | "vite-cloudflare-template";
+export type TemplateName =
+  | "vite-5-template"
+  | "vite-6-template"
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
+
+export const viteMajorTemplates = [
+  { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
+  { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+] as const satisfies Array<{
+  templateName: TemplateName;
+  templateDisplayName: string;
+}>;
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-template"
+  templateName: TemplateName = "vite-5-template"
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -273,7 +305,10 @@ type Fixtures = {
     port: number;
     cwd: string;
   }>;
-  customDev: (files: Files) => Promise<{
+  customDev: (
+    files: Files,
+    templateName?: TemplateName
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -307,9 +342,9 @@ export const test = base.extend<Fixtures>({
   // eslint-disable-next-line no-empty-pattern
   customDev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
-    await use(async (files) => {
+    await use(async (files, template) => {
       let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      let cwd = await createProject(await files({ port }), template);
       stop = await customDev({ cwd, port });
       return { port, cwd };
     });
@@ -335,7 +370,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "vite-cloudflare-template"
+        "cloudflare-dev-proxy-template"
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
@@ -399,10 +434,17 @@ function bufferize(stream: Readable): () => string {
 }
 
 export function createEditor(projectDir: string) {
-  return async (file: string, transform: (contents: string) => string) => {
+  return async function edit(
+    file: string,
+    transform: (contents: string) => string
+  ) {
     let filepath = path.join(projectDir, file);
     let contents = await fs.readFile(filepath, "utf8");
     await fs.writeFile(filepath, transform(contents), "utf8");
+
+    return async function revert() {
+      await fs.writeFile(filepath, contents, "utf8");
+    };
   };
 }
 

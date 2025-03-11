@@ -11,7 +11,9 @@ import {
   reactRouterServe,
   customDev,
   EXPRESS_SERVER,
+  reactRouterConfig,
   viteConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -165,111 +167,124 @@ const VITE_CONFIG = async (port: number) => dedent`
   }
 `;
 
-test.describe(() => {
-  test.describe(async () => {
-    let port: number;
-    let cwd: string;
-    let stop: () => void;
+test.describe("Vite CSS", () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test.describe(templateDisplayName, () => {
+      test.describe("vite dev", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
 
-    test.beforeAll(async () => {
-      port = await getPort();
-      cwd = await createProject({
-        "vite.config.ts": await VITE_CONFIG(port),
-        ...files,
-      });
-      stop = await dev({ cwd, port });
-    });
-    test.afterAll(() => stop());
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject(
+            {
+              "react-router.config.ts": reactRouterConfig({
+                viteEnvironmentApi: templateName === "vite-6-template",
+              }),
+              "vite.config.ts": await VITE_CONFIG(port),
+              ...files,
+            },
+            templateName
+          );
+          stop = await dev({ cwd, port });
+        });
+        test.afterAll(() => stop());
 
-    test.describe(() => {
-      test.use({ javaScriptEnabled: false });
-      test("Vite / CSS / vite dev / without JS", async ({ page }) => {
-        await pageLoadWorkflow({ page, port });
-      });
-    });
+        test.describe(() => {
+          test.use({ javaScriptEnabled: false });
+          test("without JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+          });
+        });
 
-    test.describe(() => {
-      test.use({ javaScriptEnabled: true });
-      test("Vite / CSS / vite dev / with JS", async ({ page }) => {
-        await pageLoadWorkflow({ page, port });
-        await hmrWorkflow({ page, port, cwd });
-      });
-    });
-  });
-
-  test.describe(async () => {
-    let port: number;
-    let cwd: string;
-    let stop: () => void;
-
-    test.beforeAll(async () => {
-      port = await getPort();
-      cwd = await createProject({
-        "vite.config.ts": await VITE_CONFIG(port),
-        "server.mjs": EXPRESS_SERVER({ port }),
-        ...files,
-      });
-      stop = await customDev({ cwd, port });
-    });
-    test.afterAll(() => stop());
-
-    test.describe(() => {
-      test.use({ javaScriptEnabled: false });
-      test("Vite / CSS / express / without JS", async ({ page }) => {
-        await pageLoadWorkflow({ page, port });
-      });
-    });
-
-    test.describe(() => {
-      test.use({ javaScriptEnabled: true });
-      test("Vite / CSS / express / with JS", async ({ page }) => {
-        await pageLoadWorkflow({ page, port });
-        await hmrWorkflow({ page, port, cwd });
-      });
-    });
-  });
-
-  test.describe(async () => {
-    let port: number;
-    let cwd: string;
-    let stop: () => void;
-
-    test.beforeAll(async () => {
-      port = await getPort();
-      cwd = await createProject({
-        "vite.config.ts": await VITE_CONFIG(port),
-        ...files,
+        test.describe(() => {
+          test.use({ javaScriptEnabled: true });
+          test("with JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+            await hmrWorkflow({ page, port, cwd });
+          });
+        });
       });
 
-      let edit = createEditor(cwd);
-      await edit("package.json", (contents) =>
-        contents.replace('"sideEffects": false', '"sideEffects": ["*.css.ts"]')
-      );
+      test.describe("express", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
 
-      let { stderr, status } = build({
-        cwd,
-        env: {
-          // Vanilla Extract uses Vite's CJS build which emits a warning to stderr
-          VITE_CJS_IGNORE_WARNING: "true",
-        },
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject({
+            "vite.config.ts": await VITE_CONFIG(port),
+            "server.mjs": EXPRESS_SERVER({ port }),
+            ...files,
+          });
+          stop = await customDev({ cwd, port });
+        });
+        test.afterAll(() => stop());
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: false });
+          test("without JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+          });
+        });
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: true });
+          test("with JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+            await hmrWorkflow({ page, port, cwd });
+          });
+        });
       });
-      expect(stderr.toString()).toBeFalsy();
-      expect(status).toBe(0);
-      stop = await reactRouterServe({ cwd, port });
-    });
-    test.afterAll(() => stop());
 
-    test.describe(() => {
-      test.use({ javaScriptEnabled: false });
-      test("Vite / CSS / vite build / without JS", async ({ page }) => {
-        await pageLoadWorkflow({ page, port });
-      });
-    });
+      test.describe(async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
 
-    test.describe(() => {
-      test.use({ javaScriptEnabled: true });
-      test("Vite / CSS / vite build / with JS", async ({ page }) => {
-        await pageLoadWorkflow({ page, port });
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject({
+            "vite.config.ts": await VITE_CONFIG(port),
+            ...files,
+          });
+
+          let edit = createEditor(cwd);
+          await edit("package.json", (contents) =>
+            contents.replace(
+              '"sideEffects": false',
+              '"sideEffects": ["*.css.ts"]'
+            )
+          );
+
+          let { stderr, status } = build({
+            cwd,
+            env: {
+              // Vanilla Extract uses Vite's CJS build which emits a warning to stderr
+              VITE_CJS_IGNORE_WARNING: "true",
+            },
+          });
+          expect(stderr.toString()).toBeFalsy();
+          expect(status).toBe(0);
+          stop = await reactRouterServe({ cwd, port });
+        });
+        test.afterAll(() => stop());
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: false });
+          test("vite build / without JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+          });
+        });
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: true });
+          test("vite build / with JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port });
+          });
+        });
       });
     });
   });

@@ -32,18 +32,25 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  unstable_InitialContext,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
   ParamParseKey,
   Params,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  unstable_RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
+} from "./lib/router/utils";
+export {
+  unstable_createContext,
+  unstable_RouterContextProvider,
 } from "./lib/router/utils";
 
 export {
@@ -85,6 +92,7 @@ export type {
   AwaitProps,
   IndexRouteProps,
   LayoutRouteProps,
+  MemoryRouterOpts,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -94,7 +102,6 @@ export type {
   RouterProviderProps,
   RoutesProps,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
 export {
   Await,
   MemoryRouter,
@@ -109,6 +116,7 @@ export {
   createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
+export type { NavigateFunction } from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -136,6 +144,7 @@ export {
 // Expose old RR DOM API
 export type {
   BrowserRouterProps,
+  DOMRouterOpts,
   HashRouterProps,
   HistoryRouterProps,
   LinkProps,
@@ -200,6 +209,8 @@ export type {
   ClientActionFunctionArgs,
   ClientLoaderFunction,
   ClientLoaderFunctionArgs,
+  HeadersArgs,
+  HeadersFunction,
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
@@ -251,11 +262,6 @@ export type {
   LinkDescriptor,
 } from "./lib/router/links";
 
-export type {
-  HeadersArgs,
-  HeadersFunction,
-} from "./lib/server-runtime/routeModules";
-
 export type { RequestHandler } from "./lib/server-runtime/server";
 
 export type {
@@ -265,6 +271,14 @@ export type {
   SessionStorage,
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
+
+export type {
+  Future,
+  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
+} from "./lib/types/future.ts";
+export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
+export type { Register } from "./lib/types/register";
+export { href } from "./lib/href";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

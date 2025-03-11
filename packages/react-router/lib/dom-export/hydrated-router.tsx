@@ -5,6 +5,7 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   DataRouter,
   HydrationState,
+  RouterInit,
 } from "react-router";
 import {
   UNSAFE_invariant as invariant,
@@ -60,7 +61,11 @@ function initSsrInfo(): void {
   }
 }
 
-function createHydratedRouter(): DataRouter {
+function createHydratedRouter({
+  unstable_getContext,
+}: {
+  unstable_getContext?: RouterInit["unstable_getContext"];
+}): DataRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
@@ -102,11 +107,17 @@ function createHydratedRouter(): DataRouter {
     ssrInfo.manifest.routes,
     ssrInfo.routeModules,
     ssrInfo.context.state,
+    ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode
   );
 
   let hydrationData: HydrationState | undefined = undefined;
-  if (!ssrInfo.context.isSpaMode) {
+  let loaderData = ssrInfo.context.state.loaderData;
+  if (ssrInfo.context.isSpaMode) {
+    // In SPA mode we hydrate in any build-time loader data which should be
+    // limited to the root route
+    hydrationData = { loaderData };
+  } else {
     // Create a shallow clone of `loaderData` we can mutate for partial hydration.
     // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
     // render the fallback so we need the client to do the same for hydration.
@@ -115,7 +126,7 @@ function createHydratedRouter(): DataRouter {
     // `createBrowserRouter` so it initializes and runs the client loaders.
     hydrationData = {
       ...ssrInfo.context.state,
-      loaderData: { ...ssrInfo.context.state.loaderData },
+      loaderData: { ...loaderData },
     };
     let initialMatches = matchRoutes(
       routes,
@@ -166,16 +177,23 @@ function createHydratedRouter(): DataRouter {
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
+    unstable_getContext,
     hydrationData,
     mapRouteProperties,
+    future: {
+      unstable_middleware: ssrInfo.context.future.unstable_middleware,
+    },
     dataStrategy: getSingleFetchDataStrategy(
       ssrInfo.manifest,
       ssrInfo.routeModules,
+      ssrInfo.context.ssr,
+      ssrInfo.context.basename,
       () => router
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,
+      ssrInfo.context.ssr,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename
     ),
@@ -198,12 +216,25 @@ function createHydratedRouter(): DataRouter {
   return router;
 }
 
+interface HydratedRouterProps {
+  /**
+   * Context object to passed through to `createBrowserRouter` and made available
+   * to `clientLoader`/`clientActon` functions
+   */
+  unstable_getContext?: RouterInit["unstable_getContext"];
+}
+
 /**
- * @category Router Components
+ * Framework-mode router component to be used in `entry.client.tsx` to hydrate a
+ * router from a `ServerRouter`
+ *
+ * @category Component Routers
  */
-export function HydratedRouter() {
+export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
-    router = createHydratedRouter();
+    router = createHydratedRouter({
+      unstable_getContext: props.unstable_getContext,
+    });
   }
 
   // Critical CSS can become stale after code changes, e.g. styles might be
@@ -247,6 +278,7 @@ export function HydratedRouter() {
     router,
     ssrInfo.manifest,
     ssrInfo.routeModules,
+    ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode
   );
 
@@ -264,6 +296,7 @@ export function HydratedRouter() {
           routeModules: ssrInfo.routeModules,
           future: ssrInfo.context.future,
           criticalCss,
+          ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
         }}
       >

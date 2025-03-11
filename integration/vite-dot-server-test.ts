@@ -22,7 +22,7 @@ let tsconfig = (aliases: Record<string, string[]>) => `
     "include": ["env.d.ts", "**/*.ts", "**/*.tsx"],
     "compilerOptions": {
       "lib": ["DOM", "DOM.Iterable", "ES2022"],
-      "isolatedModules": true,
+      "verbatimModuleSyntax": true,
       "esModuleInterop": true,
       "jsx": "react-jsx",
       "module": "ESNext",
@@ -31,7 +31,6 @@ let tsconfig = (aliases: Record<string, string[]>) => `
       "target": "ES2022",
       "strict": true,
       "allowJs": true,
-      "forceConsistentCasingInFileNames": true,
       "baseUrl": ".",
       "paths": ${JSON.stringify(aliases)},
       "noEmit": true
@@ -143,7 +142,7 @@ test.describe("Vite / route / server-only module referenced by client", () => {
         `    '${specifier}' imported by route 'app/routes/_index.tsx'`,
 
         "  React Router automatically removes server-code from these exports:",
-        "    `loader`, `action`, `headers`",
+        "    `loader`, `action`, `unstable_middleware`, `headers`",
 
         `  But other route exports in 'app/routes/_index.tsx' depend on '${specifier}'.`,
 

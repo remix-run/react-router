@@ -20,20 +20,20 @@ The following steps will get you set up to contribute changes to this repo:
 1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this page](https://github.com/remix-run/react-router))
 2. Clone your fork locally
 
-```bash
-# in a terminal, cd to parent directory where you want your clone to be, then
-git clone https://github.com/<your_github_username>/react-router.git
-cd react-router
+   ```bash
+   # in a terminal, cd to parent directory where you want your clone to be, then
+   git clone https://github.com/<your_github_username>/react-router.git
+   cd react-router
 
-# if you are making *any* code changes, make sure to checkout the dev branch
-git checkout dev
-```
+   # if you are making *any* code changes, make sure to checkout the dev branch
+   git checkout dev
+   ```
 
 3. Install dependencies and build. React Router uses [pnpm](https://pnpm.io), so you should too. If you install using `npm`, unnecessary `package-lock.json` files will be generated.
 
 ## Think You Found a Bug?
 
-Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a failing test. Next best is a link to CodeSandbox or repository that illustrates the bug.
+Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a [failing test](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts). Next best is a link to [StackBlitz](https://reactrouter.com/new) or repository that illustrates the bug.
 
 ## Adding an Example?
 
@@ -59,11 +59,15 @@ Pull requests need only the approval of two or more collaborators to be merged; 
 
 All commits that fix bugs or add features need a test.
 
-`<blink>`Do not merge code without tests!`</blink>`
+<docs-error>Do not merge code without tests!</docs-error>
 
 ### Docs + Examples
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
+
+Documentation is located in the `docs` directory. Once changes make their way into the `main` branch, they will automatically be published to the docs site.
+
+If you want to preview how the changes will look on the docs site, clone the [`react-router-website` repository](https://github.com/remix-run/react-router-website) and follow the instructions in `README.md` to view your changes locally.
 
 ## Development
 

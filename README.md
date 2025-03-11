@@ -1,6 +1,6 @@
 [![npm package][npm-badge]][npm] [![build][build-badge]][build]
 
-[npm-badge]: https://img.shields.io/npm/v/react-router-dom.svg?style=flat-square
+[npm-badge]: https://img.shields.io/npm/v/react-router-dom.svg
 [npm]: https://www.npmjs.org/package/react-router-dom
 [build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test.yml?branch=dev&style=square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml

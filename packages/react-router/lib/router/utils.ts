@@ -110,16 +110,115 @@ export type Submission =
       text: string;
     };
 
+export interface unstable_RouterContext<T = unknown> {
+  defaultValue?: T;
+}
+
+/**
+ * Creates a context object that may be used to store and retrieve arbitrary values.
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()` when no value has been
+ * set for the context. Otherwise reading this context when no value has been set will throw an
+ * error.
+ *
+ * @param defaultValue The default value for the context
+ * @returns A context object
+ */
+export function unstable_createContext<T>(
+  defaultValue?: T
+): unstable_RouterContext<T> {
+  return { defaultValue };
+}
+
+/**
+ * A Map of RouterContext objects to their initial values - used to populate a
+ * fresh `context` value per request/navigation/fetch
+ */
+export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
+
+/**
+ * Provides methods for writing/reading values in application context in a typesafe way.
+ */
+export class unstable_RouterContextProvider {
+  #map = new Map<unstable_RouterContext, unknown>();
+
+  constructor(init?: unstable_InitialContext) {
+    if (init) {
+      for (let [context, value] of init) {
+        this.set(context, value);
+      }
+    }
+  }
+
+  get<T>(context: unstable_RouterContext<T>): T {
+    if (this.#map.has(context)) {
+      return this.#map.get(context) as T;
+    }
+
+    if (context.defaultValue !== undefined) {
+      return context.defaultValue;
+    }
+
+    throw new Error("No value found for context");
+  }
+
+  set<C extends unstable_RouterContext>(
+    context: C,
+    value: C extends unstable_RouterContext<infer T> ? T : never
+  ): void {
+    this.#map.set(context, value);
+  }
+}
+
 /**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
 interface DataFunctionArgs<Context> {
+  /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function loader({
+   *   params,
+   * }: Route.LoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
   params: Params;
-  context?: Context;
+  /**
+   * This is the context passed in to your server adapter's getLoadContext() function.
+   * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
+   * It is only applicable if you are using a custom server adapter.
+   */
+  context: Context;
 }
+
+/**
+ * Route middleware `next` function to call downstream handlers and then complete
+ * middlewares from the bottom-up
+ */
+export interface unstable_MiddlewareNextFunction<Result = unknown> {
+  (): Result | Promise<Result>;
+}
+
+/**
+ * Route middleware function signature.  Receives the same "data" arguments as a
+ * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
+ * a `next` function as the second parameter which will call downstream handlers
+ * and then complete middlewares from the bottom-up
+ */
+export type unstable_MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  next: unstable_MiddlewareNextFunction<Result>
+) => Result | Promise<Result>;
 
 /**
  * Arguments passed to loader functions
@@ -134,11 +233,9 @@ export interface ActionFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
 type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
 
@@ -166,18 +263,56 @@ export interface ActionFunction<Context = any> {
  * Arguments passed to shouldRevalidate function
  */
 export interface ShouldRevalidateFunctionArgs {
+  /** This is the url the navigation started from. You can compare it with `nextUrl` to decide if you need to revalidate this route's data. */
   currentUrl: URL;
+  /** These are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params} from the URL that can be compared to the `nextParams` to decide if you need to reload or not. Perhaps you're using only a partial piece of the param for data loading, you don't need to revalidate if a superfluous part of the param changed. */
   currentParams: AgnosticDataRouteMatch["params"];
+  /** In the case of navigation, this the URL the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentUrl. */
   nextUrl: URL;
+  /** In the case of navigation, these are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params}  from the next location the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentParams. */
   nextParams: AgnosticDataRouteMatch["params"];
+  /** The method (probably `"GET"` or `"POST"`) used in the form submission that triggered the revalidation. */
   formMethod?: Submission["formMethod"];
+  /** The form action (`<Form action="/somewhere">`) that triggered the revalidation. */
   formAction?: Submission["formAction"];
+  /** The form encType (`<Form encType="application/x-www-form-urlencoded">) used in the form submission that triggered the revalidation*/
   formEncType?: Submission["formEncType"];
+  /** The form submission data when the form's encType is `text/plain` */
   text?: Submission["text"];
+  /** The form submission data when the form's encType is `application/x-www-form-urlencoded` or `multipart/form-data` */
   formData?: Submission["formData"];
+  /** The form submission data when the form's encType is `application/json` */
   json?: Submission["json"];
+  /** The status code of the action response */
   actionStatus?: number;
+  /**
+   * When a submission causes the revalidation this will be the result of the action—either action data or an error if the action failed. It's common to include some information in the action result to instruct shouldRevalidate to revalidate or not.
+   *
+   * @example
+   * export async function action() {
+   *   await saveSomeStuff();
+   *   return { ok: true };
+   * }
+   *
+   * export function shouldRevalidate({
+   *   actionResult,
+   * }) {
+   *   if (actionResult?.ok) {
+   *     return false;
+   *   }
+   *   return true;
+   * }
+   */
   actionResult?: any;
+  /**
+   * By default, React Router doesn't call every loader all the time. There are reliable optimizations it can make by default. For example, only loaders with changing params are called. Consider navigating from the following URL to the one below it:
+   *
+   * /projects/123/tasks/abc
+   * /projects/123/tasks/def
+   * React Router will only call the loader for tasks/def because the param for projects/123 didn't change.
+   *
+   * It's safest to always return defaultShouldRevalidate after you've done your specific optimizations that return false, otherwise your UI might get out of sync with your data on the server.
+   */
   defaultShouldRevalidate: boolean;
 }
 
@@ -216,16 +351,20 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = any> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = {
+  signal: AbortSignal;
   path: string;
   matches: M[];
+  fetcherKey: string | undefined;
   patch: (routeId: string | null, children: O[]) => void;
 };
 
@@ -290,6 +429,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  unstable_middleware?: unstable_MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
@@ -555,8 +695,13 @@ export function matchRoutesImpl<
 export interface UIMatch<Data = unknown, Handle = unknown> {
   id: string;
   pathname: string;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
+   **/
   params: AgnosticRouteMatch["params"];
+  /** The return value from the matched route's loader or clientLoader */
   data: Data;
+  /** The {@link https://reactrouter.com/start/framework/route-module#handle handle object} exported from the matched route module */
   handle: Handle;
 }
 
@@ -692,7 +837,7 @@ function explodeOptionalSegments(path: string): string[] {
   let required = first.replace(/\?$/, "");
 
   if (rest.length === 0) {
-    // Intepret empty string as omitting an optional segment
+    // Interpret empty string as omitting an optional segment
     // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
     return isOptional ? [required, ""] : [required];
   }
@@ -1081,7 +1226,7 @@ export function decodePath(value: string) {
   } catch (error) {
     warning(
       false,
-      `The URL path "${value}" could not be decoded because it is is a ` +
+      `The URL path "${value}" could not be decoded because it is a ` +
         `malformed URL segment. This is probably due to a bad percent ` +
         `encoding (${error}).`
     );
@@ -1386,10 +1531,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
-  return new Response(null, {
-    ...responseInit,
-    headers,
-  });
+  return new Response(null, { ...responseInit, headers });
 };
 
 /**

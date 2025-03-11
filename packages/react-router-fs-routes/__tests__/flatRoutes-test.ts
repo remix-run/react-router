@@ -1,5 +1,6 @@
+import os from "node:os";
 import path from "node:path";
-import { mkdirSync, rmdirSync, createFileSync, rmSync } from "fs-extra";
+import fse from "fs-extra";
 
 import type { RouteManifestEntry } from "../manifest";
 
@@ -880,27 +881,35 @@ describe("flatRoutes", () => {
     });
   });
 
-  describe("throw correct error", () => {
+  describe("throws expected errors", () => {
+    let tempDir = path.join(
+      os.tmpdir(),
+      "react-router-fs-routes-test",
+      Math.random().toString(36).substring(2, 15)
+    );
+
     beforeEach(() => {
-      mkdirSync(APP_DIR, { recursive: true });
+      fse.mkdirSync(tempDir, { recursive: true });
     });
     afterEach(() => {
-      rmdirSync(APP_DIR);
+      fse.rmSync(tempDir, { recursive: true, force: true });
     });
 
     test("root route is not found", () => {
-      expect(() => flatRoutes(APP_DIR)).toThrow(
-        `Could not find a root route module in the app directory: test/root/app`
+      expect(() => flatRoutes(tempDir)).toThrow(
+        `Could not find a root route module in the app directory: ${tempDir}`
       );
     });
 
     test("routes dir is not found", () => {
-      const rootRoute = path.join(APP_DIR, "root.tsx");
-      createFileSync(rootRoute);
-      expect(() => flatRoutes(APP_DIR)).toThrow(
-        `Could not find the routes directory: test/root/app/routes. Did you forget to create it?`
+      const rootRoute = path.join(tempDir, "root.tsx");
+      fse.createFileSync(rootRoute);
+      expect(() => flatRoutes(tempDir)).toThrow(
+        `Could not find the routes directory: ${path.join(
+          tempDir,
+          "routes"
+        )}. Did you forget to create it?`
       );
-      rmSync(rootRoute);
     });
   });
 });
