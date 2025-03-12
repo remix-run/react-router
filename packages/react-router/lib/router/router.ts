@@ -4961,17 +4961,19 @@ async function loadLazyMiddleware(
   routeToUpdate.unstable_lazyMiddleware = undefined;
 }
 
-async function loadLazyMiddlewareForMatches(
+function loadLazyMiddlewareForMatches(
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest
-) {
-  await Promise.all(
-    matches.map((m) =>
+): Promise<void[]> | void {
+  let promises = matches
+    .map((m) =>
       m.route.unstable_lazyMiddleware
         ? loadLazyMiddleware(m.route, manifest)
         : undefined
     )
-  );
+    .filter(Boolean);
+
+  return promises.length > 0 ? Promise.all(promises) : undefined;
 }
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
@@ -5158,7 +5160,7 @@ async function callDataStrategyImpl(
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all lazy/lazyMiddleware async functions are kicked off in parallel
   // before we await them where needed below
-  let loadMiddlewarePromises = loadLazyMiddlewareForMatches(matches, manifest);
+  let loadMiddlewarePromise = loadLazyMiddlewareForMatches(matches, manifest);
   let loadRouteDefinitionsPromises = matches.map((m) =>
     m.route.lazy
       ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
@@ -5166,7 +5168,9 @@ async function callDataStrategyImpl(
   );
 
   // Ensure all middleware is loaded before we start executing routes
-  await loadMiddlewarePromises;
+  if (loadMiddlewarePromise) {
+    await loadMiddlewarePromise;
+  }
 
   let dsMatches = matches.map((match, i) => {
     let loadRoutePromise = loadRouteDefinitionsPromises[i];
