@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-The `configureServer` and `configurePreviewServer` hooks are now removed in child compiler plugins to avoid conflicts with the main dev server.
+Fix conflicts with other Vite plugins that use the `configureServer` and/or `configurePreviewServer` hooks
