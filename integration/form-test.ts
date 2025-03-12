@@ -345,7 +345,7 @@ test.describe("Forms", () => {
             return (
               <>
                 <Form method={formMethod}>
-                  <button>Submit</button>
+                  <button>Default Submit</button>
                   <button formMethod={submitterFormMethod}>Submit with {submitterFormMethod}</button>
                 </Form>
                 {actionData ? <pre id="action-method">{actionData}</pre> : null}
@@ -532,15 +532,15 @@ test.describe("Forms", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement(`#${FORM_WITH_ACTION_INPUT} button`);
-      await page.waitForSelector(`pre:has-text("${EAT}")`);
+      await page.locator(`#${FORM_WITH_ACTION_INPUT} button`).click();
+      await page.locator(`pre:has-text("${EAT}")`).waitFor();
     });
 
     test("posts to a loader with button data with click", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement("#buttonWithValue");
-      await page.waitForSelector(`pre:has-text("${LAKSA}")`);
+      await page.locator("#buttonWithValue").click();
+      await page.locator(`pre:has-text("${LAKSA}")`).waitFor();
     });
 
     test("posts to a loader with button data with keyboard", async ({
@@ -560,16 +560,16 @@ test.describe("Forms", () => {
     test("posts with the correct checkbox data", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement(`#${CHECKBOX_BUTTON}`);
-      await page.waitForSelector(`pre:has-text("${LAKSA}")`);
-      await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
+      await page.locator(`#${CHECKBOX_BUTTON}`).click();
+      await page.locator(`pre:has-text("${LAKSA}")`).waitFor();
+      await page.locator(`pre:has-text("${CHEESESTEAK}")`).waitFor();
     });
 
     test("posts button data from outside the form", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement(`#${ORPHAN_BUTTON}`);
-      await page.waitForSelector(`pre:has-text("${SQUID_INK_HOTDOG}")`);
+      await page.locator(`#${ORPHAN_BUTTON}`).click();
+      await page.locator(`pre:has-text("${SQUID_INK_HOTDOG}")`).waitFor();
     });
 
     test(
@@ -1004,16 +1004,11 @@ test.describe("Forms", () => {
 
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto(`/form-method?method=${method}`, true);
-          await app.clickElement(`text=Submit`);
+          await page.locator("text=Default Submit").click();
           if (method !== "GET") {
-            await page.waitForSelector("#action-method");
-            expect(await app.getHtml("pre#action-method")).toBe(
-              `<pre id="action-method">${method}</pre>`
-            );
+            await expect(page.locator("#action-method")).toHaveText(method);
           }
-          expect(await app.getHtml("pre#loader-method")).toBe(
-            `<pre id="loader-method">GET</pre>`
-          );
+          await expect(page.locator("#loader-method")).toHaveText("GET");
         });
       });
     });
@@ -1087,8 +1082,8 @@ test.describe("Forms", () => {
       await app.goto("/file-upload");
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
-      await app.clickElement("button");
-      await page.waitForSelector("#formData");
+      await page.locator("button").click();
+      await page.locator("#formData").waitFor();
 
       expect((await app.getElement("#formData")).val()).toBe(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
@@ -1097,8 +1092,8 @@ test.describe("Forms", () => {
       await app.goto("/file-upload?method=post");
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
-      await app.clickElement("button");
-      await page.waitForSelector("#formData");
+      await page.locator("button").click();
+      await page.locator("#formData").waitFor();
 
       expect((await app.getElement("#formData")).val()).toBe(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
