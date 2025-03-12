@@ -1079,23 +1079,23 @@ test.describe("Forms", () => {
       let app = new PlaywrightFixture(appFixture, page);
       let myFile = fixture.projectDir + "/myfile.txt";
 
+      const formData = page.locator("#formData");
+      const submit = page.locator("button");
+
       await app.goto("/file-upload");
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
-      await page.locator("button").click();
-      await page.locator("#formData").waitFor();
-
-      expect((await app.getElement("#formData")).val()).toBe(
+      await submit.click();
+      await expect(formData).toHaveValue(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
       );
 
       await app.goto("/file-upload?method=post");
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
-      await page.locator("button").click();
-      await page.locator("#formData").waitFor();
+      await submit.click();
 
-      expect((await app.getElement("#formData")).val()).toBe(
+      await expect(formData).toHaveValue(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
       );
     });
