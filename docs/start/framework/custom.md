@@ -73,7 +73,7 @@ createBrowserRouter([
 
 ## Server Rendering
 
-To server render a custom setup, there are a few server APIs available for rendering an data loading.
+To server render a custom setup, there are a few server APIs available for rendering and data loading.
 
 This guide simply gives you some ideas about how it works. For deeper understanding, please see the [Custom Framework Example Repo](https://github.com/remix-run/custom-react-router-framework-example)
 
