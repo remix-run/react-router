@@ -1,6 +1,6 @@
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 
-export { ErrorBoundary, Layout } from "./root.client";
+export { ErrorBoundary } from "./root.client";
 
 import { Counter } from "../../counter";
 
