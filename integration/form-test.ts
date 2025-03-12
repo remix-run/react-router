@@ -1050,33 +1050,33 @@ test.describe("Forms", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
 
+      const formData = page.locator("#formData");
+
       await app.goto("/submitter");
-      await app.clickElement("text=Add Task");
-      expect((await app.getElement("#formData")).val()).toBe(
+      await page.locator("text=Add Task").click();
+      await expect(formData).toHaveValue(
         "tasks=first&tasks=second&tasks=&tasks=last"
       );
 
       await app.goto("/submitter");
-      await app.clickElement("text=No Name");
-      expect((await app.getElement("#formData")).val()).toBe(
-        "tasks=first&tasks=second&tasks=last"
-      );
+      await page.locator("text=No Name").click();
+      await expect(formData).toHaveValue("tasks=first&tasks=second&tasks=last");
 
       await app.goto("/submitter");
-      await app.clickElement("[alt='Add Task']");
-      expect((await app.getElement("#formData")).val()).toMatch(
+      await page.locator("[alt='Add Task']").click();
+      await expect(formData).toHaveValue(
         /^tasks=first&tasks=second&tasks.x=\d+&tasks.y=\d+&tasks=last$/
       );
 
       await app.goto("/submitter");
-      await app.clickElement("[alt='No Name']");
-      expect((await app.getElement("#formData")).val()).toMatch(
+      await page.locator("[alt='No Name']").click();
+      await expect(formData).toHaveValue(
         /^tasks=first&tasks=second&x=\d+&y=\d+&tasks=last$/
       );
 
       await app.goto("/submitter");
-      await app.clickElement("text=Outside");
-      expect((await app.getElement("#formData")).val()).toBe(
+      await page.locator("text=Outside").click();
+      await expect(formData).toHaveValue(
         "tasks=outside&tasks=first&tasks=second&tasks=last"
       );
     });
