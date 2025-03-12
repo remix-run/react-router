@@ -8,6 +8,7 @@ console.log("Starting development server");
 const viteDevServer = await import("vite").then((vite) =>
   vite.createServer({
     server: { middlewareMode: true },
+    forceOptimizeDeps: process.argv.includes("--force"),
   })
 );
 app.use(viteDevServer.middlewares);
