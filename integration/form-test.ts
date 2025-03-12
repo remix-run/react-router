@@ -197,12 +197,19 @@ test.describe("Forms", () => {
 
         "app/routes/blog._index.tsx": js`
           import { Form } from "react-router";
+
+          export function loader() {
+            return { timestamp: Date.now() }
+          }
+
           export function action() {
             return { ok: true };
           }
-          export default function() {
+
+          export default function Component({ loaderData }) {
             return (
               <>
+                <div id="timestamp">{loaderData.timestamp}</div>
                 <Form id="${INDEX_ROUTE_NO_ACTION}">
                   <input type="hidden" name="foo" defaultValue="1" />
                   <button>Submit</button>
@@ -793,28 +800,29 @@ test.describe("Forms", () => {
         }) => {
           let app = new PlaywrightFixture(appFixture, page);
 
+          const timestamp = page.locator(`#timestamp`);
+          const form = page.locator(`#${INDEX_ROUTE_NO_ACTION}`);
+          const submit = page.locator(`#${INDEX_ROUTE_NO_ACTION} button`);
+
           // Start with a query param
           await app.goto("/blog?junk=1");
-          let html = await app.getHtml();
-          let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toBe("/blog?index&junk=1");
-          expect(app.page.url()).toMatch(/\/blog\?junk=1$/);
+          const t0 = await timestamp.innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&junk=1");
+          expect(page.url()).toMatch(/\/blog\?junk=1$/);
 
           // On submission, we replace existing parameters (reflected in the
           // form action) with the values from the form data.  We also do not
           // need to preserve the index param in the URL on GET submissions
-          await app.clickElement(`#${INDEX_ROUTE_NO_ACTION} button`);
-          html = await app.getHtml();
-          el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toBe("/blog?index&foo=1");
-          expect(app.page.url()).toMatch(/\/blog\?foo=1$/);
+          await submit.click();
+          const t1 = await timestamp.filter({ hasNotText: t0 }).innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&foo=1");
+          expect(page.url()).toMatch(/\/blog\?foo=1$/);
 
           // Does not append duplicate params on re-submissions
-          await app.clickElement(`#${INDEX_ROUTE_NO_ACTION} button`);
-          html = await app.getHtml();
-          el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toBe("/blog?index&foo=1");
-          expect(app.page.url()).toMatch(/\/blog\?foo=1$/);
+          await submit.click();
+          await timestamp.filter({ hasNotText: t1 }).innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&foo=1");
+          expect(page.url()).toMatch(/\/blog\?foo=1$/);
         });
 
         test("handles search params correctly on POST submissions", async ({
@@ -822,20 +830,23 @@ test.describe("Forms", () => {
         }) => {
           let app = new PlaywrightFixture(appFixture, page);
 
+          const timestamp = page.locator(`#timestamp`);
+          const form = page.locator(`#${INDEX_ROUTE_NO_ACTION_POST}`);
+          const submit = page.locator(`#${INDEX_ROUTE_NO_ACTION_POST} button`);
+
           // Start with a query param
           await app.goto("/blog?junk=1");
-          let html = await app.getHtml();
-          let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION_POST}`);
-          expect(el.attr("action")).toBe("/blog?index&junk=1");
-          expect(app.page.url()).toMatch(/\/blog\?junk=1$/);
+          const t0 = await timestamp.innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&junk=1");
+          expect(page.url()).toMatch(/\/blog\?junk=1$/);
 
           // Form action reflects the current params and change them on submission
-          await app.clickElement(`#${INDEX_ROUTE_NO_ACTION_POST} button`);
-          html = await app.getHtml();
-          el = getElement(html, `#${INDEX_ROUTE_NO_ACTION_POST}`);
-          expect(el.attr("action")).toBe("/blog?index&junk=1");
+          await submit.click();
+          await timestamp.filter({ hasNotText: t0 }).innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&junk=1");
+
           await page.waitForURL(/\/blog\?index&junk=1$/);
-          expect(app.page.url()).toMatch(/\/blog\?index&junk=1$/);
+          expect(page.url()).toMatch(/\/blog\?index&junk=1$/);
         });
       });
 
