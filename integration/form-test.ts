@@ -1031,16 +1031,13 @@ test.describe("Forms", () => {
             `/form-method?method=${method}&submitterFormMethod=${overrideMethod}`,
             true
           );
-          await app.clickElement(`text=Submit with ${overrideMethod}`);
+          await page.locator(`text=Submit with ${overrideMethod}`).click();
           if (overrideMethod !== "GET") {
-            await page.waitForSelector("#action-method");
-            expect(await app.getHtml("pre#action-method")).toBe(
-              `<pre id="action-method">${overrideMethod}</pre>`
+            await expect(page.locator("pre#action-method")).toHaveText(
+              overrideMethod
             );
           }
-          expect(await app.getHtml("pre#loader-method")).toBe(
-            `<pre id="loader-method">GET</pre>`
-          );
+          await expect(page.locator("pre#loader-method")).toHaveText("GET");
         });
       });
     });
