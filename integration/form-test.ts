@@ -345,7 +345,7 @@ test.describe("Forms", () => {
             return (
               <>
                 <Form method={formMethod}>
-                  <button>Default Submit</button>
+                  <button>Submit</button>
                   <button formMethod={submitterFormMethod}>Submit with {submitterFormMethod}</button>
                 </Form>
                 {actionData ? <pre id="action-method">{actionData}</pre> : null}
@@ -1004,7 +1004,7 @@ test.describe("Forms", () => {
 
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto(`/form-method?method=${method}`, true);
-          await page.locator("text=Default Submit").click();
+          await page.getByText("Submit", { exact: true }).click();
           if (method !== "GET") {
             await expect(page.locator("#action-method")).toHaveText(method);
           }
@@ -1122,20 +1122,25 @@ test.describe("Forms", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/pathless-layout-parent/nested");
-      let html = await app.getHtml();
-      expect(html).toMatch("Pathless Layout Parent");
-      expect(html).toMatch("Pathless Layout ");
-      expect(html).toMatch("Pathless Layout Index");
 
-      let el = getElement(html, `form`);
-      expect(el.attr("action")).toBe("/pathless-layout-parent");
+      await expect(
+        page.getByText("Pathless Layout Parent", { exact: true })
+      ).toBeVisible();
+      await expect(
+        page.getByText("Pathless Layout", { exact: true })
+      ).toBeVisible();
+      await expect(
+        page.getByText("Pathless Layout Index", { exact: true })
+      ).toBeVisible();
 
-      expect(await app.getHtml()).toMatch("Submitted - No");
+      const form = page.locator("form");
+      await expect(form).toHaveAttribute("action", "/pathless-layout-parent");
+
+      await expect(page.getByText("Submitted - No")).toBeVisible();
       // This submission should ignore the index route and the pathless layout
       // route above it and hit the action in routes/pathless-layout-parent.jsx
-      await app.clickSubmitButton("/pathless-layout-parent");
-      await page.waitForSelector("text=Submitted - Yes");
-      expect(await app.getHtml()).toMatch("Submitted - Yes");
+      await page.getByRole("button").click();
+      await expect(page.getByText("Submitted - Yes")).toBeVisible();
     });
   }
 });
