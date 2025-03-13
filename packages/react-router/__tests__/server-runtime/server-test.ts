@@ -1339,10 +1339,7 @@ describe("shared server runtime", () => {
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
       expect(context.errors!.root.status).toBe(400);
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/test": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("thrown action responses bubble up for index routes", async () => {
@@ -1386,10 +1383,7 @@ describe("shared server runtime", () => {
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
       expect(context.errors!.root.status).toBe(400);
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/_index": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("thrown action responses catch deep", async () => {
@@ -1435,7 +1429,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/test"].status).toBe(400);
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/test": null,
       });
     });
 
@@ -1482,7 +1475,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/_index"].status).toBe(400);
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/_index": null,
       });
     });
 
@@ -1537,8 +1529,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].data).toBe("action");
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/test": null,
       });
     });
 
@@ -1593,8 +1583,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].data).toBe("action");
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/index": null,
       });
     });
 
@@ -1728,10 +1716,7 @@ describe("shared server runtime", () => {
       expect(context.errors!.root).toBeInstanceOf(Error);
       expect(context.errors!.root.message).toBe("Unexpected Server Error");
       expect(context.errors!.root.stack).toBeUndefined();
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/test": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("action errors bubble up for index routes", async () => {
@@ -1777,10 +1762,7 @@ describe("shared server runtime", () => {
       expect(context.errors!.root).toBeInstanceOf(Error);
       expect(context.errors!.root.message).toBe("Unexpected Server Error");
       expect(context.errors!.root.stack).toBeUndefined();
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/_index": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("action errors catch deep", async () => {
@@ -1812,6 +1794,7 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
+      debugger;
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect(testAction.mock.calls.length).toBe(1);
@@ -1830,7 +1813,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/test"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/test": null,
       });
     });
 
@@ -1881,7 +1863,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/_index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/_index": null,
       });
     });
 
@@ -1940,8 +1921,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/test": null,
       });
     });
 
@@ -2000,8 +1979,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/index": null,
       });
     });
 
