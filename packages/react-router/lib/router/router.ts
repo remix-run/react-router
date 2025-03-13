@@ -1553,7 +1553,7 @@ export function createRouter(init: RouterInit): Router {
     let flushSync = (opts && opts.flushSync) === true;
 
     // Short circuit if it's only a hash change and not a revalidation or
-    // mutation submission.
+    // mutation submission (or a potential navigation/revalidation to clear errors).
     //
     // Ignore on initial page loads because since the initial hydration will always
     // be "same hash".  For example, on /page#hash and submit a <Form method="post">
@@ -1561,6 +1561,7 @@ export function createRouter(init: RouterInit): Router {
     if (
       matches &&
       state.initialized &&
+      !state.errors &&
       !isRevalidationRequired &&
       isHashChangeOnly(state.location, location) &&
       !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
