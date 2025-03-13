@@ -197,12 +197,19 @@ test.describe("Forms", () => {
 
         "app/routes/blog._index.tsx": js`
           import { Form } from "react-router";
+
+          export function loader() {
+            return { timestamp: Date.now() }
+          }
+
           export function action() {
             return { ok: true };
           }
-          export default function() {
+
+          export default function Component({ loaderData }) {
             return (
               <>
+                <div id="timestamp">{loaderData.timestamp}</div>
                 <Form id="${INDEX_ROUTE_NO_ACTION}">
                   <input type="hidden" name="foo" defaultValue="1" />
                   <button>Submit</button>
@@ -525,15 +532,15 @@ test.describe("Forms", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement(`#${FORM_WITH_ACTION_INPUT} button`);
-      await page.waitForSelector(`pre:has-text("${EAT}")`);
+      await page.locator(`#${FORM_WITH_ACTION_INPUT} button`).click();
+      await page.locator(`pre:has-text("${EAT}")`).waitFor();
     });
 
     test("posts to a loader with button data with click", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement("#buttonWithValue");
-      await page.waitForSelector(`pre:has-text("${LAKSA}")`);
+      await page.locator("#buttonWithValue").click();
+      await page.locator(`pre:has-text("${LAKSA}")`).waitFor();
     });
 
     test("posts to a loader with button data with keyboard", async ({
@@ -553,16 +560,16 @@ test.describe("Forms", () => {
     test("posts with the correct checkbox data", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement(`#${CHECKBOX_BUTTON}`);
-      await page.waitForSelector(`pre:has-text("${LAKSA}")`);
-      await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
+      await page.locator(`#${CHECKBOX_BUTTON}`).click();
+      await page.locator(`pre:has-text("${LAKSA}")`).waitFor();
+      await page.locator(`pre:has-text("${CHEESESTEAK}")`).waitFor();
     });
 
     test("posts button data from outside the form", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/get-submission");
-      await app.clickElement(`#${ORPHAN_BUTTON}`);
-      await page.waitForSelector(`pre:has-text("${SQUID_INK_HOTDOG}")`);
+      await page.locator(`#${ORPHAN_BUTTON}`).click();
+      await page.locator(`pre:has-text("${SQUID_INK_HOTDOG}")`).waitFor();
     });
 
     test(
@@ -793,28 +800,29 @@ test.describe("Forms", () => {
         }) => {
           let app = new PlaywrightFixture(appFixture, page);
 
+          const timestamp = page.locator(`#timestamp`);
+          const form = page.locator(`#${INDEX_ROUTE_NO_ACTION}`);
+          const submit = page.locator(`#${INDEX_ROUTE_NO_ACTION} button`);
+
           // Start with a query param
           await app.goto("/blog?junk=1");
-          let html = await app.getHtml();
-          let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toBe("/blog?index&junk=1");
-          expect(app.page.url()).toMatch(/\/blog\?junk=1$/);
+          const t0 = await timestamp.innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&junk=1");
+          expect(page.url()).toMatch(/\/blog\?junk=1$/);
 
           // On submission, we replace existing parameters (reflected in the
           // form action) with the values from the form data.  We also do not
           // need to preserve the index param in the URL on GET submissions
-          await app.clickElement(`#${INDEX_ROUTE_NO_ACTION} button`);
-          html = await app.getHtml();
-          el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toBe("/blog?index&foo=1");
-          expect(app.page.url()).toMatch(/\/blog\?foo=1$/);
+          await submit.click();
+          const t1 = await timestamp.filter({ hasNotText: t0 }).innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&foo=1");
+          expect(page.url()).toMatch(/\/blog\?foo=1$/);
 
           // Does not append duplicate params on re-submissions
-          await app.clickElement(`#${INDEX_ROUTE_NO_ACTION} button`);
-          html = await app.getHtml();
-          el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toBe("/blog?index&foo=1");
-          expect(app.page.url()).toMatch(/\/blog\?foo=1$/);
+          await submit.click();
+          await timestamp.filter({ hasNotText: t1 }).innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&foo=1");
+          expect(page.url()).toMatch(/\/blog\?foo=1$/);
         });
 
         test("handles search params correctly on POST submissions", async ({
@@ -822,20 +830,23 @@ test.describe("Forms", () => {
         }) => {
           let app = new PlaywrightFixture(appFixture, page);
 
+          const timestamp = page.locator(`#timestamp`);
+          const form = page.locator(`#${INDEX_ROUTE_NO_ACTION_POST}`);
+          const submit = page.locator(`#${INDEX_ROUTE_NO_ACTION_POST} button`);
+
           // Start with a query param
           await app.goto("/blog?junk=1");
-          let html = await app.getHtml();
-          let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION_POST}`);
-          expect(el.attr("action")).toBe("/blog?index&junk=1");
-          expect(app.page.url()).toMatch(/\/blog\?junk=1$/);
+          const t0 = await timestamp.innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&junk=1");
+          expect(page.url()).toMatch(/\/blog\?junk=1$/);
 
           // Form action reflects the current params and change them on submission
-          await app.clickElement(`#${INDEX_ROUTE_NO_ACTION_POST} button`);
-          html = await app.getHtml();
-          el = getElement(html, `#${INDEX_ROUTE_NO_ACTION_POST}`);
-          expect(el.attr("action")).toBe("/blog?index&junk=1");
+          await submit.click();
+          await timestamp.filter({ hasNotText: t0 }).innerText();
+          await expect(form).toHaveAttribute("action", "/blog?index&junk=1");
+
           await page.waitForURL(/\/blog\?index&junk=1$/);
-          expect(app.page.url()).toMatch(/\/blog\?index&junk=1$/);
+          expect(page.url()).toMatch(/\/blog\?index&junk=1$/);
         });
       });
 
@@ -993,16 +1004,11 @@ test.describe("Forms", () => {
 
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto(`/form-method?method=${method}`, true);
-          await app.clickElement(`text=Submit`);
+          await page.getByText("Submit", { exact: true }).click();
           if (method !== "GET") {
-            await page.waitForSelector("#action-method");
-            expect(await app.getHtml("pre#action-method")).toBe(
-              `<pre id="action-method">${method}</pre>`
-            );
+            await expect(page.locator("#action-method")).toHaveText(method);
           }
-          expect(await app.getHtml("pre#loader-method")).toBe(
-            `<pre id="loader-method">GET</pre>`
-          );
+          await expect(page.locator("#loader-method")).toHaveText("GET");
         });
       });
     });
@@ -1020,16 +1026,13 @@ test.describe("Forms", () => {
             `/form-method?method=${method}&submitterFormMethod=${overrideMethod}`,
             true
           );
-          await app.clickElement(`text=Submit with ${overrideMethod}`);
+          await page.locator(`text=Submit with ${overrideMethod}`).click();
           if (overrideMethod !== "GET") {
-            await page.waitForSelector("#action-method");
-            expect(await app.getHtml("pre#action-method")).toBe(
-              `<pre id="action-method">${overrideMethod}</pre>`
+            await expect(page.locator("pre#action-method")).toHaveText(
+              overrideMethod
             );
           }
-          expect(await app.getHtml("pre#loader-method")).toBe(
-            `<pre id="loader-method">GET</pre>`
-          );
+          await expect(page.locator("pre#loader-method")).toHaveText("GET");
         });
       });
     });
@@ -1039,33 +1042,33 @@ test.describe("Forms", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
 
+      const formData = page.locator("#formData");
+
       await app.goto("/submitter");
-      await app.clickElement("text=Add Task");
-      expect((await app.getElement("#formData")).val()).toBe(
+      await page.locator("text=Add Task").click();
+      await expect(formData).toHaveValue(
         "tasks=first&tasks=second&tasks=&tasks=last"
       );
 
       await app.goto("/submitter");
-      await app.clickElement("text=No Name");
-      expect((await app.getElement("#formData")).val()).toBe(
-        "tasks=first&tasks=second&tasks=last"
-      );
+      await page.locator("text=No Name").click();
+      await expect(formData).toHaveValue("tasks=first&tasks=second&tasks=last");
 
       await app.goto("/submitter");
-      await app.clickElement("[alt='Add Task']");
-      expect((await app.getElement("#formData")).val()).toMatch(
+      await page.locator("[alt='Add Task']").click();
+      await expect(formData).toHaveValue(
         /^tasks=first&tasks=second&tasks.x=\d+&tasks.y=\d+&tasks=last$/
       );
 
       await app.goto("/submitter");
-      await app.clickElement("[alt='No Name']");
-      expect((await app.getElement("#formData")).val()).toMatch(
+      await page.locator("[alt='No Name']").click();
+      await expect(formData).toHaveValue(
         /^tasks=first&tasks=second&x=\d+&y=\d+&tasks=last$/
       );
 
       await app.goto("/submitter");
-      await app.clickElement("text=Outside");
-      expect((await app.getElement("#formData")).val()).toBe(
+      await page.locator("text=Outside").click();
+      await expect(formData).toHaveValue(
         "tasks=outside&tasks=first&tasks=second&tasks=last"
       );
     });
@@ -1076,23 +1079,23 @@ test.describe("Forms", () => {
       let app = new PlaywrightFixture(appFixture, page);
       let myFile = fixture.projectDir + "/myfile.txt";
 
+      const formData = page.locator("#formData");
+      const submit = page.locator("button");
+
       await app.goto("/file-upload");
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
-      await app.clickElement("button");
-      await page.waitForSelector("#formData");
-
-      expect((await app.getElement("#formData")).val()).toBe(
+      await submit.click();
+      await expect(formData).toHaveValue(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
       );
 
       await app.goto("/file-upload?method=post");
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
-      await app.clickElement("button");
-      await page.waitForSelector("#formData");
+      await submit.click();
 
-      expect((await app.getElement("#formData")).val()).toBe(
+      await expect(formData).toHaveValue(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
       );
     });
@@ -1119,20 +1122,25 @@ test.describe("Forms", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/pathless-layout-parent/nested");
-      let html = await app.getHtml();
-      expect(html).toMatch("Pathless Layout Parent");
-      expect(html).toMatch("Pathless Layout ");
-      expect(html).toMatch("Pathless Layout Index");
 
-      let el = getElement(html, `form`);
-      expect(el.attr("action")).toBe("/pathless-layout-parent");
+      await expect(
+        page.getByText("Pathless Layout Parent", { exact: true })
+      ).toBeVisible();
+      await expect(
+        page.getByText("Pathless Layout", { exact: true })
+      ).toBeVisible();
+      await expect(
+        page.getByText("Pathless Layout Index", { exact: true })
+      ).toBeVisible();
 
-      expect(await app.getHtml()).toMatch("Submitted - No");
+      const form = page.locator("form");
+      await expect(form).toHaveAttribute("action", "/pathless-layout-parent");
+
+      await expect(page.getByText("Submitted - No")).toBeVisible();
       // This submission should ignore the index route and the pathless layout
       // route above it and hit the action in routes/pathless-layout-parent.jsx
-      await app.clickSubmitButton("/pathless-layout-parent");
-      await page.waitForSelector("text=Submitted - Yes");
-      expect(await app.getHtml()).toMatch("Submitted - Yes");
+      await page.getByRole("button").click();
+      await expect(page.getByText("Submitted - Yes")).toBeVisible();
     });
   }
 });
