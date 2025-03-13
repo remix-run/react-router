@@ -1253,7 +1253,7 @@ test.describe("Middleware", () => {
       await page.waitForSelector("[data-child]");
 
       // 2 separate server requests made
-      expect(requests).toEqual([
+      expect(requests.sort()).toEqual([
         expect.stringContaining("/parent/child.data?_routes=routes%2Fparent"),
         expect.stringContaining(
           "/parent/child.data?_routes=routes%2Fparent.child"
@@ -1415,14 +1415,14 @@ test.describe("Middleware", () => {
       await page.waitForSelector("[data-action]");
 
       // 2 separate server requests made
-      expect(requests).toEqual([
-        // index gets it's own due to clientLoader
-        expect.stringMatching(
-          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/
-        ),
+      expect(requests.sort()).toEqual([
         // This is the normal request but only included parent.child because parent opted out
         expect.stringMatching(
           /\/parent\/child\.data\?_routes=routes%2Fparent\.child$/
+        ),
+        // index gets it's own due to clientLoader
+        expect.stringMatching(
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/
         ),
       ]);
 
