@@ -50,7 +50,15 @@ const files = {
     export const inSplittableMainChunk = () => console.log() || true;
 
     export const clientLoader = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const pollingPromise = (async () => {
+        while (globalThis.blockClientLoader !== false) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      })();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 2s")), 2000);
+      });
+      await Promise.race([pollingPromise, timeoutPromise]);
       return {
         message: "clientLoader in main chunk: " + eval("typeof inSplittableMainChunk === 'function'"),
         className: clientLoaderStyles.root,
@@ -117,7 +125,15 @@ const files = {
 
     export const clientLoader = async () => {
       inUnsplittableMainChunk();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const pollingPromise = (async () => {
+        while (globalThis.blockClientLoader !== false) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      })();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 2s")), 2000);
+      });
+      await Promise.race([pollingPromise, timeoutPromise]);
       return "clientLoader in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
     };
  
@@ -165,7 +181,15 @@ const files = {
 
     export const clientLoader = async () => {
       inMixedMainChunk();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const pollingPromise = (async () => {
+        while (globalThis.blockClientLoader !== false) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      })();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 2s")), 2000);
+      });
+      await Promise.race([pollingPromise, timeoutPromise]);
       return "clientLoader in main chunk: " + eval("typeof inMixedMainChunk === 'function'");
     };
  
@@ -218,6 +242,12 @@ async function mixedHydrateFallbackDownloaded(page: Page) {
   );
 }
 
+async function unblockClientLoader(page: Page) {
+  await page.evaluate(() => {
+    (globalThis as any).blockClientLoader = false;
+  });
+}
+
 test.describe("Split route modules", async () => {
   test.describe("enabled", () => {
     let splitRouteModules = true;
@@ -245,6 +275,7 @@ test.describe("Split route modules", async () => {
       page.on("pageerror", (error) => pageErrors.push(error));
 
       await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
+      await unblockClientLoader(page);
       expect(pageErrors).toEqual([]);
 
       // Ensure splittable exports are not in main chunk
@@ -301,6 +332,7 @@ test.describe("Split route modules", async () => {
         "20px"
       );
       expect(await splittableHydrateFallbackDownloaded(page)).toBe(true);
+      await unblockClientLoader(page);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
@@ -315,6 +347,7 @@ test.describe("Split route modules", async () => {
         "Loading..."
       );
       expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
+      await unblockClientLoader(page);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -347,6 +380,7 @@ test.describe("Split route modules", async () => {
       page.on("pageerror", (error) => pageErrors.push(error));
 
       await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
+      await unblockClientLoader(page);
       expect(pageErrors).toEqual([]);
 
       // Ensure splittable exports are kept in main chunk
@@ -390,6 +424,7 @@ test.describe("Split route modules", async () => {
         "padding",
         "20px"
       );
+      await unblockClientLoader(page);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
@@ -397,6 +432,7 @@ test.describe("Split route modules", async () => {
       // Ensure unsplittable client loader works during SSR
       await page.goto(`http://localhost:${port}/unsplittable`);
       expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      await unblockClientLoader(page);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
