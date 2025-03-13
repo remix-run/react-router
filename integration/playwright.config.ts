@@ -6,6 +6,8 @@ import { devices } from "@playwright/test";
 process.env.NODE_OPTIONS =
   (process.env.NODE_OPTIONS ?? "") + ` --no-warnings=ExperimentalWarning`;
 
+const isWindows = process.platform === "win32";
+
 const config: PlaywrightTestConfig = {
   testDir: ".",
   testMatch: ["**/*-test.ts"],
@@ -15,11 +17,11 @@ const config: PlaywrightTestConfig = {
     external: ["**/packages/**/*"],
   },
   /* Maximum time one test can run for. */
-  timeout: process.platform === "win32" ? 60_000 : 30_000,
+  timeout: isWindows ? 60_000 : 30_000,
   fullyParallel: true,
   expect: {
     /* Maximum time expect() should wait for the condition to be met. */
-    timeout: 5_000,
+    timeout: isWindows ? 10_000 : 5_000,
   },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 3 : 0,
