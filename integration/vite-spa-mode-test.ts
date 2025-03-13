@@ -692,6 +692,79 @@ test.describe("SPA Mode", () => {
           expect(await page.locator("h1").textContent()).toBe("Parent: 1");
           expect(await page.locator("h2").textContent()).toBe("Child");
         });
+
+        test("does not hydrate root loaderData if there's no root loader", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            spaMode: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                splitRouteModules,
+              }),
+              "app/root.tsx": js`
+                import {
+                  Meta,
+                  Links,
+                  Outlet,
+                  Routes,
+                  Route,
+                  Scripts,
+                  ScrollRestoration,
+                } from "react-router";
+
+                export function Layout({ children }: { children: React.ReactNode }) {
+                  return (
+                    <html>
+                      <head>
+                        <Meta />
+                        <Links />
+                      </head>
+                      <body>
+                        {children}
+                        <ScrollRestoration />
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+
+                let count = 0;
+                export function clientLoader() {
+                  return ++count;
+                }
+
+                export default function Root({ loaderData }) {
+                  return (
+                    <>
+                      <h1>{loaderData}</h1>
+                      <Outlet />
+                    </>
+                  );
+                }
+              `,
+              "app/routes/_index.tsx": js`
+                import { redirect } from 'react-router';
+                export const clientLoader = () => redirect('/target');
+                export default function() { return null; }
+              `,
+              "app/routes/target.tsx": js`
+                import { useRouteLoaderData } from 'react-router';
+                export default function Comp() {
+                  return <h2>{useRouteLoaderData('root')}</h2>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/");
+          await page.waitForSelector("h2");
+          expect(await page.locator("h1").textContent()).toBe("2");
+          expect(await page.locator("h2").textContent()).toBe("2");
+        });
       });
 
       test.describe("normal apps", () => {
