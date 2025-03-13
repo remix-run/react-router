@@ -74,6 +74,7 @@ const files = {
       inSplittableMainChunk();
       return (
         <>
+          <h1>Splittable Route</h1>
           <div
             data-loader-data
             className={loaderData.className}>
@@ -138,6 +139,7 @@ const files = {
       inUnsplittableMainChunk();
       return (
         <>
+          <h1>Unsplittable Route</h1>
           <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
           {actionData ? (
             <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
@@ -184,6 +186,7 @@ const files = {
       inMixedMainChunk();
       return (
         <>
+          <h1>Mixed Route</h1>
           <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
           {actionData ? (
             <div data-action-data>actionData = {JSON.stringify(actionData)}</div>
@@ -246,6 +249,7 @@ test.describe("Split route modules", async () => {
 
       // Ensure splittable exports are not in main chunk
       await page.getByRole("link", { name: "/splittable" }).click();
+      await expect(page.getByText("Splittable Route")).toBeVisible();
       expect(await splittableHydrateFallbackDownloaded(page)).toBe(false);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
@@ -262,6 +266,7 @@ test.describe("Split route modules", async () => {
 
       // Ensure unsplittable exports are in main chunk
       await page.getByRole("link", { name: "/unsplittable" }).click();
+      await expect(page.getByText("Unsplittable Route")).toBeVisible();
       expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
@@ -276,6 +281,7 @@ test.describe("Split route modules", async () => {
       // Ensure mix of splittable and unsplittable exports are handled correctly.
       // Note that only the client action is in its own chunk.
       await page.getByRole("link", { name: "/mixed" }).click();
+      await expect(page.getByText("Mixed Route")).toBeVisible();
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
       );
@@ -287,8 +293,10 @@ test.describe("Split route modules", async () => {
 
       // Ensure splittable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/splittable`);
-      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
-      expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
+      await expect(page.locator("[data-hydrate-fallback]")).toHaveText(
+        "Loading..."
+      );
+      await expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
         "padding",
         "20px"
       );
@@ -296,11 +304,16 @@ test.describe("Split route modules", async () => {
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: false"`
       );
-      expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
+      await expect(page.locator("[data-loader-data]")).toHaveCSS(
+        "padding",
+        "20px"
+      );
 
       // Ensure unsplittable HydrateFallback and client loader work during SSR
       await page.goto(`http://localhost:${port}/unsplittable`);
-      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      await expect(page.locator("[data-hydrate-fallback]")).toHaveText(
+        "Loading..."
+      );
       expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
@@ -338,21 +351,29 @@ test.describe("Split route modules", async () => {
 
       // Ensure splittable exports are kept in main chunk
       await page.getByRole("link", { name: "/splittable" }).click();
+      await expect(page.getByText("Splittable Route")).toBeVisible();
       expect(await splittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
       );
-      expect(page.locator("[data-loader-data]")).toHaveCSS("padding", "20px");
+      await expect(page.locator("[data-loader-data]")).toHaveCSS(
+        "padding",
+        "20px"
+      );
       await page.getByRole("button").click();
       await expect(page.locator("[data-action-data]")).toHaveText(
         'actionData = "clientAction in main chunk: true"'
       );
-      expect(page.locator("[data-action-data]")).toHaveCSS("padding", "20px");
+      await expect(page.locator("[data-action-data]")).toHaveCSS(
+        "padding",
+        "20px"
+      );
 
       await page.goBack();
 
       // Ensure unsplittable exports are kept in main chunk
       await page.getByRole("link", { name: "/unsplittable" }).click();
+      await expect(page.getByText("Unsplittable Route")).toBeVisible();
       expect(await unsplittableHydrateFallbackDownloaded(page)).toBe(true);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         'loaderData = "clientLoader in main chunk: true"'
