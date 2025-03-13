@@ -3491,7 +3491,7 @@ export function createStaticHandler(
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
-          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
       try {
         await loadLazyMiddlewareForMatches(matches, manifest);
@@ -3692,7 +3692,7 @@ export function createStaticHandler(
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
-          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
       await loadLazyMiddlewareForMatches(matches, manifest);
       let response = await runMiddlewarePipeline(
