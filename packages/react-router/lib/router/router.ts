@@ -2794,8 +2794,7 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         manifest,
         mapRouteProperties,
-        scopedContext,
-        future.unstable_middleware
+        scopedContext
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -4163,8 +4162,7 @@ export function createStaticHandler(
       null,
       manifest,
       mapRouteProperties,
-      requestContext,
-      false // middleware not done via dataStrategy in the static handler
+      requestContext
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -5155,8 +5153,7 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  scopedContext: unknown,
-  enableMiddleware: boolean // TODO: Remove this
+  scopedContext: unknown
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all lazy/lazyMiddleware async functions are kicked off in parallel
   // before we await them where needed below
