@@ -63,28 +63,30 @@ test.beforeAll(async () => {
     // 💿 Next, add files to this object, just like files in a real app,
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
+    spaMode: true,
     files: {
       "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+        import { redirect } from "react-router";
 
-        export function loader() {
-          return "pizza";
+        export function clientLoader() {
+          return redirect("/somewhere")
         }
 
         export default function Index() {
-          let data = useLoaderData();
           return (
-            <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
-            </div>
+            <div data-testid="index-component">index</div>
           )
         }
       `,
 
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+      "app/routes/somewhere.tsx": js`
+        export async function clientLoader() {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          return {text: "somewhere"}
+        }
+
+        export default function Somewhere({loaderData}) {
+          return <div data-testid="somewhere-component">{loaderData.text}</div>;
         }
       `,
     },
@@ -103,16 +105,18 @@ test.afterAll(() => {
 // add a good description for what you expect React Router to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
+test("SPA: Expect not to render the Component if clientLoader has redirected", async ({
+  page,
+}) => {
   let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
+  // // You can test any request your app might get using `fixture`.
+  // let response = await fixture.requestDocument("/");
+  // expect(await response.text()).toMatch("pizza");
 
   // If you need to test interactivity use the `app`
   await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
+  await expect(page.getByTestId("index-component")).not.toBeDefined();
+  await expect(page.getByTestId("somewhere-component")).toBeDefined();
 
   // If you're not sure what's going on, you can "poke" the app, it'll
   // automatically open up in your browser for 20 seconds, so be quick!
