@@ -47,7 +47,7 @@ ReactDOM.createRoot(root).render(
 
 [modes: data]
 
-[Get Started](./start/library/installation) building a custom framework with a data router.
+[Get Started](./start/framework/custom) building a custom framework with a data router.
 
 The framework features are built on top of lower-level APIs in React Router. You can use these APIs directly for a lighter-weight usage of React Router, but you'll need to set up your own bundling and server rendering (if you want it).
 
@@ -101,6 +101,8 @@ Using a data router, you now have access to nearly every runtime API in React Ro
 ## Framework
 
 [modes: framework]
+
+[Get Started](./start/framework/installation) with React Router as a framework.
 
 Building on top of the data mode, React Router can be used maximally as your React framework. In this setup, you'll use the React Router CLI and Vite bundler plugin for a full-stack development and deployment architecture. This enables React Router to provide a large set of features most web projects will want, including:
 
@@ -201,8 +203,6 @@ export async function action({
 ```
 
 Route modules also provide conventions for SEO, asset loading, error boundaries, and more.
-
-[Get Started](./start/framework/installation) with React Router as a framework.
 
 ## Upgrading
 
