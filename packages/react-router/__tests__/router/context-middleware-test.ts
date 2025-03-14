@@ -1583,6 +1583,7 @@ describe("context/middleware", () => {
 
     describe("throwing", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
+        let error: unknown;
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1593,6 +1594,12 @@ describe("context/middleware", () => {
             unstable_middleware: [
               async ({ context }, next) => {
                 context.set(parentContext, "PARENT 1");
+                try {
+                  await next();
+                } catch (e) {
+                  error = e;
+                  throw e;
+                }
               },
               async ({ context }, next) => {
                 throw new Error("PARENT 2");
@@ -1632,6 +1639,9 @@ describe("context/middleware", () => {
         expect(staticContext.errors).toEqual({
           parent: "ERROR: PARENT 2",
         });
+
+        // Ensure we don't leak the `middlewareError`structure to userland
+        expect(error).toEqual(new Error("PARENT 2"));
       });
 
       it("throwing from a middleware short circuits immediately (going up - loader)", async () => {
