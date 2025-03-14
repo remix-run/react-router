@@ -5,17 +5,17 @@ order: 1
 
 # React Router Home
 
-React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or minimally as a library with your own architecture.
+React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or as minimally as you want.
 
-- [Getting Started - Framework](./start/framework/installation)
-- [Getting Started - Library](./start/library/installation)
+The router at the top of your app determines which features are available to the rest of the APIs. Each mode builds upon the previous to let you use as much or as little as you like.
 
-If you are caught up on future flags, upgrading from React Router v6 or Remix is generally non-breaking:
+- **Declarative**: minimalist usage, just URL matching, active states, and navigating. Classic and clean. If you're using `<BrowserRouter>`, you're using declarative routing.
+- **Data**: Everything from declarative but adds data features like loaders, actions, and pending states. If you're using `createBrowserRouter`, you're using data.
+- **Framework**: Let React Router do it all with efficient bundling, code splitting, server rendering, and advanced type safety. If you're using `routes.ts`, you're using the framework.
 
-- [Upgrade from v6](./upgrading/v6)
-- [Upgrade from Remix](./upgrading/remix)
+## Declarative
 
-## React Router as a Library
+[Get Started](./start/library/installation) with Declarative routing.
 
 Like previous versions, React Router can still be used as a simple, declarative routing library. Its only job will be matching the URL to a set of components, providing access to URL data, and navigating around the app.
 
@@ -37,11 +37,62 @@ ReactDOM.createRoot(root).render(
 );
 ```
 
-[Get Started](./start/library/installation) with React Router as a library.
+## Data
 
-## React Router as a framework
+[Get Started](./start/library/installation) building a custom framework with a data router.
 
-React Router can be used maximally as your React framework. In this setup, you'll use the React Router CLI and Vite bundler plugin for a full-stack development and deployment architecture. This enables React Router to provide a large set of features most web projects will want, including:
+The framework features are built on top of lower-level APIs in React Router. You can use these APIs directly for a lighter-weight usage of React Router, but you'll need to set up your own bundling and server rendering (if you want it).
+
+Some of the features include:
+
+- Data loading with route loaders
+- Data mutations with actions
+- Concurrent mutations with fetchers
+- Race condition handling
+- Utilities to manage pending states
+
+Routes and loaders are configured at runtime with `createBrowserRouter`.
+
+```tsx
+import { createBrowserRouter } from "react-router";
+
+let router = createBrowserRouter([
+  {
+    path: "/",
+    Component: Root,
+    children: [
+      {
+        path: "shows/:showId",
+        Component: Show,
+        loader: ({ request, params }) =>
+          fetch(`/api/show/${params.id}.json`, {
+            signal: request.signal,
+          }),
+      },
+    ],
+  },
+]);
+```
+
+The router is then rendered with `<RouterProvider>`:
+
+```tsx
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router";
+import { createRoot } from "react-dom/client";
+
+createRoot(document.getElementById("root")).render(
+  <RouterProvider router={router} />
+);
+```
+
+Using a data router, you now have access to nearly every runtime API in React Router.
+
+## Framework
+
+Building on top of the data mode, React Router can be used maximally as your React framework. In this setup, you'll use the React Router CLI and Vite bundler plugin for a full-stack development and deployment architecture. This enables React Router to provide a large set of features most web projects will want, including:
 
 - Vite bundler and dev server integration
 - hot module replacement
@@ -142,3 +193,10 @@ export async function action({
 Route modules also provide conventions for SEO, asset loading, error boundaries, and more.
 
 [Get Started](./start/framework/installation) with React Router as a framework.
+
+## Upgrading
+
+If you are caught up on future flags, upgrading from React Router v6 or Remix is generally non-breaking:
+
+- [Upgrade from v6](./upgrading/v6)
+- [Upgrade from Remix](./upgrading/remix)
