@@ -4934,26 +4934,28 @@ async function loadLazyMiddleware(
     return;
   }
 
-  let middleware = await route.unstable_lazyMiddleware();
-
-  // If the lazy function was executed and removed by another parallel
-  // call then we can return - first call to finish wins because the return
-  // value is expected to be static
-  if (!route.unstable_lazyMiddleware) {
-    return;
-  }
-
   let routeToUpdate = manifest[route.id];
   invariant(routeToUpdate, "No route found in manifest");
 
-  warning(
-    !routeToUpdate.unstable_middleware,
-    `Route "${routeToUpdate.id}" has a static property "unstable_middleware" ` +
-      `defined. The "unstable_lazyMiddleware" function will be ignored.`
-  );
+  if (routeToUpdate.unstable_middleware) {
+    warning(
+      false,
+      `Route "${routeToUpdate.id}" has a static property "unstable_middleware" ` +
+        `defined. The "unstable_lazyMiddleware" function will be ignored.`
+    );
+  } else {
+    let middleware = await route.unstable_lazyMiddleware();
 
-  if (!routeToUpdate.unstable_middleware) {
-    routeToUpdate.unstable_middleware = middleware;
+    // If the `unstable_lazyMiddleware` function was executed and removed by
+    // another parallel call then we can return - first call to finish wins
+    // because the return value is expected to be static
+    if (!route.unstable_lazyMiddleware) {
+      return;
+    }
+
+    if (!routeToUpdate.unstable_middleware) {
+      routeToUpdate.unstable_middleware = middleware;
+    }
   }
 
   routeToUpdate.unstable_lazyMiddleware = undefined;
