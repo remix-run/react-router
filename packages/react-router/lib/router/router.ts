@@ -22,6 +22,7 @@ import type {
   DataStrategyResult,
   ImmutableRouteKey,
   MapRoutePropertiesFunction,
+  MaybePromise,
   MutationFormMethod,
   RedirectResult,
   RouteData,
@@ -60,8 +61,6 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
-
-type MaybePromise<T> = T | Promise<T>;
 
 /**
  * A Router instance manages all navigation and data loading/mutations
