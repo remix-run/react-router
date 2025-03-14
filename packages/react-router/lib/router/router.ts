@@ -4075,11 +4075,7 @@ export function createStaticHandler(
     if (matchesToLoad.length === 0) {
       return {
         matches,
-        // Add a null for all matched routes for proper revalidation on the client
-        loaderData: matches.reduce(
-          (acc, m) => Object.assign(acc, { [m.route.id]: null }),
-          {}
-        ),
+        loaderData: {},
         errors:
           pendingActionResult && isErrorResult(pendingActionResult[1])
             ? {
@@ -4113,16 +4109,6 @@ export function createStaticHandler(
       true,
       skipLoaderErrorBubbling
     );
-
-    // Add a null for any non-loader matches for proper revalidation on the client
-    let executedLoaders = new Set<string>(
-      matchesToLoad.map((match) => match.route.id)
-    );
-    matches.forEach((match) => {
-      if (!executedLoaders.has(match.route.id)) {
-        handlerContext.loaderData[match.route.id] = null;
-      }
-    });
 
     return {
       ...handlerContext,
