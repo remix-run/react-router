@@ -113,10 +113,19 @@ function createHydratedRouter({
 
   let hydrationData: HydrationState | undefined = undefined;
   let loaderData = ssrInfo.context.state.loaderData;
+  // In SPA mode we only hydrate build-time root loader data
   if (ssrInfo.context.isSpaMode) {
-    // In SPA mode we hydrate in any build-time loader data which should be
-    // limited to the root route
-    hydrationData = { loaderData };
+    if (
+      ssrInfo.manifest.routes.root?.hasLoader &&
+      loaderData &&
+      "root" in loaderData
+    ) {
+      hydrationData = {
+        loaderData: {
+          root: loaderData.root,
+        },
+      };
+    }
   } else {
     // Create a shallow clone of `loaderData` we can mutate for partial hydration.
     // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
