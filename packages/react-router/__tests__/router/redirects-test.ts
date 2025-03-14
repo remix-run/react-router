@@ -208,6 +208,29 @@ describe("redirects", () => {
       },
       errors: null,
     });
+    expect(t.history.location.state).toEqual({
+      _isRedirect: true,
+    });
+  });
+
+  it("supports setting location state through a header when redirecting", async () => {
+    let t = setup({ routes: REDIRECT_ROUTES });
+
+    const stateObj = { obj: { type: "bar" }, count: 42 };
+
+    let fetch = await t.fetch("/parent/child?index");
+    let nav = await fetch.loaders.index.redirectReturn(
+      "..",
+      undefined,
+      { State: JSON.stringify(stateObj) },
+      ["parent"]
+    );
+
+    await nav.loaders.parent.resolve("PARENT");
+    expect(t.router.state.location.state).toEqual({
+      ...stateObj,
+      _isRedirect: true,
+    });
   });
 
   it("supports . redirects", async () => {
