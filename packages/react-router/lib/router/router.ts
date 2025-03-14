@@ -4496,7 +4496,11 @@ function patchRoutesImpl(
   const newIds = new Set(newRoutes.map((r) => r.id));
   for (let i = childrenToPatch.length - 1; i >= 0; i--) {
     if (newIds.has(childrenToPatch[i].id)) {
-      childrenToPatch.splice(i, 1);
+      Object.assign(
+        childrenToPatch[i],
+        childrenToPatch.splice(i, 1)![0],
+        childrenToPatch[i]
+      );
     }
   }
 
