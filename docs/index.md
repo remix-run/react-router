@@ -13,7 +13,13 @@ The router at the top of your app determines which features are available to the
 - **Data**: Everything from declarative but adds data features like loaders, actions, and pending states. If you're using `createBrowserRouter`, you're using data.
 - **Framework**: Let React Router do it all with efficient bundling, code splitting, server rendering, and advanced type safety. If you're using `routes.ts`, you're using the framework.
 
+Each API doc will list which modes in which it's available with this:
+
+[MODES: framework, data, declarative]
+
 ## Declarative
+
+[modes: declarative]
 
 [Get Started](./start/library/installation) with Declarative routing.
 
@@ -38,6 +44,8 @@ ReactDOM.createRoot(root).render(
 ```
 
 ## Data
+
+[modes: data]
 
 [Get Started](./start/library/installation) building a custom framework with a data router.
 
@@ -91,6 +99,8 @@ createRoot(document.getElementById("root")).render(
 Using a data router, you now have access to nearly every runtime API in React Router.
 
 ## Framework
+
+[modes: framework]
 
 Building on top of the data mode, React Router can be used maximally as your React framework. In this setup, you'll use the React Router CLI and Vite bundler plugin for a full-stack development and deployment architecture. This enables React Router to provide a large set of features most web projects will want, including:
 
