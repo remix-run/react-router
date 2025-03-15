@@ -84,14 +84,14 @@ Every mode supports any architecture and deployment target, so the question isn'
 - are coming from Remix (React Router v7 is the "next version" after Remix v2)
 - migrating from Next.js
 
-[→ Get Started with Framework Mode](./start/framework/installation).
+[→ Get Started with Framework Mode](./framework/installation).
 
 **Use Data Mode if you:**
 
 - want data features but want to have control over bundling, data, and server abstractions
 - started a data router in v6.4 and are happy with it
 
-[→ Get Started with Data Mode](./start/data/custom).
+[→ Get Started with Data Mode](./data/custom).
 
 **Use Declarative Mode if you:**
 
@@ -100,7 +100,7 @@ Every mode supports any architecture and deployment target, so the question isn'
 - have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
 - are coming from Create React App (you may want to consider framework mode though)
 
-[→ Get Started with Declarative Mode](./start/library/installation).
+[→ Get Started with Declarative Mode](./library/installation).
 
 ## API + Mode Availability Table
 
