@@ -15,7 +15,7 @@ There are three primary ways, or "modes", to use it in your app, so there are th
 - [Data](./start/data/custom)
 - [Framework](./start/framework/installation)
 
-Learn which mode is right for you in [Picking a Mode](./start/picking-a-router).
+Learn which mode is right for you in [Picking a Mode](./start/modes).
 
 ## Using These Guides
 
