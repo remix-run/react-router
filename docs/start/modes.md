@@ -5,11 +5,11 @@ order: 1
 
 # Picking a Mode
 
-React Router is a multi-strategy router for React. There are three primary ways, or "modes", to use it in your app.
+React Router is a multi-strategy router for React. There are three primary ways, or "modes", to use it in your app. Across the docs you'll see these icons indicating which mode the content is relevant to.
 
-- [Declarative](./declarative/installation)
-- [Data](./data/custom)
-- [Framework](./framework/installation)
+[MODES: framework, data, declarative]
+
+<p></p>
 
 The features available in each mode are additive, so moving from Declarative to Data to Framework simply adds more features at the cost of architectural control. So pick your mode based on how much control or how much help you want from React Router.
 
