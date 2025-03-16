@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Split `unstable_clientMiddleware` route export when `future.unstable_splitRouteModules` is enabled
+When both `future.unstable_middleware` and `future.unstable_splitRouteModules` are enabled, split `unstable_clientMiddleware` route exports into separate chunks when possible
