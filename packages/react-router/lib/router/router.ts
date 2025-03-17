@@ -2307,9 +2307,13 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+    let dsMatches = getTargetedDataStrategyMatches(
+      fetchRequest,
       requestMatches,
-      [match]
+      match,
+      scopedContext,
+      mapRouteProperties,
+      manifest
     );
     let actionResults = await callDataStrategy(
       "action",
@@ -2592,10 +2596,13 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-
-    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+    let dsMatches = getTargetedDataStrategyMatches(
+      fetchRequest,
       matches,
-      [match]
+      match,
+      scopedContext,
+      mapRouteProperties,
+      manifest
     );
     let results = await callDataStrategy(
       "loader",
