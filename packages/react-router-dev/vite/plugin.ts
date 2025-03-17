@@ -3056,6 +3056,13 @@ const resolveRouteFileCode = async (
   );
 };
 
+function isRootRouteModuleId(ctx: ReactRouterPluginContext, id: string) {
+  return (
+    normalizeRelativeFilePath(id, ctx.reactRouterConfig) ===
+    ctx.reactRouterConfig.routes.root.file
+  );
+}
+
 async function detectRouteChunksIfEnabled(
   cache: Cache,
   ctx: ReactRouterPluginContext,
@@ -3082,10 +3089,7 @@ async function detectRouteChunksIfEnabled(
   // for all requests, all of its chunks would always be loaded up front during
   // the initial page load. Instead of firing off multiple requests to resolve
   // the root route code, we want it to be downloaded in a single request.
-  if (
-    normalizeRelativeFilePath(id, ctx.reactRouterConfig) ===
-    ctx.reactRouterConfig.routes.root.file
-  ) {
+  if (isRootRouteModuleId(ctx, id)) {
     return noRouteChunks();
   }
 
@@ -3130,6 +3134,10 @@ function validateRouteChunks({
   id: string;
   valid: Record<Exclude<RouteChunkName, "main">, boolean>;
 }): void {
+  if (isRootRouteModuleId(ctx, id)) {
+    return;
+  }
+
   let invalidChunks = Object.entries(valid)
     .filter(([_, isValid]) => !isValid)
     .map(([chunkName]) => chunkName);

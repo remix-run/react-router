@@ -462,6 +462,59 @@ test.describe("Split route modules", async () => {
       });
     });
 
+    test.describe("splittable routes with splittable root route exports", () => {
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject({
+          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "vite.config.js": await viteConfig.basic({ port }),
+          "app/root.tsx": js`
+            import { Outlet } from "react-router";
+            export const clientLoader = () => null;
+            export const clientAction = () => null;
+            export default function() {
+              return <Outlet />;
+            }
+          `,
+          // Make unsplittable routes valid so the build can pass
+          "app/routes/unsplittable.tsx": "export default function(){}",
+          "app/routes/mixed.tsx": "export default function(){}",
+        });
+      });
+
+      test("build passes", async () => {
+        let { status } = build({ cwd });
+        expect(status).toBe(0);
+      });
+    });
+
+    test.describe("splittable routes with unsplittable root route exports", () => {
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject({
+          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "vite.config.js": await viteConfig.basic({ port }),
+          "app/root.tsx": js`
+            import { Outlet } from "react-router";
+            const shared = null;
+            export const clientLoader = () => shared;
+            export const clientAction = () => shared;
+            export default function() {
+              return <Outlet />;
+            }
+          `,
+          // Make unsplittable routes valid so the build can pass
+          "app/routes/unsplittable.tsx": "export default function(){}",
+          "app/routes/mixed.tsx": "export default function(){}",
+        });
+      });
+
+      test("build passes", async () => {
+        let { status } = build({ cwd });
+        expect(status).toBe(0);
+      });
+    });
+
     test.describe("unsplittable routes", () => {
       test.beforeAll(async () => {
         port = await getPort();
