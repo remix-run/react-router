@@ -60,6 +60,8 @@ enum HistoryAction {
 
 The `useBlocker` hook allows you to prevent the user from navigating away from the current location, and present them with a custom UI to allow them to confirm the navigation.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 <docs-info>
 This only works for client-side navigations within your React Router application and will not block document requests. To prevent document navigations you will need to add your own <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event" target="_blank">`beforeunload`</a> event handler.
 </docs-info>
@@ -134,3 +136,4 @@ When in a `blocked` state, you may call `blocker.proceed()` to proceed to the bl
 When in a `blocked` state, you may call `blocker.reset()` to return the blocker back to an `unblocked` state and leave the user at the current location.
 
 [example]: https://github.com/remix-run/react-router/tree/main/examples/navigation-blocking
+[pickingarouter]: ../routers/picking-a-router
