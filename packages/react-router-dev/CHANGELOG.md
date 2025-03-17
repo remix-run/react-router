@@ -1,5 +1,21 @@
 # `@react-router/dev`
 
+## 7.4.0-pre.0
+
+### Minor Changes
+
+- Generate types for `virtual:react-router/server-build` module ([#13152](https://github.com/remix-run/react-router/pull/13152))
+
+### Patch Changes
+
+- When `future.unstable_splitRouteModules` is set to `"enforce"`, allow both splittable and unsplittable root route exports since it's always in a single chunk. ([#13238](https://github.com/remix-run/react-router/pull/13238))
+- When `future.unstable_viteEnvironmentApi` is enabled, allow plugins that override the default SSR environment (such as `@cloudflare/vite-plugin`) to be placed before or after the React Router plugin. ([#13183](https://github.com/remix-run/react-router/pull/13183))
+- Fix conflicts with other Vite plugins that use the `configureServer` and/or `configurePreviewServer` hooks ([#13184](https://github.com/remix-run/react-router/pull/13184))
+- Updated dependencies:
+  - `react-router@7.4.0-pre.0`
+  - `@react-router/node@7.4.0-pre.0`
+  - `@react-router/serve@7.4.0-pre.0`
+
 ## 7.3.0
 
 ### Patch Changes
