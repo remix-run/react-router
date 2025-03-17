@@ -5,7 +5,7 @@ order: 1
 
 # Picking a Mode
 
-React Router is a multi-strategy router for React. There are three primary ways, or "modes", to use it in your app. Across the docs you'll see these icons indicating which mode the content is relevant to.
+React Router is a multi-strategy router for React. There are three primary ways, or "modes", to use it in your app. Across the docs you'll see these icons indicating which mode the content is relevant to:
 
 [MODES: framework, data, declarative]
 
@@ -75,20 +75,20 @@ export default [
 
 Every mode supports any architecture and deployment target, so the question isn't really about if you want SSR, SPA, etc. It's about how much you want to do yourself.
 
-**Use Framework Mode if you are:**
+**Use Framework Mode if you:**
 
-- too new to have an opinion
-- considering Next.js, Solid Start, SvelteKit, Astro, TanStack Start, etc. and want to compare
+- are too new to have an opinion
+- are considering Next.js, Solid Start, SvelteKit, Astro, TanStack Start, etc. and want to compare
 - just want to build something with React
 - might want to server render, might not
 - are coming from Remix (React Router v7 is the "next version" after Remix v2)
-- migrating from Next.js
+- are migrating from Next.js
 
 [→ Get Started with Framework Mode](./framework/installation).
 
 **Use Data Mode if you:**
 
-- want data features but want to have control over bundling, data, and server abstractions
+- want data features but also want to have control over bundling, data, and server abstractions
 - started a data router in v6.4 and are happy with it
 
 [→ Get Started with Data Mode](./data/custom).
