@@ -1782,14 +1782,13 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let { dsMatches, dsMatchesToLoad } =
-        UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(matches, [
-          actionMatch,
-        ]);
+      let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+        matches,
+        [actionMatch]
+      );
       let results = await callDataStrategy(
         "action",
         request,
-        dsMatchesToLoad,
         dsMatches,
         scopedContext,
         null
@@ -2304,15 +2303,13 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let { dsMatches, dsMatchesToLoad } =
-      UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
         requestMatches,
         [match]
       );
     let actionResults = await callDataStrategy(
       "action",
       fetchRequest,
-      dsMatchesToLoad,
       dsMatches,
       scopedContext,
       key
@@ -2592,14 +2589,13 @@ export function createRouter(init: RouterInit): Router {
 
     let originatingLoadId = incrementingLoadId;
 
-    let { dsMatches, dsMatchesToLoad } =
-      UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(matches, [
-        match,
-      ]);
+    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+      matches,
+      [match]
+    );
     let results = await callDataStrategy(
       "loader",
       fetchRequest,
-      dsMatchesToLoad,
       dsMatches,
       scopedContext,
       key
@@ -2791,7 +2787,6 @@ export function createRouter(init: RouterInit): Router {
   async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
-    matchesToLoad: DataStrategyMatch[],
     matches: DataStrategyMatch[],
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null
@@ -2803,7 +2798,6 @@ export function createRouter(init: RouterInit): Router {
         dataStrategyImpl as DataStrategyFunction<unknown>,
         type,
         request,
-        matchesToLoad,
         matches,
         fetcherKey,
         manifest,
@@ -2814,7 +2808,9 @@ export function createRouter(init: RouterInit): Router {
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
       // matches - and it'll naturally bubble to the root
-      matchesToLoad.forEach((m) => {
+      matches
+        .filter((m) => m.shouldLoad)
+        .forEach((m) => {
         dataResults[m.route.id] = {
           type: ResultType.error,
           error: e,
@@ -2854,8 +2850,7 @@ export function createRouter(init: RouterInit): Router {
     scopedContext: unstable_RouterContextProvider
   ) {
     // Kick off loaders and fetchers in parallel
-    let { dsMatches, dsMatchesToLoad } =
-      UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
         matches,
         matchesToLoad
       );
@@ -2863,7 +2858,6 @@ export function createRouter(init: RouterInit): Router {
     let loaderResultsPromise = callDataStrategy(
       "loader",
       request,
-      dsMatchesToLoad,
       dsMatches,
       scopedContext,
       null
@@ -2872,7 +2866,7 @@ export function createRouter(init: RouterInit): Router {
     let fetcherResultsPromise = Promise.all(
       fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.controller) {
-          let { dsMatches, dsMatchesToLoad } =
+          let dsMatches =
             UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
               f.matches,
               [f.match]
@@ -2880,7 +2874,6 @@ export function createRouter(init: RouterInit): Router {
           let results = await callDataStrategy(
             "loader",
             createClientSideRequest(init.history, f.path, f.controller.signal),
-            dsMatchesToLoad,
             dsMatches,
             scopedContext,
             f.key
@@ -3901,15 +3894,14 @@ export function createStaticHandler(
         error,
       };
     } else {
-      let { dsMatches, dsMatchesToLoad } =
-        UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(matches, [
-          actionMatch,
-        ]);
+      let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+        matches,
+        [actionMatch]
+      );
 
       let results = await callDataStrategy(
         "action",
         request,
-        dsMatchesToLoad,
         dsMatches,
         isRouteRequest,
         requestContext,
@@ -4122,8 +4114,7 @@ export function createStaticHandler(
       };
     }
 
-    let { dsMatches, dsMatchesToLoad } =
-      UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
         matches,
         matchesToLoad
       );
@@ -4131,7 +4122,6 @@ export function createStaticHandler(
     let results = await callDataStrategy(
       "loader",
       request,
-      dsMatchesToLoad,
       dsMatches,
       isRouteRequest,
       requestContext,
@@ -4172,7 +4162,6 @@ export function createStaticHandler(
   async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
-    matchesToLoad: DataStrategyMatch[],
     matches: DataStrategyMatch[],
     isRouteRequest: boolean,
     requestContext: unknown,
@@ -4182,7 +4171,6 @@ export function createStaticHandler(
       dataStrategy || defaultDataStrategy,
       type,
       request,
-      matchesToLoad,
       matches,
       null,
       manifest,
@@ -5122,8 +5110,8 @@ async function STUB_RESOLVE() {
 function UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
   matches: AgnosticDataRouteMatch[],
   matchesToLoad: AgnosticDataRouteMatch[]
-) {
-  let dsMatches = matches.map((match) => {
+): DataStrategyMatch[] {
+  return matches.map((match) => {
     let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
     return {
       ...match,
@@ -5132,17 +5120,12 @@ function UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
       resolve: STUB_RESOLVE,
     };
   });
-  return {
-    dsMatches,
-    dsMatchesToLoad: dsMatches.filter((m) => m.shouldLoad),
-  };
 }
 
 async function callDataStrategyImpl(
   dataStrategyImpl: DataStrategyFunction<unknown>,
   type: "loader" | "action",
   request: Request,
-  matchesToLoad: DataStrategyMatch[],
   matches: DataStrategyMatch[],
   fetcherKey: string | null,
   manifest: RouteManifest,
@@ -5167,7 +5150,7 @@ async function callDataStrategyImpl(
 
   let dsMatches = matches.map((match, i) => {
     let loadRoutePromise = loadRouteDefinitionsPromises[i];
-    let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
+    let shouldLoad = match.shouldLoad;
     // `resolve` encapsulates route.lazy(), executing the loader/action,
     // and mapping return values/thrown errors to a `DataStrategyResult`.  Users
     // can pass a callback to take fine-grained control over the execution
