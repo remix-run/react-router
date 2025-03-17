@@ -1782,9 +1782,13 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+      let dsMatches = getTargetedDataStrategyMatches(
+        request,
         matches,
-        [actionMatch]
+        actionMatch,
+        scopedContext,
+        mapRouteProperties,
+        manifest
       );
       let results = await callDataStrategy(
         "action",
@@ -2304,9 +2308,9 @@ export function createRouter(init: RouterInit): Router {
 
     let originatingLoadId = incrementingLoadId;
     let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
-        requestMatches,
-        [match]
-      );
+      requestMatches,
+      [match]
+    );
     let actionResults = await callDataStrategy(
       "action",
       fetchRequest,
@@ -2811,11 +2815,11 @@ export function createRouter(init: RouterInit): Router {
       matches
         .filter((m) => m.shouldLoad)
         .forEach((m) => {
-        dataResults[m.route.id] = {
-          type: ResultType.error,
-          error: e,
-        };
-      });
+          dataResults[m.route.id] = {
+            type: ResultType.error,
+            error: e,
+          };
+        });
       return dataResults;
     }
 
@@ -2851,9 +2855,9 @@ export function createRouter(init: RouterInit): Router {
   ) {
     // Kick off loaders and fetchers in parallel
     let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
-        matches,
-        matchesToLoad
-      );
+      matches,
+      matchesToLoad
+    );
 
     let loaderResultsPromise = callDataStrategy(
       "loader",
@@ -4115,9 +4119,9 @@ export function createStaticHandler(
     }
 
     let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
-        matches,
-        matchesToLoad
-      );
+      matches,
+      matchesToLoad
+    );
 
     let results = await callDataStrategy(
       "loader",
@@ -4856,6 +4860,21 @@ function isSameRoute(
   );
 }
 
+function loadLazyRouteModules(
+  matches: AgnosticDataRouteMatch[],
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest
+) {
+  return matches.map((m) => {
+    if (m.route.lazy) {
+      let p = loadLazyRouteModule(m.route, mapRouteProperties, manifest);
+      p.catch(() => {});
+      return p;
+    }
+    return undefined;
+  });
+}
+
 /**
  * Execute route.lazy() methods to lazily load route modules (loader, action,
  * shouldRevalidate) and update the routeManifest in place which shares objects
@@ -5118,6 +5137,48 @@ function UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
       shouldLoad,
       shouldCallHandler: () => shouldLoad,
       resolve: STUB_RESOLVE,
+    };
+  });
+}
+
+function getTargetedDataStrategyMatches(
+  request: Request,
+  matches: AgnosticDataRouteMatch[],
+  targetMatch: AgnosticDataRouteMatch,
+  scopedContext: unknown,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest
+): DataStrategyMatch[] {
+  // Kick off route.lazy loads
+  let loadRouteDefinitionsPromises = loadLazyRouteModules(
+    matches,
+    mapRouteProperties,
+    manifest
+  );
+
+  return matches.map((match, index) => {
+    if (match.route.id !== targetMatch.route.id) {
+      return {
+        ...match,
+        shouldLoad: false,
+        shouldCallHandler: () => false,
+        resolve: () => Promise.resolve({ type: "data", result: undefined }),
+      };
+    }
+
+    return {
+      ...match,
+      shouldLoad: true,
+      shouldCallHandler: () => true,
+      resolve: (handlerOverride) =>
+        callLoaderOrAction(
+          isMutationMethod(request.method) ? "action" : "loader",
+          request,
+          match,
+          loadRouteDefinitionsPromises[index],
+          handlerOverride,
+          scopedContext
+        ),
     };
   });
 }
