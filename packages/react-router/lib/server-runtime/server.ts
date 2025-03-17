@@ -41,7 +41,7 @@ import type { MiddlewareEnabled } from "../types/future";
 export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
-    ? unstable_RouterContextProvider
+    ? unstable_InitialContext
     : AppLoadContext
 ) => Promise<Response>;
 
