@@ -26,5 +26,16 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "clever-sheep-draw",
+    "cuddly-dots-hear",
+    "dull-hotels-battle",
+    "eleven-oranges-cheat",
+    "few-months-begin",
+    "four-ligers-search",
+    "plenty-jeans-lie",
+    "silver-peas-shop",
+    "three-oranges-sort",
+    "unlucky-pumas-buy"
+  ]
 }
