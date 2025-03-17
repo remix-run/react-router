@@ -123,8 +123,8 @@ Takes a promise returned from a [LoaderFunction](../Other/LoaderFunction) value 
 import { useLoaderData, Await } from "react-router";
 
 export async function loader() {
-  let reviews = getReviews(); // not awaited
-  let book = await getBook();
+  const reviews = getReviews(); // not awaited
+  const book = await getBook();
   return {
     book,
     reviews, // this is a promise

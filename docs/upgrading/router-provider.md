@@ -85,7 +85,7 @@ Instead of importing your route modules directly, lazy load and convert them to 
 Not only does your route definition now conform to the Route Module API, but you also get the benefits of code-splitting your routes.
 
 ```diff filename=src/main.tsx
-let router = createBrowserRouter([
+const router = createBrowserRouter([
   // ... other routes
   {
     path: "about",

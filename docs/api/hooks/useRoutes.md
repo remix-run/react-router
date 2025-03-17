@@ -19,7 +19,7 @@ import * as React from "react";
 import { useRoutes } from "react-router";
 
 function App() {
-  let element = useRoutes([
+  const element = useRoutes([
     {
       path: "/",
       element: <Dashboard />,

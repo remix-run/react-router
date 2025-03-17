@@ -17,7 +17,7 @@ It takes an array of route objects that support loaders, actions, error boundari
 ```tsx
 import { createBrowserRouter } from "react-router";
 
-let router = createBrowserRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     Component: Root,
@@ -107,7 +107,7 @@ Turn your routes into a request handler with `createStaticHandler`:
 import { createStaticHandler } from "react-router";
 import routes from "./some-routes";
 
-let { query, dataRoutes } = createStaticHandler(routes);
+const { query, dataRoutes } = createStaticHandler(routes);
 ```
 
 ### 3. Get Routing Context and Render
@@ -126,11 +126,11 @@ import {
 
 import routes from "./some-routes.js";
 
-let { query, dataRoutes } = createStaticHandler(routes);
+const { query, dataRoutes } = createStaticHandler(routes);
 
 export async function handler(request: Request) {
   // 1. run actions/loaders to get the routing context with `query`
-  let context = await query(request);
+  const context = await query(request);
 
   // If `query` returns a Response, send it raw (a route probably a redirected)
   if (context instanceof Response) {
@@ -138,10 +138,10 @@ export async function handler(request: Request) {
   }
 
   // 2. Create a static router for SSR
-  let router = createStaticRouter(dataRoutes, context);
+  const router = createStaticRouter(dataRoutes, context);
 
   // 3. Render everything with StaticRouterProvider
-  let html = renderToString(
+  const html = renderToString(
     <StaticRouterProvider
       router={router}
       context={context}
@@ -149,12 +149,12 @@ export async function handler(request: Request) {
   );
 
   // Setup headers from action and loaders from deepest match
-  let leaf = context.matches[context.matches.length - 1];
-  let actionHeaders = context.actionHeaders[leaf.route.id];
-  let loaderHeaders = context.loaderHeaders[leaf.route.id];
-  let headers = new Headers(actionHeaders);
+  const leaf = context.matches[context.matches.length - 1];
+  const actionHeaders = context.actionHeaders[leaf.route.id];
+  const loaderHeaders = context.loaderHeaders[leaf.route.id];
+  const headers = new Headers(actionHeaders);
   if (loaderHeaders) {
-    for (let [key, value] of loaderHeaders.entries()) {
+    for (const [key, value] of loaderHeaders.entries()) {
       headers.append(key, value);
     }
   }
@@ -180,7 +180,7 @@ import { RouterProvider } from "react-router/dom";
 import routes from "./app/routes.js";
 import { createBrowserRouter } from "react-router";
 
-let router = createBrowserRouter(routes, {
+const router = createBrowserRouter(routes, {
   hydrationData: window.__staticRouterHydrationData,
 });
 

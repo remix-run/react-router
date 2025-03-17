@@ -19,7 +19,7 @@ import {
   createBrowserRouter,
 } from "react-router";
 import { createRoot } from "react-dom/client";
-let router = createBrowserRouter();
+const router = createBrowserRouter();
 createRoot(document.getElementById("root")).render(
   <RouterProvider router={router} />
 );

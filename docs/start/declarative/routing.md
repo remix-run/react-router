@@ -145,7 +145,7 @@ If a path segment starts with `:` then it becomes a "dynamic segment". When the 
 import { useParams } from "react-router";
 
 export default function Team() {
-  let params = useParams();
+  const params = useParams();
   // params.teamId
 }
 ```
@@ -163,7 +163,7 @@ You can have multiple dynamic segments in one route path:
 import { useParams } from "react-router";
 
 export default function CategoryProduct() {
-  let { categoryId, productId } = useParams();
+  const { categoryId, productId } = useParams();
   // ...
 }
 ```
@@ -193,15 +193,15 @@ Also known as "catchall" and "star" segments. If a route path pattern ends with 
 ```
 
 ```tsx
-let params = useParams();
+const params = useParams();
 // params["*"] will contain the remaining URL after files/
-let filePath = params["*"];
+const filePath = params["*"];
 ```
 
 You can destructure the `*`, you just have to assign it a new name. A common name is `splat`:
 
 ```tsx
-let { "*": splat } = useParams();
+const { "*": splat } = useParams();
 ```
 
 ## Linking

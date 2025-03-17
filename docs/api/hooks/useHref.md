@@ -16,7 +16,7 @@ Resolves a URL against the current location.
 import { useHref } from "react-router";
 
 function SomeComponent() {
-  let href = useHref("some/where");
+  const href = useHref("some/where");
   // "/resolved/some/where"
 }
 ```

@@ -17,7 +17,7 @@ import { useResolvedPath } from "react-router";
 
 function SomeComponent() {
   // if the user is at /dashboard/profile
-  let path = useResolvedPath("../accounts");
+  const path = useResolvedPath("../accounts");
   path.pathname; // "/dashboard/accounts"
   path.search; // ""
   path.hash; // ""

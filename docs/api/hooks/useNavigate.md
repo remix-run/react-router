@@ -16,7 +16,7 @@ Returns a function that lets you navigate programmatically in the browser in res
 import { useNavigate } from "react-router";
 
 function SomeComponent() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   return (
     <button
       onClick={() => {

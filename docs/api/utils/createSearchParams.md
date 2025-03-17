@@ -20,7 +20,7 @@ values for a given key, but don't want to use an array initializer.
 For example, instead of:
 
 ```tsx
-let searchParams = new URLSearchParams([
+const searchParams = new URLSearchParams([
   ["sort", "name"],
   ["sort", "price"],
 ]);
@@ -29,7 +29,7 @@ let searchParams = new URLSearchParams([
 you can do:
 
 ```
-let searchParams = createSearchParams({
+const searchParams = createSearchParams({
   sort: ['name', 'price']
 });
 ```

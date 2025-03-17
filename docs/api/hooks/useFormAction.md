@@ -19,10 +19,10 @@ import { useFormAction } from "react-router";
 
 function SomeComponent() {
   // closest route URL
-  let action = useFormAction();
+  const action = useFormAction();
 
   // closest route URL + "destroy"
-  let destroyAction = useFormAction("destroy");
+  const destroyAction = useFormAction("destroy");
 }
 ```
 

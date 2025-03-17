@@ -16,7 +16,7 @@ Returns the current navigation, defaulting to an "idle" navigation when no navig
 import { useNavigation } from "react-router";
 
 function SomeComponent() {
-  let navigation = useNavigation();
+  const navigation = useNavigation();
   navigation.state;
   navigation.formData;
   // etc.

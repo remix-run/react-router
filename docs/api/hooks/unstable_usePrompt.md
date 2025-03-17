@@ -16,7 +16,7 @@ The `unstable_` flag will not be removed because this technique has a lot of rou
 
 ```tsx
 function ImportantForm() {
-  let [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState("");
 
   // Block navigating elsewhere when data has been entered into the input
   unstable_usePrompt({

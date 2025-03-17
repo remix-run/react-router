@@ -18,7 +18,7 @@ Fetchers track their own, independent state and can be used to load data, submit
 import { useFetcher } from "react-router"
 
 function SomeComponent() {
-  let fetcher = useFetcher()
+  const fetcher = useFetcher()
 
   // states are available on the fetcher
   fetcher.state // "idle" | "loading" | "submitting"

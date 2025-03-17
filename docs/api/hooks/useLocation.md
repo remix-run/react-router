@@ -17,7 +17,7 @@ import * as React from 'react'
 import { useLocation } from 'react-router'
 
 function SomeComponent() {
-  let location = useLocation()
+  const location = useLocation()
 
   React.useEffect(() => {
     // Google Analytics

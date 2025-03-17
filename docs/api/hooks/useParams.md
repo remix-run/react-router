@@ -16,7 +16,7 @@ Returns an object of key/value pairs of the dynamic params from the current URL 
 import { useParams } from "react-router"
 
 function SomeComponent() {
-  let params = useParams()
+  const params = useParams()
   params.postId
 }
 ```
