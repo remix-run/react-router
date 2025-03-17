@@ -3525,9 +3525,9 @@ export function createStaticHandler(
 
             return res;
           },
-          async (e) => {
-            if (isResponse(e.error)) {
-              return e.error;
+          async (error, routeId) => {
+            if (isResponse(error)) {
+              return error;
             }
 
             if (renderedStaticContext) {
@@ -3538,16 +3538,16 @@ export function createStaticHandler(
               // to align server/client behavior.  Client side middleware uses
               // dataStrategy and a given route can only have one result, so the
               // error overwrites any prior loader data.
-              if (e.routeId in renderedStaticContext.loaderData) {
-                renderedStaticContext.loaderData[e.routeId] = undefined;
+              if (routeId in renderedStaticContext.loaderData) {
+                renderedStaticContext.loaderData[routeId] = undefined;
               }
 
               return respond(
                 getStaticContextFromError(
                   dataRoutes,
                   renderedStaticContext,
-                  e.error,
-                  findNearestBoundary(matches!, e.routeId).route.id
+                  error,
+                  findNearestBoundary(matches!, routeId).route.id
                 )
               );
             } else {
@@ -3568,11 +3568,9 @@ export function createStaticHandler(
                 loaderData: {},
                 actionData: null,
                 errors: {
-                  [boundary.route.id]: e.error,
+                  [boundary.route.id]: error,
                 },
-                statusCode: isRouteErrorResponse(e.error)
-                  ? e.error.status
-                  : 500,
+                statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
               });
@@ -3731,11 +3729,11 @@ export function createStaticHandler(
             ? new Response(value)
             : Response.json(value);
         },
-        (e) => {
-          if (isResponse(e.error)) {
-            return respond(e.error);
+        (error) => {
+          if (isResponse(error)) {
+            return respond(error);
           }
-          return new Response(String(e.error), {
+          return new Response(String(error), {
             status: 500,
             statusText: "Unexpected Server Error",
           });
@@ -4935,13 +4933,21 @@ async function defaultDataStrategyWithMiddleware(
     args,
     false,
     () => defaultDataStrategy(args),
-    (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+    (error, routeId) => ({ [routeId]: { type: "error", result: error } })
   ) as Promise<Record<string, DataStrategyResult>>;
 }
 
 type MutableMiddlewareState = {
-  handlerResult: unknown;
-  propagateResult: boolean;
+  // Track the result of the user-provided handler at the bottom of the
+  // middleware chain so we can return it out from runMiddleware for them when
+  // we're not propagating results
+  handlerResult?: unknown;
+  // Capture the throwing routeId for middleware error so we can bubble from the
+  // correct spot
+  middlewareError?: {
+    routeId: string;
+    error: unknown;
+  };
 };
 
 export async function runMiddlewarePipeline<T extends boolean>(
@@ -4957,12 +4963,11 @@ export async function runMiddlewarePipeline<T extends boolean>(
   handler: () => T extends true
     ? MaybePromise<Response>
     : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (error: MiddlewareError) => unknown
+  errorHandler: (error: unknown, routeId: string) => unknown
 ): Promise<unknown> {
   let { matches, request, params, context } = args;
   let middlewareState: MutableMiddlewareState = {
     handlerResult: undefined,
-    propagateResult,
   };
   try {
     let tuples = matches.flatMap((m) =>
@@ -4973,32 +4978,25 @@ export async function runMiddlewarePipeline<T extends boolean>(
     let result = await callRouteMiddleware(
       { request, params, context },
       tuples,
+      propagateResult,
       middlewareState,
       handler
     );
-    return middlewareState.propagateResult
-      ? result
-      : middlewareState.handlerResult;
+    return propagateResult ? result : middlewareState.handlerResult;
   } catch (e) {
-    if (!(e instanceof MiddlewareError)) {
+    if (!middlewareState.middlewareError) {
       // This shouldn't happen?  This would have to come from a bug in our
       // library code...
       throw e;
     }
-    let result = await errorHandler(e);
+    let result = await errorHandler(
+      middlewareState.middlewareError.error,
+      middlewareState.middlewareError.routeId
+    );
     if (propagateResult || !middlewareState.handlerResult) {
       return result;
     }
     return Object.assign(middlewareState.handlerResult, result);
-  }
-}
-
-export class MiddlewareError {
-  routeId: string;
-  error: unknown;
-  constructor(routeId: string, error: unknown) {
-    this.routeId = routeId;
-    this.error = error;
   }
 }
 
@@ -5007,6 +5005,7 @@ async function callRouteMiddleware(
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
   middlewares: [string, unstable_MiddlewareFunction][],
+  propagateResult: boolean,
   middlewareState: MutableMiddlewareState,
   handler: () => void,
   idx = 0
@@ -5039,11 +5038,12 @@ async function callRouteMiddleware(
     let result = await callRouteMiddleware(
       args,
       middlewares,
+      propagateResult,
       middlewareState,
       handler,
       idx + 1
     );
-    if (middlewareState.propagateResult) {
+    if (propagateResult) {
       nextResult = result;
       return nextResult;
     }
@@ -5070,11 +5070,15 @@ async function callRouteMiddleware(
     } else {
       return next();
     }
-  } catch (e) {
-    if (e instanceof MiddlewareError) {
-      throw e;
+  } catch (error) {
+    if (!middlewareState.middlewareError) {
+      middlewareState.middlewareError = { routeId, error };
+    } else if (middlewareState.middlewareError.error !== error) {
+      // Another middleware already threw, so only capture this new routeId if
+      // it's a different error and not just bubbling up the existing error
+      middlewareState.middlewareError = { routeId, error };
     }
-    throw new MiddlewareError(routeId, e);
+    throw error;
   }
 }
 
