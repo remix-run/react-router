@@ -305,21 +305,6 @@ async function nonSsrStrategy(
   return results;
 }
 
-function isOptedOut(
-  manifestRoute: EntryRoute | undefined,
-  routeModule: RouteModule | undefined,
-  match: DataStrategyMatch,
-  router: DataRouter
-) {
-  return (
-    match.route.id in router.state.loaderData &&
-    manifestRoute &&
-    manifestRoute.hasLoader &&
-    routeModule &&
-    routeModule.shouldRevalidate
-  );
-}
-
 // Loaders are trickier since we only want to hit the server once, so we
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
@@ -374,11 +359,19 @@ async function singleFetchLoaderNavigationStrategy(
             return;
           }
 
-          // Otherwise, we opt out if we currently have data, a `loader`, and a
+          // Otherwise, we opt out if we currently have data and a
           // `shouldRevalidate` function.  This implies that the user opted out
           // via `shouldRevalidate`
-          if (isOptedOut(manifestRoute, routeModules[m.route.id], m, router)) {
-            foundOptOutRoute = true;
+          if (
+            m.route.id in router.state.loaderData &&
+            manifestRoute &&
+            m.route.shouldRevalidate
+          ) {
+            if (manifestRoute.hasLoader) {
+              // If we have a server loader, make sure we don't include it in the
+              // single fetch .data request
+              foundOptOutRoute = true;
+            }
             return;
           }
         }
