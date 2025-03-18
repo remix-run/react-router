@@ -1,3 +1,4 @@
+import type { DataRouteMatch } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -4585,67 +4586,51 @@ function getMatchesToLoad(
 
   let navigationMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
-    let shouldLoad: boolean;
-    let shouldCallHandler: DataStrategyMatch["shouldCallHandler"];
-    let isUsingNewApi = false;
     let _lazyPromise: Promise<void> | undefined;
-    let resolve: DataStrategyMatch["resolve"];
 
     if (maxIdx != null && index > maxIdx) {
       // Don't call loaders below the boundary
-      shouldLoad = false;
-      shouldCallHandler = () => false;
-      resolve = () =>
-        Promise.resolve({ type: ResultType.data, result: undefined });
+      return getDataStrategyMatch(
+        request,
+        match,
+        undefined,
+        scopedContext,
+        false
+      );
     } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
-      _lazyPromise = loadLazyRouteModule(
-        match.route,
-        mapRouteProperties,
-        manifest
+      return getDataStrategyMatch(
+        request,
+        match,
+        loadLazyRouteModule(match.route, mapRouteProperties, manifest),
+        scopedContext,
+        true
       );
-      shouldLoad = true;
-      shouldCallHandler = () => true;
-      resolve = (handlerOverride) =>
-        callLoaderOrAction(
-          request,
-          match,
-          _lazyPromise,
-          handlerOverride,
-          scopedContext
-        );
     } else if (route.loader == null) {
-      shouldLoad = false;
-      shouldCallHandler = () => false;
-      resolve = () =>
-        Promise.resolve({ type: ResultType.data, result: undefined });
-    } else if (initialHydration) {
-      shouldLoad = shouldLoadRouteOnHydration(
-        route,
-        state.loaderData,
-        state.errors
+      return getDataStrategyMatch(
+        request,
+        match,
+        undefined,
+        scopedContext,
+        false
       );
-      shouldCallHandler = () => shouldLoad;
-      resolve = (handlerOverride) =>
-        callLoaderOrAction(
-          request,
-          match,
-          undefined,
-          handlerOverride,
-          scopedContext
-        );
+    } else if (initialHydration) {
+      return getDataStrategyMatch(
+        request,
+        match,
+        undefined,
+        scopedContext,
+        shouldLoadRouteOnHydration(route, state.loaderData, state.errors)
+      );
     } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
       // Always call the loader on new route instances
-      shouldLoad = true;
-      shouldCallHandler = () => true;
-      resolve = (handlerOverride) =>
-        callLoaderOrAction(
-          request,
-          match,
-          undefined,
-          handlerOverride,
-          scopedContext
-        );
+      return getDataStrategyMatch(
+        request,
+        match,
+        undefined,
+        scopedContext,
+        true
+      );
     } else {
       // This is the default implementation for when we revalidate.  If the route
       // provides it's own implementation, then we give them full control but
@@ -4660,7 +4645,6 @@ function getMatchesToLoad(
           // Search params affect all loaders
           currentUrl.search !== nextUrl.search ||
           isNewRouteInstance(state.matches[index], match);
-
       let args: Omit<ShouldRevalidateFunctionArgs, "defaultShouldRevalidate"> =
         {
           currentUrl,
@@ -4671,59 +4655,27 @@ function getMatchesToLoad(
           actionResult,
           actionStatus,
         };
-
-      shouldLoad = shouldRevalidateLoader(match, {
+      let shouldLoad = shouldRevalidateLoader(match, {
         ...args,
         defaultShouldRevalidate,
       });
-      shouldCallHandler = (defaultOverride) => {
-        isUsingNewApi = true;
-        return shouldRevalidateLoader(match, {
-          ...args,
-          defaultShouldRevalidate:
-            typeof defaultOverride === "boolean"
-              ? defaultOverride
-              : defaultShouldRevalidate,
-        });
-      };
-      resolve = (handlerOverride) => {
-        // If the route has `shouldLoad=true`, call the handler
-        // Otherwise, call only if:
-        //  - They're using the new `shouldCallHandler` API in which case resolve
-        //    changes behavior slightly and is a direct 1-1 to call the handler
-        //  - They passed a `handlerOverride` for a GET request on a route with a
-        //    `loader` (or unresolved `lazy`), in which case they're taking control
-        //    over handler execution.  This mimics logic we had in the original
-        //    implementation and is kept the same to avoid a breaking change
-        if (
-          shouldLoad ||
-          isUsingNewApi ||
-          (handlerOverride &&
-            request.method === "GET" &&
-            (match.route.lazy || match.route.loader))
-        ) {
-          return callLoaderOrAction(
-            request,
-            match,
-            undefined,
-            handlerOverride,
-            scopedContext
-          );
-        }
-        return Promise.resolve({
-          type: ResultType.data,
-          result: undefined,
-        });
-      };
-    }
 
-    return {
-      ...match,
-      shouldLoad,
-      shouldCallHandler,
-      resolve,
-      _lazyPromise,
-    };
+      return getDataStrategyMatch(
+        request,
+        match,
+        _lazyPromise,
+        scopedContext,
+        shouldLoad,
+        (defaultOverride) =>
+          shouldRevalidateLoader(match, {
+            ...args,
+            defaultShouldRevalidate:
+              typeof defaultOverride === "boolean"
+                ? defaultOverride
+                : defaultShouldRevalidate,
+          })
+      );
+    }
   });
 
   // Pick fetcher.loads that need to be revalidated
@@ -5280,6 +5232,46 @@ async function callRouteMiddleware(
     }
     throw new MiddlewareError(routeId, e);
   }
+}
+
+function getDataStrategyMatch(
+  request: Request,
+  match: DataRouteMatch,
+  _lazyPromise: Promise<void> | undefined,
+  scopedContext: unknown,
+  shouldLoad = false,
+  _shouldCallHandler?: DataStrategyMatch["shouldCallHandler"]
+): DataStrategyMatch {
+  let isUsingNewApi = false;
+  return {
+    ...match,
+    shouldLoad,
+    shouldCallHandler(defaultShouldRevalidate) {
+      isUsingNewApi = true;
+      return typeof _shouldCallHandler === "function"
+        ? _shouldCallHandler(defaultShouldRevalidate)
+        : shouldLoad;
+    },
+    _lazyPromise,
+    resolve(handlerOverride) {
+      if (
+        isUsingNewApi ||
+        shouldLoad ||
+        (handlerOverride &&
+          request.method === "GET" &&
+          (match.route.lazy || match.route.loader))
+      ) {
+        return callLoaderOrAction(
+          request,
+          match,
+          _lazyPromise,
+          handlerOverride,
+          scopedContext
+        );
+      }
+      return Promise.resolve({ type: ResultType.data, result: undefined });
+    },
+  };
 }
 
 function getTargetedDataStrategyMatches(
