@@ -11,6 +11,7 @@ node_modules/
 /tutorial/dist
 /playground-local/
 /integration/playwright-report
+/integration/test-results
 
 # v5 build files
 /packages/*/cjs/
@@ -28,6 +29,8 @@ node_modules/
 .wireit
 .eslintcache
 .tmp
+tsup.config.bundled_*.mjs
+build.utils.d.ts
 /.env
 /NOTES.md
 

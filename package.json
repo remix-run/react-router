@@ -21,6 +21,9 @@
     "test:integration": "pnpm build && pnpm test:integration:run",
     "posttest:integration:run": "pnpm clean:integration",
     "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
+    "vite-ecosystem-ci:build": "pnpm build",
+    "vite-ecosystem-ci:before-test": "pnpm playwright install",
+    "vite-ecosystem-ci:test": "pnpm playwright:integration --project=chromium && pnpm clean:integration",
     "changeset": "changeset",
     "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
@@ -55,7 +58,7 @@
     "@octokit/graphql": "^4.8.0",
     "@octokit/plugin-paginate-rest": "^2.21.3",
     "@octokit/rest": "^18.12.0",
-    "@playwright/test": "^1.33.0",
+    "@playwright/test": "^1.49.1",
     "@remix-run/changelog-github": "^0.0.5",
     "@testing-library/jest-dom": "5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -108,7 +111,7 @@
     "undici": "^6.10.1",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
-    "vite": "^5.1.0",
+    "vite": "^6.1.0",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2"
   },
@@ -118,10 +121,10 @@
   "pnpm": {
     "patchedDependencies": {
       "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch",
-      "@changesets/assemble-release-plan@5.2.4": "patches/@changesets__assemble-release-plan@5.2.4.patch"
+      "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
     },
     "overrides": {
-      "workerd": "1.20240614.0"
+      "workerd": "1.20241230.0"
     }
   }
 }

@@ -23,7 +23,7 @@ import {
 export default [
   // ... other routes
   route("user/:id", "pages/user-profile.tsx", [
-    route("avatar", "api/upload-avatar.tsx"),
+    route("avatar", "api/avatar.tsx"),
   ]),
 ] satisfies RouteConfig;
 ```
@@ -115,7 +115,7 @@ Update the form's `action` to store files in the `fileStorage` instance.
 
 ```tsx filename=pages/user-profile.tsx
 import {
-  FileUpload,
+  type FileUpload,
   parseFormData,
 } from "@mjackson/form-data-parser";
 import {
@@ -181,12 +181,12 @@ export default function UserPage({
 
 Create a [resource route][resource-route] that streams the file as a response.
 
-```tsx filename=api/upload-avatar.tsx
+```tsx filename=api/avatar.tsx
 import {
   fileStorage,
   getStorageKey,
 } from "~/avatar-storage.server";
-import type { Route } from "./+types/upload-avatar";
+import type { Route } from "./+types/avatar";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const storageKey = getStorageKey(params.id);

@@ -18,11 +18,11 @@ import type { Route } from "./+types/my-route";
 export async function loader({}: Route.LoaderArgs) {
   // note this is NOT awaited
   let nonCriticalData = new Promise((res) =>
-    setTimeout(() => "non-critical", 5000)
+    setTimeout(() => res("non-critical"), 5000)
   );
 
   let criticalData = await new Promise((res) =>
-    setTimeout(() => "critical", 300)
+    setTimeout(() => res("critical"), 300)
   );
 
   return { nonCriticalData, criticalData };
@@ -53,7 +53,6 @@ export default function MyComponent({
         <Await resolve={nonCriticalData}>
           {(value) => <h3>Non critical value: {value}</h3>}
         </Await>
-        <NonCriticalUI p={nonCriticalData} />
       </React.Suspense>
     </div>
   );

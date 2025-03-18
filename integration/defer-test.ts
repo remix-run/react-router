@@ -20,6 +20,8 @@ const MANUAL_RESOLVED_ID = "MANUAL_RESOLVED_ID";
 const MANUAL_FALLBACK_ID = "MANUAL_FALLBACK_ID";
 const MANUAL_ERROR_ID = "MANUAL_ERROR_ID";
 
+let originalConsoleError: typeof console.error;
+
 declare global {
   var __deferredManualResolveCache: {
     nextId: number;
@@ -537,9 +539,12 @@ test.describe("non-aborted", () => {
 
     // This creates an interactive app using playwright.
     appFixture = await createAppFixture(fixture);
+    originalConsoleError = console.error;
+    console.error = () => {};
   });
 
   test.afterAll(() => {
+    console.error = originalConsoleError;
     appFixture.close();
   });
 
@@ -1205,9 +1210,13 @@ test.describe("aborted", () => {
 
     // This creates an interactive app using playwright.
     appFixture = await createAppFixture(fixture);
+
+    originalConsoleError = console.error;
+    console.error = () => {};
   });
 
   test.afterAll(() => {
+    console.error = originalConsoleError;
     appFixture.close();
   });
 

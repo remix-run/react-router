@@ -1,5 +1,77 @@
 # `@react-router/serve`
 
+## 7.3.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.3.0`
+  - `@react-router/express@7.3.0`
+  - `@react-router/node@7.3.0`
+
+## 7.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.2.0`
+  - `@react-router/node@7.2.0`
+  - `@react-router/express@7.2.0`
+
+## 7.1.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.5`
+  - `@react-router/node@7.1.5`
+  - `@react-router/express@7.1.5`
+
+## 7.1.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.4`
+  - `@react-router/node@7.1.4`
+  - `@react-router/express@7.1.4`
+
+## 7.1.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.3`
+  - `@react-router/express@7.1.3`
+  - `@react-router/node@7.1.3`
+
+## 7.1.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.2`
+  - `@react-router/node@7.1.2`
+  - `@react-router/express@7.1.2`
+
+## 7.1.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.1`
+  - `@react-router/express@7.1.1`
+  - `@react-router/node@7.1.1`
+
+## 7.1.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.0`
+  - `@react-router/node@7.1.0`
+  - `@react-router/express@7.1.0`
+
 ## 7.0.2
 
 ### Patch Changes

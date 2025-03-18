@@ -232,9 +232,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -244,9 +241,6 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
         },
@@ -392,9 +386,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -404,9 +395,6 @@ test.describe("Error Sanitization", () => {
     test("does not sanitize loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Loader Error"),
         },
@@ -497,8 +485,6 @@ test.describe("Error Sanitization", () => {
               import { ServerRouter, isRouteErrorResponse } from "react-router";
               import { renderToPipeableStream } from "react-dom/server";
 
-              const ABORT_DELAY = 5_000;
-
               export default function handleRequest(
                 request,
                 responseStatusCode,
@@ -508,11 +494,7 @@ test.describe("Error Sanitization", () => {
                 return new Promise((resolve, reject) => {
                   let shellRendered = false;
                   const { pipe, abort } = renderToPipeableStream(
-                    <ServerRouter
-                      context={remixContext}
-                      url={request.url}
-                      abortDelay={ABORT_DELAY}
-                    />,
+                    <ServerRouter context={remixContext} url={request.url} />,
                     {
                       onShellReady() {
                         shellRendered = true;
@@ -545,7 +527,7 @@ test.describe("Error Sanitization", () => {
                     }
                   );
 
-                  setTimeout(abort, ABORT_DELAY);
+                  setTimeout(abort, 5000);
                 });
               }
 
@@ -646,9 +628,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -658,8 +637,9 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: { data: null },
-        "routes/_index": { error: new Error("Unexpected Server Error") },
+        "routes/_index": {
+          error: new Error("Unexpected Server Error"),
+        },
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(

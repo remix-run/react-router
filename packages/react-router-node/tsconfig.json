@@ -10,7 +10,6 @@
     "strict": true,
     "jsx": "react",
     "declaration": true,
-    "emitDeclarationOnly": true,
     "rootDir": ".",
     "outDir": "./dist",
     "noEmit": true,

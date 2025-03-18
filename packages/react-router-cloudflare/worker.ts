@@ -1,6 +1,13 @@
-import type { AppLoadContext, ServerBuild } from "react-router";
+import type {
+  AppLoadContext,
+  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
+  ServerBuild,
+  unstable_InitialContext,
+} from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { type CacheStorage } from "@cloudflare/workers-types";
+
+type MaybePromise<T> = T | Promise<T>;
 
 /**
  * A function that returns the value to use as `context` in route `loader` and
@@ -29,7 +36,9 @@ export type GetLoadContextFunction<
       caches: CacheStorage;
     };
   };
-}) => AppLoadContext | Promise<AppLoadContext>;
+}) => MiddlewareEnabled extends true
+  ? MaybePromise<unstable_InitialContext>
+  : MaybePromise<AppLoadContext>;
 
 export type RequestHandler<Env = any> = PagesFunction<Env>;
 

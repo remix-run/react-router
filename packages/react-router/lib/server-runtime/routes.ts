@@ -3,17 +3,18 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
+  unstable_MiddlewareFunction,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
-import type { ServerRouteModule } from "./routeModules";
 import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
 import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
+import type { ServerRouteModule } from "../dom/ssr/routeModules";
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
@@ -72,6 +73,9 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
+      unstable_middleware: route.module.unstable_middleware as unknown as
+        | unstable_MiddlewareFunction[]
+        | undefined,
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix
       loader: route.module.loader

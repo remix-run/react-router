@@ -4,7 +4,7 @@ import { UNSAFE_ServerMode as ServerMode } from "react-router";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 
-test.describe.skip("headers export", () => {
+test.describe("headers export", () => {
   let ROOT_HEADER_KEY = "X-Test";
   let ROOT_HEADER_VALUE = "SUCCESS";
   let ACTION_HKEY = "X-Test-Action";
@@ -415,5 +415,58 @@ test.describe.skip("headers export", () => {
         ["set-cookie", "parent-thrown-cookie=true"],
       ])
     );
+  });
+
+  test("does not duplicate set-cookie headers also returned via headers() function", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          "app/root.tsx": js`
+            import { Links, Meta, Outlet, Scripts } from "react-router";
+
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+
+          "app/routes/_index.tsx": js`
+            export function headers({ loaderHeaders }) {
+              return loaderHeaders;
+            }
+
+            export function loader() {
+              return new Response(null, {
+                headers: {
+                  "X-Test": "value",
+                  "Set-Cookie": "cookie=yum"
+                }
+              })
+            }
+
+            export default function Index() {
+              return <div>Heyo!</div>
+            }
+          `,
+        },
+      },
+      ServerMode.Test
+    );
+    let response = await fixture.requestDocument("/");
+    expect([...response.headers.entries()]).toEqual([
+      ["content-type", "text/html"],
+      ["set-cookie", "cookie=yum"],
+      ["x-test", "value"],
+    ]);
   });
 });
