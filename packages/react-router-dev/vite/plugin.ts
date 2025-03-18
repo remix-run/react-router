@@ -2710,7 +2710,7 @@ async function prerenderData(
   if (response.status !== 200) {
     throw new Error(
       `Prerender (data): Received a ${response.status} status code from ` +
-        `\`entry.server.tsx\` while prerendering the \`${path}\` ` +
+        `\`entry.server.tsx\` while prerendering the \`${prerenderPath}\` ` +
         `path.\n${normalizedPath}`
     );
   }
