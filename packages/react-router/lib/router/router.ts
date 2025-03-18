@@ -1792,7 +1792,6 @@ export function createRouter(init: RouterInit): Router {
         manifest
       );
       let results = await callDataStrategy(
-        "action",
         request,
         dsMatches,
         scopedContext,
@@ -2323,7 +2322,6 @@ export function createRouter(init: RouterInit): Router {
       manifest
     );
     let actionResults = await callDataStrategy(
-      "action",
       fetchRequest,
       fetchMatches,
       scopedContext,
@@ -2615,7 +2613,6 @@ export function createRouter(init: RouterInit): Router {
       manifest
     );
     let results = await callDataStrategy(
-      "loader",
       fetchRequest,
       dsMatches,
       scopedContext,
@@ -2806,7 +2803,6 @@ export function createRouter(init: RouterInit): Router {
   // Utility wrapper for calling dataStrategy client-side without having to
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
-    type: "loader" | "action",
     request: Request,
     matches: DataStrategyMatch[],
     scopedContext: unstable_RouterContextProvider,
@@ -2817,7 +2813,6 @@ export function createRouter(init: RouterInit): Router {
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
-        type,
         request,
         matches,
         fetcherKey,
@@ -2871,7 +2866,6 @@ export function createRouter(init: RouterInit): Router {
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
-      "loader",
       request,
       matches,
       scopedContext,
@@ -2882,7 +2876,6 @@ export function createRouter(init: RouterInit): Router {
       fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.request && f.controller) {
           let results = await callDataStrategy(
-            "loader",
             f.request,
             f.matches,
             scopedContext,
@@ -3914,7 +3907,6 @@ export function createStaticHandler(
       );
 
       let results = await callDataStrategy(
-        "action",
         request,
         dsMatches,
         isRouteRequest,
@@ -4141,7 +4133,6 @@ export function createStaticHandler(
           _lazyPromise,
           resolve: (handlerOverride) =>
             callLoaderOrAction(
-              isMutationMethod(request.method) ? "action" : "loader",
               request,
               match,
               _lazyPromise,
@@ -4173,7 +4164,6 @@ export function createStaticHandler(
     }
 
     let results = await callDataStrategy(
-      "loader",
       request,
       dsMatches,
       isRouteRequest,
@@ -4213,7 +4203,6 @@ export function createStaticHandler(
   // Utility wrapper for calling dataStrategy server-side without having to
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
-    type: "loader" | "action",
     request: Request,
     matches: DataStrategyMatch[],
     isRouteRequest: boolean,
@@ -4222,7 +4211,6 @@ export function createStaticHandler(
   ): Promise<Record<string, DataResult>> {
     let results = await callDataStrategyImpl(
       dataStrategy || defaultDataStrategy,
-      type,
       request,
       matches,
       null,
@@ -4620,7 +4608,6 @@ function getMatchesToLoad(
       shouldCallHandler = () => true;
       resolve = (handlerOverride) =>
         callLoaderOrAction(
-          isMutationMethod(request.method) ? "action" : "loader",
           request,
           match,
           _lazyPromise,
@@ -4641,7 +4628,6 @@ function getMatchesToLoad(
       shouldCallHandler = () => shouldLoad;
       resolve = (handlerOverride) =>
         callLoaderOrAction(
-          isMutationMethod(request.method) ? "action" : "loader",
           request,
           match,
           undefined,
@@ -4654,7 +4640,6 @@ function getMatchesToLoad(
       shouldCallHandler = () => true;
       resolve = (handlerOverride) =>
         callLoaderOrAction(
-          isMutationMethod(request.method) ? "action" : "loader",
           request,
           match,
           undefined,
@@ -4718,7 +4703,6 @@ function getMatchesToLoad(
             (match.route.lazy || match.route.loader))
         ) {
           return callLoaderOrAction(
-            isMutationMethod(request.method) ? "action" : "loader",
             request,
             match,
             undefined,
@@ -5350,7 +5334,6 @@ function getTargetedDataStrategyMatches(
             (match.route.lazy || match.route.loader))
         ) {
           return callLoaderOrAction(
-            isMutationMethod(request.method) ? "action" : "loader",
             request,
             match,
             _lazyPromise,
@@ -5366,7 +5349,6 @@ function getTargetedDataStrategyMatches(
 
 async function callDataStrategyImpl(
   dataStrategyImpl: DataStrategyFunction<unknown>,
-  type: "loader" | "action",
   request: Request,
   matches: DataStrategyMatch[],
   fetcherKey: string | null,
@@ -5418,7 +5400,6 @@ async function callDataStrategyImpl(
 
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
 async function callLoaderOrAction(
-  type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
   loadRoutePromise: Promise<void> | undefined,
@@ -5427,7 +5408,8 @@ async function callLoaderOrAction(
 ): Promise<DataStrategyResult> {
   let result: DataStrategyResult;
   let onReject: (() => void) | undefined;
-
+  let isAction = isMutationMethod(request.method);
+  let type = isAction ? "action" : "loader";
   let runHandler = (
     handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>
   ): Promise<DataStrategyResult> => {
@@ -5473,9 +5455,7 @@ async function callLoaderOrAction(
   };
 
   try {
-    let handler = match.route[type] as
-      | LoaderFunction<unknown>
-      | ActionFunction<unknown>;
+    let handler = isAction ? match.route.action : match.route.loader;
 
     // If we have a route.lazy promise, await that first
     if (loadRoutePromise) {
@@ -5499,9 +5479,7 @@ async function callLoaderOrAction(
         // Load lazy route module, then run any returned handler
         await loadRoutePromise;
 
-        handler = match.route[type] as
-          | LoaderFunction<unknown>
-          | ActionFunction<unknown>;
+        let handler = isAction ? match.route.action : match.route.loader;
         if (handler) {
           // Handler still runs even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
