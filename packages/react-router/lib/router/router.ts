@@ -3908,9 +3908,13 @@ export function createStaticHandler(
         error,
       };
     } else {
-      let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
+      let dsMatches = getTargetedDataStrategyMatches(
+        request,
         matches,
-        [actionMatch]
+        actionMatch,
+        requestContext,
+        mapRouteProperties,
+        manifest
       );
 
       let results = await callDataStrategy(
@@ -4097,19 +4101,63 @@ export function createStaticHandler(
       });
     }
 
-    let requestMatches = routeMatch
-      ? [routeMatch]
-      : pendingActionResult && isErrorResult(pendingActionResult[1])
-      ? getLoaderMatchesUntilBoundary(matches, pendingActionResult[0])
-      : matches;
-    let matchesToLoad = requestMatches.filter(
-      (m) =>
-        (m.route.loader || m.route.lazy) &&
-        (!filterMatchesToLoad || filterMatchesToLoad(m))
-    );
+    let dsMatches: DataStrategyMatch[];
+    if (routeMatch) {
+      dsMatches = getTargetedDataStrategyMatches(
+        request,
+        matches,
+        routeMatch,
+        requestContext,
+        mapRouteProperties,
+        manifest
+      );
+    } else {
+      let maxIdx =
+        pendingActionResult && isErrorResult(pendingActionResult[1])
+          ? // Up to but not including the boundary
+            matches.findIndex((m) => m.route.id === pendingActionResult[0]) - 1
+          : undefined;
+
+      dsMatches = matches.map((match, index) => {
+        // Kick off route.lazy loads
+        let _lazyPromise = match.route.lazy
+          ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
+          : undefined;
+
+        if (maxIdx != null && index > maxIdx) {
+          return {
+            ...match,
+            shouldLoad: false,
+            shouldCallHandler: () => false,
+            _lazyPromise,
+            resolve: () => Promise.resolve({ type: "data", result: undefined }),
+          };
+        }
+
+        let shouldLoad =
+          (match.route.loader || match.route.lazy) != null &&
+          (!filterMatchesToLoad || filterMatchesToLoad(match));
+
+        return {
+          ...match,
+          shouldLoad,
+          shouldCallHandler: () => shouldLoad,
+          _lazyPromise,
+          resolve: (handlerOverride) =>
+            callLoaderOrAction(
+              isMutationMethod(request.method) ? "action" : "loader",
+              request,
+              match,
+              _lazyPromise,
+              handlerOverride,
+              requestContext
+            ),
+        };
+      });
+    }
 
     // Short circuit if we have no loaders to run (query())
-    if (matchesToLoad.length === 0) {
+    if (!dsMatches.some((m) => m.shouldLoad)) {
       return {
         matches,
         // Add a null for all matched routes for proper revalidation on the client
@@ -4127,11 +4175,6 @@ export function createStaticHandler(
         loaderHeaders: {},
       };
     }
-
-    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
-      matches,
-      matchesToLoad
-    );
 
     let results = await callDataStrategy(
       "loader",
@@ -4157,7 +4200,7 @@ export function createStaticHandler(
 
     // Add a null for any non-loader matches for proper revalidation on the client
     let executedLoaders = new Set<string>(
-      matchesToLoad.map((match) => match.route.id)
+      dsMatches.filter((m) => m.shouldLoad).map((match) => match.route.id)
     );
     matches.forEach((match) => {
       if (!executedLoaders.has(match.route.id)) {
