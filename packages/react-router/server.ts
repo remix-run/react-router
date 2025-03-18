@@ -1,14 +1,4 @@
-import {
-  Link,
-  Links,
-  Meta,
-  NavLink,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "react-router/client";
-
-export { Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration };
+export * from "react-router/client";
 
 export { createStaticHandler } from "./lib/router/router";
 export { matchRoutes } from "./lib/router/utils";

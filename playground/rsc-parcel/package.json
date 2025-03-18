@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@parcel/packager-react-static": "2.14.0",
+    "@parcel/transformer-react-static": "2.14.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/parcel-env": "0.0.8",
@@ -26,7 +28,7 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^5.5.0||^6.0.0",
     "events": "^3.1.0",
-    "parcel": "2.0.0-canary.1777",
+    "parcel": "2.14.0",
     "path-browserify": "^1.0.0",
     "querystring-es3": "^0.2.1",
     "stream-http": "^3.1.0",
@@ -34,7 +36,7 @@
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
-    "@parcel/runtime-rsc": "2.13.4-canary.3402",
+    "@parcel/runtime-rsc": "2.14.0",
     "express": "^4.21.2",
     "react": "0.0.0-experimental-93b58361-20250209",
     "react-dom": "0.0.0-experimental-93b58361-20250209",
