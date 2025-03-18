@@ -4601,7 +4601,7 @@ function getMatchesToLoad(
     let shouldCallHandler: DataStrategyMatch["shouldCallHandler"];
     let isUsingNewApi = false;
     let _lazyPromise: Promise<void> | undefined;
-    let resolve: DataStrategyMatch["resolve"] = STUB_RESOLVE;
+    let resolve: DataStrategyMatch["resolve"];
 
     if (maxIdx != null && index > maxIdx) {
       // Don't call loaders below the boundary
@@ -5298,26 +5298,6 @@ async function callRouteMiddleware(
   }
 }
 
-async function STUB_RESOLVE() {
-  return { type: "error", result: new Error("Not implemented") } as const;
-}
-
-function UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
-  matches: AgnosticDataRouteMatch[],
-  matchesToLoad: AgnosticDataRouteMatch[]
-): DataStrategyMatch[] {
-  return matches.map((match) => {
-    let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
-    return {
-      ...match,
-      shouldLoad,
-      shouldCallHandler: () => shouldLoad,
-      resolve: STUB_RESOLVE,
-      _lazyPromise: undefined,
-    };
-  });
-}
-
 function getTargetedDataStrategyMatches(
   request: Request,
   matches: AgnosticDataRouteMatch[],
@@ -5413,47 +5393,11 @@ async function callDataStrategyImpl(
     await Promise.all(loadRouteDefinitionsPromises);
   }
 
-  let dsMatches = matches.map((match, i) => {
-    let loadRoutePromise = loadRouteDefinitionsPromises[i];
-    let shouldLoad = match.shouldLoad;
-    // `resolve` encapsulates route.lazy(), executing the loader/action,
-    // and mapping return values/thrown errors to a `DataStrategyResult`.  Users
-    // can pass a callback to take fine-grained control over the execution
-    // of the loader/action
-    let resolve: DataStrategyMatch["resolve"] = async (handlerOverride) => {
-      if (
-        handlerOverride &&
-        request.method === "GET" &&
-        (match.route.lazy || match.route.loader)
-      ) {
-        shouldLoad = true;
-      }
-      return shouldLoad
-        ? callLoaderOrAction(
-            type,
-            request,
-            match,
-            loadRoutePromise,
-            handlerOverride,
-            scopedContext
-          )
-        : Promise.resolve({ type: ResultType.data, result: undefined });
-    };
-
-    return {
-      ...match,
-      shouldLoad,
-      shouldCallHandler: () => shouldLoad,
-      resolve,
-    };
-  });
-
   // Send all matches here to allow for a middleware-type implementation.
   // handler will be a no-op for unneeded routes and we filter those results
   // back out below.
   let results = await dataStrategyImpl({
-    // FIXME: This is temporary so we only use the new matches for those we've implemented
-    matches: matches[0].resolve === STUB_RESOLVE ? dsMatches : matches,
+    matches,
     request,
     params: matches[0].params,
     fetcherKey,
