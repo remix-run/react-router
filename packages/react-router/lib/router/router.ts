@@ -4114,33 +4114,23 @@ export function createStaticHandler(
           : undefined;
 
         if (maxIdx != null && index > maxIdx) {
-          return {
-            ...match,
-            shouldLoad: false,
-            shouldCallHandler: () => false,
+          return getDataStrategyMatch(
+            request,
+            match,
             _lazyPromise,
-            resolve: () => Promise.resolve({ type: "data", result: undefined }),
-          };
+            requestContext,
+            false
+          );
         }
 
-        let shouldLoad =
-          (match.route.loader || match.route.lazy) != null &&
-          (!filterMatchesToLoad || filterMatchesToLoad(match));
-
-        return {
-          ...match,
-          shouldLoad,
-          shouldCallHandler: () => shouldLoad,
+        return getDataStrategyMatch(
+          request,
+          match,
           _lazyPromise,
-          resolve: (handlerOverride) =>
-            callLoaderOrAction(
-              request,
-              match,
-              _lazyPromise,
-              handlerOverride,
-              requestContext
-            ),
-        };
+          requestContext,
+          (match.route.loader || match.route.lazy) != null &&
+            (!filterMatchesToLoad || filterMatchesToLoad(match))
+        );
       });
     }
 
@@ -5239,7 +5229,7 @@ function getDataStrategyMatch(
   match: DataRouteMatch,
   _lazyPromise: Promise<void> | undefined,
   scopedContext: unknown,
-  shouldLoad = false,
+  shouldLoad: boolean,
   _shouldCallHandler?: DataStrategyMatch["shouldCallHandler"]
 ): DataStrategyMatch {
   let isUsingNewApi = false;
@@ -5280,9 +5270,7 @@ function getTargetedDataStrategyMatches(
   targetMatch: AgnosticDataRouteMatch,
   scopedContext: unknown,
   mapRouteProperties: MapRoutePropertiesFunction,
-  manifest: RouteManifest,
-  shouldLoad = true,
-  shouldCallHandler = (_: boolean | undefined) => shouldLoad
+  manifest: RouteManifest
 ): DataStrategyMatch[] {
   return matches.map((match, index) => {
     // Kick off route.lazy loads
@@ -5291,51 +5279,24 @@ function getTargetedDataStrategyMatches(
       : undefined;
 
     if (match.route.id !== targetMatch.route.id) {
+      // We don't use getDataStrategyMatch here because these are for actions/fetchers
+      // where we should _never_ call the handler for any matches other than the target
       return {
         ...match,
         shouldLoad: false,
         shouldCallHandler: () => false,
-        resolve: () => Promise.resolve({ type: "data", result: undefined }),
         _lazyPromise,
+        resolve: () => Promise.resolve({ type: "data", result: undefined }),
       };
     }
 
-    let isUsingNewApi = false;
-    return {
-      ...match,
-      shouldLoad,
-      shouldCallHandler: (defaultShouldRevalidate) => {
-        isUsingNewApi = true;
-        return shouldCallHandler(defaultShouldRevalidate);
-      },
+    return getDataStrategyMatch(
+      request,
+      match,
       _lazyPromise,
-      resolve: (handlerOverride) => {
-        // If the route has `shouldLoad=true`, call the handler
-        // Otherwise, call only if:
-        //  - They're using the new `shouldCallHandler` API in which case resolve
-        //    changes behavior slightly and is a direct 1-1 to call the handler
-        //  - They passed a `handlerOverride` for a GET request on a route with a
-        //    `loader` (or unresolved `lazy`), in which case they're taking control
-        //    over handler execution.  This mimics logic we had in the original
-        //    implementation and is kept the same to avoid a breaking change
-        if (
-          shouldLoad ||
-          isUsingNewApi ||
-          (handlerOverride &&
-            request.method === "GET" &&
-            (match.route.lazy || match.route.loader))
-        ) {
-          return callLoaderOrAction(
-            request,
-            match,
-            _lazyPromise,
-            handlerOverride,
-            scopedContext
-          );
-        }
-        return Promise.resolve({ type: ResultType.data, result: undefined });
-      },
-    };
+      scopedContext,
+      true
+    );
   });
 }
 
