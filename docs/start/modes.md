@@ -95,7 +95,7 @@ Every mode supports any architecture and deployment target, so the question isn'
 
 **Use Declarative Mode if you:**
 
-- want to use React Router as a simply as possible
+- want to use React Router as simply as possible
 - are coming from v6 and are happy with the `<BrowserRouter>`
 - have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
 - are coming from Create React App (you may want to consider framework mode though)
