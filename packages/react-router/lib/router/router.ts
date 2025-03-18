@@ -1785,12 +1785,12 @@ export function createRouter(init: RouterInit): Router {
       };
     } else {
       let dsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
         request,
         matches,
         actionMatch,
-        scopedContext,
-        mapRouteProperties,
-        manifest
+        scopedContext
       );
       let results = await callDataStrategy(
         request,
@@ -2315,12 +2315,12 @@ export function createRouter(init: RouterInit): Router {
 
     let originatingLoadId = incrementingLoadId;
     let fetchMatches = getTargetedDataStrategyMatches(
+      mapRouteProperties,
+      manifest,
       fetchRequest,
       requestMatches,
       match,
-      scopedContext,
-      mapRouteProperties,
-      manifest
+      scopedContext
     );
     let actionResults = await callDataStrategy(
       fetchRequest,
@@ -2606,12 +2606,12 @@ export function createRouter(init: RouterInit): Router {
 
     let originatingLoadId = incrementingLoadId;
     let dsMatches = getTargetedDataStrategyMatches(
+      mapRouteProperties,
+      manifest,
       fetchRequest,
       matches,
       match,
-      scopedContext,
-      mapRouteProperties,
-      manifest
+      scopedContext
     );
     let results = await callDataStrategy(
       fetchRequest,
@@ -3899,12 +3899,12 @@ export function createStaticHandler(
       };
     } else {
       let dsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
         request,
         matches,
         actionMatch,
-        requestContext,
-        mapRouteProperties,
-        manifest
+        requestContext
       );
 
       let results = await callDataStrategy(
@@ -4093,12 +4093,12 @@ export function createStaticHandler(
     let dsMatches: DataStrategyMatch[];
     if (routeMatch) {
       dsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
         request,
         matches,
         routeMatch,
-        requestContext,
-        mapRouteProperties,
-        manifest
+        requestContext
       );
     } else {
       let maxIdx =
@@ -4108,25 +4108,22 @@ export function createStaticHandler(
           : undefined;
 
       dsMatches = matches.map((match, index) => {
-        // Kick off route.lazy loads
-        let _lazyPromise = match.route.lazy
-          ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
-          : undefined;
-
         if (maxIdx != null && index > maxIdx) {
           return getDataStrategyMatch(
+            mapRouteProperties,
+            manifest,
             request,
             match,
-            _lazyPromise,
             requestContext,
             false
           );
         }
 
         return getDataStrategyMatch(
+          mapRouteProperties,
+          manifest,
           request,
           match,
-          _lazyPromise,
           requestContext,
           (match.route.loader || match.route.lazy) != null &&
             (!filterMatchesToLoad || filterMatchesToLoad(match))
@@ -4576,48 +4573,52 @@ function getMatchesToLoad(
 
   let navigationMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
-    let _lazyPromise: Promise<void> | undefined;
 
     if (maxIdx != null && index > maxIdx) {
       // Don't call loaders below the boundary
       return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
         request,
         match,
-        undefined,
         scopedContext,
         false
       );
     } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
         request,
         match,
-        loadLazyRouteModule(match.route, mapRouteProperties, manifest),
         scopedContext,
         true
       );
     } else if (route.loader == null) {
       return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
         request,
         match,
-        undefined,
         scopedContext,
         false
       );
     } else if (initialHydration) {
       return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
         request,
         match,
-        undefined,
         scopedContext,
         shouldLoadRouteOnHydration(route, state.loaderData, state.errors)
       );
     } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
       // Always call the loader on new route instances
       return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
         request,
         match,
-        undefined,
         scopedContext,
         true
       );
@@ -4651,9 +4652,10 @@ function getMatchesToLoad(
       });
 
       return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
         request,
         match,
-        _lazyPromise,
         scopedContext,
         shouldLoad,
         (defaultOverride) =>
@@ -4729,12 +4731,12 @@ function getMatchesToLoad(
         routeId: f.routeId,
         path: f.path,
         matches: getTargetedDataStrategyMatches(
+          mapRouteProperties,
+          manifest,
           fetchRequest,
           fetcherMatches,
           fetcherMatch,
-          scopedContext,
-          mapRouteProperties,
-          manifest
+          scopedContext
         ),
         match: fetcherMatch,
         request: fetchRequest,
@@ -4754,12 +4756,12 @@ function getMatchesToLoad(
           routeId: f.routeId,
           path: f.path,
           matches: getTargetedDataStrategyMatches(
+            mapRouteProperties,
+            manifest,
             fetchRequest,
             fetcherMatches,
             fetcherMatch,
-            scopedContext,
-            mapRouteProperties,
-            manifest
+            scopedContext
           ),
           match: fetcherMatch,
           request: fetchRequest,
@@ -4796,12 +4798,12 @@ function getMatchesToLoad(
           routeId: f.routeId,
           path: f.path,
           matches: getTargetedDataStrategyMatches(
+            mapRouteProperties,
+            manifest,
             fetchRequest,
             fetcherMatches,
             fetcherMatch,
-            scopedContext,
-            mapRouteProperties,
-            manifest
+            scopedContext
           ),
           match: fetcherMatch,
           request: fetchRequest,
@@ -5225,22 +5227,32 @@ async function callRouteMiddleware(
 }
 
 function getDataStrategyMatch(
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
   request: Request,
   match: DataRouteMatch,
-  _lazyPromise: Promise<void> | undefined,
   scopedContext: unknown,
   shouldLoad: boolean,
-  _shouldCallHandler?: DataStrategyMatch["shouldCallHandler"]
+  shouldCallHandler: DataStrategyMatch["shouldCallHandler"] = () => shouldLoad
 ): DataStrategyMatch {
+  // Kick off route.lazy loads
+  let _lazyPromise = match.route.lazy
+    ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
+    : undefined;
+  // Prevent unhandled rejection errors - handled inside of `callLoadOrAction`
+  _lazyPromise?.catch(() => {});
+
+  // The hope here is to avoid a breaking change to the resolve behavior.
+  // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
+  // around when resolve calls through to the handler
   let isUsingNewApi = false;
+
   return {
     ...match,
     shouldLoad,
     shouldCallHandler(defaultShouldRevalidate) {
       isUsingNewApi = true;
-      return typeof _shouldCallHandler === "function"
-        ? _shouldCallHandler(defaultShouldRevalidate)
-        : shouldLoad;
+      return shouldCallHandler(defaultShouldRevalidate);
     },
     _lazyPromise,
     resolve(handlerOverride) {
@@ -5265,20 +5277,19 @@ function getDataStrategyMatch(
 }
 
 function getTargetedDataStrategyMatches(
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
   request: Request,
   matches: AgnosticDataRouteMatch[],
   targetMatch: AgnosticDataRouteMatch,
-  scopedContext: unknown,
-  mapRouteProperties: MapRoutePropertiesFunction,
-  manifest: RouteManifest
+  scopedContext: unknown
 ): DataStrategyMatch[] {
   return matches.map((match, index) => {
-    // Kick off route.lazy loads
-    let _lazyPromise = match.route.lazy
-      ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
-      : undefined;
-
     if (match.route.id !== targetMatch.route.id) {
+      let _lazyPromise = match.route.lazy
+        ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
+        : undefined;
+
       // We don't use getDataStrategyMatch here because these are for actions/fetchers
       // where we should _never_ call the handler for any matches other than the target
       return {
@@ -5291,9 +5302,10 @@ function getTargetedDataStrategyMatches(
     }
 
     return getDataStrategyMatch(
+      mapRouteProperties,
+      manifest,
       request,
       match,
-      _lazyPromise,
       scopedContext,
       true
     );
