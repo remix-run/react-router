@@ -1953,7 +1953,11 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
+    let [dsMatches, revalidatingFetchers] = getMatchesToLoad(
+      request,
+      scopedContext,
+      mapRouteProperties,
+      manifest,
       init.history,
       state,
       matches,
@@ -1973,7 +1977,10 @@ export function createRouter(init: RouterInit): Router {
     pendingNavigationLoadId = ++incrementingLoadId;
 
     // Short circuit if we have no loaders to run
-    if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
+    if (
+      !dsMatches.some((m) => m.shouldLoad) &&
+      revalidatingFetchers.length === 0
+    ) {
       let updatedFetchers = markFetchRedirectsDone();
       completeNavigation(
         location,
@@ -2031,8 +2038,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
-        matches,
-        matchesToLoad,
+        dsMatches,
         revalidatingFetchers,
         request,
         scopedContext
@@ -2307,7 +2313,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let dsMatches = getTargetedDataStrategyMatches(
+    let fetchMatches = getTargetedDataStrategyMatches(
       fetchRequest,
       requestMatches,
       match,
@@ -2318,7 +2324,7 @@ export function createRouter(init: RouterInit): Router {
     let actionResults = await callDataStrategy(
       "action",
       fetchRequest,
-      dsMatches,
+      fetchMatches,
       scopedContext,
       key
     );
@@ -2390,7 +2396,11 @@ export function createRouter(init: RouterInit): Router {
     let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
 
-    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
+    let [dsMatches, revalidatingFetchers] = getMatchesToLoad(
+      revalidationRequest,
+      scopedContext,
+      mapRouteProperties,
+      manifest,
       init.history,
       state,
       matches,
@@ -2438,8 +2448,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
-        matches,
-        matchesToLoad,
+        dsMatches,
         revalidatingFetchers,
         revalidationRequest,
         scopedContext
@@ -2854,22 +2863,16 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function callLoadersAndMaybeResolveData(
-    matches: AgnosticDataRouteMatch[],
-    matchesToLoad: AgnosticDataRouteMatch[],
+    matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
     scopedContext: unstable_RouterContextProvider
   ) {
     // Kick off loaders and fetchers in parallel
-    let dsMatches = UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
-      matches,
-      matchesToLoad
-    );
-
     let loaderResultsPromise = callDataStrategy(
       "loader",
       request,
-      dsMatches,
+      matches,
       scopedContext,
       null
     );
@@ -4515,6 +4518,10 @@ function getLoaderMatchesUntilBoundary(
 }
 
 function getMatchesToLoad(
+  request: Request,
+  scopedContext: unknown,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
   history: History,
   state: RouterState,
   matches: AgnosticDataRouteMatch[],
@@ -4529,7 +4536,7 @@ function getMatchesToLoad(
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   pendingActionResult?: PendingActionResult
-): [AgnosticDataRouteMatch[], RevalidatingFetcher[]] {
+): [DataStrategyMatch[], RevalidatingFetcher[]] {
   let actionResult = pendingActionResult
     ? isErrorResult(pendingActionResult[1])
       ? pendingActionResult[1].error
@@ -4539,25 +4546,20 @@ function getMatchesToLoad(
   let nextUrl = history.createURL(location);
 
   // Pick navigation matches that are net-new or qualify for revalidation
-  let boundaryMatches = matches;
+  let maxIdx: number | undefined;
   if (initialHydration && state.errors) {
     // On initial hydration, only consider matches up to _and including_ the boundary.
     // This is inclusive to handle cases where a server loader ran successfully,
     // a child server loader bubbled up to this route, but this route has
     // `clientLoader.hydrate` so we want to still run the `clientLoader` so that
     // we have a complete version of `loaderData`
-    boundaryMatches = getLoaderMatchesUntilBoundary(
-      matches,
-      Object.keys(state.errors)[0],
-      true
-    );
+    let boundaryId = Object.keys(state.errors)[0];
+    maxIdx = matches.findIndex((m) => m.route.id === boundaryId);
   } else if (pendingActionResult && isErrorResult(pendingActionResult[1])) {
     // If an action threw an error, we call loaders up to, but not including the
     // boundary
-    boundaryMatches = getLoaderMatchesUntilBoundary(
-      matches,
-      pendingActionResult[0]
-    );
+    let boundaryId = pendingActionResult[0];
+    maxIdx = matches.findIndex((m) => m.route.id === boundaryId) - 1;
   }
 
   // Don't revalidate loaders by default after action 4xx/5xx responses
@@ -4568,42 +4570,78 @@ function getMatchesToLoad(
     : undefined;
   let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
-  let navigationMatches = boundaryMatches.filter((match, index) => {
+  let navigationMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
-    if (route.lazy) {
+    let shouldLoad: boolean;
+    let shouldCallHandler: DataStrategyMatch["shouldCallHandler"];
+    let isUsingNewApi = false;
+    let _lazyPromise: Promise<void> | undefined;
+    let resolve: DataStrategyMatch["resolve"] = STUB_RESOLVE;
+
+    if (maxIdx != null && index > maxIdx) {
+      // Don't call loaders below the boundary
+      shouldLoad = false;
+      shouldCallHandler = () => false;
+      resolve = () =>
+        Promise.resolve({ type: ResultType.data, result: undefined });
+    } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
-      return true;
-    }
-
-    if (route.loader == null) {
-      return false;
-    }
-
-    if (initialHydration) {
-      return shouldLoadRouteOnHydration(route, state.loaderData, state.errors);
-    }
-
-    // Always call the loader on new route instances
-    if (isNewLoader(state.loaderData, state.matches[index], match)) {
-      return true;
-    }
-
-    // This is the default implementation for when we revalidate.  If the route
-    // provides it's own implementation, then we give them full control but
-    // provide this value so they can leverage it if needed after they check
-    // their own specific use cases
-    let currentRouteMatch = state.matches[index];
-    let nextRouteMatch = match;
-
-    return shouldRevalidateLoader(match, {
-      currentUrl,
-      currentParams: currentRouteMatch.params,
-      nextUrl,
-      nextParams: nextRouteMatch.params,
-      ...submission,
-      actionResult,
-      actionStatus,
-      defaultShouldRevalidate: shouldSkipRevalidation
+      _lazyPromise = loadLazyRouteModule(
+        match.route,
+        mapRouteProperties,
+        manifest
+      );
+      shouldLoad = true;
+      shouldCallHandler = () => true;
+      resolve = (handlerOverride) =>
+        callLoaderOrAction(
+          isMutationMethod(request.method) ? "action" : "loader",
+          request,
+          match,
+          _lazyPromise,
+          handlerOverride,
+          scopedContext
+        );
+    } else if (route.loader == null) {
+      shouldLoad = false;
+      shouldCallHandler = () => false;
+      resolve = () =>
+        Promise.resolve({ type: ResultType.data, result: undefined });
+    } else if (initialHydration) {
+      shouldLoad = shouldLoadRouteOnHydration(
+        route,
+        state.loaderData,
+        state.errors
+      );
+      shouldCallHandler = () => shouldLoad;
+      resolve = (handlerOverride) =>
+        callLoaderOrAction(
+          isMutationMethod(request.method) ? "action" : "loader",
+          request,
+          match,
+          undefined,
+          handlerOverride,
+          scopedContext
+        );
+    } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
+      // Always call the loader on new route instances
+      shouldLoad = true;
+      shouldCallHandler = () => true;
+      resolve = (handlerOverride) =>
+        callLoaderOrAction(
+          isMutationMethod(request.method) ? "action" : "loader",
+          request,
+          match,
+          undefined,
+          handlerOverride,
+          scopedContext
+        );
+    } else {
+      // This is the default implementation for when we revalidate.  If the route
+      // provides it's own implementation, then we give them full control but
+      // provide this value so they can leverage it if needed after they check
+      // their own specific use cases
+      let defaultShouldRevalidate = shouldSkipRevalidation
         ? false
         : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
           isRevalidationRequired ||
@@ -4611,8 +4649,72 @@ function getMatchesToLoad(
             nextUrl.pathname + nextUrl.search ||
           // Search params affect all loaders
           currentUrl.search !== nextUrl.search ||
-          isNewRouteInstance(currentRouteMatch, nextRouteMatch),
-    });
+          isNewRouteInstance(state.matches[index], match);
+
+      let args: Omit<ShouldRevalidateFunctionArgs, "defaultShouldRevalidate"> =
+        {
+          currentUrl,
+          currentParams: state.matches[index].params,
+          nextUrl,
+          nextParams: match.params,
+          ...submission,
+          actionResult,
+          actionStatus,
+        };
+
+      shouldLoad = shouldRevalidateLoader(match, {
+        ...args,
+        defaultShouldRevalidate,
+      });
+      shouldCallHandler = (defaultOverride) => {
+        isUsingNewApi = true;
+        return shouldRevalidateLoader(match, {
+          ...args,
+          defaultShouldRevalidate:
+            typeof defaultOverride === "boolean"
+              ? defaultOverride
+              : defaultShouldRevalidate,
+        });
+      };
+      resolve = (handlerOverride) => {
+        // If the route has `shouldLoad=true`, call the handler
+        // Otherwise, call only if:
+        //  - They're using the new `shouldCallHandler` API in which case resolve
+        //    changes behavior slightly and is a direct 1-1 to call the handler
+        //  - They passed a `handlerOverride` for a GET request on a route with a
+        //    `loader` (or unresolved `lazy`), in which case they're taking control
+        //    over handler execution.  This mimics logic we had in the original
+        //    implementation and is kept the same to avoid a breaking change
+        if (
+          shouldLoad ||
+          isUsingNewApi ||
+          (handlerOverride &&
+            request.method === "GET" &&
+            (match.route.lazy || match.route.loader))
+        ) {
+          return callLoaderOrAction(
+            isMutationMethod(request.method) ? "action" : "loader",
+            request,
+            match,
+            undefined,
+            handlerOverride,
+            scopedContext
+          );
+        }
+        return Promise.resolve({
+          type: ResultType.data,
+          result: undefined,
+        });
+      };
+    }
+
+    return {
+      ...match,
+      shouldLoad,
+      shouldCallHandler,
+      resolve,
+      _lazyPromise,
+    };
   });
 
   // Pick fetcher.loads that need to be revalidated
@@ -4865,21 +4967,6 @@ function isSameRoute(
   return newRoute.children!.every((aChild, i) =>
     existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
   );
-}
-
-function loadLazyRouteModules(
-  matches: AgnosticDataRouteMatch[],
-  mapRouteProperties: MapRoutePropertiesFunction,
-  manifest: RouteManifest
-) {
-  return matches.map((m) => {
-    if (m.route.lazy) {
-      let p = loadLazyRouteModule(m.route, mapRouteProperties, manifest);
-      p.catch(() => {});
-      return p;
-    }
-    return undefined;
-  });
 }
 
 /**
@@ -5144,6 +5231,7 @@ function UNSAFE_DONT_SHIP_THIS_convertMatchesToDataStrategyMatches(
       shouldLoad,
       shouldCallHandler: () => shouldLoad,
       resolve: STUB_RESOLVE,
+      _lazyPromise: undefined,
     };
   });
 }
@@ -5156,20 +5244,19 @@ function getTargetedDataStrategyMatches(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest
 ): DataStrategyMatch[] {
-  // Kick off route.lazy loads
-  let loadRouteDefinitionsPromises = loadLazyRouteModules(
-    matches,
-    mapRouteProperties,
-    manifest
-  );
-
   return matches.map((match, index) => {
+    // Kick off route.lazy loads
+    let _lazyPromise = match.route.lazy
+      ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
+      : undefined;
+
     if (match.route.id !== targetMatch.route.id) {
       return {
         ...match,
         shouldLoad: false,
         shouldCallHandler: () => false,
         resolve: () => Promise.resolve({ type: "data", result: undefined }),
+        _lazyPromise,
       };
     }
 
@@ -5177,12 +5264,13 @@ function getTargetedDataStrategyMatches(
       ...match,
       shouldLoad: true,
       shouldCallHandler: () => true,
+      _lazyPromise,
       resolve: (handlerOverride) =>
         callLoaderOrAction(
           isMutationMethod(request.method) ? "action" : "loader",
           request,
           match,
-          loadRouteDefinitionsPromises[index],
+          _lazyPromise,
           handlerOverride,
           scopedContext
         ),
@@ -5201,8 +5289,11 @@ async function callDataStrategyImpl(
   scopedContext: unknown,
   enableMiddleware: boolean
 ): Promise<Record<string, DataStrategyResult>> {
+  let useLazyPromise = matches.some((m) => m._lazyPromise);
   let loadRouteDefinitionsPromises = matches.map((m) =>
-    m.route.lazy
+    useLazyPromise
+      ? m._lazyPromise
+      : m.route.lazy
       ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
       : undefined
   );

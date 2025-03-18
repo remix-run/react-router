@@ -335,6 +335,10 @@ export interface DataStrategyMatch
   // they are read-only but let the user provide an optional override value for
   // `defaultShouldRevalidate` if they choose
   shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  /**
+   * @private
+   */
+  _lazyPromise: Promise<void> | undefined;
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
