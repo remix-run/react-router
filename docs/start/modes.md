@@ -67,8 +67,25 @@ import { index, route } from "@react-router/dev/routes";
 
 export default [
   index("./home.tsx"),
-  route("about", "./about.tsx"),
+  route("products/:pid", "./product.tsx"),
 ];
+```
+
+You'll then have access to the Route Module API with typesafe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
+
+```ts filename=product.tsx
+import { Route } from "+./types/product.tsx";
+
+export async function loader({ params }: Route.LoaderArgs) {
+  let product = await getProduct(params.pid);
+  return { product };
+}
+
+export default function Product({
+  loaderData,
+}: Route.ComponentProps) {
+  return <div>{loaderData.product.name}</div>;
+}
 ```
 
 ## Decision Advice
