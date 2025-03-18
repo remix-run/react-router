@@ -1,9 +1,6 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
-import type {
-  Router as DataRouter,
-  MiddlewareError,
-} from "../../router/router";
+import type { Router as DataRouter } from "../../router/router";
 import { isResponse, runMiddlewarePipeline } from "../../router/router";
 import type {
   DataStrategyFunction,
@@ -136,15 +133,8 @@ export function StreamTransfer({
   }
 }
 
-function middlewareErrorHandler(
-  e: MiddlewareError,
-  keyedResults: Record<string, DataStrategyResult>
-) {
-  // we caught an error running the middleware, copy that overtop any
-  // non-error result for the route
-  Object.assign(keyedResults, {
-    [e.routeId]: { type: "error", result: e.error },
-  });
+function handleMiddlewareError(error: unknown, routeId: string) {
+  return { [routeId]: { type: "error", result: error } };
 }
 
 export function getSingleFetchDataStrategy(
@@ -161,17 +151,9 @@ export function getSingleFetchDataStrategy(
     if (request.method !== "GET") {
       return runMiddlewarePipeline(
         args,
-        matches.findIndex((m) => m.shouldLoad),
         false,
-        async (keyedResults) => {
-          let results = await singleFetchActionStrategy(
-            request,
-            matches,
-            basename
-          );
-          Object.assign(keyedResults, results);
-        },
-        middlewareErrorHandler
+        () => singleFetchActionStrategy(request, matches, basename),
+        handleMiddlewareError
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
@@ -216,24 +198,11 @@ export function getSingleFetchDataStrategy(
           !manifest.routes[m.route.id]?.hasClientLoader
       );
       if (!foundRevalidatingServerLoader) {
-        // Skip single fetch and just call the loaders in parallel when this is
-        // a SPA mode navigation
-        let tailIdx = [...matches].reverse().findIndex((m) => m.shouldLoad);
-        let lowestLoadingIndex = tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
         return runMiddlewarePipeline(
           args,
-          lowestLoadingIndex,
           false,
-          async (keyedResults) => {
-            let results = await nonSsrStrategy(
-              manifest,
-              request,
-              matches,
-              basename
-            );
-            Object.assign(keyedResults, results);
-          },
-          middlewareErrorHandler
+          () => nonSsrStrategy(manifest, request, matches, basename),
+          handleMiddlewareError
         ) as Promise<Record<string, DataStrategyResult>>;
       }
     }
@@ -242,36 +211,18 @@ export function getSingleFetchDataStrategy(
     if (fetcherKey) {
       return runMiddlewarePipeline(
         args,
-        matches.findIndex((m) => m.shouldLoad),
         false,
-        async (keyedResults) => {
-          let results = await singleFetchLoaderFetcherStrategy(
-            request,
-            matches,
-            basename
-          );
-          Object.assign(keyedResults, results);
-        },
-        middlewareErrorHandler
+        () => singleFetchLoaderFetcherStrategy(request, matches, basename),
+        handleMiddlewareError
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
     // Navigational loads are more complex...
-
-    // Determine how deep to run middleware
-    let lowestLoadingIndex = getLowestLoadingIndex(
-      manifest,
-      routeModules,
-      getRouter(),
-      matches
-    );
-
     return runMiddlewarePipeline(
       args,
-      lowestLoadingIndex,
       false,
-      async (keyedResults) => {
-        let results = await singleFetchLoaderNavigationStrategy(
+      () =>
+        singleFetchLoaderNavigationStrategy(
           manifest,
           routeModules,
           ssr,
@@ -279,10 +230,8 @@ export function getSingleFetchDataStrategy(
           request,
           matches,
           basename
-        );
-        Object.assign(keyedResults, results);
-      },
-      middlewareErrorHandler
+        ),
+      handleMiddlewareError
     ) as Promise<Record<string, DataStrategyResult>>;
   };
 }
@@ -356,42 +305,6 @@ async function nonSsrStrategy(
   return results;
 }
 
-function isOptedOut(
-  manifestRoute: EntryRoute | undefined,
-  routeModule: RouteModule | undefined,
-  match: DataStrategyMatch,
-  router: DataRouter
-) {
-  return (
-    match.route.id in router.state.loaderData &&
-    manifestRoute &&
-    manifestRoute.hasLoader &&
-    routeModule &&
-    routeModule.shouldRevalidate
-  );
-}
-
-function getLowestLoadingIndex(
-  manifest: AssetsManifest,
-  routeModules: RouteModules,
-  router: DataRouter,
-  matches: DataStrategyFunctionArgs["matches"]
-) {
-  let tailIdx = [...matches]
-    .reverse()
-    .findIndex(
-      (m) =>
-        m.shouldLoad ||
-        !isOptedOut(
-          manifest.routes[m.route.id],
-          routeModules[m.route.id],
-          m,
-          router
-        )
-    );
-  return tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
-}
-
 // Loaders are trickier since we only want to hit the server once, so we
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
@@ -446,11 +359,19 @@ async function singleFetchLoaderNavigationStrategy(
             return;
           }
 
-          // Otherwise, we opt out if we currently have data, a `loader`, and a
+          // Otherwise, we opt out if we currently have data and a
           // `shouldRevalidate` function.  This implies that the user opted out
           // via `shouldRevalidate`
-          if (isOptedOut(manifestRoute, routeModules[m.route.id], m, router)) {
-            foundOptOutRoute = true;
+          if (
+            m.route.id in router.state.loaderData &&
+            manifestRoute &&
+            m.route.shouldRevalidate
+          ) {
+            if (manifestRoute.hasLoader) {
+              // If we have a server loader, make sure we don't include it in the
+              // single fetch .data request
+              foundOptOutRoute = true;
+            }
             return;
           }
         }

@@ -2,6 +2,8 @@ import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 
+export type MaybePromise<T> = T | Promise<T>;
+
 /**
  * Map of routeId -> data returned from a loader/action/error
  */
@@ -206,7 +208,7 @@ interface DataFunctionArgs<Context> {
  * middlewares from the bottom-up
  */
 export interface unstable_MiddlewareNextFunction<Result = unknown> {
-  (): Result | Promise<Result>;
+  (): MaybePromise<Result>;
 }
 
 /**
@@ -218,7 +220,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
 export type unstable_MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<unstable_RouterContextProvider>,
   next: unstable_MiddlewareNextFunction<Result>
-) => Result | Promise<Result>;
+) => MaybePromise<Result | undefined>;
 
 /**
  * Arguments passed to loader functions
@@ -237,7 +239,7 @@ export interface ActionFunctionArgs<Context = any>
  */
 type DataFunctionValue = unknown;
 
-type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 
 /**
  * Route loader function signature
@@ -373,7 +375,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = (
   opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
-) => void | Promise<void>;
+) => MaybePromise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific

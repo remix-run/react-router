@@ -22,6 +22,7 @@ import type {
   DataStrategyResult,
   ImmutableRouteKey,
   MapRoutePropertiesFunction,
+  MaybePromise,
   MutationFormMethod,
   RedirectResult,
   RouteData,
@@ -60,8 +61,6 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
-
-type MaybePromise<T> = T | Promise<T>;
 
 /**
  * A Router instance manages all navigation and data loading/mutations
@@ -3487,15 +3486,9 @@ export function createStaticHandler(
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
-          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
       try {
-        // Run middleware as far deep as the deepest loader to be executed
-        let tailIdx = [...matches]
-          .reverse()
-          .findIndex((m) => !filterMatchesToLoad || filterMatchesToLoad(m));
-        let lowestLoadingIdx = tailIdx < 0 ? 0 : matches.length - 1 - tailIdx;
-
         let renderedStaticContext: StaticHandlerContext | undefined;
         let response = await runMiddlewarePipeline(
           {
@@ -3506,7 +3499,6 @@ export function createStaticHandler(
             // this to the proper type knowing it's not an `AppLoadContext`
             context: requestContext as unstable_RouterContextProvider,
           },
-          lowestLoadingIdx,
           true,
           async () => {
             let result = await queryImpl(
@@ -3533,9 +3525,9 @@ export function createStaticHandler(
 
             return res;
           },
-          async (e) => {
-            if (isResponse(e.error)) {
-              return e.error;
+          async (error, routeId) => {
+            if (isResponse(error)) {
+              return error;
             }
 
             if (renderedStaticContext) {
@@ -3546,16 +3538,16 @@ export function createStaticHandler(
               // to align server/client behavior.  Client side middleware uses
               // dataStrategy and a given route can only have one result, so the
               // error overwrites any prior loader data.
-              if (e.routeId in renderedStaticContext.loaderData) {
-                renderedStaticContext.loaderData[e.routeId] = undefined;
+              if (routeId in renderedStaticContext.loaderData) {
+                renderedStaticContext.loaderData[routeId] = undefined;
               }
 
               return respond(
                 getStaticContextFromError(
                   dataRoutes,
                   renderedStaticContext,
-                  e.error,
-                  findNearestBoundary(matches!, e.routeId).route.id
+                  error,
+                  findNearestBoundary(matches!, routeId).route.id
                 )
               );
             } else {
@@ -3576,11 +3568,9 @@ export function createStaticHandler(
                 loaderData: {},
                 actionData: null,
                 errors: {
-                  [boundary.route.id]: e.error,
+                  [boundary.route.id]: error,
                 },
-                statusCode: isRouteErrorResponse(e.error)
-                  ? e.error.status
-                  : 500,
+                statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
               });
@@ -3689,7 +3679,7 @@ export function createStaticHandler(
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
-          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
       let response = await runMiddlewarePipeline(
         {
@@ -3700,7 +3690,6 @@ export function createStaticHandler(
           // this to the proper type knowing it's not an `AppLoadContext`
           context: requestContext as unstable_RouterContextProvider,
         },
-        matches.length - 1,
         true,
         async () => {
           let result = await queryImpl(
@@ -3740,11 +3729,11 @@ export function createStaticHandler(
             ? new Response(value)
             : Response.json(value);
         },
-        (e) => {
-          if (isResponse(e.error)) {
-            return respond(e.error);
+        (error) => {
+          if (isResponse(error)) {
+            return respond(error);
           }
-          return new Response(String(e.error), {
+          return new Response(String(error), {
             status: 500,
             statusText: "Unexpected Server Error",
           });
@@ -4940,111 +4929,86 @@ async function defaultDataStrategyWithMiddleware(
     return defaultDataStrategy(args);
   }
 
-  // Determine how far down we'll be loading so we only run middleware to that
-  // point.  This prevents us from calling middleware below an action error
-  // boundary below which we don't run loaders
-  let lastIndex = args.matches.length - 1;
-  for (let i = lastIndex; i >= 0; i--) {
-    if (args.matches[i].shouldLoad) {
-      lastIndex = i;
-      break;
-    }
-  }
-
-  let results = await runMiddlewarePipeline(
+  return runMiddlewarePipeline(
     args,
-    lastIndex,
     false,
-    async (keyedResults: Record<string, DataStrategyResult>) => {
-      Object.assign(keyedResults, await defaultDataStrategy(args));
-    },
-    (e, keyedResults) => {
-      // we caught an error running the middleware, copy that overtop any
-      // non-error result for the route
-      Object.assign(keyedResults, {
-        [e.routeId]: { type: "error", result: e.error },
-      });
-    }
-  );
-  return results as Record<string, DataStrategyResult>;
+    () => defaultDataStrategy(args),
+    (error, routeId) => ({ [routeId]: { type: "error", result: error } })
+  ) as Promise<Record<string, DataStrategyResult>>;
 }
 
 type MutableMiddlewareState = {
-  keyedResults: Record<string, DataStrategyResult>;
-  propagateResult: boolean;
+  // Track the result of the user-provided handler at the bottom of the
+  // middleware chain so we can return it out from runMiddleware for them when
+  // we're not propagating results
+  handlerResult?: unknown;
+  // Capture the throwing routeId for middleware error so we can bubble from the
+  // correct spot
+  middlewareError?: {
+    routeId: string;
+    error: unknown;
+  };
 };
 
-export async function runMiddlewarePipeline(
-  {
-    request,
-    params,
-    context,
-    matches,
-  }: (
+export async function runMiddlewarePipeline<T extends boolean>(
+  args: (
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>
   ) & {
+    // Don't use `DataStrategyFunctionArgs` directly so we can we reduce these
+    // back from `DataStrategyMatch` to regular matches for use in the staticHandler
     matches: AgnosticDataRouteMatch[];
   },
-  lastIndex: number,
-  propagateResult: boolean,
-  handler: (results: Record<string, DataStrategyResult>) => unknown,
-  errorHandler: (
-    error: MiddlewareError,
-    results: Record<string, DataStrategyResult>
-  ) => unknown
+  propagateResult: T,
+  handler: () => T extends true
+    ? MaybePromise<Response>
+    : MaybePromise<Record<string, DataStrategyResult>>,
+  errorHandler: (error: unknown, routeId: string) => unknown
 ): Promise<unknown> {
+  let { matches, request, params, context } = args;
   let middlewareState: MutableMiddlewareState = {
-    keyedResults: {},
-    propagateResult,
+    handlerResult: undefined,
   };
   try {
+    let tuples = matches.flatMap((m) =>
+      m.route.unstable_middleware
+        ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
+        : []
+    ) as [string, unstable_MiddlewareFunction][];
     let result = await callRouteMiddleware(
-      matches
-        .slice(0, lastIndex + 1)
-        .flatMap((m) =>
-          m.route.unstable_middleware
-            ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
-            : []
-        ) as [string, unstable_MiddlewareFunction][],
-      0,
       { request, params, context },
+      tuples,
+      propagateResult,
       middlewareState,
       handler
     );
-    return middlewareState.propagateResult
-      ? result
-      : middlewareState.keyedResults;
+    return propagateResult ? result : middlewareState.handlerResult;
   } catch (e) {
-    if (!(e instanceof MiddlewareError)) {
+    if (!middlewareState.middlewareError) {
       // This shouldn't happen?  This would have to come from a bug in our
       // library code...
       throw e;
     }
-    let result = await errorHandler(e, middlewareState.keyedResults);
-    return middlewareState.propagateResult
-      ? result
-      : middlewareState.keyedResults;
-  }
-}
-
-export class MiddlewareError {
-  routeId: string;
-  error: unknown;
-  constructor(routeId: string, error: unknown) {
-    this.routeId = routeId;
-    this.error = error;
+    let result = await errorHandler(
+      middlewareState.middlewareError.error,
+      middlewareState.middlewareError.routeId
+    );
+    if (propagateResult || !middlewareState.handlerResult) {
+      return result;
+    }
+    return Object.assign(middlewareState.handlerResult, result);
   }
 }
 
 async function callRouteMiddleware(
-  middlewares: [string, unstable_MiddlewareFunction][],
-  idx: number,
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
+  middlewares: [string, unstable_MiddlewareFunction][],
+  propagateResult: boolean,
   middlewareState: MutableMiddlewareState,
-  handler: (r: Record<string, DataStrategyResult>) => void
+  handler: () => void,
+  idx = 0
 ): Promise<unknown> {
   let { request } = args;
   if (request.signal.aborted) {
@@ -5059,8 +5023,8 @@ async function callRouteMiddleware(
   let tuple = middlewares[idx];
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
-    let result = await handler(middlewareState.keyedResults);
-    return result;
+    middlewareState.handlerResult = await handler();
+    return middlewareState.handlerResult;
   }
 
   let [routeId, middleware] = tuple;
@@ -5072,13 +5036,14 @@ async function callRouteMiddleware(
     }
     nextCalled = true;
     let result = await callRouteMiddleware(
-      middlewares,
-      idx + 1,
       args,
+      middlewares,
+      propagateResult,
       middlewareState,
-      handler
+      handler,
+      idx + 1
     );
-    if (middlewareState.propagateResult) {
+    if (propagateResult) {
       nextResult = result;
       return nextResult;
     }
@@ -5105,11 +5070,15 @@ async function callRouteMiddleware(
     } else {
       return next();
     }
-  } catch (e) {
-    if (e instanceof MiddlewareError) {
-      throw e;
+  } catch (error) {
+    if (!middlewareState.middlewareError) {
+      middlewareState.middlewareError = { routeId, error };
+    } else if (middlewareState.middlewareError.error !== error) {
+      // Another middleware already threw, so only capture this new routeId if
+      // it's a different error and not just bubbling up the existing error
+      middlewareState.middlewareError = { routeId, error };
     }
-    throw new MiddlewareError(routeId, e);
+    throw error;
   }
 }
 
