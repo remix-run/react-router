@@ -38,7 +38,7 @@ afterAll(async () => {
   await fse.remove(TEMP_DIR);
 });
 
-describe.skip("create-react-router CLI", () => {
+describe("create-react-router CLI", () => {
   let tempDirs = new Set<string>();
 
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe.skip("create-react-router CLI", () => {
       args: ["--help"],
     });
     expect(stdout.trim()).toMatchInlineSnapshot(`
-      "create-react-router
+      "create-react-router  
 
       Usage:
 
