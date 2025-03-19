@@ -1,4 +1,4 @@
 ---
-title: Library
+title: Hooks
 order: 2
 ---
