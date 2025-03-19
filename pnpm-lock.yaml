@@ -1421,12 +1421,6 @@ importers:
 
   playground/split-route-modules:
     dependencies:
-      '@lingui/core':
-        specifier: ^5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.4.5))(babel-plugin-macros@3.1.0)
-      '@lingui/react':
-        specifier: ^5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.4.5))(babel-plugin-macros@3.1.0)(react@18.2.0)
       '@react-router/node':
         specifier: workspace:*
         version: link:../../packages/react-router-node
@@ -1446,12 +1440,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router
     devDependencies:
-      '@lingui/cli':
-        specifier: ^5.2.0
-        version: 5.2.0(typescript@5.4.5)
-      '@lingui/vite-plugin':
-        specifier: ^5.2.0
-        version: 5.2.0(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../packages/react-router-dev
@@ -1467,9 +1455,6 @@ importers:
       vite:
         specifier: ^6.1.0
         version: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0)
-      vite-plugin-babel-macros:
-        specifier: ^1.0.6
-        version: 1.0.6(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
       vite-tsconfig-paths:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.4.5)(vite@6.1.1(@types/node@20.11.30)(jiti@1.21.0)(tsx@4.19.3)(yaml@2.6.0))
