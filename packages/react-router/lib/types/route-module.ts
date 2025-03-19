@@ -190,7 +190,7 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
 export type CreateServerMiddlewareFunction<T extends RouteInfo> = (
   args: ServerDataFunctionArgs<T>,
   next: unstable_MiddlewareNextFunction<Response>
-) => MaybePromise<Response | void>;
+) => MaybePromise<Response | undefined>;
 
 export type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T>,
