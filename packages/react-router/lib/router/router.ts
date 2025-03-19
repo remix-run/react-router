@@ -2793,8 +2793,7 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         manifest,
         mapRouteProperties,
-        scopedContext,
-        future.unstable_middleware
+        scopedContext
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -3482,13 +3481,19 @@ export function createStaticHandler(
       return respond ? respond(staticContext) : staticContext;
     }
 
-    if (respond && matches.some((m) => m.route.unstable_middleware)) {
+    if (
+      respond &&
+      matches.some(
+        (m) => m.route.unstable_middleware || m.route.unstable_lazyMiddleware
+      )
+    ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
           "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
       try {
+        await loadLazyMiddlewareForMatches(matches, manifest);
         let renderedStaticContext: StaticHandlerContext | undefined;
         let response = await runMiddlewarePipeline(
           {
@@ -3675,12 +3680,18 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (respond && matches.some((m) => m.route.unstable_middleware)) {
+    if (
+      respond &&
+      matches.some(
+        (m) => m.route.unstable_middleware || m.route.unstable_lazyMiddleware
+      )
+    ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
           "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
+      await loadLazyMiddlewareForMatches(matches, manifest);
       let response = await runMiddlewarePipeline(
         {
           request,
@@ -4148,8 +4159,7 @@ export function createStaticHandler(
       null,
       manifest,
       mapRouteProperties,
-      requestContext,
-      false // middleware not done via dataStrategy in the static handler
+      requestContext
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -4881,6 +4891,13 @@ async function loadLazyRouteModule(
         `The lazy route property "${lazyRouteProperty}" will be ignored.`
     );
 
+    warning(
+      !immutableRouteKeys.has(lazyRouteProperty as ImmutableRouteKey),
+      "Route property " +
+        lazyRouteProperty +
+        " is not a supported property to be returned from a lazy route function. This property will be ignored."
+    );
+
     if (
       !isPropertyStaticallyDefined &&
       !immutableRouteKeys.has(lazyRouteProperty as ImmutableRouteKey)
@@ -4904,6 +4921,56 @@ async function loadLazyRouteModule(
     ...mapRouteProperties(routeToUpdate),
     lazy: undefined,
   });
+}
+
+async function loadLazyMiddleware(
+  route: AgnosticDataRouteObject,
+  manifest: RouteManifest
+) {
+  if (!route.unstable_lazyMiddleware) {
+    return;
+  }
+
+  let routeToUpdate = manifest[route.id];
+  invariant(routeToUpdate, "No route found in manifest");
+
+  if (routeToUpdate.unstable_middleware) {
+    warning(
+      false,
+      `Route "${routeToUpdate.id}" has a static property "unstable_middleware" ` +
+        `defined. The "unstable_lazyMiddleware" function will be ignored.`
+    );
+  } else {
+    let middleware = await route.unstable_lazyMiddleware();
+
+    // If the `unstable_lazyMiddleware` function was executed and removed by
+    // another parallel call then we can return - first call to finish wins
+    // because the return value is expected to be static
+    if (!route.unstable_lazyMiddleware) {
+      return;
+    }
+
+    if (!routeToUpdate.unstable_middleware) {
+      routeToUpdate.unstable_middleware = middleware;
+    }
+  }
+
+  routeToUpdate.unstable_lazyMiddleware = undefined;
+}
+
+function loadLazyMiddlewareForMatches(
+  matches: AgnosticDataRouteMatch[],
+  manifest: RouteManifest
+): Promise<void[]> | void {
+  let promises = matches
+    .map((m) =>
+      m.route.unstable_lazyMiddleware
+        ? loadLazyMiddleware(m.route, manifest)
+        : undefined
+    )
+    .filter(Boolean);
+
+  return promises.length > 0 ? Promise.all(promises) : undefined;
 }
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
@@ -5091,22 +5158,20 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  scopedContext: unknown,
-  enableMiddleware: boolean
+  scopedContext: unknown
 ): Promise<Record<string, DataStrategyResult>> {
+  // Ensure all lazy/lazyMiddleware async functions are kicked off in parallel
+  // before we await them where needed below
+  let loadMiddlewarePromise = loadLazyMiddlewareForMatches(matches, manifest);
   let loadRouteDefinitionsPromises = matches.map((m) =>
     m.route.lazy
       ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
       : undefined
   );
 
-  if (enableMiddleware) {
-    // TODO: For the initial implementation, we await route.lazy here to ensure
-    // client side middleware implementations have been loaded prior to running
-    // dataStrategy which will then run them.  This is a de-optimization and
-    // will be fixed before stable release by adding a new async middleware API
-    // allowing us to load middleware sin a split route module.
-    await Promise.all(loadRouteDefinitionsPromises);
+  // Ensure all middleware is loaded before we start executing routes
+  if (loadMiddlewarePromise) {
+    await loadMiddlewarePromise;
   }
 
   let dsMatches = matches.map((match, i) => {

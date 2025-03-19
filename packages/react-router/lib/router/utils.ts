@@ -398,6 +398,8 @@ export type ImmutableRouteKey =
   | "path"
   | "id"
   | "index"
+  | "unstable_middleware"
+  | "unstable_lazyMiddleware"
   | "children";
 
 export const immutableRouteKeys = new Set<ImmutableRouteKey>([
@@ -406,6 +408,8 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "path",
   "id",
   "index",
+  "unstable_middleware",
+  "unstable_lazyMiddleware",
   "children",
 ]);
 
@@ -424,6 +428,10 @@ export interface LazyRouteFunction<R extends AgnosticRouteObject> {
   (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
 }
 
+interface LazyMiddlewareFunction {
+  (): Promise<unstable_MiddlewareFunction[]>;
+}
+
 /**
  * Base RouteObject with common props shared by all types of routes
  */
@@ -432,6 +440,7 @@ type AgnosticBaseRouteObject = {
   path?: string;
   id?: string;
   unstable_middleware?: unstable_MiddlewareFunction[];
+  unstable_lazyMiddleware?: LazyMiddlewareFunction;
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
