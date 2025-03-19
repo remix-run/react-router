@@ -1,6 +1,6 @@
 # `@react-router/dev`
 
-## 7.4.0-pre.0
+## 7.4.0
 
 ### Minor Changes
 
@@ -12,9 +12,9 @@
 - When `future.unstable_viteEnvironmentApi` is enabled, allow plugins that override the default SSR environment (such as `@cloudflare/vite-plugin`) to be placed before or after the React Router plugin. ([#13183](https://github.com/remix-run/react-router/pull/13183))
 - Fix conflicts with other Vite plugins that use the `configureServer` and/or `configurePreviewServer` hooks ([#13184](https://github.com/remix-run/react-router/pull/13184))
 - Updated dependencies:
-  - `react-router@7.4.0-pre.0`
-  - `@react-router/node@7.4.0-pre.0`
-  - `@react-router/serve@7.4.0-pre.0`
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
+  - `@react-router/serve@7.4.0`
 
 ## 7.3.0
 
@@ -254,7 +254,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 
