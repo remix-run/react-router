@@ -98,7 +98,7 @@
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup && tsup --config tsup.config.server.ts && node ./re-write-server-build-import.mjs",
+      "command": "rimraf dist && tsup && tsup --config tsup.config.server.ts",
       "files": [
         "re-write-server-build-import.mjs",
         "lib/**",
