@@ -168,6 +168,19 @@ export function createDeferred<T = any>() {
   };
 }
 
+export function createLazyStub(): {
+  lazyStub: jest.Mock;
+  lazyDeferred: ReturnType<typeof createDeferred>;
+} {
+  let lazyDeferred = createDeferred();
+  let lazyStub = jest.fn(() => lazyDeferred.promise);
+
+  return {
+    lazyStub,
+    lazyDeferred,
+  };
+}
+
 export function getFetcherData(router: Router) {
   let fetcherData = new Map<string, unknown>();
   router.subscribe((state, { deletedFetchers }) => {

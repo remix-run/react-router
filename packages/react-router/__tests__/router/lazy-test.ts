@@ -2,7 +2,12 @@ import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
 
 import type { TestRouteObject } from "./utils/data-router-setup";
-import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
+import {
+  cleanup,
+  createDeferred,
+  createLazyStub,
+  setup,
+} from "./utils/data-router-setup";
 import {
   createFormData,
   createRequest,
@@ -23,19 +28,6 @@ describe("lazily loaded route modules", () => {
     // @ts-ignore
     console.warn.mockReset();
   });
-
-  const createLazyStub = (): {
-    lazyStub: jest.Mock;
-    lazyDeferred: ReturnType<typeof createDeferred>;
-  } => {
-    let lazyDeferred = createDeferred();
-    let lazyStub = jest.fn(() => lazyDeferred.promise);
-
-    return {
-      lazyStub,
-      lazyDeferred,
-    };
-  };
 
   const createBasicLazyRoutes = (): {
     routes: TestRouteObject[];
