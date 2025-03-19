@@ -1,5 +1,16 @@
 # `react-router`
 
+## 7.4.0
+
+### Patch Changes
+
+- Fix root loader data on initial load redirects in SPA mode ([#13222](https://github.com/remix-run/react-router/pull/13222))
+- Load ancestor pathless/index routes in lazy route discovery for upwards non-eager-discoery routing ([#13203](https://github.com/remix-run/react-router/pull/13203))
+- Fix `shouldRevalidate` behavior for `clientLoader`-only routes in `ssr:true` apps ([#13221](https://github.com/remix-run/react-router/pull/13221))
+- UNSTABLE: Fix `RequestHandler` `loadContext` parameter type when middleware is enabled ([#13204](https://github.com/remix-run/react-router/pull/13204))
+- UNSTABLE: Update `Route.unstable_MiddlewareFunction` to have a return value of `Response | undefined` instead of `Response | void` becaue you should not return anything if you aren't returning the `Response` ([#13199](https://github.com/remix-run/react-router/pull/13199))
+- UNSTABLE(BREAKING): If a middleware throws an error, ensure we only bubble the error itself via `next()` and are no longer leaking the `MiddlewareError` implementation detail ([#13180](https://github.com/remix-run/react-router/pull/13180))
+
 ## 7.3.0
 
 ### Minor Changes

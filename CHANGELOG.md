@@ -13,42 +13,48 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v7.3.0](#v730)
+  - [v7.4.0](#v740)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
+    - [Changes by Package](#changes-by-package)
+  - [v7.3.0](#v730)
+    - [Minor Changes](#minor-changes-1)
+    - [Patch Changes](#patch-changes-1)
+    - [Unstable Changes](#unstable-changes-1)
       - [Client-side `context` (unstable)](#client-side-context-unstable)
       - [Middleware (unstable)](#middleware-unstable)
         - [Middleware `context` parameter](#middleware-context-parameter)
       - [`unstable_SerializesTo`](#unstable_serializesto)
-    - [Changes by Package](#changes-by-package)
+    - [Changes by Package](#changes-by-package-1)
   - [v7.2.0](#v720)
     - [What's Changed](#whats-changed)
       - [Type-safe `href` utility](#type-safe-href-utility)
       - [Prerendering with a SPA Fallback](#prerendering-with-a-spa-fallback)
       - [Allow a root `loader` in SPA Mode](#allow-a-root-loader-in-spa-mode)
-    - [Minor Changes](#minor-changes-1)
-    - [Patch Changes](#patch-changes-1)
-    - [Unstable Changes](#unstable-changes-1)
-    - [Changes by Package](#changes-by-package-1)
-  - [v7.1.5](#v715)
-    - [Patch Changes](#patch-changes-2)
-  - [v7.1.4](#v714)
-    - [Patch Changes](#patch-changes-3)
-  - [v7.1.3](#v713)
-    - [Patch Changes](#patch-changes-4)
-  - [v7.1.2](#v712)
-    - [Patch Changes](#patch-changes-5)
-  - [v7.1.1](#v711)
-    - [Patch Changes](#patch-changes-6)
-  - [v7.1.0](#v710)
     - [Minor Changes](#minor-changes-2)
-    - [Patch Changes](#patch-changes-7)
+    - [Patch Changes](#patch-changes-2)
+    - [Unstable Changes](#unstable-changes-2)
+      - [Split Route Modules (unstable)](#split-route-modules-unstable)
     - [Changes by Package](#changes-by-package-2)
-  - [v7.0.2](#v702)
+  - [v7.1.5](#v715)
+    - [Patch Changes](#patch-changes-3)
+  - [v7.1.4](#v714)
+    - [Patch Changes](#patch-changes-4)
+  - [v7.1.3](#v713)
+    - [Patch Changes](#patch-changes-5)
+  - [v7.1.2](#v712)
+    - [Patch Changes](#patch-changes-6)
+  - [v7.1.1](#v711)
+    - [Patch Changes](#patch-changes-7)
+  - [v7.1.0](#v710)
+    - [Minor Changes](#minor-changes-3)
     - [Patch Changes](#patch-changes-8)
-  - [v7.0.1](#v701)
+    - [Changes by Package](#changes-by-package-3)
+  - [v7.0.2](#v702)
     - [Patch Changes](#patch-changes-9)
+  - [v7.0.1](#v701)
+    - [Patch Changes](#patch-changes-10)
   - [v7.0.0](#v700)
     - [Breaking Changes](#breaking-changes)
       - [Package Restructuring](#package-restructuring)
@@ -64,200 +70,200 @@ We manage release notes in this file instead of the paginated Github Releases Pa
       - [Prerendering](#prerendering)
     - [Major Changes (`react-router`)](#major-changes-react-router)
     - [Major Changes (`@react-router/*`)](#major-changes-react-router-1)
-    - [Minor Changes](#minor-changes-3)
-    - [Patch Changes](#patch-changes-10)
-    - [Changes by Package](#changes-by-package-3)
-- [React Router v6 Releases](#react-router-v6-releases)
-  - [v6.30.0](#v6300)
     - [Minor Changes](#minor-changes-4)
     - [Patch Changes](#patch-changes-11)
-  - [v6.29.0](#v6290)
+    - [Changes by Package](#changes-by-package-4)
+- [React Router v6 Releases](#react-router-v6-releases)
+  - [v6.30.0](#v6300)
     - [Minor Changes](#minor-changes-5)
     - [Patch Changes](#patch-changes-12)
-  - [v6.28.2](#v6282)
+  - [v6.29.0](#v6290)
+    - [Minor Changes](#minor-changes-6)
     - [Patch Changes](#patch-changes-13)
-  - [v6.28.1](#v6281)
+  - [v6.28.2](#v6282)
     - [Patch Changes](#patch-changes-14)
+  - [v6.28.1](#v6281)
+    - [Patch Changes](#patch-changes-15)
   - [v6.28.0](#v6280)
     - [What's Changed](#whats-changed-1)
-    - [Minor Changes](#minor-changes-6)
-    - [Patch Changes](#patch-changes-15)
+    - [Minor Changes](#minor-changes-7)
+    - [Patch Changes](#patch-changes-16)
   - [v6.27.0](#v6270)
     - [What's Changed](#whats-changed-2)
       - [Stabilized APIs](#stabilized-apis)
-    - [Minor Changes](#minor-changes-7)
-    - [Patch Changes](#patch-changes-16)
-  - [v6.26.2](#v6262)
-    - [Patch Changes](#patch-changes-17)
-  - [v6.26.1](#v6261)
-    - [Patch Changes](#patch-changes-18)
-  - [v6.26.0](#v6260)
     - [Minor Changes](#minor-changes-8)
+    - [Patch Changes](#patch-changes-17)
+  - [v6.26.2](#v6262)
+    - [Patch Changes](#patch-changes-18)
+  - [v6.26.1](#v6261)
     - [Patch Changes](#patch-changes-19)
-  - [v6.25.1](#v6251)
+  - [v6.26.0](#v6260)
+    - [Minor Changes](#minor-changes-9)
     - [Patch Changes](#patch-changes-20)
+  - [v6.25.1](#v6251)
+    - [Patch Changes](#patch-changes-21)
   - [v6.25.0](#v6250)
     - [What's Changed](#whats-changed-3)
       - [Stabilized `v7_skipActionErrorRevalidation`](#stabilized-v7_skipactionerrorrevalidation)
-    - [Minor Changes](#minor-changes-9)
-    - [Patch Changes](#patch-changes-21)
-  - [v6.24.1](#v6241)
+    - [Minor Changes](#minor-changes-10)
     - [Patch Changes](#patch-changes-22)
+  - [v6.24.1](#v6241)
+    - [Patch Changes](#patch-changes-23)
   - [v6.24.0](#v6240)
     - [What's Changed](#whats-changed-4)
       - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
-    - [Minor Changes](#minor-changes-10)
-    - [Patch Changes](#patch-changes-23)
-  - [v6.23.1](#v6231)
+    - [Minor Changes](#minor-changes-11)
     - [Patch Changes](#patch-changes-24)
+  - [v6.23.1](#v6231)
+    - [Patch Changes](#patch-changes-25)
   - [v6.23.0](#v6230)
     - [What's Changed](#whats-changed-5)
       - [Data Strategy (unstable)](#data-strategy-unstable)
       - [Skip Action Error Revalidation (unstable)](#skip-action-error-revalidation-unstable)
-    - [Minor Changes](#minor-changes-11)
+    - [Minor Changes](#minor-changes-12)
   - [v6.22.3](#v6223)
-    - [Patch Changes](#patch-changes-25)
-  - [v6.22.2](#v6222)
     - [Patch Changes](#patch-changes-26)
-  - [v6.22.1](#v6221)
+  - [v6.22.2](#v6222)
     - [Patch Changes](#patch-changes-27)
+  - [v6.22.1](#v6221)
+    - [Patch Changes](#patch-changes-28)
   - [v6.22.0](#v6220)
     - [What's Changed](#whats-changed-6)
       - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
-    - [Minor Changes](#minor-changes-12)
-    - [Patch Changes](#patch-changes-28)
-  - [v6.21.3](#v6213)
+    - [Minor Changes](#minor-changes-13)
     - [Patch Changes](#patch-changes-29)
-  - [v6.21.2](#v6212)
+  - [v6.21.3](#v6213)
     - [Patch Changes](#patch-changes-30)
-  - [v6.21.1](#v6211)
+  - [v6.21.2](#v6212)
     - [Patch Changes](#patch-changes-31)
+  - [v6.21.1](#v6211)
+    - [Patch Changes](#patch-changes-32)
   - [v6.21.0](#v6210)
     - [What's Changed](#whats-changed-7)
       - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
       - [Partial Hydration](#partial-hydration)
-    - [Minor Changes](#minor-changes-13)
-    - [Patch Changes](#patch-changes-32)
-  - [v6.20.1](#v6201)
-    - [Patch Changes](#patch-changes-33)
-  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-14)
+    - [Patch Changes](#patch-changes-33)
+  - [v6.20.1](#v6201)
     - [Patch Changes](#patch-changes-34)
+  - [v6.20.0](#v6200)
+    - [Minor Changes](#minor-changes-15)
+    - [Patch Changes](#patch-changes-35)
   - [v6.19.0](#v6190)
     - [What's Changed](#whats-changed-8)
       - [`unstable_flushSync` API](#unstable_flushsync-api)
-    - [Minor Changes](#minor-changes-15)
-    - [Patch Changes](#patch-changes-35)
+    - [Minor Changes](#minor-changes-16)
+    - [Patch Changes](#patch-changes-36)
   - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-9)
       - [New Fetcher APIs](#new-fetcher-apis)
       - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
-    - [Minor Changes](#minor-changes-16)
-    - [Patch Changes](#patch-changes-36)
+    - [Minor Changes](#minor-changes-17)
+    - [Patch Changes](#patch-changes-37)
   - [v6.17.0](#v6170)
     - [What's Changed](#whats-changed-10)
       - [View Transitions 🚀](#view-transitions-)
-    - [Minor Changes](#minor-changes-17)
-    - [Patch Changes](#patch-changes-37)
-  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-18)
     - [Patch Changes](#patch-changes-38)
-  - [v6.15.0](#v6150)
+  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-19)
     - [Patch Changes](#patch-changes-39)
-  - [v6.14.2](#v6142)
+  - [v6.15.0](#v6150)
+    - [Minor Changes](#minor-changes-20)
     - [Patch Changes](#patch-changes-40)
-  - [v6.14.1](#v6141)
+  - [v6.14.2](#v6142)
     - [Patch Changes](#patch-changes-41)
+  - [v6.14.1](#v6141)
+    - [Patch Changes](#patch-changes-42)
   - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-11)
       - [JSON/Text Submissions](#jsontext-submissions)
-    - [Minor Changes](#minor-changes-20)
-    - [Patch Changes](#patch-changes-42)
+    - [Minor Changes](#minor-changes-21)
+    - [Patch Changes](#patch-changes-43)
   - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-12)
       - [`future.v7_startTransition`](#futurev7_starttransition)
-    - [Minor Changes](#minor-changes-21)
-    - [Patch Changes](#patch-changes-43)
-  - [v6.12.1](#v6121)
+    - [Minor Changes](#minor-changes-22)
     - [Patch Changes](#patch-changes-44)
+  - [v6.12.1](#v6121)
+    - [Patch Changes](#patch-changes-45)
   - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-13)
       - [`React.startTransition` support](#reactstarttransition-support)
-    - [Minor Changes](#minor-changes-22)
-    - [Patch Changes](#patch-changes-45)
-  - [v6.11.2](#v6112)
-    - [Patch Changes](#patch-changes-46)
-  - [v6.11.1](#v6111)
-    - [Patch Changes](#patch-changes-47)
-  - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-23)
+    - [Patch Changes](#patch-changes-46)
+  - [v6.11.2](#v6112)
+    - [Patch Changes](#patch-changes-47)
+  - [v6.11.1](#v6111)
     - [Patch Changes](#patch-changes-48)
+  - [v6.11.0](#v6110)
+    - [Minor Changes](#minor-changes-24)
+    - [Patch Changes](#patch-changes-49)
   - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-14)
-    - [Minor Changes](#minor-changes-24)
+    - [Minor Changes](#minor-changes-25)
       - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
-    - [Patch Changes](#patch-changes-49)
+    - [Patch Changes](#patch-changes-50)
   - [v6.9.0](#v690)
     - [What's Changed](#whats-changed-15)
       - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
       - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
-    - [Minor Changes](#minor-changes-25)
-    - [Patch Changes](#patch-changes-50)
-  - [v6.8.2](#v682)
-    - [Patch Changes](#patch-changes-51)
-  - [v6.8.1](#v681)
-    - [Patch Changes](#patch-changes-52)
-  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-26)
+    - [Patch Changes](#patch-changes-51)
+  - [v6.8.2](#v682)
+    - [Patch Changes](#patch-changes-52)
+  - [v6.8.1](#v681)
     - [Patch Changes](#patch-changes-53)
-  - [v6.7.0](#v670)
+  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-27)
     - [Patch Changes](#patch-changes-54)
-  - [v6.6.2](#v662)
+  - [v6.7.0](#v670)
+    - [Minor Changes](#minor-changes-28)
     - [Patch Changes](#patch-changes-55)
-  - [v6.6.1](#v661)
+  - [v6.6.2](#v662)
     - [Patch Changes](#patch-changes-56)
+  - [v6.6.1](#v661)
+    - [Patch Changes](#patch-changes-57)
   - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-16)
-    - [Minor Changes](#minor-changes-28)
-    - [Patch Changes](#patch-changes-57)
-  - [v6.5.0](#v650)
-    - [What's Changed](#whats-changed-17)
     - [Minor Changes](#minor-changes-29)
     - [Patch Changes](#patch-changes-58)
-  - [v6.4.5](#v645)
+  - [v6.5.0](#v650)
+    - [What's Changed](#whats-changed-17)
+    - [Minor Changes](#minor-changes-30)
     - [Patch Changes](#patch-changes-59)
-  - [v6.4.4](#v644)
+  - [v6.4.5](#v645)
     - [Patch Changes](#patch-changes-60)
-  - [v6.4.3](#v643)
+  - [v6.4.4](#v644)
     - [Patch Changes](#patch-changes-61)
-  - [v6.4.2](#v642)
+  - [v6.4.3](#v643)
     - [Patch Changes](#patch-changes-62)
-  - [v6.4.1](#v641)
+  - [v6.4.2](#v642)
     - [Patch Changes](#patch-changes-63)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-64)
   - [v6.4.0](#v640)
     - [What's Changed](#whats-changed-18)
       - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-64)
-  - [v6.3.0](#v630)
-    - [Minor Changes](#minor-changes-30)
-  - [v6.2.2](#v622)
     - [Patch Changes](#patch-changes-65)
-  - [v6.2.1](#v621)
-    - [Patch Changes](#patch-changes-66)
-  - [v6.2.0](#v620)
+  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-31)
+  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-66)
+  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-67)
-  - [v6.1.1](#v611)
-    - [Patch Changes](#patch-changes-68)
-  - [v6.1.0](#v610)
+  - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-32)
+    - [Patch Changes](#patch-changes-68)
+  - [v6.1.1](#v611)
     - [Patch Changes](#patch-changes-69)
-  - [v6.0.2](#v602)
+  - [v6.1.0](#v610)
+    - [Minor Changes](#minor-changes-33)
     - [Patch Changes](#patch-changes-70)
-  - [v6.0.1](#v601)
+  - [v6.0.2](#v602)
     - [Patch Changes](#patch-changes-71)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-72)
   - [v6.0.0](#v600)
 
 </details>
@@ -298,6 +304,47 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
+
+## v7.4.0
+
+Date: 2025-03-19
+
+### Minor Changes
+
+- `@react-router/dev` - Generate types for `virtual:react-router/server-build` module ([#13152](https://github.com/remix-run/react-router/pull/13152))
+
+### Patch Changes
+
+- `react-router` - Fix root loader data on initial load redirects in SPA mode ([#13222](https://github.com/remix-run/react-router/pull/13222))
+- `react-router` - Load ancestor pathless/index routes in lazy route discovery for upwards non-eager-discovery routing ([#13203](https://github.com/remix-run/react-router/pull/13203))
+- `react-router` - Fix `shouldRevalidate` behavior for `clientLoader`-only routes in `ssr:true` apps ([#13221](https://github.com/remix-run/react-router/pull/13221))
+- `@react-router/dev` - Fix conflicts with other Vite plugins that use the `configureServer` and/or `configurePreviewServer` hooks ([#13184](https://github.com/remix-run/react-router/pull/13184))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - If a middleware throws an error, ensure we only bubble the error itself via `next()` and are no longer leaking the `MiddlewareError` implementation detail ([#13180](https://github.com/remix-run/react-router/pull/13180))
+  - ⚠️ This may be a breaking change if you are `catch`-ing errors thrown by the `next()` function in your middlewares
+- `react-router` - Fix `RequestHandler` `loadContext` parameter type when middleware is enabled ([#13204](https://github.com/remix-run/react-router/pull/13204))
+- `react-router` - Update `Route.unstable_MiddlewareFunction` to have a return value of `Response | undefined` instead of `Response | void` ([#13199](https://github.com/remix-run/react-router/pull/13199))
+- `@react-router/dev` - When `future.unstable_splitRouteModules` is set to `"enforce"`, allow both splittable and unsplittable root route exports since it's always in a single chunk ([#13238](https://github.com/remix-run/react-router/pull/13238))
+- `@react-router/dev` - When `future.unstable_viteEnvironmentApi` is enabled, allow plugins that override the default SSR environment (such as `@cloudflare/vite-plugin`) to be placed before or after the React Router plugin ([#13183](https://github.com/remix-run/react-router/pull/13183))
+
+### Changes by Package
+
+- [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/create-react-router/CHANGELOG.md#740)
+- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router/CHANGELOG.md#740)
+- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-architect/CHANGELOG.md#740)
+- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-cloudflare/CHANGELOG.md#740)
+- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-dev/CHANGELOG.md#740)
+- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-express/CHANGELOG.md#740)
+- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-fs-routes/CHANGELOG.md#740)
+- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-node/CHANGELOG.md#740)
+- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#740)
+- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.4.0/packages/react-router-serve/CHANGELOG.md#740)
+
+**Full Changelog**: [`v7.3.0...v7.4.0`](https://github.com/remix-run/react-router/compare/react-router@7.3.0...react-router@7.4.0)
 
 ## v7.3.0
 
@@ -391,7 +438,7 @@ function unstable_getContext() {
 
 #### Middleware (unstable)
 
-Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router-config.ts` file:
+Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router.config.ts` file:
 
 ```ts
 import type { Config } from "@react-router/dev/config";
@@ -715,6 +762,182 @@ In order to use your build-time loader data during pre-rendering, we now also ex
 - `react-router` - Add `unstable_SerializesTo` brand type for library authors to register types serializable by React Router's streaming format (`turbo-stream`) ([#12264](https://github.com/remix-run/react-router/pull/12264))
 - `@react-router/dev` - Add unstable support for splitting route modules in framework mode via `future.unstable_splitRouteModules` ([#11871](https://github.com/remix-run/react-router/pull/11871))
 - `@react-router/dev` - Add `future.unstable_viteEnvironmentApi` flag to enable experimental Vite Environment API support ([#12936](https://github.com/remix-run/react-router/pull/12936))
+
+#### Split Route Modules (unstable)
+
+> ⚠️ This feature is currently [unstable](https://reactrouter.com/community/api-development-strategy#unstable-flags), enabled by the `future.unstable_splitRouteModules` flag. We’d love any interested users to play with it locally and provide feedback, but we do not recommend using it in production yet.
+>
+> If you do choose to adopt this flag in production, please ensure you do sufficient testing against your production build to ensure that the optimization is working as expected.
+
+One of the conveniences of the [Route Module API](https://reactrouter.com/start/framework/route-module) is that everything a route needs is in a single file. Unfortunately this comes with a performance cost in some cases when using the `clientLoader`, `clientAction`, and `HydrateFallback` APIs.
+
+As a basic example, consider this route module:
+
+```tsx filename=routes/example.tsx
+import { MassiveComponent } from "~/components";
+
+export async function clientLoader() {
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+
+export default function Component({ loaderData }) {
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+In this example we have a minimal `clientLoader` export that makes a basic fetch call, whereas the default component export is much larger. This is a problem for performance because it means that if we want to navigate to this route client-side, the entire route module must be downloaded before the client loader can start running.
+
+To visualize this as a timeline:
+
+<docs-info>In the following timeline diagrams, different characters are used within the Route Module bars to denote the different Route Module APIs being exported.</docs-info>
+
+```
+Get Route Module:  |--=======|
+Run clientLoader:            |-----|
+Render:                            |-|
+```
+
+Instead, we want to optimize this to the following:
+
+```
+Get clientLoader:  |--|
+Get Component:     |=======|
+Run clientLoader:     |-----|
+Render:                     |-|
+```
+
+To achieve this optimization, React Router will split the route module into multiple smaller modules during the production build process. In this case, we'll end up with two separate [virtual modules](https://vite.dev/guide/api-plugin#virtual-modules-convention) — one for the client loader and one for the component and its dependencies.
+
+```tsx filename=routes/example.tsx?route-chunk=clientLoader
+export async function clientLoader() {
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+```
+
+```tsx filename=routes/example.tsx?route-chunk=main
+import { MassiveComponent } from "~/components";
+
+export default function Component({ loaderData }) {
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+> 💡 This optimization is automatically applied in framework mode, but you can also implement it in library mode via `route.lazy` and authoring your route in multiple files as covered in our blog post on [lazy loading route modules.](https://remix.run/blog/lazy-loading-routes#advanced-usage-and-optimizations)
+
+Now that these are available as separate modules, the client loader and the component can be downloaded in parallel. This means that the client loader can be executed as soon as it's ready without having to wait for the component.
+
+This optimization is even more pronounced when more Route Module APIs are used. For example, when using `clientLoader`, `clientAction` and `HydrateFallback`, the timeline for a single route module during a client-side navigation might look like this:
+
+```
+Get Route Module:     |--~~++++=======|
+Run clientLoader:                     |-----|
+Render:                                     |-|
+```
+
+This would instead be optimized to the following:
+
+```
+Get clientLoader:     |--|
+Get clientAction:     |~~|
+Get HydrateFallback:  SKIPPED
+Get Component:        |=======|
+Run clientLoader:        |-----|
+Render:                        |-|
+```
+
+Note that this optimization only works when the Route Module APIs being split don't share code within the same file. For example, the following route module can't be split:
+
+```tsx filename=routes/example.tsx
+import { MassiveComponent } from "~/components";
+
+const shared = () => console.log("hello");
+
+export async function clientLoader() {
+  shared();
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+
+export default function Component({ loaderData }) {
+  shared();
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+This route will still work, but since both the client loader and the component depend on the `shared` function defined within the same file, it will be de-optimized into a single route module.
+
+To avoid this, you can extract any code shared between exports into a separate file. For example:
+
+```tsx filename=routes/example/shared.tsx
+export const shared = () => console.log("hello");
+```
+
+You can then import this shared code in your route module without triggering the de-optimization:
+
+```tsx filename=routes/example/route.tsx
+import { MassiveComponent } from "~/components";
+import { shared } from "./shared";
+
+export async function clientLoader() {
+  shared();
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+
+export default function Component({ loaderData }) {
+  shared();
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+Since the shared code is in its own module, React Router is now able to split this route module into two separate virtual modules:
+
+```tsx filename=routes/example/route.tsx?route-chunk=clientLoader
+import { shared } from "./shared";
+
+export async function clientLoader() {
+  shared();
+  return await fetch("https://example.com/api").then((response) =>
+    response.json()
+  );
+}
+```
+
+```tsx filename=routes/example/route.tsx?route-chunk=main
+import { MassiveComponent } from "~/components";
+import { shared } from "./shared";
+
+export default function Component({ loaderData }) {
+  shared();
+  return <MassiveComponent data={loaderData} />;
+}
+```
+
+If your project is particularly performance sensitive, you can set the `unstable_splitRouteModules` future flag to `"enforce"`:
+
+```tsx filename=react-router-config.ts
+export default {
+  future: {
+    unstable_splitRouteModules: "enforce",
+  },
+};
+```
+
+This setting will raise an error if any route modules can't be split:
+
+```
+Error splitting route module: routes/example/route.tsx
+
+- clientLoader
+
+This export could not be split into its own chunk because it shares code with other exports. You should extract any shared code into its own module and then import it within the route module.
+```
 
 ### Changes by Package
 
