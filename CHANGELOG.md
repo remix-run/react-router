@@ -307,7 +307,7 @@ Date: YYYY-MM-DD
 
 ## v7.4.0
 
-Date: 2025-03-18
+Date: 2025-03-19
 
 ### Minor Changes
 

@@ -1,12 +1,12 @@
 # `@react-router/express`
 
-## 7.4.0-pre.0
+## 7.4.0
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.4.0-pre.0`
-  - `@react-router/node@7.4.0-pre.0`
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
 
 ## 7.3.0
 
@@ -93,7 +93,7 @@
 
 ### Major Changes
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single\_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
