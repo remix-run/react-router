@@ -20,7 +20,8 @@ import type {
   FormMethod,
   HTMLFormMethod,
   DataStrategyResult,
-  ImmutableRouteKey,
+  LazyRouteFunctionCache,
+  UnsupportedLazyRouteFunctionKey,
   MapRoutePropertiesFunction,
   MaybePromise,
   MutationFormMethod,
@@ -48,7 +49,7 @@ import {
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   getResolveToMatches,
-  immutableRouteKeys,
+  unsupportedLazyRouteFunctionKeys,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -4839,6 +4840,8 @@ function isSameRoute(
   );
 }
 
+const lazyRouteFunctionCache: LazyRouteFunctionCache = new WeakMap();
+
 /**
  * Execute route.lazy() methods to lazily load route modules (loader, action,
  * shouldRevalidate) and update the routeManifest in place which shares objects
@@ -4849,78 +4852,85 @@ async function loadLazyRouteModule(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest
 ) {
-  if (!route.lazy) {
-    return;
-  }
-
-  let lazyRoute = await route.lazy();
-
-  // If the lazy route function was executed and removed by another parallel
-  // call then we can return - first lazy() to finish wins because the return
-  // value of lazy is expected to be static
-  if (!route.lazy) {
-    return;
-  }
-
   let routeToUpdate = manifest[route.id];
   invariant(routeToUpdate, "No route found in manifest");
 
-  // Update the route in place.  This should be safe because there's no way
-  // we could yet be sitting on this route as we can't get there without
-  // resolving lazy() first.
-  //
-  // This is different than the HMR "update" use-case where we may actively be
-  // on the route being updated.  The main concern boils down to "does this
-  // mutation affect any ongoing navigations or any current state.matches
-  // values?".  If not, it should be safe to update in place.
-  let routeUpdates: Record<string, any> = {};
-  for (let lazyRouteProperty in lazyRoute) {
-    let staticRouteValue =
-      routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
-
-    let isPropertyStaticallyDefined =
-      staticRouteValue !== undefined &&
-      // This property isn't static since it should always be updated based
-      // on the route updates
-      lazyRouteProperty !== "hasErrorBoundary";
-
-    warning(
-      !isPropertyStaticallyDefined,
-      `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
-        `defined but its lazy function is also returning a value for this property. ` +
-        `The lazy route property "${lazyRouteProperty}" will be ignored.`
-    );
-
-    warning(
-      !immutableRouteKeys.has(lazyRouteProperty as ImmutableRouteKey),
-      "Route property " +
-        lazyRouteProperty +
-        " is not a supported property to be returned from a lazy route function. This property will be ignored."
-    );
-
-    if (
-      !isPropertyStaticallyDefined &&
-      !immutableRouteKeys.has(lazyRouteProperty as ImmutableRouteKey)
-    ) {
-      routeUpdates[lazyRouteProperty] =
-        lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
-    }
+  if (!route.lazy) {
+    return;
   }
 
-  // Mutate the route with the provided updates.  Do this first so we pass
-  // the updated version to mapRouteProperties
-  Object.assign(routeToUpdate, routeUpdates);
+  // Check if we have a cached promise from a previous call
+  let cachedPromise = lazyRouteFunctionCache.get(routeToUpdate);
+  if (cachedPromise) {
+    await cachedPromise;
+    return;
+  }
 
-  // Mutate the `hasErrorBoundary` property on the route based on the route
-  // updates and remove the `lazy` function so we don't resolve the lazy
-  // route again.
-  Object.assign(routeToUpdate, {
-    // To keep things framework agnostic, we use the provided `mapRouteProperties`
-    // function to set the framework-aware properties (`element`/`hasErrorBoundary`)
-    // since the logic will differ between frameworks.
-    ...mapRouteProperties(routeToUpdate),
-    lazy: undefined,
+  let lazyRoutePromise = route.lazy().then((lazyRoute) => {
+    // Update the route in place.  This should be safe because there's no way
+    // we could yet be sitting on this route as we can't get there without
+    // resolving lazy() first.
+    //
+    // This is different than the HMR "update" use-case where we may actively be
+    // on the route being updated.  The main concern boils down to "does this
+    // mutation affect any ongoing navigations or any current state.matches
+    // values?".  If not, it should be safe to update in place.
+    let routeUpdates: Record<string, any> = {};
+    for (let lazyRouteProperty in lazyRoute) {
+      let staticRouteValue =
+        routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
+
+      let isPropertyStaticallyDefined =
+        staticRouteValue !== undefined &&
+        // This property isn't static since it should always be updated based
+        // on the route updates
+        lazyRouteProperty !== "hasErrorBoundary";
+
+      warning(
+        !isPropertyStaticallyDefined,
+        `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
+          `defined but its lazy function is also returning a value for this property. ` +
+          `The lazy route property "${lazyRouteProperty}" will be ignored.`
+      );
+
+      warning(
+        !unsupportedLazyRouteFunctionKeys.has(
+          lazyRouteProperty as UnsupportedLazyRouteFunctionKey
+        ),
+        "Route property " +
+          lazyRouteProperty +
+          " is not a supported property to be returned from a lazy route function. This property will be ignored."
+      );
+
+      if (
+        !isPropertyStaticallyDefined &&
+        !unsupportedLazyRouteFunctionKeys.has(
+          lazyRouteProperty as UnsupportedLazyRouteFunctionKey
+        )
+      ) {
+        routeUpdates[lazyRouteProperty] =
+          lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
+      }
+    }
+
+    // Mutate the route with the provided updates.  Do this first so we pass
+    // the updated version to mapRouteProperties
+    Object.assign(routeToUpdate, routeUpdates);
+
+    // Mutate the `hasErrorBoundary` property on the route based on the route
+    // updates and remove the `lazy` function so we don't resolve the lazy
+    // route again.
+    Object.assign(routeToUpdate, {
+      // To keep things framework agnostic, we use the provided `mapRouteProperties`
+      // function to set the framework-aware properties (`element`/`hasErrorBoundary`)
+      // since the logic will differ between frameworks.
+      ...mapRouteProperties(routeToUpdate),
+      lazy: undefined,
+    });
   });
+
+  lazyRouteFunctionCache.set(routeToUpdate, lazyRoutePromise);
+  await lazyRoutePromise;
 }
 
 async function loadLazyMiddleware(

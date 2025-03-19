@@ -392,7 +392,7 @@ export interface MapRoutePropertiesFunction {
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type ImmutableRouteKey =
+export type UnsupportedLazyRouteFunctionKey =
   | "lazy"
   | "caseSensitive"
   | "path"
@@ -402,16 +402,17 @@ export type ImmutableRouteKey =
   | "unstable_lazyMiddleware"
   | "children";
 
-export const immutableRouteKeys = new Set<ImmutableRouteKey>([
-  "lazy",
-  "caseSensitive",
-  "path",
-  "id",
-  "index",
-  "unstable_middleware",
-  "unstable_lazyMiddleware",
-  "children",
-]);
+export const unsupportedLazyRouteFunctionKeys =
+  new Set<UnsupportedLazyRouteFunctionKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "unstable_middleware",
+    "unstable_lazyMiddleware",
+    "children",
+  ]);
 
 type RequireOne<T, Key = keyof T> = Exclude<
   {
@@ -425,8 +426,12 @@ type RequireOne<T, Key = keyof T> = Exclude<
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
+  (): Promise<RequireOne<Omit<R, UnsupportedLazyRouteFunctionKey>>>;
 }
+
+export type LazyRouteFunctionCache<
+  R extends AgnosticRouteObject = AgnosticRouteObject
+> = WeakMap<R, Promise<void>>;
 
 interface LazyMiddlewareFunction {
   (): Promise<unstable_MiddlewareFunction[]>;
