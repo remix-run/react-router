@@ -543,4 +543,58 @@ test.describe("Split route modules", async () => {
       });
     });
   });
+
+  test.describe("with support for @lingui", () => {
+    let splitRouteModules = true;
+    let port: number;
+    let cwd: string;
+
+    test.beforeAll(async () => {
+      port = await getPort();
+      cwd = await createProject({
+        "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+        "vite.config.js": await viteConfig.basic({ port }),
+        ...files,
+        "app/routes/unsplittable.tsx": js`
+          import { t } from "@lingui/core/macro";
+          import type { Route } from "./+types/unsplittable";
+          import { Form } from "react-router";
+
+          // Dummy variable to prevent route exports from being split
+          let shared: null = null;
+
+          export const clientLoader = async () => {
+            return shared ?? t\`Hello from unsplittable client loader\`;
+          };
+
+          export const clientAction = async () => {
+            return shared ?? "Hello from unsplittable client action";
+          };
+
+          export function HydrateFallback() {
+            return shared ?? <div>Loading...</div>;
+          }
+
+          export default function UnsplittableRoute({
+            loaderData,
+            actionData,
+          }: Route.ComponentProps) {
+            return (
+              <>
+                <p>{loaderData}</p>
+                <p>{actionData}</p>
+                <Form method="post">
+                  <button>Submit</button>
+                </Form>
+              </>
+            );
+          }`,
+      });
+    });
+
+    test("build passes", async () => {
+      let { status } = build({ cwd });
+      expect(status).toBe(0);
+    });
+  });
 });
