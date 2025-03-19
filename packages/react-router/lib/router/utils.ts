@@ -429,10 +429,6 @@ export interface LazyRouteFunction<R extends AgnosticRouteObject> {
   (): Promise<RequireOne<Omit<R, UnsupportedLazyRouteFunctionKey>>>;
 }
 
-export type LazyRouteFunctionCache<
-  R extends AgnosticRouteObject = AgnosticRouteObject
-> = WeakMap<R, Promise<void>>;
-
 interface LazyMiddlewareFunction {
   (): Promise<unstable_MiddlewareFunction[]>;
 }

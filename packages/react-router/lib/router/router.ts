@@ -20,7 +20,6 @@ import type {
   FormMethod,
   HTMLFormMethod,
   DataStrategyResult,
-  LazyRouteFunctionCache,
   UnsupportedLazyRouteFunctionKey,
   MapRoutePropertiesFunction,
   MaybePromise,
@@ -4840,7 +4839,10 @@ function isSameRoute(
   );
 }
 
-const lazyRouteFunctionCache: LazyRouteFunctionCache = new WeakMap();
+const lazyRouteFunctionCache = new WeakMap<
+  AgnosticDataRouteObject,
+  Promise<void>
+>();
 
 /**
  * Execute route.lazy() methods to lazily load route modules (loader, action,
