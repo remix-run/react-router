@@ -167,7 +167,7 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-To see `projects/home.tsx` appear in the layout, we'll need an outlet:
+To have routes such as `projects/project.tsx` appear in the layout, we'll need an outlet:
 
 ```tsx filename=./projects/project-layout.tsx lines=[8]
 import { Outlet } from "react-router";
