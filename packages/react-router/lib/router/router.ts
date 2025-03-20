@@ -4868,10 +4868,15 @@ async function loadLazyRouteModule(
     return;
   }
 
+  // We use `.then` to chain additional logic to the lazy route promise so that
+  // the consumer's lazy route logic is coupled to our logic for updating the
+  // route in place in a single task. This ensures that the cached promise
+  // contains all logic for managing the lazy route. This chained promise is
+  // then awaited so that consumers of this function see the updated route.
   let lazyRoutePromise = route.lazy().then((lazyRoute) => {
-    // Update the route in place.  This should be safe because there's no way
-    // we could yet be sitting on this route as we can't get there without
-    // resolving lazy() first.
+    // Here we update the route in place.  This should be safe because there's
+    // no way we could yet be sitting on this route as we can't get there
+    // without resolving lazy() first.
     //
     // This is different than the HMR "update" use-case where we may actively be
     // on the route being updated.  The main concern boils down to "does this
