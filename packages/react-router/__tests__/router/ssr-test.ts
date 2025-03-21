@@ -186,7 +186,7 @@ describe("ssr", () => {
       });
     });
 
-    it("should fill in null loaderData values for routes without loaders", async () => {
+    it("should not fill in null loaderData values for routes without loaders", async () => {
       let { query } = createStaticHandler([
         {
           id: "root",
@@ -215,10 +215,7 @@ describe("ssr", () => {
       let context = await query(createRequest("/none"));
       expect(context).toMatchObject({
         actionData: null,
-        loaderData: {
-          root: null,
-          none: null,
-        },
+        loaderData: {},
         errors: null,
         location: { pathname: "/none" },
       });
@@ -228,9 +225,7 @@ describe("ssr", () => {
       expect(context).toMatchObject({
         actionData: null,
         loaderData: {
-          root: null,
           a: "A",
-          b: null,
         },
         errors: null,
         location: { pathname: "/a/b" },

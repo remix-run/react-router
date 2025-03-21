@@ -901,10 +901,7 @@ describe("A <StaticRouterProvider>", () => {
 
     let expectedJsonString = JSON.stringify(
       JSON.stringify({
-        loaderData: {
-          0: null,
-          "0-0": null,
-        },
+        loaderData: {},
         actionData: null,
         errors: null,
       })
