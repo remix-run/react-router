@@ -90,12 +90,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   return async function requestHandler(request, initialContext) {
     _build = typeof build === "function" ? await build() : build;
 
-    let loadContext = _build.future.unstable_middleware
-      ? new unstable_RouterContextProvider(
-          initialContext as unknown as unstable_InitialContext
-        )
-      : initialContext || {};
-
     if (typeof build === "function") {
       let derived = derive(_build, mode);
       routes = derived.routes;
@@ -108,6 +102,44 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
+    }
+
+    let params: RouteMatch<ServerRoute>["params"] = {};
+    let loadContext: AppLoadContext | unstable_RouterContextProvider;
+
+    let handleError = (error: unknown) => {
+      if (mode === ServerMode.Development) {
+        getDevServerHooks()?.processRequestError?.(error);
+      }
+
+      errorHandler(error, {
+        context: loadContext,
+        params,
+        request,
+      });
+    };
+
+    if (_build.future.unstable_middleware) {
+      if (initialContext == null) {
+        loadContext = new unstable_RouterContextProvider();
+      } else {
+        try {
+          loadContext = new unstable_RouterContextProvider(
+            initialContext as unknown as unstable_InitialContext
+          );
+        } catch (e) {
+          let error = new Error(
+            "Unable to create initial `unstable_RouterContextProvider` instance. " +
+              "Please confirm you are returning an instance of " +
+              "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
+              `\n\nError: ${e instanceof Error ? e.toString() : e}`
+          );
+          handleError(error);
+          return returnLastResortErrorResponse(error, serverMode);
+        }
+      }
+    } else {
+      loadContext = initialContext || {};
     }
 
     let url = new URL(request.url);
@@ -126,19 +158,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
-
-    let params: RouteMatch<ServerRoute>["params"] = {};
-    let handleError = (error: unknown) => {
-      if (mode === ServerMode.Development) {
-        getDevServerHooks()?.processRequestError?.(error);
-      }
-
-      errorHandler(error, {
-        context: loadContext,
-        params,
-        request,
-      });
-    };
 
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
