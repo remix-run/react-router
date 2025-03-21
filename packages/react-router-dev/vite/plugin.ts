@@ -2229,7 +2229,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         }
 
-        server.hot.send({
+        server.ws.send({
           type: "custom",
           event: "react-router:hmr",
           data: hmrEventData,
