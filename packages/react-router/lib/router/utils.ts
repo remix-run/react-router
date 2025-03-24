@@ -414,8 +414,7 @@ export const unsupportedLazyRouteObjectKeys =
  */
 export type UnsupportedLazyRouteFunctionKey =
   | UnsupportedLazyRouteObjectKey
-  | "unstable_middleware"
-  | "unstable_lazyMiddleware";
+  | "unstable_middleware";
 export const unsupportedLazyRouteFunctionKeys =
   new Set<UnsupportedLazyRouteFunctionKey>([
     "lazy",
@@ -424,7 +423,6 @@ export const unsupportedLazyRouteFunctionKeys =
     "id",
     "index",
     "unstable_middleware",
-    "unstable_lazyMiddleware",
     "children",
   ]);
 

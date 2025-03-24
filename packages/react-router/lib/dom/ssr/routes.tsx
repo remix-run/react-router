@@ -474,6 +474,7 @@ export function createClientRoutes(
       }
 
       if (route.hasClientMiddleware) {
+        // @ts-expect-error TODO: Implement with new API
         dataRoute.unstable_lazyMiddleware = async () => {
           invariant(route);
           let clientMiddlewareModule = await import(
