@@ -388,20 +388,34 @@ export interface MapRoutePropertiesFunction {
 }
 
 /**
- * Keys we cannot change from within a lazy() function. We spread all other keys
- * onto the route. Either they're meaningful to the router, or they'll get
- * ignored.
+ * Keys we cannot change from within a lazy object.
  */
-export type UnsupportedLazyRouteFunctionKey =
+export type UnsupportedLazyRouteObjectKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
-  | "unstable_middleware"
-  | "unstable_lazyMiddleware"
   | "children";
+export const unsupportedLazyRouteObjectKeys =
+  new Set<UnsupportedLazyRouteObjectKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "children",
+  ]);
 
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
+export type UnsupportedLazyRouteFunctionKey =
+  | UnsupportedLazyRouteObjectKey
+  | "unstable_middleware"
+  | "unstable_lazyMiddleware";
 export const unsupportedLazyRouteFunctionKeys =
   new Set<UnsupportedLazyRouteFunctionKey>([
     "lazy",
@@ -422,6 +436,16 @@ type RequireOne<T, Key = keyof T> = Exclude<
 >;
 
 /**
+ * lazy object to load route properties, which can add non-matching
+ * related properties to a route
+ */
+export type LazyRouteObject<R extends AgnosticRouteObject> = {
+  [K in keyof R]?: K extends UnsupportedLazyRouteObjectKey
+    ? never
+    : () => Promise<R[K] | null>;
+};
+
+/**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
@@ -429,9 +453,9 @@ export interface LazyRouteFunction<R extends AgnosticRouteObject> {
   (): Promise<RequireOne<Omit<R, UnsupportedLazyRouteFunctionKey>>>;
 }
 
-interface LazyMiddlewareFunction {
-  (): Promise<unstable_MiddlewareFunction[]>;
-}
+export type LazyRouteDefinition<R extends AgnosticRouteObject> =
+  | LazyRouteObject<R>
+  | LazyRouteFunction<R>;
 
 /**
  * Base RouteObject with common props shared by all types of routes
@@ -441,13 +465,12 @@ type AgnosticBaseRouteObject = {
   path?: string;
   id?: string;
   unstable_middleware?: unstable_MiddlewareFunction[];
-  unstable_lazyMiddleware?: LazyMiddlewareFunction;
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
+  lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
 };
 
 /**
