@@ -2726,6 +2726,7 @@ async function prerenderData(
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
+  // TODO: Update this to be configurable somehow for RSC
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
       ? "/_root.data"

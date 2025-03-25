@@ -114,6 +114,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     let normalizedBasename = _build.basename || "/";
     let normalizedPath = url.pathname;
+    // TODO: Update this to be configurable somehow for RSC
     if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
       normalizedPath = normalizedBasename;
     } else if (normalizedPath.endsWith(".data")) {
@@ -150,6 +151,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         !_build.prerender.includes(normalizedPath) &&
         !_build.prerender.includes(normalizedPath + "/")
       ) {
+        // TODO: Update this to be configurable somehow for RSC
         if (url.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
           errorHandler(
@@ -193,6 +195,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let response: Response;
+    // TODO: Update this to be configurable somehow for RSC
     if (url.pathname.endsWith(".data")) {
       let handlerUrl = new URL(request.url);
       handlerUrl.pathname = normalizedPath;
