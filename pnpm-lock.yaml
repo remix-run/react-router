@@ -76,11 +76,11 @@ importers:
         specifier: 5.17.0
         version: 5.17.0
       '@testing-library/react':
-        specifier: ^13.4.0
-        version: 13.4.0(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)
+        specifier: ^16.2.0
+        version: 16.2.0(@testing-library/dom@8.17.1)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)
       '@testing-library/user-event':
-        specifier: ^14.5.2
-        version: 14.5.2(@testing-library/dom@8.17.1)
+        specifier: ^14.6.1
+        version: 14.6.1(@testing-library/dom@8.17.1)
       '@types/cross-spawn':
         specifier: ^6.0.2
         version: 6.0.6
@@ -106,8 +106,8 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       '@types/react-test-renderer':
-        specifier: ^18.0.0
-        version: 18.0.0
+        specifier: ^19.0.0
+        version: 19.0.0
       '@types/semver':
         specifier: ^7.5.0
         version: 7.5.0
@@ -193,8 +193,8 @@ importers:
         specifier: 0.0.0-experimental-93b58361-20250209
         version: 0.0.0-experimental-93b58361-20250209(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)
       react-test-renderer:
-        specifier: ^18.2.0
-        version: 18.2.0(react@0.0.0-experimental-93b58361-20250209)
+        specifier: ^19.0.0
+        version: 19.0.0(react@0.0.0-experimental-93b58361-20250209)
       remark-gfm:
         specifier: 3.0.1
         version: 3.0.1
@@ -4309,15 +4309,23 @@ packages:
     resolution: {integrity: sha512-ynmNeT7asXyH3aSVv4vvX4Rb+0qjOhdNHnO/3vuZNqPmhDpV/+rCSGwQ7bLcmU2cJ4dvoheIO85LQj0IbJHEtg==}
     engines: {node: '>=8', npm: '>=6', yarn: '>=1'}
 
-  '@testing-library/react@13.4.0':
-    resolution: {integrity: sha512-sXOGON+WNTh3MLE9rve97ftaZukN3oNf2KjDy7YTx6hcTO2uuLHuCGynMDhFwGw/jYf4OJ2Qk0i4i79qMNNkyw==}
-    engines: {node: '>=12'}
+  '@testing-library/react@16.2.0':
+    resolution: {integrity: sha512-2cSskAvA1QNtKc8Y9VJQRv0tm3hLVgxRGDB+KYhIaPQJ1I+RHbhIXcM+zClKXzMes/wshsMVzf4B9vS4IZpqDQ==}
+    engines: {node: '>=18'}
     peerDependencies:
+      '@testing-library/dom': ^10.0.0
+      '@types/react': ^18.2.18
+      '@types/react-dom': ^18.2.7
       react: 0.0.0-experimental-93b58361-20250209
       react-dom: 0.0.0-experimental-93b58361-20250209
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
 
-  '@testing-library/user-event@14.5.2':
-    resolution: {integrity: sha512-YAh82Wh4TIrxYLmfGcixwD18oIjyC1pFQC2Y01F2lzV2HTMiYrI0nze0FD0ocB//CKS/7jIUgae+adPqxK5yCQ==}
+  '@testing-library/user-event@14.6.1':
+    resolution: {integrity: sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
@@ -4527,8 +4535,8 @@ packages:
   '@types/react-dom@18.2.7':
     resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
 
-  '@types/react-test-renderer@18.0.0':
-    resolution: {integrity: sha512-C7/5FBJ3g3sqUahguGi03O79b8afNeSD6T8/GU50oQrJCU0bVCCGQHaGKUbg2Ce8VQEEqTw8/HiS6lXHHdgkdQ==}
+  '@types/react-test-renderer@19.0.0':
+    resolution: {integrity: sha512-qDVnNybqFm2eZKJ4jD34EvRd6VHD67KjgnWaEMM0Id9L22EpWe3nOSVKHWL1XWRCxUWe3lhXwlEeCKD1BlJCQA==}
 
   '@types/react@18.2.18':
     resolution: {integrity: sha512-da4NTSeBv/P34xoZPhtcLkmZuJ+oYaCxHmyHzwaDQo9RQPBeXV+06gEk2FpqEcsX9XrnNLvRpVh6bdavDSjtiQ==}
@@ -8313,6 +8321,9 @@ packages:
   react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
 
+  react-is@19.0.0:
+    resolution: {integrity: sha512-H91OHcwjZsbq3ClIDHMzBShc1rotbfACdWENsmEf0IFvZ3FgGPtdHMcsv45bQ1hAbgdfiA8SnxTKfDS+x/8m2g==}
+
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
     engines: {node: '>=0.10.0'}
@@ -8328,13 +8339,8 @@ packages:
       react: 0.0.0-experimental-93b58361-20250209
       react-dom: 0.0.0-experimental-93b58361-20250209
 
-  react-shallow-renderer@16.15.0:
-    resolution: {integrity: sha512-oScf2FqQ9LFVQgA73vr86xl2NaOIX73rh+YFqcOp68CWj56tSfgtGKrEbyhCj0rSijyG9M1CYprTh39fBi5hzA==}
-    peerDependencies:
-      react: 0.0.0-experimental-93b58361-20250209
-
-  react-test-renderer@18.2.0:
-    resolution: {integrity: sha512-JWD+aQ0lh2gvh4NM3bBM42Kx+XybOxCpgYK7F8ugAlpaTSnWsX+39Z4XkOykGZAHrjwwTZT3x3KxswVWxHPUqA==}
+  react-test-renderer@19.0.0:
+    resolution: {integrity: sha512-oX5u9rOQlHzqrE/64CNr0HB0uWxkCQmZNSfozlYvwE71TLVgeZxVf0IjouGEr1v7r1kcDifdAJBeOhdhxsG/DA==}
     peerDependencies:
       react: 0.0.0-experimental-93b58361-20250209
 
@@ -8571,8 +8577,8 @@ packages:
   scheduler@0.0.0-experimental-93b58361-20250209:
     resolution: {integrity: sha512-/jHVwrXds2Amuht81tUvUBZsziu1rzbtd1TYnDWmFU+tHWeRGOw88DjGcUrWRGJem63nDzVZwl0wY+flJXj6JQ==}
 
-  scheduler@0.23.0:
-    resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
+  scheduler@0.25.0:
+    resolution: {integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==}
 
   selfsigned@2.4.1:
     resolution: {integrity: sha512-th5B4L2U+eGLq1TVh7zNRGBapioSORUeymIydxgFpwww9d2qyKvtuPU2jJuHvYAwwqi2Y596QBL3eEqcPEYL8Q==}
@@ -13000,7 +13006,7 @@ snapshots:
 
   '@testing-library/dom@8.17.1':
     dependencies:
-      '@babel/code-frame': 7.24.2
+      '@babel/code-frame': 7.26.2
       '@babel/runtime': 7.24.1
       '@types/aria-query': 4.2.2
       aria-query: 5.3.0
@@ -13021,15 +13027,17 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
 
-  '@testing-library/react@13.4.0(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)':
+  '@testing-library/react@16.2.0(@testing-library/dom@8.17.1)(@types/react-dom@18.2.7)(@types/react@18.2.18)(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)':
     dependencies:
       '@babel/runtime': 7.24.1
       '@testing-library/dom': 8.17.1
-      '@types/react-dom': 18.2.7
       react: 0.0.0-experimental-93b58361-20250209
       react-dom: 0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209)
+    optionalDependencies:
+      '@types/react': 18.2.18
+      '@types/react-dom': 18.2.7
 
-  '@testing-library/user-event@14.5.2(@testing-library/dom@8.17.1)':
+  '@testing-library/user-event@14.6.1(@testing-library/dom@8.17.1)':
     dependencies:
       '@testing-library/dom': 8.17.1
 
@@ -13263,7 +13271,7 @@ snapshots:
     dependencies:
       '@types/react': 18.2.18
 
-  '@types/react-test-renderer@18.0.0':
+  '@types/react-test-renderer@19.0.0':
     dependencies:
       '@types/react': 18.2.18
 
@@ -18277,6 +18285,8 @@ snapshots:
 
   react-is@18.2.0: {}
 
+  react-is@19.0.0: {}
+
   react-refresh@0.14.0: {}
 
   react-refresh@0.14.2: {}
@@ -18286,18 +18296,11 @@ snapshots:
       react: 0.0.0-experimental-93b58361-20250209
       react-dom: 0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209)
 
-  react-shallow-renderer@16.15.0(react@0.0.0-experimental-93b58361-20250209):
-    dependencies:
-      object-assign: 4.1.1
-      react: 0.0.0-experimental-93b58361-20250209
-      react-is: 18.2.0
-
-  react-test-renderer@18.2.0(react@0.0.0-experimental-93b58361-20250209):
+  react-test-renderer@19.0.0(react@0.0.0-experimental-93b58361-20250209):
     dependencies:
       react: 0.0.0-experimental-93b58361-20250209
-      react-is: 18.2.0
-      react-shallow-renderer: 16.15.0(react@0.0.0-experimental-93b58361-20250209)
-      scheduler: 0.23.0
+      react-is: 19.0.0
+      scheduler: 0.25.0
 
   react@0.0.0-experimental-93b58361-20250209: {}
 
@@ -18618,9 +18621,7 @@ snapshots:
 
   scheduler@0.0.0-experimental-93b58361-20250209: {}
 
-  scheduler@0.23.0:
-    dependencies:
-      loose-envify: 1.4.0
+  scheduler@0.25.0: {}
 
   selfsigned@2.4.1:
     dependencies:
