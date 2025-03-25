@@ -155,6 +155,119 @@ describe("lazily loaded route modules", () => {
       expect(router.state.matches[0].route.action).toBeUndefined();
     });
 
+    it("ignores and warns on unsupported lazy route function properties on router initialization", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let lazyLoaderDeferred = createDeferred();
+      let router = createRouter({
+        routes: [
+          {
+            path: "/lazy",
+            // @ts-expect-error
+            lazy: async () => {
+              return {
+                loader: () => lazyLoaderDeferred.promise,
+                lazy: async () => {
+                  throw new Error("SHOULD NOT BE CALLED");
+                },
+                caseSensitive: async () => true,
+                path: async () => "/lazy/path",
+                id: async () => "lazy",
+                index: async () => true,
+                children: async () => [],
+              };
+            },
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+      });
+
+      expect(router.state.initialized).toBe(false);
+
+      router.initialize();
+
+      let LOADER_DATA = 123;
+      await lazyLoaderDeferred.resolve(LOADER_DATA);
+
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.loaderData).toEqual({
+        "0": LOADER_DATA,
+      });
+
+      expect(consoleWarn.mock.calls.map((call) => call[0]).sort())
+        .toMatchInlineSnapshot(`
+        [
+          "Route property caseSensitive is not a supported property to be returned from a lazy route function. This property will be ignored.",
+          "Route property children is not a supported property to be returned from a lazy route function. This property will be ignored.",
+          "Route property id is not a supported property to be returned from a lazy route function. This property will be ignored.",
+          "Route property index is not a supported property to be returned from a lazy route function. This property will be ignored.",
+          "Route property lazy is not a supported property to be returned from a lazy route function. This property will be ignored.",
+          "Route property path is not a supported property to be returned from a lazy route function. This property will be ignored.",
+        ]
+      `);
+      consoleWarn.mockReset();
+    });
+
+    it("ignores and warns on unsupported lazy route properties on router initialization", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let lazyLoaderDeferred = createDeferred();
+      let router = createRouter({
+        routes: [
+          {
+            path: "/lazy",
+            lazy: {
+              loader: () => lazyLoaderDeferred.promise,
+              // @ts-expect-error
+              lazy: async () => {
+                throw new Error("SHOULD NOT BE CALLED");
+              },
+              // @ts-expect-error
+              caseSensitive: async () => true,
+              // @ts-expect-error
+              path: async () => "/lazy/path",
+              // @ts-expect-error
+              id: async () => "lazy",
+              // @ts-expect-error
+              index: async () => true,
+              // @ts-expect-error
+              children: async () => [],
+            },
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+      });
+
+      expect(router.state.initialized).toBe(false);
+
+      router.initialize();
+
+      let LOADER_DATA = 123;
+      let loader = () => LOADER_DATA;
+      await lazyLoaderDeferred.resolve(loader);
+
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.loaderData).toEqual({
+        "0": LOADER_DATA,
+      });
+      expect(router.state.matches[0].route.loader).toBe(loader);
+
+      expect(consoleWarn.mock.calls.map((call) => call[0]).sort())
+        .toMatchInlineSnapshot(`
+        [
+          "Route property caseSensitive is not a supported lazy route property. This property will be ignored.",
+          "Route property children is not a supported lazy route property. This property will be ignored.",
+          "Route property id is not a supported lazy route property. This property will be ignored.",
+          "Route property index is not a supported lazy route property. This property will be ignored.",
+          "Route property lazy is not a supported lazy route property. This property will be ignored.",
+          "Route property path is not a supported lazy route property. This property will be ignored.",
+        ]
+      `);
+      consoleWarn.mockReset();
+    });
+
     it("fetches lazy route functions and executes loaders on router initialization", async () => {
       let lazyDeferred = createDeferred();
       let router = createRouter({

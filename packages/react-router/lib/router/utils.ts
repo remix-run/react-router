@@ -426,13 +426,6 @@ export const unsupportedLazyRouteFunctionKeys =
     "children",
   ]);
 
-type RequireOne<T, Key = keyof T> = Exclude<
-  {
-    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
-  }[keyof T],
-  undefined
->;
-
 /**
  * lazy object to load route properties, which can add non-matching
  * related properties to a route
@@ -441,14 +434,17 @@ export type LazyRouteObject<R extends AgnosticRouteObject> = {
   [K in keyof R]?: K extends UnsupportedLazyRouteObjectKey
     ? never
     : () => Promise<R[K] | null>;
-};
+} & Partial<Record<UnsupportedLazyRouteObjectKey, never>>;
 
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, UnsupportedLazyRouteFunctionKey>>>;
+  (): Promise<
+    Omit<R, UnsupportedLazyRouteFunctionKey> &
+      Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
+  >;
 }
 
 export type LazyRouteDefinition<R extends AgnosticRouteObject> =

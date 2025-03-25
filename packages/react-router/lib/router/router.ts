@@ -4897,37 +4897,32 @@ async function loadLazyRouteModule(
       // values?".  If not, it should be safe to update in place.
       let routeUpdates: Record<string, any> = {};
       for (let lazyRouteProperty in lazyRoute) {
+        let isUnsupported = unsupportedLazyRouteFunctionKeys.has(
+          lazyRouteProperty as UnsupportedLazyRouteFunctionKey
+        );
         let staticRouteValue =
           routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
-
-        let isPropertyStaticallyDefined =
+        let isStaticallyDefined =
           staticRouteValue !== undefined &&
           // This property isn't static since it should always be updated based
           // on the route updates
           lazyRouteProperty !== "hasErrorBoundary";
 
-        warning(
-          !isPropertyStaticallyDefined,
-          `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
-            `defined but its lazy function is also returning a value for this property. ` +
-            `The lazy route property "${lazyRouteProperty}" will be ignored.`
-        );
-
-        warning(
-          !unsupportedLazyRouteFunctionKeys.has(
-            lazyRouteProperty as UnsupportedLazyRouteFunctionKey
-          ),
-          "Route property " +
-            lazyRouteProperty +
-            " is not a supported property to be returned from a lazy route function. This property will be ignored."
-        );
-
-        if (
-          !isPropertyStaticallyDefined &&
-          !unsupportedLazyRouteFunctionKeys.has(
-            lazyRouteProperty as UnsupportedLazyRouteFunctionKey
-          )
-        ) {
+        if (isUnsupported) {
+          warning(
+            !isUnsupported,
+            "Route property " +
+              lazyRouteProperty +
+              " is not a supported property to be returned from a lazy route function. This property will be ignored."
+          );
+        } else if (isStaticallyDefined) {
+          warning(
+            !isStaticallyDefined,
+            `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
+              `defined but its lazy function is also returning a value for this property. ` +
+              `The lazy route property "${lazyRouteProperty}" will be ignored.`
+          );
+        } else {
           routeUpdates[lazyRouteProperty] =
             lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
         }
@@ -4975,22 +4970,22 @@ async function loadLazyRouteModule(
 
     // Create and cache new promise
     let propertyPromise = (async () => {
-      let unsupported = unsupportedLazyRouteObjectKeys.has(
+      let isUnsupported = unsupportedLazyRouteObjectKeys.has(
         key as UnsupportedLazyRouteObjectKey
       );
       let staticRouteValue = routeToUpdate[key as keyof typeof routeToUpdate];
-      let isPropertyStaticallyDefined =
+      let isStaticallyDefined =
         staticRouteValue !== undefined && key !== "hasErrorBoundary";
 
-      if (unsupported) {
+      if (isUnsupported) {
         warning(
-          !unsupported,
+          !isUnsupported,
           "Route property " +
             key +
             " is not a supported lazy route property. This property will be ignored."
         );
         cache[key] = Promise.resolve();
-      } else if (isPropertyStaticallyDefined) {
+      } else if (isStaticallyDefined) {
         warning(
           false,
           `Route "${routeToUpdate.id}" has a static property "${key}" ` +
