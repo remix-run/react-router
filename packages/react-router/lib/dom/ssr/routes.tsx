@@ -491,13 +491,12 @@ export function createClientRoutes(
             await new Promise((resolve) => setTimeout(resolve, 0));
           }
 
-          let modPromise = loadRouteModuleWithBlockingLinks(
+          let routeModulePromise = loadRouteModuleWithBlockingLinks(
             route,
             routeModulesCache
           );
           prefetchRouteModuleChunks(route);
-          let mod = await modPromise;
-          return await mod;
+          return await routeModulePromise;
         })();
         return await lazyRoutePromise;
       }
