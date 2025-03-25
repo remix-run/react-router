@@ -4897,6 +4897,12 @@ async function loadLazyRouteModule(
       // values?".  If not, it should be safe to update in place.
       let routeUpdates: Record<string, any> = {};
       for (let lazyRouteProperty in lazyRoute) {
+        let lazyValue = lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
+
+        if (lazyValue === undefined) {
+          continue;
+        }
+
         let isUnsupported = unsupportedLazyRouteFunctionKeys.has(
           lazyRouteProperty as UnsupportedLazyRouteFunctionKey
         );
@@ -4923,8 +4929,7 @@ async function loadLazyRouteModule(
               `The lazy route property "${lazyRouteProperty}" will be ignored.`
           );
         } else {
-          routeUpdates[lazyRouteProperty] =
-            lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
+          routeUpdates[lazyRouteProperty] = lazyValue;
         }
       }
 
@@ -4961,6 +4966,10 @@ async function loadLazyRouteModule(
   for (let [key, lazyFn] of Object.entries(route.lazy) as Array<
     [keyof typeof route.lazy, () => Promise<unknown>]
   >) {
+    if (lazyFn === undefined) {
+      continue;
+    }
+
     // Check for cached promise
     let cachedPromise = cache[key];
     if (cachedPromise) {
@@ -5064,6 +5073,13 @@ async function loadLazyMiddleware(
           routeToUpdate.lazy.unstable_middleware
         ) {
           routeToUpdate.lazy.unstable_middleware = undefined;
+          if (
+            Object.values(routeToUpdate.lazy).every(
+              (value) => value === undefined
+            )
+          ) {
+            route.lazy = undefined;
+          }
         }
       });
 
