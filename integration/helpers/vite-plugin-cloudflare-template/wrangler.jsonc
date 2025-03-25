@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "react-router-app",
+  // https://developers.cloudflare.com/workers/configuration/compatibility-flags/#flags-history
+  "compatibility_date": "2024-11-11",
+  "main": "./workers/app.ts",
+  "vars": {
+    "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
+  }
+}
