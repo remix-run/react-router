@@ -27,6 +27,7 @@ export interface IndexRouteObject {
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
   unstable_middleware?: AgnosticIndexRouteObject["unstable_middleware"];
+  unstable_lazyMiddleware?: AgnosticIndexRouteObject["unstable_lazyMiddleware"];
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
@@ -48,6 +49,7 @@ export interface NonIndexRouteObject {
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
   unstable_middleware?: AgnosticNonIndexRouteObject["unstable_middleware"];
+  unstable_lazyMiddleware?: AgnosticNonIndexRouteObject["unstable_lazyMiddleware"];
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];

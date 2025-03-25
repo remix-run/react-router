@@ -89,7 +89,7 @@ async function writeAll(ctx: Context): Promise<void> {
   const registerPath = Path.join(typegenDir, "+register.ts");
   fs.writeFileSync(registerPath, register(ctx));
 
-  const virtualPath = Path.join(typegenDir, "+virtual.ts");
+  const virtualPath = Path.join(typegenDir, "+virtual.d.ts");
   fs.writeFileSync(virtualPath, virtual);
 }
 

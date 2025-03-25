@@ -392,22 +392,27 @@ export interface MapRoutePropertiesFunction {
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type ImmutableRouteKey =
+export type UnsupportedLazyRouteFunctionKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
+  | "unstable_middleware"
+  | "unstable_lazyMiddleware"
   | "children";
 
-export const immutableRouteKeys = new Set<ImmutableRouteKey>([
-  "lazy",
-  "caseSensitive",
-  "path",
-  "id",
-  "index",
-  "children",
-]);
+export const unsupportedLazyRouteFunctionKeys =
+  new Set<UnsupportedLazyRouteFunctionKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "unstable_middleware",
+    "unstable_lazyMiddleware",
+    "children",
+  ]);
 
 type RequireOne<T, Key = keyof T> = Exclude<
   {
@@ -421,7 +426,11 @@ type RequireOne<T, Key = keyof T> = Exclude<
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
+  (): Promise<RequireOne<Omit<R, UnsupportedLazyRouteFunctionKey>>>;
+}
+
+interface LazyMiddlewareFunction {
+  (): Promise<unstable_MiddlewareFunction[]>;
 }
 
 /**
@@ -432,6 +441,7 @@ type AgnosticBaseRouteObject = {
   path?: string;
   id?: string;
   unstable_middleware?: unstable_MiddlewareFunction[];
+  unstable_lazyMiddleware?: LazyMiddlewareFunction;
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
