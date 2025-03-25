@@ -10,7 +10,7 @@ title: useLoaderData
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLoaderData.html)
 
-Returns the data from the closest route [LoaderFunction](../Other/LoaderFunction) or [ClientLoaderFunction](../Other/ClientLoaderFunction).
+Returns the data from the closest route [LoaderFunction](../other/LoaderFunction) or [ClientLoaderFunction](../other/ClientLoaderFunction).
 
 ```tsx
 import { useLoaderData } from "react-router";

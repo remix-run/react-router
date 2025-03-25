@@ -117,7 +117,7 @@ via [useRouteError](../hooks/useRouteError) hook.
 
 [modes: framework, data]
 
-Takes a promise returned from a [LoaderFunction](../Other/LoaderFunction) value to be resolved and rendered.
+Takes a promise returned from a [LoaderFunction](../other/LoaderFunction) value to be resolved and rendered.
 
 ```jsx
 import { useLoaderData, Await } from "react-router";

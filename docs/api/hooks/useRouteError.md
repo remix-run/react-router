@@ -10,7 +10,7 @@ title: useRouteError
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRouteError.html)
 
-Accesses the error thrown during an [ActionFunction](../Other/ActionFunction), [LoaderFunction](../Other/LoaderFunction), or component render to be used in a route module Error Boundary.
+Accesses the error thrown during an [ActionFunction](../other/ActionFunction), [LoaderFunction](../other/LoaderFunction), or component render to be used in a route module Error Boundary.
 
 ```tsx
 export function ErrorBoundary() {

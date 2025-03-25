@@ -149,7 +149,7 @@ This state is inaccessible on the server as it is implemented on top of [`histor
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [Path](../Other/Path):
+Can be a string or a partial [Path](../other/Path):
 
 ```tsx
 <Link to="/some/path" />
