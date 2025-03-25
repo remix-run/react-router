@@ -1,0 +1,89 @@
+{
+  "description": "#️⃣ A React Hook for advanced, typed management of URL search parameters, providing built-in TypeScript autocomplete.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gabriel117343/react-magic-search-params"
+   },
+  "homepage": "https://react-magic-search-params.netlify.app",
+  "keywords": [
+    "react",
+    "hook",
+    "url-parameters",
+    "search-params",
+    "typescript",
+    "autocomplete",
+    "use-url-search-params",
+    "use-search-params",
+    "use-query-parameters"
+
+  ],
+  "version": "1.1.5",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "vitest",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {
+    "react": ">=16",
+    "react-router-dom": ">=6"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "react-magic-search-params",
+  "author": "Gabriel S.",
+  "module": "dist/react-magic-search-params.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/usemagicsearchparams-library.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/usemagicsearchparams-library.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.2.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "husky": "^9.1.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "size-limit": "^11.2.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.8.1",
+    "typescript": "^3.9.10",
+    "vitest": "^3.0.8",
+    "@testing-library/react": "^16.2.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/react-magic-search-params.esm.js",
+      "require": "./dist/react-magic-search-params.cjs.production.min.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}

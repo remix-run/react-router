@@ -157,6 +157,7 @@ export type {
   SubmitFunction,
   FetcherSubmitFunction,
   FetcherWithComponents,
+  UseMagicSearchParamsOptions
 } from "./lib/dom/lib";
 export {
   createBrowserRouter,
@@ -177,6 +178,7 @@ export {
   useBeforeUnload,
   usePrompt as unstable_usePrompt,
   useViewTransitionState,
+  useMagicSearchParams
 } from "./lib/dom/lib";
 export type {
   FetcherSubmitOptions,

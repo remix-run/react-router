@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", // La versión de ECMAScript a la que se compilará el código TypeScript. Nota: ESNext es la versión más reciente de ECMAScript y es compatible con las últimas características de JavaScript.
+    "useDefineForClassFields": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "allowJs": true, // Para proyectos que están migrando a TypeScript de manera gradual y tienen archivos JS en su código, esto evita que TypeScript emita errores por archivos JS.
+    "checkJs": false,    // Desactiva la verificación de tipos en archivos JS/JSX
+    
+    "noImplicitAny": true, // Evita que TypeScript asigne el tipo any a una variable si no se especifica el tipo. esto ayuda a evitar errores en tiempo de ejecución. en proyectos grandes, es recomendable activar esta opción cuando se esta migrando de JS a TS.
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx", // Para proyectos que usan React, esto permite que TypeScript compile JSX.
+
+
+    "noEmitOnError": false, // Evita que TypeScript emita archivos JS si hay errores en el código.
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src", "src/global.d.ts"], // archivos o carpetas que se quieren incluir en la compilación de TypeScript
+  "exclude": ["./node_modules", "./test"], // pueden ser archivos o carpetas que no se quieren incluir en la compilación de TypeScript puedes ser archivos como node_modules o test 
+  "references": [{ "path": "./tsconfig.app.json" }]
+}
