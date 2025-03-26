@@ -4909,7 +4909,7 @@ const loadLazyRouteProperty = ({
       );
     } else {
       let value = await lazyFn();
-      if (value) {
+      if (value != null) {
         Object.assign(routeToUpdate, { [key]: value });
         Object.assign(routeToUpdate, mapRouteProperties(routeToUpdate));
       }
