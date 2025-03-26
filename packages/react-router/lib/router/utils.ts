@@ -390,32 +390,38 @@ export interface MapRoutePropertiesFunction {
 /**
  * Keys we cannot change from within a lazy object.
  */
-export type UnsupportedLazyRouteObjectKey =
+type UnsupportedLazyRouteObjectKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
   | "children";
-export const unsupportedLazyRouteObjectKeys =
-  new Set<UnsupportedLazyRouteObjectKey>([
-    "lazy",
-    "caseSensitive",
-    "path",
-    "id",
-    "index",
-    "children",
-  ]);
+const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
+  "lazy",
+  "caseSensitive",
+  "path",
+  "id",
+  "index",
+  "children",
+]);
+export function isUnsupportedLazyRouteObjectKey(
+  key: string
+): key is UnsupportedLazyRouteObjectKey {
+  return unsupportedLazyRouteObjectKeys.has(
+    key as UnsupportedLazyRouteObjectKey
+  );
+}
 
 /**
  * Keys we cannot change from within a lazy() function. We spread all other keys
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type UnsupportedLazyRouteFunctionKey =
+type UnsupportedLazyRouteFunctionKey =
   | UnsupportedLazyRouteObjectKey
   | "unstable_middleware";
-export const unsupportedLazyRouteFunctionKeys =
+const unsupportedLazyRouteFunctionKeys =
   new Set<UnsupportedLazyRouteFunctionKey>([
     "lazy",
     "caseSensitive",
@@ -425,6 +431,13 @@ export const unsupportedLazyRouteFunctionKeys =
     "unstable_middleware",
     "children",
   ]);
+export function isUnsupportedLazyRouteFunctionKey(
+  key: string
+): key is UnsupportedLazyRouteFunctionKey {
+  return unsupportedLazyRouteFunctionKeys.has(
+    key as UnsupportedLazyRouteFunctionKey
+  );
+}
 
 /**
  * lazy object to load route properties, which can add non-matching
