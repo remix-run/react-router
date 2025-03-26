@@ -312,6 +312,10 @@ Date: YYYY-MM-DD
 
 Date: 2025-03-27
 
+### Secrity Notice
+
+Fixed a security vulnerability that allowed URL manipulation and potential cache pollution via the 'Host' and 'X-Forwarded-Host' headers due to inadequate port sanitization.
+
 ### Patch Changes
 
 - `react-router` - Dedupe calls to `route.lazy` functions ([#13260](https://github.com/remix-run/react-router/pull/13260))
