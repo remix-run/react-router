@@ -765,9 +765,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               export const unstable_getCriticalCss = ({ pathname }) => {
                 return {
                   rel: "stylesheet",
-                  href: "${
-                    viteUserConfig.base ?? "/"
-                  }@react-router/critical.css?pathname=" + pathname,
+                  href: "${ctx.publicPath}@react-router/critical.css?pathname=" + pathname,
                 };
               }
             `
@@ -1566,7 +1564,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
-            if (reqPathname === "/@react-router/critical.css") {
+            if (reqPathname === `${ctx.publicPath}@react-router/critical.css`) {
               let pathname = new URLSearchParams(reqSearch).get("pathname");
               if (!pathname) {
                 return next("No pathname provided");
