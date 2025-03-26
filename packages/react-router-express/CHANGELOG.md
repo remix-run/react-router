@@ -1,5 +1,14 @@
 # `@react-router/express`
 
+## 7.4.1-pre.0
+
+### Patch Changes
+
+- Better validation of `x-forwarded-host` header to preent potential security issues. ([#13309](https://github.com/remix-run/react-router/pull/13309))
+- Updated dependencies:
+  - `react-router@7.4.1-pre.0`
+  - `@react-router/node@7.4.1-pre.0`
+
 ## 7.4.0
 
 ### Patch Changes

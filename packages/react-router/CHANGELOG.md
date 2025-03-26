@@ -1,5 +1,17 @@
 # `react-router`
 
+## 7.4.1-pre.0
+
+### Patch Changes
+
+- Fix types on `unstable_MiddlewareFunction` to avoid type errors when a middleware doesn't return a value ([#13311](https://github.com/remix-run/react-router/pull/13311))
+- Dedupe calls to `route.lazy` functions ([#13260](https://github.com/remix-run/react-router/pull/13260))
+- Add support for `route.unstable_lazyMiddleware` function to allow lazy loading of middleware logic. ([#13210](https://github.com/remix-run/react-router/pull/13210))
+
+  **Breaking change for `unstable_middleware` consumers**
+
+  The `route.unstable_middleware` property is no longer supported in the return value from `route.lazy`. If you want to lazily load middleware, you must use `route.unstable_lazyMiddleware`.
+
 ## 7.4.0
 
 ### Patch Changes
