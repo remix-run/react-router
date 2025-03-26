@@ -227,7 +227,7 @@ describe("express createRemixRequest", () => {
       headers: {
         "Cache-Control": "max-age=300, s-maxage=3600",
         Host: "localhost:3000",
-        "x-forwarded-host": ":/spoofed"
+        "x-forwarded-host": ":/spoofed",
       },
     });
     let expressResponse = createResponse();
