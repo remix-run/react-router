@@ -4870,7 +4870,7 @@ const loadLazyRouteProperty = ({
     return;
   }
 
-  let lazyFn = routeToUpdate.lazy[key];
+  let lazyFn = routeToUpdate.lazy[key as keyof typeof routeToUpdate.lazy];
 
   if (!lazyFn) {
     return;

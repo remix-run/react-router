@@ -444,10 +444,10 @@ export function isUnsupportedLazyRouteFunctionKey(
  * related properties to a route
  */
 export type LazyRouteObject<R extends AgnosticRouteObject> = {
-  [K in keyof R]?: K extends UnsupportedLazyRouteObjectKey
+  [K in keyof R as K extends UnsupportedLazyRouteObjectKey
     ? never
-    : () => Promise<R[K] | null>;
-} & Partial<Record<UnsupportedLazyRouteObjectKey, never>>;
+    : K]?: () => Promise<R[K] | null | undefined>;
+};
 
 /**
  * lazy() function to load a route definition, which can add non-matching
