@@ -4,7 +4,7 @@ title: useBlocker
 
 # useBlocker
 
-[MODES: framework, data, declarative]
+[MODES: framework, data]
 
 ## Summary
 
@@ -22,6 +22,6 @@ useBlocker(shouldBlock): Blocker
 
 ### shouldBlock
 
-[modes: framework, data, declarative]
+[modes: framework, data]
 
 _No documentation_
