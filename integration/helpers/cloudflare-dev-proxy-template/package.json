@@ -13,13 +13,13 @@
   "dependencies": {
     "@react-router/cloudflare": "workspace:*",
     "isbot": "^4.1.0",
-    "miniflare": "^3.20250214.0",
+    "miniflare": "^3.20250310.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250214.0",
+    "@cloudflare/workers-types": "^4.20250321.0",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@react-router/remix-routes-option-adapter": "workspace:*",
@@ -27,7 +27,7 @@
     "@types/react-dom": "^18.2.7",
     "typescript": "^5.1.6",
     "vite": "^6.1.0",
-    "wrangler": "^3.109.2"
+    "wrangler": "^3.114.2"
   },
   "engines": {
     "node": ">=20.0.0"
