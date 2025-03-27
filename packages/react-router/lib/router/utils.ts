@@ -220,7 +220,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
 export type unstable_MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<unstable_RouterContextProvider>,
   next: unstable_MiddlewareNextFunction<Result>
-) => MaybePromise<Result | undefined>;
+) => MaybePromise<Result | void>;
 
 /**
  * Arguments passed to loader functions

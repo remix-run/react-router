@@ -98,9 +98,15 @@ export function createRemixRequest(
 ): Request {
   // req.hostname doesn't include port information so grab that from
   // `X-Forwarded-Host` or `Host`
-  let [, hostnamePort] = req.get("X-Forwarded-Host")?.split(":") ?? [];
-  let [, hostPort] = req.get("host")?.split(":") ?? [];
-  let port = hostnamePort || hostPort;
+  let [, hostnamePortStr] = req.get("X-Forwarded-Host")?.split(":") ?? [];
+  let [, hostPortStr] = req.get("host")?.split(":") ?? [];
+  let hostnamePort = Number.parseInt(hostnamePortStr, 10);
+  let hostPort = Number.parseInt(hostPortStr, 10);
+  let port = Number.isSafeInteger(hostnamePort)
+    ? hostnamePort
+    : Number.isSafeInteger(hostPort)
+    ? hostPort
+    : "";
   // Use req.hostname here as it respects the "trust proxy" setting
   let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
   // Use `req.originalUrl` so Remix is aware of the full path
