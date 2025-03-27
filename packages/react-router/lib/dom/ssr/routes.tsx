@@ -502,11 +502,12 @@ export function createClientRoutes(
       }
 
       dataRoute.lazy = {
-        loader: dataRoute.loader
-          ? undefined
-          : async () => {
-              let { clientLoader } = await getLazyRoute();
-              if (clientLoader) {
+        loader:
+          dataRoute.loader || !route.hasClientLoader
+            ? undefined
+            : async () => {
+                let { clientLoader } = await getLazyRoute();
+                invariant(clientLoader, "No `clientLoader` export found");
                 return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
                   clientLoader({
                     ...args,
@@ -515,13 +516,13 @@ export function createClientRoutes(
                       return fetchServerLoader(singleFetch);
                     },
                   });
-              }
-            },
-        action: dataRoute.action
-          ? undefined
-          : async () => {
-              let { clientAction } = await getLazyRoute();
-              if (clientAction) {
+              },
+        action:
+          dataRoute.action || !route.hasClientAction
+            ? undefined
+            : async () => {
+                let { clientAction } = await getLazyRoute();
+                invariant(clientAction, "No `clientAction` export found");
                 return (args: ActionFunctionArgs, singleFetch?: unknown) =>
                   clientAction({
                     ...args,
@@ -530,8 +531,7 @@ export function createClientRoutes(
                       return fetchServerAction(singleFetch);
                     },
                   });
-              }
-            },
+              },
         unstable_middleware: !route.hasClientMiddleware
           ? undefined
           : async () => {
@@ -542,7 +542,7 @@ export function createClientRoutes(
               );
               invariant(
                 clientMiddlewareModule?.unstable_clientMiddleware,
-                "No `unstable_clientMiddleware` export in chunk"
+                "No `unstable_clientMiddleware` export found"
               );
               return clientMiddlewareModule.unstable_clientMiddleware;
             },
@@ -559,7 +559,9 @@ export function createClientRoutes(
         // No need to wrap these in layout since the root route is never
         // loaded via route.lazy()
         Component: async () => (await getLazyRoute()).Component,
-        ErrorBoundary: async () => (await getLazyRoute()).ErrorBoundary,
+        ErrorBoundary: route.hasErrorBoundary
+          ? async () => (await getLazyRoute()).ErrorBoundary
+          : undefined,
       };
     }
 

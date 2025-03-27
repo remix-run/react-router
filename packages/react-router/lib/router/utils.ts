@@ -388,7 +388,9 @@ export interface MapRoutePropertiesFunction {
 }
 
 /**
- * Keys we cannot change from within a lazy object.
+ * Keys we cannot change from within a lazy object. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
  */
 type UnsupportedLazyRouteObjectKey =
   | "lazy"
