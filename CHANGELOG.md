@@ -14,6 +14,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 - [React Router Releases](#react-router-releases)
   - [v7.4.1](#v741)
+    - [Security Notice](#security-notice)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
   - [v7.4.0](#v740)
@@ -310,11 +311,11 @@ Date: YYYY-MM-DD
 
 ## v7.4.1
 
-Date: 2025-03-27
+Date: 2025-03-28
 
-### Secrity Notice
+### Security Notice
 
-Fixed a security vulnerability that allowed URL manipulation and potential cache pollution via the 'Host' and 'X-Forwarded-Host' headers due to inadequate port sanitization.
+Fixed a security vulnerability that allowed URL manipulation and potential cache pollution via the `Host` and `X-Forwarded-Host` headers due to inadequate port sanitization.
 
 ### Patch Changes
 
