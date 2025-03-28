@@ -10,7 +10,7 @@ title: Meta
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Meta.html)
 
-Renders all the `<meta>` tags created by route module [MetaFunction](../Other/MetaFunction) exports. You should render it inside the `<head>` of your HTML.
+Renders all the `<meta>` tags created by route module [`meta`](../../start/framework/route-module#meta) export. You should render it inside the `<head>` of your HTML.
 
 ```tsx
 import { Meta } from "react-router";

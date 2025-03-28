@@ -1,5 +1,7 @@
 # `create-react-router`
 
+## 7.4.1
+
 ## 7.4.0
 
 _No changes_

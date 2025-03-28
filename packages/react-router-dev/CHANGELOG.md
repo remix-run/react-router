@@ -1,5 +1,18 @@
 # `@react-router/dev`
 
+## 7.4.1
+
+### Patch Changes
+
+- Fix path in prerender error messages ([#13257](https://github.com/remix-run/react-router/pull/13257))
+- Fix typegen for virtual modules when `moduleDetection` is set to `force` ([#13267](https://github.com/remix-run/react-router/pull/13267))
+- When both `future.unstable_middleware` and `future.unstable_splitRouteModules` are enabled, split `unstable_clientMiddleware` route exports into separate chunks when possible ([#13210](https://github.com/remix-run/react-router/pull/13210))
+- Improve performance of `future.unstable_middleware` by ensuring that route modules are only blocking during the middleware phase when the `unstable_clientMiddleware` has been defined ([#13210](https://github.com/remix-run/react-router/pull/13210))
+- Updated dependencies:
+  - `react-router@7.4.1`
+  - `@react-router/node@7.4.1`
+  - `@react-router/serve@7.4.1`
+
 ## 7.4.0
 
 ### Minor Changes
@@ -254,7 +267,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 

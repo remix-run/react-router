@@ -10,7 +10,7 @@ title: Links
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Links.html)
 
-Renders all of the `<link>` tags created by route module [LinksFunction](../Other/LinksFunction) export. You should render it inside the `<head>` of your document.
+Renders all of the `<link>` tags created by route module [`links`](../../start/framework/route-module#links) export. You should render it inside the `<head>` of your document.
 
 ```tsx
 import { Links } from "react-router";

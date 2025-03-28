@@ -1,5 +1,17 @@
 # `react-router`
 
+## 7.4.1
+
+### Patch Changes
+
+- Fix types on `unstable_MiddlewareFunction` to avoid type errors when a middleware doesn't return a value ([#13311](https://github.com/remix-run/react-router/pull/13311))
+- Dedupe calls to `route.lazy` functions ([#13260](https://github.com/remix-run/react-router/pull/13260))
+- Add support for `route.unstable_lazyMiddleware` function to allow lazy loading of middleware logic. ([#13210](https://github.com/remix-run/react-router/pull/13210))
+
+  **Breaking change for `unstable_middleware` consumers**
+
+  The `route.unstable_middleware` property is no longer supported in the return value from `route.lazy`. If you want to lazily load middleware, you must use `route.unstable_lazyMiddleware`.
+
 ## 7.4.0
 
 ### Patch Changes
@@ -431,7 +443,7 @@ _No changes_
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 

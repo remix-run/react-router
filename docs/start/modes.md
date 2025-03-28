@@ -67,8 +67,25 @@ import { index, route } from "@react-router/dev/routes";
 
 export default [
   index("./home.tsx"),
-  route("about", "./about.tsx"),
+  route("products/:pid", "./product.tsx"),
 ];
+```
+
+You'll then have access to the Route Module API with typesafe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
+
+```ts filename=product.tsx
+import { Route } from "+./types/product.tsx";
+
+export async function loader({ params }: Route.LoaderArgs) {
+  let product = await getProduct(params.pid);
+  return { product };
+}
+
+export default function Product({
+  loaderData,
+}: Route.ComponentProps) {
+  return <div>{loaderData.product.name}</div>;
+}
 ```
 
 ## Decision Advice
@@ -95,7 +112,7 @@ Every mode supports any architecture and deployment target, so the question isn'
 
 **Use Declarative Mode if you:**
 
-- want to use React Router as a simply as possible
+- want to use React Router as simply as possible
 - are coming from v6 and are happy with the `<BrowserRouter>`
 - have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
 - are coming from Create React App (you may want to consider framework mode though)
