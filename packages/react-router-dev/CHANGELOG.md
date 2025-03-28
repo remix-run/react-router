@@ -1,6 +1,6 @@
 # `@react-router/dev`
 
-## 7.4.1-pre.0
+## 7.4.1
 
 ### Patch Changes
 
@@ -9,9 +9,9 @@
 - When both `future.unstable_middleware` and `future.unstable_splitRouteModules` are enabled, split `unstable_clientMiddleware` route exports into separate chunks when possible ([#13210](https://github.com/remix-run/react-router/pull/13210))
 - Improve performance of `future.unstable_middleware` by ensuring that route modules are only blocking during the middleware phase when the `unstable_clientMiddleware` has been defined ([#13210](https://github.com/remix-run/react-router/pull/13210))
 - Updated dependencies:
-  - `react-router@7.4.1-pre.0`
-  - `@react-router/node@7.4.1-pre.0`
-  - `@react-router/serve@7.4.1-pre.0`
+  - `react-router@7.4.1`
+  - `@react-router/node@7.4.1`
+  - `@react-router/serve@7.4.1`
 
 ## 7.4.0
 
