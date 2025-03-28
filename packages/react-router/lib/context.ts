@@ -16,7 +16,7 @@ import type {
   AgnosticPatchRoutesOnNavigationFunction,
   AgnosticPatchRoutesOnNavigationFunctionArgs,
   AgnosticRouteMatch,
-  LazyRouteFunction,
+  LazyRouteDefinition,
   TrackedPromise,
 } from "./router/utils";
 
@@ -27,7 +27,6 @@ export interface IndexRouteObject {
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
   unstable_middleware?: AgnosticIndexRouteObject["unstable_middleware"];
-  unstable_lazyMiddleware?: AgnosticIndexRouteObject["unstable_lazyMiddleware"];
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
@@ -41,7 +40,7 @@ export interface IndexRouteObject {
   Component?: React.ComponentType | null;
   HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  lazy?: LazyRouteDefinition<RouteObject>;
 }
 
 export interface NonIndexRouteObject {
@@ -49,7 +48,6 @@ export interface NonIndexRouteObject {
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
   unstable_middleware?: AgnosticNonIndexRouteObject["unstable_middleware"];
-  unstable_lazyMiddleware?: AgnosticNonIndexRouteObject["unstable_lazyMiddleware"];
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
@@ -63,7 +61,7 @@ export interface NonIndexRouteObject {
   Component?: React.ComponentType | null;
   HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  lazy?: LazyRouteDefinition<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;

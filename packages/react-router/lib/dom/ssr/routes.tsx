@@ -473,89 +473,95 @@ export function createClientRoutes(
         };
       }
 
-      if (route.hasClientMiddleware) {
-        dataRoute.unstable_lazyMiddleware = async () => {
-          invariant(route);
-          let clientMiddlewareModule = await import(
-            /* @vite-ignore */
-            /* webpackIgnore: true */
-            route.clientMiddlewareModule || route.module
+      let lazyRoutePromise:
+        | ReturnType<typeof loadRouteModuleWithBlockingLinks>
+        | undefined;
+      async function getLazyRoute() {
+        if (lazyRoutePromise) {
+          return await lazyRoutePromise;
+        }
+        lazyRoutePromise = (async () => {
+          if (route.clientLoaderModule || route.clientActionModule) {
+            // If a client loader/action chunk is present, we push the loading of
+            // the main route chunk to the next tick to ensure the downloading of
+            // loader/action chunks takes precedence. This can be seen via their
+            // order in the network tab. Also note that since this is happening
+            // within `route.lazy`, this imperceptible delay only happens on the
+            // first load of this route.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          }
+
+          let routeModulePromise = loadRouteModuleWithBlockingLinks(
+            route,
+            routeModulesCache
           );
-          invariant(
-            clientMiddlewareModule?.unstable_clientMiddleware,
-            "No `unstable_clientMiddleware` export in chunk"
-          );
-          return clientMiddlewareModule.unstable_clientMiddleware;
-        };
+          prefetchRouteModuleChunks(route);
+          return await routeModulePromise;
+        })();
+        return await lazyRoutePromise;
       }
 
-      // Load all other modules via route.lazy()
-      dataRoute.lazy = async () => {
-        if (route.clientLoaderModule || route.clientActionModule) {
-          // If a client loader/action chunk is present, we push the loading of
-          // the main route chunk to the next tick to ensure the downloading of
-          // loader/action chunks takes precedence. This can be seen via their
-          // order in the network tab. Also note that since this is happening
-          // within `route.lazy`, this imperceptible delay only happens on the
-          // first load of this route.
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        }
-
-        let modPromise = loadRouteModuleWithBlockingLinks(
-          route,
-          routeModulesCache
-        );
-        prefetchRouteModuleChunks(route);
-        let mod = await modPromise;
-
-        let lazyRoute: Partial<DataRouteObject> = { ...mod };
-        if (mod.clientLoader) {
-          let clientLoader = mod.clientLoader;
-          lazyRoute.loader = (
-            args: LoaderFunctionArgs,
-            singleFetch?: unknown
-          ) =>
-            clientLoader({
-              ...args,
-              async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route);
-                return fetchServerLoader(singleFetch);
+      dataRoute.lazy = {
+        loader:
+          dataRoute.loader || !route.hasClientLoader
+            ? undefined
+            : async () => {
+                let { clientLoader } = await getLazyRoute();
+                invariant(clientLoader, "No `clientLoader` export found");
+                return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
+                  clientLoader({
+                    ...args,
+                    async serverLoader() {
+                      preventInvalidServerHandlerCall("loader", route);
+                      return fetchServerLoader(singleFetch);
+                    },
+                  });
               },
-            });
-        }
-
-        if (mod.clientAction) {
-          let clientAction = mod.clientAction;
-          lazyRoute.action = (
-            args: ActionFunctionArgs,
-            singleFetch?: unknown
-          ) =>
-            clientAction({
-              ...args,
-              async serverAction() {
-                preventInvalidServerHandlerCall("action", route);
-                return fetchServerAction(singleFetch);
+        action:
+          dataRoute.action || !route.hasClientAction
+            ? undefined
+            : async () => {
+                let { clientAction } = await getLazyRoute();
+                invariant(clientAction, "No `clientAction` export found");
+                return (args: ActionFunctionArgs, singleFetch?: unknown) =>
+                  clientAction({
+                    ...args,
+                    async serverAction() {
+                      preventInvalidServerHandlerCall("action", route);
+                      return fetchServerAction(singleFetch);
+                    },
+                  });
               },
-            });
-        }
-
-        return {
-          ...(lazyRoute.loader ? { loader: lazyRoute.loader } : {}),
-          ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
-
-          hasErrorBoundary: lazyRoute.hasErrorBoundary,
-          shouldRevalidate: getShouldRevalidateFunction(
+        unstable_middleware: !route.hasClientMiddleware
+          ? undefined
+          : async () => {
+              let clientMiddlewareModule = await import(
+                /* @vite-ignore */
+                /* webpackIgnore: true */
+                route.clientMiddlewareModule || route.module
+              );
+              invariant(
+                clientMiddlewareModule?.unstable_clientMiddleware,
+                "No `unstable_clientMiddleware` export found"
+              );
+              return clientMiddlewareModule.unstable_clientMiddleware;
+            },
+        shouldRevalidate: async () => {
+          let lazyRoute = await getLazyRoute();
+          return getShouldRevalidateFunction(
             lazyRoute,
             route,
             ssr,
             needsRevalidation
-          ),
-          handle: lazyRoute.handle,
-          // No need to wrap these in layout since the root route is never
-          // loaded via route.lazy()
-          Component: lazyRoute.Component,
-          ErrorBoundary: lazyRoute.ErrorBoundary,
-        };
+          );
+        },
+        handle: async () => (await getLazyRoute()).handle,
+        // No need to wrap these in layout since the root route is never
+        // loaded via route.lazy()
+        Component: async () => (await getLazyRoute()).Component,
+        ErrorBoundary: route.hasErrorBoundary
+          ? async () => (await getLazyRoute()).ErrorBoundary
+          : undefined,
       };
     }
 
