@@ -33,12 +33,14 @@ export interface EntryRoute extends Route {
   hasLoader: boolean;
   hasClientAction: boolean;
   hasClientLoader: boolean;
+  hasClientMiddleware: boolean;
   hasErrorBoundary: boolean;
   imports?: string[];
   css?: string[];
   module: string;
   clientActionModule: string | undefined;
   clientLoaderModule: string | undefined;
+  clientMiddlewareModule: string | undefined;
   hydrateFallbackModule: string | undefined;
   parentId?: string;
 }
@@ -471,6 +473,22 @@ export function createClientRoutes(
         };
       }
 
+      if (route.hasClientMiddleware) {
+        dataRoute.unstable_lazyMiddleware = async () => {
+          invariant(route);
+          let clientMiddlewareModule = await import(
+            /* @vite-ignore */
+            /* webpackIgnore: true */
+            route.clientMiddlewareModule || route.module
+          );
+          invariant(
+            clientMiddlewareModule?.unstable_clientMiddleware,
+            "No `unstable_clientMiddleware` export in chunk"
+          );
+          return clientMiddlewareModule.unstable_clientMiddleware;
+        };
+      }
+
       // Load all other modules via route.lazy()
       dataRoute.lazy = async () => {
         if (route.clientLoaderModule || route.clientActionModule) {
@@ -524,9 +542,7 @@ export function createClientRoutes(
         return {
           ...(lazyRoute.loader ? { loader: lazyRoute.loader } : {}),
           ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
-          unstable_middleware: mod.unstable_clientMiddleware as unknown as
-            | unstable_MiddlewareFunction[]
-            | undefined,
+
           hasErrorBoundary: lazyRoute.hasErrorBoundary,
           shouldRevalidate: getShouldRevalidateFunction(
             lazyRoute,
