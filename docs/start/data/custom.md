@@ -66,8 +66,8 @@ createBrowserRouter([
     path: "/show/:showId",
     lazy: () => {
       let [loader, action, Component] = await Promise.all([
-        import("./show.action.js"),
         import("./show.loader.js"),
+        import("./show.action.js"),
         import("./show.component.js"),
       ]);
       return { loader, action, Component };
