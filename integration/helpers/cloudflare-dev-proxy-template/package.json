@@ -19,7 +19,7 @@
     "react-router": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250317.0",
+    "@cloudflare/workers-types": "^4.20250404.0",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@react-router/remix-routes-option-adapter": "workspace:*",
@@ -27,7 +27,7 @@
     "@types/react-dom": "^18.2.7",
     "typescript": "^5.1.6",
     "vite": "^6.1.0",
-    "wrangler": "^4.2.0"
+    "wrangler": "^4.7.1"
   },
   "engines": {
     "node": ">=20.0.0"
