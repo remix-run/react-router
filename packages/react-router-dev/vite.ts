@@ -1,1 +1,4 @@
-export { reactRouterVitePlugin as reactRouter } from "./vite/plugin";
+export {
+  reactRouterVitePlugin as reactRouter,
+  setReactRouterDevLoadContext,
+} from "./vite/plugin";
