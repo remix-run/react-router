@@ -4,6 +4,8 @@ title: URL Values
 
 # URL Values
 
+[MODES: declarative]
+
 ## Route Params
 
 Route params are the parsed values from a dynamic segment.

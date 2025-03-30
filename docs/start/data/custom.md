@@ -1,10 +1,15 @@
 ---
 title: Custom Framework
+order: 8
 ---
 
 # Custom Framework
 
-Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions.
+[MODES: data]
+
+## Introduction
+
+Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions with Data Mode..
 
 ## Client Rendering
 

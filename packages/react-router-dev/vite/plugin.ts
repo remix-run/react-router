@@ -1445,26 +1445,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 configureServer: undefined,
                 configurePreviewServer: undefined,
               })),
-            {
-              name: "react-router:override-optimize-deps",
-              config(userConfig) {
-                // Prevent unnecessary dependency optimization in the child compiler
-                if (
-                  ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-                  userConfig.environments
-                ) {
-                  for (const environmentName of Object.keys(
-                    userConfig.environments
-                  )) {
-                    userConfig.environments[environmentName].optimizeDeps = {
-                      noDiscovery: true,
-                    };
-                  }
-                } else {
-                  userConfig.optimizeDeps = { noDiscovery: true };
-                }
-              },
-            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});

@@ -17,9 +17,9 @@ createBrowserRouter([
 ]);
 ```
 
-**Breaking change for `unstable_middleware` consumers**
+**Breaking change for `route.unstable_lazyMiddleware` consumers**
 
-The `route.unstable_middleware` property is no longer supported in the return value from `route.lazy`. If you want to lazily load middleware, you must use the new object-based `route.lazy` API with `route.lazy.unstable_middleware`, for example:
+The `route.unstable_lazyMiddleware` property is no longer supported. If you want to lazily load middleware, you must use the new object-based `route.lazy` API with `route.lazy.unstable_middleware`, for example:
 
 ```ts
 createBrowserRouter([
