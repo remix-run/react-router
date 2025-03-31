@@ -1290,7 +1290,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   );
 
   let blockerKeyRef = React.useRef<string>("");
-  
+
   // This effect is in charge of blocker key assignment and deletion (which is
   // tightly coupled to the key)
   React.useEffect(() => {
