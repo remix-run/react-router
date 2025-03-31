@@ -830,13 +830,17 @@ export function createRouter(init: RouterInit): Router {
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
-  let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
-
   // Config driven behavior flags
   let future: FutureConfig = {
     unstable_middleware: false,
     ...init.future,
   };
+  let dataStrategyImpl =
+    init.dataStrategy ||
+    (future.unstable_middleware
+      ? defaultDataStrategyWithMiddleware
+      : defaultDataStrategy);
+
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -2793,6 +2797,7 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         manifest,
         mapRouteProperties,
+        future,
         scopedContext
       );
     } catch (e) {
@@ -3372,7 +3377,8 @@ export function createRouter(init: RouterInit): Router {
 export interface CreateStaticHandlerOptions {
   basename?: string;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  future?: {};
+  // Pick<> so we only include flags that apply to the static handler
+  future?: Pick<FutureConfig, "unstable_middleware">;
 }
 
 export function createStaticHandler(
@@ -3388,6 +3394,10 @@ export function createStaticHandler(
   let basename = (opts ? opts.basename : null) || "/";
   let mapRouteProperties =
     opts?.mapRouteProperties || defaultMapRouteProperties;
+  let future: FutureConfig = {
+    unstable_middleware: false,
+    ...opts?.future,
+  };
 
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
@@ -3482,6 +3492,7 @@ export function createStaticHandler(
     }
 
     if (
+      future.unstable_middleware &&
       respond &&
       matches.some(
         (m) => m.route.unstable_middleware || m.route.unstable_lazyMiddleware
@@ -3681,6 +3692,7 @@ export function createStaticHandler(
     }
 
     if (
+      future.unstable_middleware &&
       respond &&
       matches.some(
         (m) => m.route.unstable_middleware || m.route.unstable_lazyMiddleware
@@ -4159,6 +4171,7 @@ export function createStaticHandler(
       null,
       manifest,
       mapRouteProperties,
+      future,
       requestContext
     );
 
@@ -5175,20 +5188,23 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
+  future: FutureConfig,
   scopedContext: unknown
 ): Promise<Record<string, DataStrategyResult>> {
-  // Ensure all lazy/lazyMiddleware async functions are kicked off in parallel
-  // before we await them where needed below
-  let loadMiddlewarePromise = loadLazyMiddlewareForMatches(matches, manifest);
+  // Ensure all lazy async functions are kicked off in parallel before we await
+  // them where needed below
   let loadRouteDefinitionsPromises = matches.map((m) =>
     m.route.lazy
       ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
       : undefined
   );
 
-  // Ensure all middleware is loaded before we start executing routes
-  if (loadMiddlewarePromise) {
-    await loadMiddlewarePromise;
+  // Ensure all middleware is loaded before we start executing dataStrategy
+  if (future.unstable_middleware) {
+    let loadMiddlewarePromise = loadLazyMiddlewareForMatches(matches, manifest);
+    if (loadMiddlewarePromise) {
+      await loadMiddlewarePromise;
+    }
   }
 
   let dsMatches = matches.map((match, i) => {
