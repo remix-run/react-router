@@ -423,25 +423,6 @@ export function createClientRoutes(
           prefetchStylesAndCallHandler(() => {
             return fetchServerLoader(singleFetch);
           });
-      } else if (route.clientLoaderModule) {
-        dataRoute.loader = async (
-          args: LoaderFunctionArgs,
-          singleFetch?: unknown
-        ) => {
-          invariant(route.clientLoaderModule);
-          let { clientLoader } = await import(
-            /* @vite-ignore */
-            /* webpackIgnore: true */
-            route.clientLoaderModule
-          );
-          return clientLoader({
-            ...args,
-            async serverLoader() {
-              preventInvalidServerHandlerCall("loader", route);
-              return fetchServerLoader(singleFetch);
-            },
-          });
-        };
       }
       if (!route.hasClientAction) {
         dataRoute.action = (_: ActionFunctionArgs, singleFetch?: unknown) =>
@@ -451,26 +432,6 @@ export function createClientRoutes(
             }
             return fetchServerAction(singleFetch);
           });
-      } else if (route.clientActionModule) {
-        dataRoute.action = async (
-          args: ActionFunctionArgs,
-          singleFetch?: unknown
-        ) => {
-          invariant(route.clientActionModule);
-          prefetchRouteModuleChunks(route);
-          let { clientAction } = await import(
-            /* @vite-ignore */
-            /* webpackIgnore: true */
-            route.clientActionModule
-          );
-          return clientAction({
-            ...args,
-            async serverAction() {
-              preventInvalidServerHandlerCall("action", route);
-              return fetchServerAction(singleFetch);
-            },
-          });
-        };
       }
 
       let lazyRoutePromise:
@@ -502,50 +463,64 @@ export function createClientRoutes(
       }
 
       dataRoute.lazy = {
-        loader:
-          dataRoute.loader || !route.hasClientLoader
-            ? undefined
-            : async () => {
-                let { clientLoader } = await getLazyRoute();
-                invariant(clientLoader, "No `clientLoader` export found");
-                return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
-                  clientLoader({
-                    ...args,
-                    async serverLoader() {
-                      preventInvalidServerHandlerCall("loader", route);
-                      return fetchServerLoader(singleFetch);
-                    },
-                  });
-              },
-        action:
-          dataRoute.action || !route.hasClientAction
-            ? undefined
-            : async () => {
-                let { clientAction } = await getLazyRoute();
-                invariant(clientAction, "No `clientAction` export found");
-                return (args: ActionFunctionArgs, singleFetch?: unknown) =>
-                  clientAction({
-                    ...args,
-                    async serverAction() {
-                      preventInvalidServerHandlerCall("action", route);
-                      return fetchServerAction(singleFetch);
-                    },
-                  });
-              },
-        unstable_middleware: !route.hasClientMiddleware
-          ? undefined
-          : async () => {
-              let clientMiddlewareModule = await import(
-                /* @vite-ignore */
-                /* webpackIgnore: true */
-                route.clientMiddlewareModule || route.module
-              );
+        loader: route.hasClientLoader
+          ? async () => {
+              let { clientLoader } = route.clientLoaderModule
+                ? await import(
+                    /* @vite-ignore */
+                    /* webpackIgnore: true */
+                    route.clientLoaderModule
+                  )
+                : await getLazyRoute();
+              invariant(clientLoader, "No `clientLoader` export found");
+              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
+                clientLoader({
+                  ...args,
+                  async serverLoader() {
+                    preventInvalidServerHandlerCall("loader", route);
+                    return fetchServerLoader(singleFetch);
+                  },
+                });
+            }
+          : undefined,
+        action: route.hasClientAction
+          ? async () => {
+              let clientActionPromise = route.clientActionModule
+                ? import(
+                    /* @vite-ignore */
+                    /* webpackIgnore: true */
+                    route.clientActionModule
+                  )
+                : getLazyRoute();
+              prefetchRouteModuleChunks(route);
+              let { clientAction } = await clientActionPromise;
+              invariant(clientAction, "No `clientAction` export found");
+              return (args: ActionFunctionArgs, singleFetch?: unknown) =>
+                clientAction({
+                  ...args,
+                  async serverAction() {
+                    preventInvalidServerHandlerCall("action", route);
+                    return fetchServerAction(singleFetch);
+                  },
+                });
+            }
+          : undefined,
+        unstable_middleware: route.hasClientMiddleware
+          ? async () => {
+              let { unstable_clientMiddleware } = route.clientMiddlewareModule
+                ? await import(
+                    /* @vite-ignore */
+                    /* webpackIgnore: true */
+                    route.clientMiddlewareModule
+                  )
+                : await getLazyRoute();
               invariant(
-                clientMiddlewareModule?.unstable_clientMiddleware,
+                unstable_clientMiddleware,
                 "No `unstable_clientMiddleware` export found"
               );
-              return clientMiddlewareModule.unstable_clientMiddleware;
-            },
+              return unstable_clientMiddleware;
+            }
+          : undefined,
         shouldRevalidate: async () => {
           let lazyRoute = await getLazyRoute();
           return getShouldRevalidateFunction(
