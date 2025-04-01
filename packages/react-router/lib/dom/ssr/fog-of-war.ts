@@ -64,7 +64,7 @@ export function getPartialManifest(
   return {
     ...manifest,
     routes: initialRoutes,
-    sri: true,
+    sri: sri ? true : undefined,
   };
 }
 
