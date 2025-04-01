@@ -100,6 +100,7 @@ export function createRoutesStub(
     if (routerRef.current == null) {
       remixContextRef.current = {
         future: {
+          unstable_subResourceIntegrity: future?.unstable_subResourceIntegrity === true,
           unstable_middleware: future?.unstable_middleware === true,
         },
         manifest: {
