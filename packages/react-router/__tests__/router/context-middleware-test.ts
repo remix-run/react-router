@@ -562,15 +562,17 @@ describe("context/middleware", () => {
             {
               id: "parent",
               path: "/parent",
-              unstable_lazyMiddleware: async () => [
-                async ({ context }, next) => {
-                  await next();
-                  // Grab a snapshot at the end of the upwards middleware chain
-                  snapshot = context.get(orderContext);
-                },
-                getOrderMiddleware(orderContext, "a"),
-                getOrderMiddleware(orderContext, "b"),
-              ],
+              lazy: {
+                unstable_middleware: async () => [
+                  async ({ context }, next) => {
+                    await next();
+                    // Grab a snapshot at the end of the upwards middleware chain
+                    snapshot = context.get(orderContext);
+                  },
+                  getOrderMiddleware(orderContext, "a"),
+                  getOrderMiddleware(orderContext, "b"),
+                ],
+              },
               loader({ context }) {
                 context.get(orderContext).push("parent loader");
               },
@@ -578,10 +580,12 @@ describe("context/middleware", () => {
                 {
                   id: "child",
                   path: "child",
-                  unstable_lazyMiddleware: async () => [
-                    getOrderMiddleware(orderContext, "c"),
-                    getOrderMiddleware(orderContext, "d"),
-                  ],
+                  lazy: {
+                    unstable_middleware: async () => [
+                      getOrderMiddleware(orderContext, "c"),
+                      getOrderMiddleware(orderContext, "d"),
+                    ],
+                  },
                   loader({ context }) {
                     context.get(orderContext).push("child loader");
                   },
@@ -634,10 +638,12 @@ describe("context/middleware", () => {
                 {
                   id: "child",
                   path: "child",
-                  unstable_lazyMiddleware: async () => [
-                    getOrderMiddleware(orderContext, "c"),
-                    getOrderMiddleware(orderContext, "d"),
-                  ],
+                  lazy: {
+                    unstable_middleware: async () => [
+                      getOrderMiddleware(orderContext, "c"),
+                      getOrderMiddleware(orderContext, "d"),
+                    ],
+                  },
                   loader({ context }) {
                     context.get(orderContext).push("child loader");
                   },
@@ -663,7 +669,7 @@ describe("context/middleware", () => {
         ]);
       });
 
-      it("ignores middleware returned from route.lazy", async () => {
+      it("ignores middleware returned from route.lazy function", async () => {
         let snapshot;
 
         let consoleWarn = jest
@@ -679,15 +685,17 @@ describe("context/middleware", () => {
             {
               id: "parent",
               path: "/parent",
-              unstable_lazyMiddleware: async () => [
-                async ({ context }, next) => {
-                  await next();
-                  // Grab a snapshot at the end of the upwards middleware chain
-                  snapshot = context.get(orderContext);
-                },
-                getOrderMiddleware(orderContext, "a"),
-                getOrderMiddleware(orderContext, "b"),
-              ],
+              lazy: {
+                unstable_middleware: async () => [
+                  async ({ context }, next) => {
+                    await next();
+                    // Grab a snapshot at the end of the upwards middleware chain
+                    snapshot = context.get(orderContext);
+                  },
+                  getOrderMiddleware(orderContext, "a"),
+                  getOrderMiddleware(orderContext, "b"),
+                ],
+              },
               loader({ context }) {
                 context.get(orderContext).push("parent loader");
               },
@@ -724,70 +732,6 @@ describe("context/middleware", () => {
 
         expect(consoleWarn).toHaveBeenCalledWith(
           "Route property unstable_middleware is not a supported property to be returned from a lazy route function. This property will be ignored."
-        );
-      });
-
-      it("ignores lazy middleware returned from route.lazy", async () => {
-        let snapshot;
-
-        let consoleWarn = jest
-          .spyOn(console, "warn")
-          .mockImplementation(() => {});
-
-        router = createRouter({
-          history: createMemoryHistory(),
-          routes: [
-            {
-              path: "/",
-            },
-            {
-              id: "parent",
-              path: "/parent",
-              unstable_lazyMiddleware: async () => [
-                async ({ context }, next) => {
-                  await next();
-                  // Grab a snapshot at the end of the upwards middleware chain
-                  snapshot = context.get(orderContext);
-                },
-                getOrderMiddleware(orderContext, "a"),
-                getOrderMiddleware(orderContext, "b"),
-              ],
-              loader({ context }) {
-                context.get(orderContext).push("parent loader");
-              },
-              children: [
-                {
-                  id: "child",
-                  path: "child",
-                  // @ts-expect-error
-                  lazy: async () => ({
-                    unstable_lazyMiddleware: async () => [
-                      getOrderMiddleware(orderContext, "c"),
-                      getOrderMiddleware(orderContext, "d"),
-                    ],
-                  }),
-                  loader({ context }) {
-                    context.get(orderContext).push("child loader");
-                  },
-                },
-              ],
-            },
-          ],
-        });
-
-        await router.navigate("/parent/child");
-
-        expect(snapshot).toEqual([
-          "a middleware - before next()",
-          "b middleware - before next()",
-          "parent loader",
-          "child loader",
-          "b middleware - after next()",
-          "a middleware - after next()",
-        ]);
-
-        expect(consoleWarn).toHaveBeenCalledWith(
-          "Route property unstable_lazyMiddleware is not a supported property to be returned from a lazy route function. This property will be ignored."
         );
       });
     });
@@ -1581,18 +1525,20 @@ describe("context/middleware", () => {
         {
           id: "parent",
           path: "/parent",
-          unstable_lazyMiddleware: async () => [
-            async (_, next) => {
-              let res = (await next()) as Response;
-              res.headers.set("parent1", "yes");
-              return res;
-            },
-            async (_, next) => {
-              let res = (await next()) as Response;
-              res.headers.set("parent2", "yes");
-              return res;
-            },
-          ],
+          lazy: {
+            unstable_middleware: async () => [
+              async (_, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent1", "yes");
+                return res;
+              },
+              async (_, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent2", "yes");
+                return res;
+              },
+            ],
+          },
           loader() {
             return "PARENT";
           },
@@ -1600,18 +1546,20 @@ describe("context/middleware", () => {
             {
               id: "child",
               path: "child",
-              unstable_lazyMiddleware: async () => [
-                async (_, next) => {
-                  let res = (await next()) as Response;
-                  res.headers.set("child1", "yes");
-                  return res;
-                },
-                async (_, next) => {
-                  let res = (await next()) as Response;
-                  res.headers.set("child2", "yes");
-                  return res;
-                },
-              ],
+              lazy: {
+                unstable_middleware: async () => [
+                  async (_, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child1", "yes");
+                    return res;
+                  },
+                  async (_, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child2", "yes");
+                    return res;
+                  },
+                ],
+              },
               loader() {
                 return "CHILD";
               },
@@ -2507,18 +2455,20 @@ describe("context/middleware", () => {
         {
           id: "parent",
           path: "/parent",
-          unstable_lazyMiddleware: async () => [
-            async ({ context }, next) => {
-              let res = (await next()) as Response;
-              res.headers.set("parent1", "yes");
-              return res;
-            },
-            async ({ context }, next) => {
-              let res = (await next()) as Response;
-              res.headers.set("parent2", "yes");
-              return res;
-            },
-          ],
+          lazy: {
+            unstable_middleware: async () => [
+              async ({ context }, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent1", "yes");
+                return res;
+              },
+              async ({ context }, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent2", "yes");
+                return res;
+              },
+            ],
+          },
           loader() {
             return new Response("PARENT");
           },
@@ -2526,18 +2476,20 @@ describe("context/middleware", () => {
             {
               id: "child",
               path: "child",
-              unstable_lazyMiddleware: async () => [
-                async ({ context }, next) => {
-                  let res = (await next()) as Response;
-                  res.headers.set("child1", "yes");
-                  return res;
-                },
-                async ({ context }, next) => {
-                  let res = (await next()) as Response;
-                  res.headers.set("child2", "yes");
-                  return res;
-                },
-              ],
+              lazy: {
+                unstable_middleware: async () => [
+                  async ({ context }, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child1", "yes");
+                    return res;
+                  },
+                  async ({ context }, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child2", "yes");
+                    return res;
+                  },
+                ],
+              },
               loader({ context }) {
                 return new Response("CHILD");
               },
