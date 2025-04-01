@@ -797,16 +797,15 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   return isHydrated ? null : (
     <>
-      {manifest.sri ? (
+      {typeof manifest.sri === "object" ? (
         <script
+          rr-importmap=""
           type="importmap"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: sri
-              ? JSON.stringify({
-                  integrity: sri,
-                })
-              : "",
+            __html: JSON.stringify({
+              integrity: sri,
+            }),
           }}
         />
       ) : null}
@@ -816,6 +815,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={manifest.url}
           crossOrigin={props.crossOrigin}
           integrity={sri[manifest.url]}
+          suppressHydrationWarning
         />
       ) : null}
       <link
@@ -823,6 +823,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
         integrity={sri[manifest.entry.module]}
+        suppressHydrationWarning
       />
       {preloads.map((path) => (
         <link
@@ -831,6 +832,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           href={path}
           crossOrigin={props.crossOrigin}
           integrity={sri[path]}
+          suppressHydrationWarning
         />
       ))}
       {initialScripts}
