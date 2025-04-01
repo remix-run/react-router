@@ -1,5 +1,5 @@
 name = "react-router-app"
-compatibility_date = "2024-11-18"
+compatibility_date = "2025-03-17"
 main = "./workers/app.ts"
 
 assets = {}

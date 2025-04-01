@@ -1,5 +1,291 @@
 # `react-router`
 
+## 7.4.1
+
+### Patch Changes
+
+- Fix types on `unstable_MiddlewareFunction` to avoid type errors when a middleware doesn't return a value ([#13311](https://github.com/remix-run/react-router/pull/13311))
+- Dedupe calls to `route.lazy` functions ([#13260](https://github.com/remix-run/react-router/pull/13260))
+- Add support for `route.unstable_lazyMiddleware` function to allow lazy loading of middleware logic. ([#13210](https://github.com/remix-run/react-router/pull/13210))
+
+  **Breaking change for `unstable_middleware` consumers**
+
+  The `route.unstable_middleware` property is no longer supported in the return value from `route.lazy`. If you want to lazily load middleware, you must use `route.unstable_lazyMiddleware`.
+
+## 7.4.0
+
+### Patch Changes
+
+- Fix root loader data on initial load redirects in SPA mode ([#13222](https://github.com/remix-run/react-router/pull/13222))
+- Load ancestor pathless/index routes in lazy route discovery for upwards non-eager-discoery routing ([#13203](https://github.com/remix-run/react-router/pull/13203))
+- Fix `shouldRevalidate` behavior for `clientLoader`-only routes in `ssr:true` apps ([#13221](https://github.com/remix-run/react-router/pull/13221))
+- UNSTABLE: Fix `RequestHandler` `loadContext` parameter type when middleware is enabled ([#13204](https://github.com/remix-run/react-router/pull/13204))
+- UNSTABLE: Update `Route.unstable_MiddlewareFunction` to have a return value of `Response | undefined` instead of `Response | void` becaue you should not return anything if you aren't returning the `Response` ([#13199](https://github.com/remix-run/react-router/pull/13199))
+- UNSTABLE(BREAKING): If a middleware throws an error, ensure we only bubble the error itself via `next()` and are no longer leaking the `MiddlewareError` implementation detail ([#13180](https://github.com/remix-run/react-router/pull/13180))
+
+## 7.3.0
+
+### Minor Changes
+
+- Add `fetcherKey` as a parameter to `patchRoutesOnNavigation` ([#13061](https://github.com/remix-run/react-router/pull/13061))
+
+  - In framework mode, Lazy Route Discovery will now detect manifest version mismatches after a new deploy
+  - On navigations to undiscovered routes, this mismatch will trigger a document reload of the destination path
+  - On `fetcher` calls to undiscovered routes, this mismatch will trigger a document reload of the current path
+
+### Patch Changes
+
+- Skip resource route flow in dev server in SPA mode ([#13113](https://github.com/remix-run/react-router/pull/13113))
+
+- Support middleware on routes (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
+
+  Middleware is implemented behind a `future.unstable_middleware` flag. To enable, you must enable the flag and the types in your `react-router-config.ts` file:
+
+  ```ts
+  import type { Config } from "@react-router/dev/config";
+  import type { Future } from "react-router";
+
+  declare module "react-router" {
+    interface Future {
+      unstable_middleware: true; // 👈 Enable middleware types
+    }
+  }
+
+  export default {
+    future: {
+      unstable_middleware: true, // 👈 Enable middleware
+    },
+  } satisfies Config;
+  ```
+
+  ⚠️ Middleware is unstable and should not be adopted in production. There is at least one known de-optimization in route module loading for `clientMiddleware` that we will be addressing this before a stable release.
+
+  ⚠️ Enabling middleware contains a breaking change to the `context` parameter passed to your `loader`/`action` functions - see below for more information.
+
+  Once enabled, routes can define an array of middleware functions that will run sequentially before route handlers run. These functions accept the same parameters as `loader`/`action` plus an additional `next` parameter to run the remaining data pipeline. This allows middlewares to perform logic before and after handlers execute.
+
+  ```tsx
+  // Framework mode
+  export const unstable_middleware = [serverLogger, serverAuth]; // server
+  export const unstable_clientMiddleware = [clientLogger]; // client
+
+  // Library mode
+  const routes = [
+    {
+      path: "/",
+      // Middlewares are client-side for library mode SPA's
+      unstable_middleware: [clientLogger, clientAuth],
+      loader: rootLoader,
+      Component: Root,
+    },
+  ];
+  ```
+
+  Here's a simple example of a client-side logging middleware that can be placed on the root route:
+
+  ```tsx
+  const clientLogger: Route.unstable_ClientMiddlewareFunction = async (
+    { request },
+    next
+  ) => {
+    let start = performance.now();
+
+    // Run the remaining middlewares and all route loaders
+    await next();
+
+    let duration = performance.now() - start;
+    console.log(`Navigated to ${request.url} (${duration}ms)`);
+  };
+  ```
+
+  Note that in the above example, the `next`/`middleware` functions don't return anything. This is by design as on the client there is no "response" to send over the network like there would be for middlewares running on the server. The data is all handled behind the scenes by the stateful `router`.
+
+  For a server-side middleware, the `next` function will return the HTTP `Response` that React Router will be sending across the wire, thus giving you a chance to make changes as needed. You may throw a new response to short circuit and respond immediately, or you may return a new or altered response to override the default returned by `next()`.
+
+  ```tsx
+  const serverLogger: Route.unstable_MiddlewareFunction = async (
+    { request, params, context },
+    next
+  ) => {
+    let start = performance.now();
+
+    // 👇 Grab the response here
+    let res = await next();
+
+    let duration = performance.now() - start;
+    console.log(`Navigated to ${request.url} (${duration}ms)`);
+
+    // 👇 And return it here (optional if you don't modify the response)
+    return res;
+  };
+  ```
+
+  You can throw a `redirect` from a middleware to short circuit any remaining processing:
+
+  ```tsx
+  import { sessionContext } from "../context";
+  const serverAuth: Route.unstable_MiddlewareFunction = (
+    { request, params, context },
+    next
+  ) => {
+    let session = context.get(sessionContext);
+    let user = session.get("user");
+    if (!user) {
+      session.set("returnTo", request.url);
+      throw redirect("/login", 302);
+    }
+  };
+  ```
+
+  _Note that in cases like this where you don't need to do any post-processing you don't need to call the `next` function or return a `Response`._
+
+  Here's another example of using a server middleware to detect 404s and check the CMS for a redirect:
+
+  ```tsx
+  const redirects: Route.unstable_MiddlewareFunction = async ({
+    request,
+    next,
+  }) => {
+    // attempt to handle the request
+    let res = await next();
+
+    // if it's a 404, check the CMS for a redirect, do it last
+    // because it's expensive
+    if (res.status === 404) {
+      let cmsRedirect = await checkCMSRedirects(request.url);
+      if (cmsRedirect) {
+        throw redirect(cmsRedirect, 302);
+      }
+    }
+
+    return res;
+  };
+  ```
+
+  **`context` parameter**
+
+  When middleware is enabled, your application will use a different type of `context` parameter in your loaders and actions to provide better type safety. Instead of `AppLoadContext`, `context` will now be an instance of `ContextProvider` that you can use with type-safe contexts (similar to `React.createContext`):
+
+  ```ts
+  import { unstable_createContext } from "react-router";
+  import { Route } from "./+types/root";
+  import type { Session } from "./sessions.server";
+  import { getSession } from "./sessions.server";
+
+  let sessionContext = unstable_createContext<Session>();
+
+  const sessionMiddleware: Route.unstable_MiddlewareFunction = ({
+    context,
+    request,
+  }) => {
+    let session = await getSession(request);
+    context.set(sessionContext, session);
+    //                          ^ must be of type Session
+  };
+
+  // ... then in some downstream middleware
+  const loggerMiddleware: Route.unstable_MiddlewareFunction = ({
+    context,
+    request,
+  }) => {
+    let session = context.get(sessionContext);
+    //  ^ typeof Session
+    console.log(session.get("userId"), request.method, request.url);
+  };
+
+  // ... or some downstream loader
+  export function loader({ context }: Route.LoaderArgs) {
+    let session = context.get(sessionContext);
+    let profile = await getProfile(session.get("userId"));
+    return { profile };
+  }
+  ```
+
+  If you are using a custom server with a `getLoadContext` function, the return value for initial context values passed from the server adapter layer is no longer an object and should now return an `unstable_InitialContext` (`Map<RouterContext, unknown>`):
+
+  ```ts
+  let adapterContext = unstable_createContext<MyAdapterContext>();
+
+  function getLoadContext(req, res): unstable_InitialContext {
+    let map = new Map();
+    map.set(adapterContext, getAdapterContext(req));
+    return map;
+  }
+  ```
+
+- Fix types for loaderData and actionData that contained `Record`s ([#13139](https://github.com/remix-run/react-router/pull/13139))
+
+  UNSTABLE(BREAKING):
+
+  `unstable_SerializesTo` added a way to register custom serialization types in Single Fetch for other library and framework authors like Apollo.
+  It was implemented with branded type whose branded property that was made optional so that casting arbitrary values was easy:
+
+  ```ts
+  // without the brand being marked as optional
+  let x1 = 42 as unknown as unstable_SerializesTo<number>;
+  //          ^^^^^^^^^^
+
+  // with the brand being marked as optional
+  let x2 = 42 as unstable_SerializesTo<number>;
+  ```
+
+  However, this broke type inference in `loaderData` and `actionData` for any `Record` types as those would now (incorrectly) match `unstable_SerializesTo`.
+  This affected all users, not just those that depended on `unstable_SerializesTo`.
+  To fix this, the branded property of `unstable_SerializesTo` is marked as required instead of optional.
+
+  For library and framework authors using `unstable_SerializesTo`, you may need to add `as unknown` casts before casting to `unstable_SerializesTo`.
+
+- \[REMOVE] Remove middleware depth logic and always call middlware for all matches ([#13172](https://github.com/remix-run/react-router/pull/13172))
+
+- Fix single fetch `_root.data` requests when a `basename` is used ([#12898](https://github.com/remix-run/react-router/pull/12898))
+
+- Add `context` support to client side data routers (unstable) ([#12941](https://github.com/remix-run/react-router/pull/12941))
+
+  Your application `loader` and `action` functions on the client will now receive a `context` parameter. This is an instance of `unstable_RouterContextProvider` that you use with type-safe contexts (similar to `React.createContext`) and is most useful with the corresponding `middleware`/`clientMiddleware` API's:
+
+  ```ts
+  import { unstable_createContext } from "react-router";
+
+  type User = {
+    /*...*/
+  };
+
+  let userContext = unstable_createContext<User>();
+
+  function sessionMiddleware({ context }) {
+    let user = await getUser();
+    context.set(userContext, user);
+  }
+
+  // ... then in some downstream loader
+  function loader({ context }) {
+    let user = context.get(userContext);
+    let profile = await getProfile(user.id);
+    return { profile };
+  }
+  ```
+
+  Similar to server-side requests, a fresh `context` will be created per navigation (or `fetcher` call). If you have initial data you'd like to populate in the context for every request, you can provide an `unstable_getContext` function at the root of your app:
+
+  - Library mode - `createBrowserRouter(routes, { unstable_getContext })`
+  - Framework mode - `<HydratedRouter unstable_getContext>`
+
+  This function should return an value of type `unstable_InitialContext` which is a `Map<unstable_RouterContext, unknown>` of context's and initial values:
+
+  ```ts
+  const loggerContext = unstable_createContext<(...args: unknown[]) => void>();
+
+  function logger(...args: unknown[]) {
+    console.log(new Date.toISOString(), ...args);
+  }
+
+  function unstable_getContext() {
+    let map = new Map();
+    map.set(loggerContext, logger);
+    return map;
+  }
+  ```
+
 ## 7.2.0
 
 ### Minor Changes
@@ -157,7 +443,7 @@ _No changes_
   - Collapse `@remix-run/server-runtime` into `react-router`
   - Collapse `@remix-run/testing` into `react-router`
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
 

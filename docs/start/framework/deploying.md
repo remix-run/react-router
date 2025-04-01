@@ -5,9 +5,9 @@ hidden: true
 
 # Deploying
 
-<docs-warning>
-  This document is a work in progress, and will be moved to to the deployment guides.
-</docs-warning>
+[MODES: framework]
+
+## Introduction
 
 React Router can be deployed two ways:
 

@@ -2,6 +2,8 @@ import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 
+export type MaybePromise<T> = T | Promise<T>;
+
 /**
  * Map of routeId -> data returned from a loader/action/error
  */
@@ -206,7 +208,7 @@ interface DataFunctionArgs<Context> {
  * middlewares from the bottom-up
  */
 export interface unstable_MiddlewareNextFunction<Result = unknown> {
-  (): Result | Promise<Result>;
+  (): MaybePromise<Result>;
 }
 
 /**
@@ -218,7 +220,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
 export type unstable_MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<unstable_RouterContextProvider>,
   next: unstable_MiddlewareNextFunction<Result>
-) => Result | Promise<Result>;
+) => MaybePromise<Result | void>;
 
 /**
  * Arguments passed to loader functions
@@ -237,7 +239,7 @@ export interface ActionFunctionArgs<Context = any>
  */
 type DataFunctionValue = unknown;
 
-type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 
 /**
  * Route loader function signature
@@ -373,7 +375,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = (
   opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
-) => void | Promise<void>;
+) => MaybePromise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific
@@ -386,19 +388,18 @@ export interface MapRoutePropertiesFunction {
 }
 
 /**
- * Keys we cannot change from within a lazy() function. We spread all other keys
+ * Keys we cannot change from within a lazy object. We spread all other keys
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type ImmutableRouteKey =
+type UnsupportedLazyRouteObjectKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
   | "children";
-
-export const immutableRouteKeys = new Set<ImmutableRouteKey>([
+const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
   "path",
@@ -406,21 +407,64 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "index",
   "children",
 ]);
+export function isUnsupportedLazyRouteObjectKey(
+  key: string
+): key is UnsupportedLazyRouteObjectKey {
+  return unsupportedLazyRouteObjectKeys.has(
+    key as UnsupportedLazyRouteObjectKey
+  );
+}
 
-type RequireOne<T, Key = keyof T> = Exclude<
-  {
-    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
-  }[keyof T],
-  undefined
->;
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
+type UnsupportedLazyRouteFunctionKey =
+  | UnsupportedLazyRouteObjectKey
+  | "unstable_middleware";
+const unsupportedLazyRouteFunctionKeys =
+  new Set<UnsupportedLazyRouteFunctionKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "unstable_middleware",
+    "children",
+  ]);
+export function isUnsupportedLazyRouteFunctionKey(
+  key: string
+): key is UnsupportedLazyRouteFunctionKey {
+  return unsupportedLazyRouteFunctionKeys.has(
+    key as UnsupportedLazyRouteFunctionKey
+  );
+}
+
+/**
+ * lazy object to load route properties, which can add non-matching
+ * related properties to a route
+ */
+export type LazyRouteObject<R extends AgnosticRouteObject> = {
+  [K in keyof R as K extends UnsupportedLazyRouteObjectKey
+    ? never
+    : K]?: () => Promise<R[K] | null | undefined>;
+};
 
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
+  (): Promise<
+    Omit<R, UnsupportedLazyRouteFunctionKey> &
+      Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
+  >;
 }
+
+export type LazyRouteDefinition<R extends AgnosticRouteObject> =
+  | LazyRouteObject<R>
+  | LazyRouteFunction<R>;
 
 /**
  * Base RouteObject with common props shared by all types of routes
@@ -435,7 +479,7 @@ type AgnosticBaseRouteObject = {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
+  lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
 };
 
 /**
