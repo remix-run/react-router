@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import {
   UNSAFE_ServerMode as ServerMode,
   UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
-  UNSAFE_ServerMode,
 } from "react-router";
 
 import {
