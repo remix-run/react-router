@@ -31,15 +31,22 @@ export type SingleFetchRedirectResult = {
   replace: boolean;
 };
 
+// Shared/serializable type used by both turbo-stream and RSC implementations
+type AgnosticSingleFetchResults =
+  | { routes: { [key: string]: SingleFetchResult } }
+  | { redirect: SingleFetchRedirectResult };
+
+// This and SingleFetchResults are only used over the wire, and are converted to
+// AgnosticSingleFetchResults in `fethAndDecode`.  This way turbo-stream/RSC
+// can use the same `unwrapSingleFetchResult` implementation
 export type SingleFetchResult =
   | { data: unknown }
   | { error: unknown }
   | SingleFetchRedirectResult;
 
-export type SingleFetchResults = {
-  [key: string]: SingleFetchResult;
-  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
-};
+export type SingleFetchResults =
+  | { [key: string]: SingleFetchResult }
+  | { [SingleFetchRedirectSymbol]: SingleFetchRedirectResult };
 
 interface StreamTransferProps {
   context: EntryContext;
@@ -249,12 +256,13 @@ async function singleFetchActionStrategy(
     let result = await handler(async () => {
       let url = singleFetchUrl(request.url, basename);
       let init = await createRequestInit(request);
-      let { data, status } = await fetchAndDecode(url, init);
-      actionStatus = status;
-      return unwrapSingleFetchResult(
-        data as SingleFetchResult,
+      let { data, status } = await fetchAndDecode(
+        url,
+        init,
         actionMatch!.route.id
       );
+      actionStatus = status;
+      return unwrapSingleFetchResult(data, actionMatch!.route.id);
     });
     return result;
   });
@@ -325,7 +333,7 @@ async function singleFetchLoaderNavigationStrategy(
   let routeDfds = matches.map(() => createDeferred<void>());
 
   // Deferred we'll use for the singleular call to the server
-  let singleFetchDfd = createDeferred<SingleFetchResults>();
+  let singleFetchDfd = createDeferred<AgnosticSingleFetchResults>();
 
   // Base URL and RequestInit for calls to the server
   let url = stripIndexParam(singleFetchUrl(request.url, basename));
@@ -395,7 +403,7 @@ async function singleFetchLoaderNavigationStrategy(
         try {
           let result = await handler(async () => {
             let data = await singleFetchDfd.promise;
-            return unwrapSingleFetchResults(data, m.route.id);
+            return unwrapSingleFetchResult(data, m.route.id);
           });
           results[m.route.id] = {
             type: "data",
@@ -436,7 +444,7 @@ async function singleFetchLoaderNavigationStrategy(
 
     try {
       let data = await fetchAndDecode(url, init);
-      singleFetchDfd.resolve(data.data as SingleFetchResults);
+      singleFetchDfd.resolve(data.data);
     } catch (e) {
       singleFetchDfd.reject(e);
     }
@@ -475,7 +483,7 @@ function fetchSingleLoader(
     let singleLoaderUrl = new URL(url);
     singleLoaderUrl.searchParams.set("_routes", routeId);
     let { data } = await fetchAndDecode(singleLoaderUrl, init);
-    return unwrapSingleFetchResults(data as SingleFetchResults, routeId);
+    return unwrapSingleFetchResult(data, routeId);
   });
 }
 
@@ -524,8 +532,9 @@ export function singleFetchUrl(
 
 async function fetchAndDecode(
   url: URL,
-  init: RequestInit
-): Promise<{ status: number; data: unknown }> {
+  init: RequestInit,
+  routeId?: string
+): Promise<{ status: number; data: AgnosticSingleFetchResults }> {
   let res = await fetch(url, init);
 
   // If this 404'd without hitting the running server (most likely in a
@@ -540,21 +549,38 @@ async function fetchAndDecode(
   // with the cached body content.
   const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205]);
   if (NO_BODY_STATUS_CODES.has(res.status)) {
-    if (!init.method || init.method === "GET") {
-      // SingleFetchResults can just have no routeId keys which will result
-      // in no data for all routes
-      return { status: res.status, data: {} };
-    } else {
-      // SingleFetchResult is for a singular route and can specify no data
-      return { status: res.status, data: { data: undefined } };
+    let routes: { [key: string]: SingleFetchResult } = {};
+    if (routeId) {
+      routes[routeId] = { data: undefined };
     }
+    return {
+      status: res.status,
+      data: { routes },
+    };
   }
 
   invariant(res.body, "No response body to decode");
 
   try {
     let decoded = await decodeViaTurboStream(res.body, window);
-    return { status: res.status, data: decoded.value };
+    let data: AgnosticSingleFetchResults;
+    if (!init.method || init.method === "GET") {
+      let typed = decoded.value as SingleFetchResults;
+      if (SingleFetchRedirectSymbol in typed) {
+        data = { redirect: typed[SingleFetchRedirectSymbol] };
+      } else {
+        data = { routes: typed };
+      }
+    } else {
+      let typed = decoded.value as SingleFetchResult;
+      invariant(routeId, "No routeId found for single fetch call decoding");
+      if ("redirect" in typed) {
+        data = { redirect: typed };
+      } else {
+        data = { routes: { [routeId]: typed } };
+      }
+    }
+    return { status: res.status, data };
   } catch (e) {
     // Can't clone after consuming the body via turbo-stream so we can't
     // include the body here.  In an ideal world we'd look for a turbo-stream
@@ -621,43 +647,39 @@ export function decodeViaTurboStream(
   });
 }
 
-function unwrapSingleFetchResults(
-  results: SingleFetchResults,
+function unwrapSingleFetchResult(
+  result: AgnosticSingleFetchResults,
   routeId: string
 ) {
-  let redirect = results[SingleFetchRedirectSymbol];
-  if (redirect) {
-    return unwrapSingleFetchResult(redirect, routeId);
+  if ("redirect" in result) {
+    let {
+      redirect: location,
+      revalidate,
+      reload,
+      replace,
+      status,
+    } = result.redirect;
+    throw redirect(location, {
+      status,
+      headers: {
+        // Three R's of redirecting (lol Veep)
+        ...(revalidate ? { "X-Remix-Revalidate": "yes" } : null),
+        ...(reload ? { "X-Remix-Reload-Document": "yes" } : null),
+        ...(replace ? { "X-Remix-Replace": "yes" } : null),
+      },
+    });
   }
 
-  return results[routeId] !== undefined
-    ? unwrapSingleFetchResult(results[routeId], routeId)
-    : null;
-}
-
-function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
-  if ("error" in result) {
-    throw result.error;
-  } else if ("redirect" in result) {
-    let headers: Record<string, string> = {};
-    if (result.revalidate) {
-      headers["X-Remix-Revalidate"] = "yes";
-    }
-    if (result.reload) {
-      headers["X-Remix-Reload-Document"] = "yes";
-    }
-    if (result.replace) {
-      headers["X-Remix-Replace"] = "yes";
-    }
-    throw redirect(result.redirect, { status: result.status, headers });
-  } else if ("data" in result) {
-    return result.data;
+  let routeResult = result.routes[routeId];
+  if ("error" in routeResult) {
+    throw routeResult.error;
+  } else if ("data" in routeResult) {
+    return routeResult.data;
   } else {
     throw new Error(`No response found for routeId "${routeId}"`);
   }
 }
 
-type Deferred = ReturnType<typeof createDeferred>;
 function createDeferred<T = unknown>() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: unknown) => Promise<void>;
