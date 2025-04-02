@@ -2305,7 +2305,7 @@ describe("lazily loaded route modules", () => {
     it("handles errors when failing to resolve lazy route properties on submission navigation", async () => {
       let { lazyStub, lazyDeferred } = createLazyStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyStub,
+        action: lazyStub,
       });
       let t = setup({ routes });
       expect(lazyStub).not.toHaveBeenCalled();
@@ -2627,7 +2627,7 @@ describe("lazily loaded route modules", () => {
     it("handles errors when failing to load lazy route properties on fetcher.submit", async () => {
       let { lazyStub, lazyDeferred } = createLazyStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyStub,
+        action: lazyStub,
       });
       let t = setup({ routes });
       expect(lazyStub).not.toHaveBeenCalled();

@@ -4940,24 +4940,28 @@ const lazyRouteFunctionCache = new WeakMap<
  * shouldRevalidate) and update the routeManifest in place which shares objects
  * with dataRoutes so those get updated as well.
  */
-async function loadLazyRoute(
+function loadLazyRoute(
   route: AgnosticDataRouteObject,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction
-) {
+): {
+  routePromise: Promise<void> | undefined;
+  propertyPromises?: Partial<
+    Record<keyof AgnosticDataRouteObject, Promise<void>>
+  >;
+} {
   let routeToUpdate = manifest[route.id];
   invariant(routeToUpdate, "No route found in manifest");
 
   if (!route.lazy) {
-    return;
+    return { routePromise: undefined };
   }
 
   if (typeof route.lazy === "function") {
     // Check if we have a cached promise from a previous call
     let cachedPromise = lazyRouteFunctionCache.get(routeToUpdate);
     if (cachedPromise) {
-      await cachedPromise;
-      return;
+      return { routePromise: cachedPromise };
     }
 
     // We use `.then` to chain additional logic to the lazy route promise so that
@@ -4965,7 +4969,12 @@ async function loadLazyRoute(
     // route in place in a single task. This ensures that the cached promise
     // contains all logic for managing the lazy route. This chained promise is
     // then awaited so that consumers of this function see the updated route.
-    let lazyRoutePromise = route.lazy().then((lazyRoute) => {
+    let lazyRoutePromise = (async () => {
+      invariant(
+        typeof route.lazy === "function",
+        "No lazy route function found"
+      );
+      let lazyRoute = await route.lazy();
       // Here we update the route in place.  This should be safe because there's
       // no way we could yet be sitting on this route as we can't get there
       // without resolving lazy() first.
@@ -5025,26 +5034,32 @@ async function loadLazyRoute(
         ...mapRouteProperties(routeToUpdate),
         lazy: undefined,
       });
-    });
+    })();
 
     lazyRouteFunctionCache.set(routeToUpdate, lazyRoutePromise);
-    await lazyRoutePromise;
-
-    return;
+    return { routePromise: lazyRoutePromise };
   }
 
-  let lazyKeys = Object.keys(route.lazy) as Array<keyof typeof route.lazy>;
+  type LazyKey = keyof typeof route.lazy;
+  let lazyKeys = Object.keys(route.lazy) as Array<LazyKey>;
+  let propertyPromises: Partial<Record<LazyKey, Promise<void>>> = {};
+  for (let key of lazyKeys) {
+    let promise = loadLazyRouteProperty({
+      key,
+      route,
+      manifest,
+      mapRouteProperties,
+    });
+    if (promise) {
+      propertyPromises[key] = promise;
+    }
+  }
 
-  await Promise.all(
-    lazyKeys.map((key) =>
-      loadLazyRouteProperty({
-        key,
-        route,
-        manifest,
-        mapRouteProperties,
-      })
-    )
+  let routePromise = Promise.all(Object.values(propertyPromises)).then(
+    () => {}
   );
+
+  return { routePromise, propertyPromises };
 }
 
 function loadLazyMiddlewareForMatches(
@@ -5264,10 +5279,8 @@ async function callDataStrategyImpl(
     manifest,
     mapRouteProperties
   );
-  let loadLazyRoutePromises = matches.map((m) =>
-    m.route.lazy
-      ? loadLazyRoute(m.route, manifest, mapRouteProperties)
-      : undefined
+  let loadLazyRouteResults = matches.map((m) =>
+    loadLazyRoute(m.route, manifest, mapRouteProperties)
   );
 
   // Ensure all middleware is loaded before we start executing routes
@@ -5276,7 +5289,7 @@ async function callDataStrategyImpl(
   }
 
   let dsMatches = matches.map((match, i) => {
-    let loadRoutePromise = loadLazyRoutePromises[i];
+    let { routePromise, propertyPromises } = loadLazyRouteResults[i];
     let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
     // `resolve` encapsulates route.lazy(), executing the loader/action,
     // and mapping return values/thrown errors to a `DataStrategyResult`.  Users
@@ -5290,12 +5303,16 @@ async function callDataStrategyImpl(
       ) {
         shouldLoad = true;
       }
+      let handlerPromise = propertyPromises
+        ? propertyPromises[type]
+        : routePromise;
       return shouldLoad
         ? callLoaderOrAction(
             type,
             request,
             match,
-            loadRoutePromise,
+            handlerPromise,
+            routePromise,
             handlerOverride,
             scopedContext
           )
@@ -5324,7 +5341,9 @@ async function callDataStrategyImpl(
   // it to bubble up from the `await loadRoutePromise` in `callLoaderOrAction` -
   // called from `match.resolve()`
   try {
-    await Promise.all(loadLazyRoutePromises);
+    await Promise.all(
+      loadLazyRouteResults.map(({ routePromise }) => routePromise)
+    );
   } catch (e) {
     // No-op
   }
@@ -5337,6 +5356,7 @@ async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
+  loadHandlerPromise: Promise<void> | undefined,
   loadRoutePromise: Promise<void> | undefined,
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
   scopedContext: unknown
@@ -5394,7 +5414,7 @@ async function callLoaderOrAction(
       | ActionFunction<unknown>;
 
     // If we have a route.lazy promise, await that first
-    if (loadRoutePromise) {
+    if (loadHandlerPromise) {
       if (handler) {
         // Run statically defined handler in parallel with lazy()
         let handlerError;
@@ -5405,15 +5425,15 @@ async function callLoaderOrAction(
           runHandler(handler).catch((e) => {
             handlerError = e;
           }),
-          loadRoutePromise,
+          loadHandlerPromise,
         ]);
         if (handlerError !== undefined) {
           throw handlerError;
         }
         result = value!;
       } else {
-        // Load lazy route module, then run any returned handler
-        await loadRoutePromise;
+        // Load lazy loader/action, then run any returned handler
+        await loadHandlerPromise;
 
         handler = match.route[type] as
           | LoaderFunction<unknown>
@@ -5422,7 +5442,7 @@ async function callLoaderOrAction(
           // Handler still runs even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
           // previously-lazy-loaded routes
-          result = await runHandler(handler);
+          [result] = await Promise.all([runHandler(handler), loadRoutePromise]);
         } else if (type === "action") {
           let url = new URL(request.url);
           let pathname = url.pathname + url.search;
