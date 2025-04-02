@@ -18,9 +18,8 @@ import {
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
-import type { RouteModule, RouteModules } from "./routeModules";
+import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
-import type { EntryRoute } from "./routes";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -316,22 +315,16 @@ async function singleFetchLoaderNavigationStrategy(
   matches: DataStrategyFunctionArgs["matches"],
   basename: string | undefined
 ) {
-  // Track which routes need a server load - in case we need to tack on a
-  // `_routes` param
+  // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
 
-  // We only add `_routes` when one or more routes opts out of a load via
-  // `shouldRevalidate` or `clientLoader`
+  // Only add `_routes` when at least 1 route opts out via `shouldRevalidate`/`clientLoader`
   let foundOptOutRoute = false;
 
-  // Deferreds for each route so we can be sure they've all loaded via
-  // `match.resolve()`, and a singular promise that can tell us all routes
-  // have been resolved
+  // Deferreds per-route so we can be sure they've all loaded via `match.resolve()`
   let routeDfds = matches.map(() => createDeferred<void>());
-  let routesLoadedPromise = Promise.all(routeDfds.map((d) => d.promise));
 
-  // Deferred that we'll use for the call to the server that each match can
-  // await and parse out it's specific result
+  // Deferred we'll use for the singleular call to the server
   let singleFetchDfd = createDeferred<SingleFetchResults>();
 
   // Base URL and RequestInit for calls to the server
@@ -347,10 +340,8 @@ async function singleFetchLoaderNavigationStrategy(
         routeDfds[i].resolve();
 
         let manifestRoute = manifest.routes[m.route.id];
+        invariant(manifestRoute, "No manifest route found for dataStrategy");
 
-        // Note: If this logic changes for routes that should not participate
-        // in Single Fetch, make sure you update getLowestLoadingIndex above
-        // as well
         if (!m.shouldLoad) {
           // If we're not yet initialized and this is the initial load, respect
           // `shouldLoad` because we're only dealing with `clientLoader.hydrate`
@@ -364,7 +355,6 @@ async function singleFetchLoaderNavigationStrategy(
           // via `shouldRevalidate`
           if (
             m.route.id in router.state.loaderData &&
-            manifestRoute &&
             m.route.shouldRevalidate
           ) {
             if (manifestRoute.hasLoader) {
@@ -378,7 +368,7 @@ async function singleFetchLoaderNavigationStrategy(
 
         // When a route has a client loader, it opts out of the singular call and
         // calls it's server loader via `serverLoader()` using a `?_routes` param
-        if (manifestRoute && manifestRoute.hasClientLoader) {
+        if (manifestRoute.hasClientLoader) {
           if (manifestRoute.hasLoader) {
             foundOptOutRoute = true;
           }
@@ -422,7 +412,7 @@ async function singleFetchLoaderNavigationStrategy(
   );
 
   // Wait for all routes to resolve above before we make the HTTP call
-  await routesLoadedPromise;
+  await Promise.all(routeDfds.map((d) => d.promise));
 
   // We can skip the server call:
   // - On initial hydration - only clientLoaders can pass through via `clientLoader.hydrate`
@@ -437,24 +427,18 @@ async function singleFetchLoaderNavigationStrategy(
   ) {
     singleFetchDfd.resolve({});
   } else {
-    try {
-      // When one or more routes have opted out, we add a _routes param to
-      // limit the loaders to those that have a server loader and did not
-      // opt out
-      if (ssr && foundOptOutRoute && routesParams.size > 0) {
-        url.searchParams.set(
-          "_routes",
-          matches
-            .filter((m) => routesParams.has(m.route.id))
-            .map((m) => m.route.id)
-            .join(",")
-        );
-      }
+    // When routes have opted out, add a `_routes` param to filter server loaders
+    // Skipped in `ssr:false` because we expect to be loading static `.data` files
+    if (ssr && foundOptOutRoute && routesParams.size > 0) {
+      let routes = [...routesParams.keys()].join(",");
+      url.searchParams.set("_routes", routes);
+    }
 
+    try {
       let data = await fetchAndDecode(url, init);
       singleFetchDfd.resolve(data.data as SingleFetchResults);
     } catch (e) {
-      singleFetchDfd.reject(e as Error);
+      singleFetchDfd.reject(e);
     }
   }
 
@@ -673,9 +657,10 @@ function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
   }
 }
 
+type Deferred = ReturnType<typeof createDeferred>;
 function createDeferred<T = unknown>() {
   let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
+  let reject: (error?: unknown) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);
@@ -683,7 +668,7 @@ function createDeferred<T = unknown>() {
         await promise;
       } catch (e) {}
     };
-    reject = async (error?: Error) => {
+    reject = async (error?: unknown) => {
       rej(error);
       try {
         await promise;
