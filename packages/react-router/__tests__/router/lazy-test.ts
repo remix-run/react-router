@@ -109,11 +109,16 @@ describe("lazily loaded route modules", () => {
 
       router.initialize();
 
-      let loader = () => null;
+      let loader = jest.fn(() => null);
       await lazyLoaderDeferred.resolve(loader);
 
-      let action = () => null;
+      // Ensure loader is called as soon as it's loaded
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      // Finish loading all lazy properties
+      let action = jest.fn(() => null);
       await lazyActionDeferred.resolve(action);
+      expect(action).toHaveBeenCalledTimes(0);
 
       expect(router.state.location.pathname).toBe("/lazy");
       expect(router.state.navigation.state).toBe("idle");
@@ -222,15 +227,10 @@ describe("lazily loaded route modules", () => {
               lazy: async () => {
                 throw new Error("SHOULD NOT BE CALLED");
               },
-              // @ts-expect-error
               caseSensitive: async () => true,
-              // @ts-expect-error
               path: async () => "/lazy/path",
-              // @ts-expect-error
               id: async () => "lazy",
-              // @ts-expect-error
               index: async () => true,
-              // @ts-expect-error
               children: async () => [],
             },
           },
@@ -304,12 +304,14 @@ describe("lazily loaded route modules", () => {
 
     it("resolves lazy route properties and executes loaders on router initialization", async () => {
       let lazyLoaderDeferred = createDeferred();
+      let lazyActionDeferred = createDeferred();
       let router = createRouter({
         routes: [
           {
             path: "/lazy",
             lazy: {
               loader: () => lazyLoaderDeferred.promise,
+              action: () => lazyActionDeferred.promise,
             },
           },
         ],
@@ -320,10 +322,16 @@ describe("lazily loaded route modules", () => {
 
       router.initialize();
 
-      let loaderDeferred = createDeferred();
-      let loader = () => loaderDeferred.promise;
+      // Ensure loader is called as soon as it's loaded
+      let { lazyStub: loader, lazyDeferred: loaderDeferred } = createLazyStub();
       await lazyLoaderDeferred.resolve(loader);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(router.state.initialized).toBe(false);
+
+      // Finish loading all lazy properties
+      let action = jest.fn(() => null);
+      await lazyActionDeferred.resolve(action);
+      expect(action).toHaveBeenCalledTimes(0);
 
       await loaderDeferred.resolve("LOADER");
       expect(router.state.location.pathname).toBe("/lazy");
@@ -366,32 +374,46 @@ describe("lazily loaded route modules", () => {
     });
 
     it("resolves lazy route properties on loading navigation", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let { lazyStub: lazyLoader, lazyDeferred: lazyLoaderDeferred } =
+        createLazyStub();
+      let { lazyStub: lazyAction, lazyDeferred: lazyActionDeferred } =
+        createLazyStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyStub,
+        loader: lazyLoader,
+        action: lazyAction,
       });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      lazyDeferred.resolve(() => loaderDeferred.promise);
+      // Ensure loader is called as soon as it's loaded
+      let { lazyStub: loader, lazyDeferred: loaderDeferred } = createLazyStub();
+      await lazyLoaderDeferred.resolve(loader);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
 
+      // Ensure we're still loading if other lazy properties are not loaded yet
       await loaderDeferred.resolve("LAZY LOADER");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      // Finish loading all lazy properties
+      let action = jest.fn(() => null);
+      await lazyActionDeferred.resolve(action);
+      expect(action).toHaveBeenCalledTimes(0);
 
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.loaderData).toEqual({
         lazy: "LAZY LOADER",
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("ignores falsy lazy route properties on loading navigation", async () => {
@@ -480,21 +502,25 @@ describe("lazily loaded route modules", () => {
       expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
       expect(lazyActionStub).toHaveBeenCalledTimes(1);
 
-      let actionDeferred = createDeferred();
-      let loaderDeferred = createDeferred();
-      lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
-      lazyActionDeferred.resolve(() => actionDeferred.promise);
+      let { lazyStub: action, lazyDeferred: actionDeferred } = createLazyStub();
+      let { lazyStub: loader, lazyDeferred: loaderDeferred } = createLazyStub();
+
+      // Ensure action is called as soon as it's loaded
+      await lazyActionDeferred.resolve(action);
+      await actionDeferred.resolve("LAZY ACTION");
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(0);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-
-      await actionDeferred.resolve("LAZY ACTION");
-      expect(t.router.state.location.pathname).toBe("/");
-      expect(t.router.state.navigation.state).toBe("loading");
-      expect(t.router.state.actionData).toEqual({
-        lazy: "LAZY ACTION",
-      });
+      expect(t.router.state.actionData).toEqual(null);
       expect(t.router.state.loaderData).toEqual({});
 
+      // Finish loading all lazy properties
+      await lazyLoaderDeferred.resolve(loader);
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
       await loaderDeferred.resolve("LAZY LOADER");
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
@@ -2028,7 +2054,7 @@ describe("lazily loaded route modules", () => {
       expect(lazyStub).toHaveBeenCalledTimes(1);
     });
 
-    it("handles errors when failing to resolve lazy route property on loading navigation", async () => {
+    it("handles errors when failing to resolve lazy route loader property on loading navigation", async () => {
       let { lazyStub, lazyDeferred } = createLazyStub();
       let routes = createBasicLazyRoutes({
         loader: lazyStub,
@@ -2050,6 +2076,43 @@ describe("lazily loaded route modules", () => {
         root: new Error("LAZY PROPERTY ERROR"),
       });
       expect(lazyStub).toHaveBeenCalledTimes(1);
+    });
+
+    it("handles errors when failing to resolve other lazy route properties on loading navigation", async () => {
+      let { lazyStub: lazyLoader, lazyDeferred: lazyLoaderDeferred } =
+        createLazyStub();
+      let { lazyStub: lazyAction, lazyDeferred: lazyActionDeferred } =
+        createLazyStub();
+      let routes = createBasicLazyRoutes({
+        loader: lazyLoader,
+        action: lazyAction,
+      });
+      let t = setup({ routes });
+      expect(lazyLoader).not.toHaveBeenCalled();
+
+      await t.navigate("/lazy");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+
+      // Ensure loader is called as soon as it's loaded
+      let loader = jest.fn(() => null);
+      await lazyLoaderDeferred.resolve(loader);
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      // Reject remaining lazy properties
+      await lazyActionDeferred.reject(new Error("LAZY PROPERTY ERROR"));
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+
+      expect(t.router.state.loaderData).toEqual({});
+      expect(t.router.state.errors).toEqual({
+        root: new Error("LAZY PROPERTY ERROR"),
+      });
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("handles loader errors from lazy route functions when the route has an error boundary", async () => {
