@@ -32,7 +32,7 @@ export type SingleFetchRedirectResult = {
 };
 
 // Shared/serializable type used by both turbo-stream and RSC implementations
-type AgnosticSingleFetchResults =
+type DecodedSingleFetchResults =
   | { routes: { [key: string]: SingleFetchResult } }
   | { redirect: SingleFetchRedirectResult };
 
@@ -333,7 +333,7 @@ async function singleFetchLoaderNavigationStrategy(
   let routeDfds = matches.map(() => createDeferred<void>());
 
   // Deferred we'll use for the singleular call to the server
-  let singleFetchDfd = createDeferred<AgnosticSingleFetchResults>();
+  let singleFetchDfd = createDeferred<DecodedSingleFetchResults>();
 
   // Base URL and RequestInit for calls to the server
   let url = stripIndexParam(singleFetchUrl(request.url, basename));
@@ -534,7 +534,7 @@ async function fetchAndDecode(
   url: URL,
   init: RequestInit,
   routeId?: string
-): Promise<{ status: number; data: AgnosticSingleFetchResults }> {
+): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let res = await fetch(url, init);
 
   // If this 404'd without hitting the running server (most likely in a
@@ -563,7 +563,7 @@ async function fetchAndDecode(
 
   try {
     let decoded = await decodeViaTurboStream(res.body, window);
-    let data: AgnosticSingleFetchResults;
+    let data: DecodedSingleFetchResults;
     if (!init.method || init.method === "GET") {
       let typed = decoded.value as SingleFetchResults;
       if (SingleFetchRedirectSymbol in typed) {
@@ -648,7 +648,7 @@ export function decodeViaTurboStream(
 }
 
 function unwrapSingleFetchResult(
-  result: AgnosticSingleFetchResults,
+  result: DecodedSingleFetchResults,
   routeId: string
 ) {
   if ("redirect" in result) {
