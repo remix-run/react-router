@@ -5440,8 +5440,8 @@ async function callLoaderOrAction({
       | LoaderFunction<unknown>
       | ActionFunction<unknown>;
 
-    // If we have a route.lazy promise, await that first
-    if (lazyHandlerPromise) {
+    // If we have a promise for a lazy route, await that first
+    if (lazyHandlerPromise || lazyRoutePromise) {
       if (handler) {
         // Run statically defined handler in parallel with lazy()
         let handlerError;
@@ -5453,13 +5453,14 @@ async function callLoaderOrAction({
             handlerError = e;
           }),
           lazyHandlerPromise,
+          lazyRoutePromise,
         ]);
         if (handlerError !== undefined) {
           throw handlerError;
         }
         result = value!;
       } else {
-        // Load lazy loader/action, then run any returned handler
+        // Load lazy loader/action before running it
         await lazyHandlerPromise;
 
         handler = match.route[type] as
@@ -5468,7 +5469,8 @@ async function callLoaderOrAction({
         if (handler) {
           // Handler still runs even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
-          // previously-lazy-loaded routes
+          // previously-lazy-loaded routes. We also ensure the entire lazy
+          // route is loaded before continuing.
           [result] = await Promise.all([runHandler(handler), lazyRoutePromise]);
         } else if (type === "action") {
           let url = new URL(request.url);
@@ -5479,7 +5481,7 @@ async function callLoaderOrAction({
             routeId: match.route.id,
           });
         } else {
-          // lazy() route has no loader to run.  Short circuit here so we don't
+          // lazy route has no loader to run.  Short circuit here so we don't
           // hit the invariant below that errors on returning undefined.
           return { type: ResultType.data, result: undefined };
         }
