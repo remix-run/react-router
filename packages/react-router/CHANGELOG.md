@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.5.0-pre.1
+
+### Patch Changes
+
+- [REMOVE]: Additional work on route.lazy object form ([#13339](https://github.com/remix-run/react-router/pull/13339))
+
 ## 7.5.0-pre.0
 
 ### Minor Changes
