@@ -5078,12 +5078,16 @@ function loadLazyRoute(
   };
 }
 
+function isNonNullable<T>(value: T): value is NonNullable<T> {
+  return value !== undefined;
+}
+
 function loadLazyMiddlewareForMatches(
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction
 ): Promise<void[]> | void {
-  let promises = matches
+  let promises: Promise<void>[] = matches
     .map(({ route }) => {
       if (typeof route.lazy !== "object" || !route.lazy.unstable_middleware) {
         return undefined;
@@ -5096,7 +5100,7 @@ function loadLazyMiddlewareForMatches(
         mapRouteProperties,
       });
     })
-    .filter((p): p is NonNullable<typeof p> => p != null);
+    .filter(isNonNullable);
 
   return promises.length > 0 ? Promise.all(promises) : undefined;
 }
@@ -5354,8 +5358,8 @@ async function callDataStrategyImpl(
   // it to bubble up from the `await loadRoutePromise` in `callLoaderOrAction` -
   // called from `match.resolve()`. We also ensure that all promises are
   // awaited so that we don't inadvertently leave any hanging promises.
-  let allLazyRoutePromises: Array<Promise<void>> = lazyRoutePromises.flatMap(
-    (promiseMap) => Object.values(promiseMap).filter((p) => p !== undefined)
+  let allLazyRoutePromises: Promise<void>[] = lazyRoutePromises.flatMap(
+    (promiseMap) => Object.values(promiseMap).filter(isNonNullable)
   );
   try {
     await Promise.all(allLazyRoutePromises);
