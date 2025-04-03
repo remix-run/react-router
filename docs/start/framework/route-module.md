@@ -5,6 +5,10 @@ order: 3
 
 # Route Module
 
+[MODES: framework]
+
+## Introduction
+
 The files referenced in `routes.ts` are called Route Modules.
 
 ```tsx filename=app/routes.ts

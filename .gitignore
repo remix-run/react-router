@@ -1,7 +1,6 @@
 .DS_Store
 npm-debug.log
 
-/docs/api/
 /website/build/
 node_modules/
 

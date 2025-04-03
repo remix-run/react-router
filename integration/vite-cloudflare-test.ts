@@ -25,28 +25,34 @@ function getFiles({
       }
     `,
     "load-context.ts": `
-      import { type AppLoadContext } from "@react-router/cloudflare";
-      import { type PlatformProxy } from "wrangler";
-
+      import type { ExecutionContext } from "@cloudflare/workers-types";
+      import type { AppLoadContext } from "react-router";
+      
       type Env = {
         MY_KV: KVNamespace;
       }
-      type Cloudflare = Omit<PlatformProxy<Env>, 'dispose'>;
-  
-      declare module "@react-router/cloudflare" {
-        interface AppLoadContext {
-          cloudflare: Cloudflare;
-          env2: Cloudflare["env"];
+      
+      declare global {
+        interface CloudflareEnvironment extends Env {}
+      }
+      
+      declare module "react-router" {
+        export interface AppLoadContext {
+          cloudflare: {
+            env: CloudflareEnvironment;
+            ctx: Omit<ExecutionContext, "props">;
+          };
+          env2: CloudflareEnvironment;
           extra: string;
         }
       }
-
-      type GetLoadContext = (args: {
+      
+      type GetLoadContextArgs = {
         request: Request;
-        context: { cloudflare: Cloudflare };
-      }) => AppLoadContext;
-
-      export const getLoadContext: GetLoadContext = ({ context }) => {
+        context: Pick<AppLoadContext, "cloudflare">;
+      };
+      
+      export const getLoadContext = ({ context }: GetLoadContextArgs) => {
         return {
           ...context,
           env2: context.cloudflare.env,
@@ -67,6 +73,7 @@ function getFiles({
       });
     `,
     "wrangler.toml": `
+      compatibility_date = "2025-03-17"
       kv_namespaces = [
         { id = "abc123", binding="MY_KV" }
       ]

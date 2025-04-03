@@ -50,6 +50,19 @@ function initSsrInfo(): void {
     window.__reactRouterManifest &&
     window.__reactRouterRouteModules
   ) {
+    if (window.__reactRouterManifest.sri === true) {
+      const importMap = document.querySelector("script[rr-importmap]");
+      if (importMap?.textContent) {
+        try {
+          window.__reactRouterManifest.sri = JSON.parse(
+            importMap.textContent
+          ).integrity;
+        } catch (err) {
+          console.error("Failed to parse import map", err);
+        }
+      }
+    }
+
     ssrInfo = {
       context: window.__reactRouterContext,
       manifest: window.__reactRouterManifest,

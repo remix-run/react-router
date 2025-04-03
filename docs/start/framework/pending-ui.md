@@ -5,6 +5,10 @@ order: 7
 
 # Pending UI
 
+[MODES: framework]
+
+## Introduction
+
 When the user navigates to a new route, or submits data to an action, the UI should immediately respond to the user's actions with a pending or optimistic state. Application code is responsible for this.
 
 ## Global Pending Navigation

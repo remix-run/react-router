@@ -1,10 +1,10 @@
 ---
-title: usePrompt
+title: unstable_usePrompt
 ---
 
-# usePrompt
+# unstable_usePrompt
 
-[MODES: framework, data, declarative]
+[MODES: framework, data]
 
 ## Summary
 

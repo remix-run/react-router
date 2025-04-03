@@ -16,7 +16,7 @@ import type {
   AgnosticPatchRoutesOnNavigationFunction,
   AgnosticPatchRoutesOnNavigationFunctionArgs,
   AgnosticRouteMatch,
-  LazyRouteFunction,
+  LazyRouteDefinition,
   TrackedPromise,
 } from "./router/utils";
 
@@ -40,7 +40,7 @@ export interface IndexRouteObject {
   Component?: React.ComponentType | null;
   HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  lazy?: LazyRouteDefinition<RouteObject>;
 }
 
 export interface NonIndexRouteObject {
@@ -61,7 +61,7 @@ export interface NonIndexRouteObject {
   Component?: React.ComponentType | null;
   HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
+  lazy?: LazyRouteDefinition<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;

@@ -1,10 +1,15 @@
 ---
 title: Custom Framework
+order: 8
 ---
 
 # Custom Framework
 
-Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions.
+[MODES: data]
+
+## Introduction
+
+Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions with Data Mode..
 
 ## Client Rendering
 
@@ -59,13 +64,13 @@ Routes can take most of their definition lazily with the `lazy` property.
 createBrowserRouter([
   {
     path: "/show/:showId",
-    lazy: () => {
-      let [loader, action, Component] = await Promise.all([
-        import("./show.action.js"),
-        import("./show.loader.js"),
-        import("./show.component.js"),
-      ]);
-      return { loader, action, Component };
+    lazy: {
+      loader: async () =>
+        (await import("./show.loader.js")).loader,
+      action: async () =>
+        (await import("./show.action.js")).action,
+      Component: async () =>
+        (await import("./show.component.js")).Component,
     },
   },
 ]);
@@ -73,7 +78,7 @@ createBrowserRouter([
 
 ## Server Rendering
 
-To server render a custom setup, there are a few server APIs available for rendering an data loading.
+To server render a custom setup, there are a few server APIs available for rendering and data loading.
 
 This guide simply gives you some ideas about how it works. For deeper understanding, please see the [Custom Framework Example Repo](https://github.com/remix-run/custom-react-router-framework-example)
 

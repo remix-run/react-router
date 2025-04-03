@@ -2,6 +2,7 @@
 // context but want to use Vite's ESM build to avoid deprecation warnings
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
+import * as fs from "node:fs";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
@@ -765,9 +766,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               export const unstable_getCriticalCss = ({ pathname }) => {
                 return {
                   rel: "stylesheet",
-                  href: "${
-                    viteUserConfig.base ?? "/"
-                  }@react-router/critical.css?pathname=" + pathname,
+                  href: "${ctx.publicPath}@react-router/critical.css?pathname=" + pathname,
                 };
               }
             `
@@ -807,6 +806,39 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     return new Set([...cssUrlPaths, ...chunkAssetPaths]);
   };
 
+  let generateSriManifest = async (ctx: ReactRouterPluginContext) => {
+    let clientBuildDirectory = getClientBuildDirectory(ctx.reactRouterConfig);
+    // walk the client build directory and generate SRI hashes for all .js files
+    let entries = fs.readdirSync(clientBuildDirectory, {
+      withFileTypes: true,
+      recursive: true,
+    });
+    let sriManifest: ReactRouterManifest["sri"] = {};
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith(".js")) {
+        let contents;
+        try {
+          contents = await fse.readFile(
+            path.join(entry.path, entry.name),
+            "utf-8"
+          );
+        } catch (e) {
+          logger.error(`Failed to read file for SRI generation: ${entry.name}`);
+          throw e;
+        }
+        let hash = createHash("sha384")
+          .update(contents)
+          .digest()
+          .toString("base64");
+        let filepath = getVite().normalizePath(
+          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+        );
+        sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
+      }
+    }
+    return sriManifest;
+  };
+
   let generateReactRouterManifestsForBuild = async ({
     routeIds,
   }: {
@@ -843,6 +875,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let isRootRoute = route.parentId === undefined;
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
+      let hasClientMiddleware = sourceExports.includes(
+        "unstable_clientMiddleware"
+      );
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
       let { hasRouteChunkByExportName } = await detectRouteChunksIfEnabled(
@@ -861,6 +896,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
+            unstable_clientMiddleware:
+              !hasClientMiddleware ||
+              hasRouteChunkByExportName.unstable_clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -877,6 +915,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasLoader: sourceExports.includes("loader"),
         hasClientAction,
         hasClientLoader,
+        hasClientMiddleware,
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         ...getReactRouterManifestBuildAssets(
           ctx,
@@ -901,6 +940,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               getRouteChunkModuleId(routeFile, "clientLoader")
             )
           : undefined,
+        clientMiddlewareModule:
+          hasRouteChunkByExportName.unstable_clientMiddleware
+            ? getPublicModulePathForEntry(
+                ctx,
+                viteManifest,
+                getRouteChunkModuleId(routeFile, "unstable_clientMiddleware")
+              )
+            : undefined,
         hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
           ? getPublicModulePathForEntry(
               ctx,
@@ -929,6 +976,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let reactRouterBrowserManifest: ReactRouterManifest = {
       ...fingerprintedValues,
       ...nonFingerprintedValues,
+      sri: undefined,
     };
 
     // Write the browser manifest to disk as part of the build process
@@ -939,12 +987,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};`
     );
 
+    let sri: ReactRouterManifest["sri"] = undefined;
+    if (ctx.reactRouterConfig.future.unstable_subResourceIntegrity) {
+      sri = await generateSriManifest(ctx);
+    }
+
     // The server manifest is the same as the browser manifest, except for
     // server bundle builds which only includes routes for the current bundle,
     // otherwise the server and client have the same routes
     let reactRouterServerManifest: ReactRouterManifest = {
       ...reactRouterBrowserManifest,
       routes: serverRoutes,
+      sri,
     };
 
     return {
@@ -971,6 +1025,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
+      let hasClientMiddleware = sourceExports.includes(
+        "unstable_clientMiddleware"
+      );
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
       let routeModulePath = combineURLs(
         ctx.publicPath,
@@ -996,6 +1053,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               !hasClientAction || hasRouteChunkByExportName.clientAction,
             clientLoader:
               !hasClientLoader || hasRouteChunkByExportName.clientLoader,
+            unstable_clientMiddleware:
+              !hasClientMiddleware ||
+              hasRouteChunkByExportName.unstable_clientMiddleware,
             HydrateFallback:
               !hasHydrateFallback || hasRouteChunkByExportName.HydrateFallback,
           },
@@ -1012,15 +1072,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         // Split route modules are a build-time optimization
         clientActionModule: undefined,
         clientLoaderModule: undefined,
+        clientMiddlewareModule: undefined,
         hydrateFallbackModule: undefined,
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
         hasClientAction,
         hasClientLoader,
+        hasClientMiddleware,
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         imports: [],
       };
     }
+
+    let sri: ReactRouterManifest["sri"] = undefined;
 
     let reactRouterManifestForDev = {
       version: String(Math.random()),
@@ -1035,6 +1099,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ),
         imports: [],
       },
+      sri,
       routes,
     };
 
@@ -1424,26 +1489,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 configureServer: undefined,
                 configurePreviewServer: undefined,
               })),
-            {
-              name: "react-router:override-optimize-deps",
-              config(userConfig) {
-                // Prevent unnecessary dependency optimization in the child compiler
-                if (
-                  ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-                  userConfig.environments
-                ) {
-                  for (const environmentName of Object.keys(
-                    userConfig.environments
-                  )) {
-                    userConfig.environments[environmentName].optimizeDeps = {
-                      noDiscovery: true,
-                    };
-                  }
-                } else {
-                  userConfig.optimizeDeps = { noDiscovery: true };
-                }
-              },
-            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
@@ -1543,7 +1588,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
-            if (reqPathname === "/@react-router/critical.css") {
+            if (reqPathname === `${ctx.publicPath}@react-router/critical.css`) {
               let pathname = new URLSearchParams(reqSearch).get("pathname");
               if (!pathname) {
                 return next("No pathname provided");
@@ -1885,6 +1930,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             valid: {
               clientAction: !exportNames.includes("clientAction"),
               clientLoader: !exportNames.includes("clientLoader"),
+              unstable_clientMiddleware: !exportNames.includes(
+                "unstable_clientMiddleware"
+              ),
               HydrateFallback: !exportNames.includes("HydrateFallback"),
             },
           });
@@ -2220,6 +2268,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 "hasAction",
                 "hasClientAction",
                 "clientActionModule",
+                "hasClientMiddleware",
+                "clientMiddlewareModule",
                 "hasErrorBoundary",
                 "hydrateFallbackModule",
               ] as const
@@ -2423,6 +2473,9 @@ async function getRouteMetadata(
     clientLoaderModule: hasRouteChunkByExportName.clientLoader
       ? `${getRouteChunkModuleId(moduleUrl, "clientLoader")}`
       : undefined,
+    clientMiddlewareModule: hasRouteChunkByExportName.unstable_clientMiddleware
+      ? `${getRouteChunkModuleId(moduleUrl, "unstable_clientMiddleware")}`
+      : undefined,
     hydrateFallbackModule: hasRouteChunkByExportName.HydrateFallback
       ? `${getRouteChunkModuleId(moduleUrl, "HydrateFallback")}`
       : undefined,
@@ -2430,6 +2483,7 @@ async function getRouteMetadata(
     hasClientAction: sourceExports.includes("clientAction"),
     hasLoader: sourceExports.includes("loader"),
     hasClientLoader: sourceExports.includes("clientLoader"),
+    hasClientMiddleware: sourceExports.includes("unstable_clientMiddleware"),
     hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
     imports: [],
   };
@@ -2710,7 +2764,7 @@ async function prerenderData(
   if (response.status !== 200) {
     throw new Error(
       `Prerender (data): Received a ${response.status} status code from ` +
-        `\`entry.server.tsx\` while prerendering the \`${path}\` ` +
+        `\`entry.server.tsx\` while prerendering the \`${prerenderPath}\` ` +
         `path.\n${normalizedPath}`
     );
   }
@@ -3076,6 +3130,7 @@ async function detectRouteChunksIfEnabled(
       hasRouteChunkByExportName: {
         clientAction: false,
         clientLoader: false,
+        unstable_clientMiddleware: false,
         HydrateFallback: false,
       },
     };
@@ -3438,7 +3493,10 @@ export async function getEnvironmentOptionsResolvers(
               entryFileNames: ({ moduleIds }) => {
                 let routeChunkModuleId = moduleIds.find(isRouteChunkModuleId);
                 let routeChunkName = routeChunkModuleId
-                  ? getRouteChunkNameFromModuleId(routeChunkModuleId)
+                  ? getRouteChunkNameFromModuleId(routeChunkModuleId)?.replace(
+                      "unstable_",
+                      ""
+                    )
                   : null;
                 let routeChunkSuffix = routeChunkName
                   ? `-${kebabCase(routeChunkName)}`

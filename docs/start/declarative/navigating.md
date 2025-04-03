@@ -5,6 +5,10 @@ order: 3
 
 # Navigating
 
+[MODES: declarative]
+
+## Introduction
+
 Users navigate your application with `<Link>`, `<NavLink>`, and `useNavigate`.
 
 ## NavLink

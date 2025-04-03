@@ -5,6 +5,8 @@ order: 2
 
 # Routing
 
+[MODES: declarative]
+
 ## Configuring Routes
 
 Routes are configured by rendering `<Routes>` and `<Route>` that couple URL segments to UI elements.

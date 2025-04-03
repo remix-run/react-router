@@ -22,7 +22,8 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
-      - uses: google/wireit@setup-github-actions-caching/v2
+      # TODO: Track and renable once this has been fixed: https://github.com/google/wireit/issues/1297
+      # - uses: google/wireit@setup-github-actions-caching/v2
 
       - name: Disable GitHub Actions Annotations
         run: |

@@ -1,4 +1,4 @@
 ---
-title: Framework
-order: 1
+title: Framework Mode
+order: 2
 ---

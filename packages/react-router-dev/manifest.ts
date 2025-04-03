@@ -7,12 +7,14 @@ export type ManifestRoute = {
   module: string;
   clientLoaderModule: string | undefined;
   clientActionModule: string | undefined;
+  clientMiddlewareModule: string | undefined;
   hydrateFallbackModule: string | undefined;
   imports?: string[];
   hasAction: boolean;
   hasLoader: boolean;
   hasClientAction: boolean;
   hasClientLoader: boolean;
+  hasClientMiddleware: boolean;
   hasErrorBoundary: boolean;
 };
 
@@ -26,6 +28,7 @@ export type Manifest = {
   routes: {
     [routeId: string]: ManifestRoute;
   };
+  sri: Record<string, string> | undefined;
   hmr?: {
     timestamp?: number;
     runtime: string;

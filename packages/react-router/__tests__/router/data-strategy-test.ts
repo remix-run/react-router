@@ -3,7 +3,11 @@ import type {
   DataStrategyMatch,
   DataStrategyResult,
 } from "../../lib/router/utils";
-import { createDeferred, setup } from "./utils/data-router-setup";
+import {
+  createDeferred,
+  createLazyStub,
+  setup,
+} from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
 describe("router dataStrategy", () => {
@@ -95,6 +99,10 @@ describe("router dataStrategy", () => {
           keyedResults(matches, results)
         )
       );
+      let { lazyStub: lazyJsonStub, lazyDeferred: lazyJsonDeferred } =
+        createLazyStub();
+      let { lazyStub: lazyTextStub, lazyDeferred: lazyTextDeferred } =
+        createLazyStub();
       let t = setup({
         routes: [
           {
@@ -103,12 +111,12 @@ describe("router dataStrategy", () => {
           {
             id: "json",
             path: "/test",
-            lazy: true,
+            lazy: lazyJsonStub,
             children: [
               {
                 id: "text",
                 index: true,
-                lazy: true,
+                lazy: lazyTextStub,
               },
             ],
           },
@@ -116,11 +124,11 @@ describe("router dataStrategy", () => {
         dataStrategy,
       });
 
-      let A = await t.navigate("/test");
-      await A.lazy.json.resolve({
+      await t.navigate("/test");
+      await lazyJsonDeferred.resolve({
         loader: () => ({ message: "hello json" }),
       });
-      await A.lazy.text.resolve({
+      await lazyTextDeferred.resolve({
         loader: () => "hello text",
       });
       expect(t.router.state.loaderData).toEqual({
@@ -211,6 +219,7 @@ describe("router dataStrategy", () => {
     });
 
     it("should allow custom implementations to override default behavior with lazy", async () => {
+      let { lazyStub, lazyDeferred } = createLazyStub();
       let t = setup({
         routes: [
           {
@@ -219,7 +228,7 @@ describe("router dataStrategy", () => {
           {
             id: "test",
             path: "/test",
-            lazy: true,
+            lazy: lazyStub,
           },
         ],
         async dataStrategy({ matches }) {
@@ -234,8 +243,8 @@ describe("router dataStrategy", () => {
         },
       });
 
-      let A = await t.navigate("/test");
-      await A.lazy.test.resolve({ loader: () => "TEST" });
+      await t.navigate("/test");
+      await lazyDeferred.resolve({ loader: () => "TEST" });
 
       expect(t.router.state.loaderData).toMatchObject({
         test: 'Route ID "test" returned "TEST"',
@@ -365,6 +374,7 @@ describe("router dataStrategy", () => {
     });
 
     it("does not require resolve to be called if a match is not being loaded", async () => {
+      let { lazyStub, lazyDeferred } = createLazyStub();
       let t = setup({
         routes: [
           {
@@ -379,7 +389,7 @@ describe("router dataStrategy", () => {
               {
                 id: "child",
                 path: "child",
-                lazy: true,
+                lazy: lazyStub,
               },
             ],
           },
@@ -415,7 +425,7 @@ describe("router dataStrategy", () => {
       });
 
       let B = await t.navigate("/parent/child");
-      await B.lazy.child.resolve({ loader: () => "CHILD" });
+      await lazyDeferred.resolve({ loader: () => "CHILD" });
 
       // no-op
       await B.loaders.parent.resolve("XXX");
@@ -441,6 +451,7 @@ describe("router dataStrategy", () => {
           keyedResults(matches, results)
         );
       });
+      let { lazyStub, lazyDeferred } = createLazyStub();
       let t = setup({
         routes: [
           {
@@ -457,7 +468,7 @@ describe("router dataStrategy", () => {
                   {
                     id: "child",
                     path: "child",
-                    lazy: true,
+                    lazy: lazyStub,
                   },
                 ],
               },
@@ -500,7 +511,7 @@ describe("router dataStrategy", () => {
         parent: "PARENT",
       });
 
-      let C = await t.navigate("/parent/child");
+      await t.navigate("/parent/child");
       expect(dataStrategy.mock.calls[2][0].matches).toEqual([
         expect.objectContaining({
           shouldLoad: false,
@@ -515,7 +526,7 @@ describe("router dataStrategy", () => {
           route: expect.objectContaining({ id: "child" }),
         }),
       ]);
-      await C.lazy.child.resolve({
+      await lazyDeferred.resolve({
         action: () => "CHILD ACTION",
         loader: () => "CHILD",
         shouldRevalidate: () => false,
@@ -621,6 +632,7 @@ describe("router dataStrategy", () => {
           keyedResults(matches, results)
         )
       );
+      let { lazyStub, lazyDeferred } = createLazyStub();
       let t = setup({
         routes: [
           {
@@ -629,17 +641,17 @@ describe("router dataStrategy", () => {
           {
             id: "json",
             path: "/test",
-            lazy: true,
+            lazy: lazyStub,
           },
         ],
         dataStrategy,
       });
 
-      let A = await t.navigate("/test", {
+      await t.navigate("/test", {
         formMethod: "post",
         formData: createFormData({}),
       });
-      await A.lazy.json.resolve({
+      await lazyDeferred.resolve({
         action: () => ({ message: "hello json" }),
       });
       expect(t.router.state.actionData).toEqual({
@@ -709,6 +721,7 @@ describe("router dataStrategy", () => {
             keyedResults(matches, results)
           )
         );
+        let { lazyStub, lazyDeferred } = createLazyStub();
         let t = setup({
           routes: [
             {
@@ -717,15 +730,15 @@ describe("router dataStrategy", () => {
             {
               id: "json",
               path: "/test",
-              lazy: true,
+              lazy: lazyStub,
             },
           ],
           dataStrategy,
         });
 
         let key = "key";
-        let A = await t.fetch("/test", key);
-        await A.lazy.json.resolve({
+        await t.fetch("/test", key);
+        await lazyDeferred.resolve({
           loader: () => ({ message: "hello json" }),
         });
         expect(t.fetchers[key].data.message).toBe("hello json");
@@ -795,6 +808,7 @@ describe("router dataStrategy", () => {
             keyedResults(matches, results)
           )
         );
+        let { lazyStub, lazyDeferred } = createLazyStub();
         let t = setup({
           routes: [
             {
@@ -803,18 +817,18 @@ describe("router dataStrategy", () => {
             {
               id: "json",
               path: "/test",
-              lazy: true,
+              lazy: lazyStub,
             },
           ],
           dataStrategy,
         });
 
         let key = "key";
-        let A = await t.fetch("/test", key, {
+        await t.fetch("/test", key, {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await A.lazy.json.resolve({
+        await lazyDeferred.resolve({
           action: () => ({ message: "hello json" }),
         });
 
