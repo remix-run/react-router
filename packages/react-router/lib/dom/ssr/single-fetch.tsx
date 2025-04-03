@@ -56,6 +56,12 @@ interface StreamTransferProps {
   nonce?: string;
 }
 
+// some status codes are not permitted to have bodies, so we want to just
+// treat those as "no data" instead of throwing an exception.
+// 304 is not included here because the browser should fill those responses
+// with the cached body content.
+export const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205]);
+
 // StreamTransfer recursively renders down chunks of the `serverHandoffStream`
 // into the client-side `streamController`
 export function StreamTransfer({
@@ -543,11 +549,6 @@ async function fetchAndDecode(
     throw new ErrorResponseImpl(404, "Not Found", true);
   }
 
-  // some status codes are not permitted to have bodies, so we want to just
-  // treat those as "no data" instead of throwing an exception.
-  // 304 is not included here because the browser should fill those responses
-  // with the cached body content.
-  const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205]);
   if (NO_BODY_STATUS_CODES.has(res.status)) {
     let routes: { [key: string]: SingleFetchResult } = {};
     if (routeId) {

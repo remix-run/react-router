@@ -18,26 +18,15 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
+import {
+  NO_BODY_STATUS_CODES,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
-
-export type { SingleFetchResult, SingleFetchResults };
-export { SingleFetchRedirectSymbol };
-
-// Do not include a response body if the status code is one of these,
-// otherwise `undici` will throw an error when constructing the Response:
-//   https://github.com/nodejs/undici/blob/bd98a6303e45d5e0d44192a93731b1defdb415f3/lib/web/fetch/response.js#L522-L528
-//
-// Specs:
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-informational-1xx
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
-export const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205, 304]);
 
 // We can't use a 3xx status or else the `fetch()` would follow the redirect.
 // We need to communicate the redirect back as data so we can act on it in the
