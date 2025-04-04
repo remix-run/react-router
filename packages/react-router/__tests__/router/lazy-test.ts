@@ -2852,9 +2852,7 @@ describe("lazily loaded route modules", () => {
         !(context instanceof Response),
         "Expected a StaticContext instance"
       );
-      expect(context.loaderData).toEqual({
-        root: null,
-      });
+      expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({
         lazy: new Error("LAZY LOADER ERROR"),
       });
@@ -2928,9 +2926,7 @@ describe("lazily loaded route modules", () => {
         !(context instanceof Response),
         "Expected a StaticContext instance"
       );
-      expect(context.loaderData).toEqual({
-        root: null,
-      });
+      expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
