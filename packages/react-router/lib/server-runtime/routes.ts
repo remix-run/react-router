@@ -12,7 +12,10 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
+import {
+  SingleFetchRedirectSymbol,
+  decodeViaTurboStream,
+} from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
 
@@ -100,7 +103,9 @@ export function createStaticHandlerDataRoutes(
               let decoded = await decodeViaTurboStream(stream, global);
               let data = decoded.value as SingleFetchResults;
               invariant(
-                data && route.id in data,
+                data &&
+                  !(SingleFetchRedirectSymbol in data) &&
+                  route.id in data,
                 "Unable to decode prerendered data"
               );
               let result = data[route.id] as SingleFetchResult;

@@ -24,18 +24,23 @@ import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
-import type { SingleFetchResult, SingleFetchResults } from "./single-fetch";
 import {
   encodeViaTurboStream,
   getSingleFetchRedirect,
   singleFetchAction,
   singleFetchLoaders,
-  SingleFetchRedirectSymbol,
   SINGLE_FETCH_REDIRECT_STATUS,
-  NO_BODY_STATUS_CODES,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
+import type {
+  SingleFetchResult,
+  SingleFetchResults,
+} from "../dom/ssr/single-fetch";
+import {
+  NO_BODY_STATUS_CODES,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
 
 export type RequestHandler = (
