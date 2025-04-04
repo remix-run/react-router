@@ -15,7 +15,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v7.5.0](#v750)
     - [What's Changed](#whats-changed)
-      - [Object API for `route.lazy`](#object-api-for-routelazy)
+      - [`route.lazy` Object API](#routelazy-object-api)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -318,13 +318,13 @@ Date: YYYY-MM-DD
 
 ## v7.5.0
 
-Date: 2025-04-03
+Date: 2025-04-04
 
 ### What's Changed
 
-#### Object API for `route.lazy`
+#### `route.lazy` Object API
 
-We've introduced a new `route.lazy` API which gives you more granular control over the lazy loading of route properties that you could not achieve with the `route.lazy` function signature. This is useful for Framework mode and performance-critical library mode applications.
+We've introduced a new `route.lazy` API which gives you more granular control over the lazy loading of route properties that you could not achieve with the `route.lazy()` function signature. This is useful for Framework mode and performance-critical library mode applications.
 
 ```ts
 createBrowserRouter([
@@ -339,20 +339,7 @@ createBrowserRouter([
 ]);
 ```
 
-⚠️ This is a breaking change if you have adopted the `route.unstable_lazyMiddleware` API which has been removed in favor of `route.lazy.unstable_middleware`. If you want to lazily load middleware, you must use the new object-based `route.lazy` API:
-
-```ts
-createBrowserRouter([
-  {
-    path: "/show/:showId",
-    lazy: {
-      unstable_middleware: async () =>
-        (await import("./show.middleware.js")).middleware,
-      // etc.
-    },
-  },
-]);
-```
+⚠️ This is a breaking change if you have adopted the `route.unstable_lazyMiddleware` API which has been removed in favor of `route.lazy.unstable_middleware`. See the `Unstable Changes` section below for more information.
 
 ### Minor Changes
 
@@ -368,6 +355,8 @@ createBrowserRouter([
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - `react-router` - Introduce `future.unstable_subResourceIntegrity` flag that enables generation of an `importmap` with `integrity` for the scripts that will be loaded by the browser ([#13163](https://github.com/remix-run/react-router/pull/13163))
+- `react-router` - Remove support for the `route.unstable_lazyMiddleware` property ([#13294](https://github.com/remix-run/react-router/pull/13294))
+  - In order to lazily load middleware, you can use the new object-based `route.lazy.unstable_middleware` API
 - `@react-router/dev` - When `future.unstable_viteEnvironmentApi` is enabled, ensure critical CSS in development works when using a custom Vite `base` has been configured ([#13305](https://github.com/remix-run/react-router/pull/13305))
 
 ### Changes by Package

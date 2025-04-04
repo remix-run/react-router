@@ -1,15 +1,6 @@
 # `@react-router/dev`
 
-## 7.5.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.5.0-pre.1`
-  - `@react-router/node@7.5.0-pre.1`
-  - `@react-router/serve@7.5.0-pre.1`
-
-## 7.5.0-pre.0
+## 7.5.0
 
 ### Patch Changes
 
@@ -18,9 +9,9 @@
 - When `future.unstable_viteEnvironmentApi` is enabled, ensure critical CSS in development works when using a custom Vite `base` has been configured ([#13305](https://github.com/remix-run/react-router/pull/13305))
 - Reinstate dependency optimization in the child compiler to fix `depsOptimizer is required in dev mode` errors when using `vite-plugin-cloudflare` and importing Node.js builtins ([#13317](https://github.com/remix-run/react-router/pull/13317))
 - Updated dependencies:
-  - `react-router@7.5.0-pre.0`
-  - `@react-router/node@7.5.0-pre.0`
-  - `@react-router/serve@7.5.0-pre.0`
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+  - `@react-router/serve@7.5.0`
 
 ## 7.4.1
 
