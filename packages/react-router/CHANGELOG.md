@@ -39,7 +39,6 @@
 ### Patch Changes
 
 - Introduce `unstable_subResourceIntegrity` future flag that enables generation of an importmap with integrity for the scripts that will be loaded by the browser. ([#13163](https://github.com/remix-run/react-router/pull/13163))
-- \[REMOVE]: Additional work on route.lazy object form ([#13339](https://github.com/remix-run/react-router/pull/13339))
 
 ## 7.4.1
 
