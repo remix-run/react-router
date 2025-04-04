@@ -104,7 +104,7 @@ export const EXPRESS_SERVER = (args: {
   port: number;
   base?: string;
   loadContext?: Record<string, unknown>;
-  customLogic: string;
+  customLogic?: string;
 }) =>
   String.raw`
     import { createRequestHandler } from "@react-router/express";
