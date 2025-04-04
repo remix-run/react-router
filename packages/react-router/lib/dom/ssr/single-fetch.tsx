@@ -21,6 +21,7 @@ import { escapeHtml } from "./markup";
 import type { RouteModule, RouteModules } from "./routeModules";
 import invariant from "./invariant";
 import type { EntryRoute } from "./routes";
+import { SINGLE_FETCH_REDIRECT_STATUS } from "../../server-runtime/single-fetch";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -550,6 +551,25 @@ async function fetchAndDecode(
     throw new ErrorResponseImpl(404, "Not Found", true);
   }
 
+  // Handle non-RR redirects (i.e., from express middleware via `dataRedirect`)
+  if (res.status === 204) {
+    let data: SingleFetchRedirectResult = {
+      redirect: res.headers.get("X-Remix-Redirect")!,
+      status: Number(res.headers.get("X-Remix-Status") || "302"),
+      revalidate: res.headers.get("X-Remix-Revalidate") === "true",
+      reload: res.headers.get("X-Remix-Reload-Document") === "true",
+      replace: res.headers.get("X-Remix-Replace") === "true",
+    };
+    if (!init.method || init.method === "GET") {
+      return {
+        status: SINGLE_FETCH_REDIRECT_STATUS,
+        data: { [SingleFetchRedirectSymbol]: data },
+      };
+    } else {
+      return { status: SINGLE_FETCH_REDIRECT_STATUS, data };
+    }
+  }
+
   // some status codes are not permitted to have bodies, so we want to just
   // treat those as "no data" instead of throwing an exception.
   // 304 is not included here because the browser should fill those responses
@@ -657,13 +677,13 @@ function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
   } else if ("redirect" in result) {
     let headers: Record<string, string> = {};
     if (result.revalidate) {
-      headers["X-Remix-Revalidate"] = "yes";
+      headers["X-Remix-Revalidate"] = "true";
     }
     if (result.reload) {
-      headers["X-Remix-Reload-Document"] = "yes";
+      headers["X-Remix-Reload-Document"] = "true";
     }
     if (result.replace) {
-      headers["X-Remix-Replace"] = "yes";
+      headers["X-Remix-Replace"] = "true";
     }
     throw redirect(result.redirect, { status: result.status, headers });
   } else if ("data" in result) {
