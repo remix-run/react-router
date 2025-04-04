@@ -490,7 +490,6 @@ test.describe("typegen", () => {
       expect(proc.status).toBe(0);
     });
 
-
     test("works with tsconfig 'exactOptionalPropertyTypes' set to 'true'", async () => {
       const cwd = await createProject({
         "vite.config.ts": viteConfig,

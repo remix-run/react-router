@@ -152,18 +152,17 @@ function register(ctx: Context) {
 
 const virtual = ts`
   declare module "virtual:react-router/server-build" {
-    import type { ServerBuild } from "react-router";
-    // Whilst this uses the CommonJS 'export =' syntax, which is technically not
-    // ESM-compliant, it is intentionally implemented this way to properly support
-    // optional properties in the ServerBuild type.
-    //
-    // TypeScript's type system does not provide an elegant solution for defining
-    // optional exports at the module level in ESM syntax, so this approach offers
-    // the most accurate type definitions for maintainability.
-    //
-    // This ensures all properties of ServerBuild, including optional ones, are
-    // properly type-checked when using this module.
-    const serverBuild: ServerBuild;
-    export = serverBuild;
+    import type { ServerBuild } from "react-router";    import { ServerBuild } from "react-router";
+    export const assets: ServerBuild["assets"];
+    export const assetsBuildDirectory: ServerBuild["assetsBuildDirectory"];
+    export const basename: ServerBuild["basename"];
+    export const entry: ServerBuild["entry"];
+    export const future: ServerBuild["future"];
+    export const isSpaMode: ServerBuild["isSpaMode"];
+    export const prerender: ServerBuild["prerender"];
+    export const publicPath: ServerBuild["publicPath"];
+    export const routes: ServerBuild["routes"];
+    export const ssr: ServerBuild["ssr"];
+    export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
   }
 `;

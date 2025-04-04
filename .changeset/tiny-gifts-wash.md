@@ -1,5 +1,5 @@
 ---
-"@react-router/dev": patch
+"react-router": patch
 ---
 
-Update generated types for `virtual:react-router/server-build` to ensure compatibility with TypeScript's `exactOptionalPropertyTypes` option
+Update `ServerBuild` type to ensure compatibility with TypeScript's `exactOptionalPropertyTypes` option
