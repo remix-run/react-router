@@ -552,7 +552,7 @@ async function fetchAndDecode(
   }
 
   // Handle non-RR redirects (i.e., from express middleware via `dataRedirect`)
-  if (res.status === 204) {
+  if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
     let data: SingleFetchRedirectResult = {
       redirect: res.headers.get("X-Remix-Redirect")!,
       status: Number(res.headers.get("X-Remix-Status") || "302"),
