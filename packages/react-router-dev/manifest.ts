@@ -28,6 +28,7 @@ export type Manifest = {
   routes: {
     [routeId: string]: ManifestRoute;
   };
+  sri: Record<string, string> | undefined;
   hmr?: {
     timestamp?: number;
     runtime: string;

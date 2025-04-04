@@ -2,6 +2,7 @@
 // context but want to use Vite's ESM build to avoid deprecation warnings
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
+import * as fs from "node:fs";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
@@ -765,9 +766,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               export const unstable_getCriticalCss = ({ pathname }) => {
                 return {
                   rel: "stylesheet",
-                  href: "${
-                    viteUserConfig.base ?? "/"
-                  }@react-router/critical.css?pathname=" + pathname,
+                  href: "${ctx.publicPath}@react-router/critical.css?pathname=" + pathname,
                 };
               }
             `
@@ -805,6 +804,39 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     );
 
     return new Set([...cssUrlPaths, ...chunkAssetPaths]);
+  };
+
+  let generateSriManifest = async (ctx: ReactRouterPluginContext) => {
+    let clientBuildDirectory = getClientBuildDirectory(ctx.reactRouterConfig);
+    // walk the client build directory and generate SRI hashes for all .js files
+    let entries = fs.readdirSync(clientBuildDirectory, {
+      withFileTypes: true,
+      recursive: true,
+    });
+    let sriManifest: ReactRouterManifest["sri"] = {};
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith(".js")) {
+        let contents;
+        try {
+          contents = await fse.readFile(
+            path.join(entry.path, entry.name),
+            "utf-8"
+          );
+        } catch (e) {
+          logger.error(`Failed to read file for SRI generation: ${entry.name}`);
+          throw e;
+        }
+        let hash = createHash("sha384")
+          .update(contents)
+          .digest()
+          .toString("base64");
+        let filepath = getVite().normalizePath(
+          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+        );
+        sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
+      }
+    }
+    return sriManifest;
   };
 
   let generateReactRouterManifestsForBuild = async ({
@@ -944,6 +976,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let reactRouterBrowserManifest: ReactRouterManifest = {
       ...fingerprintedValues,
       ...nonFingerprintedValues,
+      sri: undefined,
     };
 
     // Write the browser manifest to disk as part of the build process
@@ -954,12 +987,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};`
     );
 
+    let sri: ReactRouterManifest["sri"] = undefined;
+    if (ctx.reactRouterConfig.future.unstable_subResourceIntegrity) {
+      sri = await generateSriManifest(ctx);
+    }
+
     // The server manifest is the same as the browser manifest, except for
     // server bundle builds which only includes routes for the current bundle,
     // otherwise the server and client have the same routes
     let reactRouterServerManifest: ReactRouterManifest = {
       ...reactRouterBrowserManifest,
       routes: serverRoutes,
+      sri,
     };
 
     return {
@@ -1045,6 +1084,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       };
     }
 
+    let sri: ReactRouterManifest["sri"] = undefined;
+
     let reactRouterManifestForDev = {
       version: String(Math.random()),
       url: combineURLs(ctx.publicPath, virtual.browserManifest.url),
@@ -1058,6 +1099,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ),
         imports: [],
       },
+      sri,
       routes,
     };
 
@@ -1447,26 +1489,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                 configureServer: undefined,
                 configurePreviewServer: undefined,
               })),
-            {
-              name: "react-router:override-optimize-deps",
-              config(userConfig) {
-                // Prevent unnecessary dependency optimization in the child compiler
-                if (
-                  ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-                  userConfig.environments
-                ) {
-                  for (const environmentName of Object.keys(
-                    userConfig.environments
-                  )) {
-                    userConfig.environments[environmentName].optimizeDeps = {
-                      noDiscovery: true,
-                    };
-                  }
-                } else {
-                  userConfig.optimizeDeps = { noDiscovery: true };
-                }
-              },
-            },
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
@@ -1566,7 +1588,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
-            if (reqPathname === "/@react-router/critical.css") {
+            if (reqPathname === `${ctx.publicPath}@react-router/critical.css`) {
               let pathname = new URLSearchParams(reqSearch).get("pathname");
               if (!pathname) {
                 return next("No pathname provided");

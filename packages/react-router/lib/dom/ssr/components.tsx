@@ -785,32 +785,54 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   let preloads = isHydrated
     ? []
-    : manifest.entry.imports.concat(
-        getModuleLinkHrefs(matches, manifest, {
-          includeHydrateFallback: true,
-        })
+    : dedupe(
+        manifest.entry.imports.concat(
+          getModuleLinkHrefs(matches, manifest, {
+            includeHydrateFallback: true,
+          })
+        )
       );
+
+  let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
   return isHydrated ? null : (
     <>
+      {typeof manifest.sri === "object" ? (
+        <script
+          rr-importmap=""
+          type="importmap"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              integrity: sri,
+            }),
+          }}
+        />
+      ) : null}
       {!enableFogOfWar ? (
         <link
           rel="modulepreload"
           href={manifest.url}
           crossOrigin={props.crossOrigin}
+          integrity={sri[manifest.url]}
+          suppressHydrationWarning
         />
       ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
+        integrity={sri[manifest.entry.module]}
+        suppressHydrationWarning
       />
-      {dedupe(preloads).map((path) => (
+      {preloads.map((path) => (
         <link
           key={path}
           rel="modulepreload"
           href={path}
           crossOrigin={props.crossOrigin}
+          integrity={sri[path]}
+          suppressHydrationWarning
         />
       ))}
       {initialScripts}

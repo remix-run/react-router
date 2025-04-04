@@ -1,8 +1,16 @@
 {
-  "include": ["env.d.ts", "**/*.ts", "**/*.tsx", ".react-router/types/**/*"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/.server/**/*.ts",
+    "**/.server/**/*.tsx",
+    "**/.client/**/*.ts",
+    "**/.client/**/*.tsx",
+    "./.react-router/types/**/*"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["@cloudflare/workers-types", "vite/client"],
+    "types": ["@react-router/node", "vite/client"],
     "verbatimModuleSyntax": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -14,6 +22,10 @@
     "allowJs": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "noEmit": true
+    "paths": {
+      "~/*": ["./app/*"]
+    },
+    "noEmit": true,
+    "rootDirs": [".", "./.react-router/types"]
   }
 }

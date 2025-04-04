@@ -92,6 +92,7 @@ interface FutureConfig {
    * Automatically split route modules into multiple chunks when possible.
    */
   unstable_splitRouteModules: boolean | "enforce";
+  unstable_subResourceIntegrity: boolean;
   /**
    * Use Vite Environment API (experimental)
    */
@@ -497,6 +498,8 @@ async function resolveConfig({
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:
       reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
+    unstable_subResourceIntegrity:
+      reactRouterUserConfig.future?.unstable_subResourceIntegrity ?? false,
     unstable_viteEnvironmentApi:
       reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
   };
