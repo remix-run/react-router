@@ -54,6 +54,7 @@ let files = {
             <Link to="/">Home</Link><br/>
             <Link to="/about">About</Link><br/>
             <Link to="/not-found">Not Found</Link><br/>
+            <Link to="/redirect">Redirect</Link><br/>
             </nav>
             {children}
             <Scripts />
@@ -2346,6 +2347,48 @@ test.describe("Prerendering", () => {
       await app.clickLink("/not-found");
       await page.waitForSelector("[data-error]:has-text('404 Not Found')");
       expect(requests).toEqual(["/not-found.data"]);
+    });
+
+    test("Handles redirects in prerendered pages", async ({ page }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          ...files,
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false, // turn off fog of war since we're serving with a static server
+            prerender: true,
+          }),
+          "app/routes/redirect.tsx": js`
+            import { redirect } from "react-router"
+            export function loader() {
+              return redirect('/target', 301);
+            }
+            export default function Component() {
+              <h1>Nope</h1>
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1 id="target">Target</h1>
+            }
+          `,
+        },
+      });
+
+      appFixture = await createAppFixture(fixture);
+
+      // Document loads
+      let requests = captureRequests(page);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/redirect");
+      await page.waitForSelector("#target");
+      expect(requests).toEqual([]);
+
+      // Client side navigations
+      await app.goto("/", true);
+      app.clickLink("/redirect");
+      await page.waitForSelector("#target");
+      expect(requests).toEqual(["/redirect.data"]);
     });
   });
 });
