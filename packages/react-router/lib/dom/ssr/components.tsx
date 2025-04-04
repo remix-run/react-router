@@ -388,7 +388,8 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, basename);
+    // TODO: Update extension to be configurable for RSC
+    let url = singleFetchUrl(page, basename, "data");
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out

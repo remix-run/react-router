@@ -296,6 +296,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         );
         app.get("*", (req, res, next) => {
           let dir = path.join(fixture.projectDir, "build", "client");
+          // TODO: Update this to be configurable somehow for RSC
           let file = req.path.endsWith(".data")
             ? req.path
             : req.path + "/index.html";

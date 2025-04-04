@@ -167,6 +167,7 @@ export class PlaywrightFixture {
    * loaders were called (or not).
    */
   collectSingleFetchResponses() {
+    // TODO: Update this to be configurable somehow for RSC
     return this.collectResponses((url) => url.pathname.endsWith(".data"));
   }
 
