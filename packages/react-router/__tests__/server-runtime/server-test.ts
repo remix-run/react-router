@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 
-import type { StaticHandlerContext } from "react-router";
+import {
+  unstable_createContext,
+  type StaticHandlerContext,
+} from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
@@ -24,7 +27,7 @@ function spyConsole() {
   return spy;
 }
 
-describe.skip("server", () => {
+describe("server", () => {
   let routeId = "root";
   let build: ServerBuild = {
     ssr: true,
@@ -72,20 +75,20 @@ describe.skip("server", () => {
     });
 
     let allowThrough = [
-      ["GET", "/"],
-      ["GET", "/?_data=root"],
-      ["POST", "/"],
-      ["POST", "/?_data=root"],
-      ["PUT", "/"],
-      ["PUT", "/?_data=root"],
-      ["DELETE", "/"],
-      ["DELETE", "/?_data=root"],
-      ["PATCH", "/"],
-      ["PATCH", "/?_data=root"],
+      ["GET", "/", "COMPONENT"],
+      ["GET", "/_root.data", "LOADER"],
+      ["POST", "/", "COMPONENT"],
+      ["POST", "/_root.data", "ACTION"],
+      ["PUT", "/", "COMPONENT"],
+      ["PUT", "/_root.data", "ACTION"],
+      ["DELETE", "/", "COMPONENT"],
+      ["DELETE", "/_root.data", "ACTION"],
+      ["PATCH", "/", "COMPONENT"],
+      ["PATCH", "/_root.data", "ACTION"],
     ];
     it.each(allowThrough)(
       `allows through %s request to %s`,
-      async (method, to) => {
+      async (method, to, expected) => {
         let handler = createRequestHandler(build);
         let response = await handler(
           new Request(`http://localhost:3000${to}`, {
@@ -96,11 +99,6 @@ describe.skip("server", () => {
         expect(response.status).toBe(200);
         let text = await response.text();
         expect(text).toContain(method);
-        let expected = !to.includes("?_data=root")
-          ? "COMPONENT"
-          : method === "GET"
-          ? "LOADER"
-          : "ACTION";
         expect(text).toContain(expected);
         expect(spy.console).not.toHaveBeenCalled();
       }
@@ -115,6 +113,203 @@ describe.skip("server", () => {
       );
 
       expect(await response.text()).toBe("");
+    });
+
+    it("accepts proper values from getLoadContext (without middleware)", async () => {
+      let handler = createRequestHandler({
+        ssr: true,
+        entry: {
+          module: {
+            default: async (request) => {
+              return new Response(
+                `${request.method}, ${request.url} COMPONENT`
+              );
+            },
+          },
+        },
+        routes: {
+          root: {
+            id: "root",
+            path: "",
+            module: {
+              loader: ({ context }) => context.foo,
+              default: () => "COMPONENT",
+            },
+          },
+        },
+        assets: {
+          routes: {
+            root: {
+              clientActionModule: undefined,
+              clientLoaderModule: undefined,
+              clientMiddlewareModule: undefined,
+              hasAction: true,
+              hasClientAction: false,
+              hasClientLoader: false,
+              hasClientMiddleware: false,
+              hasErrorBoundary: false,
+              hasLoader: true,
+              hydrateFallbackModule: undefined,
+              id: routeId,
+              module: routeId,
+              path: "",
+            },
+          },
+          entry: { imports: [], module: "" },
+          url: "",
+          version: "",
+        },
+        future: {
+          unstable_middleware: false,
+        },
+        prerender: [],
+        publicPath: "/",
+        assetsBuildDirectory: "/",
+        isSpaMode: false,
+      });
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        {
+          foo: "FOO",
+        }
+      );
+
+      expect(await response.text()).toContain("FOO");
+    });
+
+    it("accepts proper values from getLoadContext (with middleware)", async () => {
+      let fooContext = unstable_createContext<string>();
+      let handler = createRequestHandler({
+        ssr: true,
+        entry: {
+          module: {
+            default: async (request) => {
+              return new Response(
+                `${request.method}, ${request.url} COMPONENT`
+              );
+            },
+          },
+        },
+        routes: {
+          root: {
+            id: "root",
+            path: "",
+            module: {
+              loader: ({ context }) => context.get(fooContext),
+              default: () => "COMPONENT",
+            },
+          },
+        },
+        assets: {
+          routes: {
+            root: {
+              clientActionModule: undefined,
+              clientLoaderModule: undefined,
+              clientMiddlewareModule: undefined,
+              hasAction: true,
+              hasClientAction: false,
+              hasClientLoader: false,
+              hasClientMiddleware: false,
+              hasErrorBoundary: false,
+              hasLoader: true,
+              hydrateFallbackModule: undefined,
+              id: routeId,
+              module: routeId,
+              path: "",
+            },
+          },
+          entry: { imports: [], module: "" },
+          url: "",
+          version: "",
+        },
+        future: {
+          unstable_middleware: true,
+        },
+        prerender: [],
+        publicPath: "/",
+        assetsBuildDirectory: "/",
+        isSpaMode: false,
+      });
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        // @ts-expect-error In apps the expected type is handled via the Future interface
+        new Map([[fooContext, "FOO"]])
+      );
+
+      expect(await response.text()).toContain("FOO");
+    });
+
+    it("errors if an invalid value is returned from getLoadContext (with middleware)", async () => {
+      let handleErrorSpy = jest.fn();
+      let handler = createRequestHandler({
+        ssr: true,
+        entry: {
+          module: {
+            handleError: handleErrorSpy,
+            default: async (request) => {
+              return new Response(
+                `${request.method}, ${request.url} COMPONENT`
+              );
+            },
+          },
+        },
+        routes: {
+          root: {
+            id: "root",
+            path: "",
+            module: {
+              loader: ({ context }) => context.foo,
+              default: () => "COMPONENT",
+            },
+          },
+        },
+        assets: {
+          routes: {
+            root: {
+              clientActionModule: undefined,
+              clientLoaderModule: undefined,
+              clientMiddlewareModule: undefined,
+              hasAction: true,
+              hasClientAction: false,
+              hasClientLoader: false,
+              hasClientMiddleware: false,
+              hasErrorBoundary: false,
+              hasLoader: true,
+              hydrateFallbackModule: undefined,
+              id: routeId,
+              module: routeId,
+              path: "",
+            },
+          },
+          entry: { imports: [], module: "" },
+          url: "",
+          version: "",
+        },
+        future: {
+          unstable_middleware: true,
+        },
+        prerender: [],
+        publicPath: "/",
+        assetsBuildDirectory: "/",
+        isSpaMode: false,
+      });
+
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        {
+          foo: "FOO",
+        }
+      );
+
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain("Unexpected Server Error");
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0]).toMatchInlineSnapshot(`
+        [Error: Unable to create initial \`unstable_RouterContextProvider\` instance. Please confirm you are returning an instance of \`Map<unstable_routerContext, unknown>\` from your \`getLoadContext\` function.
+
+        Error: TypeError: init is not iterable]
+      `);
+      handleErrorSpy.mockRestore();
     });
   });
 });
