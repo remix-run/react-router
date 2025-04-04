@@ -152,7 +152,7 @@ function register(ctx: Context) {
 
 const virtual = ts`
   declare module "virtual:react-router/server-build" {
-    import { ServerBuild } from "react-router";
+    import type { ServerBuild } from "react-router";    import { ServerBuild } from "react-router";
     export const assets: ServerBuild["assets"];
     export const assetsBuildDirectory: ServerBuild["assetsBuildDirectory"];
     export const basename: ServerBuild["basename"];
