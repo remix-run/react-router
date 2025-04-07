@@ -1794,7 +1794,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
-      debugger;
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect(testAction.mock.calls.length).toBe(1);
