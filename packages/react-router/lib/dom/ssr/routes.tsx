@@ -585,30 +585,19 @@ function getShouldRevalidateFunction(
   // If users are somehow re-generating updated versions of these on the backend
   // they can still opt-into revalidation which will make the `.data` request
   if (!ssr && manifestRoute.hasLoader && !manifestRoute.hasClientLoader) {
-    let [, params] = path ? compilePath(path) : [null, []];
-    let paramNames = params.map((p) => p.paramName);
-    const getDefaultShouldRevalidate = ({
-      currentParams,
-      nextParams,
-    }: ShouldRevalidateFunctionArgs) => {
-      for (let param of paramNames) {
-        if (currentParams[param] !== nextParams[param]) {
-          return true;
-        }
-      }
-      return false;
-    };
+    let myParams = path ? compilePath(path)[1].map((p) => p.paramName) : [];
+    const didParamsChange = (opts: ShouldRevalidateFunctionArgs) =>
+      myParams.some((p) => opts.currentParams[p] !== opts.nextParams[p]);
 
     if (route.shouldRevalidate) {
       let fn = route.shouldRevalidate;
       return (opts: ShouldRevalidateFunctionArgs) =>
         fn({
           ...opts,
-          defaultShouldRevalidate: getDefaultShouldRevalidate(opts),
+          defaultShouldRevalidate: didParamsChange(opts),
         });
     } else {
-      return (opts: ShouldRevalidateFunctionArgs) =>
-        getDefaultShouldRevalidate(opts);
+      return (opts: ShouldRevalidateFunctionArgs) => didParamsChange(opts);
     }
   }
 
