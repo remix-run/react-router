@@ -2791,6 +2791,9 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
+    let lazyRoutePropertiesToSkip = initialHydration
+      ? []
+      : hydrationRouteProperties;
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
@@ -2802,8 +2805,7 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         mapRouteProperties,
         scopedContext,
-        initialHydration,
-        hydrationRouteProperties
+        lazyRoutePropertiesToSkip
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -4180,11 +4182,7 @@ export function createStaticHandler(
       null,
       manifest,
       mapRouteProperties,
-      requestContext,
-      true,
-      // We never want to skip hydration route properties in static handlers.
-      // The empty array here ensures all lazy route properties are resolved.
-      []
+      requestContext
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -4874,26 +4872,16 @@ const loadLazyRouteProperty = ({
   route,
   manifest,
   mapRouteProperties,
-  initialHydration,
-  hydrationRouteProperties,
 }: {
   key: keyof AgnosticDataRouteObject;
   route: AgnosticDataRouteObject;
   manifest: RouteManifest;
   mapRouteProperties: MapRoutePropertiesFunction;
-  initialHydration: boolean;
-  hydrationRouteProperties: string[];
 }): Promise<void> | undefined => {
   let routeToUpdate = manifest[route.id];
   invariant(routeToUpdate, "No route found in manifest");
 
-  if (
-    // Ensure we have a lazy route property
-    !routeToUpdate.lazy ||
-    typeof routeToUpdate.lazy !== "object" ||
-    // If we're not hydrating, we don't need to resolve lazy hydration route properties
-    (!initialHydration && hydrationRouteProperties.includes(key))
-  ) {
+  if (!routeToUpdate.lazy || typeof routeToUpdate.lazy !== "object") {
     return;
   }
 
@@ -4970,10 +4958,9 @@ const lazyRouteFunctionCache = new WeakMap<
 function loadLazyRoute(
   route: AgnosticDataRouteObject,
   type: "loader" | "action",
-  initialHydration: boolean,
-  hydrationRouteProperties: string[],
   manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction
+  mapRouteProperties: MapRoutePropertiesFunction,
+  lazyRoutePropertiesToSkip?: string[]
 ): {
   lazyRoutePromise: Promise<void> | undefined;
   lazyHandlerPromise: Promise<void> | undefined;
@@ -5083,13 +5070,15 @@ function loadLazyRoute(
   let lazyHandlerPromise: Promise<void> | undefined = undefined;
 
   for (let key of lazyKeys) {
+    if (lazyRoutePropertiesToSkip && lazyRoutePropertiesToSkip.includes(key)) {
+      continue;
+    }
+
     let promise = loadLazyRouteProperty({
       key,
       route,
       manifest,
       mapRouteProperties,
-      initialHydration,
-      hydrationRouteProperties,
     });
     if (promise) {
       lazyPropertyPromises.push(promise);
@@ -5132,9 +5121,6 @@ function loadLazyMiddlewareForMatches(
         route,
         manifest,
         mapRouteProperties,
-        // Middleware property is always unrelated to hydration
-        initialHydration: false,
-        hydrationRouteProperties: [],
       });
     })
     .filter(isNonNullable);
@@ -5328,8 +5314,7 @@ async function callDataStrategyImpl(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   scopedContext: unknown,
-  initialHydration: boolean,
-  hydrationRouteProperties: string[]
+  lazyRoutePropertiesToSkip?: string[]
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all lazy/lazyMiddleware async functions are kicked off in parallel
   // before we await them where needed below
@@ -5342,10 +5327,9 @@ async function callDataStrategyImpl(
     loadLazyRoute(
       m.route,
       type,
-      initialHydration,
-      hydrationRouteProperties,
       manifest,
-      mapRouteProperties
+      mapRouteProperties,
+      lazyRoutePropertiesToSkip
     )
   );
 
