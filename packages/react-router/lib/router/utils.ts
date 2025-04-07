@@ -1206,7 +1206,7 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
-function compilePath(
+export function compilePath(
   path: string,
   caseSensitive = false,
   end = true
