@@ -131,6 +131,11 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
+export const hydrationRouteProperties: (keyof RouteObject)[] = [
+  "HydrateFallback",
+  "hydrateFallbackElement",
+];
+
 export interface MemoryRouterOpts {
   /**
    * Basename path for the application.
@@ -194,6 +199,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
+    hydrationRouteProperties,
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
