@@ -1789,8 +1789,7 @@ export function createRouter(init: RouterInit): Router {
         [actionMatch],
         matches,
         scopedContext,
-        null,
-        false
+        null
       );
       result = results[actionMatch.route.id];
 
@@ -2031,7 +2030,7 @@ export function createRouter(init: RouterInit): Router {
         revalidatingFetchers,
         request,
         scopedContext,
-        initialHydration === true
+        initialHydration
       );
 
     if (request.signal.aborted) {
@@ -2309,8 +2308,7 @@ export function createRouter(init: RouterInit): Router {
       [match],
       requestMatches,
       scopedContext,
-      key,
-      false
+      key
     );
     let actionResult = actionResults[match.route.id];
 
@@ -2432,8 +2430,7 @@ export function createRouter(init: RouterInit): Router {
         matchesToLoad,
         revalidatingFetchers,
         revalidationRequest,
-        scopedContext,
-        false
+        scopedContext
       );
 
     if (abortController.signal.aborted) {
@@ -2593,8 +2590,7 @@ export function createRouter(init: RouterInit): Router {
       [match],
       matches,
       scopedContext,
-      key,
-      false
+      key
     );
     let result = results[match.route.id];
 
@@ -2787,7 +2783,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null,
-    initialHydration: boolean
+    initialHydration?: boolean
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
@@ -2848,7 +2844,7 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
     scopedContext: unstable_RouterContextProvider,
-    initialHydration: boolean
+    initialHydration?: boolean
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
