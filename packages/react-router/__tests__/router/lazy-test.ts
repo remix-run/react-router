@@ -8,7 +8,7 @@ import type {
 import {
   cleanup,
   createDeferred,
-  createLazyStub,
+  createAsyncStub,
   setup,
 } from "./utils/data-router-setup";
 import {
@@ -52,13 +52,13 @@ describe("lazily loaded route modules", () => {
 
   const createBasicLazyFunctionRoutes = (): {
     routes: TestRouteObject[];
-    lazyStub: jest.Mock;
+    lazy: jest.Mock;
     lazyDeferred: ReturnType<typeof createDeferred>;
   } => {
-    let { lazyStub, lazyDeferred } = createLazyStub();
+    let [lazy, lazyDeferred] = createAsyncStub();
     return {
-      routes: createBasicLazyRoutes(lazyStub),
-      lazyStub,
+      routes: createBasicLazyRoutes(lazy),
+      lazy,
       lazyDeferred,
     };
   };
@@ -162,7 +162,7 @@ describe("lazily loaded route modules", () => {
 
     it("ignores and warns on unsupported lazy route function properties on router initialization", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let lazyLoaderDeferred = createDeferred();
+      let loaderDeferred = createDeferred();
       let router = createRouter({
         routes: [
           {
@@ -170,7 +170,7 @@ describe("lazily loaded route modules", () => {
             // @ts-expect-error
             lazy: async () => {
               return {
-                loader: () => lazyLoaderDeferred.promise,
+                loader: () => loaderDeferred.promise,
                 lazy: async () => {
                   throw new Error("SHOULD NOT BE CALLED");
                 },
@@ -191,7 +191,7 @@ describe("lazily loaded route modules", () => {
       router.initialize();
 
       let LOADER_DATA = 123;
-      await lazyLoaderDeferred.resolve(LOADER_DATA);
+      await loaderDeferred.resolve(LOADER_DATA);
 
       expect(router.state.location.pathname).toBe("/lazy");
       expect(router.state.navigation.state).toBe("idle");
@@ -216,13 +216,13 @@ describe("lazily loaded route modules", () => {
 
     it("ignores and warns on unsupported lazy route properties on router initialization", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let lazyLoaderDeferred = createDeferred();
+      let loaderDeferred = createDeferred();
       let router = createRouter({
         routes: [
           {
             path: "/lazy",
             lazy: {
-              loader: () => lazyLoaderDeferred.promise,
+              loader: () => loaderDeferred.promise,
               // @ts-expect-error
               lazy: async () => {
                 throw new Error("SHOULD NOT BE CALLED");
@@ -244,7 +244,7 @@ describe("lazily loaded route modules", () => {
 
       let LOADER_DATA = 123;
       let loader = () => LOADER_DATA;
-      await lazyLoaderDeferred.resolve(loader);
+      await loaderDeferred.resolve(loader);
 
       expect(router.state.location.pathname).toBe("/lazy");
       expect(router.state.navigation.state).toBe("idle");
@@ -323,7 +323,7 @@ describe("lazily loaded route modules", () => {
       router.initialize();
 
       // Ensure loader is called as soon as it's loaded
-      let { lazyStub: loader, lazyDeferred: loaderDeferred } = createLazyStub();
+      let [loader, loaderDeferred] = createAsyncStub();
       await lazyLoaderDeferred.resolve(loader);
       expect(loader).toHaveBeenCalledTimes(1);
       expect(router.state.initialized).toBe(false);
@@ -346,14 +346,14 @@ describe("lazily loaded route modules", () => {
 
   describe("happy path", () => {
     it("fetches lazy route functions on loading navigation", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       lazyDeferred.resolve({
@@ -361,7 +361,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await loaderDeferred.resolve("LAZY LOADER");
 
@@ -370,14 +370,12 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.loaderData).toEqual({
         lazy: "LAZY LOADER",
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("resolves lazy route properties on loading navigation", async () => {
-      let { lazyStub: lazyLoader, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyAction, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
         loader: lazyLoader,
         action: lazyAction,
@@ -391,7 +389,7 @@ describe("lazily loaded route modules", () => {
       expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       // Ensure loader is called as soon as it's loaded
-      let { lazyStub: loader, lazyDeferred: loaderDeferred } = createLazyStub();
+      let [loader, loaderDeferred] = createAsyncStub();
       await lazyLoaderDeferred.resolve(loader);
       expect(loader).toHaveBeenCalledTimes(1);
       expect(t.router.state.location.pathname).toBe("/");
@@ -417,30 +415,28 @@ describe("lazily loaded route modules", () => {
     });
 
     it("ignores falsy lazy route properties on loading navigation", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      await lazyDeferred.resolve(null);
+      await lazyLoaderDeferred.resolve(null);
       expect(t.router.state.matches[0].route.loader).toBeUndefined();
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.loaderData).toEqual({});
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("fetches lazy route functions on submission navigation", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -448,7 +444,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
       let loaderDeferred = createDeferred();
@@ -477,21 +473,19 @@ describe("lazily loaded route modules", () => {
         lazy: "LAZY LOADER",
       });
 
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("resolves lazy route properties on submission navigation", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyLoaderStub,
-        action: lazyActionStub,
+        loader: lazyLoader,
+        action: lazyAction,
       });
       let t = setup({ routes });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -499,11 +493,11 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
-      let { lazyStub: action, lazyDeferred: actionDeferred } = createLazyStub();
-      let { lazyStub: loader, lazyDeferred: loaderDeferred } = createLazyStub();
+      let [action, actionDeferred] = createAsyncStub();
+      let [loader, loaderDeferred] = createAsyncStub();
 
       // Ensure action is called as soon as it's loaded
       await lazyActionDeferred.resolve(action);
@@ -531,22 +525,20 @@ describe("lazily loaded route modules", () => {
         lazy: "LAZY LOADER",
       });
 
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("ignores falsy lazy route properties on submission navigation", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyLoaderStub,
-        action: lazyActionStub,
+        loader: lazyLoader,
+        action: lazyAction,
       });
       let t = setup({ routes });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -554,8 +546,8 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
       await lazyLoaderDeferred.resolve(undefined);
       await lazyActionDeferred.resolve(null);
@@ -563,21 +555,21 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.actionData).toEqual(null);
       expect(t.router.state.loaderData).toEqual({});
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(t.router.state.matches[0].route.loader).toBeUndefined();
       expect(t.router.state.matches[0].route.action).toBeUndefined();
     });
 
     it("fetches lazy route functions on fetcher.load", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       lazyDeferred.resolve({
@@ -589,37 +581,35 @@ describe("lazily loaded route modules", () => {
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
 
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("resolves lazy route properties on fetcher.load", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
-      lazyDeferred.resolve(() => loaderDeferred.promise);
+      lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
       await loaderDeferred.resolve("LAZY LOADER");
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
 
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("fetches lazy route functions on fetcher.submit", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -627,7 +617,7 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
       lazyDeferred.resolve({
@@ -639,21 +629,19 @@ describe("lazily loaded route modules", () => {
       expect(t.fetchers[key]?.state).toBe("idle");
       expect(t.fetchers[key]?.data).toBe("LAZY ACTION");
 
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("resolves lazy route properties on fetcher.submit", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyLoaderStub,
-        action: lazyActionStub,
+        loader: lazyLoader,
+        action: lazyAction,
       });
       let t = setup({ routes });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -661,8 +649,8 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
       let loaderDeferred = createDeferred();
@@ -674,8 +662,8 @@ describe("lazily loaded route modules", () => {
       expect(t.fetchers[key]?.state).toBe("idle");
       expect(t.fetchers[key]?.data).toBe("LAZY ACTION");
 
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("fetches lazy route functions on staticHandler.query()", async () => {
@@ -768,14 +756,14 @@ describe("lazily loaded route modules", () => {
   describe("statically defined fields", () => {
     it("prefers statically defined loader over lazily defined loader via lazy function", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
             id: "lazy",
             path: "/lazy",
             loader: true,
-            lazy: lazyStub,
+            lazy,
           },
         ],
       });
@@ -785,12 +773,10 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.navigation.state).toBe("loading");
       // Execute in parallel
       expect(A.loaders.lazy.stub).toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
-      lazyDeferred.resolve({
-        loader: lazyLoaderStub,
-      });
+      let loader = jest.fn(() => "LAZY LOADER");
+      lazyDeferred.resolve({ loader });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
 
@@ -801,12 +787,12 @@ describe("lazily loaded route modules", () => {
         lazy: "STATIC LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.loader).toEqual(expect.any(Function));
-      expect(lazyRoute.loader).not.toBe(lazyLoaderStub);
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.loader).toEqual(expect.any(Function));
+      expect(route.loader).not.toBe(loader);
+      expect(loader).not.toHaveBeenCalled();
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -817,7 +803,7 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined loader over lazily defined loader via lazy property", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -825,7 +811,7 @@ describe("lazily loaded route modules", () => {
             path: "/lazy",
             loader: true,
             lazy: {
-              loader: lazyStub,
+              loader: lazyLoader,
             },
           },
         ],
@@ -836,10 +822,10 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.navigation.state).toBe("loading");
       // Execute in parallel
       expect(A.loaders.lazy.stub).toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(0);
+      expect(lazyLoader).toHaveBeenCalledTimes(0);
 
-      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
-      lazyDeferred.resolve(lazyLoaderStub);
+      let loader = jest.fn(() => "LAZY LOADER");
+      lazyLoaderDeferred.resolve(loader);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
 
@@ -850,12 +836,12 @@ describe("lazily loaded route modules", () => {
         lazy: "STATIC LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.loader).toEqual(expect.any(Function));
-      expect(lazyRoute.loader).not.toBe(lazyLoaderStub);
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(0);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.loader).toEqual(expect.any(Function));
+      expect(route.loader).not.toBe(loader);
+      expect(loader).not.toHaveBeenCalled();
+      expect(lazyLoader).toHaveBeenCalledTimes(0);
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -866,7 +852,7 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined loader over lazily defined falsy loader via lazy property", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -874,7 +860,7 @@ describe("lazily loaded route modules", () => {
             path: "/lazy",
             loader: true,
             lazy: {
-              loader: lazyStub,
+              loader: lazyLoader,
             },
           },
         ],
@@ -885,9 +871,9 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.navigation.state).toBe("loading");
       // Execute in parallel
       expect(A.loaders.lazy.stub).toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(0);
+      expect(lazyLoader).toHaveBeenCalledTimes(0);
 
-      lazyDeferred.resolve(null);
+      lazyLoaderDeferred.resolve(null);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
 
@@ -898,11 +884,11 @@ describe("lazily loaded route modules", () => {
         lazy: "STATIC LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.loader).toEqual(expect.any(Function));
-      expect(lazyRoute.loader).toBeInstanceOf(Function);
-      expect(lazyStub).toHaveBeenCalledTimes(0);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.loader).toEqual(expect.any(Function));
+      expect(route.loader).toBeInstanceOf(Function);
+      expect(lazyLoader).toHaveBeenCalledTimes(0);
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -913,14 +899,14 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined action over lazily loaded action via lazy function", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
             id: "lazy",
             path: "/lazy",
             action: true,
-            lazy: lazyStub,
+            lazy,
           },
         ],
       });
@@ -933,12 +919,12 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.navigation.state).toBe("submitting");
       // Execute in parallel
       expect(A.actions.lazy.stub).toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let lazyActionStub = jest.fn(() => "LAZY ACTION");
+      let lazyAction = jest.fn(() => "LAZY ACTION");
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
-        action: lazyActionStub,
+        action: lazyAction,
         loader: () => loaderDeferred.promise,
       });
       expect(t.router.state.location.pathname).toBe("/");
@@ -962,12 +948,12 @@ describe("lazily loaded route modules", () => {
         lazy: "LAZY LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.action).toEqual(expect.any(Function));
-      expect(lazyRoute.action).not.toBe(lazyActionStub);
-      expect(lazyActionStub).not.toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.action).toEqual(expect.any(Function));
+      expect(route.action).not.toBe(lazyAction);
+      expect(lazyAction).not.toHaveBeenCalled();
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -978,10 +964,8 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined action over lazily loaded action via lazy property", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -989,8 +973,8 @@ describe("lazily loaded route modules", () => {
             path: "/lazy",
             action: true,
             lazy: {
-              action: lazyActionStub,
-              loader: lazyLoaderStub,
+              action: lazyAction,
+              loader: lazyLoader,
             },
           },
         ],
@@ -1004,12 +988,12 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.navigation.state).toBe("submitting");
       // Execute in parallel
       expect(A.actions.lazy.stub).toHaveBeenCalled();
-      expect(lazyActionStub).toHaveBeenCalledTimes(0);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(0);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      let actionStub = jest.fn(() => "LAZY ACTION");
+      let action = jest.fn(() => "LAZY ACTION");
       let loaderDeferred = createDeferred();
-      lazyActionDeferred.resolve(actionStub);
+      lazyActionDeferred.resolve(action);
       lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
@@ -1032,13 +1016,13 @@ describe("lazily loaded route modules", () => {
         lazy: "LAZY LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.action).toEqual(expect.any(Function));
-      expect(lazyRoute.action).not.toBe(actionStub);
-      expect(actionStub).not.toHaveBeenCalled();
-      expect(lazyActionStub).toHaveBeenCalledTimes(0);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.action).toEqual(expect.any(Function));
+      expect(route.action).not.toBe(action);
+      expect(action).not.toHaveBeenCalled();
+      expect(lazyAction).toHaveBeenCalledTimes(0);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1049,7 +1033,7 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined action/loader over lazily defined action/loader via lazy function", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -1057,7 +1041,7 @@ describe("lazily loaded route modules", () => {
             path: "/lazy",
             action: true,
             loader: true,
-            lazy: lazyStub,
+            lazy,
           },
         ],
       });
@@ -1068,14 +1052,11 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let lazyActionStub = jest.fn(() => "LAZY ACTION");
-      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
-      await lazyDeferred.resolve({
-        action: lazyActionStub,
-        loader: lazyLoaderStub,
-      });
+      let action = jest.fn(() => "LAZY ACTION");
+      let loader = jest.fn(() => "LAZY LOADER");
+      await lazyDeferred.resolve({ action, loader });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
 
@@ -1097,15 +1078,15 @@ describe("lazily loaded route modules", () => {
         lazy: "STATIC LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.action).toEqual(expect.any(Function));
-      expect(lazyRoute.loader).toEqual(expect.any(Function));
-      expect(lazyRoute.action).not.toBe(lazyActionStub);
-      expect(lazyRoute.loader).not.toBe(lazyLoaderStub);
-      expect(lazyActionStub).not.toHaveBeenCalled();
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.action).toEqual(expect.any(Function));
+      expect(route.loader).toEqual(expect.any(Function));
+      expect(route.action).not.toBe(action);
+      expect(route.loader).not.toBe(loader);
+      expect(action).not.toHaveBeenCalled();
+      expect(loader).not.toHaveBeenCalled();
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       expect(consoleWarn).toHaveBeenCalledTimes(2);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1119,10 +1100,8 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined action/loader over lazily defined action/loader via lazy property", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -1131,8 +1110,8 @@ describe("lazily loaded route modules", () => {
             action: true,
             loader: true,
             lazy: {
-              action: lazyActionStub,
-              loader: lazyLoaderStub,
+              action: lazyAction,
+              loader: lazyLoader,
             },
           },
         ],
@@ -1144,13 +1123,13 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(0);
+      expect(lazyLoader).toHaveBeenCalledTimes(0);
 
-      expect(lazyActionStub).toHaveBeenCalledTimes(0);
-      let actionStub = jest.fn(() => "LAZY ACTION");
-      let loaderStub = jest.fn(() => "LAZY LOADER");
-      lazyActionDeferred.resolve(actionStub);
-      lazyLoaderDeferred.resolve(loaderStub);
+      expect(lazyAction).toHaveBeenCalledTimes(0);
+      let action = jest.fn(() => "LAZY ACTION");
+      let loader = jest.fn(() => "LAZY LOADER");
+      lazyActionDeferred.resolve(action);
+      lazyLoaderDeferred.resolve(loader);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
 
@@ -1172,16 +1151,16 @@ describe("lazily loaded route modules", () => {
         lazy: "STATIC LOADER",
       });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.action).toEqual(expect.any(Function));
-      expect(lazyRoute.loader).toEqual(expect.any(Function));
-      expect(lazyRoute.action).not.toBe(actionStub);
-      expect(lazyRoute.loader).not.toBe(loaderStub);
-      expect(actionStub).not.toHaveBeenCalled();
-      expect(loaderStub).not.toHaveBeenCalled();
-      expect(lazyActionStub).toHaveBeenCalledTimes(0);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(0);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.action).toEqual(expect.any(Function));
+      expect(route.loader).toEqual(expect.any(Function));
+      expect(route.action).not.toBe(action);
+      expect(route.loader).not.toBe(loader);
+      expect(action).not.toHaveBeenCalled();
+      expect(loader).not.toHaveBeenCalled();
+      expect(lazyAction).toHaveBeenCalledTimes(0);
+      expect(lazyLoader).toHaveBeenCalledTimes(0);
 
       expect(consoleWarn).toHaveBeenCalledTimes(2);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1195,14 +1174,14 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined loader over lazily defined loader via lazy function (staticHandler.query)", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let lazyLoaderStub = jest.fn(async () => {
+      let loader = jest.fn(async () => {
         await tick();
         return Response.json({ value: "LAZY LOADER" });
       });
-      let lazyStub = jest.fn(async () => {
+      let lazy = jest.fn(async () => {
         await tick();
         return {
-          loader: lazyLoaderStub,
+          loader,
         };
       });
 
@@ -1214,7 +1193,7 @@ describe("lazily loaded route modules", () => {
             await tick();
             return Response.json({ value: "STATIC LOADER" });
           },
-          lazy: lazyStub,
+          lazy,
         },
       ]);
 
@@ -1226,8 +1205,8 @@ describe("lazily loaded route modules", () => {
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(lazy).toHaveBeenCalledTimes(1);
+      expect(loader).not.toHaveBeenCalled();
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1238,13 +1217,13 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined loader over lazily defined loader via lazy property (staticHandler.query)", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let loaderStub = jest.fn(async () => {
+      let loader = jest.fn(async () => {
         await tick();
         return Response.json({ value: "LAZY LOADER" });
       });
-      let lazyStub = jest.fn(async () => {
+      let lazyLoader = jest.fn(async () => {
         await tick();
-        return loaderStub;
+        return loader;
       });
 
       let { query } = createStaticHandler([
@@ -1256,7 +1235,7 @@ describe("lazily loaded route modules", () => {
             return Response.json({ value: "STATIC LOADER" });
           },
           lazy: {
-            loader: lazyStub,
+            loader: lazyLoader,
           },
         },
       ]);
@@ -1269,8 +1248,8 @@ describe("lazily loaded route modules", () => {
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
       });
-      expect(lazyStub).not.toHaveBeenCalled();
-      expect(loaderStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(loader).not.toHaveBeenCalled();
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1281,7 +1260,7 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined loader over lazily defined loader via lazy function (staticHandler.queryRoute)", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let lazyLoaderStub = jest.fn(async () => {
+      let loader = jest.fn(async () => {
         await tick();
         return Response.json({ value: "LAZY LOADER" });
       });
@@ -1297,7 +1276,7 @@ describe("lazily loaded route modules", () => {
           lazy: async () => {
             await tick();
             return {
-              loader: lazyLoaderStub,
+              loader,
             };
           },
         },
@@ -1311,7 +1290,7 @@ describe("lazily loaded route modules", () => {
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
       });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(loader).not.toHaveBeenCalled();
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1322,13 +1301,13 @@ describe("lazily loaded route modules", () => {
 
     it("prefers statically defined loader over lazily defined loader via lazy property (staticHandler.queryRoute)", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let loaderStub = jest.fn(async () => {
+      let loader = jest.fn(async () => {
         await tick();
         return Response.json({ value: "LAZY LOADER" });
       });
-      let lazyLoaderStub = jest.fn(async () => {
+      let lazyLoader = jest.fn(async () => {
         await tick();
-        return loaderStub;
+        return loader;
       });
 
       let { query } = createStaticHandler([
@@ -1340,7 +1319,7 @@ describe("lazily loaded route modules", () => {
             return Response.json({ value: "STATIC LOADER" });
           },
           lazy: {
-            loader: lazyLoaderStub,
+            loader: lazyLoader,
           },
         },
       ]);
@@ -1353,8 +1332,8 @@ describe("lazily loaded route modules", () => {
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
       });
-      expect(loaderStub).not.toHaveBeenCalled();
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(loader).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
@@ -1365,7 +1344,7 @@ describe("lazily loaded route modules", () => {
 
     it("handles errors thrown from static loaders before lazy function has completed", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -1376,13 +1355,13 @@ describe("lazily loaded route modules", () => {
                 id: "lazy",
                 path: "lazy",
                 loader: true,
-                lazy: lazyStub,
+                lazy,
               },
             ],
           },
         ],
       });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let A = await t.navigate("/lazy");
 
@@ -1400,13 +1379,14 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         lazy: "STATIC LOADER ERROR",
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
       consoleWarn.mockReset();
     });
 
     it("handles errors thrown from static loaders before lazy property has resolved", async () => {
       let consoleWarn = jest.spyOn(console, "warn");
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazyHasErrorBoundary, lazyHasErrorBoundaryDeferred] =
+        createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -1418,14 +1398,14 @@ describe("lazily loaded route modules", () => {
                 path: "lazy",
                 loader: true,
                 lazy: {
-                  hasErrorBoundary: lazyStub,
+                  hasErrorBoundary: lazyHasErrorBoundary,
                 },
               },
             ],
           },
         ],
       });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyHasErrorBoundary).not.toHaveBeenCalled();
 
       let A = await t.navigate("/lazy");
 
@@ -1434,21 +1414,22 @@ describe("lazily loaded route modules", () => {
 
       // We shouldn't bubble the loader error until after this resolves
       // so we know if it has a boundary or not
-      await lazyDeferred.resolve(true);
+      await lazyHasErrorBoundaryDeferred.resolve(true);
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.loaderData).toEqual({});
       expect(t.router.state.errors).toEqual({
         lazy: "STATIC LOADER ERROR",
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
       consoleWarn.mockReset();
     });
   });
 
   it("bubbles errors thrown from static loaders before lazy property has resolved if lazy 'hasErrorBoundary' is falsy", async () => {
     let consoleWarn = jest.spyOn(console, "warn");
-    let { lazyStub, lazyDeferred } = createLazyStub();
+    let [lazyHasErrorBoundary, lazyHasErrorBoundaryDeferred] =
+      createAsyncStub();
     let t = setup({
       routes: [
         {
@@ -1460,14 +1441,14 @@ describe("lazily loaded route modules", () => {
               path: "lazy",
               loader: true,
               lazy: {
-                hasErrorBoundary: lazyStub,
+                hasErrorBoundary: lazyHasErrorBoundary,
               },
             },
           ],
         },
       ],
     });
-    expect(lazyStub).not.toHaveBeenCalled();
+    expect(lazyHasErrorBoundary).not.toHaveBeenCalled();
 
     let A = await t.navigate("/lazy");
 
@@ -1476,22 +1457,22 @@ describe("lazily loaded route modules", () => {
 
     // We shouldn't bubble the loader error until after this resolves
     // so we know if it has a boundary or not
-    await lazyDeferred.resolve(null);
+    await lazyHasErrorBoundaryDeferred.resolve(null);
     expect(t.router.state.location.pathname).toBe("/lazy");
     expect(t.router.state.navigation.state).toBe("idle");
     expect(t.router.state.loaderData).toEqual({});
     expect(t.router.state.errors).toEqual({
       root: "STATIC LOADER ERROR",
     });
-    expect(lazyStub).toHaveBeenCalledTimes(1);
+    expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
     consoleWarn.mockReset();
   });
 
   describe("interruptions", () => {
     it("runs lazily loaded route loader even if lazy function is interrupted", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
@@ -1501,29 +1482,25 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
 
-      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
-      await lazyDeferred.resolve({
-        loader: lazyLoaderStub,
-      });
+      let loader = jest.fn(() => "LAZY LOADER");
+      await lazyDeferred.resolve({ loader });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
 
       // Ensure the lazy route object update still happened
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.loader).toBe(lazyLoaderStub);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.loader).toBe(loader);
 
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route loader even if lazy property is interrupted", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
@@ -1533,24 +1510,24 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
 
-      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
-      await lazyDeferred.resolve(lazyLoaderStub);
+      let loader = jest.fn(() => "LAZY LOADER");
+      await lazyLoaderDeferred.resolve(loader);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
 
       // Ensure the lazy route object update still happened
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.loader).toBe(lazyLoaderStub);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(route.lazy).toBeUndefined();
+      expect(route.loader).toBe(loader);
 
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route action even if lazy function is interrupted", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -1563,34 +1540,29 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
 
-      let lazyActionStub = jest.fn(() => "LAZY ACTION");
-      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
-      await lazyDeferred.resolve({
-        action: lazyActionStub,
-        loader: lazyLoaderStub,
-      });
+      let action = jest.fn(() => "LAZY ACTION");
+      let loader = jest.fn(() => "LAZY LOADER");
+      await lazyDeferred.resolve({ action, loader });
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.action).toBe(lazyActionStub);
-      expect(lazyRoute.loader).toBe(lazyLoaderStub);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(loader).not.toHaveBeenCalled();
+      expect(route.lazy).toBeUndefined();
+      expect(route.action).toBe(action);
+      expect(route.loader).toBe(loader);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route action even if lazy property is interrupted", async () => {
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
-        action: lazyActionStub,
-        loader: lazyLoaderStub,
+        action: lazyAction,
+        loader: lazyLoader,
       });
       let t = setup({ routes });
-      expect(lazyActionStub).not.toHaveBeenCalled();
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -1603,84 +1575,78 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
 
-      let actionStub = jest.fn(() => "LAZY ACTION");
-      let loaderStub = jest.fn(() => "LAZY LOADER");
-      await lazyActionDeferred.resolve(actionStub);
-      await lazyLoaderDeferred.resolve(loaderStub);
+      let action = jest.fn(() => "LAZY ACTION");
+      let loader = jest.fn(() => "LAZY LOADER");
+      await lazyActionDeferred.resolve(action);
+      await lazyLoaderDeferred.resolve(loader);
 
-      let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(actionStub).toHaveBeenCalledTimes(1);
-      expect(loaderStub).not.toHaveBeenCalled();
-      expect(lazyRoute.lazy).toBeUndefined();
-      expect(lazyRoute.action).toBe(actionStub);
-      expect(lazyRoute.loader).toBe(loaderStub);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      let route = findRouteById(t.router.routes, "lazy");
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(loader).not.toHaveBeenCalled();
+      expect(route.lazy).toBeUndefined();
+      expect(route.action).toBe(action);
+      expect(route.loader).toBe(loader);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route loader on fetcher.load() even if lazy function is interrupted", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let lazyLoaderStub = jest.fn(() => loaderDeferred.promise);
-      await lazyDeferred.resolve({
-        loader: lazyLoaderStub,
-      });
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyDeferred.resolve({ loader });
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
       await loaderDeferred.resolve("LAZY LOADER");
 
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(2);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route loader on fetcher.load() even if lazy property is interrupted", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let loaderStub = jest.fn(() => loaderDeferred.promise);
-      await lazyDeferred.resolve(loaderStub);
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyLoaderDeferred.resolve(loader);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
       await loaderDeferred.resolve("LAZY LOADER");
 
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
-      expect(loaderStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(2);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route action on fetcher.submit() even if lazy function is interrupted", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -1688,37 +1654,32 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await t.fetch("/lazy", key, {
         formMethod: "post",
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let actionDeferred = createDeferred();
-      let lazyActionStub = jest.fn(() => actionDeferred.promise);
-      await lazyDeferred.resolve({
-        action: lazyActionStub,
-      });
+      let [action, actionDeferred] = createAsyncStub();
+      await lazyDeferred.resolve({ action });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
 
       await actionDeferred.resolve("LAZY ACTION");
 
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY ACTION");
-      expect(lazyActionStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledTimes(2);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("runs lazily loaded route action on fetcher.submit() even if lazy property is interrupted", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        action: lazyStub,
-      });
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ action: lazyAction });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -1726,48 +1687,44 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
       await t.fetch("/lazy", key, {
         formMethod: "post",
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
-      let actionDeferred = createDeferred();
-      let lazyActionStub = jest.fn(() => actionDeferred.promise);
-      await lazyDeferred.resolve(lazyActionStub);
+      let [action, actionDeferred] = createAsyncStub();
+      await lazyActionDeferred.resolve(action);
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
 
       await actionDeferred.resolve("LAZY ACTION");
 
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY ACTION");
-      expect(lazyActionStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledTimes(2);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("uses the first-called lazy function execution on repeated loading navigations", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let lazyLoaderStub = jest.fn(() => loaderDeferred.promise);
-      await lazyDeferred.resolve({
-        loader: lazyLoaderStub,
-      });
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyDeferred.resolve({ loader });
 
       await loaderDeferred.resolve("LAZY LOADER");
 
@@ -1776,31 +1733,28 @@ describe("lazily loaded route modules", () => {
 
       expect(t.router.state.loaderData).toEqual({ lazy: "LAZY LOADER" });
 
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(2);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("uses the first-called lazy property execution on repeated loading navigations", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let lazyLoaderStub = jest.fn(() => loaderDeferred.promise);
-      await lazyDeferred.resolve(lazyLoaderStub);
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyLoaderDeferred.resolve(loader);
 
       await loaderDeferred.resolve("LAZY LOADER");
 
@@ -1809,14 +1763,14 @@ describe("lazily loaded route modules", () => {
 
       expect(t.router.state.loaderData).toEqual({ lazy: "LAZY LOADER" });
 
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(2);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("uses the first-called lazy function execution on repeated submission navigations", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -1824,7 +1778,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -1832,16 +1786,11 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let actionDeferred = createDeferred();
-      let lazyLoaderStub = jest.fn(() => loaderDeferred.promise);
-      let lazyActionStub = jest.fn(() => actionDeferred.promise);
-      await lazyDeferred.resolve({
-        action: lazyActionStub,
-        loader: lazyLoaderStub,
-      });
+      let [action, actionDeferred] = createAsyncStub();
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyDeferred.resolve({ action, loader });
 
       await actionDeferred.resolve("LAZY ACTION");
       await loaderDeferred.resolve("LAZY LOADER");
@@ -1852,23 +1801,21 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.actionData).toEqual({ lazy: "LAZY ACTION" });
       expect(t.router.state.loaderData).toEqual({ lazy: "LAZY LOADER" });
 
-      expect(lazyActionStub).toHaveBeenCalledTimes(2);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledTimes(2);
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("uses the first-called lazy function property on repeated submission navigations", async () => {
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
-        action: lazyActionStub,
-        loader: lazyLoaderStub,
+        action: lazyAction,
+        loader: lazyLoader,
       });
       let t = setup({ routes });
-      expect(lazyActionStub).not.toHaveBeenCalled();
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -1876,8 +1823,8 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -1885,15 +1832,13 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let actionDeferred = createDeferred();
-      let loaderStub = jest.fn(() => loaderDeferred.promise);
-      let actionStub = jest.fn(() => actionDeferred.promise);
-      await lazyActionDeferred.resolve(actionStub);
-      await lazyLoaderDeferred.resolve(loaderStub);
+      let [action, actionDeferred] = createAsyncStub();
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyActionDeferred.resolve(action);
+      await lazyLoaderDeferred.resolve(loader);
 
       await actionDeferred.resolve("LAZY ACTION");
       await loaderDeferred.resolve("LAZY LOADER");
@@ -1904,31 +1849,28 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.actionData).toEqual({ lazy: "LAZY ACTION" });
       expect(t.router.state.loaderData).toEqual({ lazy: "LAZY LOADER" });
 
-      expect(actionStub).toHaveBeenCalledTimes(2);
-      expect(loaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledTimes(2);
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("uses the first-called lazy function execution on repeated fetcher.load calls", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let lazyLoaderStub = jest.fn(() => loaderDeferred.promise);
-      await lazyDeferred.resolve({
-        loader: lazyLoaderStub,
-      });
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyDeferred.resolve({ loader });
 
       expect(t.fetchers[key].state).toBe("loading");
 
@@ -1936,30 +1878,27 @@ describe("lazily loaded route modules", () => {
 
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(2);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("uses the first-called lazy property execution on repeated fetcher.load calls", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      let loaderDeferred = createDeferred();
-      let lazyLoaderStub = jest.fn(() => loaderDeferred.promise);
-      await lazyDeferred.resolve(lazyLoaderStub);
+      let [loader, loaderDeferred] = createAsyncStub();
+      await lazyLoaderDeferred.resolve(loader);
 
       expect(t.fetchers[key].state).toBe("loading");
 
@@ -1967,8 +1906,8 @@ describe("lazily loaded route modules", () => {
 
       expect(t.fetchers[key].state).toBe("idle");
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(2);
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(2);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -2003,7 +1942,7 @@ describe("lazily loaded route modules", () => {
     });
 
     it("handles errors when failing to resolve lazy route property on initialization", async () => {
-      let lazyDeferred = createDeferred();
+      let lazyLoaderDeferred = createDeferred();
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/lazy"] }),
         routes: [
@@ -2016,7 +1955,7 @@ describe("lazily loaded route modules", () => {
                 id: "lazy",
                 path: "lazy",
                 lazy: {
-                  loader: () => lazyDeferred.promise,
+                  loader: () => lazyLoaderDeferred.promise,
                 },
               },
             ],
@@ -2025,7 +1964,7 @@ describe("lazily loaded route modules", () => {
       }).initialize();
 
       expect(router.state.initialized).toBe(false);
-      lazyDeferred.reject(new Error("LAZY PROPERTY ERROR"));
+      lazyLoaderDeferred.reject(new Error("LAZY PROPERTY ERROR"));
       await tick();
       expect(router.state.errors).toEqual({
         root: new Error("LAZY PROPERTY ERROR"),
@@ -2034,14 +1973,14 @@ describe("lazily loaded route modules", () => {
     });
 
     it("handles errors when failing to resolve lazy route function on loading navigation", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.location.pathname).toBe("/lazy");
@@ -2051,23 +1990,21 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY FUNCTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to resolve lazy route loader property on loading navigation", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      await lazyDeferred.reject(new Error("LAZY PROPERTY ERROR"));
+      await lazyLoaderDeferred.reject(new Error("LAZY PROPERTY ERROR"));
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
 
@@ -2075,14 +2012,12 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY PROPERTY ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to resolve other lazy route properties on loading navigation", async () => {
-      let { lazyStub: lazyLoader, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyAction, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
       let routes = createBasicLazyRoutes({
         loader: lazyLoader,
         action: lazyAction,
@@ -2116,14 +2051,14 @@ describe("lazily loaded route modules", () => {
     });
 
     it("handles loader errors from lazy route functions when the route has an error boundary", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2132,7 +2067,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
       await loaderDeferred.reject(new Error("LAZY LOADER ERROR"));
 
       expect(t.router.state.location.pathname).toBe("/lazy");
@@ -2140,36 +2075,33 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         lazy: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles loader errors from lazy route properties when the route has an error boundary", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let {
-        lazyStub: lazyHasErrorBoundaryStub,
-        lazyDeferred: lazyHasErrorBoundaryDeferred,
-      } = createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyHasErrorBoundary, lazyHasErrorBoundaryDeferred] =
+        createAsyncStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyLoaderStub,
-        hasErrorBoundary: lazyHasErrorBoundaryStub,
+        loader: lazyLoader,
+        hasErrorBoundary: lazyHasErrorBoundary,
       });
       let t = setup({ routes });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyHasErrorBoundaryStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(lazyHasErrorBoundary).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyHasErrorBoundaryStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
       await lazyHasErrorBoundaryDeferred.resolve(() => true);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
       await loaderDeferred.reject(new Error("LAZY LOADER ERROR"));
 
       expect(t.router.state.location.pathname).toBe("/lazy");
@@ -2177,19 +2109,19 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         lazy: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyHasErrorBoundaryStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles loader errors from in lazy route functions when the route does not specify an error boundary", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2205,24 +2137,22 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles loader errors from in lazy route properties when the route does not specify an error boundary", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
-      await lazyDeferred.resolve(() => loaderDeferred.promise);
+      await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
 
@@ -2233,18 +2163,18 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles loader errors from lazy route functions when the route specifies hasErrorBoundary:false", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2261,29 +2191,26 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles loader errors from lazy route properties when the route specifies hasErrorBoundary:false", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let {
-        lazyStub: lazyHasErrorBoundaryStub,
-        lazyDeferred: lazyHasErrorBoundaryDeferred,
-      } = createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyHasErrorBoundary, lazyHasErrorBoundaryDeferred] =
+        createAsyncStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyLoaderStub,
-        hasErrorBoundary: lazyHasErrorBoundaryStub,
+        loader: lazyLoader,
+        hasErrorBoundary: lazyHasErrorBoundary,
       });
       let t = setup({ routes });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyHasErrorBoundaryStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(lazyHasErrorBoundary).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyHasErrorBoundaryStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
@@ -2298,30 +2225,27 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyHasErrorBoundaryStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles loader errors from lazy route properties when the route specifies hasErrorBoundary:null", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let {
-        lazyStub: lazyHasErrorBoundaryStub,
-        lazyDeferred: lazyHasErrorBoundaryDeferred,
-      } = createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyHasErrorBoundary, lazyHasErrorBoundaryDeferred] =
+        createAsyncStub();
       let routes = createBasicLazyRoutes({
-        loader: lazyLoaderStub,
-        hasErrorBoundary: lazyHasErrorBoundaryStub,
+        loader: lazyLoader,
+        hasErrorBoundary: lazyHasErrorBoundary,
       });
       let t = setup({ routes });
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
-      expect(lazyHasErrorBoundaryStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
+      expect(lazyHasErrorBoundary).not.toHaveBeenCalled();
 
       await t.navigate("/lazy");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyHasErrorBoundaryStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
@@ -2336,14 +2260,14 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
-      expect(lazyHasErrorBoundaryStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to resolve lazy route functions on submission navigation", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -2351,7 +2275,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.location.pathname).toBe("/lazy");
@@ -2362,16 +2286,14 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.actionData).toEqual(null);
       expect(t.router.state.loaderData).toEqual({});
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to resolve lazy route properties on submission navigation", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        action: lazyStub,
-      });
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ action: lazyAction });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -2379,9 +2301,9 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
-      await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
+      await lazyActionDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
 
@@ -2390,13 +2312,13 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.actionData).toEqual(null);
       expect(t.router.state.loaderData).toEqual({});
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("handles action errors from lazy route functions on submission navigation", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -2404,7 +2326,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2421,22 +2343,19 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         lazy: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles action errors from lazy route properties on submission navigation", async () => {
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
-      let {
-        lazyStub: lazyErrorBoundaryStub,
-        lazyDeferred: lazyErrorBoundaryDeferred,
-      } = createLazyStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let [lazyErrorBoundaryStub, lazyErrorBoundaryDeferred] =
+        createAsyncStub();
       let routes = createBasicLazyRoutes({
-        action: lazyActionStub,
+        action: lazyAction,
         hasErrorBoundary: lazyErrorBoundaryStub,
       });
       let t = setup({ routes });
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
       expect(lazyErrorBoundaryStub).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
@@ -2445,7 +2364,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(lazyErrorBoundaryStub).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
@@ -2461,14 +2380,14 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         lazy: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(lazyErrorBoundaryStub).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles action errors from lazy route functions when the route specifies hasErrorBoundary:false", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
         formMethod: "post",
@@ -2476,7 +2395,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2493,22 +2412,19 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles action errors from lazy route properties when the route specifies hasErrorBoundary:false", async () => {
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
-      let {
-        lazyStub: lazyErrorBoundaryStub,
-        lazyDeferred: lazyErrorBoundaryDeferred,
-      } = createLazyStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let [lazyErrorBoundaryStub, lazyErrorBoundaryDeferred] =
+        createAsyncStub();
       let routes = createBasicLazyRoutes({
-        action: lazyActionStub,
+        action: lazyAction,
         hasErrorBoundary: lazyErrorBoundaryStub,
       });
       let t = setup({ routes });
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
       expect(lazyErrorBoundaryStub).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
@@ -2517,7 +2433,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(lazyErrorBoundaryStub).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
@@ -2533,23 +2449,20 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(lazyErrorBoundaryStub).toHaveBeenCalledTimes(1);
     });
 
     it("bubbles action errors from lazy route properties when the route specifies hasErrorBoundary:null", async () => {
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
-      let {
-        lazyStub: lazyErrorBoundaryStub,
-        lazyDeferred: lazyErrorBoundaryDeferred,
-      } = createLazyStub();
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let [lazyErrorBoundaryStub, lazyErrorBoundaryDeferred] =
+        createAsyncStub();
       let routes = createBasicLazyRoutes({
-        action: lazyActionStub,
+        action: lazyAction,
         hasErrorBoundary: lazyErrorBoundaryStub,
       });
       let t = setup({ routes });
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
       expect(lazyErrorBoundaryStub).not.toHaveBeenCalled();
 
       await t.navigate("/lazy", {
@@ -2558,7 +2471,7 @@ describe("lazily loaded route modules", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("submitting");
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(lazyErrorBoundaryStub).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
@@ -2574,58 +2487,56 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
       expect(lazyErrorBoundaryStub).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to load lazy route functions on fetcher.load", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.fetchers.get(key)).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY FUNCTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to load lazy route properties on fetcher.load", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
-      await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
+      await lazyLoaderDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.fetchers.get(key)).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY FUNCTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("handles loader errors in lazy route functions on fetcher.load", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2638,24 +2549,22 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles loader errors in lazy route properties on fetcher.load", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        loader: lazyStub,
-      });
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ loader: lazyLoader });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyLoader).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
 
       let loaderDeferred = createDeferred();
-      await lazyDeferred.resolve(() => loaderDeferred.promise);
+      await lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
       await loaderDeferred.reject(new Error("LAZY LOADER ERROR"));
@@ -2663,13 +2572,13 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY LOADER ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to load lazy route functions on fetcher.submit", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -2677,23 +2586,21 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.fetchers.get(key)).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY FUNCTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles errors when failing to load lazy route properties on fetcher.submit", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        action: lazyStub,
-      });
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ action: lazyAction });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -2701,20 +2608,20 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
-      await lazyDeferred.reject(new Error("LAZY FUNCTION ERROR"));
+      await lazyActionDeferred.reject(new Error("LAZY FUNCTION ERROR"));
       expect(t.router.state.fetchers.get(key)).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY FUNCTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("handles action errors in lazy route functions on fetcher.submit", async () => {
-      let { routes, lazyStub, lazyDeferred } = createBasicLazyFunctionRoutes();
+      let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazy).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -2722,7 +2629,7 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
       await lazyDeferred.resolve({
@@ -2736,16 +2643,14 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazy).toHaveBeenCalledTimes(1);
     });
 
     it("handles action errors in lazy route properties on fetcher.submit", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
-      let routes = createBasicLazyRoutes({
-        action: lazyStub,
-      });
+      let [lazyAction, lazyActionDeferred] = createAsyncStub();
+      let routes = createBasicLazyRoutes({ action: lazyAction });
       let t = setup({ routes });
-      expect(lazyStub).not.toHaveBeenCalled();
+      expect(lazyAction).not.toHaveBeenCalled();
 
       let key = "key";
       await t.fetch("/lazy", key, {
@@ -2753,10 +2658,10 @@ describe("lazily loaded route modules", () => {
         formData: createFormData({}),
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
 
       let actionDeferred = createDeferred();
-      await lazyDeferred.resolve(() => actionDeferred.promise);
+      await lazyActionDeferred.resolve(() => actionDeferred.promise);
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
 
       await actionDeferred.reject(new Error("LAZY ACTION ERROR"));
@@ -2765,7 +2670,7 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.errors).toEqual({
         root: new Error("LAZY ACTION ERROR"),
       });
-      expect(lazyStub).toHaveBeenCalledTimes(1);
+      expect(lazyAction).toHaveBeenCalledTimes(1);
     });
 
     it("throws when failing to resolve lazy route functions on staticHandler.query()", async () => {
