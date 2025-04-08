@@ -302,11 +302,7 @@ async function nonSsrStrategy(
 // Loaders are trickier since we only want to hit the server once, so we
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
-  {
-    request,
-    matches,
-    unstable_shouldRevalidateArgs: shouldRevalidateArgs,
-  }: DataStrategyFunctionArgs,
+  { request, matches }: DataStrategyFunctionArgs,
   manifest: AssetsManifest,
   ssr: boolean,
   router: DataRouter,
@@ -345,19 +341,18 @@ async function singleFetchLoaderNavigationStrategy(
         let manifestRoute = manifest.routes[m.route.id];
 
         let defaultShouldRevalidate =
-          !shouldRevalidateArgs ||
-          shouldRevalidateArgs.actionStatus == null ||
-          shouldRevalidateArgs.actionStatus < 400;
+          !m.unstable_shouldRevalidateArgs ||
+          m.unstable_shouldRevalidateArgs.actionStatus == null ||
+          m.unstable_shouldRevalidateArgs.actionStatus < 400;
         let shouldCall = m.unstable_shouldCallHandler(defaultShouldRevalidate);
 
         if (!shouldCall) {
-          // Mark an opt out route if we currently have data and a `shouldRevalidate`
-          // function.   This implies that the user opted out via `shouldRevalidate`
-          // so we don't want to include it in the single fetch .data request
+          // If this route opted out of revalidation, we don't want to include
+          // it in the single fetch .data request
           foundOptOutRoute ||=
-            manifestRoute?.hasLoader === true &&
-            m.route.id in router.state.loaderData &&
-            m.route.shouldRevalidate != null;
+            m.unstable_shouldRevalidateArgs != null && // This is a revalidation,
+            manifestRoute?.hasLoader === true && // for a route with a server loader,
+            m.route.shouldRevalidate != null; // and a shouldRevalidate function
           return;
         }
 

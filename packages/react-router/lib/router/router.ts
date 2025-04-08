@@ -1799,7 +1799,6 @@ export function createRouter(init: RouterInit): Router {
       let results = await callDataStrategy(
         request,
         dsMatches,
-        null,
         scopedContext,
         null
       );
@@ -1959,11 +1958,8 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let {
-      navigationMatches: dsMatches,
-      revalidatingFetchers,
-      shouldRevalidateArgs,
-    } = getMatchesToLoad(
+    let { navigationMatches: dsMatches, revalidatingFetchers } =
+      getMatchesToLoad(
       request,
       scopedContext,
       mapRouteProperties,
@@ -2053,7 +2049,6 @@ export function createRouter(init: RouterInit): Router {
       await callLoadersAndMaybeResolveData(
         dsMatches,
         revalidatingFetchers,
-        shouldRevalidateArgs,
         request,
         scopedContext
       );
@@ -2339,7 +2334,6 @@ export function createRouter(init: RouterInit): Router {
     let actionResults = await callDataStrategy(
       fetchRequest,
       fetchMatches,
-      null,
       scopedContext,
       key
     );
@@ -2411,11 +2405,8 @@ export function createRouter(init: RouterInit): Router {
     let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
 
-    let {
-      navigationMatches: dsMatches,
-      revalidatingFetchers,
-      shouldRevalidateArgs,
-    } = getMatchesToLoad(
+    let { navigationMatches: dsMatches, revalidatingFetchers } =
+      getMatchesToLoad(
       revalidationRequest,
       scopedContext,
       mapRouteProperties,
@@ -2470,7 +2461,6 @@ export function createRouter(init: RouterInit): Router {
       await callLoadersAndMaybeResolveData(
         dsMatches,
         revalidatingFetchers,
-        shouldRevalidateArgs,
         revalidationRequest,
         scopedContext
       );
@@ -2638,7 +2628,6 @@ export function createRouter(init: RouterInit): Router {
     let results = await callDataStrategy(
       fetchRequest,
       dsMatches,
-      null,
       scopedContext,
       key
     );
@@ -2829,7 +2818,6 @@ export function createRouter(init: RouterInit): Router {
   async function callDataStrategy(
     request: Request,
     matches: DataStrategyMatch[],
-    shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"],
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
@@ -2840,7 +2828,6 @@ export function createRouter(init: RouterInit): Router {
         dataStrategyImpl as DataStrategyFunction<unknown>,
         request,
         matches,
-        shouldRevalidateArgs,
         fetcherKey,
         scopedContext
       );
@@ -2884,7 +2871,6 @@ export function createRouter(init: RouterInit): Router {
   async function callLoadersAndMaybeResolveData(
     matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
-    shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"],
     request: Request,
     scopedContext: unstable_RouterContextProvider
   ) {
@@ -2892,7 +2878,6 @@ export function createRouter(init: RouterInit): Router {
     let loaderResultsPromise = callDataStrategy(
       request,
       matches,
-      shouldRevalidateArgs,
       scopedContext,
       null
     );
@@ -2903,7 +2888,6 @@ export function createRouter(init: RouterInit): Router {
           let results = await callDataStrategy(
             f.request,
             f.matches,
-            shouldRevalidateArgs,
             scopedContext,
             f.key
           );
@@ -4250,7 +4234,6 @@ export function createStaticHandler(
       request,
       matches,
       null,
-      null,
       requestContext
     );
 
@@ -4587,7 +4570,6 @@ function getMatchesToLoad(
 ): {
   navigationMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
-  shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"];
 } {
   let actionResult = pendingActionResult
     ? isErrorResult(pendingActionResult[1])
@@ -4622,7 +4604,7 @@ function getMatchesToLoad(
     : undefined;
   let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
-  let shouldRevalidateArgs: Omit<
+  let baseShouldRevalidateArgs: Omit<
     ShouldRevalidateFunctionArgs,
     "defaultShouldRevalidate"
   > | null = initialHydration
@@ -4709,13 +4691,25 @@ function getMatchesToLoad(
           isNewRouteInstance(state.matches[index], match);
       // Already checked `initialHydration` above so this should always be defined
       invariant(
-        shouldRevalidateArgs,
-        "Expected shouldRevalidateArgs to be defined for fetcher"
+        baseShouldRevalidateArgs,
+        "Expected shouldRevalidateArgs to be defined for route match"
       );
-      let shouldLoad = shouldRevalidateLoader(match, {
-        ...shouldRevalidateArgs,
+      let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
+        ...baseShouldRevalidateArgs,
         defaultShouldRevalidate,
-      });
+      };
+      let shouldLoad = shouldRevalidateLoader(match, shouldRevalidateArgs);
+      let shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = (
+        defaultOverride
+      ) =>
+          shouldRevalidateLoader(match, {
+            // We're not in initialHydration here so this will be defined
+            ...shouldRevalidateArgs!,
+            defaultShouldRevalidate:
+              typeof defaultOverride === "boolean"
+                ? defaultOverride
+                : defaultShouldRevalidate,
+        });
 
       return getDataStrategyMatch(
         mapRouteProperties,
@@ -4725,15 +4719,8 @@ function getMatchesToLoad(
         lazyRoutePropertiesToSkip,
         scopedContext,
         shouldLoad,
-        (defaultOverride) =>
-          shouldRevalidateLoader(match, {
-            // We're not in initialHydration here so this will be defined
-            ...shouldRevalidateArgs!,
-            defaultShouldRevalidate:
-              typeof defaultOverride === "boolean"
-                ? defaultOverride
-                : defaultShouldRevalidate,
-          })
+        shouldRevalidateArgs,
+        shouldCallHandler
       );
     }
   });
@@ -4846,13 +4833,17 @@ function getMatchesToLoad(
         : isRevalidationRequired;
       // Shouldn't run during initialHydration so this should always be defined
       invariant(
-        shouldRevalidateArgs,
+        baseShouldRevalidateArgs,
         "Expected shouldRevalidateArgs to be defined for fetcher"
       );
-      let shouldLoad = shouldRevalidateLoader(fetcherMatch, {
-        ...shouldRevalidateArgs,
+      let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
+        ...baseShouldRevalidateArgs,
         defaultShouldRevalidate,
-      });
+      };
+      let shouldLoad = shouldRevalidateLoader(
+        fetcherMatch,
+        shouldRevalidateArgs
+      );
 
       if (shouldLoad) {
         revalidatingFetchers.push({
@@ -4866,7 +4857,8 @@ function getMatchesToLoad(
             fetcherMatches,
             fetcherMatch,
             lazyRoutePropertiesToSkip,
-            scopedContext
+            scopedContext,
+            shouldRevalidateArgs
           ),
           match: fetcherMatch,
           request: fetchRequest,
@@ -4876,11 +4868,7 @@ function getMatchesToLoad(
     }
   });
 
-  return {
-    navigationMatches,
-    revalidatingFetchers,
-    shouldRevalidateArgs,
-  };
+  return { navigationMatches, revalidatingFetchers };
 }
 
 function shouldLoadRouteOnHydration(
@@ -5532,6 +5520,7 @@ function getDataStrategyMatch(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldLoad: boolean,
+  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
   unstable_shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = () =>
     shouldLoad
 ): DataStrategyMatch {
@@ -5551,6 +5540,7 @@ function getDataStrategyMatch(
   return {
     ...match,
     shouldLoad,
+    unstable_shouldRevalidateArgs,
     unstable_shouldCallHandler(defaultShouldRevalidate) {
       isUsingNewApi = true;
       return unstable_shouldCallHandler(defaultShouldRevalidate);
@@ -5585,7 +5575,8 @@ function getTargetedDataStrategyMatches(
   matches: AgnosticDataRouteMatch[],
   targetMatch: AgnosticDataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
-  scopedContext: unknown
+  scopedContext: unknown,
+  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
 ): DataStrategyMatch[] {
   return matches.map((match) => {
     if (match.route.id !== targetMatch.route.id) {
@@ -5594,6 +5585,7 @@ function getTargetedDataStrategyMatches(
       return {
         ...match,
         shouldLoad: false,
+        unstable_shouldRevalidateArgs,
         unstable_shouldCallHandler: () => false,
         _lazyPromises: getDataStrategyMatchLazyPromises(
           mapRouteProperties,
@@ -5613,7 +5605,8 @@ function getTargetedDataStrategyMatches(
       match,
       lazyRoutePropertiesToSkip,
       scopedContext,
-      true
+      true,
+      unstable_shouldRevalidateArgs
     );
   });
 }
@@ -5622,7 +5615,6 @@ async function callDataStrategyImpl(
   dataStrategyImpl: DataStrategyFunction<unknown>,
   request: Request,
   matches: DataStrategyMatch[],
-  shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"],
   fetcherKey: string | null,
   scopedContext: unknown
 ): Promise<Record<string, DataStrategyResult>> {
@@ -5636,7 +5628,6 @@ async function callDataStrategyImpl(
   // back out below.
   let results = await dataStrategyImpl({
     matches,
-    unstable_shouldRevalidateArgs: shouldRevalidateArgs,
     request,
     params: matches[0].params,
     fetcherKey,

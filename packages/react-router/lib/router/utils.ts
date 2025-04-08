@@ -332,6 +332,8 @@ export interface ShouldRevalidateFunction {
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
   shouldLoad: boolean;
+  // This can be null for actions calls and for initial hydration calls
+  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
   // TODO: Figure out a good name for this or use `shouldLoad` and add a future flag
   // This function will use a scoped version of `shouldRevalidateArgs` because
   // they are read-only but let the user provide an optional override value for
@@ -355,16 +357,6 @@ export interface DataStrategyMatch
 export interface DataStrategyFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
-  // This can be null for actions calls and for initial hydration calls
-  // We omit the `defaultShouldRevalidate` because it's a per-route choice
-  // TODO: Should this be embedded on the match?  It only applies to revalidating
-  // matches, so going from  `/a/b -> /a/c` it doesn't really apply to `c` but
-  // could be potentially misconstrued?  If we provide it on the matches then
-  // it can have the proper `defaultShouldRevalidate` value on it
-  unstable_shouldRevalidateArgs: Omit<
-    ShouldRevalidateFunctionArgs,
-    "defaultShouldRevalidate"
-  > | null;
   // TODO: Implement
   // runMiddleware: () => unknown,
   fetcherKey: string | null;
