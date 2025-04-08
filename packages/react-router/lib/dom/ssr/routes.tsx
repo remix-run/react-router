@@ -9,7 +9,7 @@ import type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
 } from "../../router/utils";
-import { ErrorResponseImpl } from "../../router/utils";
+import { ErrorResponseImpl, compilePath } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
 import type { FutureConfig } from "./entry";
@@ -312,6 +312,7 @@ export function createClientRoutes(
         unstable_middleware: routeModule.unstable_clientMiddleware,
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
+          dataRoute.path,
           routeModule,
           route,
           ssr,
@@ -524,6 +525,7 @@ export function createClientRoutes(
         shouldRevalidate: async () => {
           let lazyRoute = await getLazyRoute();
           return getShouldRevalidateFunction(
+            dataRoute.path,
             lazyRoute,
             route,
             ssr,
@@ -556,6 +558,7 @@ export function createClientRoutes(
 }
 
 function getShouldRevalidateFunction(
+  path: string | undefined,
   route: Partial<DataRouteObject>,
   manifestRoute: Omit<EntryRoute, "children">,
   ssr: boolean,
@@ -572,17 +575,29 @@ function getShouldRevalidateFunction(
 
   // When prerendering is enabled with `ssr:false`, any `loader` data is
   // statically generated at build time so if we have a `loader` but not a
-  // `clientLoader`, we disable revalidation by default since we can't be sure
-  // if a `.data` file was pre-rendered.  If users are somehow re-generating
-  // updated versions of these on the backend they can still opt-into
-  // revalidation which will make the `.data` request
+  // `clientLoader`, we only revalidate if the route's params changed since we
+  // can't be sure if a `.data` file was pre-rendered otherwise.
+  //
+  // I.e., If I have a parent and a child route and I only prerender `/parent`,
+  // we can't have parent revalidate when going from `/parent -> /parent/child`
+  // because `/parent/child.data` doesn't exist.
+  //
+  // If users are somehow re-generating updated versions of these on the backend
+  // they can still opt-into revalidation which will make the `.data` request
   if (!ssr && manifestRoute.hasLoader && !manifestRoute.hasClientLoader) {
+    let myParams = path ? compilePath(path)[1].map((p) => p.paramName) : [];
+    const didParamsChange = (opts: ShouldRevalidateFunctionArgs) =>
+      myParams.some((p) => opts.currentParams[p] !== opts.nextParams[p]);
+
     if (route.shouldRevalidate) {
       let fn = route.shouldRevalidate;
       return (opts: ShouldRevalidateFunctionArgs) =>
-        fn({ ...opts, defaultShouldRevalidate: false });
+        fn({
+          ...opts,
+          defaultShouldRevalidate: didParamsChange(opts),
+        });
     } else {
-      return () => false;
+      return (opts: ShouldRevalidateFunctionArgs) => didParamsChange(opts);
     }
   }
 

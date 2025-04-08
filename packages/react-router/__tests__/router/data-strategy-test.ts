@@ -5,7 +5,7 @@ import type {
 } from "../../lib/router/utils";
 import {
   createDeferred,
-  createLazyStub,
+  createAsyncStub,
   setup,
 } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
@@ -99,10 +99,8 @@ describe("router dataStrategy", () => {
           keyedResults(matches, results)
         )
       );
-      let { lazyStub: lazyJsonStub, lazyDeferred: lazyJsonDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyTextStub, lazyDeferred: lazyTextDeferred } =
-        createLazyStub();
+      let [lazyJson, lazyJsonDeferred] = createAsyncStub();
+      let [lazyText, lazyTextDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -111,12 +109,12 @@ describe("router dataStrategy", () => {
           {
             id: "json",
             path: "/test",
-            lazy: lazyJsonStub,
+            lazy: lazyJson,
             children: [
               {
                 id: "text",
                 index: true,
-                lazy: lazyTextStub,
+                lazy: lazyText,
               },
             ],
           },
@@ -219,7 +217,7 @@ describe("router dataStrategy", () => {
     });
 
     it("should allow custom implementations to override default behavior with lazy", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -228,7 +226,7 @@ describe("router dataStrategy", () => {
           {
             id: "test",
             path: "/test",
-            lazy: lazyStub,
+            lazy,
           },
         ],
         async dataStrategy({ matches }) {
@@ -374,7 +372,7 @@ describe("router dataStrategy", () => {
     });
 
     it("does not require resolve to be called if a match is not being loaded", async () => {
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -389,7 +387,7 @@ describe("router dataStrategy", () => {
               {
                 id: "child",
                 path: "child",
-                lazy: lazyStub,
+                lazy,
               },
             ],
           },
@@ -451,7 +449,7 @@ describe("router dataStrategy", () => {
           keyedResults(matches, results)
         );
       });
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -468,7 +466,7 @@ describe("router dataStrategy", () => {
                   {
                     id: "child",
                     path: "child",
-                    lazy: lazyStub,
+                    lazy,
                   },
                 ],
               },
@@ -632,7 +630,7 @@ describe("router dataStrategy", () => {
           keyedResults(matches, results)
         )
       );
-      let { lazyStub, lazyDeferred } = createLazyStub();
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -641,7 +639,7 @@ describe("router dataStrategy", () => {
           {
             id: "json",
             path: "/test",
-            lazy: lazyStub,
+            lazy,
           },
         ],
         dataStrategy,
@@ -721,7 +719,7 @@ describe("router dataStrategy", () => {
             keyedResults(matches, results)
           )
         );
-        let { lazyStub, lazyDeferred } = createLazyStub();
+        let [lazy, lazyDeferred] = createAsyncStub();
         let t = setup({
           routes: [
             {
@@ -730,7 +728,7 @@ describe("router dataStrategy", () => {
             {
               id: "json",
               path: "/test",
-              lazy: lazyStub,
+              lazy,
             },
           ],
           dataStrategy,
@@ -808,7 +806,7 @@ describe("router dataStrategy", () => {
             keyedResults(matches, results)
           )
         );
-        let { lazyStub, lazyDeferred } = createLazyStub();
+        let [lazy, lazyDeferred] = createAsyncStub();
         let t = setup({
           routes: [
             {
@@ -817,7 +815,7 @@ describe("router dataStrategy", () => {
             {
               id: "json",
               path: "/test",
-              lazy: lazyStub,
+              lazy,
             },
           ],
           dataStrategy,

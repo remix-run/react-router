@@ -169,17 +169,14 @@ export function createDeferred<T = any>() {
   };
 }
 
-export function createLazyStub(): {
-  lazyStub: jest.Mock;
-  lazyDeferred: ReturnType<typeof createDeferred>;
-} {
-  let lazyDeferred = createDeferred();
-  let lazyStub = jest.fn(() => lazyDeferred.promise);
+export function createAsyncStub(): [
+  asyncStub: jest.Mock,
+  deferred: ReturnType<typeof createDeferred>
+] {
+  let deferred = createDeferred();
+  let asyncStub = jest.fn(() => deferred.promise);
 
-  return {
-    lazyStub,
-    lazyDeferred,
-  };
+  return [asyncStub, deferred];
 }
 
 export function getFetcherData(router: Router) {
