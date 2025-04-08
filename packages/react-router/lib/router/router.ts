@@ -5501,10 +5501,11 @@ function getDataStrategyMatch(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldLoad: boolean,
-  shouldCallHandler: DataStrategyMatch["shouldCallHandler"] = () => shouldLoad
+  unstable_shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = () =>
+    shouldLoad
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
-  // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
+  // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
   // around when resolve calls through to the handler
   let isUsingNewApi = false;
 
@@ -5519,9 +5520,9 @@ function getDataStrategyMatch(
   return {
     ...match,
     shouldLoad,
-    shouldCallHandler(defaultShouldRevalidate) {
+    unstable_shouldCallHandler(defaultShouldRevalidate) {
       isUsingNewApi = true;
-      return shouldCallHandler(defaultShouldRevalidate);
+      return unstable_shouldCallHandler(defaultShouldRevalidate);
     },
     _lazyPromises,
     resolve(handlerOverride) {
@@ -5562,7 +5563,7 @@ function getTargetedDataStrategyMatches(
       return {
         ...match,
         shouldLoad: false,
-        shouldCallHandler: () => false,
+        unstable_shouldCallHandler: () => false,
         _lazyPromises: getDataStrategyMatchLazyPromises(
           mapRouteProperties,
           manifest,

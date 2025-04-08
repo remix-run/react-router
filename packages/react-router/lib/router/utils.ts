@@ -336,7 +336,7 @@ export interface DataStrategyMatch
   // This function will use a scoped version of `shouldRevalidateArgs` because
   // they are read-only but let the user provide an optional override value for
   // `defaultShouldRevalidate` if they choose
-  shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   /**
    * @private
    */
