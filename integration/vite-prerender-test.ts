@@ -2341,7 +2341,6 @@ test.describe("Prerendering", () => {
       await app.clickLink("/param/1");
       await page.waitForSelector('[data-param="1"]');
       expect(await (await page.$("[data-param]"))?.innerText()).toBe("Param 1");
-      console.log("asserting", requests);
       expect(requests).toEqual(["/param/1.data"]);
       clearRequests(requests);
 
@@ -2426,7 +2425,6 @@ test.describe("Prerendering", () => {
       await app.clickLink("/param/1");
       await page.waitForSelector('[data-param="1"]');
       expect(await (await page.$("[data-param]"))?.innerText()).toBe("Param 1");
-      console.log("asserting", requests);
       expect(requests).toEqual(["/param/1.data"]);
       clearRequests(requests);
 
