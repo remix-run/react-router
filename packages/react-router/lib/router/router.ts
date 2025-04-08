@@ -1960,26 +1960,26 @@ export function createRouter(init: RouterInit): Router {
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let { navigationMatches: dsMatches, revalidatingFetchers } =
       getMatchesToLoad(
-      request,
-      scopedContext,
-      mapRouteProperties,
-      manifest,
-      init.history,
-      state,
-      matches,
-      activeSubmission,
-      location,
-      initialHydration ? [] : hydrationRouteProperties,
-      initialHydration === true,
-      isRevalidationRequired,
-      cancelledFetcherLoads,
-      fetchersQueuedForDeletion,
-      fetchLoadMatches,
-      fetchRedirectIds,
-      routesToUse,
-      basename,
-      pendingActionResult
-    );
+        request,
+        scopedContext,
+        mapRouteProperties,
+        manifest,
+        init.history,
+        state,
+        matches,
+        activeSubmission,
+        location,
+        initialHydration ? [] : hydrationRouteProperties,
+        initialHydration === true,
+        isRevalidationRequired,
+        cancelledFetcherLoads,
+        fetchersQueuedForDeletion,
+        fetchLoadMatches,
+        fetchRedirectIds,
+        routesToUse,
+        basename,
+        pendingActionResult
+      );
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
@@ -2407,26 +2407,26 @@ export function createRouter(init: RouterInit): Router {
 
     let { navigationMatches: dsMatches, revalidatingFetchers } =
       getMatchesToLoad(
-      revalidationRequest,
-      scopedContext,
-      mapRouteProperties,
-      manifest,
-      init.history,
-      state,
-      matches,
-      submission,
-      nextLocation,
-      hydrationRouteProperties,
-      false,
-      isRevalidationRequired,
-      cancelledFetcherLoads,
-      fetchersQueuedForDeletion,
-      fetchLoadMatches,
-      fetchRedirectIds,
-      routesToUse,
-      basename,
-      [match.route.id, actionResult]
-    );
+        revalidationRequest,
+        scopedContext,
+        mapRouteProperties,
+        manifest,
+        init.history,
+        state,
+        matches,
+        submission,
+        nextLocation,
+        hydrationRouteProperties,
+        false,
+        isRevalidationRequired,
+        cancelledFetcherLoads,
+        fetchersQueuedForDeletion,
+        fetchLoadMatches,
+        fetchRedirectIds,
+        routesToUse,
+        basename,
+        [match.route.id, actionResult]
+      );
 
     // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
@@ -4622,95 +4622,32 @@ function getMatchesToLoad(
   let navigationMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
 
+    // For these cases we don't let the user have control via shouldRevalidate
+    // and we either force the loader to run or not run
+    let forceShouldLoad: boolean | null = null;
+
     if (maxIdx != null && index > maxIdx) {
       // Don't call loaders below the boundary
-      return getDataStrategyMatch(
-        mapRouteProperties,
-        manifest,
-        request,
-        match,
-        lazyRoutePropertiesToSkip,
-        scopedContext,
-        false
-      );
+      forceShouldLoad = false;
     } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
-      return getDataStrategyMatch(
-        mapRouteProperties,
-        manifest,
-        request,
-        match,
-        lazyRoutePropertiesToSkip,
-        scopedContext,
-        true
-      );
+      forceShouldLoad = true;
     } else if (route.loader == null) {
-      return getDataStrategyMatch(
-        mapRouteProperties,
-        manifest,
-        request,
-        match,
-        lazyRoutePropertiesToSkip,
-        scopedContext,
-        false
-      );
+      // Nothing to load!
+      forceShouldLoad = false;
     } else if (initialHydration) {
-      return getDataStrategyMatch(
-        mapRouteProperties,
-        manifest,
-        request,
-        match,
-        lazyRoutePropertiesToSkip,
-        scopedContext,
-        shouldLoadRouteOnHydration(route, state.loaderData, state.errors)
+      // Only run on hydration if this is a hydrating `clientLoader`
+      forceShouldLoad = shouldLoadRouteOnHydration(
+        route,
+        state.loaderData,
+        state.errors
       );
     } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
       // Always call the loader on new route instances
-      return getDataStrategyMatch(
-        mapRouteProperties,
-        manifest,
-        request,
-        match,
-        lazyRoutePropertiesToSkip,
-        scopedContext,
-        true
-      );
-    } else {
-      // This is the default implementation for when we revalidate.  If the route
-      // provides it's own implementation, then we give them full control but
-      // provide this value so they can leverage it if needed after they check
-      // their own specific use cases
-      let defaultShouldRevalidate = shouldSkipRevalidation
-        ? false
-        : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-          isRevalidationRequired ||
-          currentUrl.pathname + currentUrl.search ===
-            nextUrl.pathname + nextUrl.search ||
-          // Search params affect all loaders
-          currentUrl.search !== nextUrl.search ||
-          isNewRouteInstance(state.matches[index], match);
-      // Already checked `initialHydration` above so this should always be defined
-      invariant(
-        baseShouldRevalidateArgs,
-        "Expected shouldRevalidateArgs to be defined for route match"
-      );
-      let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
-        ...baseShouldRevalidateArgs,
-        defaultShouldRevalidate,
-      };
-      let shouldLoad = shouldRevalidateLoader(match, shouldRevalidateArgs);
-      let shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = (
-        defaultOverride
-      ) =>
-          shouldRevalidateLoader(match, {
-            // We're not in initialHydration here so this will be defined
-            ...shouldRevalidateArgs!,
-            defaultShouldRevalidate:
-              typeof defaultOverride === "boolean"
-                ? defaultOverride
-                : defaultShouldRevalidate,
-        });
+      forceShouldLoad = true;
+    }
 
+    if (forceShouldLoad !== null) {
       return getDataStrategyMatch(
         mapRouteProperties,
         manifest,
@@ -4718,11 +4655,56 @@ function getMatchesToLoad(
         match,
         lazyRoutePropertiesToSkip,
         scopedContext,
-        shouldLoad,
-        shouldRevalidateArgs,
-        shouldCallHandler
+        forceShouldLoad
       );
     }
+
+    // This is the default implementation for when we revalidate.  If the route
+    // provides it's own implementation, then we give them full control but
+    // provide this value so they can leverage it if needed after they check
+    // their own specific use cases
+    let defaultShouldRevalidate = shouldSkipRevalidation
+      ? false
+      : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
+        isRevalidationRequired ||
+        currentUrl.pathname + currentUrl.search ===
+          nextUrl.pathname + nextUrl.search ||
+        // Search params affect all loaders
+        currentUrl.search !== nextUrl.search ||
+        isNewRouteInstance(state.matches[index], match);
+    // Already checked `initialHydration` above so this should always be defined
+    invariant(
+      baseShouldRevalidateArgs,
+      "Expected shouldRevalidateArgs to be defined for route match"
+    );
+    let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
+      ...baseShouldRevalidateArgs,
+      defaultShouldRevalidate,
+    };
+    let shouldLoad = shouldRevalidateLoader(match, shouldRevalidateArgs);
+    let shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = (
+      defaultOverride
+    ) =>
+      shouldRevalidateLoader(match, {
+        // We're not in initialHydration here so this will be defined
+        ...shouldRevalidateArgs!,
+        defaultShouldRevalidate:
+          typeof defaultOverride === "boolean"
+            ? defaultOverride
+            : defaultShouldRevalidate,
+      });
+
+    return getDataStrategyMatch(
+      mapRouteProperties,
+      manifest,
+      request,
+      match,
+      lazyRoutePropertiesToSkip,
+      scopedContext,
+      shouldLoad,
+      shouldRevalidateArgs,
+      shouldCallHandler
+    );
   });
 
   // Pick fetcher.loads that need to be revalidated
