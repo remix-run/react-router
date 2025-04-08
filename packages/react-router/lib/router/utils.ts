@@ -1,3 +1,4 @@
+import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -172,6 +173,10 @@ export class unstable_RouterContextProvider {
   }
 }
 
+type DefaultContext = MiddlewareEnabled extends true
+  ? unstable_RouterContextProvider
+  : any;
+
 /**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
@@ -225,13 +230,13 @@ export type unstable_MiddlewareFunction<Result = unknown> = (
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
+export interface LoaderFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
+export interface ActionFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
@@ -244,7 +249,7 @@ type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = any> = {
+export type LoaderFunction<Context = DefaultContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -254,7 +259,7 @@ export type LoaderFunction<Context = any> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = any> {
+export interface ActionFunction<Context = DefaultContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -354,7 +359,7 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = any>
+export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   // TODO: Implement
@@ -370,7 +375,7 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction<Context = any> {
+export interface DataStrategyFunction<Context = DefaultContext> {
   (args: DataStrategyFunctionArgs<Context>): Promise<
     Record<string, DataStrategyResult>
   >;
