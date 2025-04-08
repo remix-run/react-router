@@ -1958,28 +1958,27 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let { navigationMatches: dsMatches, revalidatingFetchers } =
-      getMatchesToLoad(
-        request,
-        scopedContext,
-        mapRouteProperties,
-        manifest,
-        init.history,
-        state,
-        matches,
-        activeSubmission,
-        location,
-        initialHydration ? [] : hydrationRouteProperties,
-        initialHydration === true,
-        isRevalidationRequired,
-        cancelledFetcherLoads,
-        fetchersQueuedForDeletion,
-        fetchLoadMatches,
-        fetchRedirectIds,
-        routesToUse,
-        basename,
-        pendingActionResult
-      );
+    let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
+      request,
+      scopedContext,
+      mapRouteProperties,
+      manifest,
+      init.history,
+      state,
+      matches,
+      activeSubmission,
+      location,
+      initialHydration ? [] : hydrationRouteProperties,
+      initialHydration === true,
+      isRevalidationRequired,
+      cancelledFetcherLoads,
+      fetchersQueuedForDeletion,
+      fetchLoadMatches,
+      fetchRedirectIds,
+      routesToUse,
+      basename,
+      pendingActionResult
+    );
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
@@ -2405,28 +2404,27 @@ export function createRouter(init: RouterInit): Router {
     let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
 
-    let { navigationMatches: dsMatches, revalidatingFetchers } =
-      getMatchesToLoad(
-        revalidationRequest,
-        scopedContext,
-        mapRouteProperties,
-        manifest,
-        init.history,
-        state,
-        matches,
-        submission,
-        nextLocation,
-        hydrationRouteProperties,
-        false,
-        isRevalidationRequired,
-        cancelledFetcherLoads,
-        fetchersQueuedForDeletion,
-        fetchLoadMatches,
-        fetchRedirectIds,
-        routesToUse,
-        basename,
-        [match.route.id, actionResult]
-      );
+    let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
+      revalidationRequest,
+      scopedContext,
+      mapRouteProperties,
+      manifest,
+      init.history,
+      state,
+      matches,
+      submission,
+      nextLocation,
+      hydrationRouteProperties,
+      false,
+      isRevalidationRequired,
+      cancelledFetcherLoads,
+      fetchersQueuedForDeletion,
+      fetchLoadMatches,
+      fetchRedirectIds,
+      routesToUse,
+      basename,
+      [match.route.id, actionResult]
+    );
 
     // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
@@ -4568,7 +4566,7 @@ function getMatchesToLoad(
   basename: string | undefined,
   pendingActionResult?: PendingActionResult
 ): {
-  navigationMatches: DataStrategyMatch[];
+  dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
 } {
   let actionResult = pendingActionResult
@@ -4604,22 +4602,17 @@ function getMatchesToLoad(
     : undefined;
   let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
-  let baseShouldRevalidateArgs: Omit<
-    ShouldRevalidateFunctionArgs,
-    "defaultShouldRevalidate"
-  > | null = initialHydration
-    ? null
-    : {
-        currentUrl,
-        currentParams: state.matches[0]?.params || {},
-        nextUrl,
-        nextParams: matches[0].params,
-        ...submission,
-        actionResult,
-        actionStatus,
-      };
+  let baseShouldRevalidateArgs = {
+    currentUrl,
+    currentParams: state.matches[0]?.params || {},
+    nextUrl,
+    nextParams: matches[0].params,
+    ...submission,
+    actionResult,
+    actionStatus,
+  };
 
-  let navigationMatches: DataStrategyMatch[] = matches.map((match, index) => {
+  let dsMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
 
     // For these cases we don't let the user have control via shouldRevalidate
@@ -4672,28 +4665,11 @@ function getMatchesToLoad(
         // Search params affect all loaders
         currentUrl.search !== nextUrl.search ||
         isNewRouteInstance(state.matches[index], match);
-    // Already checked `initialHydration` above so this should always be defined
-    invariant(
-      baseShouldRevalidateArgs,
-      "Expected shouldRevalidateArgs to be defined for route match"
-    );
-    let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
+    let shouldRevalidateArgs = {
       ...baseShouldRevalidateArgs,
       defaultShouldRevalidate,
     };
     let shouldLoad = shouldRevalidateLoader(match, shouldRevalidateArgs);
-    let shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = (
-      defaultOverride
-    ) =>
-      shouldRevalidateLoader(match, {
-        // We're not in initialHydration here so this will be defined
-        ...shouldRevalidateArgs!,
-        defaultShouldRevalidate:
-          typeof defaultOverride === "boolean"
-            ? defaultOverride
-            : defaultShouldRevalidate,
-      });
-
     return getDataStrategyMatch(
       mapRouteProperties,
       manifest,
@@ -4702,8 +4678,7 @@ function getMatchesToLoad(
       lazyRoutePropertiesToSkip,
       scopedContext,
       shouldLoad,
-      shouldRevalidateArgs,
-      shouldCallHandler
+      shouldRevalidateArgs
     );
   });
 
@@ -4760,26 +4735,20 @@ function getMatchesToLoad(
       fetchController.signal
     );
 
+    let fetcherDsMatches: DataStrategyMatch[] | null = null;
+
     if (cancelledFetcherLoads.has(key)) {
       // Always mark for revalidation if the fetcher was cancelled
       cancelledFetcherLoads.delete(key);
-      revalidatingFetchers.push({
-        key,
-        routeId: f.routeId,
-        path: f.path,
-        matches: getTargetedDataStrategyMatches(
-          mapRouteProperties,
-          manifest,
-          fetchRequest,
-          fetcherMatches,
-          fetcherMatch,
-          lazyRoutePropertiesToSkip,
-          scopedContext
-        ),
-        match: fetcherMatch,
-        request: fetchRequest,
-        controller: fetchController,
-      });
+      fetcherDsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
+        fetchRequest,
+        fetcherMatches,
+        fetcherMatch,
+        lazyRoutePropertiesToSkip,
+        scopedContext
+      );
     } else if (
       fetcher &&
       fetcher.state !== "idle" &&
@@ -4789,68 +4758,53 @@ function getMatchesToLoad(
         // If the fetcher hasn't ever completed loading yet, then this isn't a
         // revalidation, it would just be a brand new load if an explicit
         // revalidation is required
-        revalidatingFetchers.push({
-          key,
-          routeId: f.routeId,
-          path: f.path,
-          matches: getTargetedDataStrategyMatches(
-            mapRouteProperties,
-            manifest,
-            fetchRequest,
-            fetcherMatches,
-            fetcherMatch,
-            lazyRoutePropertiesToSkip,
-            scopedContext
-          ),
-          match: fetcherMatch,
-          request: fetchRequest,
-          controller: fetchController,
-        });
+        fetcherDsMatches = getTargetedDataStrategyMatches(
+          mapRouteProperties,
+          manifest,
+          fetchRequest,
+          fetcherMatches,
+          fetcherMatch,
+          lazyRoutePropertiesToSkip,
+          scopedContext
+        );
       }
     } else {
       // Otherwise fall back on any user-defined shouldRevalidate, defaulting
       // to explicit revalidations only
-      let defaultShouldRevalidate = shouldSkipRevalidation
-        ? false
-        : isRevalidationRequired;
-      // Shouldn't run during initialHydration so this should always be defined
-      invariant(
-        baseShouldRevalidateArgs,
-        "Expected shouldRevalidateArgs to be defined for fetcher"
-      );
       let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
         ...baseShouldRevalidateArgs,
-        defaultShouldRevalidate,
+        defaultShouldRevalidate: shouldSkipRevalidation
+          ? false
+          : isRevalidationRequired,
       };
-      let shouldLoad = shouldRevalidateLoader(
-        fetcherMatch,
-        shouldRevalidateArgs
-      );
-
-      if (shouldLoad) {
-        revalidatingFetchers.push({
-          key,
-          routeId: f.routeId,
-          path: f.path,
-          matches: getTargetedDataStrategyMatches(
-            mapRouteProperties,
-            manifest,
-            fetchRequest,
-            fetcherMatches,
-            fetcherMatch,
-            lazyRoutePropertiesToSkip,
-            scopedContext,
-            shouldRevalidateArgs
-          ),
-          match: fetcherMatch,
-          request: fetchRequest,
-          controller: fetchController,
-        });
+      if (shouldRevalidateLoader(fetcherMatch, shouldRevalidateArgs)) {
+        fetcherDsMatches = getTargetedDataStrategyMatches(
+          mapRouteProperties,
+          manifest,
+          fetchRequest,
+          fetcherMatches,
+          fetcherMatch,
+          lazyRoutePropertiesToSkip,
+          scopedContext,
+          shouldRevalidateArgs
+        );
       }
+    }
+
+    if (fetcherDsMatches) {
+      revalidatingFetchers.push({
+        key,
+        routeId: f.routeId,
+        path: f.path,
+        matches: fetcherDsMatches,
+        match: fetcherMatch,
+        request: fetchRequest,
+        controller: fetchController,
+      });
     }
   });
 
-  return { navigationMatches, revalidatingFetchers };
+  return { dsMatches, revalidatingFetchers };
 }
 
 function shouldLoadRouteOnHydration(
@@ -5502,9 +5456,7 @@ function getDataStrategyMatch(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldLoad: boolean,
-  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
-  unstable_shouldCallHandler: DataStrategyMatch["unstable_shouldCallHandler"] = () =>
-    shouldLoad
+  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
   // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
@@ -5521,13 +5473,23 @@ function getDataStrategyMatch(
 
   return {
     ...match,
+    _lazyPromises,
     shouldLoad,
     unstable_shouldRevalidateArgs,
     unstable_shouldCallHandler(defaultShouldRevalidate) {
       isUsingNewApi = true;
-      return unstable_shouldCallHandler(defaultShouldRevalidate);
+      if (!unstable_shouldRevalidateArgs) {
+        return shouldLoad;
+      }
+
+      if (typeof defaultShouldRevalidate === "boolean") {
+        return shouldRevalidateLoader(match, {
+          ...unstable_shouldRevalidateArgs,
+          defaultShouldRevalidate,
+        });
+      }
+      return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
     },
-    _lazyPromises,
     resolve(handlerOverride) {
       if (
         isUsingNewApi ||
@@ -5558,7 +5520,7 @@ function getTargetedDataStrategyMatches(
   targetMatch: AgnosticDataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
-  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
+  shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
 ): DataStrategyMatch[] {
   return matches.map((match) => {
     if (match.route.id !== targetMatch.route.id) {
@@ -5567,7 +5529,7 @@ function getTargetedDataStrategyMatches(
       return {
         ...match,
         shouldLoad: false,
-        unstable_shouldRevalidateArgs,
+        unstable_shouldRevalidateArgs: shouldRevalidateArgs,
         unstable_shouldCallHandler: () => false,
         _lazyPromises: getDataStrategyMatchLazyPromises(
           mapRouteProperties,
@@ -5588,7 +5550,7 @@ function getTargetedDataStrategyMatches(
       lazyRoutePropertiesToSkip,
       scopedContext,
       true,
-      unstable_shouldRevalidateArgs
+      shouldRevalidateArgs
     );
   });
 }
