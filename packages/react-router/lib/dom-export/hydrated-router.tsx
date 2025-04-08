@@ -209,7 +209,6 @@ function createHydratedRouter({
     },
     dataStrategy: getSingleFetchDataStrategy(
       ssrInfo.manifest,
-      ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename,
       () => router
