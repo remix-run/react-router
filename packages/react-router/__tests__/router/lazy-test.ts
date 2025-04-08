@@ -566,22 +566,18 @@ describe("lazily loaded route modules", () => {
     });
 
     it("only resolves lazy hydration route properties on hydration", async () => {
-      let {
-        lazyStub: lazyLoaderForHydration,
-        lazyDeferred: lazyLoaderDeferredForHydration,
-      } = createLazyStub();
-      let {
-        lazyStub: lazyLoaderForNavigation,
-        lazyDeferred: lazyLoaderDeferredForNavigation,
-      } = createLazyStub();
-      let {
-        lazyStub: lazyHydrateFallbackForHydration,
-        lazyDeferred: lazyHydrateFallbackDeferredForHydration,
-      } = createLazyStub();
-      let {
-        lazyStub: lazyHydrateFallbackElementForHydration,
-        lazyDeferred: lazyHydrateFallbackElementDeferredForHydration,
-      } = createLazyStub();
+      let [lazyLoaderForHydration, lazyLoaderDeferredForHydration] =
+        createAsyncStub();
+      let [lazyLoaderForNavigation, lazyLoaderDeferredForNavigation] =
+        createAsyncStub();
+      let [
+        lazyHydrateFallbackForHydration,
+        lazyHydrateFallbackDeferredForHydration,
+      ] = createAsyncStub();
+      let [
+        lazyHydrateFallbackElementForHydration,
+        lazyHydrateFallbackElementDeferredForHydration,
+      ] = createAsyncStub();
       let lazyHydrateFallbackForNavigation = jest.fn(async () => null);
       let lazyHydrateFallbackElementForNavigation = jest.fn(async () => null);
       let router = createMemoryRouter(
@@ -678,8 +674,7 @@ describe("lazily loaded route modules", () => {
     });
 
     it("skips lazy hydration route properties on fetcher.load", async () => {
-      let { lazyStub: lazyLoader, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let lazyHydrateFallback = jest.fn(async () => null);
       let lazyHydrateFallbackElement = jest.fn(async () => null);
       let routes = createBasicLazyRoutes({
@@ -773,10 +768,8 @@ describe("lazily loaded route modules", () => {
     });
 
     it("skips lazy hydration route properties on fetcher.submit", async () => {
-      let { lazyStub: lazyLoaderStub, lazyDeferred: lazyLoaderDeferred } =
-        createLazyStub();
-      let { lazyStub: lazyActionStub, lazyDeferred: lazyActionDeferred } =
-        createLazyStub();
+      let [lazyLoaderStub, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyActionStub, lazyActionDeferred] = createAsyncStub();
       let lazyHydrateFallback = jest.fn(async () => null);
       let lazyHydrateFallbackElement = jest.fn(async () => null);
       let routes = createBasicLazyRoutes({
