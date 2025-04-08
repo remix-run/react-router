@@ -1,4 +1,4 @@
-import type { Future } from "../types/future";
+import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -173,7 +173,7 @@ export class unstable_RouterContextProvider {
   }
 }
 
-type DefaultContext = Future extends { unstable_middleware: true }
+type DefaultContext = MiddlewareEnabled extends true
   ? unstable_RouterContextProvider
   : any;
 
