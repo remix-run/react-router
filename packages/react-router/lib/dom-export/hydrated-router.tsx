@@ -21,6 +21,7 @@ import {
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
 } from "react-router";
@@ -50,6 +51,19 @@ function initSsrInfo(): void {
     window.__reactRouterManifest &&
     window.__reactRouterRouteModules
   ) {
+    if (window.__reactRouterManifest.sri === true) {
+      const importMap = document.querySelector("script[rr-importmap]");
+      if (importMap?.textContent) {
+        try {
+          window.__reactRouterManifest.sri = JSON.parse(
+            importMap.textContent
+          ).integrity;
+        } catch (err) {
+          console.error("Failed to parse import map", err);
+        }
+      }
+    }
+
     ssrInfo = {
       context: window.__reactRouterContext,
       manifest: window.__reactRouterManifest,
@@ -113,10 +127,19 @@ function createHydratedRouter({
 
   let hydrationData: HydrationState | undefined = undefined;
   let loaderData = ssrInfo.context.state.loaderData;
+  // In SPA mode we only hydrate build-time root loader data
   if (ssrInfo.context.isSpaMode) {
-    // In SPA mode we hydrate in any build-time loader data which should be
-    // limited to the root route
-    hydrationData = { loaderData };
+    if (
+      ssrInfo.manifest.routes.root?.hasLoader &&
+      loaderData &&
+      "root" in loaderData
+    ) {
+      hydrationData = {
+        loaderData: {
+          root: loaderData.root,
+        },
+      };
+    }
   } else {
     // Create a shallow clone of `loaderData` we can mutate for partial hydration.
     // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
@@ -179,6 +202,7 @@ function createHydratedRouter({
     basename: ssrInfo.context.basename,
     unstable_getContext,
     hydrationData,
+    hydrationRouteProperties,
     mapRouteProperties,
     future: {
       unstable_middleware: ssrInfo.context.future.unstable_middleware,

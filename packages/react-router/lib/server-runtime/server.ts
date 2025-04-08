@@ -41,7 +41,7 @@ import type { MiddlewareEnabled } from "../types/future";
 export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
-    ? unstable_RouterContextProvider
+    ? unstable_InitialContext
     : AppLoadContext
 ) => Promise<Response>;
 
@@ -90,12 +90,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   return async function requestHandler(request, initialContext) {
     _build = typeof build === "function" ? await build() : build;
 
-    let loadContext = _build.future.unstable_middleware
-      ? new unstable_RouterContextProvider(
-          initialContext as unknown as unstable_InitialContext
-        )
-      : initialContext || {};
-
     if (typeof build === "function") {
       let derived = derive(_build, mode);
       routes = derived.routes;
@@ -108,6 +102,44 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
+    }
+
+    let params: RouteMatch<ServerRoute>["params"] = {};
+    let loadContext: AppLoadContext | unstable_RouterContextProvider;
+
+    let handleError = (error: unknown) => {
+      if (mode === ServerMode.Development) {
+        getDevServerHooks()?.processRequestError?.(error);
+      }
+
+      errorHandler(error, {
+        context: loadContext,
+        params,
+        request,
+      });
+    };
+
+    if (_build.future.unstable_middleware) {
+      if (initialContext == null) {
+        loadContext = new unstable_RouterContextProvider();
+      } else {
+        try {
+          loadContext = new unstable_RouterContextProvider(
+            initialContext as unknown as unstable_InitialContext
+          );
+        } catch (e) {
+          let error = new Error(
+            "Unable to create initial `unstable_RouterContextProvider` instance. " +
+              "Please confirm you are returning an instance of " +
+              "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
+              `\n\nError: ${e instanceof Error ? e.toString() : e}`
+          );
+          handleError(error);
+          return returnLastResortErrorResponse(error, serverMode);
+        }
+      }
+    } else {
+      loadContext = initialContext || {};
     }
 
     let url = new URL(request.url);
@@ -126,19 +158,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
-
-    let params: RouteMatch<ServerRoute>["params"] = {};
-    let handleError = (error: unknown) => {
-      if (mode === ServerMode.Development) {
-        getDevServerHooks()?.processRequestError?.(error);
-      }
-
-      errorHandler(error, {
-        context: loadContext,
-        params,
-        request,
-      });
-    };
 
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
@@ -318,7 +337,28 @@ async function handleManifestRequest(
   let patches: Record<string, EntryRoute> = {};
 
   if (url.searchParams.has("p")) {
-    for (let path of url.searchParams.getAll("p")) {
+    let paths = new Set<string>();
+
+    // In addition to responding with the patches for the requested paths, we
+    // need to include patches for each partial path so that we pick up any
+    // pathless/index routes below ancestor segments.  So if we
+    // get a request for `/parent/child`, we need to look for a match on `/parent`
+    // so that if a `parent._index` route exists we return it so it's available
+    // for client side matching if the user routes back up to `/parent`.
+    // This is the same thing we do on initial load in <Scripts> via
+    // `getPartialManifest()`
+    url.searchParams.getAll("p").forEach((path) => {
+      if (!path.startsWith("/")) {
+        path = `/${path}`;
+      }
+      let segments = path.split("/").slice(1);
+      segments.forEach((_, i) => {
+        let partialPath = segments.slice(0, i + 1).join("/");
+        paths.add(`/${partialPath}`);
+      });
+    });
+
+    for (let path of paths) {
       let matches = matchServerRoutes(routes, path, build.basename);
       if (matches) {
         for (let match of matches) {

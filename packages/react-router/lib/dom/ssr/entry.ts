@@ -42,6 +42,7 @@ export interface EntryContext extends FrameworkContextObject {
 }
 
 export interface FutureConfig {
+  unstable_subResourceIntegrity: boolean;
   unstable_middleware: boolean;
 }
 
@@ -59,4 +60,5 @@ export interface AssetsManifest {
     timestamp?: number;
     runtime: string;
   };
+  sri?: Record<string, string> | true;
 }

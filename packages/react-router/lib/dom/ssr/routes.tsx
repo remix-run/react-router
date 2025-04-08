@@ -9,7 +9,7 @@ import type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
 } from "../../router/utils";
-import { ErrorResponseImpl } from "../../router/utils";
+import { ErrorResponseImpl, compilePath } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
 import type { FutureConfig } from "./entry";
@@ -33,12 +33,14 @@ export interface EntryRoute extends Route {
   hasLoader: boolean;
   hasClientAction: boolean;
   hasClientLoader: boolean;
+  hasClientMiddleware: boolean;
   hasErrorBoundary: boolean;
   imports?: string[];
   css?: string[];
   module: string;
   clientActionModule: string | undefined;
   clientLoaderModule: string | undefined;
+  clientMiddlewareModule: string | undefined;
   hydrateFallbackModule: string | undefined;
   parentId?: string;
 }
@@ -310,6 +312,7 @@ export function createClientRoutes(
         unstable_middleware: routeModule.unstable_clientMiddleware,
         handle: routeModule.handle,
         shouldRevalidate: getShouldRevalidateFunction(
+          dataRoute.path,
           routeModule,
           route,
           ssr,
@@ -421,25 +424,6 @@ export function createClientRoutes(
           prefetchStylesAndCallHandler(() => {
             return fetchServerLoader(singleFetch);
           });
-      } else if (route.clientLoaderModule) {
-        dataRoute.loader = async (
-          args: LoaderFunctionArgs,
-          singleFetch?: unknown
-        ) => {
-          invariant(route.clientLoaderModule);
-          let { clientLoader } = await import(
-            /* @vite-ignore */
-            /* webpackIgnore: true */
-            route.clientLoaderModule
-          );
-          return clientLoader({
-            ...args,
-            async serverLoader() {
-              preventInvalidServerHandlerCall("loader", route);
-              return fetchServerLoader(singleFetch);
-            },
-          });
-        };
       }
       if (!route.hasClientAction) {
         dataRoute.action = (_: ActionFunctionArgs, singleFetch?: unknown) =>
@@ -449,97 +433,112 @@ export function createClientRoutes(
             }
             return fetchServerAction(singleFetch);
           });
-      } else if (route.clientActionModule) {
-        dataRoute.action = async (
-          args: ActionFunctionArgs,
-          singleFetch?: unknown
-        ) => {
-          invariant(route.clientActionModule);
-          prefetchRouteModuleChunks(route);
-          let { clientAction } = await import(
-            /* @vite-ignore */
-            /* webpackIgnore: true */
-            route.clientActionModule
-          );
-          return clientAction({
-            ...args,
-            async serverAction() {
-              preventInvalidServerHandlerCall("action", route);
-              return fetchServerAction(singleFetch);
-            },
-          });
-        };
       }
 
-      // Load all other modules via route.lazy()
-      dataRoute.lazy = async () => {
-        if (route.clientLoaderModule || route.clientActionModule) {
-          // If a client loader/action chunk is present, we push the loading of
-          // the main route chunk to the next tick to ensure the downloading of
-          // loader/action chunks takes precedence. This can be seen via their
-          // order in the network tab. Also note that since this is happening
-          // within `route.lazy`, this imperceptible delay only happens on the
-          // first load of this route.
-          await new Promise((resolve) => setTimeout(resolve, 0));
+      let lazyRoutePromise:
+        | ReturnType<typeof loadRouteModuleWithBlockingLinks>
+        | undefined;
+      async function getLazyRoute() {
+        if (lazyRoutePromise) {
+          return await lazyRoutePromise;
         }
+        lazyRoutePromise = (async () => {
+          if (route.clientLoaderModule || route.clientActionModule) {
+            // If a client loader/action chunk is present, we push the loading of
+            // the main route chunk to the next tick to ensure the downloading of
+            // loader/action chunks takes precedence. This can be seen via their
+            // order in the network tab. Also note that since this is happening
+            // within `route.lazy`, this imperceptible delay only happens on the
+            // first load of this route.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          }
 
-        let modPromise = loadRouteModuleWithBlockingLinks(
-          route,
-          routeModulesCache
-        );
-        prefetchRouteModuleChunks(route);
-        let mod = await modPromise;
+          let routeModulePromise = loadRouteModuleWithBlockingLinks(
+            route,
+            routeModulesCache
+          );
+          prefetchRouteModuleChunks(route);
+          return await routeModulePromise;
+        })();
+        return await lazyRoutePromise;
+      }
 
-        let lazyRoute: Partial<DataRouteObject> = { ...mod };
-        if (mod.clientLoader) {
-          let clientLoader = mod.clientLoader;
-          lazyRoute.loader = (
-            args: LoaderFunctionArgs,
-            singleFetch?: unknown
-          ) =>
-            clientLoader({
-              ...args,
-              async serverLoader() {
-                preventInvalidServerHandlerCall("loader", route);
-                return fetchServerLoader(singleFetch);
-              },
-            });
-        }
-
-        if (mod.clientAction) {
-          let clientAction = mod.clientAction;
-          lazyRoute.action = (
-            args: ActionFunctionArgs,
-            singleFetch?: unknown
-          ) =>
-            clientAction({
-              ...args,
-              async serverAction() {
-                preventInvalidServerHandlerCall("action", route);
-                return fetchServerAction(singleFetch);
-              },
-            });
-        }
-
-        return {
-          ...(lazyRoute.loader ? { loader: lazyRoute.loader } : {}),
-          ...(lazyRoute.action ? { action: lazyRoute.action } : {}),
-          unstable_middleware: mod.unstable_clientMiddleware as unknown as
-            | unstable_MiddlewareFunction[]
-            | undefined,
-          hasErrorBoundary: lazyRoute.hasErrorBoundary,
-          shouldRevalidate: getShouldRevalidateFunction(
+      dataRoute.lazy = {
+        loader: route.hasClientLoader
+          ? async () => {
+              let { clientLoader } = route.clientLoaderModule
+                ? await import(
+                    /* @vite-ignore */
+                    /* webpackIgnore: true */
+                    route.clientLoaderModule
+                  )
+                : await getLazyRoute();
+              invariant(clientLoader, "No `clientLoader` export found");
+              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
+                clientLoader({
+                  ...args,
+                  async serverLoader() {
+                    preventInvalidServerHandlerCall("loader", route);
+                    return fetchServerLoader(singleFetch);
+                  },
+                });
+            }
+          : undefined,
+        action: route.hasClientAction
+          ? async () => {
+              let clientActionPromise = route.clientActionModule
+                ? import(
+                    /* @vite-ignore */
+                    /* webpackIgnore: true */
+                    route.clientActionModule
+                  )
+                : getLazyRoute();
+              prefetchRouteModuleChunks(route);
+              let { clientAction } = await clientActionPromise;
+              invariant(clientAction, "No `clientAction` export found");
+              return (args: ActionFunctionArgs, singleFetch?: unknown) =>
+                clientAction({
+                  ...args,
+                  async serverAction() {
+                    preventInvalidServerHandlerCall("action", route);
+                    return fetchServerAction(singleFetch);
+                  },
+                });
+            }
+          : undefined,
+        unstable_middleware: route.hasClientMiddleware
+          ? async () => {
+              let { unstable_clientMiddleware } = route.clientMiddlewareModule
+                ? await import(
+                    /* @vite-ignore */
+                    /* webpackIgnore: true */
+                    route.clientMiddlewareModule
+                  )
+                : await getLazyRoute();
+              invariant(
+                unstable_clientMiddleware,
+                "No `unstable_clientMiddleware` export found"
+              );
+              return unstable_clientMiddleware;
+            }
+          : undefined,
+        shouldRevalidate: async () => {
+          let lazyRoute = await getLazyRoute();
+          return getShouldRevalidateFunction(
+            dataRoute.path,
             lazyRoute,
             route,
             ssr,
             needsRevalidation
-          ),
-          handle: lazyRoute.handle,
-          // No need to wrap these in layout since the root route is never
-          // loaded via route.lazy()
-          Component: lazyRoute.Component,
-          ErrorBoundary: lazyRoute.ErrorBoundary,
-        };
+          );
+        },
+        handle: async () => (await getLazyRoute()).handle,
+        // No need to wrap these in layout since the root route is never
+        // loaded via route.lazy()
+        Component: async () => (await getLazyRoute()).Component,
+        ErrorBoundary: route.hasErrorBoundary
+          ? async () => (await getLazyRoute()).ErrorBoundary
+          : undefined,
       };
     }
 
@@ -559,6 +558,7 @@ export function createClientRoutes(
 }
 
 function getShouldRevalidateFunction(
+  path: string | undefined,
   route: Partial<DataRouteObject>,
   manifestRoute: Omit<EntryRoute, "children">,
   ssr: boolean,
@@ -575,17 +575,29 @@ function getShouldRevalidateFunction(
 
   // When prerendering is enabled with `ssr:false`, any `loader` data is
   // statically generated at build time so if we have a `loader` but not a
-  // `clientLoader`, we disable revalidation by default since we can't be sure
-  // if a `.data` file was pre-rendered.  If users are somehow re-generating
-  // updated versions of these on the backend they can still opt-into
-  // revalidation which will make the `.data` request
+  // `clientLoader`, we only revalidate if the route's params changed since we
+  // can't be sure if a `.data` file was pre-rendered otherwise.
+  //
+  // I.e., If I have a parent and a child route and I only prerender `/parent`,
+  // we can't have parent revalidate when going from `/parent -> /parent/child`
+  // because `/parent/child.data` doesn't exist.
+  //
+  // If users are somehow re-generating updated versions of these on the backend
+  // they can still opt-into revalidation which will make the `.data` request
   if (!ssr && manifestRoute.hasLoader && !manifestRoute.hasClientLoader) {
+    let myParams = path ? compilePath(path)[1].map((p) => p.paramName) : [];
+    const didParamsChange = (opts: ShouldRevalidateFunctionArgs) =>
+      myParams.some((p) => opts.currentParams[p] !== opts.nextParams[p]);
+
     if (route.shouldRevalidate) {
       let fn = route.shouldRevalidate;
       return (opts: ShouldRevalidateFunctionArgs) =>
-        fn({ ...opts, defaultShouldRevalidate: false });
+        fn({
+          ...opts,
+          defaultShouldRevalidate: didParamsChange(opts),
+        });
     } else {
-      return () => false;
+      return (opts: ShouldRevalidateFunctionArgs) => didParamsChange(opts);
     }
   }
 

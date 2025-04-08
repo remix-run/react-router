@@ -317,7 +317,10 @@ export {
 } from "./lib/context";
 
 /** @internal */
-export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
+export {
+  hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
+  mapRouteProperties as UNSAFE_mapRouteProperties,
+} from "./lib/components";
 
 /** @internal */
 export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";

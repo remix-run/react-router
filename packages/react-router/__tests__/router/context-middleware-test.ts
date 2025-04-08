@@ -550,6 +550,192 @@ describe("context/middleware", () => {
       });
     });
 
+    describe("lazy", () => {
+      it("runs lazy loaded middleware", async () => {
+        let snapshot;
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              lazy: {
+                unstable_middleware: async () => [
+                  async ({ context }, next) => {
+                    await next();
+                    // Grab a snapshot at the end of the upwards middleware chain
+                    snapshot = context.get(orderContext);
+                  },
+                  getOrderMiddleware(orderContext, "a"),
+                  getOrderMiddleware(orderContext, "b"),
+                ],
+              },
+              loader({ context }) {
+                context.get(orderContext).push("parent loader");
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  lazy: {
+                    unstable_middleware: async () => [
+                      getOrderMiddleware(orderContext, "c"),
+                      getOrderMiddleware(orderContext, "d"),
+                    ],
+                  },
+                  loader({ context }) {
+                    context.get(orderContext).push("child loader");
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(snapshot).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "parent loader",
+          "child loader",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+      });
+
+      it("runs lazy loaded middleware when static middleware is defined", async () => {
+        let snapshot;
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              unstable_middleware: [
+                async ({ context }, next) => {
+                  await next();
+                  // Grab a snapshot at the end of the upwards middleware chain
+                  snapshot = context.get(orderContext);
+                },
+                getOrderMiddleware(orderContext, "a"),
+                getOrderMiddleware(orderContext, "b"),
+              ],
+              loader({ context }) {
+                context.get(orderContext).push("parent loader");
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  lazy: {
+                    unstable_middleware: async () => [
+                      getOrderMiddleware(orderContext, "c"),
+                      getOrderMiddleware(orderContext, "d"),
+                    ],
+                  },
+                  loader({ context }) {
+                    context.get(orderContext).push("child loader");
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(snapshot).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "parent loader",
+          "child loader",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+      });
+
+      it("ignores middleware returned from route.lazy function", async () => {
+        let snapshot;
+
+        let consoleWarn = jest
+          .spyOn(console, "warn")
+          .mockImplementation(() => {});
+
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              lazy: {
+                unstable_middleware: async () => [
+                  async ({ context }, next) => {
+                    await next();
+                    // Grab a snapshot at the end of the upwards middleware chain
+                    snapshot = context.get(orderContext);
+                  },
+                  getOrderMiddleware(orderContext, "a"),
+                  getOrderMiddleware(orderContext, "b"),
+                ],
+              },
+              loader({ context }) {
+                context.get(orderContext).push("parent loader");
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  // @ts-expect-error
+                  lazy: async () => ({
+                    unstable_middleware: [
+                      getOrderMiddleware(orderContext, "c"),
+                      getOrderMiddleware(orderContext, "d"),
+                    ],
+                  }),
+                  loader({ context }) {
+                    context.get(orderContext).push("child loader");
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(snapshot).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "parent loader",
+          "child loader",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+
+        expect(consoleWarn).toHaveBeenCalledWith(
+          "Route property unstable_middleware is not a supported property to be returned from a lazy route function. This property will be ignored."
+        );
+      });
+    });
+
     describe("throwing", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
         router = createRouter({
@@ -1331,6 +1517,81 @@ describe("context/middleware", () => {
       expect(res.headers.get("child2")).toEqual("yes");
     });
 
+    it("propagates a Response through lazy middleware when a `respond` API is passed", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          lazy: {
+            unstable_middleware: async () => [
+              async (_, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent1", "yes");
+                return res;
+              },
+              async (_, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent2", "yes");
+                return res;
+              },
+            ],
+          },
+          loader() {
+            return "PARENT";
+          },
+          children: [
+            {
+              id: "child",
+              path: "child",
+              lazy: {
+                unstable_middleware: async () => [
+                  async (_, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child1", "yes");
+                    return res;
+                  },
+                  async (_, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child2", "yes");
+                    return res;
+                  },
+                ],
+              },
+              loader() {
+                return "CHILD";
+              },
+            },
+          ],
+        },
+      ]);
+
+      let res = (await handler.query(
+        new Request("http://localhost/parent/child"),
+        { unstable_respond: respondWithJson }
+      )) as Response;
+      let staticContext = (await res.json()) as StaticHandlerContext;
+
+      expect(staticContext).toMatchObject({
+        location: {
+          pathname: "/parent/child",
+        },
+        statusCode: 200,
+        loaderData: {
+          child: "CHILD",
+          parent: "PARENT",
+        },
+        actionData: null,
+        errors: null,
+      });
+      expect(res.headers.get("parent1")).toEqual("yes");
+      expect(res.headers.get("parent2")).toEqual("yes");
+      expect(res.headers.get("child1")).toEqual("yes");
+      expect(res.headers.get("child2")).toEqual("yes");
+    });
+
     it("propagates the response even if you call next and forget to return it", async () => {
       let handler = createStaticHandler([
         {
@@ -1583,6 +1844,7 @@ describe("context/middleware", () => {
 
     describe("throwing", () => {
       it("throwing from a middleware short circuits immediately (going down - loader)", async () => {
+        let error: unknown;
         let handler = createStaticHandler([
           {
             path: "/",
@@ -1593,6 +1855,12 @@ describe("context/middleware", () => {
             unstable_middleware: [
               async ({ context }, next) => {
                 context.set(parentContext, "PARENT 1");
+                try {
+                  await next();
+                } catch (e) {
+                  error = e;
+                  throw e;
+                }
               },
               async ({ context }, next) => {
                 throw new Error("PARENT 2");
@@ -1632,6 +1900,9 @@ describe("context/middleware", () => {
         expect(staticContext.errors).toEqual({
           parent: "ERROR: PARENT 2",
         });
+
+        // Ensure we don't leak the `middlewareError`structure to userland
+        expect(error).toEqual(new Error("PARENT 2"));
       });
 
       it("throwing from a middleware short circuits immediately (going up - loader)", async () => {
@@ -2154,6 +2425,71 @@ describe("context/middleware", () => {
                   return res;
                 },
               ],
+              loader({ context }) {
+                return new Response("CHILD");
+              },
+            },
+          ],
+        },
+      ]);
+
+      let res = (await handler.queryRoute(
+        new Request("http://localhost/parent/child"),
+        {
+          unstable_respond: (v) => v,
+        }
+      )) as Response;
+
+      expect(await res.text()).toBe("CHILD");
+      expect(res.headers.get("parent1")).toEqual("yes");
+      expect(res.headers.get("parent2")).toEqual("yes");
+      expect(res.headers.get("child1")).toEqual("yes");
+      expect(res.headers.get("child2")).toEqual("yes");
+    });
+
+    it("propagates a Response through lazy middleware when a `respond` API is passed", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          lazy: {
+            unstable_middleware: async () => [
+              async ({ context }, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent1", "yes");
+                return res;
+              },
+              async ({ context }, next) => {
+                let res = (await next()) as Response;
+                res.headers.set("parent2", "yes");
+                return res;
+              },
+            ],
+          },
+          loader() {
+            return new Response("PARENT");
+          },
+          children: [
+            {
+              id: "child",
+              path: "child",
+              lazy: {
+                unstable_middleware: async () => [
+                  async ({ context }, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child1", "yes");
+                    return res;
+                  },
+                  async ({ context }, next) => {
+                    let res = (await next()) as Response;
+                    res.headers.set("child2", "yes");
+                    return res;
+                  },
+                ],
+              },
               loader({ context }) {
                 return new Response("CHILD");
               },

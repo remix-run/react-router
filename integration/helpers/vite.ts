@@ -102,6 +102,7 @@ export const viteConfig = {
 
 export const EXPRESS_SERVER = (args: {
   port: number;
+  base?: string;
   loadContext?: Record<string, unknown>;
 }) =>
   String.raw`

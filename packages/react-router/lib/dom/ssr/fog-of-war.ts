@@ -31,7 +31,7 @@ export function isFogOfWarEnabled(ssr: boolean) {
 }
 
 export function getPartialManifest(
-  manifest: AssetsManifest,
+  { sri, ...manifest }: AssetsManifest,
   router: DataRouter
 ) {
   // Start with our matches for this pathname
@@ -64,6 +64,7 @@ export function getPartialManifest(
   return {
     ...manifest,
     routes: initialRoutes,
+    sri: sri ? true : undefined,
   };
 }
 
