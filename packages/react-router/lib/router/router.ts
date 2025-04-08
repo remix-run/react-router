@@ -2816,8 +2816,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     matches: DataStrategyMatch[],
     scopedContext: unstable_RouterContextProvider,
-    fetcherKey: string | null,
-    initialHydration?: boolean
+    fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
@@ -2878,8 +2877,7 @@ export function createRouter(init: RouterInit): Router {
       request,
       matches,
       scopedContext,
-      null,
-      initialHydration
+      null
     );
 
     let fetcherResultsPromise = Promise.all(
@@ -2889,8 +2887,7 @@ export function createRouter(init: RouterInit): Router {
             f.request,
             f.matches,
             scopedContext,
-            f.key,
-            initialHydration
+            f.key
           );
           let result = results[f.match.route.id];
           // Fetcher results are keyed by fetcher key from here on out, not routeId
@@ -5467,16 +5464,13 @@ async function callRouteMiddleware(
   }
 }
 
-function getDataStrategyMatch(
+function getDataStrategyMatchLazyPromises(
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
   request: Request,
   match: DataRouteMatch,
-  lazyRoutePropertiesToSkip: string[],
-  scopedContext: unknown,
-  shouldLoad: boolean,
-  shouldCallHandler: DataStrategyMatch["shouldCallHandler"] = () => shouldLoad
-): DataStrategyMatch {
+  lazyRoutePropertiesToSkip: string[]
+): DataStrategyMatch["_lazyPromises"] {
   let lazyMiddlewarePromise = loadLazyRouteProperty({
     key: "unstable_middleware",
     route: match.route,
@@ -5492,10 +5486,35 @@ function getDataStrategyMatch(
     lazyRoutePropertiesToSkip
   );
 
+  return {
+    middleware: lazyMiddlewarePromise,
+    route: lazyRoutePromises.lazyRoutePromise,
+    handler: lazyRoutePromises.lazyHandlerPromise,
+  };
+}
+
+function getDataStrategyMatch(
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
+  request: Request,
+  match: DataRouteMatch,
+  lazyRoutePropertiesToSkip: string[],
+  scopedContext: unknown,
+  shouldLoad: boolean,
+  shouldCallHandler: DataStrategyMatch["shouldCallHandler"] = () => shouldLoad
+): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
   // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
   // around when resolve calls through to the handler
   let isUsingNewApi = false;
+
+  let _lazyPromises = getDataStrategyMatchLazyPromises(
+    mapRouteProperties,
+    manifest,
+    request,
+    match,
+    lazyRoutePropertiesToSkip
+  );
 
   return {
     ...match,
@@ -5504,11 +5523,7 @@ function getDataStrategyMatch(
       isUsingNewApi = true;
       return shouldCallHandler(defaultShouldRevalidate);
     },
-    _lazyPromises: {
-      middleware: lazyMiddlewarePromise,
-      route: lazyRoutePromises.lazyRoutePromise,
-      handler: lazyRoutePromises.lazyHandlerPromise,
-    },
+    _lazyPromises,
     resolve(handlerOverride) {
       if (
         isUsingNewApi ||
@@ -5520,8 +5535,8 @@ function getDataStrategyMatch(
         return callLoaderOrAction({
           request,
           match,
-          lazyHandlerPromise: lazyRoutePromises.lazyHandlerPromise,
-          lazyRoutePromise: lazyRoutePromises.lazyRoutePromise,
+          lazyHandlerPromise: _lazyPromises?.handler,
+          lazyRoutePromise: _lazyPromises?.route,
           handlerOverride,
           scopedContext,
         });
@@ -5540,34 +5555,21 @@ function getTargetedDataStrategyMatches(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown
 ): DataStrategyMatch[] {
-  return matches.map((match, index) => {
+  return matches.map((match) => {
     if (match.route.id !== targetMatch.route.id) {
-      let lazyMiddlewarePromise = loadLazyRouteProperty({
-        key: "unstable_middleware",
-        route: match.route,
-        manifest,
-        mapRouteProperties,
-      });
-
-      let lazyRoutePromises = loadLazyRoute(
-        match.route,
-        isMutationMethod(request.method) ? "action" : "loader",
-        manifest,
-        mapRouteProperties,
-        lazyRoutePropertiesToSkip
-      );
-
       // We don't use getDataStrategyMatch here because these are for actions/fetchers
       // where we should _never_ call the handler for any matches other than the target
       return {
         ...match,
         shouldLoad: false,
         shouldCallHandler: () => false,
-        _lazyPromises: {
-          middleware: lazyMiddlewarePromise,
-          route: lazyRoutePromises.lazyRoutePromise,
-          handler: lazyRoutePromises.lazyHandlerPromise,
-        },
+        _lazyPromises: getDataStrategyMatchLazyPromises(
+          mapRouteProperties,
+          manifest,
+          request,
+          match,
+          lazyRoutePropertiesToSkip
+        ),
         resolve: () => Promise.resolve({ type: "data", result: undefined }),
       };
     }
