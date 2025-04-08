@@ -21,6 +21,7 @@ import {
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
 } from "react-router";
@@ -201,6 +202,7 @@ function createHydratedRouter({
     basename: ssrInfo.context.basename,
     unstable_getContext,
     hydrationData,
+    hydrationRouteProperties,
     mapRouteProperties,
     future: {
       unstable_middleware: ssrInfo.context.future.unstable_middleware,

@@ -379,6 +379,7 @@ export interface RouterInit {
   unstable_getContext?: () => MaybePromise<unstable_InitialContext>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
+  hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
   window?: Window;
   dataStrategy?: DataStrategyFunction;
@@ -817,6 +818,7 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
+  let hydrationRouteProperties = init.hydrationRouteProperties || [];
   let mapRouteProperties = init.mapRouteProperties || defaultMapRouteProperties;
 
   // Routes keyed by ID
@@ -2027,7 +2029,8 @@ export function createRouter(init: RouterInit): Router {
         matchesToLoad,
         revalidatingFetchers,
         request,
-        scopedContext
+        scopedContext,
+        initialHydration
       );
 
     if (request.signal.aborted) {
@@ -2779,10 +2782,14 @@ export function createRouter(init: RouterInit): Router {
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
-    fetcherKey: string | null
+    fetcherKey: string | null,
+    initialHydration?: boolean
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
+    let lazyRoutePropertiesToSkip = initialHydration
+      ? []
+      : hydrationRouteProperties;
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
@@ -2793,7 +2800,8 @@ export function createRouter(init: RouterInit): Router {
         fetcherKey,
         manifest,
         mapRouteProperties,
-        scopedContext
+        scopedContext,
+        lazyRoutePropertiesToSkip
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -2835,7 +2843,8 @@ export function createRouter(init: RouterInit): Router {
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
-    scopedContext: unstable_RouterContextProvider
+    scopedContext: unstable_RouterContextProvider,
+    initialHydration?: boolean
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
@@ -2844,7 +2853,8 @@ export function createRouter(init: RouterInit): Router {
       matchesToLoad,
       matches,
       scopedContext,
-      null
+      null,
+      initialHydration
     );
 
     let fetcherResultsPromise = Promise.all(
@@ -2856,7 +2866,8 @@ export function createRouter(init: RouterInit): Router {
             [f.match],
             f.matches,
             scopedContext,
-            f.key
+            f.key,
+            initialHydration
           );
           let result = results[f.match.route.id];
           // Fetcher results are keyed by fetcher key from here on out, not routeId
@@ -4944,7 +4955,8 @@ function loadLazyRoute(
   route: AgnosticDataRouteObject,
   type: "loader" | "action",
   manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction
+  mapRouteProperties: MapRoutePropertiesFunction,
+  lazyRoutePropertiesToSkip?: string[]
 ): {
   lazyRoutePromise: Promise<void> | undefined;
   lazyHandlerPromise: Promise<void> | undefined;
@@ -5054,6 +5066,10 @@ function loadLazyRoute(
   let lazyHandlerPromise: Promise<void> | undefined = undefined;
 
   for (let key of lazyKeys) {
+    if (lazyRoutePropertiesToSkip && lazyRoutePropertiesToSkip.includes(key)) {
+      continue;
+    }
+
     let promise = loadLazyRouteProperty({
       key,
       route,
@@ -5068,9 +5084,12 @@ function loadLazyRoute(
     }
   }
 
-  let lazyRoutePromise = Promise.all(lazyPropertyPromises)
-    // Ensure type is Promise<void>, not Promise<void[]>
-    .then(() => {});
+  let lazyRoutePromise =
+    lazyPropertyPromises.length > 0
+      ? Promise.all(lazyPropertyPromises)
+          // Ensure type is Promise<void>, not Promise<void[]>
+          .then(() => {})
+      : undefined;
 
   return {
     lazyRoutePromise,
@@ -5290,7 +5309,8 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  scopedContext: unknown
+  scopedContext: unknown,
+  lazyRoutePropertiesToSkip?: string[]
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all lazy/lazyMiddleware async functions are kicked off in parallel
   // before we await them where needed below
@@ -5300,7 +5320,13 @@ async function callDataStrategyImpl(
     mapRouteProperties
   );
   let lazyRoutePromises = matches.map((m) =>
-    loadLazyRoute(m.route, type, manifest, mapRouteProperties)
+    loadLazyRoute(
+      m.route,
+      type,
+      manifest,
+      mapRouteProperties,
+      lazyRoutePropertiesToSkip
+    )
   );
 
   // Ensure all middleware is loaded before we start executing routes

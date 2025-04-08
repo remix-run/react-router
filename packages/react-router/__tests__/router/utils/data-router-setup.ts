@@ -139,6 +139,7 @@ type SetupOpts = {
   basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
 };
@@ -204,6 +205,7 @@ export function setup({
   basename,
   initialEntries,
   initialIndex,
+  hydrationRouteProperties,
   hydrationData,
   dataStrategy,
 }: SetupOpts) {
@@ -319,6 +321,7 @@ export function setup({
     basename,
     history,
     routes: enhanceRoutes(routes),
+    hydrationRouteProperties,
     hydrationData,
     window: testWindow,
     dataStrategy: dataStrategy,

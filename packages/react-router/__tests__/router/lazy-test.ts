@@ -1,5 +1,9 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import { createRouter, createStaticHandler } from "../../lib/router/router";
+import {
+  createMemoryRouter,
+  hydrationRouteProperties,
+} from "../../lib/components";
 
 import type {
   TestNonIndexRouteObject,
@@ -561,6 +565,69 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.matches[0].route.action).toBeUndefined();
     });
 
+    it("only resolves lazy hydration route properties on hydration", async () => {
+      let [lazyLoaderForHydration, lazyLoaderDeferredForHydration] =
+        createAsyncStub();
+      let [lazyLoaderForNavigation, lazyLoaderDeferredForNavigation] =
+        createAsyncStub();
+      let [
+        lazyHydrateFallbackForHydration,
+        lazyHydrateFallbackDeferredForHydration,
+      ] = createAsyncStub();
+      let [
+        lazyHydrateFallbackElementForHydration,
+        lazyHydrateFallbackElementDeferredForHydration,
+      ] = createAsyncStub();
+      let lazyHydrateFallbackForNavigation = jest.fn(async () => null);
+      let lazyHydrateFallbackElementForNavigation = jest.fn(async () => null);
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/hydration",
+            lazy: {
+              HydrateFallback: lazyHydrateFallbackForHydration,
+              hydrateFallbackElement: lazyHydrateFallbackElementForHydration,
+              loader: lazyLoaderForHydration,
+            },
+          },
+          {
+            path: "/navigation",
+            lazy: {
+              HydrateFallback: lazyHydrateFallbackForNavigation,
+              hydrateFallbackElement: lazyHydrateFallbackElementForNavigation,
+              loader: lazyLoaderForNavigation,
+            },
+          },
+        ],
+        {
+          initialEntries: ["/hydration"],
+        }
+      );
+      expect(router.state.initialized).toBe(false);
+
+      expect(lazyHydrateFallbackForHydration).toHaveBeenCalledTimes(1);
+      expect(lazyHydrateFallbackElementForHydration).toHaveBeenCalledTimes(1);
+      expect(lazyLoaderForHydration).toHaveBeenCalledTimes(1);
+      await lazyHydrateFallbackDeferredForHydration.resolve(null);
+      await lazyHydrateFallbackElementDeferredForHydration.resolve(null);
+      await lazyLoaderDeferredForHydration.resolve(null);
+
+      expect(router.state.location.pathname).toBe("/hydration");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.initialized).toBe(true);
+
+      let navigationPromise = router.navigate("/navigation");
+      expect(router.state.location.pathname).toBe("/hydration");
+      expect(router.state.navigation.state).toBe("loading");
+      expect(lazyHydrateFallbackForNavigation).not.toHaveBeenCalled();
+      expect(lazyHydrateFallbackElementForNavigation).not.toHaveBeenCalled();
+      expect(lazyLoaderForNavigation).toHaveBeenCalledTimes(1);
+      await lazyLoaderDeferredForNavigation.resolve(null);
+      await navigationPromise;
+      expect(router.state.location.pathname).toBe("/navigation");
+      expect(router.state.navigation.state).toBe("idle");
+    });
+
     it("fetches lazy route functions on fetcher.load", async () => {
       let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
@@ -604,6 +671,40 @@ describe("lazily loaded route modules", () => {
       expect(t.fetchers[key].data).toBe("LAZY LOADER");
 
       expect(lazyLoader).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips lazy hydration route properties on fetcher.load", async () => {
+      let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
+      let lazyHydrateFallback = jest.fn(async () => null);
+      let lazyHydrateFallbackElement = jest.fn(async () => null);
+      let routes = createBasicLazyRoutes({
+        loader: lazyLoader,
+        // @ts-expect-error
+        HydrateFallback: lazyHydrateFallback,
+        hydrateFallbackElement: lazyHydrateFallbackElement,
+      });
+      let t = setup({ routes, hydrationRouteProperties });
+      expect(lazyHydrateFallback).not.toHaveBeenCalled();
+      expect(lazyHydrateFallbackElement).not.toHaveBeenCalled();
+
+      let key = "key";
+      await t.fetch("/lazy", key);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHydrateFallback).not.toHaveBeenCalled();
+      expect(lazyHydrateFallbackElement).not.toHaveBeenCalled();
+
+      let loaderDeferred = createDeferred();
+      lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      await loaderDeferred.resolve("LAZY LOADER");
+      expect(t.fetchers[key].state).toBe("idle");
+      expect(t.fetchers[key].data).toBe("LAZY LOADER");
+
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(lazyHydrateFallback).not.toHaveBeenCalled();
+      expect(lazyHydrateFallbackElement).not.toHaveBeenCalled();
     });
 
     it("fetches lazy route functions on fetcher.submit", async () => {
@@ -664,6 +765,49 @@ describe("lazily loaded route modules", () => {
 
       expect(lazyLoader).toHaveBeenCalledTimes(1);
       expect(lazyAction).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips lazy hydration route properties on fetcher.submit", async () => {
+      let [lazyLoaderStub, lazyLoaderDeferred] = createAsyncStub();
+      let [lazyActionStub, lazyActionDeferred] = createAsyncStub();
+      let lazyHydrateFallback = jest.fn(async () => null);
+      let lazyHydrateFallbackElement = jest.fn(async () => null);
+      let routes = createBasicLazyRoutes({
+        loader: lazyLoaderStub,
+        action: lazyActionStub,
+        // @ts-expect-error
+        HydrateFallback: lazyHydrateFallback,
+        hydrateFallbackElement: lazyHydrateFallbackElement,
+      });
+      let t = setup({ routes, hydrationRouteProperties });
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(lazyActionStub).not.toHaveBeenCalled();
+
+      let key = "key";
+      await t.fetch("/lazy", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyHydrateFallback).not.toHaveBeenCalled();
+      expect(lazyHydrateFallbackElement).not.toHaveBeenCalled();
+
+      let actionDeferred = createDeferred();
+      let loaderDeferred = createDeferred();
+      lazyLoaderDeferred.resolve(() => loaderDeferred.promise);
+      lazyActionDeferred.resolve(() => actionDeferred.promise);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await actionDeferred.resolve("LAZY ACTION");
+      expect(t.fetchers[key]?.state).toBe("idle");
+      expect(t.fetchers[key]?.data).toBe("LAZY ACTION");
+
+      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
+      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyHydrateFallback).not.toHaveBeenCalled();
+      expect(lazyHydrateFallbackElement).not.toHaveBeenCalled();
     });
 
     it("fetches lazy route functions on staticHandler.query()", async () => {
@@ -750,6 +894,35 @@ describe("lazily loaded route modules", () => {
       let response = await queryRoute(createRequest("/lazy"));
       let data = await response.json();
       expect(data).toEqual({ value: "LAZY LOADER" });
+    });
+
+    it("resolves lazy hydration route properties on staticHandler.queryRoute()", async () => {
+      let lazyHydrateFallback = jest.fn(async () => null);
+      let lazyHydrateFallbackElement = jest.fn(async () => null);
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "lazy",
+            path: "/lazy",
+            lazy: {
+              loader: async () => {
+                await tick();
+                return () => Response.json({ value: "LAZY LOADER" });
+              },
+              // @ts-expect-error
+              HydrateFallback: lazyHydrateFallback,
+              hydrateFallbackElement: lazyHydrateFallbackElement,
+            },
+          },
+        ],
+        { hydrationRouteProperties }
+      );
+
+      let response = await queryRoute(createRequest("/lazy"));
+      let data = await response.json();
+      expect(data).toEqual({ value: "LAZY LOADER" });
+      expect(lazyHydrateFallback).toHaveBeenCalled();
+      expect(lazyHydrateFallbackElement).toHaveBeenCalled();
     });
   });
 
