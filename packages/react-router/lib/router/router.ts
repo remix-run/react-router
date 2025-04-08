@@ -1799,6 +1799,7 @@ export function createRouter(init: RouterInit): Router {
       let results = await callDataStrategy(
         request,
         dsMatches,
+        null,
         scopedContext,
         null
       );
@@ -1958,7 +1959,11 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let [dsMatches, revalidatingFetchers] = getMatchesToLoad(
+    let {
+      navigationMatches: dsMatches,
+      revalidatingFetchers,
+      shouldRevalidateArgs,
+    } = getMatchesToLoad(
       request,
       scopedContext,
       mapRouteProperties,
@@ -2046,9 +2051,9 @@ export function createRouter(init: RouterInit): Router {
       await callLoadersAndMaybeResolveData(
         dsMatches,
         revalidatingFetchers,
+        shouldRevalidateArgs,
         request,
-        scopedContext,
-        initialHydration
+        scopedContext
       );
 
     if (request.signal.aborted) {
@@ -2332,6 +2337,7 @@ export function createRouter(init: RouterInit): Router {
     let actionResults = await callDataStrategy(
       fetchRequest,
       fetchMatches,
+      null,
       scopedContext,
       key
     );
@@ -2403,7 +2409,11 @@ export function createRouter(init: RouterInit): Router {
     let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
 
-    let [dsMatches, revalidatingFetchers] = getMatchesToLoad(
+    let {
+      navigationMatches: dsMatches,
+      revalidatingFetchers,
+      shouldRevalidateArgs,
+    } = getMatchesToLoad(
       revalidationRequest,
       scopedContext,
       mapRouteProperties,
@@ -2458,6 +2468,7 @@ export function createRouter(init: RouterInit): Router {
       await callLoadersAndMaybeResolveData(
         dsMatches,
         revalidatingFetchers,
+        shouldRevalidateArgs,
         revalidationRequest,
         scopedContext
       );
@@ -2625,6 +2636,7 @@ export function createRouter(init: RouterInit): Router {
     let results = await callDataStrategy(
       fetchRequest,
       dsMatches,
+      null,
       scopedContext,
       key
     );
@@ -2815,6 +2827,7 @@ export function createRouter(init: RouterInit): Router {
   async function callDataStrategy(
     request: Request,
     matches: DataStrategyMatch[],
+    shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"],
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
@@ -2825,6 +2838,7 @@ export function createRouter(init: RouterInit): Router {
         dataStrategyImpl as DataStrategyFunction<unknown>,
         request,
         matches,
+        shouldRevalidateArgs,
         fetcherKey,
         scopedContext
       );
@@ -2868,14 +2882,15 @@ export function createRouter(init: RouterInit): Router {
   async function callLoadersAndMaybeResolveData(
     matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
+    shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"],
     request: Request,
-    scopedContext: unstable_RouterContextProvider,
-    initialHydration?: boolean
+    scopedContext: unstable_RouterContextProvider
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       request,
       matches,
+      shouldRevalidateArgs,
       scopedContext,
       null
     );
@@ -2886,6 +2901,7 @@ export function createRouter(init: RouterInit): Router {
           let results = await callDataStrategy(
             f.request,
             f.matches,
+            shouldRevalidateArgs,
             scopedContext,
             f.key
           );
@@ -4231,6 +4247,7 @@ export function createStaticHandler(
       request,
       matches,
       null,
+      null,
       requestContext
     );
 
@@ -4564,7 +4581,11 @@ function getMatchesToLoad(
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   pendingActionResult?: PendingActionResult
-): [DataStrategyMatch[], RevalidatingFetcher[]] {
+): {
+  navigationMatches: DataStrategyMatch[];
+  revalidatingFetchers: RevalidatingFetcher[];
+  shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"];
+} {
   let actionResult = pendingActionResult
     ? isErrorResult(pendingActionResult[1])
       ? pendingActionResult[1].error
@@ -4597,6 +4618,21 @@ function getMatchesToLoad(
     ? pendingActionResult[1].statusCode
     : undefined;
   let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
+
+  let shouldRevalidateArgs: Omit<
+    ShouldRevalidateFunctionArgs,
+    "defaultShouldRevalidate"
+  > | null = initialHydration
+    ? null
+    : {
+        currentUrl,
+        currentParams: state.matches[0]?.params || {},
+        nextUrl,
+        nextParams: matches[0].params,
+        ...submission,
+        actionResult,
+        actionStatus,
+      };
 
   let navigationMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
@@ -4668,18 +4704,13 @@ function getMatchesToLoad(
           // Search params affect all loaders
           currentUrl.search !== nextUrl.search ||
           isNewRouteInstance(state.matches[index], match);
-      let args: Omit<ShouldRevalidateFunctionArgs, "defaultShouldRevalidate"> =
-        {
-          currentUrl,
-          currentParams: state.matches[index].params,
-          nextUrl,
-          nextParams: match.params,
-          ...submission,
-          actionResult,
-          actionStatus,
-        };
+      // Already checked `initialHydration` above so this should always be defined
+      invariant(
+        shouldRevalidateArgs,
+        "Expected shouldRevalidateArgs to be defined for fetcher"
+      );
       let shouldLoad = shouldRevalidateLoader(match, {
-        ...args,
+        ...shouldRevalidateArgs,
         defaultShouldRevalidate,
       });
 
@@ -4693,7 +4724,8 @@ function getMatchesToLoad(
         shouldLoad,
         (defaultOverride) =>
           shouldRevalidateLoader(match, {
-            ...args,
+            // We're not in initialHydration here so this will be defined
+            ...shouldRevalidateArgs!,
             defaultShouldRevalidate:
               typeof defaultOverride === "boolean"
                 ? defaultOverride
@@ -4806,24 +4838,16 @@ function getMatchesToLoad(
     } else {
       // Otherwise fall back on any user-defined shouldRevalidate, defaulting
       // to explicit revalidations only
-      let svArgs: Omit<
-        ShouldRevalidateFunctionArgs,
-        "defaultShouldRevalidate"
-      > = {
-        currentUrl,
-        currentParams: state.matches[state.matches.length - 1].params,
-        nextUrl,
-        nextParams: matches[matches.length - 1].params,
-        ...submission,
-        actionResult,
-        actionStatus,
-      };
       let defaultShouldRevalidate = shouldSkipRevalidation
         ? false
         : isRevalidationRequired;
-
+      // Shouldn't run during initialHydration so this should always be defined
+      invariant(
+        shouldRevalidateArgs,
+        "Expected shouldRevalidateArgs to be defined for fetcher"
+      );
       let shouldLoad = shouldRevalidateLoader(fetcherMatch, {
-        ...svArgs,
+        ...shouldRevalidateArgs,
         defaultShouldRevalidate,
       });
 
@@ -4849,7 +4873,11 @@ function getMatchesToLoad(
     }
   });
 
-  return [navigationMatches, revalidatingFetchers];
+  return {
+    navigationMatches,
+    revalidatingFetchers,
+    shouldRevalidateArgs,
+  };
 }
 
 function shouldLoadRouteOnHydration(
@@ -5591,6 +5619,7 @@ async function callDataStrategyImpl(
   dataStrategyImpl: DataStrategyFunction<unknown>,
   request: Request,
   matches: DataStrategyMatch[],
+  shouldRevalidateArgs: DataStrategyFunctionArgs["unstable_shouldRevalidateArgs"],
   fetcherKey: string | null,
   scopedContext: unknown
 ): Promise<Record<string, DataStrategyResult>> {
@@ -5604,6 +5633,7 @@ async function callDataStrategyImpl(
   // back out below.
   let results = await dataStrategyImpl({
     matches,
+    unstable_shouldRevalidateArgs: shouldRevalidateArgs,
     request,
     params: matches[0].params,
     fetcherKey,

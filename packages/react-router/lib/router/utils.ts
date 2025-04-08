@@ -357,11 +357,14 @@ export interface DataStrategyFunctionArgs<Context = any>
   matches: DataStrategyMatch[];
   // This can be null for actions calls and for initial hydration calls
   // We omit the `defaultShouldRevalidate` because it's a per-route choice
-  // TODO: Implement
-  // shouldRevalidateArgs: Omit<
-  //   ShouldRevalidateFunctionArgs,
-  //   "defaultShouldRevalidate"
-  // > | null;
+  // TODO: Should this be embedded on the match?  It only applies to revalidating
+  // matches, so going from  `/a/b -> /a/c` it doesn't really apply to `c` but
+  // could be potentially misconstrued?  If we provide it on the matches then
+  // it can have the proper `defaultShouldRevalidate` value on it
+  unstable_shouldRevalidateArgs: Omit<
+    ShouldRevalidateFunctionArgs,
+    "defaultShouldRevalidate"
+  > | null;
   // TODO: Implement
   // runMiddleware: () => unknown,
   fetcherKey: string | null;
