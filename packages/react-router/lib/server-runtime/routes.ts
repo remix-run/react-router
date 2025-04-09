@@ -2,7 +2,6 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-  RedirectFunction,
   RouteManifest,
   unstable_MiddlewareFunction,
 } from "../router/utils";
