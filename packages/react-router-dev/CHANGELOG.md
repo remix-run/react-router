@@ -1,5 +1,18 @@
 # `@react-router/dev`
 
+## 7.5.0
+
+### Patch Changes
+
+- Introduce `unstable_subResourceIntegrity` future flag that enables generation of an importmap with integrity for the scripts that will be loaded by the browser. ([#13163](https://github.com/remix-run/react-router/pull/13163))
+- Update optional Wrangler peer dependency range to support Wrangler v4 ([#13258](https://github.com/remix-run/react-router/pull/13258))
+- When `future.unstable_viteEnvironmentApi` is enabled, ensure critical CSS in development works when using a custom Vite `base` has been configured ([#13305](https://github.com/remix-run/react-router/pull/13305))
+- Reinstate dependency optimization in the child compiler to fix `depsOptimizer is required in dev mode` errors when using `vite-plugin-cloudflare` and importing Node.js builtins ([#13317](https://github.com/remix-run/react-router/pull/13317))
+- Updated dependencies:
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+  - `@react-router/serve@7.5.0`
+
 ## 7.4.1
 
 ### Patch Changes

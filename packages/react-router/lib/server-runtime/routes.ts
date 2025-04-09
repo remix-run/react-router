@@ -5,6 +5,7 @@ import type {
   RouteManifest,
   unstable_MiddlewareFunction,
 } from "../router/utils";
+import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
@@ -102,15 +103,31 @@ export function createStaticHandlerDataRoutes(
               });
               let decoded = await decodeViaTurboStream(stream, global);
               let data = decoded.value as SingleFetchResults;
-              invariant(
-                data &&
-                  !(SingleFetchRedirectSymbol in data) &&
-                  route.id in data,
-                "Unable to decode prerendered data"
-              );
-              let result = data[route.id] as SingleFetchResult;
-              invariant("data" in result, "Unable to process prerendered data");
-              return result.data;
+
+              // If the loader returned a `.data` redirect, re-throw a normal
+              // Response here to trigger a document level SSG redirect
+              if (data && SingleFetchRedirectSymbol in data) {
+                let result = data[SingleFetchRedirectSymbol]!;
+                let init = { status: result.status };
+                if (result.reload) {
+                  throw redirectDocument(result.redirect, init);
+                } else if (result.replace) {
+                  throw replace(result.redirect, init);
+                } else {
+                  throw redirect(result.redirect, init);
+                }
+              } else {
+                invariant(
+                  data && route.id in data,
+                  "Unable to decode prerendered data"
+                );
+                let result = data[route.id] as SingleFetchResult;
+                invariant(
+                  "data" in result,
+                  "Unable to process prerendered data"
+                );
+                return result.data;
+              }
             }
             let val = await callRouteHandler(route.module.loader!, args);
             return val;

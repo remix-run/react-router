@@ -151,7 +151,6 @@ function handleMiddlewareError(error: unknown, routeId: string) {
 
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
-  routeModules: RouteModules,
   ssr: boolean,
   basename: string | undefined,
   getRouter: () => DataRouter
@@ -164,12 +163,11 @@ export function getSingleFetchDataStrategy(
       return runMiddlewarePipeline(
         args,
         false,
-        () => singleFetchActionStrategy(request, matches, basename),
+        () => singleFetchActionStrategy(args, basename),
         handleMiddlewareError
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
-    // TODO: Enable middleware for this flow
     if (!ssr) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
@@ -205,7 +203,7 @@ export function getSingleFetchDataStrategy(
       //   the other end
       let foundRevalidatingServerLoader = matches.some(
         (m) =>
-          m.shouldLoad &&
+          m.unstable_shouldCallHandler() &&
           manifest.routes[m.route.id]?.hasLoader &&
           !manifest.routes[m.route.id]?.hasClientLoader
       );
@@ -213,7 +211,7 @@ export function getSingleFetchDataStrategy(
         return runMiddlewarePipeline(
           args,
           false,
-          () => nonSsrStrategy(manifest, request, matches, basename),
+          () => nonSsrStrategy(args, manifest, basename),
           handleMiddlewareError
         ) as Promise<Record<string, DataStrategyResult>>;
       }
@@ -235,12 +233,10 @@ export function getSingleFetchDataStrategy(
       false,
       () =>
         singleFetchLoaderNavigationStrategy(
+          args,
           manifest,
-          routeModules,
           ssr,
           getRouter(),
-          request,
-          matches,
           basename
         ),
       handleMiddlewareError
@@ -251,11 +247,10 @@ export function getSingleFetchDataStrategy(
 // Actions are simple since they're singular calls to the server for both
 // navigations and fetchers)
 async function singleFetchActionStrategy(
-  request: Request,
-  matches: DataStrategyFunctionArgs["matches"],
+  { request, matches }: DataStrategyFunctionArgs,
   basename: string | undefined
 ) {
-  let actionMatch = matches.find((m) => m.shouldLoad);
+  let actionMatch = matches.find((m) => m.unstable_shouldCallHandler());
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
@@ -289,12 +284,11 @@ async function singleFetchActionStrategy(
 
 // We want to opt-out of Single Fetch when we aren't in SSR mode
 async function nonSsrStrategy(
+  { request, matches }: DataStrategyFunctionArgs,
   manifest: AssetsManifest,
-  request: Request,
-  matches: DataStrategyFunctionArgs["matches"],
   basename: string | undefined
 ) {
-  let matchesToLoad = matches.filter((m) => m.shouldLoad);
+  let matchesToLoad = matches.filter((m) => m.unstable_shouldCallHandler());
   let url = stripIndexParam(singleFetchUrl(request.url, basename));
   let init = await createRequestInit(request);
   let results: Record<string, DataStrategyResult> = {};
@@ -321,12 +315,10 @@ async function nonSsrStrategy(
 // Loaders are trickier since we only want to hit the server once, so we
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
+  { request, matches }: DataStrategyFunctionArgs,
   manifest: AssetsManifest,
-  routeModules: RouteModules,
   ssr: boolean,
   router: DataRouter,
-  request: Request,
-  matches: DataStrategyFunctionArgs["matches"],
   basename: string | undefined
 ) {
   // Track which routes need a server load for use in a `_routes` param
@@ -356,28 +348,19 @@ async function singleFetchLoaderNavigationStrategy(
         let manifestRoute = manifest.routes[m.route.id];
         invariant(manifestRoute, "No manifest route found for dataStrategy");
 
-        if (!m.shouldLoad) {
-          // If we're not yet initialized and this is the initial load, respect
-          // `shouldLoad` because we're only dealing with `clientLoader.hydrate`
-          // routes which will fall into the `clientLoader` section below.
-          if (!router.state.initialized) {
-            return;
-          }
+        let defaultShouldRevalidate =
+          !m.unstable_shouldRevalidateArgs ||
+          m.unstable_shouldRevalidateArgs.actionStatus == null ||
+          m.unstable_shouldRevalidateArgs.actionStatus < 400;
+        let shouldCall = m.unstable_shouldCallHandler(defaultShouldRevalidate);
 
-          // Otherwise, we opt out if we currently have data and a
-          // `shouldRevalidate` function.  This implies that the user opted out
-          // via `shouldRevalidate`
-          if (
-            m.route.id in router.state.loaderData &&
-            m.route.shouldRevalidate
-          ) {
-            if (manifestRoute.hasLoader) {
-              // If we have a server loader, make sure we don't include it in the
-              // single fetch .data request
-              foundOptOutRoute = true;
-            }
-            return;
-          }
+        if (!shouldCall) {
+          // If this route opted out, don't include in the .data request
+          foundOptOutRoute ||=
+            m.unstable_shouldRevalidateArgs != null && // This is a revalidation,
+            manifestRoute?.hasLoader === true && // for a route with a server loader,
+            m.route.shouldRevalidate != null; // and a shouldRevalidate function
+          return;
         }
 
         // When a route has a client loader, it opts out of the singular call and
@@ -467,7 +450,7 @@ async function singleFetchLoaderFetcherStrategy(
   matches: DataStrategyFunctionArgs["matches"],
   basename: string | undefined
 ) {
-  let fetcherMatch = matches.find((m) => m.shouldLoad);
+  let fetcherMatch = matches.find((m) => m.unstable_shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
   let result = await fetcherMatch.resolve(async (handler) => {
     let url = stripIndexParam(singleFetchUrl(request.url, basename));
