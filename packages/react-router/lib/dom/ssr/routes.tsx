@@ -4,7 +4,6 @@ import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  unstable_MiddlewareFunction,
   RouteManifest,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
