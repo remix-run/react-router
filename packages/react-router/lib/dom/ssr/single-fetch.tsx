@@ -18,7 +18,6 @@ import {
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
-import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
@@ -37,8 +36,8 @@ type DecodedSingleFetchResults =
   | { redirect: SingleFetchRedirectResult };
 
 // This and SingleFetchResults are only used over the wire, and are converted to
-// AgnosticSingleFetchResults in `fethAndDecode`.  This way turbo-stream/RSC
-// can use the same `unwrapSingleFetchResult` implementation
+// DecodedSingleFetchResults in `fetchAndDecode`.  This way turbo-stream/RSC
+// can use the same `unwrapSingleFetchResult` implementation.
 export type SingleFetchResult =
   | { data: unknown }
   | { error: unknown }
