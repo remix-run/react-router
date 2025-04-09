@@ -19,7 +19,8 @@ ${colors.blueBright("react-router")}
   \`build\` Options:
     --assetsInlineLimit Static asset base64 inline threshold in bytes (default: 4096) (number)
     --clearScreen       Allow/disable clear screen when logging (boolean)
-    --config, -c        Use specified config file (string)
+    --config, -c        Use specified Vite config file (string)
+    --configLoader      Load config file with specified Vite config loader (string)
     --emptyOutDir       Force empty outDir when it's outside of root (boolean)
     --logLevel, -l      Info | warn | error | silent (string)
     --minify            Enable/disable minification, or specify minifier to use (default: "esbuild") (boolean | "terser" | "esbuild")
@@ -29,7 +30,8 @@ ${colors.blueBright("react-router")}
     --sourcemapServer   Output source maps for server build (default: false) (boolean | "inline" | "hidden")
   \`dev\` Options:
     --clearScreen       Allow/disable clear screen when logging (boolean)
-    --config, -c        Use specified config file (string)
+    --config, -c        Use specified Vite config file (string)
+    --configLoader      Load config file with specified Vite config loader (string)
     --cors              Enable CORS (boolean)
     --force             Force the optimizer to ignore the cache and re-bundle (boolean)
     --host              Specify hostname (string)
@@ -41,9 +43,11 @@ ${colors.blueBright("react-router")}
     --strictPort        Exit if specified port is already in use (boolean)
   \`routes\` Options:
     --config, -c        Use specified Vite config file (string)
+    --configLoader      Load config file with specified Vite config loader (string)
     --json              Print the routes as JSON
   \`reveal\` Options:
     --config, -c        Use specified Vite config file (string)
+    --configLoader      Load config file with specified Vite config loader (string)
     --no-typescript     Generate plain JavaScript files
   \`typegen\` Options:
     --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
@@ -117,6 +121,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "-p": "--port",
       "--config": String,
       "-c": "--config",
+      "--configLoader": String,
       "--assetsInlineLimit": Number,
       "--clearScreen": Boolean,
       "--cors": Boolean,

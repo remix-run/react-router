@@ -19,6 +19,7 @@ export interface ViteBuildOptions {
   assetsInlineLimit?: number;
   clearScreen?: boolean;
   config?: string;
+  configLoader?: 'bundle' | 'runner' | 'native';
   emptyOutDir?: boolean;
   force?: boolean;
   logLevel?: Vite.LogLevel;
@@ -62,6 +63,7 @@ async function viteAppBuild(
     assetsInlineLimit,
     clearScreen,
     config: configFile,
+    configLoader,
     emptyOutDir,
     force,
     logLevel,
@@ -76,6 +78,7 @@ async function viteAppBuild(
     root,
     mode,
     configFile,
+    configLoader,
     build: {
       assetsInlineLimit,
       emptyOutDir,
@@ -125,6 +128,7 @@ async function viteBuild(
     assetsInlineLimit,
     clearScreen,
     config: configFile,
+    configLoader,
     emptyOutDir,
     force,
     logLevel,
@@ -137,6 +141,7 @@ async function viteBuild(
   let viteUserConfig: Vite.UserConfig = {};
   let viteConfig = await resolveViteConfig({
     configFile,
+    configLoader,
     mode,
     root,
     plugins: [
@@ -173,6 +178,7 @@ async function viteBuild(
       root,
       mode,
       configFile,
+      configLoader,
       build: {
         assetsInlineLimit,
         emptyOutDir,

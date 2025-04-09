@@ -1,4 +1,5 @@
 // We can only import types from Vite at the top level since we're in a CJS
+import {UserConfig} from "vite";
 // context but want to use Vite's ESM build to avoid deprecation warnings
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
@@ -74,11 +75,13 @@ export type LoadCssContents = (
 
 export async function resolveViteConfig({
   configFile,
+  configLoader,
   mode,
   root,
   plugins,
 }: {
   configFile?: string;
+  configLoader?: 'bundle' | 'runner' | 'native';
   mode?: string;
   plugins?: Vite.Plugin[];
   root: string;
@@ -86,7 +89,7 @@ export async function resolveViteConfig({
   let vite = getVite();
 
   let viteConfig = await vite.resolveConfig(
-    { mode, configFile, root, plugins },
+    { mode, configFile, configLoader, root, plugins },
     "build", // command
     "production", // default mode
     "production" // default NODE_ENV
@@ -1226,6 +1229,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let clientEnvironment = environments.client;
         invariant(clientEnvironment);
 
+        // If configLoader is not default, we must exclude jsxDev from esbuild to avoid errors.
+        const configLoader = "configLoader" in viteUserConfig && viteUserConfig?.configLoader;
+        const isDefaultConfigLoader = !configLoader || configLoader === 'bundle';
+
         return {
           __reactRouterPluginContext: ctx,
           appType:
@@ -1270,7 +1277,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           },
           esbuild: {
             jsx: "automatic",
-            jsxDev: viteCommand !== "build",
+            jsxDev: viteCommand !== "build" && isDefaultConfigLoader,
           },
           resolve: {
             dedupe: [
@@ -1422,7 +1429,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             command: viteConfig.command,
             mode: viteConfig.mode,
           },
-          viteConfig.configFile
+          viteConfig.configFile,
+          undefined,
+          undefined,
+          undefined,
+          viteConfig.inlineConfig.configLoader,
         );
 
         invariant(

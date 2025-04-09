@@ -7,6 +7,7 @@ import * as profiler from "./profiler";
 export interface ViteDevOptions {
   clearScreen?: boolean;
   config?: string;
+  configLoader?: 'bundle' | 'runner' | 'native';
   cors?: boolean;
   force?: boolean;
   host?: boolean | string;
@@ -23,6 +24,7 @@ export async function dev(
   {
     clearScreen,
     config: configFile,
+    configLoader,
     cors,
     force,
     host,
@@ -42,6 +44,7 @@ export async function dev(
     root,
     mode,
     configFile,
+    configLoader,
     server: { open, cors, host, port, strictPort },
     optimizeDeps: { force },
     clearScreen,
