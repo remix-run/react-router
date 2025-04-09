@@ -18,7 +18,7 @@ import {
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
 import { createReadableStreamFromReadable } from "@react-router/node";
 
-import { viteConfig, reactRouterConfig } from "./vite.js";
+import { viteConfig, reactRouterConfig, TemplateName } from "./vite.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
@@ -31,6 +31,7 @@ export interface FixtureInit {
   spaMode?: boolean;
   prerender?: boolean;
   port?: number;
+  templateName?: TemplateName;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -362,7 +363,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = "vite-5-template";
+  let template = init.templateName ?? "vite-5-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);

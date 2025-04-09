@@ -3403,6 +3403,14 @@ export async function getEnvironmentOptionsResolvers(
     ...(moduleSyncEnabled ? ["module-sync"] : []),
   ];
 
+  let vitePackageJsonPath = require.resolve("vite/package.json", {
+    paths: [ctx.rootDirectory],
+  });
+  let vitePackageJson = JSON.parse(
+    fse.readFileSync(vitePackageJsonPath, "utf-8")
+  );
+  let isRolldown = vitePackageJson.name === "rolldown-vite";
+
   function getBaseOptions({
     viteUserConfig,
   }: {
@@ -3413,7 +3421,7 @@ export async function getEnvironmentOptionsResolvers(
         cssMinify: viteUserConfig.build?.cssMinify ?? true,
         manifest: true, // The manifest is enabled for all builds to detect SSR-only assets
         rollupOptions: {
-          preserveEntrySignatures: "exports-only",
+          ...(!isRolldown ? { preserveEntrySignatures: "exports-only" } : {}),
           // Silence Rollup "use client" warnings
           // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
           onwarn(warning, defaultHandler) {

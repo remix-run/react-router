@@ -81,21 +81,46 @@ export const viteConfig = {
     `;
     return text;
   },
+  build: () => {
+    return dedent`
+      build: await (async () => {
+        const fs = await import("node:fs/promises");
+        const path = await import("node:path");
+        const vitePackageJsonPath = path.join(import.meta.dirname, "node_modules/vite/package.json");
+        const vitePackageJson = JSON.parse(await fs.readFile(vitePackageJsonPath, "utf8"));
+        const isRolldown = vitePackageJson.name === "rolldown-vite";
+
+        return isRolldown ? {
+          rollupOptions: {
+            // NOTE: ignore missing export errors
+            shimMissingExports: true,
+            // NOTE: ignore "The built-in minifier is still under development." warning
+            onwarn(warning, warn) {
+              if (warning.code === "MINIFY_WARNING") return;
+              warn(warning);
+            },
+          },
+        } : undefined;
+      })(),
+    `;
+  },
   basic: async (args: ViteConfigArgs) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
+      import fs from "node:fs";
 
-      export default {
+      export default async () => ({
         ${await viteConfig.server(args)}
+        ${viteConfig.build()}
         envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
         ],
-      };
+      });
     `;
   },
 };
@@ -145,14 +170,19 @@ export const EXPRESS_SERVER = (args: {
   `;
 
 export type TemplateName =
+  | "cloudflare-dev-proxy-template"
   | "vite-5-template"
   | "vite-6-template"
-  | "cloudflare-dev-proxy-template"
-  | "vite-plugin-cloudflare-template";
+  | "vite-plugin-cloudflare-template"
+  | "vite-rolldown-template";
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+  {
+    templateName: "vite-rolldown-template",
+    templateDisplayName: "Vite Rolldown",
+  },
 ] as const satisfies Array<{
   templateName: TemplateName;
   templateDisplayName: string;
