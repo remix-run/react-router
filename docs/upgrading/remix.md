@@ -198,7 +198,7 @@ export default defineConfig({
 -     ssr: true,
 -     future: {/* all the v3 flags */}
 -   }),
-+   remix(),
++   reactRouter(),
     tsconfigPaths(),
   ],
 });

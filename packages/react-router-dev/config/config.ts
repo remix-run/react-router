@@ -22,7 +22,6 @@ import {
   configRoutesToRouteManifest,
 } from "./routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
-import { isReactRouterRepo } from "./is-react-router-repo";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof ReactRouterConfig
@@ -84,15 +83,20 @@ type ServerBundlesBuildManifest = BaseBuildManifest & {
 type ServerModuleFormat = "esm" | "cjs";
 
 interface FutureConfig {
+  /**
+   * Enable route middleware
+   */
+  unstable_middleware: boolean;
   unstable_optimizeDeps: boolean;
   /**
    * Automatically split route modules into multiple chunks when possible.
    */
-  unstable_splitRouteModules?: boolean | "enforce";
+  unstable_splitRouteModules: boolean | "enforce";
+  unstable_subResourceIntegrity: boolean;
   /**
    * Use Vite Environment API (experimental)
    */
-  unstable_viteEnvironmentApi?: boolean;
+  unstable_viteEnvironmentApi: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -488,10 +492,14 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
+    unstable_middleware:
+      reactRouterUserConfig.future?.unstable_middleware ?? false,
     unstable_optimizeDeps:
       reactRouterUserConfig.future?.unstable_optimizeDeps ?? false,
     unstable_splitRouteModules:
       reactRouterUserConfig.future?.unstable_splitRouteModules ?? false,
+    unstable_subResourceIntegrity:
+      reactRouterUserConfig.future?.unstable_subResourceIntegrity ?? false,
     unstable_viteEnvironmentApi:
       reactRouterUserConfig.future?.unstable_viteEnvironmentApi ?? false,
   };
@@ -546,10 +554,6 @@ export async function createConfigLoader({
   let viteNodeContext = await ViteNode.createContext({
     root,
     mode: watch ? "development" : "production",
-    server: !watch ? { watch: null } : {},
-    ssr: {
-      external: ssrExternals,
-    },
   });
 
   let reactRouterConfigFile = findEntry(root, "react-router.config", {
@@ -731,22 +735,6 @@ export async function resolveEntryFiles({
 
   return { entryClientFilePath, entryServerFilePath };
 }
-
-export const ssrExternals = isReactRouterRepo()
-  ? [
-      // This is only needed within this repo because these packages
-      // are linked to a directory outside of node_modules so Vite
-      // treats them as internal code by default.
-      "react-router",
-      "react-router-dom",
-      "@react-router/architect",
-      "@react-router/cloudflare",
-      "@react-router/dev",
-      "@react-router/express",
-      "@react-router/node",
-      "@react-router/serve",
-    ]
-  : undefined;
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 

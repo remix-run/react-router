@@ -152,12 +152,19 @@ const files = {
   `,
 };
 
-const VITE_CONFIG = async (port: number) => dedent`
+const VITE_CONFIG = async ({
+  port,
+  base,
+}: {
+  port: number;
+  base?: string;
+}) => dedent`
   import { reactRouter } from "@react-router/dev/vite";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
   export default {
     ${await viteConfig.server({ port })}
+    ${base ? `base: "${base}",` : ""}
     plugins: [
       reactRouter(),
       vanillaExtractPlugin({
@@ -182,7 +189,7 @@ test.describe("Vite CSS", () => {
               "react-router.config.ts": reactRouterConfig({
                 viteEnvironmentApi: templateName === "vite-6-template",
               }),
-              "vite.config.ts": await VITE_CONFIG(port),
+              "vite.config.ts": await VITE_CONFIG({ port }),
               ...files,
             },
             templateName
@@ -207,6 +214,45 @@ test.describe("Vite CSS", () => {
         });
       });
 
+      test.describe("vite dev with custom base", async () => {
+        let port: number;
+        let cwd: string;
+        let stop: () => void;
+        let base = "/custom/base/";
+
+        test.beforeAll(async () => {
+          port = await getPort();
+          cwd = await createProject(
+            {
+              "react-router.config.ts": reactRouterConfig({
+                viteEnvironmentApi: templateName === "vite-6-template",
+                basename: base,
+              }),
+              "vite.config.ts": await VITE_CONFIG({ port, base }),
+              ...files,
+            },
+            templateName
+          );
+          stop = await dev({ cwd, port });
+        });
+        test.afterAll(() => stop());
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: false });
+          test("without JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port, base });
+          });
+        });
+
+        test.describe(() => {
+          test.use({ javaScriptEnabled: true });
+          test("with JS", async ({ page }) => {
+            await pageLoadWorkflow({ page, port, base });
+            await hmrWorkflow({ page, port, cwd, base });
+          });
+        });
+      });
+
       test.describe("express", async () => {
         let port: number;
         let cwd: string;
@@ -215,7 +261,7 @@ test.describe("Vite CSS", () => {
         test.beforeAll(async () => {
           port = await getPort();
           cwd = await createProject({
-            "vite.config.ts": await VITE_CONFIG(port),
+            "vite.config.ts": await VITE_CONFIG({ port }),
             "server.mjs": EXPRESS_SERVER({ port }),
             ...files,
           });
@@ -247,7 +293,7 @@ test.describe("Vite CSS", () => {
         test.beforeAll(async () => {
           port = await getPort();
           cwd = await createProject({
-            "vite.config.ts": await VITE_CONFIG(port),
+            "vite.config.ts": await VITE_CONFIG({ port }),
             ...files,
           });
 
@@ -290,11 +336,19 @@ test.describe("Vite CSS", () => {
   });
 });
 
-async function pageLoadWorkflow({ page, port }: { page: Page; port: number }) {
+async function pageLoadWorkflow({
+  page,
+  port,
+  base,
+}: {
+  page: Page;
+  port: number;
+  base?: string;
+}) {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
 
-  await page.goto(`http://localhost:${port}/`, {
+  await page.goto(`http://localhost:${port}${base ?? "/"}`, {
     waitUntil: "networkidle",
   });
 
@@ -316,15 +370,17 @@ async function hmrWorkflow({
   page,
   cwd,
   port,
+  base,
 }: {
   page: Page;
   cwd: string;
   port: number;
+  base?: string;
 }) {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
 
-  await page.goto(`http://localhost:${port}/`, {
+  await page.goto(`http://localhost:${port}${base ?? "/"}`, {
     waitUntil: "networkidle",
   });
 

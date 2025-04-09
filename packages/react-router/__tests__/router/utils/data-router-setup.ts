@@ -34,9 +34,8 @@ import { isRedirect, tick } from "./utils";
 // by our test harness
 export type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle"
+  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
 > & {
-  lazy?: boolean;
   loader?: boolean;
   action?: boolean;
   hasErrorBoundary?: boolean;
@@ -44,9 +43,8 @@ export type TestIndexRouteObject = Pick<
 
 export type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate" | "handle"
+  "id" | "index" | "path" | "shouldRevalidate" | "handle" | "lazy"
 > & {
-  lazy?: boolean;
   loader?: boolean;
   action?: boolean;
   hasErrorBoundary?: boolean;
@@ -86,7 +84,6 @@ export type Helpers = InternalHelpers & {
 // control and assertions over the loaders/actions
 export type NavigationHelpers = {
   navigationId: number;
-  lazy: Record<string, Helpers>;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
 };
@@ -142,17 +139,18 @@ type SetupOpts = {
   basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
 // tick() calls to let the router finish updating
-export function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
+export function createDeferred<T = any>() {
+  let resolve: (val: T) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
+  let promise = new Promise<T>((res, rej) => {
+    resolve = async (val: T) => {
       res(val);
       await tick();
       await promise;
@@ -169,6 +167,16 @@ export function createDeferred() {
     //@ts-ignore
     reject,
   };
+}
+
+export function createAsyncStub(): [
+  asyncStub: jest.Mock,
+  deferred: ReturnType<typeof createDeferred>
+] {
+  let deferred = createDeferred();
+  let asyncStub = jest.fn(() => deferred.promise);
+
+  return [asyncStub, deferred];
 }
 
 export function getFetcherData(router: Router) {
@@ -197,6 +205,7 @@ export function setup({
   basename,
   initialEntries,
   initialIndex,
+  hydrationRouteProperties,
   hydrationData,
   dataStrategy,
 }: SetupOpts) {
@@ -223,38 +232,13 @@ export function setup({
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
       let enhancedRoute: AgnosticDataRouteObject = {
+        unstable_middleware: undefined,
         ...r,
-        lazy: undefined,
         loader: undefined,
         action: undefined,
         children: undefined,
         id: r.id || `route-${guid++}`,
       };
-      if (r.lazy) {
-        // @ts-expect-error
-        enhancedRoute.lazy = (args) => {
-          // This is maybe not ideal, but works for now :).  We don't really know
-          // which key to look for so we resolve the earliest one we find and
-          // remove it such that subsequent calls resolve the later ones.
-          const sortedIds = [
-            activeLoaderNavigationId,
-            activeActionNavigationId,
-            activeLoaderFetchId,
-            activeActionFetchId,
-          ].sort();
-          let helperKey = sortedIds
-            .map((id) => `${id}:lazy:${enhancedRoute.id}`)
-            .find((k) => activeHelpers.has(k));
-          invariant(helperKey != null, `No helperKey found`);
-          let helpers = activeHelpers.get(helperKey);
-          invariant(helpers, `No helpers found for: ${helperKey}`);
-          helpers.stub(args);
-          return helpers.dfd.promise.then((def) => {
-            activeHelpers.delete(helperKey!);
-            return def;
-          });
-        };
-      }
       if (r.loader) {
         enhancedRoute.loader = (...args) => {
           let navigationId =
@@ -337,6 +321,7 @@ export function setup({
     basename,
     history,
     routes: enhanceRoutes(routes),
+    hydrationRouteProperties,
     hydrationData,
     window: testWindow,
     dataStrategy: dataStrategy,
@@ -456,13 +441,6 @@ export function setup({
     );
     let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
 
-    // Generate helpers for all route matches that contain loaders
-    let lazyHelpers = getHelpers(
-      (matches || []).filter((m) => m.route.lazy),
-      navigationId,
-      (routeId, helpers) =>
-        activeHelpers.set(`${navigationId}:lazy:${routeId}`, helpers)
-    );
     let loaderHelpers = getHelpers(
       (matches || []).filter((m) => m.route.loader),
       navigationId,
@@ -484,7 +462,6 @@ export function setup({
 
     return {
       navigationId,
-      lazy: lazyHelpers,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };
@@ -516,7 +493,6 @@ export function setup({
           invariant(currentRouter, "No currentRouter available");
           return currentRouter.getFetcher(key);
         },
-        lazy: {},
         loaders: {},
         actions: {},
       };
@@ -544,13 +520,6 @@ export function setup({
       }
     }
 
-    // Generate helpers for all route matches that contain loaders
-    let lazyHelpers = getHelpers(
-      match.route.lazy ? [match] : [],
-      navigationId,
-      (routeId, helpers) =>
-        activeHelpers.set(`${navigationId}:lazy:${routeId}`, helpers)
-    );
     let loaderHelpers = getHelpers(
       activeLoaderMatches.filter((m) => m.route.loader),
       navigationId,
@@ -574,7 +543,6 @@ export function setup({
           data: fetcherData.get(key),
         };
       },
-      lazy: lazyHelpers,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };

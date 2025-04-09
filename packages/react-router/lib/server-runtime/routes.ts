@@ -3,7 +3,9 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
   RouteManifest,
+  unstable_MiddlewareFunction,
 } from "../router/utils";
+import { redirectDocument, replace, redirect } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { Route } from "../dom/ssr/routes";
@@ -11,7 +13,10 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
+import {
+  SingleFetchRedirectSymbol,
+  decodeViaTurboStream,
+} from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
 
@@ -72,12 +77,15 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
+      unstable_middleware: route.module.unstable_middleware as unknown as
+        | unstable_MiddlewareFunction[]
+        | undefined,
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix
       loader: route.module.loader
         ? async (args: RRLoaderFunctionArgs) => {
             // If we're prerendering, use the data passed in from prerendering
-            // the .data route so we dom't call loaders twice
+            // the .data route so we don't call loaders twice
             if (args.request.headers.has("X-React-Router-Prerender-Data")) {
               const preRenderedData = args.request.headers.get(
                 "X-React-Router-Prerender-Data"
@@ -95,13 +103,31 @@ export function createStaticHandlerDataRoutes(
               });
               let decoded = await decodeViaTurboStream(stream, global);
               let data = decoded.value as SingleFetchResults;
-              invariant(
-                data && route.id in data,
-                "Unable to decode prerendered data"
-              );
-              let result = data[route.id] as SingleFetchResult;
-              invariant("data" in result, "Unable to process prerendered data");
-              return result.data;
+
+              // If the loader returned a `.data` redirect, re-throw a normal
+              // Response here to trigger a document level SSG redirect
+              if (data && SingleFetchRedirectSymbol in data) {
+                let result = data[SingleFetchRedirectSymbol]!;
+                let init = { status: result.status };
+                if (result.reload) {
+                  throw redirectDocument(result.redirect, init);
+                } else if (result.replace) {
+                  throw replace(result.redirect, init);
+                } else {
+                  throw redirect(result.redirect, init);
+                }
+              } else {
+                invariant(
+                  data && route.id in data,
+                  "Unable to decode prerendered data"
+                );
+                let result = data[route.id] as SingleFetchResult;
+                invariant(
+                  "data" in result,
+                  "Unable to process prerendered data"
+                );
+                return result.data;
+              }
             }
             let val = await callRouteHandler(route.module.loader!, args);
             return val;

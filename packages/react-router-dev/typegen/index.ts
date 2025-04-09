@@ -88,6 +88,9 @@ async function writeAll(ctx: Context): Promise<void> {
 
   const registerPath = Path.join(typegenDir, "+register.ts");
   fs.writeFileSync(registerPath, register(ctx));
+
+  const virtualPath = Path.join(typegenDir, "+virtual.d.ts");
+  fs.writeFileSync(virtualPath, virtual);
 }
 
 function register(ctx: Context) {
@@ -103,6 +106,12 @@ function register(ctx: Context) {
 
   const { t } = Babel;
 
+  const indexPaths = new Set(
+    Object.values(ctx.config.routes)
+      .filter((route) => route.index)
+      .map((route) => route.path)
+  );
+
   const typeParams = t.tsTypeAliasDeclaration(
     t.identifier("Params"),
     null,
@@ -111,6 +120,9 @@ function register(ctx: Context) {
         .map((route) => {
           // filter out pathless (layout) routes
           if (route.id !== "root" && !route.path) return undefined;
+
+          // filter out layout routes that have a corresponding index
+          if (!route.index && indexPaths.has(route.path)) return undefined;
 
           const lineage = Route.lineage(ctx.config.routes, route);
           const fullpath = Route.fullpath(lineage);
@@ -137,3 +149,20 @@ function register(ctx: Context) {
 
   return [register, Babel.generate(typeParams).code].join("\n\n");
 }
+
+const virtual = ts`
+  declare module "virtual:react-router/server-build" {
+    import { ServerBuild } from "react-router";
+    export const assets: ServerBuild["assets"];
+    export const assetsBuildDirectory: ServerBuild["assetsBuildDirectory"];
+    export const basename: ServerBuild["basename"];
+    export const entry: ServerBuild["entry"];
+    export const future: ServerBuild["future"];
+    export const isSpaMode: ServerBuild["isSpaMode"];
+    export const prerender: ServerBuild["prerender"];
+    export const publicPath: ServerBuild["publicPath"];
+    export const routes: ServerBuild["routes"];
+    export const ssr: ServerBuild["ssr"];
+    export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
+  }
+`;

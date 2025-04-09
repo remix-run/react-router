@@ -34,18 +34,25 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  unstable_InitialContext,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
   ParamParseKey,
   Params,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  unstable_RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
+} from "./lib/router/utils";
+export {
+  unstable_createContext,
+  unstable_RouterContextProvider,
 } from "./lib/router/utils";
 
 export {
@@ -87,6 +94,7 @@ export type {
   AwaitProps,
   IndexRouteProps,
   LayoutRouteProps,
+  MemoryRouterOpts,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -96,7 +104,6 @@ export type {
   RouterProviderProps,
   RoutesProps,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
 export {
   Await,
   MemoryRouter,
@@ -111,6 +118,7 @@ export {
   createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
+export type { NavigateFunction } from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -138,6 +146,7 @@ export {
 // Expose old RR DOM API
 export type {
   BrowserRouterProps,
+  DOMRouterOpts,
   HashRouterProps,
   HistoryRouterProps,
   LinkProps,
@@ -265,6 +274,10 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
+export type {
+  Future,
+  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
+} from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
@@ -306,7 +319,10 @@ export {
 } from "./lib/context";
 
 /** @internal */
-export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
+export {
+  hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
+  mapRouteProperties as UNSAFE_mapRouteProperties,
+} from "./lib/components";
 
 /** @internal */
 export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";

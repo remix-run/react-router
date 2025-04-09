@@ -111,7 +111,7 @@
     "undici": "^6.10.1",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
-    "vite": "^6.0.0",
+    "vite": "^6.1.0",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2",
     "react-server-dom-parcel": "0.0.0-experimental-93b58361-20250209"
