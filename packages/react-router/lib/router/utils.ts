@@ -1,6 +1,9 @@
+import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+
+export type MaybePromise<T> = T | Promise<T>;
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -110,6 +113,70 @@ export type Submission =
       text: string;
     };
 
+export interface unstable_RouterContext<T = unknown> {
+  defaultValue?: T;
+}
+
+/**
+ * Creates a context object that may be used to store and retrieve arbitrary values.
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()` when no value has been
+ * set for the context. Otherwise reading this context when no value has been set will throw an
+ * error.
+ *
+ * @param defaultValue The default value for the context
+ * @returns A context object
+ */
+export function unstable_createContext<T>(
+  defaultValue?: T
+): unstable_RouterContext<T> {
+  return { defaultValue };
+}
+
+/**
+ * A Map of RouterContext objects to their initial values - used to populate a
+ * fresh `context` value per request/navigation/fetch
+ */
+export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
+
+/**
+ * Provides methods for writing/reading values in application context in a typesafe way.
+ */
+export class unstable_RouterContextProvider {
+  #map = new Map<unstable_RouterContext, unknown>();
+
+  constructor(init?: unstable_InitialContext) {
+    if (init) {
+      for (let [context, value] of init) {
+        this.set(context, value);
+      }
+    }
+  }
+
+  get<T>(context: unstable_RouterContext<T>): T {
+    if (this.#map.has(context)) {
+      return this.#map.get(context) as T;
+    }
+
+    if (context.defaultValue !== undefined) {
+      return context.defaultValue;
+    }
+
+    throw new Error("No value found for context");
+  }
+
+  set<C extends unstable_RouterContext>(
+    context: C,
+    value: C extends unstable_RouterContext<infer T> ? T : never
+  ): void {
+    this.#map.set(context, value);
+  }
+}
+
+type DefaultContext = MiddlewareEnabled extends true
+  ? unstable_RouterContextProvider
+  : any;
+
 /**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
@@ -138,34 +205,51 @@ interface DataFunctionArgs<Context> {
    * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
    * It is only applicable if you are using a custom server adapter.
    */
-  context?: Context;
+  context: Context;
 }
+
+/**
+ * Route middleware `next` function to call downstream handlers and then complete
+ * middlewares from the bottom-up
+ */
+export interface unstable_MiddlewareNextFunction<Result = unknown> {
+  (): MaybePromise<Result>;
+}
+
+/**
+ * Route middleware function signature.  Receives the same "data" arguments as a
+ * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
+ * a `next` function as the second parameter which will call downstream handlers
+ * and then complete middlewares from the bottom-up
+ */
+export type unstable_MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  next: unstable_MiddlewareNextFunction<Result>
+) => MaybePromise<Result | void>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
+export interface LoaderFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
+export interface ActionFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
-type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = any> = {
+export type LoaderFunction<Context = DefaultContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -175,7 +259,7 @@ export type LoaderFunction<Context = any> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = any> {
+export interface ActionFunction<Context = DefaultContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -252,7 +336,22 @@ export interface ShouldRevalidateFunction {
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  /**
+   * @private
+   */
+  _lazyPromises?: {
+    middleware: Promise<void> | undefined;
+    handler: Promise<void> | undefined;
+    route: Promise<void> | undefined;
+  };
   shouldLoad: boolean;
+  // This can be null for actions calls and for initial hydration calls
+  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  // TODO: Figure out a good name for this or use `shouldLoad` and add a future flag
+  // This function will use a scoped version of `shouldRevalidateArgs` because
+  // they are read-only but let the user provide an optional override value for
+  // `defaultShouldRevalidate` if they choose
+  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
@@ -260,9 +359,11 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = any>
+export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
+  // TODO: Implement
+  // runMiddleware: () => unknown,
   fetcherKey: string | null;
 }
 
@@ -274,8 +375,10 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = DefaultContext> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
@@ -285,6 +388,7 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   signal: AbortSignal;
   path: string;
   matches: M[];
+  fetcherKey: string | undefined;
   patch: (routeId: string | null, children: O[]) => void;
 };
 
@@ -293,7 +397,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = (
   opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
-) => void | Promise<void>;
+) => MaybePromise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific
@@ -306,19 +410,18 @@ export interface MapRoutePropertiesFunction {
 }
 
 /**
- * Keys we cannot change from within a lazy() function. We spread all other keys
+ * Keys we cannot change from within a lazy object. We spread all other keys
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type ImmutableRouteKey =
+type UnsupportedLazyRouteObjectKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
   | "children";
-
-export const immutableRouteKeys = new Set<ImmutableRouteKey>([
+const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
   "path",
@@ -326,21 +429,64 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "index",
   "children",
 ]);
+export function isUnsupportedLazyRouteObjectKey(
+  key: string
+): key is UnsupportedLazyRouteObjectKey {
+  return unsupportedLazyRouteObjectKeys.has(
+    key as UnsupportedLazyRouteObjectKey
+  );
+}
 
-type RequireOne<T, Key = keyof T> = Exclude<
-  {
-    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
-  }[keyof T],
-  undefined
->;
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
+type UnsupportedLazyRouteFunctionKey =
+  | UnsupportedLazyRouteObjectKey
+  | "unstable_middleware";
+const unsupportedLazyRouteFunctionKeys =
+  new Set<UnsupportedLazyRouteFunctionKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "unstable_middleware",
+    "children",
+  ]);
+export function isUnsupportedLazyRouteFunctionKey(
+  key: string
+): key is UnsupportedLazyRouteFunctionKey {
+  return unsupportedLazyRouteFunctionKeys.has(
+    key as UnsupportedLazyRouteFunctionKey
+  );
+}
+
+/**
+ * lazy object to load route properties, which can add non-matching
+ * related properties to a route
+ */
+export type LazyRouteObject<R extends AgnosticRouteObject> = {
+  [K in keyof R as K extends UnsupportedLazyRouteObjectKey
+    ? never
+    : K]?: () => Promise<R[K] | null | undefined>;
+};
 
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
+  (): Promise<
+    Omit<R, UnsupportedLazyRouteFunctionKey> &
+      Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
+  >;
 }
+
+export type LazyRouteDefinition<R extends AgnosticRouteObject> =
+  | LazyRouteObject<R>
+  | LazyRouteFunction<R>;
 
 /**
  * Base RouteObject with common props shared by all types of routes
@@ -349,12 +495,13 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  unstable_middleware?: unstable_MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
+  lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
 };
 
 /**
@@ -1076,7 +1223,7 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
-function compilePath(
+export function compilePath(
   path: string,
   caseSensitive = false,
   end = true

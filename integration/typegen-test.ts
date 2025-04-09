@@ -444,4 +444,71 @@ test.describe("typegen", () => {
     expect(proc.stderr.toString()).toBe("");
     expect(proc.status).toBe(0);
   });
+
+  test.describe("virtual:react-router/server-build", async () => {
+    test("static import matches 'createRequestHandler' argument type", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          import * as serverBuild from "virtual:react-router/server-build";
+          export default createRequestHandler(serverBuild);
+        `,
+      });
+
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
+
+    test("works with tsconfig 'moduleDetection' set to 'force'", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          import * as serverBuild from "virtual:react-router/server-build";
+          export default createRequestHandler(serverBuild);
+        `,
+      });
+
+      const tsconfig = await fse.readJson(path.join(cwd, "tsconfig.json"));
+      tsconfig.compilerOptions.moduleDetection = "force";
+      await fse.writeJson(path.join(cwd, "tsconfig.json"), tsconfig);
+
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
+
+    test("dynamic import matches 'createRequestHandler' function argument type", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/routes.ts": tsx`
+          import { type RouteConfig } from "@react-router/dev/routes";
+          export default [] satisfies RouteConfig;
+        `,
+        "app/handler.ts": tsx`
+          import { createRequestHandler } from "react-router";
+          export default createRequestHandler(
+            () => import("virtual:react-router/server-build")
+          );
+        `,
+      });
+
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
+  });
 });

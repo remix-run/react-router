@@ -1,5 +1,82 @@
 # `@react-router/dev`
 
+## 7.5.0
+
+### Patch Changes
+
+- Introduce `unstable_subResourceIntegrity` future flag that enables generation of an importmap with integrity for the scripts that will be loaded by the browser. ([#13163](https://github.com/remix-run/react-router/pull/13163))
+- Update optional Wrangler peer dependency range to support Wrangler v4 ([#13258](https://github.com/remix-run/react-router/pull/13258))
+- When `future.unstable_viteEnvironmentApi` is enabled, ensure critical CSS in development works when using a custom Vite `base` has been configured ([#13305](https://github.com/remix-run/react-router/pull/13305))
+- Reinstate dependency optimization in the child compiler to fix `depsOptimizer is required in dev mode` errors when using `vite-plugin-cloudflare` and importing Node.js builtins ([#13317](https://github.com/remix-run/react-router/pull/13317))
+- Updated dependencies:
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+  - `@react-router/serve@7.5.0`
+
+## 7.4.1
+
+### Patch Changes
+
+- Fix path in prerender error messages ([#13257](https://github.com/remix-run/react-router/pull/13257))
+- Fix typegen for virtual modules when `moduleDetection` is set to `force` ([#13267](https://github.com/remix-run/react-router/pull/13267))
+- When both `future.unstable_middleware` and `future.unstable_splitRouteModules` are enabled, split `unstable_clientMiddleware` route exports into separate chunks when possible ([#13210](https://github.com/remix-run/react-router/pull/13210))
+- Improve performance of `future.unstable_middleware` by ensuring that route modules are only blocking during the middleware phase when the `unstable_clientMiddleware` has been defined ([#13210](https://github.com/remix-run/react-router/pull/13210))
+- Updated dependencies:
+  - `react-router@7.4.1`
+  - `@react-router/node@7.4.1`
+  - `@react-router/serve@7.4.1`
+
+## 7.4.0
+
+### Minor Changes
+
+- Generate types for `virtual:react-router/server-build` module ([#13152](https://github.com/remix-run/react-router/pull/13152))
+
+### Patch Changes
+
+- When `future.unstable_splitRouteModules` is set to `"enforce"`, allow both splittable and unsplittable root route exports since it's always in a single chunk. ([#13238](https://github.com/remix-run/react-router/pull/13238))
+- When `future.unstable_viteEnvironmentApi` is enabled, allow plugins that override the default SSR environment (such as `@cloudflare/vite-plugin`) to be placed before or after the React Router plugin. ([#13183](https://github.com/remix-run/react-router/pull/13183))
+- Fix conflicts with other Vite plugins that use the `configureServer` and/or `configurePreviewServer` hooks ([#13184](https://github.com/remix-run/react-router/pull/13184))
+- Updated dependencies:
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
+  - `@react-router/serve@7.4.0`
+
+## 7.3.0
+
+### Patch Changes
+
+- Fix support for custom client `build.rollupOptions.output.entryFileNames` ([#13098](https://github.com/remix-run/react-router/pull/13098))
+
+- Fix usage of `prerender` option when `serverBundles` option has been configured or provided by a preset, e.g. `vercelPreset` from `@vercel/react-router` ([#13082](https://github.com/remix-run/react-router/pull/13082))
+
+- Fix support for custom `build.assetsDir` ([#13077](https://github.com/remix-run/react-router/pull/13077))
+
+- Remove unused dependencies ([#13134](https://github.com/remix-run/react-router/pull/13134))
+
+- Stub all routes except root in "SPA Mode" server builds to avoid issues when route modules or their dependencies import non-SSR-friendly modules ([#13023](https://github.com/remix-run/react-router/pull/13023))
+
+- Fix errors with `future.unstable_viteEnvironmentApi` when the `ssr` environment has been configured by another plugin to be a custom `Vite.DevEnvironment` rather than the default `Vite.RunnableDevEnvironment` ([#13008](https://github.com/remix-run/react-router/pull/13008))
+
+- Remove unused Vite file system watcher ([#13133](https://github.com/remix-run/react-router/pull/13133))
+
+- Fix support for custom SSR build input when `serverBundles` option has been configured ([#13107](https://github.com/remix-run/react-router/pull/13107))
+
+  Note that for consumers using the `future.unstable_viteEnvironmentApi` and `serverBundles` options together, hyphens are no longer supported in server bundle IDs since they also need to be valid Vite environment names.
+
+- Fix dev server when using HTTPS by stripping HTTP/2 pseudo headers from dev server requests ([#12830](https://github.com/remix-run/react-router/pull/12830))
+
+- Lazy load Cloudflare platform proxy on first dev server request when using the `cloudflareDevProxy` Vite plugin to avoid creating unnecessary workerd processes ([#13016](https://github.com/remix-run/react-router/pull/13016))
+
+- When `future.unstable_viteEnvironmentApi` is enabled and the `ssr` environment has `optimizeDeps.noDiscovery` disabled, define `optimizeDeps.entries` and `optimizeDeps.include` ([#13007](https://github.com/remix-run/react-router/pull/13007))
+
+- Fix duplicated entries in typegen for layout routes and their corresponding index route ([#13140](https://github.com/remix-run/react-router/pull/13140))
+
+- Updated dependencies:
+  - `react-router@7.3.0`
+  - `@react-router/node@7.3.0`
+  - `@react-router/serve@7.3.0`
+
 ## 7.2.0
 
 ### Minor Changes
@@ -203,7 +280,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 

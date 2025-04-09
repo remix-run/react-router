@@ -241,8 +241,11 @@ export function Links() {
 
   return (
     <>
-      {criticalCss ? (
+      {typeof criticalCss === "string" ? (
         <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
+      ) : null}
+      {typeof criticalCss === "object" ? (
+        <link rel="stylesheet" href={criticalCss.href} />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
@@ -322,6 +325,7 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
+  let { basename } = useDataRouterContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -384,7 +388,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page);
+    let url = singleFetchUrl(page, basename);
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -400,6 +404,7 @@ function PrefetchPageLinksImpl({
 
     return [url.pathname + url.search];
   }, [
+    basename,
     loaderData,
     location,
     manifest,
@@ -683,6 +688,7 @@ ${matches
     let {
       clientActionModule,
       clientLoaderModule,
+      clientMiddlewareModule,
       hydrateFallbackModule,
       module,
     } = manifestEntry;
@@ -701,6 +707,14 @@ ${matches
             {
               module: clientLoaderModule,
               varName: `${routeVarName}_clientLoader`,
+            },
+          ]
+        : []),
+      ...(clientMiddlewareModule
+        ? [
+            {
+              module: clientMiddlewareModule,
+              varName: `${routeVarName}_clientMiddleware`,
             },
           ]
         : []),
@@ -771,32 +785,54 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   let preloads = isHydrated
     ? []
-    : manifest.entry.imports.concat(
-        getModuleLinkHrefs(matches, manifest, {
-          includeHydrateFallback: true,
-        })
+    : dedupe(
+        manifest.entry.imports.concat(
+          getModuleLinkHrefs(matches, manifest, {
+            includeHydrateFallback: true,
+          })
+        )
       );
+
+  let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
   return isHydrated ? null : (
     <>
+      {typeof manifest.sri === "object" ? (
+        <script
+          rr-importmap=""
+          type="importmap"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              integrity: sri,
+            }),
+          }}
+        />
+      ) : null}
       {!enableFogOfWar ? (
         <link
           rel="modulepreload"
           href={manifest.url}
           crossOrigin={props.crossOrigin}
+          integrity={sri[manifest.url]}
+          suppressHydrationWarning
         />
       ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
+        integrity={sri[manifest.entry.module]}
+        suppressHydrationWarning
       />
-      {dedupe(preloads).map((path) => (
+      {preloads.map((path) => (
         <link
           key={path}
           rel="modulepreload"
           href={path}
           crossOrigin={props.crossOrigin}
+          integrity={sri[path]}
+          suppressHydrationWarning
         />
       ))}
       {initialScripts}

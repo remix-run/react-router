@@ -1,11 +1,17 @@
 import type { MetaDescriptor } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../router/links";
+import type {
+  unstable_MiddlewareNextFunction,
+  unstable_RouterContextProvider,
+} from "../router/utils";
 import type { AppLoadContext } from "../server-runtime/data";
+import type { MiddlewareEnabled } from "./future";
 
 import type { ClientDataFrom, ServerDataFrom } from "./route-data";
 import type { Equal, Expect, Func, Pretty } from "./utils";
 
 type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
+type MaybePromise<T> = T | Promise<T>;
 
 type RouteModule = {
   meta?: Func;
@@ -135,6 +141,15 @@ type ClientDataFunctionArgs<T extends RouteInfo> = {
    * }
    **/
   params: T["params"];
+  /**
+   * When `future.unstable_middleware` is not enabled, this is undefined.
+   *
+   * When `future.unstable_middleware` is enabled, this is an instance of
+   * `unstable_RouterContextProvider` and can be used to access context values
+   * from your route middlewares.  You may pass in initial context values in your
+   * `<HydratedRouter unstable_getContext>` prop
+   */
+  context: unstable_RouterContextProvider;
 };
 
 type ServerDataFunctionArgs<T extends RouteInfo> = {
@@ -156,12 +171,31 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
    **/
   params: T["params"];
   /**
-   * This is the context passed in to your server adapter's getLoadContext() function.
-   * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
+   * Without `future.unstable_middleware` enabled, this is the context passed in
+   * to your server adapter's `getLoadContext` function. It's a way to bridge the
+   * gap between the adapter's request/response API with your React Router app.
    * It is only applicable if you are using a custom server adapter.
+   *
+   * With `future.unstable_middleware` enabled, this is an instance of
+   * `unstable_RouterContextProvider` and can be used for type-safe access to
+   * context value set in your route middlewares.  If you are using a custom
+   * server adapter, you may provide an initial set of context values from your
+   * `getLoadContext` function.
    */
-  context: AppLoadContext;
+  context: MiddlewareEnabled extends true
+    ? unstable_RouterContextProvider
+    : AppLoadContext;
 };
+
+export type CreateServerMiddlewareFunction<T extends RouteInfo> = (
+  args: ServerDataFunctionArgs<T>,
+  next: unstable_MiddlewareNextFunction<Response>
+) => MaybePromise<Response | void>;
+
+export type CreateClientMiddlewareFunction<T extends RouteInfo> = (
+  args: ClientDataFunctionArgs<T>,
+  next: unstable_MiddlewareNextFunction<undefined>
+) => MaybePromise<void>;
 
 export type CreateServerLoaderArgs<T extends RouteInfo> =
   ServerDataFunctionArgs<T>;

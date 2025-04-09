@@ -23,6 +23,7 @@ describe("loaders", () => {
       },
       entry: { module: {} },
       prerender: [],
+      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
