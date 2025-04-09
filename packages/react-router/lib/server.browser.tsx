@@ -118,7 +118,11 @@ export function ServerBrowserRouter({
   }).initialize();
 
   const frameworkContext: FrameworkContextObject = {
-    future: {},
+    future: {
+      // TODO: Update these
+      unstable_middleware: false,
+      unstable_subResourceIntegrity: false,
+    },
     isSpaMode: true,
     ssr: true,
     criticalCss: "",

@@ -85,7 +85,11 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
   );
 
   const frameworkContext: FrameworkContextObject = {
-    future: {},
+    future: {
+      // TODO: Update these
+      unstable_middleware: false,
+      unstable_subResourceIntegrity: false,
+    },
     isSpaMode: false,
     ssr: false,
     criticalCss: "",
