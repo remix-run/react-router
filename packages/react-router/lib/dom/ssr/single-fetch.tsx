@@ -55,9 +55,13 @@ interface StreamTransferProps {
   nonce?: string;
 }
 
-// some status codes are not permitted to have bodies, so we want to just
-// treat those as "no data" instead of throwing an exception.
-// 304 is not included here because the browser should fill those responses
+// Some status codes are not permitted to have bodies, so we want to just
+// treat those as "no data" instead of throwing an exception:
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-informational-1xx
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
+//   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
+//
+// Note: 304 is not included here because the browser should fill those responses
 // with the cached body content.
 export const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205]);
 

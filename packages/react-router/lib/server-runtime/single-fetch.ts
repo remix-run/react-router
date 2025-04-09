@@ -35,6 +35,14 @@ import type { ServerBuild } from "./build";
 // the user control cache behavior via Cache-Control
 export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
+// Add 304 for server side - that is not included in the client side logic
+// because the browser should fill those responses with the cached data
+// https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
+export const SERVER_NO_BODY_STATUS_CODES = new Set([
+  ...NO_BODY_STATUS_CODES,
+  304,
+]);
+
 export async function singleFetchAction(
   build: ServerBuild,
   serverMode: ServerMode,
@@ -269,7 +277,7 @@ function generateSingleFetchResponse(
   resultHeaders.set("X-Remix-Response", "yes");
 
   // Skip response body for unsupported status codes
-  if (NO_BODY_STATUS_CODES.has(status)) {
+  if (SERVER_NO_BODY_STATUS_CODES.has(status)) {
     return new Response(null, { status, headers: resultHeaders });
   }
 
