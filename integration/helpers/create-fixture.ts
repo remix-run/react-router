@@ -18,7 +18,7 @@ import {
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
 import { createReadableStreamFromReadable } from "@react-router/node";
 
-import { viteConfig, reactRouterConfig, TemplateName } from "./vite.js";
+import { type TemplateName, viteConfig, reactRouterConfig } from "./vite.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
