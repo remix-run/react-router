@@ -1,7 +1,5 @@
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 
-export { ErrorBoundary } from "./root.client";
-
 import { Counter } from "../../counter";
 
 export function loader() {
@@ -19,18 +17,14 @@ export default function Root({
   return (
     <>
       <h1>{message}</h1>
-      <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        <li>
-          <Link to="/about">About</Link>
-        </li>
-      </ul>
       {counter}
       <Outlet />
     </>
   );
+}
+
+export function ErrorBoundary() {
+  return <h1>Something went wrong!</h1>;
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -43,6 +37,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <header>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/about">About</Link>
+            </li>
+          </ul>
+          <Counter />
+        </header>
         {children}
         <ScrollRestoration />
       </body>
