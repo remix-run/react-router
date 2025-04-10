@@ -1,6 +1,10 @@
 "use client";
 
-import { type ClientLoaderFunctionArgs, useLoaderData } from "react-router";
+import {
+  type ClientLoaderFunctionArgs,
+  useLoaderData,
+  useRouteError,
+} from "react-router";
 
 import { Counter } from "../../counter";
 
@@ -41,5 +45,6 @@ export default function About() {
 }
 
 export function ErrorBoundary() {
+  console.log(useRouteError());
   return <h1>Oooops</h1>;
 }

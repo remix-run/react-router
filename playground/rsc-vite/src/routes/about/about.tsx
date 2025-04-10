@@ -1,6 +1,11 @@
 import { data } from "react-router";
 
-export { ErrorBoundary, clientLoader, default } from "./about.client";
+export {
+  ErrorBoundary,
+  clientLazy,
+  clientLoader,
+  default,
+} from "./about.client";
 
 export function loader() {
   // throw new Error("oops");

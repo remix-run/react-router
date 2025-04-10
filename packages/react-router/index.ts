@@ -373,7 +373,7 @@ export type {
   ServerMatch,
   ServerPayload,
   ServerRenderPayload,
-  ServerRouteManifest,
+  RenderedRoute as ServerRouteManifest,
   ServerRouteMatch,
   ServerRouteObject,
 } from "./lib/server";

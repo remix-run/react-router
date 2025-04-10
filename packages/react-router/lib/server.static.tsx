@@ -17,7 +17,6 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
     loaderHeaders: {},
     location: payload.location,
     statusCode: 200,
-    _deepestRenderedBoundaryId: payload.deepestRenderedBoundaryId,
     matches: payload.matches.map((match) => ({
       params: match.params,
       pathname: match.pathname,
@@ -65,7 +64,7 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
       unstable_subResourceIntegrity: false,
     },
     isSpaMode: false,
-    ssr: false,
+    ssr: true,
     criticalCss: "",
     manifest: {
       routes: {

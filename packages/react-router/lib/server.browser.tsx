@@ -6,7 +6,7 @@ import { FrameworkContext } from "./dom/ssr/components";
 import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createBrowserHistory } from "./router/history";
 import { type Router, createRouter } from "./router/router";
-import type { ServerPayload, ServerRouteManifest } from "./server";
+import type { ServerPayload, RenderedRoute } from "./server";
 
 export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
@@ -17,6 +17,7 @@ export type EncodeActionFunction = (args: unknown[]) => Promise<BodyInit>;
 declare global {
   interface Window {
     __router: Router;
+    __routerInitPromise?: Promise<void>;
   }
 }
 
@@ -60,7 +61,7 @@ export function createCallServer({
           locationKey === window.__router.state.loaderData
         ) {
           landedActionId = actionId;
-          let lastMatch: ServerRouteManifest | undefined;
+          let lastMatch: RenderedRoute | undefined;
           for (const match of rendered.matches) {
             window.__router.patchRoutes(lastMatch?.id ?? null, [
               createRouteFromServerManifest(match),
@@ -116,7 +117,7 @@ function createRouterFromPayload({
     return [route];
   }, [] as DataRouteObject[]);
 
-  return (window.__router = createRouter({
+  window.__router = createRouter({
     basename: payload.basename,
     history: createBrowserHistory(),
     hydrationData: {
@@ -135,13 +136,14 @@ function createRouterFromPayload({
         throw new Error("Failed to patch routes on navigation");
       }
 
-      let lastMatch: ServerRouteManifest | undefined;
+      let lastMatch: RenderedRoute | undefined;
       for (const match of payload.matches) {
         patch(lastMatch?.id ?? null, [createRouteFromServerManifest(match)]);
         lastMatch = match;
       }
     },
     async dataStrategy({ matches, request }) {
+      await Promise.resolve();
       if (!window.__router) {
         throw new Error("No router");
       }
@@ -164,7 +166,7 @@ function createRouterFromPayload({
         throw new Error("Unexpected payload type");
       }
 
-      let lastMatch: ServerRouteManifest | undefined;
+      let lastMatch: RenderedRoute | undefined;
       for (const match of payload.matches) {
         window.__router.patchRoutes(lastMatch?.id ?? null, [
           createRouteFromServerManifest(match),
@@ -206,7 +208,21 @@ function createRouterFromPayload({
 
       return res;
     },
-  }).initialize());
+  }).initialize();
+
+  if (!window.__router.state.initialized) {
+    window.__routerInitPromise = new Promise((resolve) => {
+      const unsubscribe = window.__router.subscribe((state) => {
+        if (state.initialized) {
+          window.__routerInitPromise = undefined;
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
+  }
+
+  return window.__router;
 }
 
 export function ServerBrowserRouter({
@@ -223,6 +239,11 @@ export function ServerBrowserRouter({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+
+  console.log(window.__routerInitPromise);
+  if (window.__routerInitPromise) {
+    throw window.__routerInitPromise;
+  }
 
   const frameworkContext: FrameworkContextObject = {
     future: {
@@ -256,9 +277,7 @@ export function ServerBrowserRouter({
   );
 }
 
-function createRouteFromServerManifest(
-  match: ServerRouteManifest
-): DataRouteObject {
+function createRouteFromServerManifest(match: RenderedRoute): DataRouteObject {
   return {
     id: match.id,
     action: match.hasAction || !!match.clientAction,

@@ -10,14 +10,14 @@ import { injectRSCPayload } from "./html-stream/server";
 import type { Location } from "./router/history";
 import { createStaticHandler } from "./router/router";
 import {
-  isRouteErrorResponse,
-  matchRoutes,
   type ActionFunction,
   type AgnosticRouteObject,
   type LazyRouteFunction,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
+  isRouteErrorResponse,
+  matchRoutes,
 } from "./router/utils";
 
 type ServerRouteObjectBase = {
@@ -48,7 +48,7 @@ export type ServerRouteObject = ServerRouteObjectBase & {
       }
   );
 
-export type ServerRouteManifest = {
+export type RenderedRoute = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
   element?: React.ReactElement;
@@ -66,7 +66,7 @@ export type ServerRouteManifest = {
   shouldRevalidate?: ShouldRevalidateFunction;
 };
 
-export type ServerRouteMatch = ServerRouteManifest & {
+export type ServerRouteMatch = RenderedRoute & {
   params: Params;
   pathname: string;
   pathnameBase: string;
@@ -76,7 +76,6 @@ export type ServerRenderPayload = {
   type: "render";
   actionData: Record<string, any> | null;
   basename?: string;
-  deepestRenderedBoundaryId?: string;
   errors: Record<string, any> | null;
   loaderData: Record<string, any>;
   location: Location;
@@ -86,7 +85,7 @@ export type ServerRenderPayload = {
 
 export type ServerManifestPayload = {
   type: "manifest";
-  matches: ServerRouteManifest[];
+  matches: RenderedRoute[];
 };
 
 export type ServerActionPayload = {
@@ -147,6 +146,9 @@ export async function matchServerRequest({
               route = {
                 ...route,
                 ...((await route.lazy()) as any),
+                path: route.path,
+                index: (route as any).index,
+                id: route.id,
               };
             }
 
@@ -201,10 +203,8 @@ export async function matchServerRequest({
     });
   }
 
-  const getRenderPayload = async (
-    action?: boolean
-  ): Promise<ServerRenderPayload> => {
-    const handler = createStaticHandler(routes as AgnosticRouteObject[]);
+  const getRenderPayload = async (): Promise<ServerRenderPayload> => {
+    const handler = createStaticHandler(routes);
     const staticContext = await handler.query(request);
 
     if (staticContext instanceof Response) {
@@ -230,8 +230,6 @@ export async function matchServerRequest({
     const payload = {
       type: "render",
       actionData: staticContext.actionData,
-      deepestRenderedBoundaryId:
-        staticContext._deepestRenderedBoundaryId ?? undefined,
       errors,
       loaderData: staticContext.loaderData,
       location: staticContext.location,
@@ -314,7 +312,7 @@ export async function matchServerRequest({
         ? {
             type: "action",
             actionResult,
-            rerender: getRenderPayload(true),
+            rerender: getRenderPayload(),
           }
         : await getRenderPayload(),
     };
