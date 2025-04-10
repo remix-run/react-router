@@ -99,7 +99,9 @@ export const viteConfig = {
   build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
-        // Detect rolldown-vite:
+        // Detect rolldown-vite. This should ideally use "rolldownVersion"
+        // but that's not exported. Once that's available, this
+        // check should be updated to use it.
         rollupOptions: "transformWithOxc" in (await import("vite"))
           ? {
               onwarn(warning, warn) {
