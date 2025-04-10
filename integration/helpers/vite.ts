@@ -109,12 +109,8 @@ export const viteConfig = {
               },
             }
           : undefined,
-        assetsInlineLimit: ${
-          assetsInlineLimit !== undefined
-            ? JSON.stringify(assetsInlineLimit)
-            : "undefined"
-        },
-        assetsDir: ${assetsDir ? JSON.stringify(assetsDir) : "undefined"},
+        assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
+        assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
       },
     `;
   },
