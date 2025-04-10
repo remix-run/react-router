@@ -121,7 +121,6 @@ export const viteConfig = {
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
-      import fs from "node:fs";
 
       export default async () => ({
         ${args.port ? await viteConfig.server(args) : ""}
