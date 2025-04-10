@@ -347,7 +347,6 @@ export interface DataStrategyMatch
   shouldLoad: boolean;
   // This can be null for actions calls and for initial hydration calls
   unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
-  // TODO: Figure out a good name for this or use `shouldLoad` and add a future flag
   // This function will use a scoped version of `shouldRevalidateArgs` because
   // they are read-only but let the user provide an optional override value for
   // `defaultShouldRevalidate` if they choose
@@ -362,8 +361,9 @@ export interface DataStrategyMatch
 export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
-  // TODO: Implement
-  // runMiddleware: () => unknown,
+  unstable_runClientMiddleware: (
+    cb: DataStrategyFunction<Context>
+  ) => Promise<Record<string, DataStrategyResult>>;
   fetcherKey: string | null;
 }
 
