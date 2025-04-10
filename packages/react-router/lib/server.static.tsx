@@ -1,28 +1,9 @@
 import * as React from "react";
-import { RouteContext, type DataRouteObject } from "./context";
+import { type DataRouteObject } from "./context";
 import { FrameworkContext } from "./dom/ssr/components";
 import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "./dom/server";
 import type { ServerPayload } from "./server";
-
-export function RouteWrapper({ id }: { id: string }) {
-  const ctx = React.useContext(RouteContext);
-  const match = ctx.matches.find((match) => match.route.id === id);
-
-  if (!match) {
-    throw new Error(`No match found for route with id "${id}"`);
-  }
-
-  const { Component, element, Layout } = (match as any).route.rendered as any;
-
-  return Layout ? (
-    <Layout>{Component ? <Component /> : element}</Layout>
-  ) : Component ? (
-    <Component />
-  ) : (
-    element
-  );
-}
 
 export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
   if (payload.type !== "render") return null;
@@ -45,7 +26,7 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
         handle: match.handle,
-        hasErrorBoundary: !!match.ErrorBoundary,
+        hasErrorBoundary: match.hasErrorBoundary,
         loader: match.hasLoader || !!match.clientLoader,
         index: match.index,
         path: match.path,
@@ -56,21 +37,14 @@ export function ServerStaticRouter({ payload }: { payload: ServerPayload }) {
 
   const router = createStaticRouter(
     payload.matches.reduceRight((previous, match) => {
-      const route: DataRouteObject & {
-        rendered: { Component: any; element: any; Layout: any };
-      } = {
+      const route: DataRouteObject = {
         id: match.id,
         action: match.hasAction || !!match.clientAction,
-        rendered: {
-          Component: match.Component,
-          element: match.element,
-          Layout: match.Layout,
-        },
-        element: <RouteWrapper id={match.id} />,
-        ErrorBoundary: match.ErrorBoundary,
+        element: match.element,
+        errorElement: match.errorElement,
         handle: match.handle,
-        hasErrorBoundary: !!match.ErrorBoundary,
-        HydrateFallback: match.HydrateFallback,
+        hasErrorBoundary: !!match.errorElement,
+        hydrateFallbackElement: match.hydrateFallbackElement,
         index: match.index,
         loader: match.hasLoader || !!match.clientLoader,
         path: match.path,

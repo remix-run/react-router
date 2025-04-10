@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import * as React from "react";
 
 import type {
   ClientActionFunction,
@@ -51,16 +51,15 @@ export type ServerRouteObject = ServerRouteObjectBase & {
 export type ServerRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  Component?: React.ComponentType<any>;
-  element?: React.ReactElement | null;
-  ErrorBoundary?: React.ComponentType<any>;
+  element?: React.ReactElement;
+  errorElement?: React.ReactElement;
   handle?: any;
   hasAction: boolean;
+  hasErrorBoundary: boolean;
   hasLoader: boolean;
-  HydrateFallback?: React.ComponentType<any>;
+  hydrateFallbackElement?: React.ReactElement;
   id: string;
   index?: boolean;
-  Layout?: React.ComponentType<any>;
   links?: LinksFunction;
   meta?: MetaFunction;
   path?: string;
@@ -130,21 +129,16 @@ export async function matchServerRequest(
               };
             }
 
-            const componentIsClientReference = isClientReference(route.default);
-
             return {
               clientAction: route.clientAction,
               clientLoader: route.clientLoader,
-              Component: componentIsClientReference ? route.default : undefined,
-              ErrorBoundary: route.ErrorBoundary,
               handle: route.handle,
               hasAction: !!route.action,
+              hasErrorBoundary: !!route.ErrorBoundary,
               hasLoader: !!route.loader,
-              HydrateFallback: route.HydrateFallback,
               id: route.id,
               path: route.path,
               index: "index" in route ? route.index : undefined,
-              Layout: route.Layout,
               links: route.links,
               meta: route.meta,
             };
@@ -183,31 +177,59 @@ export async function matchServerRequest(
     loaderData: result.loaderData,
     location: result.location,
     matches: result.matches.map((match) => {
-      const componentIsClientReference = isClientReference(
-        (match.route as any).default
-      );
+      const Layout = (match.route as any).Layout || React.Fragment;
+      const Component = (match.route as any).default;
+      const ErrorBoundary = (match.route as any).ErrorBoundary;
+      const HydrateFallback = (match.route as any).HydrateFallback;
+      const element = Component
+        ? React.createElement(
+            Layout,
+            {
+              loaderData: result.loaderData[match.route.id],
+              actionData: result.actionData?.[match.route.id],
+            },
+            React.createElement(Component, {
+              loaderData: result.loaderData[match.route.id],
+              actionData: result.actionData?.[match.route.id],
+            })
+          )
+        : undefined;
+      const errorElement = ErrorBoundary
+        ? React.createElement(
+            Layout,
+            {
+              loaderData: result.loaderData[match.route.id],
+              actionData: result.actionData?.[match.route.id],
+            },
+            React.createElement(ErrorBoundary)
+          )
+        : undefined;
+      const hydrateFallbackElement = HydrateFallback
+        ? React.createElement(
+            Layout,
+            {
+              loaderData: result.loaderData[match.route.id],
+              actionData: result.actionData?.[match.route.id],
+            },
+            React.createElement(HydrateFallback, {
+              loaderData: result.loaderData[match.route.id],
+              actionData: result.actionData?.[match.route.id],
+            })
+          )
+        : undefined;
 
       return {
         clientAction: (match.route as any).clientAction,
         clientLoader: (match.route as any).clientLoader,
-        Component: componentIsClientReference
-          ? (match.route as any).default
-          : undefined,
-        element:
-          (match.route as any).default && !componentIsClientReference
-            ? createElement((match.route as any).default, {
-                actionData: result.actionData?.[match.route.id],
-                loaderData: result.loaderData[match.route.id],
-              })
-            : null,
-        ErrorBoundary: (match.route as any).ErrorBoundary,
+        element,
+        errorElement,
         handle: (match.route as any).handle,
         hasAction: !!match.route.action,
+        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
         hasLoader: !!match.route.loader,
-        HydrateFallback: (match.route as any).HydrateFallback,
+        hydrateFallbackElement,
         id: match.route.id,
         index: match.route.index,
-        Layout: (match.route as any).Layout,
         links: (match.route as any).links,
         meta: (match.route as any).meta,
         params: match.params,
@@ -296,15 +318,4 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
-}
-
-const CLIENT_REFERENCE_TAG = Symbol.for("react.client.reference");
-
-function isClientReference(obj: unknown) {
-  return (
-    obj &&
-    (typeof obj === "object" || typeof obj === "function") &&
-    "$$typeof" in obj &&
-    obj.$$typeof === CLIENT_REFERENCE_TAG
-  );
 }

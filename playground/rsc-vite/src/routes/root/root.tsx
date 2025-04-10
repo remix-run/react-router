@@ -17,7 +17,7 @@ export default function Root({
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
   return (
-    <Layout>
+    <>
       <h1>{message}</h1>
       <ul>
         <li>
@@ -29,11 +29,11 @@ export default function Root({
       </ul>
       {counter}
       <Outlet />
-    </Layout>
+    </>
   );
 }
 
-function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>

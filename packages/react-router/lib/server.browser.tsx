@@ -6,7 +6,6 @@ import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createBrowserHistory } from "./router/history";
 import { type Router, createRouter } from "./router/router";
 import type { ServerPayload, ServerRouteManifest } from "./server";
-import { RouteWrapper } from "./server.static";
 
 export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
@@ -112,10 +111,19 @@ function createRouterFromPayload({
               return payload[dataKey]?.[match.route.id];
             });
 
-            return [match.route.id, result];
+            return [
+              match.route.id,
+              payload.errors?.[match.route.id]
+                ? {
+                    type: "error",
+                    result: payload.errors[match.route.id],
+                  }
+                : result,
+            ];
           })
         )),
       ]);
+      console.log({ res });
 
       return res;
     },
@@ -171,22 +179,15 @@ export function ServerBrowserRouter({
 
 function createRouteFromServerManifest(
   match: ServerRouteManifest
-): DataRouteObject & {
-  rendered: { Component: any; element: any; Layout: any };
-} {
+): DataRouteObject {
   return {
     id: match.id,
     action: match.hasAction || !!match.clientAction,
-    rendered: {
-      Component: match.Component,
-      element: match.element,
-      Layout: match.Layout,
-    },
-    element: <RouteWrapper id={match.id} />,
-    errorElement: match.ErrorBoundary ? <match.ErrorBoundary /> : undefined,
+    element: match.element,
+    errorElement: match.errorElement,
     handle: match.handle,
-    hasErrorBoundary: !!match.ErrorBoundary,
-    HydrateFallback: match.HydrateFallback,
+    hasErrorBoundary: match.hasErrorBoundary,
+    hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
     loader: match.hasLoader || !!match.clientLoader,
     path: match.path,
