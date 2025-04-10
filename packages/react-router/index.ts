@@ -368,8 +368,12 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
 
 export type {
+  DecodeCallServerFunction,
+  ServerManifestPayload,
   ServerMatch,
   ServerPayload,
+  ServerRenderPayload,
+  ServerRouteManifest,
   ServerRouteMatch,
   ServerRouteObject,
 } from "./lib/server";
@@ -378,7 +382,10 @@ export {
   matchServerRequest,
   routeServerRequest,
 } from "./lib/server";
-export type { DecodeServerResponseFunction } from "./lib/server.browser";
-export { ServerBrowserRouter } from "./lib/server.browser";
+export type {
+  DecodeServerResponseFunction,
+  EncodeActionFunction,
+} from "./lib/server.browser";
+export { createCallServer, ServerBrowserRouter } from "./lib/server.browser";
 export { ServerStaticRouter } from "./lib/server.static";
 export { getServerStream } from "./lib/html-stream/browser";

@@ -82,6 +82,7 @@ export type ServerRenderPayload = {
   location: Location;
   matches: ServerRouteMatch[];
   nonce?: string;
+  actionResult?: unknown;
 };
 
 export type ServerManifestPayload = {
@@ -97,10 +98,22 @@ export type ServerMatch = {
   payload: ServerPayload;
 };
 
-export async function matchServerRequest(
-  request: Request,
-  routes: ServerRouteObject[]
-): Promise<ServerMatch | Response> {
+export type DecodeCallServerFunction = (
+  id: string,
+  reply: FormData | string
+) => Promise<() => Promise<unknown>>;
+
+export async function matchServerRequest({
+  decodeCallServer,
+  onError,
+  request,
+  routes,
+}: {
+  decodeCallServer?: DecodeCallServerFunction;
+  onError?: (error: unknown) => void;
+  request: Request;
+  routes: ServerRouteObject[];
+}): Promise<ServerMatch | Response> {
   const url = new URL(request.url);
 
   if (isManifestRequest(url)) {
@@ -148,35 +161,68 @@ export async function matchServerRequest(
     };
   }
 
-  const handler = createStaticHandler(routes as AgnosticRouteObject[]);
-  const result = await handler.query(request);
+  let actionResult: unknown | undefined;
+  const actionId = request.headers.get("rsc-action-id");
+  if (actionId) {
+    // TODO: Handle action
+    if (!decodeCallServer) {
+      throw new Error(
+        "Cannot handle enhanced server action without a decodeCallServer function"
+      );
+    }
 
-  if (result instanceof Response) {
-    const headers = new Headers(result.headers);
-    headers.set("Vary", "Content-Type");
-    headers.set("x-react-router-error", "true");
-    return result;
+    const reply = canDecodeWithFormData(request.headers.get("Content-Type"))
+      ? await request.formData()
+      : await request.text();
+    const serverAction = await decodeCallServer(actionId, reply);
+
+    actionResult = serverAction();
+    try {
+      // Wait for actions to finish regardless of state
+      await actionResult;
+    } catch (error) {
+      // The error is propagated to the client through the result promise in the stream
+      onError?.(error);
+    }
+
+    request = new Request(request.url, {
+      method: "GET",
+      headers: request.headers,
+      signal: request.signal,
+    });
   }
 
-  const errors = result.errors
+  const handler = createStaticHandler(routes as AgnosticRouteObject[]);
+  const staticContext = await handler.query(request);
+
+  if (staticContext instanceof Response) {
+    const headers = new Headers(staticContext.headers);
+    headers.set("Vary", "Content-Type");
+    headers.set("x-react-router-error", "true");
+    return staticContext;
+  }
+
+  const errors = staticContext.errors
     ? Object.fromEntries(
-        Object.entries(result.errors).map(([key, error]) => [
+        Object.entries(staticContext.errors).map(([key, error]) => [
           key,
           isRouteErrorResponse(error)
             ? Object.fromEntries(Object.entries(error))
             : error,
         ])
       )
-    : result.errors;
+    : staticContext.errors;
 
   const payload = {
     type: "render",
-    actionData: result.actionData,
-    deepestRenderedBoundaryId: result._deepestRenderedBoundaryId ?? undefined,
+    actionData: staticContext.actionData,
+    actionResult,
+    deepestRenderedBoundaryId:
+      staticContext._deepestRenderedBoundaryId ?? undefined,
     errors,
-    loaderData: result.loaderData,
-    location: result.location,
-    matches: result.matches.map((match) => {
+    loaderData: staticContext.loaderData,
+    location: staticContext.location,
+    matches: staticContext.matches.map((match) => {
       const Layout = (match.route as any).Layout || React.Fragment;
       const Component = (match.route as any).default;
       const ErrorBoundary = (match.route as any).ErrorBoundary;
@@ -185,12 +231,12 @@ export async function matchServerRequest(
         ? React.createElement(
             Layout,
             {
-              loaderData: result.loaderData[match.route.id],
-              actionData: result.actionData?.[match.route.id],
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
             },
             React.createElement(Component, {
-              loaderData: result.loaderData[match.route.id],
-              actionData: result.actionData?.[match.route.id],
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
             })
           )
         : undefined;
@@ -198,8 +244,8 @@ export async function matchServerRequest(
         ? React.createElement(
             Layout,
             {
-              loaderData: result.loaderData[match.route.id],
-              actionData: result.actionData?.[match.route.id],
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
             },
             React.createElement(ErrorBoundary)
           )
@@ -208,12 +254,12 @@ export async function matchServerRequest(
         ? React.createElement(
             Layout,
             {
-              loaderData: result.loaderData[match.route.id],
-              actionData: result.actionData?.[match.route.id],
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
             },
             React.createElement(HydrateFallback, {
-              loaderData: result.loaderData[match.route.id],
-              actionData: result.actionData?.[match.route.id],
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
             })
           )
         : undefined;
@@ -242,7 +288,7 @@ export async function matchServerRequest(
   } satisfies ServerRenderPayload;
 
   return {
-    statusCode: result.statusCode,
+    statusCode: staticContext.statusCode,
     headers: new Headers({
       "Content-Type": "text/x-component",
       Vary: "Content-Type",
@@ -262,6 +308,11 @@ export async function routeServerRequest(
   const url = new URL(request.url);
   let serverRequest = request;
   const isDataRequest = isReactServerRequest(url);
+  const respondWithRSCPayload =
+    isDataRequest ||
+    isManifestRequest(url) ||
+    request.headers.has("rsc-action-id");
+
   if (isDataRequest) {
     const serverURL = new URL(request.url);
     serverURL.pathname = serverURL.pathname.replace(/\.rsc$/, "");
@@ -276,7 +327,7 @@ export async function routeServerRequest(
 
   const serverResponse = await requestServer(serverRequest);
 
-  if (isDataRequest || isManifestRequest(url)) {
+  if (respondWithRSCPayload) {
     return serverResponse;
   }
 
@@ -318,4 +369,12 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+function canDecodeWithFormData(contentType: string | null) {
+  if (!contentType) return false;
+  return (
+    contentType.match(/\bapplication\/x-www-form-urlencoded\b/) ||
+    contentType.match(/\bmultipart\/form-data\b/)
+  );
 }

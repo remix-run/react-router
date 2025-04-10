@@ -13,10 +13,18 @@ export default function Home({
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
+  const logOnServer = () => {
+    "use server";
+    console.log(message);
+  };
+
   return (
     <main>
       <h1>{message}</h1>
       <Counter />
+      <form action={logOnServer as any}>
+        <button type="submit">Log on server</button>
+      </form>
     </main>
   );
 }

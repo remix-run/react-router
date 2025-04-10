@@ -39,3 +39,7 @@ export default function About() {
     </main>
   );
 }
+
+export function ErrorBoundary() {
+  return <h1>Oooops</h1>;
+}

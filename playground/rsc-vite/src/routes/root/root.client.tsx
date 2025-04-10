@@ -16,3 +16,12 @@ export function ErrorReporter() {
 
   return null;
 }
+
+export function ErrorBoundary() {
+  return (
+    <>
+      <h1>Something went wrong!</h1>
+      <ErrorReporter />
+    </>
+  );
+}

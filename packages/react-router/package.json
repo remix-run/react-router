@@ -94,6 +94,7 @@
   },
   "scripts": {
     "build": "wireit",
+    "watch": "tsup --watch & tsup --config tsup.config.server.ts --watch",
     "typecheck": "tsc"
   },
   "wireit": {

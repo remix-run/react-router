@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { RouterProvider } from "./components";
 import type { DataRouteObject } from "./context";
 import { FrameworkContext } from "./dom/ssr/components";
@@ -11,10 +12,53 @@ export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
 ) => Promise<ServerPayload>;
 
+export type EncodeActionFunction = (args: unknown[]) => Promise<BodyInit>;
+
 declare global {
   interface Window {
     __router: Router;
   }
+}
+
+export function createCallServer({
+  decode,
+  encodeAction,
+}: {
+  decode: DecodeServerResponseFunction;
+  encodeAction: EncodeActionFunction;
+}) {
+  return async (id: string, args: unknown[]) => {
+    const response = await fetch(location.href, {
+      body: await encodeAction(args),
+      method: "POST",
+      headers: {
+        Accept: "text/x-component",
+        "rsc-action-id": id,
+      },
+    });
+    if (!response.body) {
+      throw new Error("No response body");
+    }
+    const payload = await decode(response.body);
+
+    if (payload.type !== "render") {
+      throw new Error("Unexpected payload type");
+    }
+
+    let lastMatch: ServerRouteManifest | undefined;
+    for (const match of payload.matches) {
+      window.__router.patchRoutes(lastMatch?.id ?? null, [
+        createRouteFromServerManifest(match),
+      ]);
+      lastMatch = match;
+    }
+
+    React.startTransition(() => {
+      window.__router._internalReflow();
+    });
+
+    return payload.actionResult;
+  };
 }
 
 function createRouterFromPayload({

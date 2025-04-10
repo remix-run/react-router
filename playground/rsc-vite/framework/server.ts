@@ -10,3 +10,10 @@ export function renderToReadableStream(payload: any) {
     pipe(new stream.PassThrough())
   ) as ReadableStream<Uint8Array>;
 }
+
+export function decodeReply(
+  reply: FormData | string,
+  options?: any
+): unknown[] {
+  return RSD.decodeReply(reply, manifest, options);
+}

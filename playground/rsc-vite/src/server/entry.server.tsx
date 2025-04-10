@@ -1,14 +1,31 @@
 /// <reference types="@cloudflare/workers-types" />
 
-import { renderToReadableStream } from "../../framework/server";
+import { decodeReply, renderToReadableStream } from "../../framework/server";
+// @ts-expect-error - no types yet
+import { manifest } from "virtual:react-manifest";
 
-import { matchServerRequest } from "react-router";
+import {
+  type DecodeCallServerFunction,
+  matchServerRequest,
+} from "react-router";
 
 import { routes } from "../routes";
 
+const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
+  const args = await decodeReply(reply);
+  const reference = manifest.resolveServerReference(actionId);
+  await reference.preload();
+  const action = reference.get() as (...args: unknown[]) => Promise<unknown>;
+  return action.bind(null, ...args);
+};
+
 export default {
   async fetch(request, env) {
-    const match = await matchServerRequest(request, routes);
+    const match = await matchServerRequest({
+      decodeCallServer,
+      request,
+      routes,
+    });
     if (match instanceof Response) {
       return match;
     }

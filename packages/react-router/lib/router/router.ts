@@ -274,6 +274,14 @@ export interface Router {
    * @private
    * PRIVATE - DO NOT USE
    *
+   * Cause subscribers to re-render.  This is used to force a re-render.
+   */
+  _internalReflow(): void;
+
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
    * Internal fetch AbortControllers accessed by unit tests
    */
   _internalFetchControllers: Map<string, AbortController>;
@@ -1212,6 +1220,7 @@ export function createRouter(init: RouterInit): Router {
   ): void {
     if (routesPatched) {
       newState.matches = matchRoutes(dataRoutes, location) ?? newState.matches;
+      routesPatched = false;
     }
 
     // Deduce if we're in a loading/actionReload state:
@@ -3350,6 +3359,7 @@ export function createRouter(init: RouterInit): Router {
 
     routesPatched = true;
 
+    console.log({ isNonHMR });
     // If we are not in the middle of an HMR revalidation and we changed the
     // routes, provide a new identity and trigger a reflow via `updateState`
     // to re-run memoized `router.routes` dependencies.
@@ -3397,6 +3407,15 @@ export function createRouter(init: RouterInit): Router {
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
     _internalSetRoutes,
+    _internalReflow() {
+      const newState: Partial<RouterState> = {};
+      if (routesPatched) {
+        newState.matches =
+          matchRoutes(dataRoutes, location) ?? newState.matches;
+        routesPatched = false;
+      }
+      updateState(newState);
+    },
   };
 
   return router;
