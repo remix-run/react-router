@@ -1,7 +1,7 @@
 export * from "react-router/client";
 
 export { createStaticHandler } from "./lib/router/router";
-export { matchRoutes } from "./lib/router/utils";
+export { data, matchRoutes } from "./lib/router/utils";
 
 export type {
   ServerMatch,
