@@ -1,12 +1,11 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
-import { isResponse, runMiddlewarePipeline } from "../../router/router";
+import { isResponse } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyResult,
-  DataStrategyMatch,
 } from "../../router/utils";
 import {
   ErrorResponseImpl,
@@ -16,7 +15,7 @@ import {
   stripBasename,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
-import type { AssetsManifest, EntryContext } from "./entry";
+import type { EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
 
@@ -148,30 +147,55 @@ export function StreamTransfer({
   }
 }
 
-function handleMiddlewareError(error: unknown, routeId: string) {
-  return { [routeId]: { type: "error", result: error } };
-}
+type GetRouteInfoFunction = (routeId: string) => {
+  hasLoader: boolean;
+  hasClientLoader: boolean; // TODO: Can this be read from match.route?
+  hasShouldRevalidate: boolean | undefined; // TODO: Can this be read from match.route?
+};
+
+type FetchAndDecodeFunction = (
+  request: Request,
+  basename: string | undefined,
+  targetRoutes?: string[]
+) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
 export function getSingleFetchDataStrategy(
-  manifest: AssetsManifest,
+  getRouter: () => DataRouter,
+  getRouteInfo: GetRouteInfoFunction,
   ssr: boolean,
-  basename: string | undefined,
-  getRouter: () => DataRouter
+  basename: string | undefined
+): DataStrategyFunction {
+  let dataStrategy = getSingleFetchDataStrategyImpl(
+    getRouter,
+    getRouteInfo,
+    fetchAndDecodeViaTurboStream,
+    ssr,
+    basename
+  );
+  return async (args) => args.unstable_runClientMiddleware(dataStrategy);
+}
+
+export function getSingleFetchDataStrategyImpl(
+  getRouter: () => DataRouter,
+  getRouteInfo: GetRouteInfoFunction,
+  fetchAndDecode: FetchAndDecodeFunction,
+  ssr: boolean,
+  basename: string | undefined
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
+    let router = getRouter();
 
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
-      return runMiddlewarePipeline(
-        args,
-        false,
-        () => singleFetchActionStrategy(args, basename),
-        handleMiddlewareError
-      ) as Promise<Record<string, DataStrategyResult>>;
+      return singleFetchActionStrategy(args, fetchAndDecode, basename);
     }
 
-    if (!ssr) {
+    let foundRevalidatingServerLoader = matches.some((m) => {
+      let { hasLoader, hasClientLoader } = getRouteInfo(m.route.id);
+      return m.unstable_shouldCallHandler() && hasLoader && !hasClientLoader;
+    });
+    if (!ssr && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
       // SPA mode because we may load a SPA fallback page but then navigate into
@@ -204,46 +228,28 @@ export function getSingleFetchDataStrategy(
       //   errored otherwise
       // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      let foundRevalidatingServerLoader = matches.some(
-        (m) =>
-          m.unstable_shouldCallHandler() &&
-          manifest.routes[m.route.id]?.hasLoader &&
-          !manifest.routes[m.route.id]?.hasClientLoader
-      );
-      if (!foundRevalidatingServerLoader) {
-        return runMiddlewarePipeline(
-          args,
-          false,
-          () => nonSsrStrategy(args, manifest, basename),
-          handleMiddlewareError
-        ) as Promise<Record<string, DataStrategyResult>>;
-      }
+      return nonSsrStrategy(args, getRouteInfo, fetchAndDecode, basename);
     }
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return runMiddlewarePipeline(
-        args,
-        false,
-        () => singleFetchLoaderFetcherStrategy(request, matches, basename),
-        handleMiddlewareError
-      ) as Promise<Record<string, DataStrategyResult>>;
+      return singleFetchLoaderFetcherStrategy(
+        request,
+        matches,
+        fetchAndDecode,
+        basename
+      );
     }
 
     // Navigational loads are more complex...
-    return runMiddlewarePipeline(
+    return singleFetchLoaderNavigationStrategy(
       args,
-      false,
-      () =>
-        singleFetchLoaderNavigationStrategy(
-          args,
-          manifest,
-          ssr,
-          getRouter(),
-          basename
-        ),
-      handleMiddlewareError
-    ) as Promise<Record<string, DataStrategyResult>>;
+      router,
+      getRouteInfo,
+      fetchAndDecode,
+      ssr,
+      basename
+    );
   };
 }
 
@@ -251,6 +257,7 @@ export function getSingleFetchDataStrategy(
 // navigations and fetchers)
 async function singleFetchActionStrategy(
   { request, matches }: DataStrategyFunctionArgs,
+  fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined
 ) {
   let actionMatch = matches.find((m) => m.unstable_shouldCallHandler());
@@ -258,13 +265,9 @@ async function singleFetchActionStrategy(
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
     let result = await handler(async () => {
-      let url = singleFetchUrl(request.url, basename);
-      let init = await createRequestInit(request);
-      let { data, status } = await fetchAndDecode(
-        url,
-        init,
-        actionMatch!.route.id
-      );
+      let { data, status } = await fetchAndDecode(request, basename, [
+        actionMatch!.route.id,
+      ]);
       actionStatus = status;
       return unwrapSingleFetchResult(data, actionMatch!.route.id);
     });
@@ -288,22 +291,28 @@ async function singleFetchActionStrategy(
 // We want to opt-out of Single Fetch when we aren't in SSR mode
 async function nonSsrStrategy(
   { request, matches }: DataStrategyFunctionArgs,
-  manifest: AssetsManifest,
+  getRouteInfo: GetRouteInfoFunction,
+  fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined
 ) {
   let matchesToLoad = matches.filter((m) => m.unstable_shouldCallHandler());
-  let url = stripIndexParam(singleFetchUrl(request.url, basename));
-  let init = await createRequestInit(request);
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
     matchesToLoad.map((m) =>
       m.resolve(async (handler) => {
         try {
+          let { hasClientLoader } = getRouteInfo(m.route.id);
           // Need to pass through a `singleFetch` override handler so
           // clientLoader's can still call server loaders through `.data`
           // requests
-          let result = manifest.routes[m.route.id]?.hasClientLoader
-            ? await fetchSingleLoader(handler, url, init, m.route.id)
+          let routeId = m.route.id;
+          let result = hasClientLoader
+            ? await handler(async () => {
+                let { data } = await fetchAndDecode(request, basename, [
+                  routeId,
+                ]);
+                return unwrapSingleFetchResult(data, routeId);
+              })
             : await handler();
           results[m.route.id] = { type: "data", result };
         } catch (e) {
@@ -319,9 +328,10 @@ async function nonSsrStrategy(
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
   { request, matches }: DataStrategyFunctionArgs,
-  manifest: AssetsManifest,
-  ssr: boolean,
   router: DataRouter,
+  getRouteInfo: GetRouteInfoFunction,
+  fetchAndDecode: FetchAndDecodeFunction,
+  ssr: boolean,
   basename: string | undefined
 ) {
   // Track which routes need a server load for use in a `_routes` param
@@ -336,10 +346,6 @@ async function singleFetchLoaderNavigationStrategy(
   // Deferred we'll use for the singleular call to the server
   let singleFetchDfd = createDeferred<DecodedSingleFetchResults>();
 
-  // Base URL and RequestInit for calls to the server
-  let url = stripIndexParam(singleFetchUrl(request.url, basename));
-  let init = await createRequestInit(request);
-
   // We'll build up this results object as we loop through matches
   let results: Record<string, DataStrategyResult> = {};
 
@@ -347,9 +353,9 @@ async function singleFetchLoaderNavigationStrategy(
     matches.map(async (m, i) =>
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
-
-        let manifestRoute = manifest.routes[m.route.id];
-        invariant(manifestRoute, "No manifest route found for dataStrategy");
+        let routeId = m.route.id;
+        let { hasLoader, hasClientLoader, hasShouldRevalidate } =
+          getRouteInfo(routeId);
 
         let defaultShouldRevalidate =
           !m.unstable_shouldRevalidateArgs ||
@@ -361,51 +367,44 @@ async function singleFetchLoaderNavigationStrategy(
           // If this route opted out, don't include in the .data request
           foundOptOutRoute ||=
             m.unstable_shouldRevalidateArgs != null && // This is a revalidation,
-            manifestRoute?.hasLoader === true && // for a route with a server loader,
-            m.route.shouldRevalidate != null; // and a shouldRevalidate function
+            hasLoader && // for a route with a server loader,
+            hasShouldRevalidate === true; // and a shouldRevalidate function
           return;
         }
 
         // When a route has a client loader, it opts out of the singular call and
         // calls it's server loader via `serverLoader()` using a `?_routes` param
-        if (manifestRoute.hasClientLoader) {
-          if (manifestRoute.hasLoader) {
+        if (hasClientLoader) {
+          if (hasLoader) {
             foundOptOutRoute = true;
           }
           try {
-            let result = await fetchSingleLoader(
-              handler,
-              url,
-              init,
-              m.route.id
-            );
-            results[m.route.id] = { type: "data", result };
+            let result = await handler(async () => {
+              let { data } = await fetchAndDecode(request, basename, [routeId]);
+              return unwrapSingleFetchResult(data, routeId);
+            });
+
+            results[routeId] = { type: "data", result };
           } catch (e) {
-            results[m.route.id] = { type: "error", result: e };
+            results[routeId] = { type: "error", result: e };
           }
           return;
         }
 
         // Load this route on the server if it has a loader
-        if (manifestRoute && manifestRoute.hasLoader) {
-          routesParams.add(m.route.id);
+        if (hasLoader) {
+          routesParams.add(routeId);
         }
 
         // Lump this match in with the others on a singular promise
         try {
           let result = await handler(async () => {
             let data = await singleFetchDfd.promise;
-            return unwrapSingleFetchResult(data, m.route.id);
+            return unwrapSingleFetchResult(data, routeId);
           });
-          results[m.route.id] = {
-            type: "data",
-            result,
-          };
+          results[routeId] = { type: "data", result };
         } catch (e) {
-          results[m.route.id] = {
-            type: "error",
-            result: e,
-          };
+          results[routeId] = { type: "error", result: e };
         }
       })
     )
@@ -429,13 +428,12 @@ async function singleFetchLoaderNavigationStrategy(
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
     // Skipped in `ssr:false` because we expect to be loading static `.data` files
-    if (ssr && foundOptOutRoute && routesParams.size > 0) {
-      let routes = [...routesParams.keys()].join(",");
-      url.searchParams.set("_routes", routes);
-    }
-
+    let targetRoutes =
+      ssr && foundOptOutRoute && routesParams.size > 0
+        ? [...routesParams.keys()]
+        : undefined;
     try {
-      let data = await fetchAndDecode(url, init);
+      let data = await fetchAndDecode(request, basename, targetRoutes);
       singleFetchDfd.resolve(data.data);
     } catch (e) {
       singleFetchDfd.reject(e);
@@ -451,32 +449,19 @@ async function singleFetchLoaderNavigationStrategy(
 async function singleFetchLoaderFetcherStrategy(
   request: Request,
   matches: DataStrategyFunctionArgs["matches"],
+  fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined
 ) {
   let fetcherMatch = matches.find((m) => m.unstable_shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
-  let result = await fetcherMatch.resolve(async (handler) => {
-    let url = stripIndexParam(singleFetchUrl(request.url, basename));
-    let init = await createRequestInit(request);
-    return fetchSingleLoader(handler, url, init, fetcherMatch!.route.id);
-  });
+  let routeId = fetcherMatch.route.id;
+  let result = await fetcherMatch.resolve(async (handler) =>
+    handler(async () => {
+      let { data } = await fetchAndDecode(request, basename, [routeId]);
+      return unwrapSingleFetchResult(data, routeId);
+    })
+  );
   return { [fetcherMatch.route.id]: result };
-}
-
-function fetchSingleLoader(
-  handler: Parameters<
-    NonNullable<Parameters<DataStrategyMatch["resolve"]>[0]>
-  >[0],
-  url: URL,
-  init: RequestInit,
-  routeId: string
-) {
-  return handler(async () => {
-    let singleLoaderUrl = new URL(url);
-    singleLoaderUrl.searchParams.set("_routes", routeId);
-    let { data } = await fetchAndDecode(singleLoaderUrl, init);
-    return unwrapSingleFetchResult(data, routeId);
-  });
 }
 
 function stripIndexParam(url: URL) {
@@ -522,12 +507,20 @@ export function singleFetchUrl(
   return url;
 }
 
-async function fetchAndDecode(
-  url: URL,
-  init: RequestInit,
-  routeId?: string
+async function fetchAndDecodeViaTurboStream(
+  request: Request,
+  basename: string | undefined,
+  targetRoutes?: string[]
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
-  let res = await fetch(url, init);
+  let url = singleFetchUrl(request.url, basename);
+  if (request.method === "GET") {
+    url = stripIndexParam(url);
+    if (targetRoutes) {
+      url.searchParams.set("_routes", targetRoutes.join(","));
+    }
+  }
+
+  let res = await fetch(url, await createRequestInit(request));
 
   // If this 404'd without hitting the running server (most likely in a
   // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
@@ -537,8 +530,10 @@ async function fetchAndDecode(
 
   if (NO_BODY_STATUS_CODES.has(res.status)) {
     let routes: { [key: string]: SingleFetchResult } = {};
-    if (routeId) {
-      routes[routeId] = { data: undefined };
+    // We get back just a single result for action requests - normalize that
+    // to a DecodedSingleFetchResults shape here
+    if (targetRoutes && request.method !== "GET") {
+      routes[targetRoutes[0]] = { data: undefined };
     }
     return {
       status: res.status,
@@ -551,7 +546,7 @@ async function fetchAndDecode(
   try {
     let decoded = await decodeViaTurboStream(res.body, window);
     let data: DecodedSingleFetchResults;
-    if (!init.method || init.method === "GET") {
+    if (request.method === "GET") {
       let typed = decoded.value as SingleFetchResults;
       if (SingleFetchRedirectSymbol in typed) {
         data = { redirect: typed[SingleFetchRedirectSymbol] };
@@ -560,6 +555,7 @@ async function fetchAndDecode(
       }
     } else {
       let typed = decoded.value as SingleFetchResult;
+      let routeId = targetRoutes?.[0];
       invariant(routeId, "No routeId found for single fetch call decoding");
       if ("redirect" in typed) {
         data = { redirect: typed };
