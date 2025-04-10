@@ -2827,7 +2827,8 @@ export function createRouter(init: RouterInit): Router {
         request,
         matches,
         fetcherKey,
-        scopedContext
+        scopedContext,
+        false
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -4218,7 +4219,8 @@ export function createStaticHandler(
       request,
       matches,
       null,
-      requestContext
+      requestContext,
+      true
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -5546,7 +5548,8 @@ async function callDataStrategyImpl(
   request: Request,
   matches: DataStrategyMatch[],
   fetcherKey: string | null,
-  scopedContext: unknown
+  scopedContext: unknown,
+  isStaticHandler: boolean
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all middleware is loaded before we start executing routes
   if (matches.some((m) => m._lazyPromises?.middleware)) {
@@ -5556,12 +5559,52 @@ async function callDataStrategyImpl(
   // Send all matches here to allow for a middleware-type implementation.
   // handler will be a no-op for unneeded routes and we filter those results
   // back out below.
-  let results = await dataStrategyImpl({
-    matches,
+  let dataStrategyArgs = {
     request,
     params: matches[0].params,
-    fetcherKey,
     context: scopedContext,
+    matches,
+  };
+  let unstable_runMiddleware = isStaticHandler
+    ? () => {
+        throw new Error(
+          "You cannot call `unstable_runMiddleware()` from a static handler " +
+            "`dataStrategy`. Middleware is run outside of `dataStrategy` during " +
+            "SSR in order to bubble up the Response.  You can enable middleware " +
+            "via the `respond` API in `query`/`queryRoute`"
+        );
+      }
+    : (cb: DataStrategyFunction<unstable_RouterContextProvider>) => {
+        let typedDataStrategyArgs = dataStrategyArgs as (
+          | LoaderFunctionArgs<unstable_RouterContextProvider>
+          | ActionFunctionArgs<unstable_RouterContextProvider>
+        ) & {
+          matches: DataStrategyMatch[];
+        };
+        return runMiddlewarePipeline(
+          typedDataStrategyArgs,
+          false,
+          () =>
+            cb({
+              ...typedDataStrategyArgs,
+              fetcherKey,
+              unstable_runMiddleware: () => {
+                throw new Error(
+                  "Cannot call `unstable_runMiddleware()` from within an " +
+                    "`unstable_runMiddleware` handler"
+                );
+              },
+            }),
+          (error: unknown, routeId: string) => ({
+            [routeId]: { type: "error", result: error },
+          })
+        ) as Promise<Record<string, DataStrategyResult>>;
+      };
+
+  let results = await dataStrategyImpl({
+    ...dataStrategyArgs,
+    fetcherKey,
+    unstable_runMiddleware,
   });
 
   // Wait for all routes to load here but swallow the error since we want

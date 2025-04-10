@@ -1,7 +1,7 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
-import { isResponse, runMiddlewarePipeline } from "../../router/router";
+import { isResponse } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -148,11 +148,22 @@ export function StreamTransfer({
   }
 }
 
-function handleMiddlewareError(error: unknown, routeId: string) {
-  return { [routeId]: { type: "error", result: error } };
+export function getSingleFetchDataStrategy(
+  manifest: AssetsManifest,
+  ssr: boolean,
+  basename: string | undefined,
+  getRouter: () => DataRouter
+): DataStrategyFunction {
+  let dataStrategy = getSingleFetchDataStrategyImpl(
+    manifest,
+    ssr,
+    basename,
+    getRouter
+  );
+  return async (args) => args.unstable_runMiddleware(dataStrategy);
 }
 
-export function getSingleFetchDataStrategy(
+export function getSingleFetchDataStrategyImpl(
   manifest: AssetsManifest,
   ssr: boolean,
   basename: string | undefined,
@@ -163,15 +174,16 @@ export function getSingleFetchDataStrategy(
 
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
-      return runMiddlewarePipeline(
-        args,
-        false,
-        () => singleFetchActionStrategy(args, basename),
-        handleMiddlewareError
-      ) as Promise<Record<string, DataStrategyResult>>;
+      return singleFetchActionStrategy(args, basename);
     }
 
-    if (!ssr) {
+    let foundRevalidatingServerLoader = matches.some(
+      (m) =>
+        m.unstable_shouldCallHandler() &&
+        manifest.routes[m.route.id]?.hasLoader &&
+        !manifest.routes[m.route.id]?.hasClientLoader
+    );
+    if (!ssr && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
       // SPA mode because we may load a SPA fallback page but then navigate into
@@ -204,46 +216,22 @@ export function getSingleFetchDataStrategy(
       //   errored otherwise
       // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      let foundRevalidatingServerLoader = matches.some(
-        (m) =>
-          m.unstable_shouldCallHandler() &&
-          manifest.routes[m.route.id]?.hasLoader &&
-          !manifest.routes[m.route.id]?.hasClientLoader
-      );
-      if (!foundRevalidatingServerLoader) {
-        return runMiddlewarePipeline(
-          args,
-          false,
-          () => nonSsrStrategy(args, manifest, basename),
-          handleMiddlewareError
-        ) as Promise<Record<string, DataStrategyResult>>;
-      }
+      return nonSsrStrategy(args, manifest, basename);
     }
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return runMiddlewarePipeline(
-        args,
-        false,
-        () => singleFetchLoaderFetcherStrategy(request, matches, basename),
-        handleMiddlewareError
-      ) as Promise<Record<string, DataStrategyResult>>;
+      return singleFetchLoaderFetcherStrategy(request, matches, basename);
     }
 
     // Navigational loads are more complex...
-    return runMiddlewarePipeline(
+    return singleFetchLoaderNavigationStrategy(
       args,
-      false,
-      () =>
-        singleFetchLoaderNavigationStrategy(
-          args,
-          manifest,
-          ssr,
-          getRouter(),
-          basename
-        ),
-      handleMiddlewareError
-    ) as Promise<Record<string, DataStrategyResult>>;
+      manifest,
+      ssr,
+      getRouter(),
+      basename
+    );
   };
 }
 
