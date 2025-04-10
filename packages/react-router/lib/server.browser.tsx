@@ -28,6 +28,9 @@ export function createCallServer({
   encodeAction: EncodeActionFunction;
 }) {
   return async (id: string, args: unknown[]) => {
+    // TODO: Expose internal "loadID" (incrementingLoadId) to use as a key?
+    const locationKey = window.__router.state.location.key;
+
     const response = await fetch(location.href, {
       body: await encodeAction(args),
       method: "POST",
@@ -45,17 +48,19 @@ export function createCallServer({
       throw new Error("Unexpected payload type");
     }
 
-    let lastMatch: ServerRouteManifest | undefined;
-    for (const match of payload.matches) {
-      window.__router.patchRoutes(lastMatch?.id ?? null, [
-        createRouteFromServerManifest(match),
-      ]);
-      lastMatch = match;
-    }
+    if (locationKey === window.__router.state.location.key) {
+      let lastMatch: ServerRouteManifest | undefined;
+      for (const match of payload.matches) {
+        window.__router.patchRoutes(lastMatch?.id ?? null, [
+          createRouteFromServerManifest(match),
+        ]);
+        lastMatch = match;
+      }
 
-    React.startTransition(() => {
-      window.__router._internalReflow();
-    });
+      React.startTransition(() => {
+        window.__router._internalReflow();
+      });
+    }
 
     return payload.actionResult;
   };
