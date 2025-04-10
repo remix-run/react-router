@@ -123,7 +123,6 @@ function createRouterFromPayload({
           })
         )),
       ]);
-      console.log({ res });
 
       return res;
     },
