@@ -361,7 +361,7 @@ export interface DataStrategyMatch
 export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
-  unstable_runMiddleware: (
+  unstable_runClientMiddleware: (
     cb: DataStrategyFunction<Context>
   ) => Promise<Record<string, DataStrategyResult>>;
   fetcherKey: string | null;

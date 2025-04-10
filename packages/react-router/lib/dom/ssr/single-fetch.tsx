@@ -160,7 +160,7 @@ export function getSingleFetchDataStrategy(
     basename,
     getRouter
   );
-  return async (args) => args.unstable_runMiddleware(dataStrategy);
+  return async (args) => args.unstable_runClientMiddleware(dataStrategy);
 }
 
 export function getSingleFetchDataStrategyImpl(

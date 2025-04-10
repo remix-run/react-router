@@ -5565,10 +5565,10 @@ async function callDataStrategyImpl(
     context: scopedContext,
     matches,
   };
-  let unstable_runMiddleware = isStaticHandler
+  let unstable_runClientMiddleware = isStaticHandler
     ? () => {
         throw new Error(
-          "You cannot call `unstable_runMiddleware()` from a static handler " +
+          "You cannot call `unstable_runClientMiddleware()` from a static handler " +
             "`dataStrategy`. Middleware is run outside of `dataStrategy` during " +
             "SSR in order to bubble up the Response.  You can enable middleware " +
             "via the `respond` API in `query`/`queryRoute`"
@@ -5588,10 +5588,10 @@ async function callDataStrategyImpl(
             cb({
               ...typedDataStrategyArgs,
               fetcherKey,
-              unstable_runMiddleware: () => {
+              unstable_runClientMiddleware: () => {
                 throw new Error(
-                  "Cannot call `unstable_runMiddleware()` from within an " +
-                    "`unstable_runMiddleware` handler"
+                  "Cannot call `unstable_runClientMiddleware()` from within an " +
+                    "`unstable_runClientMiddleware` handler"
                 );
               },
             }),
@@ -5604,7 +5604,7 @@ async function callDataStrategyImpl(
   let results = await dataStrategyImpl({
     ...dataStrategyArgs,
     fetcherKey,
-    unstable_runMiddleware,
+    unstable_runClientMiddleware,
   });
 
   // Wait for all routes to load here but swallow the error since we want
