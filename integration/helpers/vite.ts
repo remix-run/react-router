@@ -240,12 +240,21 @@ export const build = ({
 }) => {
   let nodeBin = process.argv[0];
 
+  let vitePackageJsonPath = require.resolve("vite/package.json", {
+    paths: [cwd],
+  });
+  let vitePackageJson = JSON.parse(
+    fse.readFileSync(vitePackageJsonPath, "utf-8")
+  );
+  let isRolldown = vitePackageJson.name === "rolldown-vite";
+
   return spawnSync(nodeBin, [reactRouterBin, "build"], {
     cwd,
     env: {
       ...process.env,
       ...colorEnv,
       ...env,
+      ...(isRolldown ? { ROLLDOWN_OPTIONS_VALIDATION: "loose" } : {}),
     },
   });
 };

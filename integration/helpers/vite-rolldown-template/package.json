@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router build",
+    "build": "cross-env ROLLDOWN_OPTIONS_VALIDATION=loose react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -29,6 +29,7 @@
     "@react-router/remix-routes-option-adapter": "workspace:*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
+    "cross-env": "^7.0.3",
     "eslint": "^8.38.0",
     "typescript": "^5.1.6",
     "vite": "npm:rolldown-vite@6.3.0-beta.5",
