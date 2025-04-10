@@ -335,7 +335,6 @@ test.describe("Client Data", () => {
               }),
               "app/routes/parent.child.tsx": js`
                 import * as React from 'react';
-                import { json } from "react-router"
                 import { Await, useLoaderData } from "react-router"
                 export function loader() {
                   return {
@@ -685,7 +684,6 @@ test.describe("Client Data", () => {
                 }),
                 "app/routes/parent.child.tsx": js`
                   import * as React from 'react';
-                  import { json } from "react-router";
                   import { useLoaderData, useRevalidator } from "react-router";
                   let isFirstCall = true;
                   export async function loader({ serverLoader }) {
@@ -763,7 +761,7 @@ test.describe("Client Data", () => {
                     childClientLoaderHydrate: false,
                   }),
                   "app/routes/parent.child.tsx": js`
-                    import { ClientLoaderFunctionArgs, useRouteError } from "react-router";
+                    import { useRouteError } from "react-router";
 
                     export function loader() {
                       throw new Error("Broken!")
@@ -1286,7 +1284,6 @@ test.describe("Client Data", () => {
                 }),
                 "app/routes/parent.child.tsx": js`
                   import * as React from 'react';
-                  import { json } from "react-router";
                   import { Form, useRouteError } from "react-router";
                   export async function clientAction({ serverAction }) {
                     return await serverAction();
@@ -1508,7 +1505,6 @@ test.describe("Client Data", () => {
                 }),
                 "app/routes/parent.child.tsx": js`
                   import * as React from 'react';
-                  import { json } from "react-router";
                   import { Form, useRouteError } from "react-router";
                   export async function clientAction({ serverAction }) {
                     return await serverAction();
