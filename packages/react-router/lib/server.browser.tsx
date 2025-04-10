@@ -240,7 +240,6 @@ export function ServerBrowserRouter({
     []
   );
 
-  console.log(window.__routerInitPromise);
   if (window.__routerInitPromise) {
     throw window.__routerInitPromise;
   }
