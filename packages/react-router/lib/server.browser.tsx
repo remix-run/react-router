@@ -27,9 +27,12 @@ export function createCallServer({
   decode: DecodeServerResponseFunction;
   encodeAction: EncodeActionFunction;
 }) {
+  let actionCounter = 0;
+  let landedActionId: number = 0;
+
   return async (id: string, args: unknown[]) => {
-    // TODO: Expose internal "loadID" (incrementingLoadId) to use as a key?
-    const locationKey = window.__router.state.location.key;
+    let actionId = ++actionCounter;
+    const locationKey = window.__router.state.loaderData;
 
     const response = await fetch(location.href, {
       body: await encodeAction(args),
@@ -44,22 +47,50 @@ export function createCallServer({
     }
     const payload = await decode(response.body);
 
-    if (payload.type !== "render") {
+    if (payload.type !== "action") {
       throw new Error("Unexpected payload type");
     }
 
-    if (locationKey === window.__router.state.location.key) {
-      let lastMatch: ServerRouteManifest | undefined;
-      for (const match of payload.matches) {
-        window.__router.patchRoutes(lastMatch?.id ?? null, [
-          createRouteFromServerManifest(match),
-        ]);
-        lastMatch = match;
-      }
+    if (payload.rerender) {
+      (async () => {
+        const rendered = await payload.rerender;
+        if (!rendered) return;
+        if (
+          actionId > landedActionId &&
+          locationKey === window.__router.state.loaderData
+        ) {
+          landedActionId = actionId;
+          let lastMatch: ServerRouteManifest | undefined;
+          for (const match of rendered.matches) {
+            window.__router.patchRoutes(lastMatch?.id ?? null, [
+              createRouteFromServerManifest(match),
+            ]);
+            lastMatch = match;
+          }
 
-      React.startTransition(() => {
-        window.__router._internalReflow();
-      });
+          React.startTransition(() => {
+            window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
+              actionData: Object.assign(
+                {},
+                window.__router.state.actionData,
+                rendered.actionData
+              ),
+              loaderData: Object.assign(
+                {},
+                window.__router.state.loaderData,
+                rendered.loaderData
+              ),
+              errors: rendered.errors
+                ? Object.assign(
+                    {},
+                    window.__router.state.errors,
+                    rendered.errors
+                  )
+                : null,
+            });
+          });
+        }
+      })();
     }
 
     return payload.actionResult;

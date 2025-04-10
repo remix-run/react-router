@@ -82,7 +82,6 @@ export type ServerRenderPayload = {
   location: Location;
   matches: ServerRouteMatch[];
   nonce?: string;
-  actionResult?: unknown;
 };
 
 export type ServerManifestPayload = {
@@ -90,7 +89,16 @@ export type ServerManifestPayload = {
   matches: ServerRouteManifest[];
 };
 
-export type ServerPayload = ServerRenderPayload | ServerManifestPayload;
+export type ServerActionPayload = {
+  type: "action";
+  actionResult: Promise<unknown>;
+  rerender?: Promise<ServerRenderPayload>;
+};
+
+export type ServerPayload =
+  | ServerRenderPayload
+  | ServerManifestPayload
+  | ServerActionPayload;
 
 export type ServerMatch = {
   statusCode: number;
@@ -161,7 +169,8 @@ export async function matchServerRequest({
     };
   }
 
-  let actionResult: unknown | undefined;
+  let statusCode = 200;
+  let actionResult: Promise<unknown> | undefined;
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
     // TODO: Handle action
@@ -176,7 +185,7 @@ export async function matchServerRequest({
       : await request.text();
     const serverAction = await decodeCallServer(actionId, reply);
 
-    actionResult = serverAction();
+    actionResult = Promise.resolve(serverAction());
     try {
       // Wait for actions to finish regardless of state
       await actionResult;
@@ -192,109 +201,129 @@ export async function matchServerRequest({
     });
   }
 
-  const handler = createStaticHandler(routes as AgnosticRouteObject[]);
-  const staticContext = await handler.query(request);
+  const getRenderPayload = async (
+    action?: boolean
+  ): Promise<ServerRenderPayload> => {
+    const handler = createStaticHandler(routes as AgnosticRouteObject[]);
+    const staticContext = await handler.query(request);
 
-  if (staticContext instanceof Response) {
-    const headers = new Headers(staticContext.headers);
-    headers.set("Vary", "Content-Type");
-    headers.set("x-react-router-error", "true");
-    return staticContext;
-  }
+    if (staticContext instanceof Response) {
+      // TODO: Properlly handle this case
+      const headers = new Headers(staticContext.headers);
+      headers.set("Vary", "Content-Type");
+      headers.set("x-react-router-error", "true");
+      throw staticContext;
+    }
+    statusCode = staticContext.statusCode ?? statusCode;
 
-  const errors = staticContext.errors
-    ? Object.fromEntries(
-        Object.entries(staticContext.errors).map(([key, error]) => [
-          key,
-          isRouteErrorResponse(error)
-            ? Object.fromEntries(Object.entries(error))
-            : error,
-        ])
-      )
-    : staticContext.errors;
+    const errors = staticContext.errors
+      ? Object.fromEntries(
+          Object.entries(staticContext.errors).map(([key, error]) => [
+            key,
+            isRouteErrorResponse(error)
+              ? Object.fromEntries(Object.entries(error))
+              : error,
+          ])
+        )
+      : staticContext.errors;
 
-  const payload = {
-    type: "render",
-    actionData: staticContext.actionData,
-    actionResult,
-    deepestRenderedBoundaryId:
-      staticContext._deepestRenderedBoundaryId ?? undefined,
-    errors,
-    loaderData: staticContext.loaderData,
-    location: staticContext.location,
-    matches: staticContext.matches.map((match) => {
-      const Layout = (match.route as any).Layout || React.Fragment;
-      const Component = (match.route as any).default;
-      const ErrorBoundary = (match.route as any).ErrorBoundary;
-      const HydrateFallback = (match.route as any).HydrateFallback;
-      const element = Component
-        ? React.createElement(
-            Layout,
-            {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            },
-            React.createElement(Component, {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            })
-          )
-        : undefined;
-      const errorElement = ErrorBoundary
-        ? React.createElement(
-            Layout,
-            {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            },
-            React.createElement(ErrorBoundary)
-          )
-        : undefined;
-      const hydrateFallbackElement = HydrateFallback
-        ? React.createElement(
-            Layout,
-            {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            },
-            React.createElement(HydrateFallback, {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            })
-          )
-        : undefined;
+    const payload = {
+      type: "render",
+      actionData: staticContext.actionData,
+      deepestRenderedBoundaryId:
+        staticContext._deepestRenderedBoundaryId ?? undefined,
+      errors,
+      loaderData: staticContext.loaderData,
+      location: staticContext.location,
+      matches: staticContext.matches.map((match) => {
+        const Layout = (match.route as any).Layout || React.Fragment;
+        const Component = (match.route as any).default;
+        const ErrorBoundary = (match.route as any).ErrorBoundary;
+        const HydrateFallback = (match.route as any).HydrateFallback;
+        const element = Component
+          ? React.createElement(
+              Layout,
+              {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              },
+              React.createElement(Component, {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              })
+            )
+          : undefined;
+        const errorElement = ErrorBoundary
+          ? React.createElement(
+              Layout,
+              {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              },
+              React.createElement(ErrorBoundary)
+            )
+          : undefined;
+        const hydrateFallbackElement = HydrateFallback
+          ? React.createElement(
+              Layout,
+              {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              },
+              React.createElement(HydrateFallback, {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              })
+            )
+          : undefined;
 
-      return {
-        clientAction: (match.route as any).clientAction,
-        clientLoader: (match.route as any).clientLoader,
-        element,
-        errorElement,
-        handle: (match.route as any).handle,
-        hasAction: !!match.route.action,
-        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-        hasLoader: !!match.route.loader,
-        hydrateFallbackElement,
-        id: match.route.id,
-        index: match.route.index,
-        links: (match.route as any).links,
-        meta: (match.route as any).meta,
-        params: match.params,
-        path: match.route.path,
-        pathname: match.pathname,
-        pathnameBase: match.pathnameBase,
-        shouldRevalidate: (match.route as any).shouldRevalidate,
-      };
-    }),
-  } satisfies ServerRenderPayload;
+        return {
+          clientAction: (match.route as any).clientAction,
+          clientLoader: (match.route as any).clientLoader,
+          element,
+          errorElement,
+          handle: (match.route as any).handle,
+          hasAction: !!match.route.action,
+          hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+          hasLoader: !!match.route.loader,
+          hydrateFallbackElement,
+          id: match.route.id,
+          index: match.route.index,
+          links: (match.route as any).links,
+          meta: (match.route as any).meta,
+          params: match.params,
+          path: match.route.path,
+          pathname: match.pathname,
+          pathnameBase: match.pathnameBase,
+          shouldRevalidate: (match.route as any).shouldRevalidate,
+        };
+      }),
+    } satisfies ServerRenderPayload;
 
-  return {
-    statusCode: staticContext.statusCode,
-    headers: new Headers({
-      "Content-Type": "text/x-component",
-      Vary: "Content-Type",
-    }),
-    payload,
+    return payload;
   };
+
+  try {
+    return {
+      statusCode,
+      headers: new Headers({
+        "Content-Type": "text/x-component",
+        Vary: "Content-Type",
+      }),
+      payload: actionResult
+        ? {
+            type: "action",
+            actionResult,
+            rerender: getRenderPayload(true),
+          }
+        : await getRenderPayload(),
+    };
+  } catch (error) {
+    if (typeof error === "object" && error instanceof Response) {
+      return error;
+    }
+    throw error;
+  }
 }
 
 export async function routeServerRequest(
