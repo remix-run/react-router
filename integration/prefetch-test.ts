@@ -492,6 +492,7 @@ test.describe("other scenarios", () => {
     let stylesheets = requests.filter(
       (r) => r.type === "stylesheet" && /\/global-[a-z0-9-]+\.css/i.test(r.url)
     );
+    expect(stylesheets.length).toBe(1);
   });
 
   test("dedupes prefetch tags", async ({ page }) => {
