@@ -6,7 +6,6 @@ import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyResult,
-  DataStrategyMatch,
 } from "../../router/utils";
 import {
   ErrorResponseImpl,
