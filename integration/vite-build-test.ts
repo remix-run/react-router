@@ -295,7 +295,7 @@ test.describe("Build", () => {
           expect(pageErrors).toEqual([]);
         });
 
-        test.only("emits SSR-only assets to the client assets directory", async ({
+        test("emits SSR-only assets to the client assets directory", async ({
           page,
         }) => {
           let pageErrors: Error[] = [];
