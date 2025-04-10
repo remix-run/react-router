@@ -23,11 +23,11 @@
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "typescript": "^5.1.6",
-    "vite": "npm:rolldown-vite@6.3.0-beta.3",
+    "vite": "npm:rolldown-vite@6.3.0-beta.5",
     "vite-tsconfig-paths": "^4.2.1"
   },
   "overrides": {
-    "vite": "npm:rolldown-vite@6.3.0-beta.3"
+    "vite": "npm:rolldown-vite@6.3.0-beta.5"
   },
   "engines": {
     "node": ">=20.0.0"

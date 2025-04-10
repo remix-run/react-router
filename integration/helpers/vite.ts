@@ -99,31 +99,18 @@ export const viteConfig = {
   build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
-        rollupOptions: await (async () => {
-          const fs = await import("node:fs/promises");
-          const path = await import("node:path");
-          const vitePackageJsonPath = path.join(import.meta.dirname, "node_modules/vite/package.json");
-          const vitePackageJson = JSON.parse(await fs.readFile(vitePackageJsonPath, "utf8"));
-          const isRolldown = vitePackageJson.name === "rolldown-vite";
-
-          return isRolldown ? {
-            // NOTE: ignore "The built-in minifier is still under development." warning
-            onwarn(warning, warn) {
-              if (warning.code === "MINIFY_WARNING") return;
-              warn(warning);
-            },
-          } : undefined;
-        })(),
-        ${
-          assetsInlineLimit !== undefined
-            ? `assetsInlineLimit: ${JSON.stringify(assetsInlineLimit)},`
-            : ""
-        }
-        ${
-          assetsDir !== undefined
-            ? `assetsDir: ${JSON.stringify(assetsDir)},`
-            : ""
-        }
+        // Detect rolldown-vite:
+        rollupOptions: "transformWithOxc" in (await import("vite"))
+          ? {
+              onwarn(warning, warn) {
+                // Ignore "The built-in minifier is still under development." warning
+                if (warning.code === "MINIFY_WARNING") return;
+                warn(warning);
+              },
+            }
+          : undefined,
+        assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
+        assetsDir: ${assetsDir ?? "undefined"},
       },
     `;
   },
