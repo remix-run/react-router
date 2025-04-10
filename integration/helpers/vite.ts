@@ -61,14 +61,29 @@ export const reactRouterConfig = ({
   `;
 };
 
-type ViteConfigArgs = {
+type ViteConfigServerArgs = {
   port: number;
   fsAllow?: string[];
+};
+
+type ViteConfigBuildArgs = {
+  assetsInlineLimit?: number;
+  assetsDir?: string;
+};
+
+type ViteConfigBaseArgs = {
   envDir?: string;
 };
 
+type ViteConfigArgs = (
+  | ViteConfigServerArgs
+  | { [K in keyof ViteConfigServerArgs]?: never }
+) &
+  ViteConfigBuildArgs &
+  ViteConfigBaseArgs;
+
 export const viteConfig = {
-  server: async (args: ViteConfigArgs) => {
+  server: async (args: ViteConfigServerArgs) => {
     let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
@@ -81,27 +96,35 @@ export const viteConfig = {
     `;
     return text;
   },
-  build: () => {
+  build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
     return dedent`
-      build: await (async () => {
-        const fs = await import("node:fs/promises");
-        const path = await import("node:path");
-        const vitePackageJsonPath = path.join(import.meta.dirname, "node_modules/vite/package.json");
-        const vitePackageJson = JSON.parse(await fs.readFile(vitePackageJsonPath, "utf8"));
-        const isRolldown = vitePackageJson.name === "rolldown-vite";
+      build: {
+        rollupOptions: await (async () => {
+          const fs = await import("node:fs/promises");
+          const path = await import("node:path");
+          const vitePackageJsonPath = path.join(import.meta.dirname, "node_modules/vite/package.json");
+          const vitePackageJson = JSON.parse(await fs.readFile(vitePackageJsonPath, "utf8"));
+          const isRolldown = vitePackageJson.name === "rolldown-vite";
 
-        return isRolldown ? {
-          rollupOptions: {
-            // NOTE: ignore missing export errors
-            shimMissingExports: true,
+          return isRolldown ? {
             // NOTE: ignore "The built-in minifier is still under development." warning
             onwarn(warning, warn) {
               if (warning.code === "MINIFY_WARNING") return;
               warn(warning);
             },
-          },
-        } : undefined;
-      })(),
+          } : undefined;
+        })(),
+        ${
+          assetsInlineLimit !== undefined
+            ? `assetsInlineLimit: ${JSON.stringify(assetsInlineLimit)},`
+            : ""
+        }
+        ${
+          assetsDir !== undefined
+            ? `assetsDir: ${JSON.stringify(assetsDir)},`
+            : ""
+        }
+      },
     `;
   },
   basic: async (args: ViteConfigArgs) => {
@@ -112,8 +135,8 @@ export const viteConfig = {
       import fs from "node:fs";
 
       export default async () => ({
-        ${await viteConfig.server(args)}
-        ${viteConfig.build()}
+        ${args.port ? await viteConfig.server(args) : ""}
+        ${viteConfig.build(args)}
         envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
