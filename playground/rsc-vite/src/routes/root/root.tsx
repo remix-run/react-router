@@ -1,10 +1,4 @@
-import {
-  Link,
-  Links,
-  Outlet,
-  ScrollRestoration,
-  useRouteError,
-} from "react-router";
+import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 
 import { Counter } from "../../counter";
 import { ErrorReporter } from "./root.client";

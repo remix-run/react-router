@@ -205,10 +205,23 @@ export async function matchServerRequest({
 
   const getRenderPayload = async (): Promise<ServerRenderPayload> => {
     const handler = createStaticHandler(routes);
-    const staticContext = await handler.query(request);
+
+    let url = new URL(request.url);
+    let routeIdsToLoad = url.searchParams.has("_routes")
+      ? url.searchParams.get("_routes")!.split(",")
+      : null;
+
+    const staticContext = await handler.query(request, {
+      skipLoaderErrorBubbling: true,
+      ...(routeIdsToLoad
+        ? {
+            filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id),
+          }
+        : null),
+    });
 
     if (staticContext instanceof Response) {
-      // TODO: Properlly handle this case
+      // TODO: Properly handle this case
       const headers = new Headers(staticContext.headers);
       headers.set("Vary", "Content-Type");
       headers.set("x-react-router-error", "true");
@@ -233,69 +246,71 @@ export async function matchServerRequest({
       errors,
       loaderData: staticContext.loaderData,
       location: staticContext.location,
-      matches: staticContext.matches.map((match) => {
-        const Layout = (match.route as any).Layout || React.Fragment;
-        const Component = (match.route as any).default;
-        const ErrorBoundary = (match.route as any).ErrorBoundary;
-        const HydrateFallback = (match.route as any).HydrateFallback;
-        const element = Component
-          ? React.createElement(
-              Layout,
-              {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              },
-              React.createElement(Component, {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              })
-            )
-          : undefined;
-        const errorElement = ErrorBoundary
-          ? React.createElement(
-              Layout,
-              {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              },
-              React.createElement(ErrorBoundary)
-            )
-          : undefined;
-        const hydrateFallbackElement = HydrateFallback
-          ? React.createElement(
-              Layout,
-              {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              },
-              React.createElement(HydrateFallback, {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              })
-            )
-          : undefined;
+      matches: staticContext.matches
+        .filter((m) => !routeIdsToLoad || routeIdsToLoad.includes(m.route.id))
+        .map((match) => {
+          const Layout = (match.route as any).Layout || React.Fragment;
+          const Component = (match.route as any).default;
+          const ErrorBoundary = (match.route as any).ErrorBoundary;
+          const HydrateFallback = (match.route as any).HydrateFallback;
+          const element = Component
+            ? React.createElement(
+                Layout,
+                {
+                  loaderData: staticContext.loaderData[match.route.id],
+                  actionData: staticContext.actionData?.[match.route.id],
+                },
+                React.createElement(Component, {
+                  loaderData: staticContext.loaderData[match.route.id],
+                  actionData: staticContext.actionData?.[match.route.id],
+                })
+              )
+            : undefined;
+          const errorElement = ErrorBoundary
+            ? React.createElement(
+                Layout,
+                {
+                  loaderData: staticContext.loaderData[match.route.id],
+                  actionData: staticContext.actionData?.[match.route.id],
+                },
+                React.createElement(ErrorBoundary)
+              )
+            : undefined;
+          const hydrateFallbackElement = HydrateFallback
+            ? React.createElement(
+                Layout,
+                {
+                  loaderData: staticContext.loaderData[match.route.id],
+                  actionData: staticContext.actionData?.[match.route.id],
+                },
+                React.createElement(HydrateFallback, {
+                  loaderData: staticContext.loaderData[match.route.id],
+                  actionData: staticContext.actionData?.[match.route.id],
+                })
+              )
+            : undefined;
 
-        return {
-          clientAction: (match.route as any).clientAction,
-          clientLoader: (match.route as any).clientLoader,
-          element,
-          errorElement,
-          handle: (match.route as any).handle,
-          hasAction: !!match.route.action,
-          hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-          hasLoader: !!match.route.loader,
-          hydrateFallbackElement,
-          id: match.route.id,
-          index: match.route.index,
-          links: (match.route as any).links,
-          meta: (match.route as any).meta,
-          params: match.params,
-          path: match.route.path,
-          pathname: match.pathname,
-          pathnameBase: match.pathnameBase,
-          shouldRevalidate: (match.route as any).shouldRevalidate,
-        };
-      }),
+          return {
+            clientAction: (match.route as any).clientAction,
+            clientLoader: (match.route as any).clientLoader,
+            element,
+            errorElement,
+            handle: (match.route as any).handle,
+            hasAction: !!match.route.action,
+            hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+            hasLoader: !!match.route.loader,
+            hydrateFallbackElement,
+            id: match.route.id,
+            index: match.route.index,
+            links: (match.route as any).links,
+            meta: (match.route as any).meta,
+            params: match.params,
+            path: match.route.path,
+            pathname: match.pathname,
+            pathnameBase: match.pathnameBase,
+            shouldRevalidate: (match.route as any).shouldRevalidate,
+          };
+        }),
     } satisfies ServerRenderPayload;
 
     return payload;
@@ -342,7 +357,10 @@ export async function routeServerRequest(
 
   if (isDataRequest) {
     const serverURL = new URL(request.url);
-    serverURL.pathname = serverURL.pathname.replace(/\.rsc$/, "");
+    serverURL.pathname = serverURL.pathname.replace(/(_root)?\.rsc$/, "");
+    if (!isDataRequest) {
+      serverURL.searchParams.delete("_routes");
+    }
     serverRequest = new Request(serverURL, {
       body: request.body,
       duplex: request.body ? "half" : undefined,

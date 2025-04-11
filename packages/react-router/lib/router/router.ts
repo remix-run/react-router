@@ -6350,7 +6350,7 @@ function isValidMethod(method: string): method is FormMethod {
   return validRequestMethods.has(method.toUpperCase() as FormMethod);
 }
 
-function isMutationMethod(method: string): method is MutationFormMethod {
+export function isMutationMethod(method: string): method is MutationFormMethod {
   return validMutationMethods.has(method.toUpperCase() as MutationFormMethod);
 }
 

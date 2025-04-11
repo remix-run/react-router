@@ -15,9 +15,11 @@ import {
   stripBasename,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
-import type { EntryContext } from "./entry";
+import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
+import type { RouteModules } from "./routeModules";
+import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -30,7 +32,7 @@ export type SingleFetchRedirectResult = {
 };
 
 // Shared/serializable type used by both turbo-stream and RSC implementations
-type DecodedSingleFetchResults =
+export type DecodedSingleFetchResults =
   | { routes: { [key: string]: SingleFetchResult } }
   | { redirect: SingleFetchRedirectResult };
 
@@ -147,27 +149,37 @@ export function StreamTransfer({
   }
 }
 
-type GetRouteInfoFunction = (routeId: string) => {
+export type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
-  hasClientLoader: boolean; // TODO: Can this be read from match.route?
-  hasShouldRevalidate: boolean | undefined; // TODO: Can this be read from match.route?
+  hasClientLoader: boolean;
+  hasShouldRevalidate: boolean;
 };
 
-type FetchAndDecodeFunction = (
+export type FetchAndDecodeFunction = (
   request: Request,
   basename: string | undefined,
   targetRoutes?: string[]
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
-export function getSingleFetchDataStrategy(
+export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
-  getRouteInfo: GetRouteInfoFunction,
+  manifest: AssetsManifest,
+  routeModules: RouteModules,
   ssr: boolean,
   basename: string | undefined
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
-    getRouteInfo,
+    (match: DataRouteMatch) => {
+      let manifestRoute = manifest.routes[match.route.id];
+      invariant(manifestRoute, "Route not found in manifest");
+      let routeModule = routeModules[match.route.id];
+      return {
+        hasLoader: manifestRoute.hasLoader,
+        hasClientLoader: manifestRoute.hasClientLoader,
+        hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
+      };
+    },
     fetchAndDecodeViaTurboStream,
     ssr,
     basename
@@ -192,7 +204,7 @@ export function getSingleFetchDataStrategyImpl(
     }
 
     let foundRevalidatingServerLoader = matches.some((m) => {
-      let { hasLoader, hasClientLoader } = getRouteInfo(m.route.id);
+      let { hasLoader, hasClientLoader } = getRouteInfo(m);
       return m.unstable_shouldCallHandler() && hasLoader && !hasClientLoader;
     });
     if (!ssr && !foundRevalidatingServerLoader) {
@@ -301,7 +313,7 @@ async function nonSsrStrategy(
     matchesToLoad.map((m) =>
       m.resolve(async (handler) => {
         try {
-          let { hasClientLoader } = getRouteInfo(m.route.id);
+          let { hasClientLoader } = getRouteInfo(m);
           // Need to pass through a `singleFetch` override handler so
           // clientLoader's can still call server loaders through `.data`
           // requests
@@ -355,7 +367,7 @@ async function singleFetchLoaderNavigationStrategy(
         routeDfds[i].resolve();
         let routeId = m.route.id;
         let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(routeId);
+          getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.unstable_shouldRevalidateArgs ||
@@ -464,7 +476,7 @@ async function singleFetchLoaderFetcherStrategy(
   return { [fetcherMatch.route.id]: result };
 }
 
-function stripIndexParam(url: URL) {
+export function stripIndexParam(url: URL) {
   let indexValues = url.searchParams.getAll("index");
   url.searchParams.delete("index");
   let indexValuesToKeep = [];
@@ -482,7 +494,8 @@ function stripIndexParam(url: URL) {
 
 export function singleFetchUrl(
   reqUrl: URL | string,
-  basename: string | undefined
+  basename: string | undefined,
+  extension: string
 ) {
   let url =
     typeof reqUrl === "string"
@@ -497,22 +510,22 @@ export function singleFetchUrl(
       : reqUrl;
 
   if (url.pathname === "/") {
-    url.pathname = "_root.data";
+    url.pathname = `_root.${extension}`;
   } else if (basename && stripBasename(url.pathname, basename) === "/") {
-    url.pathname = `${basename.replace(/\/$/, "")}/_root.data`;
+    url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
   } else {
-    url.pathname = `${url.pathname.replace(/\/$/, "")}.data`;
+    url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
   }
 
   return url;
 }
 
-async function fetchAndDecodeViaTurboStream(
+const fetchAndDecodeViaTurboStream: FetchAndDecodeFunction = async (
   request: Request,
   basename: string | undefined,
   targetRoutes?: string[]
-): Promise<{ status: number; data: DecodedSingleFetchResults }> {
-  let url = singleFetchUrl(request.url, basename);
+): Promise<{ status: number; data: DecodedSingleFetchResults }> => {
+  let url = singleFetchUrl(request.url, basename, "data");
   if (request.method === "GET") {
     url = stripIndexParam(url);
     if (targetRoutes) {
@@ -573,7 +586,7 @@ async function fetchAndDecodeViaTurboStream(
     // bit restrictive.
     throw new Error("Unable to decode turbo-stream response");
   }
-}
+};
 
 // Note: If you change this function please change the corresponding
 // encodeViaTurboStream function in server-runtime

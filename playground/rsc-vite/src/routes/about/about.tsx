@@ -2,7 +2,7 @@ import { data } from "react-router";
 
 export {
   ErrorBoundary,
-  clientLazy,
+  // clientLazy,
   clientLoader,
   default,
 } from "./about.client";

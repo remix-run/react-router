@@ -1,12 +1,24 @@
 import * as React from "react";
 
 import { RouterProvider } from "./components";
-import type { DataRouteObject } from "./context";
+import type { DataRouteMatch, DataRouteObject } from "./context";
 import { FrameworkContext } from "./dom/ssr/components";
 import type { FrameworkContextObject } from "./dom/ssr/entry";
-import { createBrowserHistory } from "./router/history";
-import { type Router, createRouter } from "./router/router";
+import { createBrowserHistory, invariant } from "./router/history";
+import type { Router as DataRouter } from "./router/router";
+import { createRouter, isMutationMethod } from "./router/router";
 import type { ServerPayload, RenderedRoute } from "./server";
+import { ErrorResponseImpl, type DataStrategyFunction } from "./router/utils";
+import type {
+  DecodedSingleFetchResults,
+  FetchAndDecodeFunction,
+} from "./dom/ssr/single-fetch";
+import {
+  getSingleFetchDataStrategyImpl,
+  singleFetchUrl,
+  stripIndexParam,
+} from "./dom/ssr/single-fetch";
+import { createRequestInit } from "./dom/ssr/data";
 
 export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
@@ -16,7 +28,7 @@ export type EncodeActionFunction = (args: unknown[]) => Promise<BodyInit>;
 
 declare global {
   interface Window {
-    __router: Router;
+    __router: DataRouter;
     __routerInitPromise?: Promise<void>;
   }
 }
@@ -142,72 +154,13 @@ function createRouterFromPayload({
         lastMatch = match;
       }
     },
-    async dataStrategy({ matches, request }) {
-      await Promise.resolve();
-      if (!window.__router) {
-        throw new Error("No router");
-      }
-
-      // TODO: Implement this
-      const url = new URL(request.url);
-      url.pathname += ".rsc";
-      const response = await fetch(url, {
-        body: request.body,
-        headers: request.headers,
-        method: request.method,
-        referrer: request.referrer,
-        signal: request.signal,
-      });
-      if (!response.body) {
-        throw new Error("No response body");
-      }
-      const payload = await decode(response.body);
-      if (payload.type !== "render") {
-        throw new Error("Unexpected payload type");
-      }
-
-      let lastMatch: RenderedRoute | undefined;
-      for (const match of payload.matches) {
-        window.__router.patchRoutes(lastMatch?.id ?? null, [
-          createRouteFromServerManifest(match),
-        ]);
-        lastMatch = match;
-      }
-
-      const dataKey =
-        request.method === "GET" || request.method === "HEAD"
-          ? "loaderData"
-          : "actionData";
-
-      const res = Object.fromEntries([
-        ...Object.entries(payload[dataKey] ?? {}).map(([id, value]) => [
-          id,
-          {
-            type: "data",
-            result: value,
-          },
-        ]),
-        ...(await Promise.all(
-          matches.map(async (match) => {
-            const result = await match.resolve(async () => {
-              return payload[dataKey]?.[match.route.id];
-            });
-
-            return [
-              match.route.id,
-              payload.errors?.[match.route.id]
-                ? {
-                    type: "error",
-                    result: payload.errors[match.route.id],
-                  }
-                : result,
-            ];
-          })
-        )),
-      ]);
-
-      return res;
-    },
+    // FIXME: Pass `build.ssr` and `build.basename` into this function
+    dataStrategy: getRSCSingleFetchDataStrategy(
+      () => window.__router,
+      true,
+      undefined,
+      decode
+    ),
   }).initialize();
 
   if (!window.__router.state.initialized) {
@@ -223,6 +176,116 @@ function createRouterFromPayload({
   }
 
   return window.__router;
+}
+
+export function getRSCSingleFetchDataStrategy(
+  getRouter: () => DataRouter,
+  ssr: boolean,
+  basename: string | undefined,
+  decode: DecodeServerResponseFunction
+): DataStrategyFunction {
+  // create map
+  let dataStrategy = getSingleFetchDataStrategyImpl(
+    getRouter,
+    (match: DataRouteMatch) => {
+      // TODO: Clean this up with a shared type
+      let M = match as DataRouteMatch & {
+        route: DataRouteObject & {
+          hasLoader: boolean;
+          hasClientLoader: boolean;
+          hasAction: boolean;
+          hasClientAction: boolean;
+          hasShouldRevalidate: boolean;
+        };
+      };
+      return {
+        hasLoader: M.route.hasLoader,
+        hasClientLoader: M.route.hasClientLoader,
+        hasAction: M.route.hasAction,
+        hasClientAction: M.route.hasClientAction,
+        hasShouldRevalidate: M.route.hasShouldRevalidate,
+      };
+    },
+    // pass map into fetchAndDecode so it can add payloads
+    getFetchAndDecodeViaRSC(decode),
+    ssr,
+    basename
+  );
+  return async (args) => args.unstable_runClientMiddleware(dataStrategy);
+  // return async (args) => args.unstable_runClientMiddleware(async () => {
+  //   let results = await dataStrategy()
+  //   // patch into router from all payloads in map
+  //   return results;
+  // });
+}
+
+function getFetchAndDecodeViaRSC(
+  decode: DecodeServerResponseFunction
+): FetchAndDecodeFunction {
+  return async (
+    request: Request,
+    basename: string | undefined,
+    targetRoutes?: string[]
+  ) => {
+    //
+    let url = singleFetchUrl(request.url, basename, "rsc");
+    if (request.method === "GET") {
+      url = stripIndexParam(url);
+      if (targetRoutes) {
+        url.searchParams.set("_routes", targetRoutes.join(","));
+      }
+    }
+
+    let res = await fetch(url, await createRequestInit(request));
+
+    // If this 404'd without hitting the running server (most likely in a
+    // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
+    if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
+      throw new ErrorResponseImpl(404, "Not Found", true);
+    }
+
+    invariant(res.body, "No response body to decode");
+
+    try {
+      const payload = await decode(res.body);
+      if (payload.type !== "render") {
+        throw new Error("Unexpected payload type");
+      }
+
+      let lastMatch: RenderedRoute | undefined;
+      for (const match of payload.matches) {
+        // TODO: We can't do this per-request here because when clientLoaders
+        // come into play we'll have filtered matches coming back on the payloads.
+        //
+        // TODO: Don't blow away prior routes
+        window.__router.patchRoutes(lastMatch?.id ?? null, [
+          createRouteFromServerManifest(match),
+        ]);
+        lastMatch = match;
+      }
+
+      let results: DecodedSingleFetchResults = { routes: {} };
+      const dataKey = isMutationMethod(request.method)
+        ? "actionData"
+        : "loaderData";
+      for (let [routeId, data] of Object.entries(payload[dataKey] || {})) {
+        results.routes[routeId] = { data };
+      }
+      if (payload.errors) {
+        for (let [routeId, error] of Object.entries(payload.errors)) {
+          results.routes[routeId] = { error };
+        }
+      }
+      return { status: res.status, data: results };
+    } catch (e) {
+      // Can't clone after consuming the body via decode so we can't include the
+      // body here.  In an ideal world we'd look for an RSC  content type here,
+      // or even X-Remix-Response but then folks can't statically deploy their
+      // prerendered .rsc files to a CDN unless they can tell that CDN to add
+      // special headers to those certain files - which is a bit restrictive.
+      throw new Error("Unable to decode RSC response");
+    }
+  };
 }
 
 export function ServerBrowserRouter({
@@ -276,7 +339,15 @@ export function ServerBrowserRouter({
   );
 }
 
-function createRouteFromServerManifest(match: RenderedRoute): DataRouteObject {
+function createRouteFromServerManifest(
+  match: RenderedRoute
+): DataRouteObject & {
+  hasLoader: boolean;
+  hasClientLoader: boolean;
+  hasAction: boolean;
+  hasClientAction: boolean;
+  hasShouldRevalidate: boolean;
+} {
   return {
     id: match.id,
     action: match.hasAction || !!match.clientAction,
@@ -286,8 +357,28 @@ function createRouteFromServerManifest(match: RenderedRoute): DataRouteObject {
     hasErrorBoundary: match.hasErrorBoundary,
     hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
-    loader: match.hasLoader || !!match.clientLoader,
+    loader:
+      // prettier-ignore
+      match.clientLoader ? (args, singleFetch) => {
+        return match.clientLoader!({
+          ...args,
+          async serverLoader() {
+            invariant(typeof singleFetch === "function", "Invalid singleFetch parameter");
+            return singleFetch();
+          },
+        });
+      } :
+      match.hasLoader ? (args, singleFetch) => {
+        invariant(typeof singleFetch === "function", "Invalid singleFetch parameter");
+        return singleFetch();
+      } :
+      undefined,
     path: match.path,
     shouldRevalidate: match.shouldRevalidate,
+    hasLoader: match.hasLoader,
+    hasClientLoader: match.clientLoader != null,
+    hasAction: match.hasAction,
+    hasClientAction: match.clientAction != null,
+    hasShouldRevalidate: match.shouldRevalidate != null,
   };
 }
