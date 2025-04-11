@@ -35,7 +35,6 @@ export function HydrateFallback() {
 }
 
 export function ErrorBoundary() {
-  console.log(useRouteError());
   return (
     <>
       <h1>Something went wrong!</h1>
