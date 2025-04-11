@@ -33,7 +33,7 @@ const files = {
     export const loader = () => "hello";
 
     export default function Route() {
-      const loaderData = useLoaderData();
+      const loaderData = useLoaderData() ?? null;
       return (
         <div data-loader-data>loaderData = {JSON.stringify(loaderData)}</div>
       );
