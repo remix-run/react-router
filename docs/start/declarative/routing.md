@@ -231,6 +231,7 @@ function Header() {
   );
 }
 ```
+
 ---
 
 Next: [Navigating](./navigating)
