@@ -23,6 +23,7 @@
   "dependencies": {
     "@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
     "@mjackson/node-fetch-server": "0.6.1",
+    "compression": "^1.8.0",
     "express": "^4.21.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

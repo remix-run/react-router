@@ -6,12 +6,6 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  build: {
-    minify: false,
-  },
-  define: {
-    "process.env.NODE_ENV": JSON.stringify("development"),
-  },
   resolve: {
     external: ["cloudflare:workers"],
   },
