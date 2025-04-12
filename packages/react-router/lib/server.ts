@@ -11,6 +11,7 @@ import type { Location } from "./router/history";
 import { createStaticHandler } from "./router/router";
 import {
   type ActionFunction,
+  type AgnosticDataRouteMatch,
   type AgnosticRouteObject,
   type LazyRouteFunction,
   type LoaderFunction,
@@ -18,7 +19,6 @@ import {
   type ShouldRevalidateFunction,
   isRouteErrorResponse,
   matchRoutes,
-  AgnosticDataRouteMatch,
 } from "./router/utils";
 
 type ServerRouteObjectBase = {
