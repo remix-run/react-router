@@ -1,6 +1,7 @@
 {
   "name": "react-router",
   "version": "7.5.0",
+  "type": "module",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -24,71 +25,24 @@
   "exports": {
     ".": {
       "react-server": {
-        "node": {
-          "types": "./dist/development/server.d.ts",
-          "module-sync": "./dist/development/server.mjs",
-          "default": "./dist/development/server.js"
-        },
-        "import": {
-          "types": "./dist/development/server.d.mts",
-          "default": "./dist/development/server.mjs"
-        },
-        "default": {
-          "types": "./dist/development/server.d.ts",
-          "default": "./dist/development/server.js"
-        }
-      },
-      "node": {
-        "types": "./dist/development/index.d.ts",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
-      },
-      "import": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
+        "types": "./dist/development/server.d.mts",
+        "default": "./dist/development/server.mjs"
       },
       "default": {
-        "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       }
     },
     "./client": {
-      "node": {
-        "types": "./dist/development/index.d.ts",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
-      },
-      "import": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "default": {
-        "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
-      }
+      "types": "./dist/development/index.d.mts",
+      "default": "./dist/development/index.mjs"
     },
     "./route-module": {
-      "import": {
-        "types": "./dist/development/lib/types/route-module.d.mts"
-      },
-      "default": {
-        "types": "./dist/development/lib/types/route-module.d.ts"
-      }
+      "types": "./dist/development/lib/types/route-module.d.mts"
     },
     "./dom": {
-      "node": {
-        "types": "./dist/development/dom-export.d.ts",
-        "module-sync": "./dist/development/dom-export.mjs",
-        "default": "./dist/development/dom-export.js"
-      },
-      "import": {
-        "types": "./dist/development/dom-export.d.mts",
-        "default": "./dist/development/dom-export.mjs"
-      },
-      "default": {
-        "types": "./dist/development/dom-export.d.ts",
-        "default": "./dist/development/dom-export.js"
-      }
+      "types": "./dist/development/dom-export.d.mts",
+      "default": "./dist/development/dom-export.mjs"
     },
     "./package.json": "./package.json"
   },

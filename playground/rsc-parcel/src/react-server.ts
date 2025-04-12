@@ -9,7 +9,10 @@ import { renderToReadableStream } from "react-server-dom-parcel/server.edge";
 import { routes } from "./routes";
 
 export async function callServer(request: Request) {
-  const match = await matchServerRequest(request, routes);
+  const match = await matchServerRequest({
+    request,
+    routes,
+  });
   if (match instanceof Response) {
     return match;
   }
