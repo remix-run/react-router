@@ -3,6 +3,8 @@ import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 import { Counter } from "../../counter";
 import { ErrorReporter } from "./root.client";
 
+export { shouldRevalidate } from "./root.client";
+
 export function loader() {
   return {
     counter: <Counter />,

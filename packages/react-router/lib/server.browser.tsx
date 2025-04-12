@@ -138,7 +138,7 @@ function createRouterFromPayload({
       loaderData: payload.loaderData,
     },
     routes,
-    async patchRoutesOnNavigation({ patch, path, signal }) {
+    async patchRoutesOnNavigation({ matches, patch, path, signal }) {
       const response = await fetch(`${path}.manifest`, { signal });
       if (!response.body || response.status < 200 || response.status >= 300) {
         return;
@@ -148,6 +148,7 @@ function createRouterFromPayload({
         throw new Error("Failed to patch routes on navigation");
       }
 
+      const existingIds = new Set(matches.map((m) => m.route.id));
       let lastMatch: RenderedRoute | undefined;
       for (const match of payload.matches) {
         patch(lastMatch?.id ?? null, [createRouteFromServerManifest(match)]);
@@ -178,6 +179,7 @@ function createRouterFromPayload({
   return window.__router;
 }
 
+const requestRenderedRouteCache = new WeakMap<Request, RenderedRoute[]>();
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
@@ -211,12 +213,23 @@ export function getRSCSingleFetchDataStrategy(
     ssr,
     basename
   );
-  return async (args) => args.unstable_runClientMiddleware(dataStrategy);
-  // return async (args) => args.unstable_runClientMiddleware(async () => {
-  //   let results = await dataStrategy()
-  //   // patch into router from all payloads in map
-  //   return results;
-  // });
+  // return async (args) => args.unstable_runClientMiddleware(dataStrategy);
+  return async (args) =>
+    args.unstable_runClientMiddleware(async () => {
+      const renderedRoutes: RenderedRoute[] = [];
+      requestRenderedRouteCache.set(args.request, renderedRoutes);
+      let results = await dataStrategy(args);
+      // patch into router from all payloads in map
+      const renderedRouteById = new Map(renderedRoutes.map((r) => [r.id, r]));
+      for (const match of args.matches) {
+        const rendered = renderedRouteById.get(match.route.id);
+        if (!rendered) continue;
+        window.__router.patchRoutes(rendered.parentId ?? null, [
+          createRouteFromServerManifest(rendered),
+        ]);
+      }
+      return results;
+    });
 }
 
 function getFetchAndDecodeViaRSC(
@@ -227,7 +240,9 @@ function getFetchAndDecodeViaRSC(
     basename: string | undefined,
     targetRoutes?: string[]
   ) => {
-    //
+    const renderedRoutes = requestRenderedRouteCache.get(request);
+    invariant(renderedRoutes, "No rendered routes cache for request");
+
     let url = singleFetchUrl(request.url, basename, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
@@ -252,17 +267,18 @@ function getFetchAndDecodeViaRSC(
         throw new Error("Unexpected payload type");
       }
 
-      let lastMatch: RenderedRoute | undefined;
-      for (const match of payload.matches) {
-        // TODO: We can't do this per-request here because when clientLoaders
-        // come into play we'll have filtered matches coming back on the payloads.
-        //
-        // TODO: Don't blow away prior routes
-        window.__router.patchRoutes(lastMatch?.id ?? null, [
-          createRouteFromServerManifest(match),
-        ]);
-        lastMatch = match;
-      }
+      renderedRoutes.push(...payload.matches);
+      // let lastMatch: RenderedRoute | undefined;
+      // for (const match of payload.matches) {
+      //   // TODO: We can't do this per-request here because when clientLoaders
+      //   // come into play we'll have filtered matches coming back on the payloads.
+      //   //
+      //   // TODO: Don't blow away prior routes
+      //   window.__router.patchRoutes(lastMatch?.id ?? null, [
+      //     createRouteFromServerManifest(match),
+      //   ]);
+      //   lastMatch = match;
+      // }
 
       let results: DecodedSingleFetchResults = { routes: {} };
       const dataKey = isMutationMethod(request.method)

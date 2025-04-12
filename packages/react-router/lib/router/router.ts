@@ -4909,9 +4909,26 @@ function patchRoutesImpl(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction
 ) {
+  const findRouteRecursively = (
+    id: string,
+    routes: AgnosticDataRouteObject[] = routesToUse
+  ): AgnosticDataRouteObject | null => {
+    for (const route of routes) {
+      if (route.id === id) {
+        return route;
+      }
+      if (route.children) {
+        const found = findRouteRecursively(id, route.children);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return null;
+  };
   let childrenToPatch: AgnosticDataRouteObject[];
   if (routeId) {
-    let route = manifest[routeId];
+    let route = findRouteRecursively(routeId);
     invariant(
       route,
       `No route found to patch children into: routeId = ${routeId}`
@@ -4930,18 +4947,22 @@ function patchRoutesImpl(
     [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
     manifest
   );
-  const newIds = new Set(newRoutes.map((r) => r.id));
-  for (let i = childrenToPatch.length - 1; i >= 0; i--) {
-    if (newIds.has(childrenToPatch[i].id)) {
-      Object.assign(
-        childrenToPatch[i],
-        childrenToPatch.splice(i, 1)![0],
-        childrenToPatch[i]
-      );
+
+  for (const newRoute of newRoutes) {
+    const existingRoute = childrenToPatch.find((r) => r.id === newRoute.id);
+    if (existingRoute) {
+      let anyRoute: any = newRoute;
+      if (anyRoute.element) {
+        Object.assign(existingRoute, newRoute, {
+          element: anyRoute.element,
+          errorElement: anyRoute.errorElement,
+          hydrateFallbackElement: anyRoute.hydrateFallbackElement,
+        });
+      }
+    } else {
+      childrenToPatch.push(newRoute);
     }
   }
-
-  childrenToPatch.push(...newRoutes);
 }
 
 const lazyRoutePropertyCache = new WeakMap<

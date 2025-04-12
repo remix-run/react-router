@@ -18,3 +18,7 @@ export function ErrorBoundary() {
     </>
   );
 }
+
+export function shouldRevalidate() {
+  return false;
+}
