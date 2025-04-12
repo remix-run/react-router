@@ -181,6 +181,6 @@ createBrowserRouter([
 
 ---
 
-Next: [Rendering Strategies](./rendering)
+Next: [Data Loading](./data-loading)
 
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
