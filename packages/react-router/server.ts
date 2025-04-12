@@ -1,3 +1,4 @@
+// @ts-ignore
 export * from "react-router/client";
 
 export { createStaticHandler } from "./lib/router/router";
