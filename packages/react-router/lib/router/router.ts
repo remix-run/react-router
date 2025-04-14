@@ -1,4 +1,4 @@
-import type { DataRouteMatch } from "../context";
+import type { DataRouteMatch, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -258,8 +258,15 @@ export interface Router {
    * @param routeId The parent route id or a callback function accepting `patch`
    *                to perform batch patching
    * @param children The additional children routes
+   * @param allowElementMutations Allow mutation or route elements on existing routes.
+   *                              Intended for RSC-usage only.
    */
-  patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
+  patchRoutes(
+    routeId: string | null,
+    children: AgnosticRouteObject[],
+    // TODO: Does this need ro be a future flag or is the new API ok?
+    unstable_allowElementMutations?: boolean
+  ): void;
 
   /**
    * @private
@@ -3287,7 +3294,8 @@ export function createRouter(init: RouterInit): Router {
               children,
               routesToUse,
               localManifest,
-              mapRouteProperties
+              mapRouteProperties,
+              false
             );
           },
         });
@@ -3348,7 +3356,8 @@ export function createRouter(init: RouterInit): Router {
 
   function patchRoutes(
     routeId: string | null,
-    children: AgnosticRouteObject[]
+    children: AgnosticRouteObject[],
+    unstable_allowElementMutations = false
   ): void {
     let isNonHMR = inFlightDataRoutes == null;
     let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3357,7 +3366,8 @@ export function createRouter(init: RouterInit): Router {
       children,
       routesToUse,
       manifest,
-      mapRouteProperties
+      mapRouteProperties,
+      unstable_allowElementMutations
     );
 
     routesPatched = true;
@@ -4907,28 +4917,13 @@ function patchRoutesImpl(
   children: AgnosticRouteObject[],
   routesToUse: AgnosticDataRouteObject[],
   manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction
+  mapRouteProperties: MapRoutePropertiesFunction,
+  allowElementMutations: boolean
 ) {
-  const findRouteRecursively = (
-    id: string,
-    routes: AgnosticDataRouteObject[] = routesToUse
-  ): AgnosticDataRouteObject | null => {
-    for (const route of routes) {
-      if (route.id === id) {
-        return route;
-      }
-      if (route.children) {
-        const found = findRouteRecursively(id, route.children);
-        if (found) {
-          return found;
-        }
-      }
-    }
-    return null;
-  };
   let childrenToPatch: AgnosticDataRouteObject[];
   if (routeId) {
-    let route = findRouteRecursively(routeId);
+    // TODO: Can we enhance the manifest to make this an O(1) lookup?
+    let route = findRouteRecursively(routeId, routesToUse);
     invariant(
       route,
       `No route found to patch children into: routeId = ${routeId}`
@@ -4941,28 +4936,123 @@ function patchRoutesImpl(
     childrenToPatch = routesToUse;
   }
 
-  let newRoutes = convertRoutesToDataRoutes(
-    children,
-    mapRouteProperties,
-    [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
-    manifest
+  // Don't patch in routes we already know about so that `patch` is idempotent
+  // to simplify user-land code. This is useful because we re-call the
+  // `patchRoutesOnNavigation` function for matched routes with params.
+  let uniqueChildren: AgnosticRouteObject[] = [];
+  let existingChildren: {
+    existingRoute: AgnosticRouteObject;
+    newRoute: AgnosticRouteObject;
+  }[] = [];
+  children.forEach((newRoute) => {
+    let existingRoute = childrenToPatch.find((existingRoute) =>
+      isSameRoute(newRoute, existingRoute)
   );
-
-  for (const newRoute of newRoutes) {
-    const existingRoute = childrenToPatch.find((r) => r.id === newRoute.id);
     if (existingRoute) {
-      let anyRoute: any = newRoute;
-      if (anyRoute.element) {
-        Object.assign(existingRoute, newRoute, {
-          element: anyRoute.element,
-          errorElement: anyRoute.errorElement,
-          hydrateFallbackElement: anyRoute.hydrateFallbackElement,
-        });
-      }
+      existingChildren.push({ existingRoute, newRoute });
     } else {
-      childrenToPatch.push(newRoute);
+      uniqueChildren.push(newRoute);
+    }
+  });
+
+  if (uniqueChildren.length > 0) {
+    // Patch in new children
+    childrenToPatch.push(
+      ...convertRoutesToDataRoutes(
+        uniqueChildren,
+        mapRouteProperties,
+        [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
+        manifest
+      )
+    );
+  }
+
+  // When flag is enabled we allow mutations of elements on exiting routes
+  if (allowElementMutations && existingChildren.length > 0) {
+    for (let i = 0; i < existingChildren.length; i++) {
+      let { existingRoute, newRoute } = existingChildren[i];
+      let existingRouteAny = existingRoute as RouteObject;
+      // All this will end up doing for these scenarios is adding `hasErrorBoundary`
+      // to the route.  There's no need for Component->element conversions since
+      // we're already dealing with elements here
+      let [newRouteAny] = convertRoutesToDataRoutes(
+        [newRoute],
+        mapRouteProperties,
+        [], // Doesn't matter for mutated routes since they already have an id
+        manifest,
+        true
+      ) as RouteObject[];
+      Object.assign(existingRouteAny, {
+        element: newRouteAny.element
+          ? newRouteAny.element
+          : existingRouteAny.element,
+        errorElement: newRouteAny.errorElement
+          ? newRouteAny.errorElement
+          : existingRouteAny.errorElement,
+        hydrateFallbackElement: newRouteAny.hydrateFallbackElement
+          ? newRouteAny.hydrateFallbackElement
+          : existingRouteAny.hydrateFallbackElement,
+      });
     }
   }
+}
+
+function isSameRoute(
+  newRoute: AgnosticRouteObject,
+  existingRoute: AgnosticRouteObject
+): boolean {
+  // Most optimal check is by id
+  if (
+    "id" in newRoute &&
+    "id" in existingRoute &&
+    newRoute.id === existingRoute.id
+  ) {
+    return true;
+  }
+
+  // Second is by pathing differences
+  if (
+    !(
+      newRoute.index === existingRoute.index &&
+      newRoute.path === existingRoute.path &&
+      newRoute.caseSensitive === existingRoute.caseSensitive
+    )
+  ) {
+    return false;
+  }
+
+  // Pathless layout routes are trickier since we need to check children.
+  // If they have no children then they're the same as far as we can tell
+  if (
+    (!newRoute.children || newRoute.children.length === 0) &&
+    (!existingRoute.children || existingRoute.children.length === 0)
+  ) {
+    return true;
+  }
+
+  // Otherwise, we look to see if every child in the new route is already
+  // represented in the existing route's children
+  return newRoute.children!.every((aChild, i) =>
+    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
+  );
+}
+
+function findRouteRecursively(
+  id: string,
+  routes: AgnosticDataRouteObject[]
+): AgnosticDataRouteObject | null {
+  for (const route of routes) {
+    if (route.id === id) {
+      return route;
+    }
+    if (route.children) {
+      const found = findRouteRecursively(id, route.children);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
 }
 
 const lazyRoutePropertyCache = new WeakMap<

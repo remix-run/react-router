@@ -75,9 +75,11 @@ export function createCallServer({
           landedActionId = actionId;
           let lastMatch: RenderedRoute | undefined;
           for (const match of rendered.matches) {
-            window.__router.patchRoutes(lastMatch?.id ?? null, [
-              createRouteFromServerManifest(match),
-            ]);
+            window.__router.patchRoutes(
+              lastMatch?.id ?? null,
+              [createRouteFromServerManifest(match)],
+              true
+            );
             lastMatch = match;
           }
 
@@ -139,21 +141,23 @@ function createRouterFromPayload({
     },
     routes,
     async patchRoutesOnNavigation({ matches, patch, path, signal }) {
-      const response = await fetch(`${path}.manifest`, { signal });
+      let response = await fetch(`${path}.manifest`, { signal });
       if (!response.body || response.status < 200 || response.status >= 300) {
-        return;
+        throw new Error("Unable to fetch new route matches from the server");
       }
-      const payload = await decode(response.body);
+
+      let payload = await decode(response.body);
       if (payload.type !== "manifest") {
         throw new Error("Failed to patch routes on navigation");
       }
 
-      const existingIds = new Set(matches.map((m) => m.route.id));
-      let lastMatch: RenderedRoute | undefined;
-      for (const match of payload.matches) {
-        patch(lastMatch?.id ?? null, [createRouteFromServerManifest(match)]);
-        lastMatch = match;
-      }
+      // Without the `allowElementMutations` flag, this will no-op if the route
+      // already exists so we can just call it for all returned matches
+      payload.matches.forEach((match, i) =>
+        patch(payload.matches[i - 1]?.id ?? null, [
+          createRouteFromServerManifest(match),
+        ])
+      );
     },
     // FIXME: Pass `build.ssr` and `build.basename` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
@@ -224,9 +228,11 @@ export function getRSCSingleFetchDataStrategy(
       for (const match of args.matches) {
         const rendered = renderedRouteById.get(match.route.id);
         if (!rendered) continue;
-        window.__router.patchRoutes(rendered.parentId ?? null, [
-          createRouteFromServerManifest(rendered),
-        ]);
+        window.__router.patchRoutes(
+          rendered.parentId ?? null,
+          [createRouteFromServerManifest(rendered)],
+          true
+        );
       }
       return results;
     });
@@ -268,17 +274,6 @@ function getFetchAndDecodeViaRSC(
       }
 
       renderedRoutes.push(...payload.matches);
-      // let lastMatch: RenderedRoute | undefined;
-      // for (const match of payload.matches) {
-      //   // TODO: We can't do this per-request here because when clientLoaders
-      //   // come into play we'll have filtered matches coming back on the payloads.
-      //   //
-      //   // TODO: Don't blow away prior routes
-      //   window.__router.patchRoutes(lastMatch?.id ?? null, [
-      //     createRouteFromServerManifest(match),
-      //   ]);
-      //   lastMatch = match;
-      // }
 
       let results: DecodedSingleFetchResults = { routes: {} };
       const dataKey = isMutationMethod(request.method)
