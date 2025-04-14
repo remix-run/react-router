@@ -8,21 +8,22 @@ export { shouldRevalidate } from "./root.client";
 export function loader() {
   return {
     counter: <Counter />,
-    message: "Hello from the server!",
+    message: `Root route loader ran at ${new Date().toISOString()}`,
   };
 }
 
 export default function Root({
-  loaderData: { counter, message },
+  loaderData,
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
   return (
-    <>
-      <h1>{message}</h1>
-      {counter}
+    <div style={{ border: "1px solid black", padding: "10px" }}>
+      <h1>Root Route</h1>
+      <p>Loader data: {loaderData.message}</p>
+      {loaderData.counter}
       <Outlet />
-    </>
+    </div>
   );
 }
 
@@ -49,18 +50,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <header>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/about">About</Link>
-            </li>
-          </ul>
+        <div style={{ border: "1px solid black", padding: "10px" }}>
+          <header>
+            <Link to="/">Home</Link>
+            {" | "}
+            <Link to="/about">About</Link>
+          </header>
+          <h1>Root Layout</h1>
           <Counter />
-        </header>
-        {children}
+          {children}
+        </div>
         <ScrollRestoration />
       </body>
     </html>

@@ -7,11 +7,12 @@ export function Counter() {
 
   return (
     <div>
-      <h1>Counter</h1>
-      <p>Current count: {count}</p>
-      <button type="button" onClick={() => setCount(count + 1)}>
-        Increment
-      </button>
+      <h3>
+        Counter: {count}{" "}
+        <button type="button" onClick={() => setCount(count + 1)}>
+          Increment
+        </button>
+      </h3>
     </div>
   );
 }

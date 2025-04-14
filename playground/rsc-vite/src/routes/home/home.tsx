@@ -4,27 +4,28 @@ import { Counter } from "../../counter";
 
 export function loader() {
   return {
-    message: "Hello Home!" + "!".repeat(Math.floor(Math.random() * 10)),
+    message: `Home route loader ran at ${new Date().toISOString()}`,
   };
 }
 
 export default function Home({
-  loaderData: { message },
+  loaderData,
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
   const logOnServer = () => {
     "use server";
-    console.log(message);
+    console.log(loaderData.message);
   };
 
   return (
-    <main>
-      <h1>{message}</h1>
+    <div style={{ border: "1px solid black", padding: "10px" }}>
+      <h2>Home Route</h2>
+      <p>Loader data: {loaderData.message}</p>
       <Counter />
       <form action={logOnServer as any}>
         <button type="submit">Log on server</button>
       </form>
-    </main>
+    </div>
   );
 }

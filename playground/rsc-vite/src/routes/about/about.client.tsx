@@ -26,21 +26,19 @@ export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
   const res = await serverLoader<typeof loader>();
 
   return {
-    client: true,
-    ...res,
+    message: res.message + " (mutated in clientLoader)",
   };
 }
 
 export default function About() {
-  const { client, message } = useLoaderData<typeof clientLoader>();
+  const loaderData = useLoaderData<typeof clientLoader>();
 
   return (
-    <main>
-      <h1>
-        {message} {String(client)}
-      </h1>
+    <div style={{ border: "1px solid black", padding: "10px" }}>
+      <h2>About Route</h2>
+      <p>Loader data: {loaderData.message}</p>
       <Counter />
-    </main>
+    </div>
   );
 }
 
