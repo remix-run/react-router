@@ -4947,7 +4947,7 @@ function patchRoutesImpl(
   children.forEach((newRoute) => {
     let existingRoute = childrenToPatch.find((existingRoute) =>
       isSameRoute(newRoute, existingRoute)
-  );
+    );
     if (existingRoute) {
       existingChildren.push({ existingRoute, newRoute });
     } else {
@@ -4956,15 +4956,13 @@ function patchRoutesImpl(
   });
 
   if (uniqueChildren.length > 0) {
-    // Patch in new children
-    childrenToPatch.push(
-      ...convertRoutesToDataRoutes(
-        uniqueChildren,
-        mapRouteProperties,
-        [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
-        manifest
-      )
+    let newRoutes = convertRoutesToDataRoutes(
+      uniqueChildren,
+      mapRouteProperties,
+      [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
+      manifest
     );
+    childrenToPatch.push(...newRoutes);
   }
 
   // When flag is enabled we allow mutations of elements on exiting routes
