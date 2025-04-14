@@ -90,11 +90,6 @@ export function createCallServer({
 
           React.startTransition(() => {
             window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
-              actionData: Object.assign(
-                {},
-                window.__router.state.actionData,
-                rendered.actionData
-              ),
               loaderData: Object.assign(
                 {},
                 window.__router.state.loaderData,
@@ -223,7 +218,6 @@ export function getRSCSingleFetchDataStrategy(
     ssr,
     basename
   );
-  // return async (args) => args.unstable_runClientMiddleware(dataStrategy);
   return async (args) =>
     args.unstable_runClientMiddleware(async () => {
       // Before we run the dataStrategy, create a place to stick rendered routes
@@ -244,12 +238,13 @@ export function getRSCSingleFetchDataStrategy(
       );
       for (const match of args.matches) {
         const rendered = renderedRouteById.get(match.route.id);
-        if (!rendered) continue;
-        window.__router.patchRoutes(
-          rendered.parentId ?? null,
-          [createRouteFromServerManifest(rendered)],
-          true
-        );
+        if (rendered) {
+          window.__router.patchRoutes(
+            rendered.parentId ?? null,
+            [createRouteFromServerManifest(rendered)],
+            true
+          );
+        }
       }
       return results;
     });
@@ -383,29 +378,30 @@ function createRouteFromServerManifest(
 } {
   return {
     id: match.id,
-    action: match.hasAction || !!match.clientAction,
     element: match.element,
     errorElement: match.errorElement,
     handle: match.handle,
     hasErrorBoundary: match.hasErrorBoundary,
     hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
-    loader:
-      // prettier-ignore
-      match.clientLoader ? (args, singleFetch) => {
-        return match.clientLoader!({
-          ...args,
-          async serverLoader() {
-            invariant(typeof singleFetch === "function", "Invalid singleFetch parameter");
-            return singleFetch();
-          },
-        });
-      } :
-      match.hasLoader ? (args, singleFetch) => {
-        invariant(typeof singleFetch === "function", "Invalid singleFetch parameter");
-        return singleFetch();
-      } :
-      undefined,
+    loader: match.clientLoader
+      ? (args, singleFetch) =>
+          match.clientLoader!({
+            ...args,
+            serverLoader: () => callSingleFetch(singleFetch),
+          })
+      : match.hasLoader
+      ? (_, singleFetch) => callSingleFetch(singleFetch)
+      : undefined,
+    action: match.clientAction
+      ? (args, singleFetch) =>
+          match.clientAction!({
+            ...args,
+            serverAction: () => callSingleFetch(singleFetch),
+          })
+      : match.hasAction
+      ? (_, singleFetch) => callSingleFetch(singleFetch)
+      : undefined,
     path: match.path,
     shouldRevalidate: match.shouldRevalidate,
     hasLoader: match.hasLoader,
@@ -414,4 +410,9 @@ function createRouteFromServerManifest(
     hasClientAction: match.clientAction != null,
     hasShouldRevalidate: match.shouldRevalidate != null,
   };
+}
+
+function callSingleFetch(singleFetch: unknown) {
+  invariant(typeof singleFetch === "function", "Invalid singleFetch parameter");
+  return singleFetch();
 }

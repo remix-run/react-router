@@ -251,10 +251,7 @@ export async function matchServerRequest({
       const element = Component
         ? React.createElement(
             Layout,
-            {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            },
+            null,
             React.createElement(Component, {
               loaderData: staticContext.loaderData[match.route.id],
               actionData: staticContext.actionData?.[match.route.id],
@@ -264,20 +261,16 @@ export async function matchServerRequest({
       const errorElement = ErrorBoundary
         ? React.createElement(
             Layout,
-            {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            },
-            React.createElement(ErrorBoundary)
+            null,
+            React.createElement(ErrorBoundary, {
+              error: staticContext.errors?.[match.route.id],
+            })
           )
         : undefined;
       const hydrateFallbackElement = HydrateFallback
         ? React.createElement(
             Layout,
-            {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            },
+            null,
             React.createElement(HydrateFallback, {
               loaderData: staticContext.loaderData[match.route.id],
               actionData: staticContext.actionData?.[match.route.id],
