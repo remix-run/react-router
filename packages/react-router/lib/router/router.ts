@@ -850,7 +850,6 @@ export function createRouter(init: RouterInit): Router {
     manifest
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
-  let routesPatched = false;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.dataStrategy || defaultDataStrategyWithMiddleware;
 
@@ -1168,6 +1167,15 @@ export function createRouter(init: RouterInit): Router {
       viewTransitionOpts?: ViewTransitionOpts;
     } = {}
   ): void {
+    // We may have patched routes during the navigation and if so we need to
+    // get references to the latest elements here
+    if (newState.matches) {
+      newState.matches = newState.matches.map((m) => {
+        let route = manifest[m.route.id]!;
+        return { ...m, route };
+      });
+    }
+
     state = {
       ...state,
       ...newState,
@@ -1227,11 +1235,6 @@ export function createRouter(init: RouterInit): Router {
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>,
     { flushSync }: { flushSync?: boolean } = {}
   ): void {
-    if (routesPatched) {
-      newState.matches = matchRoutes(dataRoutes, location) ?? newState.matches;
-      routesPatched = false;
-    }
-
     // Deduce if we're in a loading/actionReload state:
     // - We have committed actionData in the store
     // - The current navigation was a mutation submission
@@ -3370,8 +3373,6 @@ export function createRouter(init: RouterInit): Router {
       unstable_allowElementMutations
     );
 
-    routesPatched = true;
-
     // If we are not in the middle of an HMR revalidation and we changed the
     // routes, provide a new identity and trigger a reflow via `updateState`
     // to re-run memoized `router.routes` dependencies.
@@ -3420,11 +3421,6 @@ export function createRouter(init: RouterInit): Router {
     // updating the tree while validating the update algorithm.
     _internalSetRoutes,
     _internalSetStateDoNotUseOrYouWillBreakYourApp(newState) {
-      if (routesPatched) {
-        newState.matches =
-          matchRoutes(dataRoutes, location) ?? newState.matches;
-        routesPatched = false;
-      }
       updateState(newState);
     },
   };
