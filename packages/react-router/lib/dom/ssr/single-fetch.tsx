@@ -154,7 +154,7 @@ type GetRouteInfoFunction = (routeId: string) => {
 };
 
 type FetchAndDecodeFunction = (
-  request: Request,
+  args: DataStrategyFunctionArgs,
   basename: string | undefined,
   targetRoutes?: string[]
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
@@ -233,12 +233,7 @@ export function getSingleFetchDataStrategyImpl(
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return singleFetchLoaderFetcherStrategy(
-        request,
-        matches,
-        fetchAndDecode,
-        basename
-      );
+      return singleFetchLoaderFetcherStrategy(args, fetchAndDecode, basename);
     }
 
     // Navigational loads are more complex...
@@ -256,16 +251,16 @@ export function getSingleFetchDataStrategyImpl(
 // Actions are simple since they're singular calls to the server for both
 // navigations and fetchers)
 async function singleFetchActionStrategy(
-  { request, matches }: DataStrategyFunctionArgs,
+  args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined
 ) {
-  let actionMatch = matches.find((m) => m.unstable_shouldCallHandler());
+  let actionMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
     let result = await handler(async () => {
-      let { data, status } = await fetchAndDecode(request, basename, [
+      let { data, status } = await fetchAndDecode(args, basename, [
         actionMatch!.route.id,
       ]);
       actionStatus = status;
@@ -290,12 +285,14 @@ async function singleFetchActionStrategy(
 
 // We want to opt-out of Single Fetch when we aren't in SSR mode
 async function nonSsrStrategy(
-  { request, matches }: DataStrategyFunctionArgs,
+  args: DataStrategyFunctionArgs,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined
 ) {
-  let matchesToLoad = matches.filter((m) => m.unstable_shouldCallHandler());
+  let matchesToLoad = args.matches.filter((m) =>
+    m.unstable_shouldCallHandler()
+  );
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
     matchesToLoad.map((m) =>
@@ -308,9 +305,7 @@ async function nonSsrStrategy(
           let routeId = m.route.id;
           let result = hasClientLoader
             ? await handler(async () => {
-                let { data } = await fetchAndDecode(request, basename, [
-                  routeId,
-                ]);
+                let { data } = await fetchAndDecode(args, basename, [routeId]);
                 return unwrapSingleFetchResult(data, routeId);
               })
             : await handler();
@@ -327,7 +322,7 @@ async function nonSsrStrategy(
 // Loaders are trickier since we only want to hit the server once, so we
 // create a singular promise for all server-loader routes to latch onto.
 async function singleFetchLoaderNavigationStrategy(
-  { request, matches }: DataStrategyFunctionArgs,
+  args: DataStrategyFunctionArgs,
   router: DataRouter,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
@@ -341,7 +336,7 @@ async function singleFetchLoaderNavigationStrategy(
   let foundOptOutRoute = false;
 
   // Deferreds per-route so we can be sure they've all loaded via `match.resolve()`
-  let routeDfds = matches.map(() => createDeferred<void>());
+  let routeDfds = args.matches.map(() => createDeferred<void>());
 
   // Deferred we'll use for the singleular call to the server
   let singleFetchDfd = createDeferred<DecodedSingleFetchResults>();
@@ -350,7 +345,7 @@ async function singleFetchLoaderNavigationStrategy(
   let results: Record<string, DataStrategyResult> = {};
 
   let resolvePromise = Promise.all(
-    matches.map(async (m, i) =>
+    args.matches.map(async (m, i) =>
       m.resolve(async (handler) => {
         routeDfds[i].resolve();
         let routeId = m.route.id;
@@ -380,7 +375,7 @@ async function singleFetchLoaderNavigationStrategy(
           }
           try {
             let result = await handler(async () => {
-              let { data } = await fetchAndDecode(request, basename, [routeId]);
+              let { data } = await fetchAndDecode(args, basename, [routeId]);
               return unwrapSingleFetchResult(data, routeId);
             });
 
@@ -433,7 +428,7 @@ async function singleFetchLoaderNavigationStrategy(
         ? [...routesParams.keys()]
         : undefined;
     try {
-      let data = await fetchAndDecode(request, basename, targetRoutes);
+      let data = await fetchAndDecode(args, basename, targetRoutes);
       singleFetchDfd.resolve(data.data);
     } catch (e) {
       singleFetchDfd.reject(e);
@@ -447,17 +442,16 @@ async function singleFetchLoaderNavigationStrategy(
 
 // Fetcher loader calls are much simpler than navigational loader calls
 async function singleFetchLoaderFetcherStrategy(
-  request: Request,
-  matches: DataStrategyFunctionArgs["matches"],
+  args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
   basename: string | undefined
 ) {
-  let fetcherMatch = matches.find((m) => m.unstable_shouldCallHandler());
+  let fetcherMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
   let routeId = fetcherMatch.route.id;
   let result = await fetcherMatch.resolve(async (handler) =>
     handler(async () => {
-      let { data } = await fetchAndDecode(request, basename, [routeId]);
+      let { data } = await fetchAndDecode(args, basename, [routeId]);
       return unwrapSingleFetchResult(data, routeId);
     })
   );
@@ -508,10 +502,11 @@ export function singleFetchUrl(
 }
 
 async function fetchAndDecodeViaTurboStream(
-  request: Request,
+  args: DataStrategyFunctionArgs,
   basename: string | undefined,
   targetRoutes?: string[]
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
+  let { request } = args;
   let url = singleFetchUrl(request.url, basename);
   if (request.method === "GET") {
     url = stripIndexParam(url);
