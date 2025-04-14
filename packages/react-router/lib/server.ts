@@ -208,13 +208,18 @@ export async function matchServerRequest({
   const getRenderPayload = async (): Promise<ServerRenderPayload> => {
     const handler = createStaticHandler(routes);
 
+    let method = request.method.toUpperCase();
+    let skipRevalidation = method !== "GET" && method !== "HEAD";
     let url = new URL(request.url);
-    let routeIdsToLoad = url.searchParams.has("_routes")
+    let routeIdsToLoad = skipRevalidation
+      ? []
+      : url.searchParams.has("_routes")
       ? url.searchParams.get("_routes")!.split(",")
       : null;
 
     const staticContext = await handler.query(request, {
       skipLoaderErrorBubbling: true,
+      skipRevalidation,
       ...(routeIdsToLoad
         ? {
             filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id),

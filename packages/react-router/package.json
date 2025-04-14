@@ -26,8 +26,13 @@
       "react-server": {
         "node": {
           "types": "./dist/development/server.d.ts",
+          "module": "./dist/development/server.mjs",
           "module-sync": "./dist/development/server.mjs",
           "default": "./dist/development/server.js"
+        },
+        "module": {
+          "types": "./dist/development/server.d.mts",
+          "default": "./dist/development/server.mjs"
         },
         "import": {
           "types": "./dist/development/server.d.mts",
@@ -40,8 +45,13 @@
       },
       "node": {
         "types": "./dist/development/index.d.ts",
+        "module": "./dist/development/index.mjs",
         "module-sync": "./dist/development/index.mjs",
         "default": "./dist/development/index.js"
+      },
+      "module": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "import": {
         "types": "./dist/development/index.d.mts",
@@ -57,6 +67,10 @@
         "types": "./dist/development/index.d.ts",
         "module-sync": "./dist/development/index.mjs",
         "default": "./dist/development/index.js"
+      },
+      "module": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "import": {
         "types": "./dist/development/index.d.mts",
@@ -78,8 +92,13 @@
     "./dom": {
       "node": {
         "types": "./dist/development/dom-export.d.ts",
+        "module": "./dist/development/dom-export.mjs",
         "module-sync": "./dist/development/dom-export.mjs",
         "default": "./dist/development/dom-export.js"
+      },
+      "module": {
+        "types": "./dist/development/dom-export.d.mts",
+        "default": "./dist/development/dom-export.mjs"
       },
       "import": {
         "types": "./dist/development/dom-export.d.mts",
@@ -113,6 +132,7 @@
     }
   },
   "dependencies": {
+    "@types/cookie": "^0.6.0",
     "cookie": "^1.0.1",
     "set-cookie-parser": "^2.6.0",
     "turbo-stream": "2.4.0"
