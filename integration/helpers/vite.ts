@@ -61,14 +61,29 @@ export const reactRouterConfig = ({
   `;
 };
 
-type ViteConfigArgs = {
+type ViteConfigServerArgs = {
   port: number;
   fsAllow?: string[];
+};
+
+type ViteConfigBuildArgs = {
+  assetsInlineLimit?: number;
+  assetsDir?: string;
+};
+
+type ViteConfigBaseArgs = {
   envDir?: string;
 };
 
+type ViteConfigArgs = (
+  | ViteConfigServerArgs
+  | { [K in keyof ViteConfigServerArgs]?: never }
+) &
+  ViteConfigBuildArgs &
+  ViteConfigBaseArgs;
+
 export const viteConfig = {
-  server: async (args: ViteConfigArgs) => {
+  server: async (args: ViteConfigServerArgs) => {
     let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
@@ -81,21 +96,42 @@ export const viteConfig = {
     `;
     return text;
   },
+  build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
+    return dedent`
+      build: {
+        // Detect rolldown-vite. This should ideally use "rolldownVersion"
+        // but that's not exported. Once that's available, this
+        // check should be updated to use it.
+        rollupOptions: "transformWithOxc" in (await import("vite"))
+          ? {
+              onwarn(warning, warn) {
+                // Ignore "The built-in minifier is still under development." warning
+                if (warning.code === "MINIFY_WARNING") return;
+                warn(warning);
+              },
+            }
+          : undefined,
+        assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
+        assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
+      },
+    `;
+  },
   basic: async (args: ViteConfigArgs) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
-      export default {
-        ${await viteConfig.server(args)}
+      export default async () => ({
+        ${args.port ? await viteConfig.server(args) : ""}
+        ${viteConfig.build(args)}
         envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
         ],
-      };
+      });
     `;
   },
 };
@@ -145,14 +181,19 @@ export const EXPRESS_SERVER = (args: {
   `;
 
 export type TemplateName =
+  | "cloudflare-dev-proxy-template"
   | "vite-5-template"
   | "vite-6-template"
-  | "cloudflare-dev-proxy-template"
-  | "vite-plugin-cloudflare-template";
+  | "vite-plugin-cloudflare-template"
+  | "vite-rolldown-template";
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+  {
+    templateName: "vite-rolldown-template",
+    templateDisplayName: "Vite Rolldown",
+  },
 ] as const satisfies Array<{
   templateName: TemplateName;
   templateDisplayName: string;
@@ -205,6 +246,9 @@ export const build = ({
       ...process.env,
       ...colorEnv,
       ...env,
+      // Ensure build can pass in Rolldown. This can be removed once
+      // "preserveEntrySignatures" is supported in rolldown-vite.
+      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 };

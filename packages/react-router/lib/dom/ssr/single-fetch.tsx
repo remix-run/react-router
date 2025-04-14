@@ -157,7 +157,7 @@ export type GetRouteInfoFunction = (match: DataRouteMatch) => {
 };
 
 export type FetchAndDecodeFunction = (
-  args: DataStrategyFunctionArgs<any>,
+  args: DataStrategyFunctionArgs,
   basename: string | undefined,
   targetRoutes?: string[]
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
@@ -515,11 +515,11 @@ export function singleFetchUrl(
   return url;
 }
 
-const fetchAndDecodeViaTurboStream: FetchAndDecodeFunction = async (
+async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
   targetRoutes?: string[]
-): Promise<{ status: number; data: DecodedSingleFetchResults }> => {
+): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
   let url = singleFetchUrl(request.url, basename, "data");
   if (request.method === "GET") {
@@ -582,7 +582,7 @@ const fetchAndDecodeViaTurboStream: FetchAndDecodeFunction = async (
     // bit restrictive.
     throw new Error("Unable to decode turbo-stream response");
   }
-};
+}
 
 // Note: If you change this function please change the corresponding
 // encodeViaTurboStream function in server-runtime
