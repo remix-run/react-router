@@ -15,7 +15,10 @@ export default function Home({
 }) {
   const logOnServer = () => {
     "use server";
-    console.log(loaderData.message);
+    console.log("Running action on server!");
+    console.log(
+      `  loader data to prove that scoped vars work: ${loaderData.message}`
+    );
   };
 
   return (

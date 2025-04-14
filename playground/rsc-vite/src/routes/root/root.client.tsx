@@ -19,6 +19,6 @@ export function ErrorBoundary() {
   );
 }
 
-export function shouldRevalidate() {
-  return false;
+export function shouldRevalidate({ nextUrl }: { nextUrl: URL }) {
+  return !nextUrl.pathname.endsWith("/about");
 }

@@ -8,7 +8,12 @@ import { createBrowserHistory, invariant } from "./router/history";
 import type { Router as DataRouter } from "./router/router";
 import { createRouter, isMutationMethod } from "./router/router";
 import type { ServerPayload, RenderedRoute } from "./server";
-import { ErrorResponseImpl, type DataStrategyFunction } from "./router/utils";
+import type {
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  unstable_RouterContextProvider,
+} from "./router/utils";
+import { ErrorResponseImpl, unstable_createContext } from "./router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -140,7 +145,7 @@ function createRouterFromPayload({
       loaderData: payload.loaderData,
     },
     routes,
-    async patchRoutesOnNavigation({ matches, patch, path, signal }) {
+    async patchRoutesOnNavigation({ patch, path, signal }) {
       let response = await fetch(`${path}.manifest`, { signal });
       if (!response.body || response.status < 200 || response.status >= 300) {
         throw new Error("Unable to fetch new route matches from the server");
@@ -183,7 +188,8 @@ function createRouterFromPayload({
   return window.__router;
 }
 
-const requestRenderedRouteCache = new WeakMap<Request, RenderedRoute[]>();
+const renderedRoutesContext = unstable_createContext<RenderedRoute[]>();
+
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
@@ -220,11 +226,22 @@ export function getRSCSingleFetchDataStrategy(
   // return async (args) => args.unstable_runClientMiddleware(dataStrategy);
   return async (args) =>
     args.unstable_runClientMiddleware(async () => {
-      const renderedRoutes: RenderedRoute[] = [];
-      requestRenderedRouteCache.set(args.request, renderedRoutes);
+      // Before we run the dataStrategy, create a place to stick rendered routes
+      // from the payload so we can patch them into the router after all loaders
+      // have completed.  Need to do this since we may have multiple fetch
+      // requests returning multiple server payloads (due to clientLoaders, fine
+      // grained revalidation, etc.).  This lets us stitch them all together and
+      // patch them all at the end
+      // This cast should be fine since this is always run client side and
+      // `context` is always of this type on the client -- unlike on the server
+      // in framework mode when it could be `AppLoadContext`
+      let context = args.context as unstable_RouterContextProvider;
+      context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
-      const renderedRouteById = new Map(renderedRoutes.map((r) => [r.id, r]));
+      const renderedRouteById = new Map(
+        context.get(renderedRoutesContext).map((r) => [r.id, r])
+      );
       for (const match of args.matches) {
         const rendered = renderedRouteById.get(match.route.id);
         if (!rendered) continue;
@@ -242,13 +259,11 @@ function getFetchAndDecodeViaRSC(
   decode: DecodeServerResponseFunction
 ): FetchAndDecodeFunction {
   return async (
-    request: Request,
+    args: DataStrategyFunctionArgs<unknown>,
     basename: string | undefined,
     targetRoutes?: string[]
   ) => {
-    const renderedRoutes = requestRenderedRouteCache.get(request);
-    invariant(renderedRoutes, "No rendered routes cache for request");
-
+    let { request, context } = args;
     let url = singleFetchUrl(request.url, basename, "rsc");
     if (request.method === "GET") {
       url = stripIndexParam(url);
@@ -273,7 +288,14 @@ function getFetchAndDecodeViaRSC(
         throw new Error("Unexpected payload type");
       }
 
-      renderedRoutes.push(...payload.matches);
+      // Track routes rendered per-single-fetch call so we can gather them up
+      // and patch them in together at the end.  This cast should be fine since
+      // this is always run client side and `context` is always of this type on
+      // the client -- unlike on the server in framework mode when it could be
+      // `AppLoadContext`
+      (context as unstable_RouterContextProvider)
+        .get(renderedRoutesContext)
+        .push(...payload.matches);
 
       let results: DecodedSingleFetchResults = { routes: {} };
       const dataKey = isMutationMethod(request.method)
