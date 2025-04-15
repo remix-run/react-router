@@ -28,5 +28,15 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "fair-weeks-beam",
+    "happy-spoons-watch",
+    "orange-sloths-tease",
+    "silent-snakes-mix",
+    "sixty-tigers-poke",
+    "smart-ads-doubt",
+    "smart-ligers-lay",
+    "violet-carrots-work",
+    "yellow-mangos-impress"
+  ]
 }

@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.5.1-pre.0
+
+### Patch Changes
+
+- Fix prerendering when a loader returns a redirect ([#13365](https://github.com/remix-run/react-router/pull/13365))
+- Updated dependencies:
+  - `react-router@7.5.1-pre.0`
+  - `@react-router/node@7.5.1-pre.0`
+  - `@react-router/serve@7.5.1-pre.0`
+
 ## 7.5.0
 
 ### Patch Changes
