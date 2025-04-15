@@ -325,9 +325,9 @@ Date: 2025-04-17
 
 ### Patch Changes
 
-- `react-router` - When using the object-based `route.lazy` API, the `HydrateFallback` and `hydrateFallbackElement` properties are now skipped when lazy loading routes after hydration. ([#13376](https://github.com/remix-run/react-router/pull/13376))
+- `react-router` - When using the object-based `route.lazy` API, the `HydrateFallback` and `hydrateFallbackElement` properties are now skipped when lazy loading routes after hydration ([#13376](https://github.com/remix-run/react-router/pull/13376))
 
-  - If you move the code for these properties into a separate file, you can use this optimization to avoid downloading unused hydration code. For example:
+  - If you move the code for these properties into a separate file, since the hydrate properties were unused already (if the route wasn't present during hydration), you can avoid downloading them at all. For example:
 
     ```ts
     createBrowserRouter([
@@ -345,7 +345,7 @@ Date: 2025-04-17
     ```
 
 - `react-router` - Fix single fetch bug where no revalidation request would be made when navigating upwards to a reused parent route ([#13253](https://github.com/remix-run/react-router/pull/13253))
-- `react-router` - Properly revalidate pre-rendered paths when param values change ([#13380](https://github.com/remix-run/react-router/pull/13380))
+- `react-router` - Properly revalidate pre-rendered paths when param values change when using `ssr:false` + `prerender` configs ([#13380](https://github.com/remix-run/react-router/pull/13380))
 - `react-router` - Fix pre-rendering when a loader returns a redirect ([#13365](https://github.com/remix-run/react-router/pull/13365))
 - `react-router` - Do not automatically add `null` to `staticHandler.query()` `context.loaderData` if routes do not have loaders ([#13223](https://github.com/remix-run/react-router/pull/13223))
   - This was a Remix v2 implementation detail inadvertently left in for React Router v7
