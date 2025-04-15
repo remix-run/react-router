@@ -38,3 +38,7 @@ function MyRoute() {
 ```
 
 As the user navigates between routes, the loaders are called before the route component is rendered.
+
+---
+
+Next: [Actions](./actions)
