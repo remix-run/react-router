@@ -7,6 +7,7 @@ import {
   Form,
   useActionData,
   type ClientActionFunctionArgs,
+  isRouteErrorResponse,
 } from "react-router";
 
 import { Counter } from "../../counter";
@@ -60,6 +61,17 @@ export default function About() {
 }
 
 export function ErrorBoundary() {
-  console.log(useRouteError());
-  return <h1>Oooops</h1>;
+  let error = useRouteError();
+  return (
+    <>
+      <h1>Oooops</h1>
+      {isRouteErrorResponse(error) ? (
+        <p>
+          {error.status} {error.statusText} {error.data}
+        </p>
+      ) : (
+        <p>{String(error)}</p>
+      )}
+    </>
+  );
 }

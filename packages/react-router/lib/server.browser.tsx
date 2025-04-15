@@ -426,6 +426,11 @@ function createRouteFromServerManifest(
             let result = await match.clientLoader!({
               ...args,
               serverLoader: () => {
+                preventInvalidServerHandlerCall(
+                  "loader",
+                  match.id,
+                  match.hasLoader
+                );
                 // On the first call, resolve with the server result
                 if (isHydrationRequest) {
                   if (hasInitialData) {
@@ -450,7 +455,14 @@ function createRouteFromServerManifest(
       ? (args, singleFetch) =>
           match.clientAction!({
             ...args,
-            serverAction: () => callSingleFetch(singleFetch),
+            serverAction: async () => {
+              preventInvalidServerHandlerCall(
+                "loader",
+                match.id,
+                match.hasLoader
+              );
+              return await callSingleFetch(singleFetch);
+            },
           })
       : match.hasAction
       ? (_, singleFetch) => callSingleFetch(singleFetch)
@@ -479,4 +491,19 @@ function createRouteFromServerManifest(
 function callSingleFetch(singleFetch: unknown) {
   invariant(typeof singleFetch === "function", "Invalid singleFetch parameter");
   return singleFetch();
+}
+
+function preventInvalidServerHandlerCall(
+  type: "action" | "loader",
+  routeId: string,
+  hasHandler: boolean
+) {
+  if (!hasHandler) {
+    let fn = type === "action" ? "serverAction()" : "serverLoader()";
+    let msg =
+      `You are trying to call ${fn} on a route that does not have a server ` +
+      `${type} (routeId: "${routeId}")`;
+    console.error(msg);
+    throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
+  }
 }

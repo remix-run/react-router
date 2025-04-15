@@ -5,7 +5,9 @@ import { useRouteError } from "react-router";
 export function ErrorReporter() {
   const error = useRouteError();
 
-  console.log(error);
+  if (typeof document !== "undefined") {
+    console.log(error);
+  }
 
   return null;
 }

@@ -145,14 +145,24 @@ export async function matchServerRequest({
           matches.map(async (match) => {
             let route = match.route as ServerRouteObject;
             if ("lazy" in route && route.lazy) {
-              route = {
-                ...route,
+              Object.assign(route, {
                 ...((await route.lazy()) as any),
                 path: route.path,
                 index: (route as any).index,
                 id: route.id,
-              };
+              });
             }
+
+            const Layout = (match.route as any).Layout || React.Fragment;
+            // We send errorElement early in the manifest so we have it client
+            // side for any client-side errors thrown during dataStrategy
+            const errorElement = route.ErrorBoundary
+              ? React.createElement(
+                  Layout,
+                  null,
+                  React.createElement(route.ErrorBoundary)
+                )
+              : undefined;
 
             return {
               clientAction: route.clientAction,
@@ -160,6 +170,7 @@ export async function matchServerRequest({
               handle: route.handle,
               hasAction: !!route.action,
               hasErrorBoundary: !!route.ErrorBoundary,
+              errorElement,
               hasLoader: !!route.loader,
               id: route.id,
               path: route.path,
@@ -262,72 +273,82 @@ export async function matchServerRequest({
     }
 
     let lastMatch: AgnosticDataRouteMatch | null = null;
-    let matches = staticContext.matches.map((match) => {
-      const Layout = (match.route as any).Layout || React.Fragment;
-      const Component = (match.route as any).default;
-      const ErrorBoundary = (match.route as any).ErrorBoundary;
-      const HydrateFallback = (match.route as any).HydrateFallback;
-      // TODO: DRY this up once it's fully fleshed out
-      // TODO: Align this with the fields passed in with-props.tsx
-      const element = Component
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(Component, {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            })
-          )
-        : undefined;
-      const errorElement = ErrorBoundary
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(ErrorBoundary, {
-              error: staticContext.errors?.[match.route.id],
-            })
-          )
-        : undefined;
-      const hydrateFallbackElement = HydrateFallback
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(HydrateFallback, {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            })
-          )
-        : match.route.id === "root"
-        ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-          // currently uses a hook internally so it fails during RSC.  Restructure
-          // so it can be used safely in an RSC render pass.
-          React.createElement("p", null, "Loading!")
-        : undefined;
+    let matches = await Promise.all(
+      staticContext.matches.map(async (match) => {
+        if ("lazy" in match.route && match.route.lazy) {
+          Object.assign(match.route, {
+            // @ts-expect-error - FIXME: Fix the types here
+            ...((await match.route.lazy()) as any),
+            path: match.route.path,
+            index: (match.route as any).index,
+            id: match.route.id,
+          });
+        }
 
-      let result = {
-        clientAction: (match.route as any).clientAction,
-        clientLoader: (match.route as any).clientLoader,
-        element,
-        errorElement,
-        handle: (match.route as any).handle,
-        hasAction: !!match.route.action,
-        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-        hasLoader: !!match.route.loader,
-        hydrateFallbackElement,
-        id: match.route.id,
-        index: match.route.index,
-        links: (match.route as any).links,
-        meta: (match.route as any).meta,
-        params: match.params,
-        parentId: lastMatch?.route.id,
-        path: match.route.path,
-        pathname: match.pathname,
-        pathnameBase: match.pathnameBase,
-        shouldRevalidate: (match.route as any).shouldRevalidate,
-      };
-      lastMatch = match;
-      return result;
-    });
+        const Layout = (match.route as any).Layout || React.Fragment;
+        const Component = (match.route as any).default;
+        const ErrorBoundary = (match.route as any).ErrorBoundary;
+        const HydrateFallback = (match.route as any).HydrateFallback;
+        // TODO: DRY this up once it's fully fleshed out
+        // TODO: Align this with the fields passed in with-props.tsx
+        const element = Component
+          ? React.createElement(
+              Layout,
+              null,
+              React.createElement(Component, {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              })
+            )
+          : undefined;
+        const errorElement = ErrorBoundary
+          ? React.createElement(
+              Layout,
+              null,
+              React.createElement(ErrorBoundary)
+            )
+          : undefined;
+        const hydrateFallbackElement = HydrateFallback
+          ? React.createElement(
+              Layout,
+              null,
+              React.createElement(HydrateFallback, {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              })
+            )
+          : match.route.id === "root"
+          ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
+            // currently uses a hook internally so it fails during RSC.  Restructure
+            // so it can be used safely in an RSC render pass.
+            React.createElement("p", null, "Loading!")
+          : undefined;
+
+        let result = {
+          clientAction: (match.route as any).clientAction,
+          clientLoader: (match.route as any).clientLoader,
+          element,
+          errorElement,
+          handle: (match.route as any).handle,
+          hasAction: !!match.route.action,
+          hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+          hasLoader: !!match.route.loader,
+          hydrateFallbackElement,
+          id: match.route.id,
+          index: match.route.index,
+          links: (match.route as any).links,
+          meta: (match.route as any).meta,
+          params: match.params,
+          parentId: lastMatch?.route.id,
+          path: match.route.path,
+          pathname: match.pathname,
+          pathnameBase: match.pathnameBase,
+          shouldRevalidate: (match.route as any).shouldRevalidate,
+        };
+        lastMatch = match;
+        return result;
+      })
+    );
 
     payload.matches = routeIdsToLoad
       ? matches.filter((m) => routeIdsToLoad.includes(m.id))
