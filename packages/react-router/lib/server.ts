@@ -8,7 +8,7 @@ import type {
 } from "./dom/ssr/routeModules";
 import { injectRSCPayload } from "./html-stream/server";
 import type { Location } from "./router/history";
-import { createStaticHandler } from "./router/router";
+import { createStaticHandler, isMutationMethod } from "./router/router";
 import {
   type ActionFunction,
   type AgnosticDataRouteMatch,
@@ -208,22 +208,21 @@ export async function matchServerRequest({
   const getRenderPayload = async (): Promise<ServerRenderPayload> => {
     const handler = createStaticHandler(routes);
 
-    let method = request.method.toUpperCase();
-    let skipRevalidation = method !== "GET" && method !== "HEAD";
-    let url = new URL(request.url);
-    let routeIdsToLoad = skipRevalidation
-      ? []
-      : url.searchParams.has("_routes")
-      ? url.searchParams.get("_routes")!.split(",")
-      : null;
+    // If this is a RR submission, we just want the `actionData` but don't want
+    // to call any loaders or render any components back in the response - that
+    // will happen in the subsequent revalidation request
+    let isSubmission = isMutationMethod(request.method);
+    let searchParams = new URL(request.url).searchParams;
+    let routeIdsToLoad =
+      !isSubmission && searchParams.has("_routes")
+        ? searchParams.get("_routes")!.split(",")
+        : null;
 
     const staticContext = await handler.query(request, {
       skipLoaderErrorBubbling: true,
-      skipRevalidation,
+      skipRevalidation: isSubmission,
       ...(routeIdsToLoad
-        ? {
-            filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id),
-          }
+        ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
     });
 
@@ -234,6 +233,7 @@ export async function matchServerRequest({
       headers.set("x-react-router-error", "true");
       throw staticContext;
     }
+
     statusCode = staticContext.statusCode ?? statusCode;
 
     const errors = staticContext.errors
@@ -247,77 +247,82 @@ export async function matchServerRequest({
         )
       : staticContext.errors;
 
-    let lastMatch: AgnosticDataRouteMatch | null = null;
-    const matches = staticContext.matches.map((match) => {
-      const Layout = (match.route as any).Layout || React.Fragment;
-      const Component = (match.route as any).default;
-      const ErrorBoundary = (match.route as any).ErrorBoundary;
-      const HydrateFallback = (match.route as any).HydrateFallback;
-      const element = Component
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(Component, {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            })
-          )
-        : undefined;
-      const errorElement = ErrorBoundary
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(ErrorBoundary, {
-              error: staticContext.errors?.[match.route.id],
-            })
-          )
-        : undefined;
-      const hydrateFallbackElement = HydrateFallback
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(HydrateFallback, {
-              loaderData: staticContext.loaderData[match.route.id],
-              actionData: staticContext.actionData?.[match.route.id],
-            })
-          )
-        : undefined;
-
-      let result = {
-        clientAction: (match.route as any).clientAction,
-        clientLoader: (match.route as any).clientLoader,
-        element,
-        errorElement,
-        handle: (match.route as any).handle,
-        hasAction: !!match.route.action,
-        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-        hasLoader: !!match.route.loader,
-        hydrateFallbackElement,
-        id: match.route.id,
-        index: match.route.index,
-        links: (match.route as any).links,
-        meta: (match.route as any).meta,
-        params: match.params,
-        parentId: lastMatch?.route.id,
-        path: match.route.path,
-        pathname: match.pathname,
-        pathnameBase: match.pathnameBase,
-        shouldRevalidate: (match.route as any).shouldRevalidate,
-      };
-      lastMatch = match;
-      return result;
-    });
-
-    const payload = {
+    const payload: ServerRenderPayload = {
       type: "render",
       actionData: staticContext.actionData,
       errors,
       loaderData: staticContext.loaderData,
       location: staticContext.location,
-      matches: matches.filter(
-        (m) => !routeIdsToLoad || routeIdsToLoad.includes(m.id)
-      ),
-    } satisfies ServerRenderPayload;
+      matches: [],
+    };
+
+    // Short circuit without matches on submissions
+    if (isSubmission) {
+      return payload;
+    }
+
+    let lastMatch: AgnosticDataRouteMatch | null = null;
+    payload.matches = staticContext.matches
+      .filter((m) => !routeIdsToLoad || routeIdsToLoad.includes(m.id))
+      .map((match) => {
+        const Layout = (match.route as any).Layout || React.Fragment;
+        const Component = (match.route as any).default;
+        const ErrorBoundary = (match.route as any).ErrorBoundary;
+        const HydrateFallback = (match.route as any).HydrateFallback;
+        const element = Component
+          ? React.createElement(
+              Layout,
+              null,
+              React.createElement(Component, {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              })
+            )
+          : undefined;
+        const errorElement = ErrorBoundary
+          ? React.createElement(
+              Layout,
+              null,
+              React.createElement(ErrorBoundary, {
+                error: staticContext.errors?.[match.route.id],
+              })
+            )
+          : undefined;
+        const hydrateFallbackElement = HydrateFallback
+          ? React.createElement(
+              Layout,
+              null,
+              React.createElement(HydrateFallback, {
+                loaderData: staticContext.loaderData[match.route.id],
+                actionData: staticContext.actionData?.[match.route.id],
+              })
+            )
+          : undefined;
+
+        let result = {
+          clientAction: (match.route as any).clientAction,
+          clientLoader: (match.route as any).clientLoader,
+          element,
+          errorElement,
+          handle: (match.route as any).handle,
+          hasAction: !!match.route.action,
+          hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+          hasLoader: !!match.route.loader,
+          hydrateFallbackElement,
+          id: match.route.id,
+          index: match.route.index,
+          links: (match.route as any).links,
+          meta: (match.route as any).meta,
+          params: match.params,
+          parentId: lastMatch?.route.id,
+          path: match.route.path,
+          pathname: match.pathname,
+          pathnameBase: match.pathnameBase,
+          shouldRevalidate: (match.route as any).shouldRevalidate,
+        };
+        lastMatch = match;
+        return result;
+      });
 
     return payload;
   };
