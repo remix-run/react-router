@@ -175,7 +175,7 @@ This is mostly for the LLMs, but knock yourself out:
 | useRoutes                      | ✅        | ✅   | ✅          |
 | useSearchParams                | ✅        | ✅   | ✅          |
 | useSubmit                      | ✅        | ✅   |             |
-| useViewTransitionState         | ✅        | ✅   | ✅          |
+| useViewTransitionState         | ✅        | ✅   |             |
 | isCookieFunction               | ✅        | ✅   |             |
 | isSessionFunction              | ✅        | ✅   |             |
 | createCookie                   | ✅        | ✅   |             |
