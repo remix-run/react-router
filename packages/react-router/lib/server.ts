@@ -262,67 +262,69 @@ export async function matchServerRequest({
     }
 
     let lastMatch: AgnosticDataRouteMatch | null = null;
-    payload.matches = staticContext.matches
-      .filter((m) => !routeIdsToLoad || routeIdsToLoad.includes(m.id))
-      .map((match) => {
-        const Layout = (match.route as any).Layout || React.Fragment;
-        const Component = (match.route as any).default;
-        const ErrorBoundary = (match.route as any).ErrorBoundary;
-        const HydrateFallback = (match.route as any).HydrateFallback;
-        const element = Component
-          ? React.createElement(
-              Layout,
-              null,
-              React.createElement(Component, {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              })
-            )
-          : undefined;
-        const errorElement = ErrorBoundary
-          ? React.createElement(
-              Layout,
-              null,
-              React.createElement(ErrorBoundary, {
-                error: staticContext.errors?.[match.route.id],
-              })
-            )
-          : undefined;
-        const hydrateFallbackElement = HydrateFallback
-          ? React.createElement(
-              Layout,
-              null,
-              React.createElement(HydrateFallback, {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              })
-            )
-          : undefined;
+    let matches = staticContext.matches.map((match) => {
+      const Layout = (match.route as any).Layout || React.Fragment;
+      const Component = (match.route as any).default;
+      const ErrorBoundary = (match.route as any).ErrorBoundary;
+      const HydrateFallback = (match.route as any).HydrateFallback;
+      const element = Component
+        ? React.createElement(
+            Layout,
+            null,
+            React.createElement(Component, {
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
+            })
+          )
+        : undefined;
+      const errorElement = ErrorBoundary
+        ? React.createElement(
+            Layout,
+            null,
+            React.createElement(ErrorBoundary, {
+              error: staticContext.errors?.[match.route.id],
+            })
+          )
+        : undefined;
+      const hydrateFallbackElement = HydrateFallback
+        ? React.createElement(
+            Layout,
+            null,
+            React.createElement(HydrateFallback, {
+              loaderData: staticContext.loaderData[match.route.id],
+              actionData: staticContext.actionData?.[match.route.id],
+            })
+          )
+        : undefined;
 
-        let result = {
-          clientAction: (match.route as any).clientAction,
-          clientLoader: (match.route as any).clientLoader,
-          element,
-          errorElement,
-          handle: (match.route as any).handle,
-          hasAction: !!match.route.action,
-          hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-          hasLoader: !!match.route.loader,
-          hydrateFallbackElement,
-          id: match.route.id,
-          index: match.route.index,
-          links: (match.route as any).links,
-          meta: (match.route as any).meta,
-          params: match.params,
-          parentId: lastMatch?.route.id,
-          path: match.route.path,
-          pathname: match.pathname,
-          pathnameBase: match.pathnameBase,
-          shouldRevalidate: (match.route as any).shouldRevalidate,
-        };
-        lastMatch = match;
-        return result;
-      });
+      let result = {
+        clientAction: (match.route as any).clientAction,
+        clientLoader: (match.route as any).clientLoader,
+        element,
+        errorElement,
+        handle: (match.route as any).handle,
+        hasAction: !!match.route.action,
+        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+        hasLoader: !!match.route.loader,
+        hydrateFallbackElement,
+        id: match.route.id,
+        index: match.route.index,
+        links: (match.route as any).links,
+        meta: (match.route as any).meta,
+        params: match.params,
+        parentId: lastMatch?.route.id,
+        path: match.route.path,
+        pathname: match.pathname,
+        pathnameBase: match.pathnameBase,
+        shouldRevalidate: (match.route as any).shouldRevalidate,
+      };
+      lastMatch = match;
+      return result;
+    });
+
+    payload.matches = routeIdsToLoad
+      ? matches.filter((m) => routeIdsToLoad.includes(m.id))
+      : matches;
 
     return payload;
   };
