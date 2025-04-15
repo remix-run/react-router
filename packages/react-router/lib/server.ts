@@ -267,6 +267,8 @@ export async function matchServerRequest({
       const Component = (match.route as any).default;
       const ErrorBoundary = (match.route as any).ErrorBoundary;
       const HydrateFallback = (match.route as any).HydrateFallback;
+      // TODO: DRY this up once it's fully fleshed out
+      // TODO: Align this with the fields passed in with-props.tsx
       const element = Component
         ? React.createElement(
             Layout,
@@ -295,6 +297,11 @@ export async function matchServerRequest({
               actionData: staticContext.actionData?.[match.route.id],
             })
           )
+        : match.route.id === "root"
+        ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
+          // currently uses a hook internally so it fails during RSC.  Restructure
+          // so it can be used safely in an RSC render pass.
+          React.createElement("p", null, "Loading!")
         : undefined;
 
       let result = {

@@ -35,11 +35,12 @@ export async function clientAction({ serverAction }: ClientActionFunctionArgs) {
 
 export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
   const res = await serverLoader<typeof loader>();
-
   return {
     message: res.message + " (mutated in clientLoader)",
   };
 }
+
+clientLoader.hydrate = true;
 
 export default function About() {
   const loaderData = useLoaderData<typeof clientLoader>();

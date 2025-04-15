@@ -343,6 +343,9 @@ export {
 } from "./lib/dom/ssr/fog-of-war";
 
 /** @internal */
+export { getHydrationData as UNSAFE_getHydrationData } from "./lib/dom/ssr/hydration";
+
+/** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
 
 /** @internal */

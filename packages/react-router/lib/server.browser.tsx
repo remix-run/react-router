@@ -7,10 +7,16 @@ import type { FrameworkContextObject } from "./dom/ssr/entry";
 import { createBrowserHistory, invariant } from "./router/history";
 import type { Router as DataRouter } from "./router/router";
 import { createRouter, isMutationMethod } from "./router/router";
-import type { ServerPayload, RenderedRoute } from "./server";
 import type {
+  ServerPayload,
+  RenderedRoute,
+  ServerRenderPayload,
+} from "./server";
+import type {
+  ActionFunction,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  LoaderFunction,
   unstable_RouterContextProvider,
 } from "./router/utils";
 import { ErrorResponseImpl, unstable_createContext } from "./router/utils";
@@ -24,6 +30,8 @@ import {
   stripIndexParam,
 } from "./dom/ssr/single-fetch";
 import { createRequestInit } from "./dom/ssr/data";
+import { getHydrationData } from "./dom/ssr/hydration";
+import { shouldHydrateRouteLoader } from "./dom/ssr/routes";
 
 export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
@@ -34,7 +42,7 @@ export type EncodeActionFunction = (args: unknown[]) => Promise<BodyInit>;
 declare global {
   interface Window {
     __router: DataRouter;
-    __routerInitPromise?: Promise<void>;
+    __routerInitialized: boolean;
   }
 }
 
@@ -124,7 +132,10 @@ function createRouterFromPayload({
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let routes = payload.matches.reduceRight((previous, match) => {
-    const route: DataRouteObject = createRouteFromServerManifest(match);
+    const route: DataRouteObject = createRouteFromServerManifest(
+      match,
+      payload
+    );
     if (previous.length > 0) {
       route.children = previous;
     }
@@ -132,14 +143,27 @@ function createRouterFromPayload({
   }, [] as DataRouteObject[]);
 
   window.__router = createRouter({
+    routes,
     basename: payload.basename,
     history: createBrowserHistory(),
-    hydrationData: {
-      actionData: payload.actionData,
-      errors: payload.errors,
-      loaderData: payload.loaderData,
-    },
-    routes,
+    hydrationData: getHydrationData(
+      {
+        loaderData: payload.loaderData,
+        actionData: payload.actionData,
+        errors: payload.errors,
+      },
+      routes,
+      (routeId) => {
+        let match = payload.matches.find((m) => m.id === routeId);
+        invariant(match, "Route not found in payload");
+        return {
+          clientLoader: match.clientLoader,
+          hasLoader: match.hasLoader,
+          hasHydrateFallback: match.hydrateFallbackElement != null,
+        };
+      },
+      false
+    ),
     async patchRoutesOnNavigation({ patch, path, signal }) {
       let response = await fetch(`${path}.manifest`, { signal });
       if (!response.body || response.status < 200 || response.status >= 300) {
@@ -166,18 +190,15 @@ function createRouterFromPayload({
       undefined,
       decode
     ),
-  }).initialize();
+  });
 
-  if (!window.__router.state.initialized) {
-    window.__routerInitPromise = new Promise((resolve) => {
-      const unsubscribe = window.__router.subscribe((state) => {
-        if (state.initialized) {
-          window.__routerInitPromise = undefined;
-          unsubscribe();
-          resolve();
-        }
-      });
-    });
+  // We can call initialize() immediately if the router doesn't have any
+  // loaders to run on hydration
+  if (window.__router.state.initialized) {
+    window.__routerInitialized = true;
+    window.__router.initialize();
+  } else {
+    window.__routerInitialized = false;
   }
 
   return window.__router;
@@ -331,9 +352,14 @@ export function ServerBrowserRouter({
     []
   );
 
-  if (window.__routerInitPromise) {
-    throw window.__routerInitPromise;
-  }
+  React.useLayoutEffect(() => {
+    // If we had to run clientLoaders on hydration, we delay initialization until
+    // after we've hydrated to avoid hydration issues from synchronous client loaders
+    if (!window.__routerInitialized) {
+      window.__routerInitialized = true;
+      window.__router.initialize();
+    }
+  }, []);
 
   const frameworkContext: FrameworkContextObject = {
     future: {
@@ -367,16 +393,26 @@ export function ServerBrowserRouter({
   );
 }
 
-function createRouteFromServerManifest(
-  match: RenderedRoute
-): DataRouteObject & {
+type DataRouteObjectWithManifestInfo = DataRouteObject & {
   hasLoader: boolean;
   hasClientLoader: boolean;
   hasAction: boolean;
   hasClientAction: boolean;
   hasShouldRevalidate: boolean;
-} {
-  return {
+};
+
+function createRouteFromServerManifest(
+  match: RenderedRoute,
+  payload?: ServerRenderPayload
+): DataRouteObjectWithManifestInfo {
+  let hasInitialData = payload && match.id in payload.loaderData;
+  let initialData = payload?.loaderData[match.id];
+  let hasInitialError = payload?.errors && match.id in payload.errors;
+  let initialError = payload?.errors?.[match.id];
+  let isHydrationRequest =
+    match.clientLoader?.hydrate === true || !match.hasLoader;
+
+  let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,
     element: match.element,
     errorElement: match.errorElement,
@@ -385,11 +421,28 @@ function createRouteFromServerManifest(
     hydrateFallbackElement: match.hydrateFallbackElement,
     index: match.index,
     loader: match.clientLoader
-      ? (args, singleFetch) =>
-          match.clientLoader!({
-            ...args,
-            serverLoader: () => callSingleFetch(singleFetch),
-          })
+      ? async (args, singleFetch) => {
+          try {
+            let result = await match.clientLoader!({
+              ...args,
+              serverLoader: () => {
+                // On the first call, resolve with the server result
+                if (isHydrationRequest) {
+                  if (hasInitialData) {
+                    return initialData;
+                  }
+                  if (hasInitialError) {
+                    throw initialError;
+                  }
+                }
+                return callSingleFetch(singleFetch);
+              },
+            });
+            return result;
+          } finally {
+            isHydrationRequest = false;
+          }
+        }
       : match.hasLoader
       ? (_, singleFetch) => callSingleFetch(singleFetch)
       : undefined,
@@ -410,6 +463,17 @@ function createRouteFromServerManifest(
     hasClientAction: match.clientAction != null,
     hasShouldRevalidate: match.shouldRevalidate != null,
   };
+
+  if (typeof dataRoute.loader === "function") {
+    dataRoute.loader.hydrate = shouldHydrateRouteLoader(
+      match.id,
+      match.clientLoader,
+      match.hasLoader,
+      false
+    );
+  }
+
+  return dataRoute;
 }
 
 function callSingleFetch(singleFetch: unknown) {
