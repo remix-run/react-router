@@ -356,9 +356,9 @@ Date: 2025-04-17
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- `react-router` - UNSTABLE: Add a new `unstable_runClientMiddleware` argument to `dataStrategy` to enable middleware execution in custom `dataStrategy` implementations ([#13395](https://github.com/remix-run/react-router/pull/13395))
-- `react-router` - UNSTABLE: Add better error messaging when `getLoadContext` is not updated to return a `Map`" ([#13242](https://github.com/remix-run/react-router/pull/13242))
-- `react-router` - UNSTABLE: Update context type for `LoaderFunctionArgs`/`ActionFunctionArgs` when middleware is enabled ([#13381](https://github.com/remix-run/react-router/pull/13381))
+- `react-router` - Add better error messaging when `getLoadContext` is not updated to return a `Map` ([#13242](https://github.com/remix-run/react-router/pull/13242))
+- `react-router` - Update context type for `LoaderFunctionArgs`/`ActionFunctionArgs` when middleware is enabled ([#13381](https://github.com/remix-run/react-router/pull/13381))
+- `react-router` - Add a new `unstable_runClientMiddleware` argument to `dataStrategy` to enable middleware execution in custom `dataStrategy` implementations ([#13395](https://github.com/remix-run/react-router/pull/13395))
 - `react-router` - Add support for the new `unstable_shouldCallHandler`/`unstable_shouldRevalidateArgs` APIs in `dataStrategy` ([#13253](https://github.com/remix-run/react-router/pull/13253))
 
 **Full Changelog**: [`v7.5.0...v7.5.1`](https://github.com/remix-run/react-router/compare/react-router@7.5.0...react-router@7.5.1)
