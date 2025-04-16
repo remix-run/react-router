@@ -1,11 +1,12 @@
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 
 import { Counter } from "../../counter";
-import { ErrorReporter } from "./root.client";
+import { ErrorReporter, NavigationState } from "./root.client";
 
 export { shouldRevalidate } from "./root.client";
 
-export function loader() {
+export async function loader() {
+  await new Promise((r) => setTimeout(r, 500));
   return {
     counter: <Counter />,
     message: `Root route loader ran at ${new Date().toISOString()}`,
@@ -63,6 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link to="/redirect">Redirect</Link>
           </header>
           <h1>Root Layout</h1>
+          <NavigationState />
           <Counter />
           {children}
         </div>

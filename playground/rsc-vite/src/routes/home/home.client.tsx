@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { type ClientLoaderFunctionArgs, useLoaderData } from "react-router";
 
 import { Counter } from "../../counter";
@@ -25,5 +26,18 @@ export default function Home() {
       </h1>
       <Counter />
     </main>
+  );
+}
+
+export function HomeForm({ fn }: { fn: () => unknown }) {
+  const [state, formAction, isPending] = React.useActionState(fn, null);
+
+  return (
+    <form action={formAction}>
+      <button type="submit">
+        Log on server{isPending ? " (pending)" : null}
+      </button>
+      {state ? <p>Action state: {state}</p> : null}
+    </form>
   );
 }
