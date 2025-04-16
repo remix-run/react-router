@@ -3236,7 +3236,11 @@ export function createRouter(init: RouterInit): Router {
 
         return { active: true, matches: fogMatches || [] };
       } else {
-        if (Object.keys(matches[0].params).length > 0) {
+        let lastRoute = matches.slice(-1)[0];
+        if (
+          Object.keys(matches[0].params).length > 0 ||
+          (!lastRoute?.route.index && lastRoute?.route.path === "")
+        ) {
           // If we matched a dynamic param or a splat, it might only be because
           // we haven't yet discovered other routes that would match with a
           // higher score.  Call patchRoutesOnNavigation just to be sure
