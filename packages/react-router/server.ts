@@ -11,8 +11,4 @@ export type {
   ServerRouteMatch,
   ServerRouteObject,
 } from "./lib/server";
-export {
-  isReactServerRequest,
-  matchServerRequest,
-  routeServerRequest,
-} from "./lib/server";
+export { isReactServerRequest, matchServerRequest } from "./lib/server";

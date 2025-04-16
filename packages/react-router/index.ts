@@ -370,15 +370,14 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 /** @internal */
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
 
-export {
-  isReactServerRequest,
-  matchServerRequest,
-  routeServerRequest,
-} from "./lib/server";
 export type {
   DecodeServerResponseFunction,
   EncodeActionFunction,
 } from "./lib/server.browser";
 export { createCallServer, ServerBrowserRouter } from "./lib/server.browser";
-export { ServerStaticRouter } from "./lib/server.static";
+export {
+  isReactServerRequest,
+  routeServerRequest,
+  ServerStaticRouter,
+} from "./lib/server.static";
 export { getServerStream } from "./lib/html-stream/browser";
