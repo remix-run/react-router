@@ -149,6 +149,7 @@ export async function matchServerRequest({
                 index: (route as any).index,
                 id: route.id,
               });
+              route.lazy = undefined;
             }
 
             const Layout = (match.route as any).Layout || React.Fragment;
@@ -281,6 +282,7 @@ export async function matchServerRequest({
             index: (match.route as any).index,
             id: match.route.id,
           });
+          match.route.lazy = undefined;
         }
 
         const Layout = (match.route as any).Layout || React.Fragment;
@@ -379,8 +381,6 @@ export async function matchServerRequest({
     throw error;
   }
 }
-
-
 
 export function isReactServerRequest(url: URL) {
   return url.pathname.endsWith(".rsc");
