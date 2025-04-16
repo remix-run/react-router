@@ -11,13 +11,13 @@ import { createStaticHandler, isMutationMethod } from "./router/router";
 import {
   type ActionFunction,
   type AgnosticDataRouteMatch,
-  type AgnosticRouteObject,
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
   isRouteErrorResponse,
   matchRoutes,
 } from "./router/utils";
+import type { RouteMatch } from "./context";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -80,12 +80,21 @@ export type ServerRenderPayload = {
   loaderData: Record<string, any>;
   location: Location;
   matches: ServerRouteMatch[];
+  // Additional routes we should patch into the router for subsequent navigatons.
+  // Mostly a collection of pathless/index routes that may be needed for complete
+  // matching on upward navigations.
+  patches: RenderedRoute[];
   nonce?: string;
 };
 
 export type ServerManifestPayload = {
   type: "manifest";
+  // Current rendered matches
   matches: RenderedRoute[];
+  // Additional routes we should patch into the router for subsequent navigations.
+  // Mostly a collection of pathless/index routes that may be needed for complete
+  // matching on upward navigations.
+  patches: RenderedRoute[];
 };
 
 export type ServerActionPayload = {
@@ -125,12 +134,13 @@ export async function matchServerRequest({
 
   if (isManifestRequest(url)) {
     const matches = matchRoutes(
-      routes as AgnosticRouteObject[],
+      routes,
       url.pathname.replace(/\.manifest$/, "")
     );
     if (!matches?.length) {
       return new Response("Not found", { status: 404 });
     }
+
     return {
       statusCode: 200,
       headers: new Headers({
@@ -140,44 +150,12 @@ export async function matchServerRequest({
       payload: {
         type: "manifest",
         matches: await Promise.all(
-          matches.map(async (match) => {
-            let route = match.route as ServerRouteObject;
-            if ("lazy" in route && route.lazy) {
-              Object.assign(route, {
-                ...((await route.lazy()) as any),
-                path: route.path,
-                index: (route as any).index,
-                id: route.id,
-              });
-              route.lazy = undefined;
-            }
-
-            const Layout = (match.route as any).Layout || React.Fragment;
-            // We send errorElement early in the manifest so we have it client
-            // side for any client-side errors thrown during dataStrategy
-            const errorElement = route.ErrorBoundary
-              ? React.createElement(
-                  Layout,
-                  null,
-                  React.createElement(route.ErrorBoundary)
-                )
-              : undefined;
-
-            return {
-              clientAction: route.clientAction,
-              clientLoader: route.clientLoader,
-              handle: route.handle,
-              hasAction: !!route.action,
-              hasErrorBoundary: !!route.ErrorBoundary,
-              errorElement,
-              hasLoader: !!route.loader,
-              id: route.id,
-              path: route.path,
-              index: "index" in route ? route.index : undefined,
-              links: route.links,
-              meta: route.meta,
-            };
-          })
+          matches.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id))
+        ),
+        patches: await getAdditionalRoutePatches(
+          url.pathname,
+          routes,
+          matches.map((m) => m.route.id)
         ),
       } satisfies ServerManifestPayload,
     };
@@ -257,18 +235,21 @@ export async function matchServerRequest({
         )
       : staticContext.errors;
 
-    const payload: ServerRenderPayload = {
+    const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
       type: "render",
       actionData: staticContext.actionData,
       errors,
       loaderData: staticContext.loaderData,
       location: staticContext.location,
-      matches: [],
     };
 
     // Short circuit without matches on submissions
     if (isSubmission) {
-      return payload;
+      return {
+        ...payload,
+        matches: [],
+        patches: [],
+      };
     }
 
     let lastMatch: AgnosticDataRouteMatch | null = null;
@@ -352,11 +333,17 @@ export async function matchServerRequest({
       })
     );
 
-    payload.matches = routeIdsToLoad
-      ? matches.filter((m) => routeIdsToLoad.includes(m.id))
-      : matches;
-
-    return payload;
+    return {
+      ...payload,
+      matches: routeIdsToLoad
+        ? matches.filter((m) => routeIdsToLoad.includes(m.id))
+        : matches,
+      patches: await getAdditionalRoutePatches(
+        staticContext.location.pathname,
+        routes,
+        matches.map((m) => m.id)
+      ),
+    };
   };
 
   try {
@@ -380,6 +367,88 @@ export async function matchServerRequest({
     }
     throw error;
   }
+}
+
+async function getRoute(
+  route: ServerRouteObject,
+  parentId: string | undefined
+): Promise<RenderedRoute> {
+  if ("lazy" in route && route.lazy) {
+    Object.assign(route, {
+      ...((await route.lazy()) as any),
+      path: route.path,
+      index: (route as any).index,
+      id: route.id,
+    });
+    route.lazy = undefined;
+  }
+
+  const Layout = (route as any).Layout || React.Fragment;
+  // We send errorElement early in the manifest so we have it client
+  // side for any client-side errors thrown during dataStrategy
+  const errorElement = route.ErrorBoundary
+    ? React.createElement(
+        Layout,
+        null,
+        React.createElement(route.ErrorBoundary)
+      )
+    : undefined;
+
+  return {
+    clientAction: route.clientAction,
+    clientLoader: route.clientLoader,
+    handle: route.handle,
+    hasAction: !!route.action,
+    hasErrorBoundary: !!route.ErrorBoundary,
+    errorElement,
+    hasLoader: !!route.loader,
+    id: route.id,
+    parentId,
+    path: route.path,
+    index: "index" in route ? route.index : undefined,
+    links: route.links,
+    meta: route.meta,
+  };
+}
+
+async function getAdditionalRoutePatches(
+  pathname: string,
+  routes: ServerRouteObject[],
+  matchedRouteIds: string[]
+): Promise<RenderedRoute[]> {
+  let patchRouteMatches = new Map<
+    string,
+    ServerRouteObject & { parentId: string | undefined }
+  >();
+  let segments = pathname.split("/").filter(Boolean);
+  let paths: string[] = ["/"];
+
+  // We've already matched to the last segment
+  segments.pop();
+
+  // Traverse each path for our parents and match in case they have pathless/index
+  // children we need to include in the initial manifest
+  while (segments.length > 0) {
+    paths.push(`/${segments.join("/")}`);
+    segments.pop();
+  }
+
+  paths.forEach((path) => {
+    let matches = matchRoutes(routes, path) || [];
+    matches.forEach((m, i) =>
+      patchRouteMatches.set(m.route.id, {
+        ...m.route,
+        parentId: matches[i - 1]?.route.id,
+      })
+    );
+  });
+
+  let patches = await Promise.all(
+    [...patchRouteMatches.values()]
+      .filter((route) => !matchedRouteIds.some((id) => id === route.id))
+      .map((route) => getRoute(route, route.parentId))
+  );
+  return patches;
 }
 
 export function isReactServerRequest(url: URL) {

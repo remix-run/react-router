@@ -17,6 +17,23 @@ export const routes = [
         path: "about",
         lazy: () => import("./routes/about/about"),
       },
+      {
+        id: "parent",
+        path: "parent",
+        lazy: () => import("./routes/parent/parent"),
+        children: [
+          {
+            id: "parent-index",
+            index: true,
+            lazy: () => import("./routes/parent-index/parent-index"),
+          },
+          {
+            id: "child",
+            path: "child",
+            lazy: () => import("./routes/child/child"),
+          },
+        ],
+      },
     ],
   },
 ] satisfies ServerRouteObject[];

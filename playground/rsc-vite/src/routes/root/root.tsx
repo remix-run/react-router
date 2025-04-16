@@ -55,6 +55,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link to="/">Home</Link>
             {" | "}
             <Link to="/about">About</Link>
+            {" | "}
+            <Link to="/parent">Parent</Link>
+            {" | "}
+            <Link to="/parent/child">Child</Link>
           </header>
           <h1>Root Layout</h1>
           <Counter />

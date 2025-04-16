@@ -131,6 +131,14 @@ function createRouterFromPayload({
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
+  let patches = new Map<string, RenderedRoute[]>();
+  payload.patches.forEach((patch) => {
+    invariant(patch.parentId, "Invalid patch parentId");
+    if (!patches.has(patch.parentId)) {
+      patches.set(patch.parentId, []);
+    }
+    patches.get(patch.parentId)?.push(patch);
+  });
   let routes = payload.matches.reduceRight((previous, match) => {
     const route: DataRouteObject = createRouteFromServerManifest(
       match,
@@ -138,6 +146,12 @@ function createRouterFromPayload({
     );
     if (previous.length > 0) {
       route.children = previous;
+      let childrenToPatch = patches.get(match.id);
+      if (childrenToPatch) {
+        route.children.push(
+          ...childrenToPatch.map((r) => createRouteFromServerManifest(r))
+        );
+      }
     }
     return [route];
   }, [] as DataRouteObject[]);
@@ -182,6 +196,9 @@ function createRouterFromPayload({
           createRouteFromServerManifest(match),
         ])
       );
+      payload.patches.forEach((p) => {
+        patch(p.parentId ?? null, [createRouteFromServerManifest(p)]);
+      });
     },
     // FIXME: Pass `build.ssr` and `build.basename` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
