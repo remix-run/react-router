@@ -100,13 +100,22 @@ export type ServerManifestPayload = {
 export type ServerActionPayload = {
   type: "action";
   actionResult: Promise<unknown>;
-  rerender?: Promise<ServerRenderPayload>;
+  rerender?: Promise<ServerRenderPayload | ServerRedirectPayload>;
+};
+
+export type ServerRedirectPayload = {
+  type: "redirect";
+  status: number;
+  location: string;
+  replace: boolean;
+  reload: boolean;
 };
 
 export type ServerPayload =
   | ServerRenderPayload
   | ServerManifestPayload
-  | ServerActionPayload;
+  | ServerActionPayload
+  | ServerRedirectPayload;
 
 export type ServerMatch = {
   statusCode: number;
@@ -193,7 +202,9 @@ export async function matchServerRequest({
     });
   }
 
-  const getRenderPayload = async (): Promise<ServerRenderPayload> => {
+  const getRenderPayload = async (): Promise<
+    ServerRenderPayload | ServerRedirectPayload
+  > => {
     const handler = createStaticHandler(routes);
 
     // If this is a RR submission, we just want the `actionData` but don't want
@@ -215,11 +226,14 @@ export async function matchServerRequest({
     });
 
     if (staticContext instanceof Response) {
-      // TODO: Properly handle this case
-      const headers = new Headers(staticContext.headers);
-      headers.set("Vary", "Content-Type");
-      headers.set("x-react-router-error", "true");
-      throw staticContext;
+      console.log(Object.fromEntries(staticContext.headers));
+      return {
+        type: "redirect",
+        location: staticContext.headers.get("Location") || "",
+        reload: staticContext.headers.get("x-remix-reload-document") === "true",
+        replace: staticContext.headers.get("x-remix-replace") === "true",
+        status: staticContext.status,
+      };
     }
 
     statusCode = staticContext.statusCode ?? statusCode;

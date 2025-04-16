@@ -1,5 +1,11 @@
 export { createStaticHandler } from "./lib/router/router";
-export { data, matchRoutes } from "./lib/router/utils";
+export {
+  data,
+  matchRoutes,
+  redirect,
+  redirectDocument,
+  replace,
+} from "./lib/router/utils";
 
 export type {
   DecodeCallServerFunction,

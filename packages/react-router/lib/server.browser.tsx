@@ -13,10 +13,8 @@ import type {
   ServerRenderPayload,
 } from "./server";
 import type {
-  ActionFunction,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  LoaderFunction,
   unstable_RouterContextProvider,
 } from "./router/utils";
 import { ErrorResponseImpl, unstable_createContext } from "./router/utils";
@@ -43,6 +41,7 @@ declare global {
   interface Window {
     __router: DataRouter;
     __routerInitialized: boolean;
+    __routerActionID: number;
   }
 }
 
@@ -53,12 +52,10 @@ export function createCallServer({
   decode: DecodeServerResponseFunction;
   encodeAction: EncodeActionFunction;
 }) {
-  let actionCounter = 0;
-  let landedActionId: number = 0;
-
+  let landedActionId = 0;
   return async (id: string, args: unknown[]) => {
-    let actionId = ++actionCounter;
-    const locationKey = window.__router.state.loaderData;
+    let actionId = (window.__routerActionID =
+      (window.__routerActionID ??= 0) + 1);
 
     const response = await fetch(location.href, {
       body: await encodeAction(args),
@@ -79,15 +76,25 @@ export function createCallServer({
 
     if (payload.rerender) {
       (async () => {
-        const rendered = await payload.rerender;
-        if (!rendered) return;
-        if (
-          actionId > landedActionId &&
-          locationKey === window.__router.state.loaderData
-        ) {
+        const rerender = await payload.rerender;
+        if (!rerender) return;
+
+        if (landedActionId < actionId && window.__routerActionID <= actionId) {
           landedActionId = actionId;
+
+          if (rerender.type === "redirect") {
+            if (rerender.reload) {
+              window.location.href = rerender.location;
+              return;
+            }
+            window.__router.navigate(rerender.location, {
+              replace: rerender.replace,
+            });
+            return;
+          }
+
           let lastMatch: RenderedRoute | undefined;
-          for (const match of rendered.matches) {
+          for (const match of rerender.matches) {
             window.__router.patchRoutes(
               lastMatch?.id ?? null,
               [createRouteFromServerManifest(match)],
@@ -95,19 +102,20 @@ export function createCallServer({
             );
             lastMatch = match;
           }
+          window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
 
           React.startTransition(() => {
             window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
               loaderData: Object.assign(
                 {},
                 window.__router.state.loaderData,
-                rendered.loaderData
+                rerender.loaderData
               ),
-              errors: rendered.errors
+              errors: rerender.errors
                 ? Object.assign(
                     {},
                     window.__router.state.errors,
-                    rendered.errors
+                    rerender.errors
                   )
                 : null,
             });
@@ -218,6 +226,13 @@ function createRouterFromPayload({
     window.__routerInitialized = false;
   }
 
+  let lastLocationKey = window.__router.state.location.key;
+  window.__router.subscribe(({ location }) => {
+    if (location.key !== lastLocationKey) {
+      window.__routerActionID = (window.__routerActionID ??= 0) + 1;
+    }
+  });
+
   return window.__router;
 }
 
@@ -317,6 +332,21 @@ function getFetchAndDecodeViaRSC(
 
     try {
       const payload = await decode(res.body);
+      if (payload.type === "redirect") {
+        return {
+          status: res.status,
+          data: {
+            redirect: {
+              redirect: payload.location,
+              reload: false,
+              replace: payload.replace,
+              revalidate: false,
+              status: payload.status,
+            },
+          },
+        };
+      }
+
       if (payload.type !== "render") {
         throw new Error("Unexpected payload type");
       }

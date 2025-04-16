@@ -34,6 +34,11 @@ export const routes = [
           },
         ],
       },
+      {
+        id: "redirect",
+        path: "redirect",
+        lazy: () => import("./routes/redirect"),
+      },
     ],
   },
 ] satisfies ServerRouteObject[];

@@ -53,7 +53,15 @@ export async function routeServerRequest(
   }
 
   const payload = (await decode(serverResponse.body)) as ServerPayload;
-  // TODO: Handle redirect payloads
+
+  if (payload.type === "redirect") {
+    return new Response(null, {
+      status: payload.status,
+      headers: {
+        Location: payload.location,
+      },
+    });
+  }
 
   const html = await renderHTML(payload);
 
