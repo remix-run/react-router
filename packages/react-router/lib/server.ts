@@ -52,7 +52,7 @@ export type ServerRouteObject = ServerRouteObjectBase & {
 export type RenderedRoute = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  element?: React.ReactElement;
+  element?: React.ReactElement | false;
   errorElement?: React.ReactElement;
   handle?: any;
   hasAction: boolean;
@@ -292,14 +292,16 @@ export async function matchServerRequest({
         // TODO: DRY this up once it's fully fleshed out
         // TODO: Align this with the fields passed in with-props.tsx
         const element = Component
-          ? React.createElement(
-              Layout,
-              null,
-              React.createElement(Component, {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              })
-            )
+          ? staticContext.errors?.[match.route.id]
+            ? (false as const)
+            : React.createElement(
+                Layout,
+                null,
+                React.createElement(Component, {
+                  loaderData: staticContext.loaderData[match.route.id],
+                  actionData: staticContext.actionData?.[match.route.id],
+                })
+              )
           : undefined;
         const errorElement = ErrorBoundary
           ? React.createElement(
