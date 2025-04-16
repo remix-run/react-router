@@ -39,7 +39,7 @@ type ServerRouteObjectBase = {
 export type ServerRouteObject = ServerRouteObjectBase & {
   id: string;
   path?: string;
-  lazy?: LazyRouteFunction<ServerRouteObjectBase>;
+  lazy?: () => Promise<ServerRouteObjectBase>;
 } & (
     | {
         index: true;

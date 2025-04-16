@@ -23,48 +23,9 @@
   "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
-      "react-server": {
-        "node": {
-          "types": "./dist/development/server.d.ts",
-          "module": "./dist/development/server.mjs",
-          "module-sync": "./dist/development/server.mjs",
-          "default": "./dist/development/server.js"
-        },
-        "module": {
-          "types": "./dist/development/server.d.mts",
-          "default": "./dist/development/server.mjs"
-        },
-        "import": {
-          "types": "./dist/development/server.d.mts",
-          "default": "./dist/development/server.mjs"
-        },
-        "default": {
-          "types": "./dist/development/server.d.ts",
-          "default": "./dist/development/server.js"
-        }
-      },
       "node": {
         "types": "./dist/development/index.d.ts",
         "module": "./dist/development/index.mjs",
-        "module-sync": "./dist/development/index.mjs",
-        "default": "./dist/development/index.js"
-      },
-      "module": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "import": {
-        "types": "./dist/development/index.d.mts",
-        "default": "./dist/development/index.mjs"
-      },
-      "default": {
-        "types": "./dist/development/index.d.ts",
-        "default": "./dist/development/index.js"
-      }
-    },
-    "./client": {
-      "node": {
-        "types": "./dist/development/index.d.ts",
         "module-sync": "./dist/development/index.mjs",
         "default": "./dist/development/index.js"
       },
@@ -107,6 +68,26 @@
       "default": {
         "types": "./dist/development/dom-export.d.ts",
         "default": "./dist/development/dom-export.js"
+      }
+    },
+    "./server": {
+      "node": {
+        "types": "./dist/development/server.d.ts",
+        "module": "./dist/development/server.mjs",
+        "module-sync": "./dist/development/server.mjs",
+        "default": "./dist/development/server.js"
+      },
+      "module": {
+        "types": "./dist/development/server.d.mts",
+        "default": "./dist/development/server.mjs"
+      },
+      "import": {
+        "types": "./dist/development/server.d.mts",
+        "default": "./dist/development/server.mjs"
+      },
+      "default": {
+        "types": "./dist/development/server.d.ts",
+        "default": "./dist/development/server.js"
       }
     },
     "./package.json": "./package.json"

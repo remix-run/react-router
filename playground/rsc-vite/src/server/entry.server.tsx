@@ -7,7 +7,7 @@ import { manifest } from "virtual:react-manifest";
 import {
   type DecodeCallServerFunction,
   matchServerRequest,
-} from "react-router";
+} from "react-router/server";
 
 import { routes } from "../routes";
 
