@@ -226,7 +226,6 @@ export async function matchServerRequest({
     });
 
     if (staticContext instanceof Response) {
-      console.log(Object.fromEntries(staticContext.headers));
       return {
         type: "redirect",
         location: staticContext.headers.get("Location") || "",
