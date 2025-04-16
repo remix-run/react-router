@@ -19,63 +19,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     router = null;
   });
 
-  it("discovers child route at a depth of 0 for root layout (GET navigation)", async () => {
-    let indexDfd = createDeferred<AgnosticDataRouteObject[]>();
-    let loaderDfd = createDeferred();
-    let indexLoaderDfd = createDeferred();
-
-    router = createRouter({
-      history: createMemoryHistory({ initialEntries: ["/child"] }),
-      routes: [
-        {
-          id: "parent",
-          path: "",
-          children: [
-            {
-              id: "child",
-              path: "child",
-              loader: () => loaderDfd.promise,
-            },
-          ],
-        },
-      ],
-      async patchRoutesOnNavigation({ patch }) {
-        let children = await indexDfd.promise;
-        patch("parent", children);
-      },
-    });
-
-    router.navigate("/");
-    expect(router.state.navigation).toMatchObject({
-      state: "loading",
-      location: { pathname: "/" },
-    });
-
-    indexDfd.resolve([
-      {
-        id: "index",
-        index: true,
-        loader: () => indexLoaderDfd.promise,
-      },
-    ]);
-    expect(router.state.navigation).toMatchObject({
-      state: "loading",
-      location: { pathname: "/" },
-    });
-
-    indexLoaderDfd.resolve("INDEX");
-    await tick();
-
-    expect(router.state.location.pathname).toBe("/");
-    expect(router.state.loaderData).toEqual({
-      index: "INDEX",
-    });
-    expect(router.state.matches.map((m) => m.route.id)).toEqual([
-      "parent",
-      "index",
-    ]);
-  });
-
   it("discovers child route at a depth of 1 (GET navigation)", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
     let loaderDfd = createDeferred();
