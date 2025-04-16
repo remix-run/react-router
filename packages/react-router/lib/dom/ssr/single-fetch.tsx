@@ -432,7 +432,7 @@ async function singleFetchLoaderNavigationStrategy(
     (!router.state.initialized || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
-    singleFetchDfd.resolve({});
+    singleFetchDfd.resolve({ routes: {} });
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
     // Skipped in `ssr:false` because we expect to be loading static `.data` files
@@ -663,12 +663,14 @@ function unwrapSingleFetchResult(
   }
 
   let routeResult = result.routes[routeId];
-  if ("error" in routeResult) {
+  if (!routeResult) {
+    return undefined;
+  } else if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
     return routeResult.data;
   } else {
-    throw new Error(`No response found for routeId "${routeId}"`);
+    throw new Error(`Invalid response found for routeId "${routeId}"`);
   }
 }
 

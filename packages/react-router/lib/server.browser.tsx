@@ -448,9 +448,9 @@ function createRouteFromServerManifest(
             isHydrationRequest = false;
           }
         }
-      : match.hasLoader
-      ? (_, singleFetch) => callSingleFetch(singleFetch)
-      : undefined,
+      : // We always make the call in this RSC world since even if we don't
+        // have a `loader` we may need to get the `element` implementation
+        (_, singleFetch) => callSingleFetch(singleFetch),
     action: match.clientAction
       ? (args, singleFetch) =>
           match.clientAction!({
@@ -469,7 +469,9 @@ function createRouteFromServerManifest(
       : undefined,
     path: match.path,
     shouldRevalidate: match.shouldRevalidate,
-    hasLoader: match.hasLoader,
+    // We always have a "loader" in this RSC world since even if we don't
+    // have a `loader` we may need to get the `element` implementation
+    hasLoader: true,
     hasClientLoader: match.clientLoader != null,
     hasAction: match.hasAction,
     hasClientAction: match.clientAction != null,

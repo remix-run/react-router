@@ -5578,7 +5578,7 @@ function getDataStrategyMatch(
         isUsingNewApi ||
         shouldLoad ||
         (handlerOverride &&
-          request.method === "GET" &&
+          !isMutationMethod(request.method) &&
           (match.route.lazy || match.route.loader))
       ) {
         return callLoaderOrAction({
