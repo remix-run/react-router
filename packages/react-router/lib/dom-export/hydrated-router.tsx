@@ -16,7 +16,7 @@ import {
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
   UNSAFE_deserializeErrors as deserializeErrors,
-  UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
+  UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
@@ -176,22 +176,10 @@ function createHydratedRouter({
     future: {
       unstable_middleware: ssrInfo.context.future.unstable_middleware,
     },
-    dataStrategy: getSingleFetchDataStrategy(
+    dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
-      (routeId: string) => {
-        let manifestRoute = ssrInfo!.manifest.routes[routeId];
-        invariant(manifestRoute, "Route not found in manifest/routeModules");
-        let routeModule = ssrInfo!.routeModules[routeId];
-        return {
-          hasLoader: manifestRoute.hasLoader,
-          hasClientLoader: manifestRoute.hasClientLoader,
-          // In some cases the module may not be loaded yet and we don't care
-          // if it's got shouldRevalidate or not
-          hasShouldRevalidate: routeModule
-            ? routeModule.shouldRevalidate != null
-            : undefined,
-        };
-      },
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename
     ),

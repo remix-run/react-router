@@ -351,7 +351,7 @@ export {
 } from "./lib/dom/ssr/routes";
 
 /** @internal */
-export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
+export { getTurboStreamSingleFetchDataStrategy as UNSAFE_getTurboStreamSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
 export {
