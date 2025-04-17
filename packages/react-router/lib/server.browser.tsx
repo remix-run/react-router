@@ -184,6 +184,8 @@ function createRouterFromPayload({
           hasHydrateFallback: match.hydrateFallbackElement != null,
         };
       },
+      payload.location,
+      undefined,
       false
     ),
     async patchRoutesOnNavigation({ patch, path, signal }) {
