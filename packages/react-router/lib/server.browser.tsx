@@ -226,9 +226,9 @@ function createRouterFromPayload({
     window.__routerInitialized = false;
   }
 
-  let lastLocationKey = window.__router.state.location.key;
-  window.__router.subscribe(({ location }) => {
-    if (location.key !== lastLocationKey) {
+  let lastLoaderData: unknown = undefined;
+  window.__router.subscribe(({ loaderData, actionData }) => {
+    if (lastLoaderData !== loaderData) {
       window.__routerActionID = (window.__routerActionID ??= 0) + 1;
     }
   });

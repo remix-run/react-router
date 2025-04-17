@@ -20,7 +20,7 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
     controller: TransformStreamDefaultController<Uint8Array>
   ) {
     for (let chunk of buffered) {
-      let buf = decoder.decode(chunk);
+      let buf = decoder.decode(chunk, { stream: true });
       if (buf.endsWith(trailer)) {
         buf = buf.slice(0, -trailer.length);
       }
