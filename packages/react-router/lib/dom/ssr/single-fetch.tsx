@@ -169,7 +169,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   ssr: boolean,
   basename: string | undefined
 ): DataStrategyFunction {
-  let dataStrategy = getTurboStreamSingleFetchDataStrategyImpl(
+  let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
     (match: DataRouteMatch) => {
       let manifestRoute = manifest.routes[match.route.id];
@@ -188,7 +188,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   return async (args) => args.unstable_runClientMiddleware(dataStrategy);
 }
 
-export function getTurboStreamSingleFetchDataStrategyImpl(
+export function getSingleFetchDataStrategyImpl(
   getRouter: () => DataRouter,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
