@@ -169,7 +169,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   ssr: boolean,
   basename: string | undefined
 ): DataStrategyFunction {
-  let dataStrategy = getSingleFetchDataStrategyImpl(
+  let dataStrategy = getTurboStreamSingleFetchDataStrategyImpl(
     getRouter,
     (match: DataRouteMatch) => {
       let manifestRoute = manifest.routes[match.route.id];
@@ -188,7 +188,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   return async (args) => args.unstable_runClientMiddleware(dataStrategy);
 }
 
-export function getSingleFetchDataStrategyImpl(
+export function getTurboStreamSingleFetchDataStrategyImpl(
   getRouter: () => DataRouter,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
@@ -675,8 +675,8 @@ function unwrapSingleFetchResult(
 }
 
 function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: unknown) => Promise<void>;
+  let resolve: (val: T) => Promise<void>;
+  let reject: (error: unknown) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);

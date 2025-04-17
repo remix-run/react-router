@@ -1,8 +1,9 @@
 import type { DataRouteObject } from "../../context";
+import type { Path } from "../../router/history";
 import type { Router as DataRouter, HydrationState } from "../../router/router";
 import { matchRoutes } from "../../router/utils";
-import { shouldHydrateRouteLoader } from "./routes";
 import type { ClientLoaderFunction } from "./routeModules";
+import { shouldHydrateRouteLoader } from "./routes";
 
 export function getHydrationData(
   state: {
@@ -16,6 +17,8 @@ export function getHydrationData(
     hasLoader: boolean;
     hasHydrateFallback: boolean;
   },
+  location: Path,
+  basename: string | undefined,
   isSpaMode: boolean
 ): HydrationState {
   // Create a shallow clone of `loaderData` we can mutate for partial hydration.
@@ -28,11 +31,7 @@ export function getHydrationData(
     ...state,
     loaderData: { ...state.loaderData },
   };
-  let initialMatches = matchRoutes(
-    routes,
-    window.location,
-    window.__reactRouterContext?.basename
-  );
+  let initialMatches = matchRoutes(routes, location, basename);
   if (initialMatches) {
     for (let match of initialMatches) {
       let routeId = match.route.id;
