@@ -37,5 +37,12 @@ fi
 
 git push
 
+git branch -d release-next
+
+if [[ -n $(git show-ref refs/heads/changeset-release/release-next) ]]; then
+  git branch -d changeset-release/release-next
+fi
+
+
 set +e
 set +x
