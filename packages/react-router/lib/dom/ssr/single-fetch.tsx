@@ -15,9 +15,11 @@ import {
   stripBasename,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
-import type { EntryContext } from "./entry";
+import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
+import type { RouteModules } from "./routeModules";
+import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -147,10 +149,10 @@ export function StreamTransfer({
   }
 }
 
-type GetRouteInfoFunction = (routeId: string) => {
+type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
-  hasClientLoader: boolean; // TODO: Can this be read from match.route?
-  hasShouldRevalidate: boolean | undefined; // TODO: Can this be read from match.route?
+  hasClientLoader: boolean;
+  hasShouldRevalidate: boolean;
 };
 
 type FetchAndDecodeFunction = (
@@ -159,15 +161,25 @@ type FetchAndDecodeFunction = (
   targetRoutes?: string[]
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
-export function getSingleFetchDataStrategy(
+export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
-  getRouteInfo: GetRouteInfoFunction,
+  manifest: AssetsManifest,
+  routeModules: RouteModules,
   ssr: boolean,
   basename: string | undefined
 ): DataStrategyFunction {
-  let dataStrategy = getSingleFetchDataStrategyImpl(
+  let dataStrategy = getTurboStreamSingleFetchDataStrategyImpl(
     getRouter,
-    getRouteInfo,
+    (match: DataRouteMatch) => {
+      let manifestRoute = manifest.routes[match.route.id];
+      invariant(manifestRoute, "Route not found in manifest");
+      let routeModule = routeModules[match.route.id];
+      return {
+        hasLoader: manifestRoute.hasLoader,
+        hasClientLoader: manifestRoute.hasClientLoader,
+        hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
+      };
+    },
     fetchAndDecodeViaTurboStream,
     ssr,
     basename
@@ -175,7 +187,7 @@ export function getSingleFetchDataStrategy(
   return async (args) => args.unstable_runClientMiddleware(dataStrategy);
 }
 
-export function getSingleFetchDataStrategyImpl(
+export function getTurboStreamSingleFetchDataStrategyImpl(
   getRouter: () => DataRouter,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
@@ -192,7 +204,7 @@ export function getSingleFetchDataStrategyImpl(
     }
 
     let foundRevalidatingServerLoader = matches.some((m) => {
-      let { hasLoader, hasClientLoader } = getRouteInfo(m.route.id);
+      let { hasLoader, hasClientLoader } = getRouteInfo(m);
       return m.unstable_shouldCallHandler() && hasLoader && !hasClientLoader;
     });
     if (!ssr && !foundRevalidatingServerLoader) {
@@ -298,7 +310,7 @@ async function nonSsrStrategy(
     matchesToLoad.map((m) =>
       m.resolve(async (handler) => {
         try {
-          let { hasClientLoader } = getRouteInfo(m.route.id);
+          let { hasClientLoader } = getRouteInfo(m);
           // Need to pass through a `singleFetch` override handler so
           // clientLoader's can still call server loaders through `.data`
           // requests
@@ -350,7 +362,7 @@ async function singleFetchLoaderNavigationStrategy(
         routeDfds[i].resolve();
         let routeId = m.route.id;
         let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(routeId);
+          getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.unstable_shouldRevalidateArgs ||
@@ -419,7 +431,7 @@ async function singleFetchLoaderNavigationStrategy(
     (!router.state.initialized || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
-    singleFetchDfd.resolve({});
+    singleFetchDfd.resolve({ routes: {} });
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
     // Skipped in `ssr:false` because we expect to be loading static `.data` files
@@ -659,8 +671,8 @@ function unwrapSingleFetchResult(
 }
 
 function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: unknown) => Promise<void>;
+  let resolve: (val: T) => Promise<void>;
+  let reject: (error: unknown) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);

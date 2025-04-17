@@ -9,7 +9,11 @@ import type {
   ShouldRevalidateFunctionArgs,
 } from "../../router/utils";
 import { ErrorResponseImpl, compilePath } from "../../router/utils";
-import type { RouteModule, RouteModules } from "./routeModules";
+import type {
+  ClientLoaderFunction,
+  RouteModule,
+  RouteModules,
+} from "./routeModules";
 import { loadRouteModule } from "./routeModules";
 import type { FutureConfig } from "./entry";
 import { prefetchRouteCss, prefetchStyleLinks } from "./links";
@@ -382,8 +386,9 @@ export function createClientRoutes(
 
       // Let React Router know whether to run this on hydration
       dataRoute.loader.hydrate = shouldHydrateRouteLoader(
-        route,
-        routeModule,
+        route.id,
+        routeModule.clientLoader,
+        route.hasLoader,
         isSpaMode
       );
 
@@ -676,13 +681,14 @@ function getRouteModuleComponent(routeModule: RouteModule) {
 }
 
 export function shouldHydrateRouteLoader(
-  route: EntryRoute,
-  routeModule: RouteModule,
+  routeId: string,
+  clientLoader: ClientLoaderFunction | undefined,
+  hasLoader: boolean,
   isSpaMode: boolean
 ) {
   return (
-    (isSpaMode && route.id !== "root") ||
-    (routeModule.clientLoader != null &&
-      (routeModule.clientLoader.hydrate === true || route.hasLoader !== true))
+    (isSpaMode && routeId !== "root") ||
+    (clientLoader != null &&
+      (clientLoader.hydrate === true || hasLoader !== true))
   );
 }
