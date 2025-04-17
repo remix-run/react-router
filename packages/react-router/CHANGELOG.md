@@ -1,5 +1,47 @@
 # `react-router`
 
+## 7.5.1
+
+### Patch Changes
+
+- Fix single fetch bug where no revalidation request would be made when navigating upwards to a reused parent route ([#13253](https://github.com/remix-run/react-router/pull/13253))
+
+- When using the object-based `route.lazy` API, the `HydrateFallback` and `hydrateFallbackElement` properties are now skipped when lazy loading routes after hydration. ([#13376](https://github.com/remix-run/react-router/pull/13376))
+
+  If you move the code for these properties into a separate file, you can use this optimization to avoid downloading unused hydration code. For example:
+
+  ```ts
+  createBrowserRouter([
+    {
+      path: "/show/:showId",
+      lazy: {
+        loader: async () => (await import("./show.loader.js")).loader,
+        Component: async () => (await import("./show.component.js")).Component,
+        HydrateFallback: async () =>
+          (await import("./show.hydrate-fallback.js")).HydrateFallback,
+      },
+    },
+  ]);
+  ```
+
+- Properly revalidate prerendered paths when param values change ([#13380](https://github.com/remix-run/react-router/pull/13380))
+
+- UNSTABLE: Add a new `unstable_runClientMiddleware` argument to `dataStrategy` to enable middleware execution in custom `dataStrategy` implementations ([#13395](https://github.com/remix-run/react-router/pull/13395))
+
+- UNSTABLE: Add better error messaging when `getLoadContext` is not updated to return a `Map`" ([#13242](https://github.com/remix-run/react-router/pull/13242))
+
+- Do not automatically add `null` to `staticHandler.query()` `context.loaderData` if routes do not have loaders ([#13223](https://github.com/remix-run/react-router/pull/13223))
+
+  - This was a Remix v2 implementation detail inadvertently left in for React Router v7
+  - Now that we allow returning `undefined` from loaders, our prior check of `loaderData[routeId] !== undefined` was no longer sufficient and was changed to a `routeId in loaderData` check - these `null` values can cause issues for this new check
+  - ⚠️ This could be a "breaking bug fix" for you if you are doing manual SSR with `createStaticHandler()`/`<StaticRouterProvider>`, and using `context.loaderData` to control `<RouterProvider>` hydration behavior on the client
+
+- Fix prerendering when a loader returns a redirect ([#13365](https://github.com/remix-run/react-router/pull/13365))
+
+- UNSTABLE: Update context type for `LoaderFunctionArgs`/`ActionFunctionArgs` when middleware is enabled ([#13381](https://github.com/remix-run/react-router/pull/13381))
+
+- Add support for the new `unstable_shouldCallHandler`/`unstable_shouldRevalidateArgs` APIs in `dataStrategy` ([#13253](https://github.com/remix-run/react-router/pull/13253))
+
 ## 7.5.0
 
 ### Minor Changes

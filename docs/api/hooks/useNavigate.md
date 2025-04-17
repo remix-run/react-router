@@ -27,7 +27,7 @@ function SomeComponent() {
 }
 ```
 
-It's often better to use [redirect](../Utils/redirect) in [ActionFunction](../Other/ActionFunction) and [LoaderFunction](../Other/LoaderFunction) than this hook.
+It's often better to use [redirect](../utils/redirect) in [ActionFunction](../Other/ActionFunction) and [LoaderFunction](../Other/LoaderFunction) than this hook.
 
 ## Signature
 

@@ -24,6 +24,7 @@ import {
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
+import { getHydrationData } from "../dom/ssr/hydration";
 import { RouterProvider } from "./dom-router-provider";
 
 type SSRInfo = {
@@ -149,6 +150,8 @@ function createHydratedRouter({
         hasHydrateFallback:
           ssrInfo!.routeModules[routeId]?.HydrateFallback != null,
       }),
+      window.location,
+      window.__reactRouterContext?.basename,
       ssrInfo.context.isSpaMode
     );
 
