@@ -431,7 +431,7 @@ async function singleFetchLoaderNavigationStrategy(
     (!router.state.initialized || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
-    singleFetchDfd.resolve({});
+    singleFetchDfd.resolve({ routes: {} });
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
     // Skipped in `ssr:false` because we expect to be loading static `.data` files
@@ -671,8 +671,8 @@ function unwrapSingleFetchResult(
 }
 
 function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: unknown) => Promise<void>;
+  let resolve: (val: T) => Promise<void>;
+  let reject: (error: unknown) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);
