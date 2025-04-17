@@ -49,7 +49,7 @@ export default defineConfig({
           importFrom: path.resolve("./framework/references.browser.ts"),
         },
         server: {
-          importFrom: path.resolve("./framework/references.server.ts"),
+          importFrom: path.resolve("./framework/references.rsc.ts"),
         },
         ssr: {
           importFrom: path.resolve("./framework/references.ssr.ts"),
@@ -61,7 +61,7 @@ export default defineConfig({
       configPath: "src/ssr/wrangler.toml",
       auxiliaryWorkers: [
         {
-          configPath: "src/server/wrangler.toml",
+          configPath: "src/rsc/wrangler.toml",
         },
       ],
     }),

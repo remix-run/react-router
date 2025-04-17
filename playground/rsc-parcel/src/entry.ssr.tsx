@@ -10,11 +10,11 @@ import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/
 	env: "react-client",
 };
 
-import { routeServerRequest, ServerStaticRouter,type ServerPayload } from "react-router" with {
+import { routeRSCServerRequest, RSCStaticRouter } from "react-router" with {
 	env: "react-client",
 };
 
-import { callServer } from "./react-server" with {
+import { callServer } from "./entry.rsc" with {
 	env: "react-server",
 };
 
@@ -24,13 +24,13 @@ app.use(express.static("dist"));
 
 app.use(
 	createRequestListener(async (request) => {
-		return routeServerRequest(
+		return routeRSCServerRequest(
 			request,
 			callServer,
 			createFromReadableStream,
 			async (payload) => {
 				return await renderHTMLToReadableStream(
-					<ServerStaticRouter payload={payload} />,
+					<RSCStaticRouter payload={payload} />,
 					{
 						bootstrapScriptContent: (
 							callServer as unknown as { bootstrapScript: string }

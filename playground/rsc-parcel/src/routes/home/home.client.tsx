@@ -20,9 +20,8 @@ export default function Home() {
 
   return (
     <main>
-      <h1>
-        {message} {String(client)}
-      </h1>
+      <h1>{message}</h1>
+      <p>Did client loader run? {client ? "Yes" : "No"}</p>
       <Counter />
     </main>
   );

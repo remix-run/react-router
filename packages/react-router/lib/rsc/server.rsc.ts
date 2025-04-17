@@ -5,9 +5,9 @@ import type {
   ClientLoaderFunction,
   LinksFunction,
   MetaFunction,
-} from "./dom/ssr/routeModules";
-import type { Location } from "./router/history";
-import { createStaticHandler, isMutationMethod } from "./router/router";
+} from "../dom/ssr/routeModules";
+import type { Location } from "../router/history";
+import { createStaticHandler, isMutationMethod } from "../router/router";
 import {
   type ActionFunction,
   type AgnosticDataRouteMatch,
@@ -16,7 +16,7 @@ import {
   type ShouldRevalidateFunction,
   isRouteErrorResponse,
   matchRoutes,
-} from "./router/utils";
+} from "../router/utils";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -131,7 +131,7 @@ export type DecodeFormActionFunction = (
   formData: FormData
 ) => Promise<() => Promise<void>>;
 
-export async function matchServerRequest({
+export async function matchRSCServerRequest({
   decodeCallServer,
   decodeFormAction,
   onError,

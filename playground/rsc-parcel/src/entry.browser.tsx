@@ -5,11 +5,8 @@ import { hydrateRoot } from "react-dom/client";
 // @ts-expect-error
 import { createFromReadableStream } from "react-server-dom-parcel/client";
 
-import {
-  type ServerPayload,
-  getServerStream,
-  ServerBrowserRouter,
-} from "react-router";
+import { getServerStream, RSCHydratedRouter } from "react-router";
+import { type ServerPayload } from "react-router/rsc";
 
 createFromReadableStream(
   getServerStream(),
@@ -24,7 +21,7 @@ createFromReadableStream(
     hydrateRoot(
       document,
       <StrictMode>
-        <ServerBrowserRouter
+        <RSCHydratedRouter
           decode={createFromReadableStream}
           payload={payload}
         />

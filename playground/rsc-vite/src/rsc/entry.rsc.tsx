@@ -6,8 +6,8 @@ import { manifest } from "virtual:react-manifest";
 
 import {
   type DecodeCallServerFunction,
-  matchServerRequest,
-} from "react-router/server";
+  matchRSCServerRequest,
+} from "react-router/rsc";
 
 import { routes } from "../routes";
 
@@ -21,7 +21,7 @@ const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
 
 export default {
   async fetch(request, env) {
-    const match = await matchServerRequest({
+    const match = await matchRSCServerRequest({
       decodeCallServer,
       request,
       routes,

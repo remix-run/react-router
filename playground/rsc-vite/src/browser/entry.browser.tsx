@@ -11,13 +11,14 @@ import { manifest } from "virtual:react-manifest";
 import {
   type DecodeServerResponseFunction,
   type EncodeActionFunction,
-  type ServerPayload,
   createCallServer,
   getServerStream,
-  ServerBrowserRouter,
+  RSCHydratedRouter,
 } from "react-router";
+import { type ServerPayload } from "react-router/rsc";
 
-const encodeAction: EncodeActionFunction = (args: unknown[]) => encodeReply(args);
+const encodeAction: EncodeActionFunction = (args: unknown[]) =>
+  encodeReply(args);
 
 const decode: DecodeServerResponseFunction = (body) =>
   createFromReadableStream(body, manifest, { callServer });
@@ -30,7 +31,7 @@ createFromReadableStream(getServerStream(), manifest, { callServer }).then(
       hydrateRoot(
         document,
         <StrictMode>
-          <ServerBrowserRouter decode={decode} payload={payload} />
+          <RSCHydratedRouter decode={decode} payload={payload} />
         </StrictMode>
       );
     });

@@ -1,4 +1,4 @@
-import type { ServerRouteObject } from "react-router/server";
+import type { ServerRouteObject } from "react-router/rsc";
 
 export const routes = [
   {

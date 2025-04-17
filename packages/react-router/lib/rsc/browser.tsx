@@ -1,35 +1,35 @@
 import * as React from "react";
 
-import { RouterProvider } from "./components";
-import type { DataRouteMatch, DataRouteObject } from "./context";
-import { FrameworkContext } from "./dom/ssr/components";
-import type { FrameworkContextObject } from "./dom/ssr/entry";
-import { createBrowserHistory, invariant } from "./router/history";
-import type { Router as DataRouter } from "./router/router";
-import { createRouter, isMutationMethod } from "./router/router";
+import { RouterProvider } from "../components";
+import type { DataRouteMatch, DataRouteObject } from "../context";
+import { FrameworkContext } from "../dom/ssr/components";
+import type { FrameworkContextObject } from "../dom/ssr/entry";
+import { createBrowserHistory, invariant } from "../router/history";
+import type { Router as DataRouter } from "../router/router";
+import { createRouter, isMutationMethod } from "../router/router";
 import type {
   ServerPayload,
   RenderedRoute,
   ServerRenderPayload,
-} from "./server";
+} from "./server.rsc";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   unstable_RouterContextProvider,
-} from "./router/utils";
-import { ErrorResponseImpl, unstable_createContext } from "./router/utils";
+} from "../router/utils";
+import { ErrorResponseImpl, unstable_createContext } from "../router/utils";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
-} from "./dom/ssr/single-fetch";
+} from "../dom/ssr/single-fetch";
 import {
   getSingleFetchDataStrategyImpl,
   singleFetchUrl,
   stripIndexParam,
-} from "./dom/ssr/single-fetch";
-import { createRequestInit } from "./dom/ssr/data";
-import { getHydrationData } from "./dom/ssr/hydration";
-import { shouldHydrateRouteLoader } from "./dom/ssr/routes";
+} from "../dom/ssr/single-fetch";
+import { createRequestInit } from "../dom/ssr/data";
+import { getHydrationData } from "../dom/ssr/hydration";
+import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 
 export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
@@ -386,7 +386,7 @@ function getFetchAndDecodeViaRSC(
   };
 }
 
-export function ServerBrowserRouter({
+export function RSCHydratedRouter({
   decode,
   payload,
 }: {

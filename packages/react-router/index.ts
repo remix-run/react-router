@@ -373,11 +373,11 @@ export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/l
 export type {
   DecodeServerResponseFunction,
   EncodeActionFunction,
-} from "./lib/server.browser";
-export { createCallServer, ServerBrowserRouter } from "./lib/server.browser";
+} from "./lib/rsc/browser";
+export { createCallServer, RSCHydratedRouter } from "./lib/rsc/browser";
 export {
   isReactServerRequest,
-  routeServerRequest,
-  ServerStaticRouter,
-} from "./lib/server.static";
-export { getServerStream } from "./lib/html-stream/browser";
+  routeRSCServerRequest,
+  RSCStaticRouter,
+} from "./lib/rsc/server.ssr";
+export { getServerStream } from "./lib/rsc/html-stream/browser";

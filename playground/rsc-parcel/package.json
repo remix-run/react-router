@@ -1,7 +1,7 @@
 {
   "name": "@playground/rsc-parcel",
   "private": true,
-  "source": "src/server.tsx",
+  "source": "src/entry.ssr.tsx",
   "server": "dist/server.js",
   "targets": {
     "server": {
@@ -12,8 +12,8 @@
     }
   },
   "scripts": {
-    "dev": "parcel",
-    "build": "parcel build",
+    "dev": "parcel --no-cache",
+    "build": "parcel build --no-cache",
     "start": "node dist/server.js"
   },
   "devDependencies": {

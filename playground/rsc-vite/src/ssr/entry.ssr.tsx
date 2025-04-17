@@ -7,7 +7,7 @@ import RDS from "react-dom/server.edge";
 // @ts-expect-error
 import { bootstrapModules, manifest } from "virtual:react-manifest";
 
-import { routeServerRequest, ServerStaticRouter } from "react-router";
+import { routeRSCServerRequest, RSCStaticRouter } from "react-router";
 
 type CloudflareEnv = {
   ASSETS: Fetcher;
@@ -18,13 +18,13 @@ export default {
   async fetch(request, { SERVER }) {
     const callServer = async (request: Request) => await SERVER.fetch(request);
     try {
-      return await routeServerRequest(
+      return await routeRSCServerRequest(
         request,
         callServer,
         (body) => RSD.createFromReadableStream(body, manifest),
         async (payload) => {
           return await RDS.renderToReadableStream(
-            <ServerStaticRouter payload={payload} />,
+            <RSCStaticRouter payload={payload} />,
             {
               bootstrapModules,
               signal: request.signal,

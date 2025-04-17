@@ -70,36 +70,36 @@
         "default": "./dist/development/dom-export.js"
       }
     },
-    "./server": {
+    "./rsc": {
       "node": {
-        "types": "./dist/development/server.d.ts",
-        "module": "./dist/development/server.mjs",
-        "module-sync": "./dist/development/server.mjs",
-        "default": "./dist/development/server.js"
+        "types": "./dist/development/rsc-export.d.ts",
+        "module": "./dist/development/rsc-export.mjs",
+        "module-sync": "./dist/development/rsc-export.mjs",
+        "default": "./dist/development/rsc-export.js"
       },
       "module": {
-        "types": "./dist/development/server.d.mts",
-        "default": "./dist/development/server.mjs"
+        "types": "./dist/development/rsc-export.d.mts",
+        "default": "./dist/development/rsc-export.mjs"
       },
       "import": {
-        "types": "./dist/development/server.d.mts",
-        "default": "./dist/development/server.mjs"
+        "types": "./dist/development/rsc-export.d.mts",
+        "default": "./dist/development/rsc-export.mjs"
       },
       "default": {
-        "types": "./dist/development/server.d.ts",
-        "default": "./dist/development/server.js"
+        "types": "./dist/development/rsc-export.d.ts",
+        "default": "./dist/development/rsc-export.js"
       }
     },
     "./package.json": "./package.json"
   },
   "scripts": {
     "build": "wireit",
-    "watch": "tsup --watch & tsup --config tsup.config.server.ts --watch",
+    "watch": "tsup --watch & tsup --config tsup.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup && tsup --config tsup.config.server.ts",
+      "command": "rimraf dist && tsup && tsup --config tsup.config.rsc.ts",
       "files": [
         "re-write-server-build-import.mjs",
         "lib/**",
