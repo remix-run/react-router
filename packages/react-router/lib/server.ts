@@ -138,7 +138,7 @@ export async function matchServerRequest({
   onError?: (error: unknown) => void;
   request: Request;
   routes: ServerRouteObject[];
-}): Promise<ServerMatch | Response> {
+}): Promise<ServerMatch> {
   const url = new URL(request.url);
 
   if (isManifestRequest(url)) {
@@ -146,9 +146,6 @@ export async function matchServerRequest({
       routes,
       url.pathname.replace(/\.manifest$/, "")
     );
-    if (!matches?.length) {
-      return new Response("Not found", { status: 404 });
-    }
 
     return {
       statusCode: 200,
@@ -159,12 +156,13 @@ export async function matchServerRequest({
       payload: {
         type: "manifest",
         matches: await Promise.all(
-          matches.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id))
+          matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ??
+            []
         ),
         patches: await getAdditionalRoutePatches(
           url.pathname,
           routes,
-          matches.map((m) => m.route.id)
+          matches?.map((m) => m.route.id) ?? []
         ),
       } satisfies ServerManifestPayload,
     };
@@ -375,9 +373,6 @@ export async function matchServerRequest({
         : await getRenderPayload(),
     };
   } catch (error) {
-    if (typeof error === "object" && error instanceof Response) {
-      return error;
-    }
     throw error;
   }
 }
