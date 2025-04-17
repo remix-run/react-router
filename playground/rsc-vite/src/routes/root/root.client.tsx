@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouteError } from "react-router";
+import { useRouteError, useNavigation } from "react-router";
 
 export function ErrorReporter() {
   const error = useRouteError();
@@ -10,6 +10,11 @@ export function ErrorReporter() {
   }
 
   return null;
+}
+
+export function NavigationState() {
+  let navigation = useNavigation();
+  return <p>Navigation state: {navigation.state}</p>;
 }
 
 export function ErrorBoundary() {

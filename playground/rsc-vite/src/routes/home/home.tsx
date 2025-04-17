@@ -1,8 +1,10 @@
+import { HomeForm } from "./home.client";
 export { clientLoader } from "./home.client";
 
 import { Counter } from "../../counter";
 
-export function loader() {
+export async function loader() {
+  await new Promise((r) => setTimeout(r, 500));
   return {
     message: `Home route loader ran at ${new Date().toISOString()}`,
   };
@@ -13,12 +15,12 @@ export default function Home({
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
-  const logOnServer = () => {
+  const logOnServer = async () => {
     "use server";
+    await new Promise((r) => setTimeout(r, 500));
     console.log("Running action on server!");
-    console.log(
-      `  loader data to prove that scoped vars work: ${loaderData.message}`
-    );
+    console.log(`  data to prove that scoped vars work: ${loaderData.message}`);
+    return new Date().toISOString();
   };
 
   return (
@@ -26,9 +28,7 @@ export default function Home({
       <h2>Home Route</h2>
       <p>Loader data: {loaderData.message}</p>
       <Counter />
-      <form action={logOnServer as any}>
-        <button type="submit">Log on server</button>
-      </form>
+      <HomeForm fn={logOnServer} />
     </div>
   );
 }

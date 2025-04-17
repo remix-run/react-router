@@ -1,6 +1,5 @@
-import { Outlet } from "react-router";
-
-export function loader() {
+export async function loader() {
+  await new Promise((r) => setTimeout(r, 500));
   return {
     message: `Parent Index route loader ran at ${new Date().toISOString()}`,
   };
