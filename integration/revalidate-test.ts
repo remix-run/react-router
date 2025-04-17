@@ -46,8 +46,7 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.tsx": js`
-              import { data } from "react-router";
-              import { Outlet, useLoaderData } from "react-router";
+              import { data, Outlet, useLoaderData } from "react-router";
 
               export async function loader({ request }) {
                 let header = request.headers.get('Cookie') || '';
@@ -86,8 +85,7 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.child.tsx": js`
-              import { data } from "react-router";
-              import { Form, useLoaderData, useRevalidator } from "react-router";
+              import { data, Form, useLoaderData, useRevalidator } from "react-router";
 
               export async function action() {
                 return { action: 'data' }

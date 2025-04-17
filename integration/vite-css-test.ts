@@ -162,8 +162,9 @@ const VITE_CONFIG = async ({
   import { reactRouter } from "@react-router/dev/vite";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
-  export default {
+  export default async () => ({
     ${await viteConfig.server({ port })}
+    ${viteConfig.build()}
     ${base ? `base: "${base}",` : ""}
     plugins: [
       reactRouter(),
@@ -171,7 +172,7 @@ const VITE_CONFIG = async ({
         emitCssInSsr: true,
       }),
     ],
-  }
+  });
 `;
 
 test.describe("Vite CSS", () => {
@@ -260,11 +261,14 @@ test.describe("Vite CSS", () => {
 
         test.beforeAll(async () => {
           port = await getPort();
-          cwd = await createProject({
-            "vite.config.ts": await VITE_CONFIG({ port }),
-            "server.mjs": EXPRESS_SERVER({ port }),
-            ...files,
-          });
+          cwd = await createProject(
+            {
+              "vite.config.ts": await VITE_CONFIG({ port }),
+              "server.mjs": EXPRESS_SERVER({ port }),
+              ...files,
+            },
+            templateName
+          );
           stop = await customDev({ cwd, port });
         });
         test.afterAll(() => stop());
@@ -292,10 +296,13 @@ test.describe("Vite CSS", () => {
 
         test.beforeAll(async () => {
           port = await getPort();
-          cwd = await createProject({
-            "vite.config.ts": await VITE_CONFIG({ port }),
-            ...files,
-          });
+          cwd = await createProject(
+            {
+              "vite.config.ts": await VITE_CONFIG({ port }),
+              ...files,
+            },
+            templateName
+          );
 
           let edit = createEditor(cwd);
           await edit("package.json", (contents) =>

@@ -21,6 +21,7 @@ import {
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
   matchRoutes,
 } from "react-router";
@@ -201,16 +202,29 @@ function createHydratedRouter({
     basename: ssrInfo.context.basename,
     unstable_getContext,
     hydrationData,
+    hydrationRouteProperties,
     mapRouteProperties,
     future: {
       unstable_middleware: ssrInfo.context.future.unstable_middleware,
     },
     dataStrategy: getSingleFetchDataStrategy(
-      ssrInfo.manifest,
-      ssrInfo.routeModules,
+      () => router,
+      (routeId: string) => {
+        let manifestRoute = ssrInfo!.manifest.routes[routeId];
+        invariant(manifestRoute, "Route not found in manifest/routeModules");
+        let routeModule = ssrInfo!.routeModules[routeId];
+        return {
+          hasLoader: manifestRoute.hasLoader,
+          hasClientLoader: manifestRoute.hasClientLoader,
+          // In some cases the module may not be loaded yet and we don't care
+          // if it's got shouldRevalidate or not
+          hasShouldRevalidate: routeModule
+            ? routeModule.shouldRevalidate != null
+            : undefined,
+        };
+      },
       ssrInfo.context.ssr,
-      ssrInfo.context.basename,
-      () => router
+      ssrInfo.context.basename
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
