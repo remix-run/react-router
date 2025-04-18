@@ -25,8 +25,13 @@
     ".": {
       "node": {
         "types": "./dist/development/index.d.ts",
+        "module": "./dist/development/index.mjs",
         "module-sync": "./dist/development/index.mjs",
         "default": "./dist/development/index.js"
+      },
+      "module": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "import": {
         "types": "./dist/development/index.d.mts",
@@ -48,8 +53,13 @@
     "./dom": {
       "node": {
         "types": "./dist/development/dom-export.d.ts",
+        "module": "./dist/development/dom-export.mjs",
         "module-sync": "./dist/development/dom-export.mjs",
         "default": "./dist/development/dom-export.js"
+      },
+      "module": {
+        "types": "./dist/development/dom-export.d.mts",
+        "default": "./dist/development/dom-export.mjs"
       },
       "import": {
         "types": "./dist/development/dom-export.d.mts",
