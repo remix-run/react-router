@@ -9,6 +9,7 @@ export {
 
 export type {
   DecodeCallServerFunction,
+  DecodeFormActionFunction,
   ServerManifestPayload,
   ServerMatch,
   ServerPayload,
