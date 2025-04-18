@@ -24,14 +24,20 @@ export interface ServerBuild {
   };
   routes: ServerRouteManifest;
   assets: AssetsManifest;
-  basename?: string;
+  // `| undefined` is required to ensure compatibility with TypeScript's
+  // `exactOptionalPropertyTypes` option
+  basename?: string | undefined;
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
   ssr: boolean;
-  unstable_getCriticalCss?: (args: {
-    pathname: string;
-  }) => OptionalCriticalCss | Promise<OptionalCriticalCss>;
+  unstable_getCriticalCss?:
+    | ((args: {
+        pathname: string;
+      }) => OptionalCriticalCss | Promise<OptionalCriticalCss>)
+    // `| undefined` is required to ensure compatibility with TypeScript's
+    // `exactOptionalPropertyTypes` option
+    | undefined;
   /**
    * @deprecated This is now done via a custom header during prerendering
    */
