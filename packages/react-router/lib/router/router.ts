@@ -258,13 +258,13 @@ export interface Router {
    * @param routeId The parent route id or a callback function accepting `patch`
    *                to perform batch patching
    * @param children The additional children routes
-   * @param allowElementMutations Allow mutation or route elements on existing routes.
-   *                              Intended for RSC-usage only.
+   * @param unstable_allowElementMutations Allow mutation or route elements on
+   *                                       existing routes. Intended for RSC-usage
+   *                                       only.
    */
   patchRoutes(
     routeId: string | null,
     children: AgnosticRouteObject[],
-    // TODO: Does this need ro be a future flag or is the new API ok?
     unstable_allowElementMutations?: boolean
   ): void;
 
@@ -1171,8 +1171,19 @@ export function createRouter(init: RouterInit): Router {
     // get references to the latest elements here
     if (newState.matches) {
       newState.matches = newState.matches.map((m) => {
-        let route = manifest[m.route.id]!;
-        return { ...m, route };
+        let route = manifest[m.route.id]! as RouteObject;
+        let matchRoute = m.route as RouteObject;
+        if (
+          matchRoute.element !== route.element ||
+          matchRoute.errorElement !== route.errorElement ||
+          matchRoute.hydrateFallbackElement !== route.hydrateFallbackElement
+        ) {
+          return {
+            ...m,
+            route: route as AgnosticDataRouteObject,
+          };
+        }
+        return m;
       });
     }
 
@@ -4918,8 +4929,7 @@ function patchRoutesImpl(
 ) {
   let childrenToPatch: AgnosticDataRouteObject[];
   if (routeId) {
-    // TODO: Can we enhance the manifest to make this an O(1) lookup?
-    let route = findRouteRecursively(routeId, routesToUse);
+    let route = manifest[routeId];
     invariant(
       route,
       `No route found to patch children into: routeId = ${routeId}`
@@ -4965,27 +4975,27 @@ function patchRoutesImpl(
   if (allowElementMutations && existingChildren.length > 0) {
     for (let i = 0; i < existingChildren.length; i++) {
       let { existingRoute, newRoute } = existingChildren[i];
-      let existingRouteAny = existingRoute as RouteObject;
+      let existingRouteTyped = existingRoute as RouteObject;
       // All this will end up doing for these scenarios is adding `hasErrorBoundary`
       // to the route.  There's no need for Component->element conversions since
       // we're already dealing with elements here
-      let [newRouteAny] = convertRoutesToDataRoutes(
+      let [newRouteTyped] = convertRoutesToDataRoutes(
         [newRoute],
         mapRouteProperties,
         [], // Doesn't matter for mutated routes since they already have an id
-        manifest,
+        {}, // Don't touch the manifest here since we're updating in place
         true
       ) as RouteObject[];
-      Object.assign(existingRouteAny, {
-        element: newRouteAny.element
-          ? newRouteAny.element
-          : existingRouteAny.element,
-        errorElement: newRouteAny.errorElement
-          ? newRouteAny.errorElement
-          : existingRouteAny.errorElement,
-        hydrateFallbackElement: newRouteAny.hydrateFallbackElement
-          ? newRouteAny.hydrateFallbackElement
-          : existingRouteAny.hydrateFallbackElement,
+      Object.assign(existingRouteTyped, {
+        element: newRouteTyped.element
+          ? newRouteTyped.element
+          : existingRouteTyped.element,
+        errorElement: newRouteTyped.errorElement
+          ? newRouteTyped.errorElement
+          : existingRouteTyped.errorElement,
+        hydrateFallbackElement: newRouteTyped.hydrateFallbackElement
+          ? newRouteTyped.hydrateFallbackElement
+          : existingRouteTyped.hydrateFallbackElement,
       });
     }
   }
@@ -5029,24 +5039,6 @@ function isSameRoute(
   return newRoute.children!.every((aChild, i) =>
     existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
   );
-}
-
-function findRouteRecursively(
-  id: string,
-  routes: AgnosticDataRouteObject[]
-): AgnosticDataRouteObject | null {
-  for (const route of routes) {
-    if (route.id === id) {
-      return route;
-    }
-    if (route.children) {
-      const found = findRouteRecursively(id, route.children);
-      if (found) {
-        return found;
-      }
-    }
-  }
-  return null;
 }
 
 const lazyRoutePropertyCache = new WeakMap<

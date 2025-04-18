@@ -277,6 +277,19 @@ export async function matchRSCServerRequest({
         )
       : staticContext.errors;
 
+    // In the RSC world we set `hasLoader:true` eve if a route doesn't have a
+    // loader so that we always make the single fetch call to get the rendered
+    // `element`.  We add a `null`value for any of the routes that don't
+    // actually have a loader so the single fetch logic can find a result for
+    // the route.  This is a bit of a hack but allows us to re-use all the
+    // existing logic.  This can go away if we ever fork off and re-implement a
+    // standalone RSC `dataStrategy`
+    staticContext.matches.forEach((m) => {
+      if (!(m.route.id in staticContext.loaderData)) {
+        staticContext.loaderData[m.route.id] = null;
+      }
+    });
+
     const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
       type: "render",
       actionData: staticContext.actionData,

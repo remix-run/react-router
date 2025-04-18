@@ -150,7 +150,7 @@ export function StreamTransfer({
   }
 }
 
-export type GetRouteInfoFunction = (match: DataRouteMatch) => {
+type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
   hasClientLoader: boolean;
   hasShouldRevalidate: boolean;
@@ -663,9 +663,8 @@ function unwrapSingleFetchResult(
   }
 
   let routeResult = result.routes[routeId];
-  if (!routeResult) {
-    return undefined;
-  } else if ("error" in routeResult) {
+  invariant(routeResult, `No response found for routeId "${routeId}"`);
+  if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
     return routeResult.data;

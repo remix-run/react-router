@@ -3,7 +3,7 @@ import compression from "compression";
 import express from "express";
 
 import ssr from "./dist/ssr/entry.ssr.js";
-import server from "./dist/server/entry.server.js";
+import server from "./dist/server/entry.rsc.js";
 
 const app = express();
 

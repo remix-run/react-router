@@ -18,7 +18,4 @@ export type {
   ServerRouteMatch,
   ServerRouteObject,
 } from "./lib/rsc/server.rsc";
-export {
-  isReactServerRequest,
-  matchRSCServerRequest,
-} from "./lib/rsc/server.rsc";
+export { matchRSCServerRequest } from "./lib/rsc/server.rsc";

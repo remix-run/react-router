@@ -282,6 +282,15 @@ export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
 
+// RSC
+export type {
+  DecodeServerResponseFunction,
+  EncodeActionFunction,
+} from "./lib/rsc/browser";
+export { createCallServer, RSCHydratedRouter } from "./lib/rsc/browser";
+export { routeRSCServerRequest, RSCStaticRouter } from "./lib/rsc/server.ssr";
+export { getServerStream } from "./lib/rsc/html-stream/browser";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -369,15 +378,3 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 /** @internal */
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
-
-export type {
-  DecodeServerResponseFunction,
-  EncodeActionFunction,
-} from "./lib/rsc/browser";
-export { createCallServer, RSCHydratedRouter } from "./lib/rsc/browser";
-export {
-  isReactServerRequest,
-  routeRSCServerRequest,
-  RSCStaticRouter,
-} from "./lib/rsc/server.ssr";
-export { getServerStream } from "./lib/rsc/html-stream/browser";
