@@ -62,7 +62,10 @@ export async function singleFetchAction(
     });
 
     function respond(context: StaticHandlerContext) {
-      let headers = getDocumentHeaders(build, context);
+      let headers = getDocumentHeaders(
+        context,
+        (m) => build.routes[m.route.id]?.module.headers
+      );
 
       if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
         return generateSingleFetchResponse(request, build, serverMode, {
@@ -161,7 +164,10 @@ export async function singleFetchLoaders(
     let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
     function respond(context: StaticHandlerContext) {
-      let headers = getDocumentHeaders(build, context);
+      let headers = getDocumentHeaders(
+        context,
+        (m) => build.routes[m.route.id]?.module.headers
+      );
 
       if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
         return generateSingleFetchResponse(request, build, serverMode, {

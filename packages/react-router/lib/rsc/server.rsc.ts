@@ -3,6 +3,7 @@ import * as React from "react";
 import type {
   ClientActionFunction,
   ClientLoaderFunction,
+  HeadersFunction,
   LinksFunction,
   MetaFunction,
 } from "../dom/ssr/routeModules";
@@ -17,6 +18,8 @@ import {
   isRouteErrorResponse,
   matchRoutes,
 } from "../router/utils";
+import { getDocumentHeaders } from "../server-runtime/headers";
+import type { RouteMatch } from "../context";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -25,6 +28,7 @@ type ServerRouteObjectBase = {
   default?: React.ComponentType<any>;
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
+  headers?: HeadersFunction;
   HydrateFallback?: React.ComponentType<any>;
   Layout?: React.ComponentType<any>;
   links?: LinksFunction;
@@ -234,7 +238,10 @@ export async function matchRSCServerRequest({
 
   const getRenderPayload = async (
     isDataRequest: boolean
-  ): Promise<ServerRenderPayload | ServerRedirectPayload> => {
+  ): Promise<{
+    headers?: Headers;
+    payload: ServerRenderPayload | ServerRedirectPayload;
+  }> => {
     const handler = createStaticHandler(routes);
 
     // If this is a RR submission, we just want the `actionData` but don't want
@@ -257,11 +264,14 @@ export async function matchRSCServerRequest({
 
     if (staticContext instanceof Response) {
       return {
-        type: "redirect",
-        location: staticContext.headers.get("Location") || "",
-        reload: staticContext.headers.get("x-remix-reload-document") === "true",
-        replace: staticContext.headers.get("x-remix-replace") === "true",
-        status: staticContext.status,
+        payload: {
+          type: "redirect",
+          location: staticContext.headers.get("Location") || "",
+          reload:
+            staticContext.headers.get("x-remix-reload-document") === "true",
+          replace: staticContext.headers.get("x-remix-replace") === "true",
+          status: staticContext.status,
+        },
       };
     }
 
@@ -291,6 +301,11 @@ export async function matchRSCServerRequest({
       }
     });
 
+    let headers = getDocumentHeaders(
+      staticContext,
+      (match) => (match as RouteMatch<string, ServerRouteObject>).route.headers
+    );
+
     const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
       type: "render",
       actionData: staticContext.actionData,
@@ -302,9 +317,12 @@ export async function matchRSCServerRequest({
     // Short circuit without matches on submissions
     if (isSubmission) {
       return {
-        ...payload,
-        matches: [],
-        patches: [],
+        headers,
+        payload: {
+          ...payload,
+          matches: [],
+          patches: [],
+        },
       };
     }
 
@@ -390,35 +408,48 @@ export async function matchRSCServerRequest({
     );
 
     return {
-      ...payload,
-      matches: routeIdsToLoad
-        ? matches.filter((m) => routeIdsToLoad.includes(m.id))
-        : matches,
-      patches: !isDataRequest
-        ? await getAdditionalRoutePatches(
-            staticContext.location.pathname,
-            routes,
-            matches.map((m) => m.id)
-          )
-        : undefined,
+      headers,
+      payload: {
+        ...payload,
+        matches: routeIdsToLoad
+          ? matches.filter((m) => routeIdsToLoad.includes(m.id))
+          : matches,
+        patches: !isDataRequest
+          ? await getAdditionalRoutePatches(
+              staticContext.location.pathname,
+              routes,
+              matches.map((m) => m.id)
+            )
+          : undefined,
+      },
     };
   };
 
   try {
-    return {
-      statusCode,
-      headers: new Headers({
-        "Content-Type": "text/x-component",
-        Vary: "Content-Type",
-      }),
-      payload: actionResult
-        ? {
-            type: "action",
-            actionResult,
-            rerender: getRenderPayload(isDataRequest),
-          }
-        : await getRenderPayload(isDataRequest),
-    };
+    if (actionResult !== undefined) {
+      return {
+        statusCode,
+        headers: new Headers({
+          "Content-Type": "text/x-component",
+          Vary: "Content-Type",
+        }),
+        payload: {
+          type: "action",
+          actionResult,
+          rerender: getRenderPayload(isDataRequest).then((r) => r.payload),
+        },
+      };
+    } else {
+      let { headers, payload } = await getRenderPayload(isDataRequest);
+      headers ||= new Headers();
+      headers.set("Content-Type", "text/x-component");
+      headers.set("Vary", "Content-Type");
+      return {
+        statusCode,
+        headers,
+        payload,
+      };
+    }
   } catch (error) {
     throw error;
   }

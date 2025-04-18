@@ -5,6 +5,10 @@ import { ErrorReporter, NavigationState } from "./root.client";
 
 export { shouldRevalidate } from "./root.client";
 
+export function headers() {
+  return new Headers({ "x-root": "yes" });
+}
+
 export async function loader() {
   await new Promise((r) => setTimeout(r, 500));
   return {
