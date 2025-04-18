@@ -140,7 +140,7 @@ function createRouterFromPayload({
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let patches = new Map<string, RenderedRoute[]>();
-  payload.patches.forEach((patch) => {
+  payload.patches?.forEach((patch) => {
     invariant(patch.parentId, "Invalid patch parentId");
     if (!patches.has(patch.parentId)) {
       patches.set(patch.parentId, []);

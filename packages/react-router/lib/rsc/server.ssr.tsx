@@ -25,13 +25,12 @@ export async function routeRSCServerRequest(
   if (isDataRequest) {
     const serverURL = new URL(request.url);
     serverURL.pathname = serverURL.pathname.replace(/(_root)?\.rsc$/, "");
-    if (!isDataRequest) {
-      serverURL.searchParams.delete("_routes");
-    }
+    let headers = new Headers(request.headers);
+    headers.set("X-React-Router-Data-Request", "true");
     serverRequest = new Request(serverURL, {
       body: request.body,
       duplex: request.body ? "half" : undefined,
-      headers: request.headers,
+      headers,
       method: request.method,
       signal: request.signal,
     } as RequestInit & { duplex?: "half" });

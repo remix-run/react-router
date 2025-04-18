@@ -79,10 +79,11 @@ export type ServerRenderPayload = {
   loaderData: Record<string, any>;
   location: Location;
   matches: ServerRouteMatch[];
-  // Additional routes we should patch into the router for subsequent navigatons.
+  // Additional routes we should patch into the router for subsequent navigations.
   // Mostly a collection of pathless/index routes that may be needed for complete
-  // matching on upward navigations.
-  patches: RenderedRoute[];
+  // matching on upward navigations.  Only needed on the initial document request,
+  // for SPA navigations the manifest call will handle these patches.
+  patches?: RenderedRoute[];
   nonce?: string;
 };
 
@@ -145,6 +146,7 @@ export async function matchRSCServerRequest({
   routes: ServerRouteObject[];
 }): Promise<ServerMatch> {
   const url = new URL(request.url);
+  let isDataRequest = request.headers.has("X-React-Router-Data-Request");
 
   if (isManifestRequest(url)) {
     const matches = matchRoutes(
@@ -231,9 +233,9 @@ export async function matchRSCServerRequest({
     }
   }
 
-  const getRenderPayload = async (): Promise<
-    ServerRenderPayload | ServerRedirectPayload
-  > => {
+  const getRenderPayload = async (
+    isDataRequest: boolean
+  ): Promise<ServerRenderPayload | ServerRedirectPayload> => {
     const handler = createStaticHandler(routes);
 
     // If this is a RR submission, we just want the `actionData` but don't want
@@ -393,11 +395,13 @@ export async function matchRSCServerRequest({
       matches: routeIdsToLoad
         ? matches.filter((m) => routeIdsToLoad.includes(m.id))
         : matches,
-      patches: await getAdditionalRoutePatches(
-        staticContext.location.pathname,
-        routes,
-        matches.map((m) => m.id)
-      ),
+      patches: !isDataRequest
+        ? await getAdditionalRoutePatches(
+            staticContext.location.pathname,
+            routes,
+            matches.map((m) => m.id)
+          )
+        : undefined,
     };
   };
 
@@ -412,9 +416,9 @@ export async function matchRSCServerRequest({
         ? {
             type: "action",
             actionResult,
-            rerender: getRenderPayload(),
+            rerender: getRenderPayload(isDataRequest),
           }
-        : await getRenderPayload(),
+        : await getRenderPayload(isDataRequest),
     };
   } catch (error) {
     throw error;
