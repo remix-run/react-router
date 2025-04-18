@@ -17,7 +17,6 @@ import {
   isRouteErrorResponse,
   matchRoutes,
 } from "./router/utils";
-import type { RouteMatch } from "./context";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -128,13 +127,19 @@ export type DecodeCallServerFunction = (
   reply: FormData | string
 ) => Promise<() => Promise<unknown>>;
 
+export type DecodeFormActionFunction = (
+  formData: FormData
+) => Promise<() => Promise<void>>;
+
 export async function matchServerRequest({
   decodeCallServer,
+  decodeFormAction,
   onError,
   request,
   routes,
 }: {
   decodeCallServer?: DecodeCallServerFunction;
+  decodeFormAction?: DecodeFormActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
   routes: ServerRouteObject[];
@@ -198,6 +203,34 @@ export async function matchServerRequest({
       headers: request.headers,
       signal: request.signal,
     });
+  }
+
+  if (request.method === "POST") {
+    const formData = await request.formData();
+    if (
+      Array.from(formData.values()).some(
+        (value) => typeof value === "string" && value.startsWith("$ACTION_ID_")
+      )
+    ) {
+      if (!decodeFormAction) {
+        throw new Error(
+          "Cannot handle form actions without a decodeFormAction function"
+        );
+      }
+
+      const action = await decodeFormAction(formData);
+      try {
+        await action();
+      } catch (error) {
+        onError?.(error);
+      }
+
+      request = new Request(request.url, {
+        method: "GET",
+        headers: request.headers,
+        signal: request.signal,
+      });
+    }
   }
 
   const getRenderPayload = async (): Promise<
