@@ -208,9 +208,7 @@ export async function matchServerRequest({
   if (request.method === "POST") {
     const formData = await request.formData();
     if (
-      Array.from(formData.values()).some(
-        (value) => typeof value === "string" && value.startsWith("$ACTION_ID_")
-      )
+      Array.from(formData.keys()).some((key) => key.startsWith("$ACTION_ID_"))
     ) {
       if (!decodeFormAction) {
         throw new Error(
