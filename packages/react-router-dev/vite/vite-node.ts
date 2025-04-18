@@ -15,9 +15,11 @@ export type Context = {
 export async function createContext({
   root,
   mode,
+  customLogger,
 }: {
   root: Vite.UserConfig["root"];
   mode: Vite.ConfigEnv["mode"];
+  customLogger: Vite.UserConfig["customLogger"];
 }): Promise<Context> {
   await preloadVite();
   const vite = getVite();
@@ -25,6 +27,7 @@ export async function createContext({
   const devServer = await vite.createServer({
     root,
     mode,
+    customLogger,
     server: {
       preTransformRequests: false,
       hmr: false,
