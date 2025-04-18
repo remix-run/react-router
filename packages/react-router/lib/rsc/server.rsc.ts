@@ -296,7 +296,7 @@ export async function matchRSCServerRequest({
     // existing logic.  This can go away if we ever fork off and re-implement a
     // standalone RSC `dataStrategy`
     staticContext.matches.forEach((m) => {
-      if (!(m.route.id in staticContext.loaderData)) {
+      if (staticContext.loaderData[m.route.id] === undefined) {
         staticContext.loaderData[m.route.id] = null;
       }
     });
