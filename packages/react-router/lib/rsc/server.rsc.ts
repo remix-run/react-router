@@ -179,7 +179,6 @@ export async function matchRSCServerRequest({
   let actionResult: Promise<unknown> | undefined;
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
-    // TODO: Handle action
     if (!decodeCallServer) {
       throw new Error(
         "Cannot handle enhanced server action without a decodeCallServer function"

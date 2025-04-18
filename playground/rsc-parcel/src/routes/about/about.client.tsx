@@ -6,18 +6,6 @@ import { Counter } from "../../counter";
 
 import type { loader } from "./about";
 
-// TODO: Investigate using lazy as a preload method for split route chunk modules
-// export function lazy() {
-//   import("./about.client.tsx?route-chunk=clientLoader");
-//   import("./about.client.tsx?route-chunk=clientAction");
-//   return {};
-// }
-// export async function clientLoader(...args) {
-//   return import("./about.client.tsx?route-chunk=clientLoader").then((mod) =>
-//     mod.clientLoader(...args)
-//   );
-// }
-
 export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
   const res = await serverLoader<typeof loader>();
 

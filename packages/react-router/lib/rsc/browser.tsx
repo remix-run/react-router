@@ -412,7 +412,8 @@ export function RSCHydratedRouter({
 
   const frameworkContext: FrameworkContextObject = {
     future: {
-      // TODO: Update these
+      // These flags have no runtime impact so can always be false.  If we add
+      // flags that drive runtime behavior they'll need to be proxied through.
       unstable_middleware: false,
       unstable_subResourceIntegrity: false,
     },
@@ -420,11 +421,7 @@ export function RSCHydratedRouter({
     ssr: true,
     criticalCss: "",
     manifest: {
-      routes: {
-        // root: {
-        //   css: []
-        // },
-      },
+      routes: {},
       version: "1",
       url: "",
       entry: {
