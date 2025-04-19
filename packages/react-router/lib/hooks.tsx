@@ -961,7 +961,7 @@ enum DataRouterStateHook {
 function getDataRouterConsoleError(
   hookName: DataRouterHook | DataRouterStateHook
 ) {
-  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
+  return `${hookName} must be used within a data router.  See https://reactrouter.com/6.30.0/routers/picking-a-router.`;
 }
 
 function useDataRouterContext(hookName: DataRouterHook) {
