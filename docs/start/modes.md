@@ -117,7 +117,7 @@ Every mode supports any architecture and deployment target, so the question isn'
 - have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
 - are coming from Create React App (you may want to consider framework mode though)
 
-[→ Get Started with Declarative Mode](./library/installation).
+[→ Get Started with Declarative Mode](./declarative/installation).
 
 ## API + Mode Availability Table
 
