@@ -555,7 +555,7 @@ type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" 
 type Regez_AZ = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
 type Regex_09 = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 type Regex_w = Regex_az | Regez_AZ | Regex_09 | "_";
-type ParamChar = Regex_w | "-";
+type ParamChar = Regex_w | "-" | "|";
 
 // Emulates regex `+`
 type RegexMatchPlus<
@@ -1062,6 +1062,84 @@ function matchRouteBranch<
   return matches;
 }
 
+type ExtractCharacters<T extends string> = T extends `${infer Left}${infer Right}`
+    ? Left | ExtractCharacters<Right>
+    : T;
+
+type OnlyIncludes<T extends string, Allowed extends string> = ExtractCharacters<T> extends ExtractCharacters<Allowed>
+    ? true
+    : false;
+
+type IsExtractableRegex<T extends string> = OnlyIncludes<Lowercase<T>, ParamChar>
+
+export type ExtractRegExpOptions<T extends string, U = string | null> = IsExtractableRegex<T> extends true
+    ? ExtractOptions<T>
+    : U;
+
+export type ExtractOptions<T extends string> = T extends `${infer Left}|${infer Right}` ? Left | ExtractOptions<Right> : T | null;
+
+export type ExtractRouteParam<T extends string, U = string | null> =
+    T extends `*`
+    ? { '*': U }
+    : T extends `${infer Param}*${infer _Rest}`
+    ? { [k in Param]: U }
+    : T extends `${infer Param}+${infer _Rest}`
+    ? { [k in Param]: U }
+    : T extends `${infer Param}?${infer _Rest}`
+    ? { [k in Param]: U }
+    : T extends `${infer Param}.${infer _Rest}`
+    ? { [k in Param]: U }
+    : { [k in T]: U };
+
+
+type Flatten<T> = {
+  [P in keyof T]: T[P];
+};
+
+export type ExtractRouteParams<T extends string, U = string | null> = Flatten<ExtractRouteParamsNonFlat<T, U>>
+
+export type ExtractRouteParamsNonFlat<T extends string, U = string | null> = string extends T
+    ? { [k in string]: U }
+    : T extends `*`
+    ? { '*': U }
+    : T extends `:${infer ParamWithRegexp}/${infer Rest}`
+    ? ParamWithRegexp extends `${infer Param}(${infer RegExp})`
+        ? ExtractRouteParam<Param, ExtractRegExpOptions<RegExp, U>> & ExtractRouteParams<Rest, U>
+        : ExtractRouteParam<ParamWithRegexp, U> & ExtractRouteParams<Rest, U>
+    : T extends `:${infer ParamWithRegexp}`
+    ? ParamWithRegexp extends `${infer Param}(${infer RegExp})`
+        ? ExtractRouteParam<Param, ExtractRegExpOptions<RegExp, U>>
+        : ExtractRouteParam<ParamWithRegexp, U>
+    : T extends `${infer _Start}/:${infer ParamWithRegexp}/${infer Rest}`
+    ? ParamWithRegexp extends `${infer Param}(${infer RegExp})`
+        ? ExtractRouteParam<Param, ExtractRegExpOptions<RegExp, U>> & ExtractRouteParams<Rest, U>
+        : ExtractRouteParam<ParamWithRegexp, U> & ExtractRouteParams<Rest, U>
+    : T extends `${infer _Start}/:${infer ParamWithRegexp}`
+    ? ParamWithRegexp extends `${infer Param}(${infer RegExp})`
+        ? ExtractRouteParam<Param, ExtractRegExpOptions<RegExp, U>>
+        : ExtractRouteParam<ParamWithRegexp, U>
+    : T extends `${infer _Start}/*${infer Rest}`
+    ? { '*': U } & ExtractRouteParams<Rest, U>
+    : {};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _testExtractRouteParams = [
+  Expect<Equal<ExtractRouteParams<'/posts/:postId'>, { postId: string | null }>>,
+  Expect<Equal<ExtractRouteParams<'/pages/:page(comments|latest_activity)'>
+    , { page: 'comments' | 'latest_activity' | null }>>,
+  Expect<Equal<ExtractRouteParams<'/page/:page(home|comments\d+)'>
+    , { page: string | null }>>,
+    Expect<Equal<ExtractRouteParams<"/a/b/*">, { '*': string | null }>>,
+    Expect<Equal<ExtractRouteParams<":a">, { a: string | null }>>,
+    Expect<Equal<ExtractRouteParams<":a/:b">, { a: string | null, b: string | null }>>,
+    Expect<Equal<ExtractRouteParams<"/a/:b">, { b: string | null }>>,
+    Expect<Equal<ExtractRouteParams<"/a/blahblahblah:b">, {}>>,
+    Expect<Equal<ExtractRouteParams<"/:a/:b">, { a: string | null, b: string | null }>>,
+    Expect<Equal<ExtractRouteParams<"/:a/b/:c/*">, { a: string | null, c: string | null, '*': string | null }>>,
+    Expect<Equal<ExtractRouteParams<"/:lang.xml">, { lang: string | null }>>,
+    Expect<Equal<ExtractRouteParams<"/:lang?.xml">, { lang: string | null }>>,
+];
+
 /**
  * Returns a path with params interpolated.
  *
@@ -1069,9 +1147,7 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any
+  params: ExtractRouteParams<Path> = {} as any
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
