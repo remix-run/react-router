@@ -1174,7 +1174,7 @@ export function generatePath<Path extends string>(
 
       // only apply the splat if it's the last segment
       if (isLastSegment && segment === "*") {
-        const star = "*" as PathParam<Path>;
+        const star = "*" as keyof ExtractRouteParams<Path>;
         // Apply the splat
         return stringify(params[star]);
       }
@@ -1182,7 +1182,7 @@ export function generatePath<Path extends string>(
       const keyMatch = segment.match(/^:([\w-]+)(\??)$/);
       if (keyMatch) {
         const [, key, optional] = keyMatch;
-        let param = params[key as PathParam<Path>];
+        let param = params[key as keyof ExtractRouteParams<Path>];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
         return stringify(param);
       }
