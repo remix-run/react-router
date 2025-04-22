@@ -14,3 +14,15 @@ export function getDevServerHooks(): DevServerHooks | undefined {
   // @ts-expect-error
   return globalThis[globalDevServerHooksKey];
 }
+
+// Guarded access to build-time-only headers
+export function getBuildTimeHeader(request: Request, headerName: string) {
+  if (typeof process !== "undefined") {
+    try {
+      if (process.env?.IS_RR_BUILD_REQUEST === "yes") {
+        return request.headers.get(headerName);
+      }
+    } catch (e) {}
+  }
+  return null;
+}
