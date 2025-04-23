@@ -159,6 +159,13 @@ export type ReactRouterConfig = {
    */
   presets?: Array<Preset>;
   /**
+   * Control the "Lazy Route Discovery" behavior.  By default, this resolves to
+   * `lazy` which will lazily discover routes as the user navigates around your
+   * application.  You can set this to `initial` to opt-out of this behavior and
+   * load all routes with the initial HTML document load.
+   */
+  routeDiscovery?: "lazy" | "initial";
+  /**
    * The file name of the server build output. This file
    * should end in a `.js` extension and should be deployed to your server.
    * Defaults to `"index.js"`.
@@ -205,6 +212,13 @@ export type ResolvedReactRouterConfig = Readonly<{
    * function returning an array to dynamically generate URLs.
    */
   prerender: ReactRouterConfig["prerender"];
+  /**
+   * Control the "Lazy Route Discovery" behavior.  By default, this resolves to
+   * `lazy` which will lazily discover routes as the user navigates around your
+   * application.  You can set this to `initial` to opt-out of this behavior and
+   * load all routes with the initial HTML document load.
+   */
+  routeDiscovery: ReactRouterConfig["routeDiscovery"];
   /**
    * An object of all available routes, keyed by route id.
    */
@@ -383,10 +397,16 @@ async function resolveConfig({
   let defaults = {
     basename: "/",
     buildDirectory: "build",
+    routeDiscovery: "lazy",
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
   } as const satisfies Partial<ReactRouterConfig>;
+
+  let userAndPresetConfigs = mergeReactRouterConfig(
+    ...presets,
+    reactRouterUserConfig
+  );
 
   let {
     appDirectory: userAppDirectory,
@@ -394,13 +414,14 @@ async function resolveConfig({
     buildDirectory: userBuildDirectory,
     buildEnd,
     prerender,
+    routeDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
     ssr,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
-    ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
+    ...userAndPresetConfigs,
   };
 
   if (!ssr && serverBundles) {
@@ -418,6 +439,20 @@ async function resolveConfig({
       "The `prerender` config must be a boolean, an array of string paths, " +
         "or a function returning a boolean or array of string paths"
     );
+  }
+
+  if (routeDiscovery === "lazy" && !ssr) {
+    if (userAndPresetConfigs.routeDiscovery === "lazy") {
+      // If the user set "lazy" and `ssr:false`, then it's an invalid config
+      // and we want to fail the build
+      return err(
+        'The `routeDiscovery` config cannot be set to "lazy" when setting `ssr:false`'
+      );
+    } else {
+      // But if the user didn't specify, then we want to default to "initial"
+      // when SSR is disabled
+      routeDiscovery = "initial";
+    }
   }
 
   let appDirectory = path.resolve(root, userAppDirectory || "app");
@@ -512,11 +547,12 @@ async function resolveConfig({
     future,
     prerender,
     routes,
+    routeDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
     ssr,
-  });
+  } satisfies ResolvedReactRouterConfig);
 
   for (let preset of reactRouterUserConfig.presets ?? []) {
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });

@@ -742,6 +742,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const ssr = ${ctx.reactRouterConfig.ssr};
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
+      export const routeDiscovery = ${JSON.stringify(
+        ctx.reactRouterConfig.routeDiscovery
+      )};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {

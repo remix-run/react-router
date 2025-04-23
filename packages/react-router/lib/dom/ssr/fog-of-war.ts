@@ -7,6 +7,7 @@ import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
+import type { ServerBuild } from "../../server-runtime/build";
 
 declare global {
   interface Navigator {
@@ -25,10 +26,6 @@ const discoveredPaths = new Set<string>();
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
-
-export function isFogOfWarEnabled(ssr: boolean) {
-  return ssr === true;
-}
 
 export function getPartialManifest(
   { sri, ...manifest }: AssetsManifest,
@@ -72,10 +69,11 @@ export function getPatchRoutesOnNavigationFunction(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
+  routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
   basename: string | undefined
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (!isFogOfWarEnabled(ssr)) {
+  if (routeDiscovery !== "lazy") {
     return undefined;
   }
 
@@ -102,11 +100,12 @@ export function useFogOFWarDiscovery(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
+  routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
-    if (!isFogOfWarEnabled(ssr) || navigator.connection?.saveData === true) {
+    if (routeDiscovery !== "lazy" || navigator.connection?.saveData === true) {
       return;
     }
 
@@ -181,7 +180,7 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [ssr, isSpaMode, manifest, routeModules, router]);
+  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
 }
 
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";

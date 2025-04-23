@@ -22,7 +22,7 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { createServerHandoffString } from "./serverHandoff";
+import { ServerHandoff, createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
 import {
   encodeViaTurboStream,
@@ -474,17 +474,21 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: serializeErrors(context.errors, serverMode),
     };
+    let baseServerHandoff: ServerHandoff = {
+      basename: build.basename,
+      future: build.future,
+      routeDiscovery: build.routeDiscovery,
+      ssr: build.ssr,
+      isSpaMode,
+    };
     let entryContext: EntryContext = {
       manifest: build.assets,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
       serverHandoffString: createServerHandoffString({
-        basename: build.basename,
+        ...baseServerHandoff,
         criticalCss,
-        future: build.future,
-        ssr: build.ssr,
-        isSpaMode,
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,
@@ -495,6 +499,7 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
+      routeDiscovery: build.routeDiscovery,
       isSpaMode,
       serializeError: (err) => serializeError(err, serverMode),
     };
@@ -554,12 +559,7 @@ async function handleDocumentRequest(
       entryContext = {
         ...entryContext,
         staticHandlerContext: context,
-        serverHandoffString: createServerHandoffString({
-          basename: build.basename,
-          future: build.future,
-          ssr: build.ssr,
-          isSpaMode,
-        }),
+        serverHandoffString: createServerHandoffString(baseServerHandoff),
         serverHandoffStream: encodeViaTurboStream(
           state,
           request.signal,

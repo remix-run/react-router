@@ -29,7 +29,7 @@ import type {
 import { singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
 import { useLocation } from "../../hooks";
-import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
+import { getPartialManifest } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
 
 function useDataRouterContext() {
@@ -643,11 +643,11 @@ export type ScriptsProps = Omit<
   @category Components
  */
 export function Scripts(props: ScriptsProps) {
-  let { manifest, serverHandoffString, isSpaMode, ssr, renderMeta } =
+  let { manifest, serverHandoffString, isSpaMode, renderMeta, routeDiscovery } =
     useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = isFogOfWarEnabled(ssr);
+  let enableFogOfWar = routeDiscovery === "lazy";
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { PassThrough } from "node:stream";
 
 import {
   createAppFixture,
@@ -6,6 +7,7 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import { reactRouterConfig } from "./helpers/vite.js";
 
 function getFiles() {
   return {
@@ -118,6 +120,10 @@ test.describe("Fog of War", () => {
     let res = await fixture.requestDocument("/");
     let html = await res.text();
 
+    expect(html).toContain("window.__reactRouterManifest = {");
+    expect(html).not.toContain(
+      '<link rel="modulepreload" href="/assets/manifest-'
+    );
     expect(html).toContain('"root": {');
     expect(html).toContain('"routes/_index": {');
     expect(html).not.toContain('"routes/a"');
@@ -1401,5 +1407,173 @@ test.describe("Fog of War", () => {
 
     await app.clickLink("/a");
     await page.waitForSelector("#a-index");
+  });
+
+  test.describe("routeDiscovery=initial", () => {
+    test("loads full manifest on initial load", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...getFiles(),
+          "react-router.config.ts": reactRouterConfig({
+            routeDiscovery: "initial",
+          }),
+          "app/entry.client.tsx": js`
+            import { HydratedRouter } from "react-router/dom";
+            import { startTransition, StrictMode } from "react";
+            import { hydrateRoot } from "react-dom/client";
+            startTransition(() => {
+              hydrateRoot(
+                document,
+                <StrictMode>
+                  <HydratedRouter discover={"none"} />
+                </StrictMode>
+              );
+            });
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+
+      let manifestRequests: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes("/__manifest")) {
+          manifestRequests.push(req.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+
+      expect(html).not.toContain("window.__reactRouterManifest = {");
+      expect(html).toContain(
+        '<link rel="modulepreload" href="/assets/manifest-'
+      );
+
+      // Linking to A succeeds
+      await app.goto("/", true);
+      expect(
+        await page.evaluate(() =>
+          Object.keys((window as any).__reactRouterManifest.routes)
+        )
+      ).toEqual([
+        "root",
+        "routes/_index",
+        "routes/a",
+        "routes/a.b",
+        "routes/a.b.c",
+      ]);
+
+      await app.clickLink("/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
+      expect(manifestRequests).toEqual([]);
+    });
+
+    test("defaults to `routeDiscovery=initial` when `ssr:false` is set", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        spaMode: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+          }),
+          "app/root.tsx": js`
+            import * as React from "react";
+            import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+            export default function Root() {
+              let [showLink, setShowLink] = React.useState(false);
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Link to="/">Home</Link><br/>
+                    <Link to="/a">/a</Link><br/>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            export default function Index() {
+              return <h1 id="index">Index</h1>
+            }
+          `,
+
+          "app/routes/a.tsx": js`
+            export function clientLoader({ request }) {
+              return { message: "A LOADER" };
+            }
+            export default function Index({ loaderData }) {
+              return <h1 id="a">A: {loaderData.message}</h1>
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+
+      let manifestRequests: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes("/__manifest")) {
+          manifestRequests.push(req.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+
+      expect(html).toContain('"routeDiscovery":"initial"');
+
+      await app.goto("/", true);
+      await page.waitForSelector("#index");
+      await app.clickLink("/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
+      expect(manifestRequests).toEqual([]);
+    });
+
+    test("Errors if you try to set routeDiscovery=lazy and ssr:false", async () => {
+      let ogConsole = console.error;
+      console.error = () => {};
+      let buildStdio = new PassThrough();
+      let err;
+      try {
+        await createFixture({
+          buildStdio,
+          spaMode: true,
+          files: {
+            ...getFiles(),
+            "react-router.config.ts": reactRouterConfig({
+              ssr: false,
+              routeDiscovery: "lazy",
+            }),
+          },
+        });
+      } catch (e) {
+        err = e;
+      }
+
+      let chunks: Buffer[] = [];
+      let buildOutput = await new Promise<string>((resolve, reject) => {
+        buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        buildStdio.on("error", (err) => reject(err));
+        buildStdio.on("end", () =>
+          resolve(Buffer.concat(chunks).toString("utf8"))
+        );
+      });
+
+      expect(err).toEqual(new Error("Build failed, check the output above"));
+      expect(buildOutput).toContain(
+        'Error: The `routeDiscovery` config cannot be set to "lazy" when setting `ssr:false`'
+      );
+      console.error = ogConsole;
+    });
   });
 });

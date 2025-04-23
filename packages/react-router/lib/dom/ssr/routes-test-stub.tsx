@@ -113,6 +113,7 @@ export function createRoutesStub(
         routeModules: {},
         ssr: false,
         isSpaMode: false,
+        routeDiscovery: "lazy",
       };
 
       // Update the routes to include context in the loader/action and populate
