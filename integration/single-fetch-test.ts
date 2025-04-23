@@ -10,7 +10,14 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
+import {
+  EXPRESS_SERVER,
+  createProject,
+  customDev,
+  reactRouterConfig,
+  viteConfig,
+} from "./helpers/vite.js";
+import getPort from "get-port";
 
 const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
@@ -1536,6 +1543,63 @@ test.describe("single-fetch", () => {
     await app.clickLink("/base/data");
     await page.waitForSelector("#target");
     expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes redirects returned outside of react router", async ({
+    page,
+  }) => {
+    let port = await getPort();
+    let cwd = await createProject({
+      "vite.config.js": await viteConfig.basic({ port }),
+      "server.mjs": EXPRESS_SERVER({
+        port,
+        customLogic: js`
+          app.use(async (req, res, next) => {
+            if (req.url === "/page.data") {
+              res.status(204);
+              res.append('X-Remix-Status', '302');
+              res.append('X-Remix-Redirect', '/target');
+              res.end();
+            } else {
+              next();
+            }
+          });
+        `,
+      }),
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+        export default function Component() {
+          return <Link to="/page">Go to /page</Link>
+        }
+      `,
+      "app/routes/page.tsx": js`
+        export function loader() {
+          return null
+        }
+        export default function Component() {
+          return <p>Should not see me</p>
+        }
+      `,
+      "app/routes/target.tsx": js`
+        export default function Component() {
+          return <h1 id="target">Target</h1>
+        }
+      `,
+    });
+    let stop = await customDev({ cwd, port });
+
+    try {
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      let link = page.locator('a[href="/page"]');
+      await expect(link).toHaveText("Go to /page");
+      await link.click();
+      await page.waitForSelector("#target");
+      await expect(page.locator("#target")).toHaveText("Target");
+    } finally {
+      stop();
+    }
   });
 
   test("processes thrown loader errors", async ({ page }) => {
