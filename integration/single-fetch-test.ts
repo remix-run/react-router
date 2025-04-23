@@ -1482,13 +1482,9 @@ test.describe("single-fetch", () => {
         customLogic: js`
           app.use(async (req, res, next) => {
             if (req.url === "/page.data") {
-              let { dataRedirect } = await import("react-router");
-              let response = dataRedirect("/target");
-              res.statusMessage = response.statusText;
-              res.status(response.status);
-              for (let [key, value] of response.headers.entries()) {
-                res.append(key, value);
-              }
+              res.status(204);
+              res.append('X-Remix-Status', '302');
+              res.append('X-Remix-Redirect', '/target');
               res.end();
             } else {
               next();

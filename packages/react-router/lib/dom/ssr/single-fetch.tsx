@@ -551,7 +551,7 @@ async function fetchAndDecode(
     throw new ErrorResponseImpl(404, "Not Found", true);
   }
 
-  // Handle non-RR redirects (i.e., from express middleware via `dataRedirect`)
+  // Handle non-RR redirects (i.e., from express middleware)
   if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
     let data: SingleFetchRedirectResult = {
       redirect: res.headers.get("X-Remix-Redirect")!,

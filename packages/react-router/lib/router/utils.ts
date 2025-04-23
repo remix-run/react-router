@@ -1605,37 +1605,6 @@ export const replace: RedirectFunction = (url, init) => {
   return response;
 };
 
-/**
- * A "soft" redirect response that can be returned from outside of React Router
- * in response to a `.data` request.  Options are available to set the status
- * and toggle the equivalent behaviors of the traditional redirect utilities
- * ()`redirect`/`replace`/`redirectDocument`)
- *
- * @category Utils
- */
-export function dataRedirect(
-  url: string,
-  {
-    status,
-    replace,
-    revalidate,
-    reload,
-  }: {
-    status?: number;
-    replace?: boolean;
-    revalidate?: boolean;
-    reload?: boolean;
-  } = {}
-) {
-  let headers = new Headers();
-  headers.set("X-Remix-Redirect", url);
-  if (status) headers.set("X-Remix-Status", String(status));
-  if (replace) headers.set("X-Remix-Replace", "true");
-  if (revalidate) headers.set("X-Remix-Revalidate", "true");
-  if (reload) headers.set("X-Remix-Reload-Document", "true");
-  return new Response(null, { status: 204, headers });
-}
-
 export type ErrorResponse = {
   status: number;
   statusText: string;

@@ -65,7 +65,6 @@ export {
 } from "./lib/router/router";
 export {
   data,
-  dataRedirect,
   generatePath,
   isRouteErrorResponse,
   matchPath,
