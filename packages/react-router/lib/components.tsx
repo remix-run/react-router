@@ -52,11 +52,16 @@ import {
 } from "./context";
 import {
   _renderMatches,
+  useActionData,
   useAsyncValue,
   useInRouterContext,
+  useLoaderData,
   useLocation,
+  useMatches,
   useNavigate,
   useOutlet,
+  useParams,
+  useRouteError,
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
@@ -1133,6 +1138,67 @@ function ResolveAwait({
   let data = useAsyncValue();
   let toRender = typeof children === "function" ? children(data) : children;
   return <>{toRender}</>;
+}
+
+export type RouteComponentProps = {
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  params: ReturnType<typeof useParams>;
+  matches: ReturnType<typeof useMatches>;
+};
+
+export function WithRouteComponentProps({
+  Component,
+}: {
+  Component: React.ComponentType<any>;
+}) {
+  let props: RouteComponentProps = {
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    params: useParams(),
+    matches: useMatches(),
+  };
+  return React.createElement(Component, props);
+}
+
+export type HydrateFallbackProps = {
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  params: ReturnType<typeof useParams>;
+};
+
+export function WithHydrateFallbackProps({
+  HydrateFallback,
+}: {
+  HydrateFallback: React.ComponentType<any>;
+}) {
+  let props: HydrateFallbackProps = {
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    params: useParams(),
+  };
+  return React.createElement(HydrateFallback, props);
+}
+
+export type ErrorBoundaryProps = {
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  params: ReturnType<typeof useParams>;
+  error: ReturnType<typeof useRouteError>;
+};
+
+export function WithErrorBoundaryProps({
+  ErrorBoundary,
+}: {
+  ErrorBoundary: React.ComponentType<any>;
+}) {
+  let props: ErrorBoundaryProps = {
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    params: useParams(),
+    error: useRouteError(),
+  };
+  return React.createElement(ErrorBoundary, props);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

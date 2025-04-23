@@ -6,7 +6,7 @@ import { createBanner } from "../../build.utils.js";
 import pkg from "./package.json";
 
 const entry = ["rsc-export.ts"];
-const external = ["react-router/client"];
+const external = ["react-router"];
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([

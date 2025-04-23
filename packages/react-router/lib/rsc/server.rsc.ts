@@ -17,9 +17,20 @@ import {
   type ShouldRevalidateFunction,
   isRouteErrorResponse,
   matchRoutes,
+  convertRouteMatchToUiMatch,
 } from "../router/utils";
 import { getDocumentHeaders } from "../server-runtime/headers";
 import type { RouteMatch } from "../context";
+import type {
+  RouteComponentProps,
+  HydrateFallbackProps,
+  ErrorBoundaryProps,
+} from "../components";
+import {
+  UNSAFE_WithRouteComponentProps as WithRouteComponentProps,
+  UNSAFE_WithHydrateFallbackProps as WithHydrateFallbackProps,
+  UNSAFE_WithErrorBoundaryProps as WithErrorBoundaryProps,
+} from "react-router";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -344,35 +355,64 @@ export async function matchRSCServerRequest({
         const Component = (match.route as any).default;
         const ErrorBoundary = (match.route as any).ErrorBoundary;
         const HydrateFallback = (match.route as any).HydrateFallback;
+        const loaderData = staticContext.loaderData[match.route.id];
+        const actionData = staticContext.actionData?.[match.route.id];
+        const params = match.params;
         // TODO: DRY this up once it's fully fleshed out
-        // TODO: Align this with the fields passed in with-props.tsx
         const element = Component
           ? staticContext.errors?.[match.route.id]
             ? (false as const)
             : React.createElement(
                 Layout,
                 null,
-                React.createElement(Component, {
-                  loaderData: staticContext.loaderData[match.route.id],
-                  actionData: staticContext.actionData?.[match.route.id],
-                })
+                typeof Component === "function"
+                  ? React.createElement(Component, {
+                      loaderData,
+                      actionData,
+                      params,
+                      matches: staticContext.matches.map((match) =>
+                        convertRouteMatchToUiMatch(
+                          match,
+                          staticContext.loaderData
+                        )
+                      ),
+                    } satisfies RouteComponentProps)
+                  : React.createElement(WithRouteComponentProps, {
+                      Component,
+                    })
               )
           : undefined;
         const errorElement = ErrorBoundary
           ? React.createElement(
               Layout,
               null,
-              React.createElement(ErrorBoundary)
+              typeof ErrorBoundary === "function"
+                ? React.createElement(ErrorBoundary, {
+                    loaderData,
+                    actionData,
+                    params,
+                    error: [...staticContext.matches]
+                      .reverse()
+                      .find((match) => staticContext.errors?.[match.route.id]),
+                  } satisfies ErrorBoundaryProps)
+                : React.createElement(WithErrorBoundaryProps, {
+                    ErrorBoundary,
+                  })
             )
           : undefined;
         const hydrateFallbackElement = HydrateFallback
           ? React.createElement(
               Layout,
               null,
-              React.createElement(HydrateFallback, {
-                loaderData: staticContext.loaderData[match.route.id],
-                actionData: staticContext.actionData?.[match.route.id],
-              })
+              typeof HydrateFallback === "function"
+                ? React.createElement(HydrateFallback, {
+                    loaderData,
+                    actionData,
+                    params,
+                  } satisfies HydrateFallbackProps)
+                : React.createElement(WithHydrateFallbackProps, {
+                    HydrateFallback,
+                  })
             )
           : match.route.id === "root"
           ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
@@ -395,7 +435,7 @@ export async function matchRSCServerRequest({
           index: match.route.index,
           links: (match.route as any).links,
           meta: (match.route as any).meta,
-          params: match.params,
+          params,
           parentId: lastMatch?.route.id,
           path: match.route.path,
           pathname: match.pathname,
