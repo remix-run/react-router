@@ -139,6 +139,7 @@ type SetupOpts = {
   basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
 };
@@ -168,17 +169,14 @@ export function createDeferred<T = any>() {
   };
 }
 
-export function createLazyStub(): {
-  lazyStub: jest.Mock;
-  lazyDeferred: ReturnType<typeof createDeferred>;
-} {
-  let lazyDeferred = createDeferred();
-  let lazyStub = jest.fn(() => lazyDeferred.promise);
+export function createAsyncStub(): [
+  asyncStub: jest.Mock,
+  deferred: ReturnType<typeof createDeferred>
+] {
+  let deferred = createDeferred();
+  let asyncStub = jest.fn(() => deferred.promise);
 
-  return {
-    lazyStub,
-    lazyDeferred,
-  };
+  return [asyncStub, deferred];
 }
 
 export function getFetcherData(router: Router) {
@@ -207,6 +205,7 @@ export function setup({
   basename,
   initialEntries,
   initialIndex,
+  hydrationRouteProperties,
   hydrationData,
   dataStrategy,
 }: SetupOpts) {
@@ -322,6 +321,7 @@ export function setup({
     basename,
     history,
     routes: enhanceRoutes(routes),
+    hydrationRouteProperties,
     hydrationData,
     window: testWindow,
     dataStrategy: dataStrategy,

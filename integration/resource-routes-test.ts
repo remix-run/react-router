@@ -114,7 +114,6 @@ test.describe("loader in an app", async () => {
           }
         `,
         "app/routes/$.tsx": js`
-          import { json } from "react-router";
           import { useRouteError } from "react-router";
           export function loader({ request }) {
             throw Response.json({

@@ -415,6 +415,80 @@ test.describe("single-fetch", () => {
     ]);
   });
 
+  test("revalidates on reused routes by default", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+          export default function Index() {
+            return <Link to="/parent">Go to Parent</Link>
+          }
+        `,
+        "app/routes/parent.tsx": js`
+          import { Link, Outlet } from "react-router";
+          import type { Route } from "./+types/parent";
+
+          let count = 0;
+          export function loader() {
+            return ++count;
+          }
+
+          export default function Parent({ loaderData }: Route.ComponentProps) {
+            return (
+              <>
+                <h1 data-parent={loaderData}>PARENT:{loaderData}</h1>
+                <Link to="/parent">Go to Parent</Link><br/>
+                <Link to="/parent/child">Go to Child</Link>
+                <Outlet />
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.child.tsx": js`
+          import { Outlet } from "react-router";
+          import type { Route } from "./+types/parent";
+
+          export function loader() {
+            return "CHILD"
+          }
+
+          export default function Parent({ loaderData }: Route.ComponentProps) {
+            return <h2 data-child>{loaderData}</h2>
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (req.method() === "GET" && url.pathname.endsWith(".data")) {
+        urls.push(url.pathname + url.search);
+      }
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+
+    await app.clickLink("/parent");
+    await page.waitForSelector('[data-parent="1"]');
+    expect(urls).toEqual(["/parent.data"]);
+    urls.length = 0;
+
+    await app.clickLink("/parent/child");
+    await page.waitForSelector("[data-child]");
+    await expect(page.locator('[data-parent="2"]')).toBeDefined();
+    expect(urls).toEqual(["/parent/child.data"]);
+    urls.length = 0;
+
+    await app.clickLink("/parent");
+    await page.waitForSelector('[data-parent="3"]');
+    expect(urls).toEqual(["/parent.data"]);
+    urls.length = 0;
+  });
+
   test("does not revalidate on 4xx/5xx action responses", async ({ page }) => {
     let fixture = await createFixture({
       files: {

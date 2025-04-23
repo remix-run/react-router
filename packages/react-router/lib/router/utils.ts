@@ -1,3 +1,4 @@
+import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
@@ -172,6 +173,10 @@ export class unstable_RouterContextProvider {
   }
 }
 
+type DefaultContext = MiddlewareEnabled extends true
+  ? unstable_RouterContextProvider
+  : any;
+
 /**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
@@ -225,13 +230,13 @@ export type unstable_MiddlewareFunction<Result = unknown> = (
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
+export interface LoaderFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
+export interface ActionFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
@@ -244,7 +249,7 @@ type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = any> = {
+export type LoaderFunction<Context = DefaultContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -254,7 +259,7 @@ export type LoaderFunction<Context = any> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = any> {
+export interface ActionFunction<Context = DefaultContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -331,7 +336,21 @@ export interface ShouldRevalidateFunction {
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  /**
+   * @private
+   */
+  _lazyPromises?: {
+    middleware: Promise<void> | undefined;
+    handler: Promise<void> | undefined;
+    route: Promise<void> | undefined;
+  };
   shouldLoad: boolean;
+  // This can be null for actions calls and for initial hydration calls
+  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  // This function will use a scoped version of `shouldRevalidateArgs` because
+  // they are read-only but let the user provide an optional override value for
+  // `defaultShouldRevalidate` if they choose
+  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
@@ -339,9 +358,12 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = any>
+export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
+  unstable_runClientMiddleware: (
+    cb: DataStrategyFunction<Context>
+  ) => Promise<Record<string, DataStrategyResult>>;
   fetcherKey: string | null;
 }
 
@@ -353,7 +375,7 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction<Context = any> {
+export interface DataStrategyFunction<Context = DefaultContext> {
   (args: DataStrategyFunctionArgs<Context>): Promise<
     Record<string, DataStrategyResult>
   >;
@@ -1206,7 +1228,7 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
-function compilePath(
+export function compilePath(
   path: string,
   caseSensitive = false,
   end = true

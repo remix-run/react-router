@@ -2761,7 +2761,8 @@ async function prerenderData(
   let response = await handler(request);
   let data = await response.text();
 
-  if (response.status !== 200) {
+  // 202 is used for `.data` redirects
+  if (response.status !== 200 && response.status !== 202) {
     throw new Error(
       `Prerender (data): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${prerenderPath}\` ` +
@@ -2780,6 +2781,8 @@ async function prerenderData(
   return data;
 }
 
+let redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+
 async function prerenderRoute(
   handler: RequestHandler,
   prerenderPath: string,
@@ -2796,7 +2799,29 @@ async function prerenderRoute(
   let response = await handler(request);
   let html = await response.text();
 
-  if (response.status !== 200) {
+  if (redirectStatusCodes.has(response.status)) {
+    // This isn't ideal but gets the job done as a fallback if the user can't
+    // implement proper redirects via .htaccess or something else.  This is the
+    // approach used by Astro as well so there's some precedent.
+    // https://github.com/withastro/roadmap/issues/466
+    // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
+    let location = response.headers.get("Location");
+    // A short delay causes Google to interpret the redirect as temporary.
+    // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
+    let delay = response.status === 302 ? 2 : 0;
+    html = `<!doctype html>
+<head>
+<title>Redirecting to: ${location}</title>
+<meta http-equiv="refresh" content="${delay};url=${location}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+	<a href="${location}">
+    Redirecting from <code>${normalizedPath}</code> to <code>${location}</code>
+  </a>
+</body>
+</html>`;
+  } else if (response.status !== 200) {
     throw new Error(
       `Prerender (html): Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
@@ -3383,29 +3408,46 @@ export async function getEnvironmentOptionsResolvers(
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
+    // This is a workaround for type errors when running in vite-ecosystem-ci
+    // against rolldown-vite since "preserveEntrySignatures" is not yet
+    // supported. We're doing this instead of using `ts-ignore` so we're still
+    // type checking against regular Vite build options. Once it's supported,
+    // this custom type can be removed and the build config can be inlined.
+    type RollupOptionsWithPreserveEntrySignatures =
+      Vite.BuildOptions["rollupOptions"] extends {
+        preserveEntrySignatures: any;
+      }
+        ? Vite.BuildOptions["rollupOptions"]
+        : Vite.BuildOptions["rollupOptions"] & {
+            // We hard-code the one value we're using. If it's not valid in
+            // Rollup, the build will fail.
+            preserveEntrySignatures: "exports-only";
+          };
+    const rollupOptions: RollupOptionsWithPreserveEntrySignatures = {
+      preserveEntrySignatures: "exports-only",
+      // Silence Rollup "use client" warnings
+      // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
+      onwarn(warning, defaultHandler) {
+        if (
+          warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+          warning.message.includes("use client")
+        ) {
+          return;
+        }
+        let userHandler = viteUserConfig.build?.rollupOptions?.onwarn;
+        if (userHandler) {
+          userHandler(warning, defaultHandler);
+        } else {
+          defaultHandler(warning);
+        }
+      },
+    };
+
     return {
       build: {
         cssMinify: viteUserConfig.build?.cssMinify ?? true,
         manifest: true, // The manifest is enabled for all builds to detect SSR-only assets
-        rollupOptions: {
-          preserveEntrySignatures: "exports-only",
-          // Silence Rollup "use client" warnings
-          // Adapted from https://github.com/vitejs/vite-plugin-react/pull/144
-          onwarn(warning, defaultHandler) {
-            if (
-              warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-              warning.message.includes("use client")
-            ) {
-              return;
-            }
-            let userHandler = viteUserConfig.build?.rollupOptions?.onwarn;
-            if (userHandler) {
-              userHandler(warning, defaultHandler);
-            } else {
-              defaultHandler(warning);
-            }
-          },
-        },
+        rollupOptions,
       },
     };
   }

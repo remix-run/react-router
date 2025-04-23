@@ -66,7 +66,11 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import { Router, mapRouteProperties } from "../components";
+import {
+  Router,
+  mapRouteProperties,
+  hydrationRouteProperties,
+} from "../components";
 import type {
   RouteObject,
   NavigateOptions,
@@ -186,6 +190,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
@@ -209,6 +214,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
