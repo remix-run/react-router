@@ -29,7 +29,6 @@ import {
   getSingleFetchRedirect,
   singleFetchAction,
   singleFetchLoaders,
-  SINGLE_FETCH_REDIRECT_STATUS,
   SERVER_NO_BODY_STATUS_CODES,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
@@ -38,7 +37,10 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
+import {
+  SINGLE_FETCH_REDIRECT_STATUS,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
 
 export type RequestHandler = (

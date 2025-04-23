@@ -18,7 +18,6 @@ import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
-import { SINGLE_FETCH_REDIRECT_STATUS } from "../../server-runtime/single-fetch";
 import type { RouteModules } from "./routeModules";
 import type { DataRouteMatch } from "../../context";
 
@@ -56,6 +55,13 @@ interface StreamTransferProps {
   textDecoder: TextDecoder;
   nonce?: string;
 }
+
+// We can't use a 3xx status or else the `fetch()` would follow the redirect.
+// We need to communicate the redirect back as data so we can act on it in the
+// client side router.  We use a 202 to avoid any automatic caching we might
+// get from a 200 since a "temporary" redirect should not be cached.  This lets
+// the user control cache behavior via Cache-Control
+export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
 // Some status codes are not permitted to have bodies, so we want to just
 // treat those as "no data" instead of throwing an exception:

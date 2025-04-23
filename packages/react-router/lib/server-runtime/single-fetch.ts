@@ -20,6 +20,7 @@ import type {
 } from "../dom/ssr/single-fetch";
 import {
   NO_BODY_STATUS_CODES,
+  SINGLE_FETCH_REDIRECT_STATUS,
   SingleFetchRedirectSymbol,
 } from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
@@ -27,13 +28,6 @@ import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
-
-// We can't use a 3xx status or else the `fetch()` would follow the redirect.
-// We need to communicate the redirect back as data so we can act on it in the
-// client side router.  We use a 202 to avoid any automatic caching we might
-// get from a 200 since a "temporary" redirect should not be cached.  This lets
-// the user control cache behavior via Cache-Control
-export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
 // Add 304 for server side - that is not included in the client side logic
 // because the browser should fill those responses with the cached data
