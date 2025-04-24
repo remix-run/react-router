@@ -4,7 +4,7 @@ title: useViewTransitionState
 
 # useViewTransitionState
 
-[MODES: framework, data, declarative]
+[MODES: framework, data]
 
 ## Summary
 
