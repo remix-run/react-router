@@ -1,6 +1,6 @@
 # `react-router`
 
-## 7.5.2-pre.0
+## 7.5.2
 
 ### Patch Changes
 

@@ -1,14 +1,14 @@
 # `@react-router/dev`
 
-## 7.5.2-pre.0
+## 7.5.2
 
 ### Patch Changes
 
 - Adjust approach for Prerendering/SPA Mode via headers ([#13453](https://github.com/remix-run/react-router/pull/13453))
 - Updated dependencies:
-  - `react-router@7.5.2-pre.0`
-  - `@react-router/node@7.5.2-pre.0`
-  - `@react-router/serve@7.5.2-pre.0`
+  - `react-router@7.5.2`
+  - `@react-router/node@7.5.2`
+  - `@react-router/serve@7.5.2`
 
 ## 7.5.1
 
