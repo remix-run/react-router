@@ -14,6 +14,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 - [React Router Releases](#react-router-releases)
   - [v7.5.2](#v752)
+    - [Security Notice](#security-notice)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
   - [v7.5.1](#v751)
@@ -27,7 +28,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Unstable Changes](#unstable-changes-2)
     - [Changes by Package](#changes-by-package)
   - [v7.4.1](#v741)
-    - [Security Notice](#security-notice)
+    - [Security Notice](#security-notice-1)
     - [Patch Changes](#patch-changes-3)
     - [Unstable Changes](#unstable-changes-3)
   - [v7.4.0](#v740)
@@ -326,6 +327,10 @@ Date: YYYY-MM-DD
 
 Date: 2025-04-24
 
+### Security Notice
+
+Fixed 2 security vulnerabilities that could result in cache-poisoning attacks by sending specific headers intended for build-time usage for SPA Mode and Pre-rendering ([GHSA-f46r-rw29-r322](https://github.com/remix-run/react-router/security/advisories/GHSA-f46r-rw29-r322), [GHSA-cpj6-fhp6-mr6j](https://github.com/remix-run/react-router/security/advisories/GHSA-cpj6-fhp6-mr6j)).
+
 ### Patch Changes
 
 - `react-router` - Adjust approach for Pre-rendering/SPA Mode via headers ([#13453](https://github.com/remix-run/react-router/pull/13453))
@@ -452,7 +457,7 @@ Date: 2025-03-28
 
 ### Security Notice
 
-Fixed a security vulnerability that allowed URL manipulation and potential cache pollution via the `Host` and `X-Forwarded-Host` headers due to inadequate port sanitization.
+Fixed a security vulnerability that allowed URL manipulation and potential cache pollution via the `Host` and `X-Forwarded-Host` headers due to inadequate port sanitization ([GHSA-4q56-crqp-v477/CVE-2025-31137](https://github.com/remix-run/react-router/security/advisories/GHSA-4q56-crqp-v477)).
 
 ### Patch Changes
 
