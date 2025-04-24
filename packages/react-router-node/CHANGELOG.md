@@ -1,11 +1,11 @@
 # `@react-router/node`
 
-## 7.5.2-pre.0
+## 7.5.2
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.5.2-pre.0`
+  - `react-router@7.5.2`
 
 ## 7.5.1
 
