@@ -3,6 +3,7 @@ import * as React from "react";
 import { Scripts, useFrameworkContext } from "./components";
 import type { Location } from "../../router/history";
 import { isRouteErrorResponse } from "../../router/utils";
+import { ENABLE_DEV_WARNINGS } from "../../context";
 
 type RemixErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
@@ -83,7 +84,7 @@ export function RemixRootDefaultErrorBoundary({
       dangerouslySetInnerHTML={{
         __html: `
         console.log(
-          "💿 Hey developer 👋. You can provide a way better UX than this when your app throws errors. Check out https://remix.run/guides/errors for more information."
+          "💿 Hey developer 👋. You can provide a way better UX than this when your app throws errors. Check out https://reactrouter.com/how-to/error-boundary for more information."
         );
       `,
       }}
@@ -96,7 +97,7 @@ export function RemixRootDefaultErrorBoundary({
         <h1 style={{ fontSize: "24px" }}>
           {error.status} {error.statusText}
         </h1>
-        {heyDeveloper}
+        {ENABLE_DEV_WARNINGS && heyDeveloper}
       </BoundaryShell>
     );
   }

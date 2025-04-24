@@ -10,6 +10,7 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
+  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -50,10 +51,6 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
   Resolves a URL against the current location.
