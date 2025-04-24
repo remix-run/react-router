@@ -22,7 +22,8 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { ServerHandoff, createServerHandoffString } from "./serverHandoff";
+import type { ServerHandoff } from "./serverHandoff";
+import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
 import {
   encodeViaTurboStream,
