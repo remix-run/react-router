@@ -23,7 +23,7 @@ import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import { createServerHandoffString } from "./serverHandoff";
-import { getDevServerHooks } from "./dev";
+import { getBuildTimeHeader, getDevServerHooks } from "./dev";
 import {
   encodeViaTurboStream,
   getSingleFetchRedirect,
@@ -164,12 +164,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       normalizedPath = normalizedPath.slice(0, -1);
     }
 
+    let isSpaMode =
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
+
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
     if (!_build.ssr) {
+      // When SSR is disabled this, file can only ever run during dev because we
+      // delete the server build at the end of the build
       if (_build.prerender.length === 0) {
-        // Add the header if we're in SPA mode
-        request.headers.set("X-React-Router-SPA-Mode", "yes");
+        // ssr:false and no prerender config indicates "SPA Mode"
+        isSpaMode = true;
       } else if (
         !_build.prerender.includes(normalizedPath) &&
         !_build.prerender.includes(normalizedPath + "/")
@@ -194,7 +199,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
           });
         } else {
           // Serve a SPA fallback for non-pre-rendered document requests
-          request.headers.set("X-React-Router-SPA-Mode", "yes");
+          isSpaMode = true;
         }
       }
     }
@@ -275,7 +280,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         }
       }
     } else if (
-      !request.headers.has("X-React-Router-SPA-Mode") &&
+      !isSpaMode &&
       matches &&
       matches[matches.length - 1].route.module.default == null &&
       matches[matches.length - 1].route.module.ErrorBoundary == null
@@ -309,6 +314,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
         loadContext,
         handleError,
+        isSpaMode,
         criticalCss
       );
     }
@@ -426,9 +432,9 @@ async function handleDocumentRequest(
   request: Request,
   loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void,
+  isSpaMode: boolean,
   criticalCss?: CriticalCss
 ) {
-  let isSpaMode = request.headers.has("X-React-Router-SPA-Mode");
   try {
     let response = await staticHandler.query(request, {
       requestContext: loadContext,

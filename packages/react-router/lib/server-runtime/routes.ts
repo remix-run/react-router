@@ -19,6 +19,7 @@ import {
 } from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
+import { getBuildTimeHeader } from "./dev";
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
@@ -86,10 +87,11 @@ export function createStaticHandlerDataRoutes(
         ? async (args: RRLoaderFunctionArgs) => {
             // If we're prerendering, use the data passed in from prerendering
             // the .data route so we don't call loaders twice
-            if (args.request.headers.has("X-React-Router-Prerender-Data")) {
-              const preRenderedData = args.request.headers.get(
-                "X-React-Router-Prerender-Data"
-              );
+            let preRenderedData = getBuildTimeHeader(
+              args.request,
+              "X-React-Router-Prerender-Data"
+            );
+            if (preRenderedData != null) {
               let encoded = preRenderedData
                 ? decodeURI(preRenderedData)
                 : preRenderedData;

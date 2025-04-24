@@ -234,6 +234,37 @@ test.describe("SPA Mode", () => {
           expect(await res.text()).toMatch(/^<!DOCTYPE html><html lang="en">/);
         });
 
+        test("Ignores build-time headers at runtime", async () => {
+          let fixture = await createFixture({
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                splitRouteModules,
+              }),
+              "app/root.tsx": js`
+                import { Outlet, Scripts } from "react-router";
+
+                export default function Root() {
+                  return (
+                    <html lang="en">
+                      <head></head>
+                      <body>
+                        <h1 data-root>Root</h1>
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+              `,
+            },
+          });
+          let res = await fixture.requestDocument("/", {
+            headers: { "X-React-Router-SPA-Mode": "yes" },
+          });
+          let html = await res.text();
+          expect(html).toMatch('"isSpaMode":false');
+          expect(html).toMatch('<h1 data-root="true">Root</h1>');
+        });
+
         test("works when combined with a basename", async ({ page }) => {
           fixture = await createFixture({
             spaMode: true,
