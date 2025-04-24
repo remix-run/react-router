@@ -1148,9 +1148,9 @@ export type RouteComponentProps = {
 };
 
 export function WithRouteComponentProps({
-  Component,
+  children,
 }: {
-  Component: React.ComponentType<any>;
+  children: React.ReactElement;
 }) {
   let props: RouteComponentProps = {
     loaderData: useLoaderData(),
@@ -1158,7 +1158,7 @@ export function WithRouteComponentProps({
     params: useParams(),
     matches: useMatches(),
   };
-  return React.createElement(Component, props);
+  return React.cloneElement(children, props);
 }
 
 export type HydrateFallbackProps = {
@@ -1168,16 +1168,16 @@ export type HydrateFallbackProps = {
 };
 
 export function WithHydrateFallbackProps({
-  HydrateFallback,
+  children,
 }: {
-  HydrateFallback: React.ComponentType<any>;
+  children: React.ReactElement;
 }) {
   let props: HydrateFallbackProps = {
     loaderData: useLoaderData(),
     actionData: useActionData(),
     params: useParams(),
   };
-  return React.createElement(HydrateFallback, props);
+  return React.cloneElement(children, props);
 }
 
 export type ErrorBoundaryProps = {
@@ -1188,9 +1188,9 @@ export type ErrorBoundaryProps = {
 };
 
 export function WithErrorBoundaryProps({
-  ErrorBoundary,
+  children,
 }: {
-  ErrorBoundary: React.ComponentType<any>;
+  children: React.ReactElement;
 }) {
   let props: ErrorBoundaryProps = {
     loaderData: useLoaderData(),
@@ -1198,7 +1198,7 @@ export function WithErrorBoundaryProps({
     params: useParams(),
     error: useRouteError(),
   };
-  return React.createElement(ErrorBoundary, props);
+  return React.cloneElement(children, props);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

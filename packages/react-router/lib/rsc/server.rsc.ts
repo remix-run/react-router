@@ -365,8 +365,13 @@ export async function matchRSCServerRequest({
             : React.createElement(
                 Layout,
                 null,
-                typeof Component === "function"
-                  ? React.createElement(Component, {
+                Component.$$typeof === Symbol.for("react.client.reference")
+                  ? React.createElement(
+                      WithRouteComponentProps,
+                      null,
+                      React.createElement(Component)
+                    )
+                  : React.createElement(Component, {
                       loaderData,
                       actionData,
                       params,
@@ -377,17 +382,19 @@ export async function matchRSCServerRequest({
                         )
                       ),
                     } satisfies RouteComponentProps)
-                  : React.createElement(WithRouteComponentProps, {
-                      Component,
-                    })
               )
           : undefined;
         const errorElement = ErrorBoundary
           ? React.createElement(
               Layout,
               null,
-              typeof ErrorBoundary === "function"
-                ? React.createElement(ErrorBoundary, {
+              Component.$$typeof === Symbol.for("react.client.reference")
+                ? React.createElement(
+                    WithErrorBoundaryProps,
+                    null,
+                    React.createElement(ErrorBoundary)
+                  )
+                : React.createElement(ErrorBoundary, {
                     loaderData,
                     actionData,
                     params,
@@ -395,24 +402,23 @@ export async function matchRSCServerRequest({
                       .reverse()
                       .find((match) => staticContext.errors?.[match.route.id]),
                   } satisfies ErrorBoundaryProps)
-                : React.createElement(WithErrorBoundaryProps, {
-                    ErrorBoundary,
-                  })
             )
           : undefined;
         const hydrateFallbackElement = HydrateFallback
           ? React.createElement(
               Layout,
               null,
-              typeof HydrateFallback === "function"
-                ? React.createElement(HydrateFallback, {
+              Component.$$typeof === Symbol.for("react.client.reference")
+                ? React.createElement(
+                    WithHydrateFallbackProps,
+                    null,
+                    React.createElement(HydrateFallback)
+                  )
+                : React.createElement(HydrateFallback, {
                     loaderData,
                     actionData,
                     params,
                   } satisfies HydrateFallbackProps)
-                : React.createElement(WithHydrateFallbackProps, {
-                    HydrateFallback,
-                  })
             )
           : match.route.id === "root"
           ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
