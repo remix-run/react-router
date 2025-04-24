@@ -8223,7 +8223,7 @@ title: isSession
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.isSession.html)
 
-Returns true if an object is a Remix session.
+Returns true if an object is a React Router session.
 ---
 title: Location
 hidden: true

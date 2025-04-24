@@ -1,5 +1,17 @@
 # `react-router`
 
+## 7.5.2
+
+### Patch Changes
+
+- Update Single Fetch to also handle the 204 redirects used in `?_data` requests in Remix v2 ([#13364](https://github.com/remix-run/react-router/pull/13364))
+
+  - This allows applications to return a redirect on `.data` requests from outside the scope of React Router (i.e., an `express`/`hono` middleware)
+  - ⚠️ Please note that doing so relies on implementation details that are subject to change without a SemVer major release
+  - This is primarily done to ease upgrading to Single Fetch for existing Remix v2 applications, but the recommended way to handle this is redirecting from a route middleware
+
+- Adjust approach for Prerendering/SPA Mode via headers ([#13453](https://github.com/remix-run/react-router/pull/13453))
+
 ## 7.5.1
 
 ### Patch Changes

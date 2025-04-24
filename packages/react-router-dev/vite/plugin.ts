@@ -1724,6 +1724,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             );
           }
 
+          // Set an environment variable we can look for in the handler to
+          // enable some build-time-only logic
+          process.env.IS_RR_BUILD_REQUEST = "yes";
+
           if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
             // If we have prerender routes, that takes precedence over SPA mode
             // which is ssr:false and only the root route being rendered
@@ -2623,11 +2627,6 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  let headers = {
-    // Header that can be used in the loader to know if you're running at
-    // build time or runtime
-    "X-React-Router-Prerender": "yes",
-  };
   for (let path of build.prerender) {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
@@ -2655,8 +2654,7 @@ async function handlePrerender(
           [leafRoute.id],
           clientBuildDirectory,
           reactRouterConfig,
-          viteConfig,
-          { headers }
+          viteConfig
         );
         // Prerender a raw file for external consumption
         await prerenderResourceRoute(
@@ -2664,8 +2662,7 @@ async function handlePrerender(
           path,
           clientBuildDirectory,
           reactRouterConfig,
-          viteConfig,
-          { headers }
+          viteConfig
         );
       } else {
         viteConfig.logger.warn(
@@ -2684,8 +2681,7 @@ async function handlePrerender(
           null,
           clientBuildDirectory,
           reactRouterConfig,
-          viteConfig,
-          { headers }
+          viteConfig
         );
       }
 
@@ -2698,11 +2694,10 @@ async function handlePrerender(
         data
           ? {
               headers: {
-                ...headers,
                 "X-React-Router-Prerender-Data": encodeURI(data),
               },
             }
-          : { headers }
+          : undefined
       );
     }
   }
@@ -2746,7 +2741,7 @@ async function prerenderData(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
@@ -2789,7 +2784,7 @@ async function prerenderRoute(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
     /\/\/+/g,
@@ -2845,7 +2840,7 @@ async function prerenderResourceRoute(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
     .replace(/\/\/+/g, "/")

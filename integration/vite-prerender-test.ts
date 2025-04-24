@@ -602,7 +602,7 @@ test.describe("Prerendering", () => {
           "app/routes/about.tsx": js`
             import { useLoaderData } from 'react-router';
             export function loader({ request }) {
-              return "ABOUT-" + request.headers.has('X-React-Router-Prerender');
+              return "ABOUT-" + Boolean(process.env.IS_RR_BUILD_REQUEST);
             }
 
             export default function Comp() {
@@ -613,7 +613,7 @@ test.describe("Prerendering", () => {
           "app/routes/not-prerendered.tsx": js`
             import { useLoaderData } from 'react-router';
             export function loader({ request }) {
-              return "NOT-PRERENDERED-" + request.headers.has('X-React-Router-Prerender');
+              return "NOT-PRERENDERED-" + Boolean(process.env.IS_RR_BUILD_REQUEST);
             }
 
             export default function Comp() {
@@ -659,7 +659,7 @@ test.describe("Prerendering", () => {
             import { useLoaderData } from 'react-router';
             export function loader({ request }) {
               return {
-                prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+                prerendered: process.env.IS_RR_BUILD_REQUEST ?? "no",
                 // 24999 characters
                 data: new Array(5000).fill('test').join('-'),
               };
@@ -712,7 +712,7 @@ test.describe("Prerendering", () => {
             import { useLoaderData } from 'react-router';
             export function loader({ request }) {
               return {
-                prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+                prerendered: process.env.IS_RR_BUILD_REQUEST ?? "no",
                 data: "한글 데이터 - UTF-8 문자",
               };
             }
@@ -732,7 +732,7 @@ test.describe("Prerendering", () => {
             import { useLoaderData } from 'react-router';
             export function loader({ request }) {
               return {
-                prerendered: request.headers.has('X-React-Router-Prerender') ? 'yes' : 'no',
+                prerendered: process.env.IS_RR_BUILD_REQUEST ?? "no",
                 data: "非プリレンダリングデータ - UTF-8文字",
               };
             }
@@ -836,6 +836,18 @@ test.describe("Prerendering", () => {
       await app.goto("/parent/child");
       await page.waitForSelector("[data-mounted]");
       expect(await app.getHtml()).toMatch("Index: INDEX");
+    });
+
+    test("Ignores build-time headers at runtime", async () => {
+      fixture = await createFixture({ files });
+      let res = await fixture.requestSingleFetchData("/_root.data", {
+        headers: {
+          "X-React-Router-Prerender-Data": encodeURI(
+            '[{"_1":2},"routes/_index",{"_3":4},"data","Hello World!"]'
+          ),
+        },
+      });
+      expect((res.data as any)["routes/_index"].data).toBe("Index Loader Data");
     });
   });
 

@@ -8,6 +8,7 @@ import type {
   RouterInit,
 } from "react-router";
 import {
+  UNSAFE_getHydrationData as getHydrationData,
   UNSAFE_invariant as invariant,
   UNSAFE_FrameworkContext as FrameworkContext,
   UNSAFE_decodeViaTurboStream as decodeViaTurboStream,
@@ -16,14 +17,12 @@ import {
   UNSAFE_createClientRoutes as createClientRoutes,
   UNSAFE_createRouter as createRouter,
   UNSAFE_deserializeErrors as deserializeErrors,
-  UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
+  UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
-  UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
-  matchRoutes,
 } from "react-router";
 import { RouterProvider } from "./dom-router-provider";
 
@@ -126,9 +125,9 @@ function createHydratedRouter({
   );
 
   let hydrationData: HydrationState | undefined = undefined;
-  let loaderData = ssrInfo.context.state.loaderData;
   // In SPA mode we only hydrate build-time root loader data
   if (ssrInfo.context.isSpaMode) {
+    let { loaderData } = ssrInfo.context.state;
     if (
       ssrInfo.manifest.routes.root?.hasLoader &&
       loaderData &&
@@ -141,51 +140,19 @@ function createHydratedRouter({
       };
     }
   } else {
-    // Create a shallow clone of `loaderData` we can mutate for partial hydration.
-    // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
-    // render the fallback so we need the client to do the same for hydration.
-    // The server loader data has already been exposed to these route `clientLoader`'s
-    // in `createClientRoutes` above, so we need to clear out the version we pass to
-    // `createBrowserRouter` so it initializes and runs the client loaders.
-    hydrationData = {
-      ...ssrInfo.context.state,
-      loaderData: { ...loaderData },
-    };
-    let initialMatches = matchRoutes(
+    hydrationData = getHydrationData(
+      ssrInfo.context.state,
       routes,
+      (routeId) => ({
+        clientLoader: ssrInfo!.routeModules[routeId]?.clientLoader,
+        hasLoader: ssrInfo!.manifest.routes[routeId]?.hasLoader === true,
+        hasHydrateFallback:
+          ssrInfo!.routeModules[routeId]?.HydrateFallback != null,
+      }),
       window.location,
-      window.__reactRouterContext?.basename
+      window.__reactRouterContext?.basename,
+      ssrInfo.context.isSpaMode
     );
-    if (initialMatches) {
-      for (let match of initialMatches) {
-        let routeId = match.route.id;
-        let route = ssrInfo.routeModules[routeId];
-        let manifestRoute = ssrInfo.manifest.routes[routeId];
-        // Clear out the loaderData to avoid rendering the route component when the
-        // route opted into clientLoader hydration and either:
-        // * gave us a HydrateFallback
-        // * or doesn't have a server loader and we have no data to render
-        if (
-          route &&
-          manifestRoute &&
-          shouldHydrateRouteLoader(
-            manifestRoute,
-            route,
-            ssrInfo.context.isSpaMode
-          ) &&
-          (route.HydrateFallback || !manifestRoute.hasLoader)
-        ) {
-          delete hydrationData.loaderData![routeId];
-        } else if (manifestRoute && !manifestRoute.hasLoader) {
-          // Since every Remix route gets a `loader` on the client side to load
-          // the route JS module, we need to add a `null` value to `loaderData`
-          // for any routes that don't have server loaders so our partial
-          // hydration logic doesn't kick off the route module loaders during
-          // hydration
-          hydrationData.loaderData![routeId] = null;
-        }
-      }
-    }
 
     if (hydrationData && hydrationData.errors) {
       // TODO: De-dup this or remove entirely in v7 where single fetch is the
@@ -207,22 +174,10 @@ function createHydratedRouter({
     future: {
       unstable_middleware: ssrInfo.context.future.unstable_middleware,
     },
-    dataStrategy: getSingleFetchDataStrategy(
+    dataStrategy: getTurboStreamSingleFetchDataStrategy(
       () => router,
-      (routeId: string) => {
-        let manifestRoute = ssrInfo!.manifest.routes[routeId];
-        invariant(manifestRoute, "Route not found in manifest/routeModules");
-        let routeModule = ssrInfo!.routeModules[routeId];
-        return {
-          hasLoader: manifestRoute.hasLoader,
-          hasClientLoader: manifestRoute.hasClientLoader,
-          // In some cases the module may not be loaded yet and we don't care
-          // if it's got shouldRevalidate or not
-          hasShouldRevalidate: routeModule
-            ? routeModule.shouldRevalidate != null
-            : undefined,
-        };
-      },
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
       ssrInfo.context.ssr,
       ssrInfo.context.basename
     ),

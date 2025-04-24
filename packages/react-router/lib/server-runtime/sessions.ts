@@ -14,7 +14,7 @@ export interface SessionData {
 /**
  * Session persists data across HTTP requests.
  *
- * @see https://remix.run/utils/sessions#session-api
+ * @see https://reactrouter.com/explanation/sessions-and-cookies#sessions
  */
 export interface Session<Data = SessionData, FlashData = Data> {
   /**
@@ -89,8 +89,6 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  *
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
- *
- * @see https://remix.run/utils/sessions#createsession
  */
 export const createSession: CreateSessionFunction = <
   Data = SessionData,
@@ -144,9 +142,9 @@ export const createSession: CreateSessionFunction = <
 export type IsSessionFunction = (object: any) => object is Session;
 
 /**
- * Returns true if an object is a Remix session.
+ * Returns true if an object is a React Router session.
  *
- * @see https://remix.run/utils/sessions#issession
+ * @see https://reactrouter.com/api/utils/isSession
  */
 export const isSession: IsSessionFunction = (object): object is Session => {
   return (
@@ -303,7 +301,7 @@ export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
     cookie.isSigned,
     `The "${cookie.name}" cookie is not signed, but session cookies should be ` +
       `signed to prevent tampering on the client before they are sent back to the ` +
-      `server. See https://remix.run/utils/cookies#signing-cookies ` +
+      `server. See https://reactrouter.com/explanation/sessions-and-cookies#signing-cookies ` +
       `for more information.`
   );
 }

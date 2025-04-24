@@ -140,6 +140,7 @@ export const EXPRESS_SERVER = (args: {
   port: number;
   base?: string;
   loadContext?: Record<string, unknown>;
+  customLogic?: string;
 }) =>
   String.raw`
     import { createRequestHandler } from "@react-router/express";
@@ -165,6 +166,8 @@ export const EXPRESS_SERVER = (args: {
       );
     }
     app.use(express.static("build/client", { maxAge: "1h" }));
+
+    ${args?.customLogic || ""}
 
     app.all(
       "*",

@@ -341,6 +341,9 @@ export {
 } from "./lib/dom/ssr/fog-of-war";
 
 /** @internal */
+export { getHydrationData as UNSAFE_getHydrationData } from "./lib/dom/ssr/hydration";
+
+/** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
 
 /** @internal */
@@ -351,7 +354,7 @@ export {
 } from "./lib/dom/ssr/routes";
 
 /** @internal */
-export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
+export { getTurboStreamSingleFetchDataStrategy as UNSAFE_getTurboStreamSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
 export {

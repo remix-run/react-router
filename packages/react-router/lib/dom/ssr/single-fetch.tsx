@@ -15,9 +15,11 @@ import {
   stripBasename,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
-import type { EntryContext } from "./entry";
+import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import invariant from "./invariant";
+import type { RouteModules } from "./routeModules";
+import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -53,6 +55,13 @@ interface StreamTransferProps {
   textDecoder: TextDecoder;
   nonce?: string;
 }
+
+// We can't use a 3xx status or else the `fetch()` would follow the redirect.
+// We need to communicate the redirect back as data so we can act on it in the
+// client side router.  We use a 202 to avoid any automatic caching we might
+// get from a 200 since a "temporary" redirect should not be cached.  This lets
+// the user control cache behavior via Cache-Control
+export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
 // Some status codes are not permitted to have bodies, so we want to just
 // treat those as "no data" instead of throwing an exception:
@@ -147,10 +156,10 @@ export function StreamTransfer({
   }
 }
 
-type GetRouteInfoFunction = (routeId: string) => {
+type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasLoader: boolean;
-  hasClientLoader: boolean; // TODO: Can this be read from match.route?
-  hasShouldRevalidate: boolean | undefined; // TODO: Can this be read from match.route?
+  hasClientLoader: boolean;
+  hasShouldRevalidate: boolean;
 };
 
 type FetchAndDecodeFunction = (
@@ -159,15 +168,25 @@ type FetchAndDecodeFunction = (
   targetRoutes?: string[]
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
-export function getSingleFetchDataStrategy(
+export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
-  getRouteInfo: GetRouteInfoFunction,
+  manifest: AssetsManifest,
+  routeModules: RouteModules,
   ssr: boolean,
   basename: string | undefined
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
-    getRouteInfo,
+    (match: DataRouteMatch) => {
+      let manifestRoute = manifest.routes[match.route.id];
+      invariant(manifestRoute, "Route not found in manifest");
+      let routeModule = routeModules[match.route.id];
+      return {
+        hasLoader: manifestRoute.hasLoader,
+        hasClientLoader: manifestRoute.hasClientLoader,
+        hasShouldRevalidate: Boolean(routeModule?.shouldRevalidate),
+      };
+    },
     fetchAndDecodeViaTurboStream,
     ssr,
     basename
@@ -192,7 +211,7 @@ export function getSingleFetchDataStrategyImpl(
     }
 
     let foundRevalidatingServerLoader = matches.some((m) => {
-      let { hasLoader, hasClientLoader } = getRouteInfo(m.route.id);
+      let { hasLoader, hasClientLoader } = getRouteInfo(m);
       return m.unstable_shouldCallHandler() && hasLoader && !hasClientLoader;
     });
     if (!ssr && !foundRevalidatingServerLoader) {
@@ -298,7 +317,7 @@ async function nonSsrStrategy(
     matchesToLoad.map((m) =>
       m.resolve(async (handler) => {
         try {
-          let { hasClientLoader } = getRouteInfo(m.route.id);
+          let { hasClientLoader } = getRouteInfo(m);
           // Need to pass through a `singleFetch` override handler so
           // clientLoader's can still call server loaders through `.data`
           // requests
@@ -350,7 +369,7 @@ async function singleFetchLoaderNavigationStrategy(
         routeDfds[i].resolve();
         let routeId = m.route.id;
         let { hasLoader, hasClientLoader, hasShouldRevalidate } =
-          getRouteInfo(routeId);
+          getRouteInfo(m);
 
         let defaultShouldRevalidate =
           !m.unstable_shouldRevalidateArgs ||
@@ -419,7 +438,7 @@ async function singleFetchLoaderNavigationStrategy(
     (!router.state.initialized || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
-    singleFetchDfd.resolve({});
+    singleFetchDfd.resolve({ routes: {} });
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
     // Skipped in `ssr:false` because we expect to be loading static `.data` files
@@ -521,6 +540,22 @@ async function fetchAndDecodeViaTurboStream(
   // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
   if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
     throw new ErrorResponseImpl(404, "Not Found", true);
+  }
+
+  // Handle non-RR redirects (i.e., from express middleware)
+  if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
+    return {
+      status: SINGLE_FETCH_REDIRECT_STATUS,
+      data: {
+        redirect: {
+          redirect: res.headers.get("X-Remix-Redirect")!,
+          status: Number(res.headers.get("X-Remix-Status") || "302"),
+          revalidate: res.headers.get("X-Remix-Revalidate") === "true",
+          reload: res.headers.get("X-Remix-Reload-Document") === "true",
+          replace: res.headers.get("X-Remix-Replace") === "true",
+        },
+      },
+    };
   }
 
   if (NO_BODY_STATUS_CODES.has(res.status)) {
@@ -659,8 +694,8 @@ function unwrapSingleFetchResult(
 }
 
 function createDeferred<T = unknown>() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: unknown) => Promise<void>;
+  let resolve: (val: T) => Promise<void>;
+  let reject: (error: unknown) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
     resolve = async (val: T) => {
       res(val);
