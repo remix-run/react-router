@@ -159,12 +159,28 @@ export type ReactRouterConfig = {
    */
   presets?: Array<Preset>;
   /**
-   * Control the "Lazy Route Discovery" behavior.  By default, this resolves to
-   * `lazy` which will lazily discover routes as the user navigates around your
-   * application.  You can set this to `initial` to opt-out of this behavior and
-   * load all routes with the initial HTML document load.
+   * Control the "Lazy Route Discovery" behavior.
+   *
+   * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
+   *   lazily discover routes as the user navigates around your application.
+   *   You can set this to `initial` to opt-out of this behavior and load all
+   *   routes with the initial HTML document load.
+   * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
+   *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
+   *
+   * If you do not need to control the manifest, you can specify the mode
+   * directly on the `routeDiscovery` config.
    */
-  routeDiscovery?: "lazy" | "initial";
+  routeDiscovery?:
+    | "lazy"
+    | "initial"
+    | {
+        mode?: "lazy"; // Can only adjust the manifest path in `lazy` mode
+        manifestPath: string;
+      }
+    | {
+        mode: "initial";
+      };
   /**
    * The file name of the server build output. This file
    * should end in a `.js` extension and should be deployed to your server.
@@ -218,7 +234,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    * application.  You can set this to `initial` to opt-out of this behavior and
    * load all routes with the initial HTML document load.
    */
-  routeDiscovery: ReactRouterConfig["routeDiscovery"];
+  routeDiscovery: {
+    mode: "lazy" | "initial";
+    manifestPath: string;
+  };
   /**
    * An object of all available routes, keyed by route id.
    */
@@ -397,7 +416,6 @@ async function resolveConfig({
   let defaults = {
     basename: "/",
     buildDirectory: "build",
-    routeDiscovery: "lazy",
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
@@ -414,7 +432,7 @@ async function resolveConfig({
     buildDirectory: userBuildDirectory,
     buildEnd,
     prerender,
-    routeDiscovery,
+    routeDiscovery: userRouteDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
@@ -441,17 +459,43 @@ async function resolveConfig({
     );
   }
 
-  if (routeDiscovery === "lazy" && !ssr) {
-    if (userAndPresetConfigs.routeDiscovery === "lazy") {
-      // If the user set "lazy" and `ssr:false`, then it's an invalid config
-      // and we want to fail the build
-      return err(
-        'The `routeDiscovery` config cannot be set to "lazy" when setting `ssr:false`'
-      );
+  let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"] = {
+    mode: "lazy",
+    manifestPath: "/__manifest",
+  };
+
+  if (userRouteDiscovery == null) {
+    if (!ssr) {
+      // No FOW when SSR is disabled
+      routeDiscovery.mode = "initial";
     } else {
-      // But if the user didn't specify, then we want to default to "initial"
-      // when SSR is disabled
-      routeDiscovery = "initial";
+      // no-op - use defaults
+    }
+  } else if (
+    userRouteDiscovery === "initial" ||
+    (typeof userRouteDiscovery === "object" &&
+      userRouteDiscovery.mode === "initial")
+  ) {
+    routeDiscovery.mode = "initial";
+  } else {
+    if (!ssr) {
+      return err(
+        'The `routeDiscovery` config must be left unset or set to "initial" ' +
+          "when setting `ssr:false`"
+      );
+    }
+    if (typeof userRouteDiscovery === "object") {
+      if (
+        userRouteDiscovery.manifestPath != null &&
+        !userRouteDiscovery.manifestPath.startsWith("/")
+      ) {
+        return err(
+          "The `routeDiscovery.manifestPath` config must be a root-relative " +
+            'pathname beginning with a slash (i.e., "/__manifest")'
+        );
+      }
+      routeDiscovery.manifestPath =
+        userRouteDiscovery.manifestPath ?? "/__manifest";
     }
   }
 

@@ -42,7 +42,14 @@ export const reactRouterConfig = ({
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
   middleware?: boolean;
-  routeDiscovery?: "initial" | "lazy";
+  routeDiscovery?:
+    | "initial"
+    | "lazy"
+    | {
+        mode?: "lazy";
+        manifestPath: string;
+      }
+    | { mode: "initial" };
 }) => {
   let config: Config = {
     ssr,

@@ -647,7 +647,7 @@ export function Scripts(props: ScriptsProps) {
     useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = routeDiscovery === "lazy";
+  let enableFogOfWar = routeDiscovery.mode === "lazy";
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts

@@ -73,7 +73,7 @@ export function getPatchRoutesOnNavigationFunction(
   isSpaMode: boolean,
   basename: string | undefined
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (routeDiscovery !== "lazy") {
+  if (routeDiscovery.mode !== "lazy") {
     return undefined;
   }
 
@@ -89,6 +89,7 @@ export function getPatchRoutesOnNavigationFunction(
       ssr,
       isSpaMode,
       basename,
+      routeDiscovery.manifestPath,
       patch,
       signal
     );
@@ -105,7 +106,10 @@ export function useFogOFWarDiscovery(
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
-    if (routeDiscovery !== "lazy" || navigator.connection?.saveData === true) {
+    if (
+      routeDiscovery.mode !== "lazy" ||
+      navigator.connection?.saveData === true
+    ) {
       return;
     }
 
@@ -156,6 +160,7 @@ export function useFogOFWarDiscovery(
           ssr,
           isSpaMode,
           router.basename,
+          routeDiscovery.manifestPath,
           router.patchRoutes
         );
       } catch (e) {
@@ -193,13 +198,13 @@ export async function fetchAndApplyManifestPatches(
   ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined,
+  _manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal
 ): Promise<void> {
-  let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
-    /\/+/g,
-    "/"
-  );
+  let manifestPath = `${
+    basename != null ? basename : "/"
+  }${_manifestPath}`.replace(/\/+/g, "/");
   let url = new URL(manifestPath, window.location.origin);
   paths.sort().forEach((path) => url.searchParams.append("p", path));
   url.searchParams.set("version", manifest.version);

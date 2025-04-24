@@ -1409,6 +1409,52 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#a-index");
   });
 
+  test("allows configuration of the manifest path", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "react-router.config.ts": reactRouterConfig({
+          routeDiscovery: { manifestPath: "/custom-manifest" },
+        }),
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let wrongManifestRequests: string[] = [];
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        wrongManifestRequests.push(req.url());
+      }
+      if (req.url().includes("/custom-manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/a"]);
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/custom-manifest\?p=%2F&p=%2Fa&version=/),
+    ]);
+    manifestRequests = [];
+
+    await app.clickLink("/a");
+    await page.waitForSelector("#a");
+    expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
+    // Wait for eager discovery to kick off
+    await new Promise((r) => setTimeout(r, 500));
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/custom-manifest\?p=%2Fa%2Fb&version=/),
+    ]);
+
+    expect(wrongManifestRequests).toEqual([]);
+  });
+
   test.describe("routeDiscovery=initial", () => {
     test("loads full manifest on initial load", async ({ page }) => {
       let fixture = await createFixture({
