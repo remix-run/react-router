@@ -1,6 +1,6 @@
 {
   "name": "@react-router/fs-routes",
-  "version": "7.5.2",
+  "version": "0.0.0-nightly-1c03f313d-20250425",
   "description": "File system routing conventions for React Router, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
