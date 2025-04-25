@@ -87,7 +87,8 @@ export function fromNodeRequest(
 export async function toNodeRequest(res: Response, nodeRes: ServerResponse) {
   nodeRes.statusCode = res.status;
 
-  // HTTP/2 doesn't support status messages (RFC7540 8.1.2.4)
+  // HTTP/2 doesn't support status messages
+  // https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.4
   if (!nodeRes.req || nodeRes.req.httpVersionMajor < 2) {
     nodeRes.statusMessage = res.statusText;
   }
