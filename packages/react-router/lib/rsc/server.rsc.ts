@@ -7,7 +7,7 @@ import type {
   LinksFunction,
   MetaFunction,
 } from "../dom/ssr/routeModules";
-import { invariant, type Location } from "../router/history";
+import { type Location } from "../router/history";
 import {
   type StaticHandler,
   createStaticHandler,
@@ -262,8 +262,6 @@ export async function matchRSCServerRequest({
     isDataRequest: boolean,
     actionResult?: Promise<unknown>
   ): Promise<Response> => {
-    const handler = createStaticHandler(routes);
-
     // If this is a RR submission, we just want the `actionData` but don't want
     // to call any loaders or render any components back in the response - that
     // will happen in the subsequent revalidation request
@@ -502,6 +500,18 @@ export async function matchRSCServerRequest({
       }
     };
 
+    // Explode lazy functions out the routes so we can use middleware
+    // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
+    // and if we move to `lazy: {}` then we lose all the other things from the
+    // `ServerRouteObject` like `Layout` etc.
+    let matches = matchRoutes(routes, url.pathname);
+    if (matches) {
+      await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
+    }
+
+    // Create the handler here with exploded routes
+    const handler = createStaticHandler(routes);
+
     const result = await handler.query(request, {
       skipLoaderErrorBubbling: true,
       skipRevalidation: isSubmission,
@@ -550,15 +560,7 @@ async function getRoute(
   route: ServerRouteObject,
   parentId: string | undefined
 ): Promise<RenderedRoute> {
-  if ("lazy" in route && route.lazy) {
-    Object.assign(route, {
-      ...((await route.lazy()) as any),
-      path: route.path,
-      index: (route as any).index,
-      id: route.id,
-    });
-    route.lazy = undefined;
-  }
+  await explodeLazyRoute(route);
 
   const Layout = (route as any).Layout || React.Fragment;
   // We send errorElement early in the manifest so we have it client
@@ -586,6 +588,16 @@ async function getRoute(
     links: route.links,
     meta: route.meta,
   };
+}
+
+async function explodeLazyRoute(route: ServerRouteObject) {
+  if ("lazy" in route && route.lazy) {
+    let impl = (await route.lazy()) as any;
+    for (let [k, v] of Object.entries(impl)) {
+      route[k as keyof ServerRouteObject] = v;
+    }
+    route.lazy = undefined;
+  }
 }
 
 async function getAdditionalRoutePatches(
