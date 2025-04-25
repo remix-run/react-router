@@ -8,17 +8,19 @@ import { renderToReadableStream } from "react-server-dom-parcel/server.edge";
 
 import { routes } from "./routes";
 
-export async function callServer(request: Request) {
-  const match = await matchRSCServerRequest({
+export function callServer(request: Request) {
+  return matchRSCServerRequest({
     request,
     routes,
-  });
-  if (match instanceof Response) {
-    return match;
-  }
+    generateResponse(match) {
+      if (match instanceof Response) {
+        return match;
+      }
 
-  return new Response(renderToReadableStream(match.payload), {
-    status: match.statusCode,
-    headers: match.headers,
+      return new Response(renderToReadableStream(match.payload), {
+        status: match.statusCode,
+        headers: match.headers,
+      });
+    },
   });
 }
