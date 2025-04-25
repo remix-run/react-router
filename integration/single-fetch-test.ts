@@ -1567,22 +1567,38 @@ test.describe("single-fetch", () => {
         `,
       }),
       "app/routes/_index.tsx": js`
-        import { Link } from "react-router";
+        import { Link, Form } from "react-router";
         export default function Component() {
-          return <Link to="/page">Go to /page</Link>
+          return (
+            <div id="index">
+              <Link to="/page">Go to /page</Link>
+              <Form method="post" action="/page">
+                <button type="submit" name="key" value="value">Submit</button>
+              </Form>
+            </div>
+          );
         }
       `,
       "app/routes/page.tsx": js`
-        export function loader() {
+        export function action() {
           return null
+        }
+        export function loader() {
+            return null
         }
         export default function Component() {
           return <p>Should not see me</p>
         }
       `,
       "app/routes/target.tsx": js`
+        import { Link } from "react-router";
         export default function Component() {
-          return <h1 id="target">Target</h1>
+          return (
+            <>
+              <h1 id="target">Target</h1>
+              <Link to="/">Go home</Link>
+            </>
+          );
         }
       `,
     });
@@ -1592,9 +1608,15 @@ test.describe("single-fetch", () => {
       await page.goto(`http://localhost:${port}/`, {
         waitUntil: "networkidle",
       });
-      let link = page.locator('a[href="/page"]');
-      await expect(link).toHaveText("Go to /page");
-      await link.click();
+
+      await page.locator('a[href="/page"]').click();
+      await page.waitForSelector("#target");
+      await expect(page.locator("#target")).toHaveText("Target");
+
+      await page.locator('a[href="/"]').click();
+      await page.waitForSelector("#index");
+
+      await page.locator('button[type="submit"]').click();
       await page.waitForSelector("#target");
       await expect(page.locator("#target")).toHaveText("Target");
     } finally {
