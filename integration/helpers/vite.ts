@@ -18,7 +18,7 @@ import type { Config } from "@react-router/dev/config";
 
 const require = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -28,17 +28,30 @@ export const reactRouterConfig = ({
   basename,
   prerender,
   appDirectory,
+  splitRouteModules,
+  viteEnvironmentApi,
+  middleware,
 }: {
   ssr?: boolean;
   basename?: string;
   prerender?: boolean | string[];
   appDirectory?: string;
+  splitRouteModules?: NonNullable<
+    Config["future"]
+  >["unstable_splitRouteModules"];
+  viteEnvironmentApi?: boolean;
+  middleware?: boolean;
 }) => {
   let config: Config = {
     ssr,
     basename,
     prerender,
     appDirectory,
+    future: {
+      unstable_splitRouteModules: splitRouteModules,
+      unstable_viteEnvironmentApi: viteEnvironmentApi,
+      unstable_middleware: middleware,
+    },
   };
 
   return dedent`
@@ -48,8 +61,29 @@ export const reactRouterConfig = ({
   `;
 };
 
+type ViteConfigServerArgs = {
+  port: number;
+  fsAllow?: string[];
+};
+
+type ViteConfigBuildArgs = {
+  assetsInlineLimit?: number;
+  assetsDir?: string;
+};
+
+type ViteConfigBaseArgs = {
+  envDir?: string;
+};
+
+type ViteConfigArgs = (
+  | ViteConfigServerArgs
+  | { [K in keyof ViteConfigServerArgs]?: never }
+) &
+  ViteConfigBuildArgs &
+  ViteConfigBaseArgs;
+
 export const viteConfig = {
-  server: async (args: { port: number; fsAllow?: string[] }) => {
+  server: async (args: ViteConfigServerArgs) => {
     let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
@@ -62,27 +96,51 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: { port: number; fsAllow?: string[] }) => {
+  build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
+    return dedent`
+      build: {
+        // Detect rolldown-vite. This should ideally use "rolldownVersion"
+        // but that's not exported. Once that's available, this
+        // check should be updated to use it.
+        rollupOptions: "transformWithOxc" in (await import("vite"))
+          ? {
+              onwarn(warning, warn) {
+                // Ignore "The built-in minifier is still under development." warning
+                if (warning.code === "MINIFY_WARNING") return;
+                warn(warning);
+              },
+            }
+          : undefined,
+        assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
+        assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
+      },
+    `;
+  },
+  basic: async (args: ViteConfigArgs) => {
     return dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
-      export default {
-        ${await viteConfig.server(args)}
+      export default async () => ({
+        ${args.port ? await viteConfig.server(args) : ""}
+        ${viteConfig.build(args)}
+        envDir: ${args.envDir ? `"${args.envDir}"` : "undefined"},
         plugins: [
           reactRouter(),
           envOnlyMacros(),
           tsconfigPaths()
         ],
-      };
+      });
     `;
   },
 };
 
 export const EXPRESS_SERVER = (args: {
   port: number;
+  base?: string;
   loadContext?: Record<string, unknown>;
+  customLogic?: string;
 }) =>
   String.raw`
     import { createRequestHandler } from "@react-router/express";
@@ -109,6 +167,8 @@ export const EXPRESS_SERVER = (args: {
     }
     app.use(express.static("build/client", { maxAge: "1h" }));
 
+    ${args?.customLogic || ""}
+
     app.all(
       "*",
       createRequestHandler({
@@ -123,14 +183,20 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-type TemplateName =
+export type TemplateName =
+  | "cloudflare-dev-proxy-template"
   | "vite-5-template"
   | "vite-6-template"
-  | "vite-cloudflare-template";
+  | "vite-plugin-cloudflare-template"
+  | "vite-rolldown-template";
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+  {
+    templateName: "vite-rolldown-template",
+    templateDisplayName: "Vite Rolldown",
+  },
 ] as const satisfies Array<{
   templateName: TemplateName;
   templateDisplayName: string;
@@ -183,6 +249,9 @@ export const build = ({
       ...process.env,
       ...colorEnv,
       ...env,
+      // Ensure build can pass in Rolldown. This can be removed once
+      // "preserveEntrySignatures" is supported in rolldown-vite.
+      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 };
@@ -349,7 +418,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "vite-cloudflare-template"
+        "cloudflare-dev-proxy-template"
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
@@ -413,10 +482,17 @@ function bufferize(stream: Readable): () => string {
 }
 
 export function createEditor(projectDir: string) {
-  return async (file: string, transform: (contents: string) => string) => {
+  return async function edit(
+    file: string,
+    transform: (contents: string) => string
+  ) {
     let filepath = path.join(projectDir, file);
     let contents = await fs.readFile(filepath, "utf8");
     await fs.writeFile(filepath, transform(contents), "utf8");
+
+    return async function revert() {
+      await fs.writeFile(filepath, contents, "utf8");
+    };
   };
 }
 

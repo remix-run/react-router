@@ -5,6 +5,10 @@ order: 5
 
 # Data Loading
 
+[MODES: framework]
+
+## Introduction
+
 Data is provided to the route component from `loader` and `clientLoader`.
 
 Loader data is automatically serialized from loaders and deserialized in components. In addition to primitive values like strings and numbers, loaders can return promises, maps, sets, dates and more.
@@ -135,6 +139,7 @@ export async function clientLoader({
   params,
 }: Route.ClientLoaderArgs) {
   const res = await fetch(`/api/products/${params.pid}`);
+  const serverData = await serverLoader();
   return { ...serverData, ...res.json() };
 }
 

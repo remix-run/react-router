@@ -72,7 +72,7 @@ export async function action({
 }
 ```
 
-See the [Session API][session-api] for more all the methods available on the session object.
+See the [Session API][session-api] for all methods available on the session object.
 
 ### Login form example
 

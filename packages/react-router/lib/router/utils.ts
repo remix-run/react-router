@@ -1,6 +1,9 @@
+import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+
+export type MaybePromise<T> = T | Promise<T>;
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -110,42 +113,143 @@ export type Submission =
       text: string;
     };
 
+export interface unstable_RouterContext<T = unknown> {
+  defaultValue?: T;
+}
+
+/**
+ * Creates a context object that may be used to store and retrieve arbitrary values.
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()` when no value has been
+ * set for the context. Otherwise reading this context when no value has been set will throw an
+ * error.
+ *
+ * @param defaultValue The default value for the context
+ * @returns A context object
+ */
+export function unstable_createContext<T>(
+  defaultValue?: T
+): unstable_RouterContext<T> {
+  return { defaultValue };
+}
+
+/**
+ * A Map of RouterContext objects to their initial values - used to populate a
+ * fresh `context` value per request/navigation/fetch
+ */
+export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
+
+/**
+ * Provides methods for writing/reading values in application context in a typesafe way.
+ */
+export class unstable_RouterContextProvider {
+  #map = new Map<unstable_RouterContext, unknown>();
+
+  constructor(init?: unstable_InitialContext) {
+    if (init) {
+      for (let [context, value] of init) {
+        this.set(context, value);
+      }
+    }
+  }
+
+  get<T>(context: unstable_RouterContext<T>): T {
+    if (this.#map.has(context)) {
+      return this.#map.get(context) as T;
+    }
+
+    if (context.defaultValue !== undefined) {
+      return context.defaultValue;
+    }
+
+    throw new Error("No value found for context");
+  }
+
+  set<C extends unstable_RouterContext>(
+    context: C,
+    value: C extends unstable_RouterContext<infer T> ? T : never
+  ): void {
+    this.#map.set(context, value);
+  }
+}
+
+type DefaultContext = MiddlewareEnabled extends true
+  ? unstable_RouterContextProvider
+  : any;
+
 /**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
 interface DataFunctionArgs<Context> {
+  /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function loader({
+   *   params,
+   * }: Route.LoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
   params: Params;
-  context?: Context;
+  /**
+   * This is the context passed in to your server adapter's getLoadContext() function.
+   * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
+   * It is only applicable if you are using a custom server adapter.
+   */
+  context: Context;
 }
+
+/**
+ * Route middleware `next` function to call downstream handlers and then complete
+ * middlewares from the bottom-up
+ */
+export interface unstable_MiddlewareNextFunction<Result = unknown> {
+  (): MaybePromise<Result>;
+}
+
+/**
+ * Route middleware function signature.  Receives the same "data" arguments as a
+ * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
+ * a `next` function as the second parameter which will call downstream handlers
+ * and then complete middlewares from the bottom-up
+ */
+export type unstable_MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  next: unstable_MiddlewareNextFunction<Result>
+) => MaybePromise<Result | void>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
+export interface LoaderFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
+export interface ActionFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
-type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = any> = {
+export type LoaderFunction<Context = DefaultContext> = {
   (
     args: LoaderFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -155,7 +259,7 @@ export type LoaderFunction<Context = any> = {
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = any> {
+export interface ActionFunction<Context = DefaultContext> {
   (
     args: ActionFunctionArgs<Context>,
     handlerCtx?: unknown
@@ -166,18 +270,56 @@ export interface ActionFunction<Context = any> {
  * Arguments passed to shouldRevalidate function
  */
 export interface ShouldRevalidateFunctionArgs {
+  /** This is the url the navigation started from. You can compare it with `nextUrl` to decide if you need to revalidate this route's data. */
   currentUrl: URL;
+  /** These are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params} from the URL that can be compared to the `nextParams` to decide if you need to reload or not. Perhaps you're using only a partial piece of the param for data loading, you don't need to revalidate if a superfluous part of the param changed. */
   currentParams: AgnosticDataRouteMatch["params"];
+  /** In the case of navigation, this the URL the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentUrl. */
   nextUrl: URL;
+  /** In the case of navigation, these are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params}  from the next location the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentParams. */
   nextParams: AgnosticDataRouteMatch["params"];
+  /** The method (probably `"GET"` or `"POST"`) used in the form submission that triggered the revalidation. */
   formMethod?: Submission["formMethod"];
+  /** The form action (`<Form action="/somewhere">`) that triggered the revalidation. */
   formAction?: Submission["formAction"];
+  /** The form encType (`<Form encType="application/x-www-form-urlencoded">) used in the form submission that triggered the revalidation*/
   formEncType?: Submission["formEncType"];
+  /** The form submission data when the form's encType is `text/plain` */
   text?: Submission["text"];
+  /** The form submission data when the form's encType is `application/x-www-form-urlencoded` or `multipart/form-data` */
   formData?: Submission["formData"];
+  /** The form submission data when the form's encType is `application/json` */
   json?: Submission["json"];
+  /** The status code of the action response */
   actionStatus?: number;
+  /**
+   * When a submission causes the revalidation this will be the result of the action—either action data or an error if the action failed. It's common to include some information in the action result to instruct shouldRevalidate to revalidate or not.
+   *
+   * @example
+   * export async function action() {
+   *   await saveSomeStuff();
+   *   return { ok: true };
+   * }
+   *
+   * export function shouldRevalidate({
+   *   actionResult,
+   * }) {
+   *   if (actionResult?.ok) {
+   *     return false;
+   *   }
+   *   return true;
+   * }
+   */
   actionResult?: any;
+  /**
+   * By default, React Router doesn't call every loader all the time. There are reliable optimizations it can make by default. For example, only loaders with changing params are called. Consider navigating from the following URL to the one below it:
+   *
+   * /projects/123/tasks/abc
+   * /projects/123/tasks/def
+   * React Router will only call the loader for tasks/def because the param for projects/123 didn't change.
+   *
+   * It's safest to always return defaultShouldRevalidate after you've done your specific optimizations that return false, otherwise your UI might get out of sync with your data on the server.
+   */
   defaultShouldRevalidate: boolean;
 }
 
@@ -194,7 +336,21 @@ export interface ShouldRevalidateFunction {
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  /**
+   * @private
+   */
+  _lazyPromises?: {
+    middleware: Promise<void> | undefined;
+    handler: Promise<void> | undefined;
+    route: Promise<void> | undefined;
+  };
   shouldLoad: boolean;
+  // This can be null for actions calls and for initial hydration calls
+  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  // This function will use a scoped version of `shouldRevalidateArgs` because
+  // they are read-only but let the user provide an optional override value for
+  // `defaultShouldRevalidate` if they choose
+  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
@@ -202,9 +358,12 @@ export interface DataStrategyMatch
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = any>
+export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
+  unstable_runClientMiddleware: (
+    cb: DataStrategyFunction<Context>
+  ) => Promise<Record<string, DataStrategyResult>>;
   fetcherKey: string | null;
 }
 
@@ -216,16 +375,20 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = DefaultContext> {
+  (args: DataStrategyFunctionArgs<Context>): Promise<
+    Record<string, DataStrategyResult>
+  >;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = {
+  signal: AbortSignal;
   path: string;
   matches: M[];
+  fetcherKey: string | undefined;
   patch: (routeId: string | null, children: O[]) => void;
 };
 
@@ -234,7 +397,7 @@ export type AgnosticPatchRoutesOnNavigationFunction<
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > = (
   opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
-) => void | Promise<void>;
+) => MaybePromise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific
@@ -247,19 +410,18 @@ export interface MapRoutePropertiesFunction {
 }
 
 /**
- * Keys we cannot change from within a lazy() function. We spread all other keys
+ * Keys we cannot change from within a lazy object. We spread all other keys
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type ImmutableRouteKey =
+type UnsupportedLazyRouteObjectKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
   | "children";
-
-export const immutableRouteKeys = new Set<ImmutableRouteKey>([
+const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
   "path",
@@ -267,21 +429,64 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "index",
   "children",
 ]);
+export function isUnsupportedLazyRouteObjectKey(
+  key: string
+): key is UnsupportedLazyRouteObjectKey {
+  return unsupportedLazyRouteObjectKeys.has(
+    key as UnsupportedLazyRouteObjectKey
+  );
+}
 
-type RequireOne<T, Key = keyof T> = Exclude<
-  {
-    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
-  }[keyof T],
-  undefined
->;
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
+type UnsupportedLazyRouteFunctionKey =
+  | UnsupportedLazyRouteObjectKey
+  | "unstable_middleware";
+const unsupportedLazyRouteFunctionKeys =
+  new Set<UnsupportedLazyRouteFunctionKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "unstable_middleware",
+    "children",
+  ]);
+export function isUnsupportedLazyRouteFunctionKey(
+  key: string
+): key is UnsupportedLazyRouteFunctionKey {
+  return unsupportedLazyRouteFunctionKeys.has(
+    key as UnsupportedLazyRouteFunctionKey
+  );
+}
+
+/**
+ * lazy object to load route properties, which can add non-matching
+ * related properties to a route
+ */
+export type LazyRouteObject<R extends AgnosticRouteObject> = {
+  [K in keyof R as K extends UnsupportedLazyRouteObjectKey
+    ? never
+    : K]?: () => Promise<R[K] | null | undefined>;
+};
 
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
+  (): Promise<
+    Omit<R, UnsupportedLazyRouteFunctionKey> &
+      Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
+  >;
 }
+
+export type LazyRouteDefinition<R extends AgnosticRouteObject> =
+  | LazyRouteObject<R>
+  | LazyRouteFunction<R>;
 
 /**
  * Base RouteObject with common props shared by all types of routes
@@ -290,12 +495,13 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  unstable_middleware?: unstable_MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
+  lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
 };
 
 /**
@@ -555,8 +761,13 @@ export function matchRoutesImpl<
 export interface UIMatch<Data = unknown, Handle = unknown> {
   id: string;
   pathname: string;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
+   **/
   params: AgnosticRouteMatch["params"];
+  /** The return value from the matched route's loader or clientLoader */
   data: Data;
+  /** The {@link https://reactrouter.com/start/framework/route-module#handle handle object} exported from the matched route module */
   handle: Handle;
 }
 
@@ -1017,7 +1228,7 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
-function compilePath(
+export function compilePath(
   path: string,
   caseSensitive = false,
   end = true

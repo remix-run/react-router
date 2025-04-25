@@ -1,4 +1,9 @@
-import type { AppLoadContext, ServerBuild } from "react-router";
+import type {
+  AppLoadContext,
+  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
+  ServerBuild,
+  unstable_InitialContext,
+} from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { readableStreamToString } from "@react-router/node";
 import type {
@@ -10,6 +15,8 @@ import type {
 
 import { isBinaryType } from "./binaryTypes";
 
+type MaybePromise<T> = T | Promise<T>;
+
 /**
  * A function that returns the value to use as `context` in route `loader` and
  * `action` functions.
@@ -19,7 +26,9 @@ import { isBinaryType } from "./binaryTypes";
  */
 export type GetLoadContextFunction = (
   event: APIGatewayProxyEventV2
-) => Promise<AppLoadContext> | AppLoadContext;
+) => MiddlewareEnabled extends true
+  ? MaybePromise<unstable_InitialContext>
+  : MaybePromise<AppLoadContext>;
 
 export type RequestHandler = APIGatewayProxyHandlerV2;
 

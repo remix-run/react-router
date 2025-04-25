@@ -5,6 +5,10 @@ order: 3
 
 # Route Module
 
+[MODES: framework]
+
+## Introduction
+
 The files referenced in `routes.ts` are called Route Modules.
 
 ```tsx filename=app/routes.ts
@@ -25,7 +29,7 @@ This guide is a quick overview of every route module feature. The rest of the ge
 
 ## Component (`default`)
 
-Defines the component that will render when the route matches.
+The `default` export in a route module defines the component that will render when the route matches.
 
 ```tsx filename=app/routes/my-route.tsx
 export default function MyRouteComponent() {
@@ -35,6 +39,40 @@ export default function MyRouteComponent() {
       <p>
         I'm still using React Router after like 10 years.
       </p>
+    </div>
+  );
+}
+```
+
+### Props passed to the Component
+
+When the component is rendered, it is provided the props defined in `Route.ComponentProps` that React Router will automatically generate for you. These props include:
+
+1. `loaderData`: The data returned from the `loader` function in this route module
+2. `actionData`: The data returned from the `action` function in this route module
+3. `params`: An object containing the route parameters (if any).
+4. `matches`: An array of all the matches in the current route tree.
+
+You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferrable because they will be automatically typed correctly for the route.
+
+### Using props
+
+```tsx filename=app/routes/my-route-with-default-params.tsx
+import type { Route } from "./+types/route-name";
+
+export default function MyRouteComponent({
+  loaderData,
+  actionData,
+  params,
+  matches,
+}: Route.ComponentProps) {
+  return (
+    <div>
+      <h1>Welcome to My Route with Props!</h1>
+      <p>Loader Data: {JSON.stringify(loaderData)}</p>
+      <p>Action Data: {JSON.stringify(actionData)}</p>
+      <p>Route Parameters: {JSON.stringify(params)}</p>
+      <p>Matched Routes: {JSON.stringify(matches)}</p>
     </div>
   );
 }

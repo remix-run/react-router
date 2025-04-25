@@ -23,7 +23,6 @@ test.describe("useFetcher", () => {
     fixture = await createFixture({
       files: {
         "app/routes/resource-route-action-only.ts": js`
-          import { json } from "react-router";
           export function action() {
             return new Response("${CHEESESTEAK}");
           }

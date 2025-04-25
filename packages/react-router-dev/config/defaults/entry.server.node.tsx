@@ -15,6 +15,8 @@ export default function handleRequest(
   responseHeaders: Headers,
   routerContext: EntryContext,
   loadContext: AppLoadContext
+  // If you have middleware enabled:
+  // loadContext: unstable_RouterContextProvider
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;

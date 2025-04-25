@@ -1,5 +1,41 @@
 # `create-react-router`
 
+## 7.5.2
+
+_No changes_
+
+## 7.5.1
+
+_No changes_
+
+## 7.5.0
+
+_No changes_
+
+## 7.4.1
+
+_No changes_
+
+## 7.4.0
+
+_No changes_
+
+## 7.3.0
+
+_No changes_
+
+## 7.2.0
+
+_No changes_
+
+## 7.1.5
+
+_No changes_
+
+## 7.1.4
+
+_No changes_
+
 ## 7.1.3
 
 _No changes_

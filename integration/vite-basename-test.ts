@@ -70,14 +70,15 @@ async function configFiles({
       basename: basename !== "/" ? basename : undefined,
     }),
     "vite.config.js": js`
-    import { reactRouter } from "@react-router/dev/vite";
+      import { reactRouter } from "@react-router/dev/vite";
 
-    export default {
-      ${base !== "/" ? 'base: "' + base + '",' : ""}
-      ${await viteConfig.server({ port })}
-      plugins: [reactRouter()]
-    }
-  `,
+      export default async () => ({
+        ${base !== "/" ? 'base: "' + base + '",' : ""}
+        ${await viteConfig.server({ port })}
+        ${viteConfig.build()}
+        plugins: [reactRouter()]
+      })
+    `,
   };
 }
 

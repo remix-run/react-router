@@ -1273,4 +1273,133 @@ test.describe("Fog of War", () => {
       ),
     ]);
   });
+
+  test("handles interruptions from back to back navigations", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/a.tsx": js`
+          import { Link, Outlet, useLoaderData, useNavigate } from "react-router";
+          export function loader({ request }) {
+            return { message: "A LOADER" };
+          }
+          export default function Index() {
+            let data = useLoaderData();
+            let navigate = useNavigate();
+            return (
+              <>
+                <h1 id="a">A: {data.message}</h1>
+                <button data-link onClick={async () => {
+                  navigate('/a/b');
+                  setTimeout(() => navigate('/a/b'), 0)
+                }}>
+                  /a/b
+                </button>
+                <Outlet/>
+              </>
+            )
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/a", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual(["root", "routes/a", "routes/_index"]);
+
+    // /a/b gets discovered on click
+    await app.clickElement("[data-link]");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    expect(await (await page.$("body"))?.textContent()).not.toContain(
+      "Not Found"
+    );
+    await page.waitForSelector("#b");
+
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual(["root", "routes/a", "routes/_index", "routes/a.b"]);
+  });
+
+  test("loads ancestor index routes on navigations", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/root.tsx": js`
+          import * as React from "react";
+          import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            let [showLink, setShowLink] = React.useState(false);
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Link to="/" discover="none">Home</Link><br/>
+                  <Link to="/a" discover="none">/a</Link><br/>
+                  <Link to="/a/b" discover="none">/a/b</Link><br/>
+                  <Link to="/a/b/c" discover="none">/a/b/c</Link><br/>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/a._index.tsx": js`
+          export default function Index() {
+            return <h3 id="a-index">A INDEX</h3>;
+          }
+        `,
+        "app/routes/a.b._index.tsx": js`
+          export default function Index() {
+            return <h3 id="b-index">B INDEX</h3>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index"]);
+
+    await app.clickLink("/a/b/c");
+    await page.waitForSelector("#c");
+
+    // /a/b is not discovered yet even thought it's rendered
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__reactRouterManifest.routes)
+      )
+    ).toEqual([
+      "root",
+      "routes/_index",
+      "routes/a",
+      "routes/a._index",
+      "routes/a.b",
+      "routes/a.b._index",
+      "routes/a.b.c",
+    ]);
+
+    await app.clickLink("/a/b");
+    await page.waitForSelector("#b-index");
+
+    await app.clickLink("/a");
+    await page.waitForSelector("#a-index");
+  });
 });

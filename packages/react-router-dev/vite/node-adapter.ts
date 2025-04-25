@@ -1,4 +1,4 @@
-import type { IncomingHttpHeaders, ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { once } from "node:events";
 import { Readable } from "node:stream";
 import { splitCookiesString } from "set-cookie-parser";
@@ -12,7 +12,20 @@ export type NodeRequestHandler = (
   res: ServerResponse
 ) => Promise<void>;
 
-function fromNodeHeaders(nodeHeaders: IncomingHttpHeaders): Headers {
+function fromNodeHeaders(nodeReq: IncomingMessage): Headers {
+  let nodeHeaders = nodeReq.headers;
+
+  if (nodeReq.httpVersionMajor >= 2) {
+    nodeHeaders = { ...nodeHeaders };
+    if (nodeHeaders[":authority"]) {
+      nodeHeaders.host = nodeHeaders[":authority"] as string;
+    }
+    delete nodeHeaders[":authority"];
+    delete nodeHeaders[":method"];
+    delete nodeHeaders[":path"];
+    delete nodeHeaders[":scheme"];
+  }
+
   let headers = new Headers();
 
   for (let [key, values] of Object.entries(nodeHeaders)) {
@@ -50,7 +63,7 @@ export function fromNodeRequest(
   let controller: AbortController | null = new AbortController();
   let init: RequestInit = {
     method: nodeReq.method,
-    headers: fromNodeHeaders(nodeReq.headers),
+    headers: fromNodeHeaders(nodeReq),
     signal: controller.signal,
   };
 

@@ -33,9 +33,11 @@ export function mockServerBuild(
   } = {}
 ) {
   return {
+    ssr: true,
     future: {
       ...opts.future,
     },
+    prerender: [],
     assets: {
       entry: {
         imports: [""],
