@@ -118,6 +118,32 @@ export type ReactRouterConfig = {
   appDirectory?: string;
 
   /**
+   * The path to the root route module file, relative to the app directory or absolute.
+   * If not specified, defaults to root.
+   */
+  rootRouteFile?: string;
+
+  /**
+   * The path to the routes configuration file, relative to the app directory or absolute.
+   * If not specified, defaults to routes.
+   */
+  routesFile?: string;
+
+  /**
+   * The path to the client entry file, relative to the app directory or absolute.
+   * If not specified, defaults entry.client in the app directory, or falls back
+   * to the default implementation.
+   */
+  clientEntryFile?: string;
+
+  /**
+   * The path to the server entry file, relative to the app directory or absolute.
+   * If not specified, defaults to entry.server in the app directory, or falls back
+   * to the default implementation.
+   */
+  serverEntryFile?: string;
+
+  /**
    * The output format of the server build. Defaults to "esm".
    */
   serverModuleFormat?: ServerModuleFormat;
@@ -232,6 +258,22 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * The path to the root route module file.
+   */
+  rootRouteFile: string;
+  /**
+   * The path to the routes configuration file.
+   */
+  routesFile: string;
+  /**
+   * The path to a custom client entry file, if one exists.
+   */
+  clientEntryFile?: string;
+  /**
+   * The path to a custom server entry file, if one exists.
+   */
+  serverEntryFile?: string;
 }>;
 
 let mergeReactRouterConfig = (
@@ -393,9 +435,13 @@ async function resolveConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
+    clientEntryFile,
     prerender,
+    rootRouteFile: userRootRouteFile,
+    routesFile: userRoutesFile,
     serverBuildFile,
     serverBundles,
+    serverEntryFile,
     serverModuleFormat,
     ssr,
   } = {
@@ -423,7 +469,8 @@ async function resolveConfig({
   let appDirectory = path.resolve(root, userAppDirectory || "app");
   let buildDirectory = path.resolve(root, userBuildDirectory);
 
-  let rootRouteFile = findEntry(appDirectory, "root");
+  let rootRouteFile = findEntry(appDirectory, "root", userRootRouteFile);
+
   if (!rootRouteFile) {
     let rootRouteDisplayPath = path.relative(
       root,
@@ -435,10 +482,10 @@ async function resolveConfig({
   }
 
   let routes: RouteManifest = {
-    root: { path: "", id: "root", file: rootRouteFile },
+    root: { path: "", id: "root", file: path.relative(appDirectory, rootRouteFile) },
   };
 
-  let routeConfigFile = findEntry(appDirectory, "routes");
+  let routeConfigFile = findEntry(appDirectory, "routes", userRoutesFile);
 
   try {
     if (!routeConfigFile) {
@@ -451,9 +498,7 @@ async function resolveConfig({
 
     setAppDirectory(appDirectory);
     let routeConfigExport = (
-      await viteNodeContext.runner.executeFile(
-        path.join(appDirectory, routeConfigFile)
-      )
+      await viteNodeContext.runner.executeFile(routeConfigFile)
     ).default;
     let routeConfig = await routeConfigExport;
 
@@ -516,6 +561,10 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    rootRouteFile,
+    routesFile: routeConfigFile,
+    clientEntryFile,
+    serverEntryFile,
   });
 
   for (let preset of reactRouterUserConfig.presets ?? []) {
@@ -556,9 +605,7 @@ export async function createConfigLoader({
     mode: watch ? "development" : "production",
   });
 
-  let reactRouterConfigFile = findEntry(root, "react-router.config", {
-    absolute: true,
-  });
+  let reactRouterConfigFile = findEntry(root, "react-router.config");
 
   let getConfig = () =>
     resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
@@ -673,7 +720,7 @@ export async function resolveEntryFiles({
   rootDirectory: string;
   reactRouterConfig: ResolvedReactRouterConfig;
 }) {
-  let { appDirectory } = reactRouterConfig;
+  let { appDirectory, clientEntryFile, serverEntryFile } = reactRouterConfig;
 
   let defaultsDirectory = path.resolve(
     path.dirname(require.resolve("@react-router/dev/package.json")),
@@ -682,18 +729,17 @@ export async function resolveEntryFiles({
     "defaults"
   );
 
-  let userEntryClientFile = findEntry(appDirectory, "entry.client");
-  let userEntryServerFile = findEntry(appDirectory, "entry.server");
+  let entryClientFilePath = findEntry(appDirectory, "entry.client", clientEntryFile);
+  let entryServerFilePath = findEntry(appDirectory, "entry.server", serverEntryFile);
 
-  let entryServerFile: string;
-  let entryClientFile = userEntryClientFile || "entry.client.tsx";
+  if (!entryClientFilePath) {
+    entryClientFilePath = path.resolve(defaultsDirectory, "entry.client.tsx");
+  }
 
-  let pkgJson = await PackageJson.load(rootDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
+  if (!entryServerFilePath) {
+    let pkgJson = await PackageJson.load(rootDirectory);
+    let deps = pkgJson.content.dependencies ?? {};
 
-  if (userEntryServerFile) {
-    entryServerFile = userEntryServerFile;
-  } else {
     if (!deps["@react-router/node"]) {
       throw new Error(
         `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`
@@ -722,16 +768,8 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = `entry.server.node.tsx`;
+    entryServerFilePath = path.resolve(defaultsDirectory, "entry.server.node.tsx");
   }
-
-  let entryClientFilePath = userEntryClientFile
-    ? path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
-    : path.resolve(defaultsDirectory, entryClientFile);
-
-  let entryServerFilePath = userEntryServerFile
-    ? path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
-    : path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
 }
@@ -741,12 +779,22 @@ const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 function findEntry(
   dir: string,
   basename: string,
-  options?: { absolute?: boolean }
+  customPath?: string
 ): string | undefined {
+  if (customPath) {
+    const file = path.resolve(dir, customPath);
+    if (!fs.existsSync(file)) {
+      throw new Error(`Could not find "${basename}" entry file at ${file}.`);
+    }
+    return file;
+  }
+
+  // Try all supported extensions.
   for (let ext of entryExts) {
-    let file = path.resolve(dir, basename + ext);
+    const file = path.resolve(dir, basename + ext);
+
     if (fs.existsSync(file)) {
-      return options?.absolute ?? false ? file : path.relative(dir, file);
+      return file;
     }
   }
 
