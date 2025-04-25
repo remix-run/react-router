@@ -9,6 +9,15 @@ export function headers() {
   return new Headers({ "x-root": "yes" });
 }
 
+export const unstable_middleware = [
+  async ({ request, context }, next) => {
+    console.log("start middleware on RSC server");
+    let res = await next();
+    console.log("end middleware on RSC server");
+    return res;
+  },
+];
+
 export async function loader() {
   await new Promise((r) => setTimeout(r, 500));
   return {
