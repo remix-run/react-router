@@ -159,7 +159,7 @@ export type ReactRouterConfig = {
    */
   presets?: Array<Preset>;
   /**
-   * Control the "Lazy Route Discovery" behavior.
+   * Control the "Lazy Route Discovery" behavior
    *
    * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
    *   lazily discover routes as the user navigates around your application.
@@ -167,9 +167,6 @@ export type ReactRouterConfig = {
    *   routes with the initial HTML document load.
    * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
    *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
-   *
-   * If you do not need to control the manifest, you can specify the mode
-   * directly on the `routeDiscovery` config.
    */
   routeDiscovery?:
     | {
@@ -227,10 +224,14 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   prerender: ReactRouterConfig["prerender"];
   /**
-   * Control the "Lazy Route Discovery" behavior.  By default, this resolves to
-   * `lazy` which will lazily discover routes as the user navigates around your
-   * application.  You can set this to `initial` to opt-out of this behavior and
-   * load all routes with the initial HTML document load.
+   * Control the "Lazy Route Discovery" behavior
+   *
+   * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
+   *   lazily discover routes as the user navigates around your application.
+   *   You can set this to `initial` to opt-out of this behavior and load all
+   *   routes with the initial HTML document load.
+   * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
+   *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
    */
   routeDiscovery: ReactRouterConfig["routeDiscovery"];
   /**

@@ -199,7 +199,7 @@ export function getManifestPath(
   _manifestPath: string | undefined,
   basename: string | undefined
 ) {
-  let manifestPath = _manifestPath || "/_manifest";
+  let manifestPath = _manifestPath || "/__manifest";
 
   if (basename == null) {
     return manifestPath;
