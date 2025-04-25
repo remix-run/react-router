@@ -97,7 +97,7 @@ export function RemixRootDefaultErrorBoundary({
         <h1 style={{ fontSize: "24px" }}>
           {error.status} {error.statusText}
         </h1>
-        {ENABLE_DEV_WARNINGS && heyDeveloper}
+        {ENABLE_DEV_WARNINGS ? heyDeveloper : null}
       </BoundaryShell>
     );
   }

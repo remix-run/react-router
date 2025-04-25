@@ -10,7 +10,7 @@ import { ENABLE_DEV_WARNINGS } from "../../context";
 export function RemixRootDefaultHydrateFallback() {
   return (
     <BoundaryShell title="Loading..." renderScripts>
-      {ENABLE_DEV_WARNINGS && (
+      {ENABLE_DEV_WARNINGS ? (
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -23,7 +23,7 @@ export function RemixRootDefaultHydrateFallback() {
             `,
           }}
         />
-      )}
+      ) : null}
     </BoundaryShell>
   );
 }
