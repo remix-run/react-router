@@ -20,19 +20,21 @@ const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
 };
 
 export default {
-  async fetch(request, env) {
-    const match = await matchRSCServerRequest({
+  fetch(request, env) {
+    return matchRSCServerRequest({
       decodeCallServer,
       request,
       routes,
-    });
-    if (match instanceof Response) {
-      return match;
-    }
+      generateResponse(match) {
+        if (match instanceof Response) {
+          return match;
+        }
 
-    return new Response(renderToReadableStream(match.payload), {
-      status: match.statusCode,
-      headers: match.headers,
+        return new Response(renderToReadableStream(match.payload), {
+          status: match.statusCode,
+          headers: match.headers,
+        });
+      },
     });
   },
 } satisfies ExportedHandler;
