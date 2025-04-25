@@ -1,33 +1,28 @@
-import type { ServerBuild } from "../../lib/server-runtime/build";
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ErrorResponseImpl } from "../../lib/router/utils";
+import { mockServerBuild } from "./utils";
+import type { HandleDocumentRequestFunction } from "../../lib/server-runtime/build";
 
-function getHandler(routeModule = {}, entryServerModule = {}) {
-  let routeId = "root";
+function getHandler(
+  routeModule = {},
+  opts: {
+    handleDocumentRequest?: HandleDocumentRequestFunction;
+  } = {}
+) {
   let handleErrorSpy = jest.fn();
-  let build = {
-    routes: {
-      [routeId]: {
-        id: routeId,
+  let build = mockServerBuild(
+    {
+      root: {
         path: "/",
-        module: {
-          default() {},
-          ...routeModule,
-        },
+        default() {},
+        ...routeModule,
       },
     },
-    entry: {
-      module: {
-        handleError: handleErrorSpy,
-        default() {
-          return new Response("<html><body>Dummy document</body></html>");
-        },
-        ...entryServerModule,
-      },
-    },
-    future: {},
-    prerender: [],
-  } as unknown as ServerBuild;
+    {
+      handleError: handleErrorSpy,
+      handleDocumentRequest: opts.handleDocumentRequest,
+    }
+  );
 
   return {
     handler: createRequestHandler(build),
@@ -76,7 +71,7 @@ describe("handleError", () => {
 
     it("provides render-thrown Error", async () => {
       let { handler, handleErrorSpy } = getHandler(undefined, {
-        default() {
+        handleDocumentRequest() {
           throw new Error("Render error");
         },
       });
