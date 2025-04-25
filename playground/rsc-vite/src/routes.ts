@@ -5,14 +5,6 @@ export const routes = [
     id: "root",
     path: "",
     // requiredCSS: ["/index.css"],
-    unstable_middleware: [
-      async ({ request, context }, next) => {
-        console.log("start middleware on RSC server");
-        let res = await next();
-        console.log("end middleware on RSC server");
-        return res;
-      },
-    ],
     lazy: () => import("./routes/root/root"),
     children: [
       {
