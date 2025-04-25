@@ -172,11 +172,9 @@ export type ReactRouterConfig = {
    * directly on the `routeDiscovery` config.
    */
   routeDiscovery?:
-    | "lazy"
-    | "initial"
     | {
-        mode?: "lazy"; // Can only adjust the manifest path in `lazy` mode
-        manifestPath: string;
+        mode?: "lazy";
+        manifestPath?: string;
       }
     | {
         mode: "initial";
@@ -234,10 +232,7 @@ export type ResolvedReactRouterConfig = Readonly<{
    * application.  You can set this to `initial` to opt-out of this behavior and
    * load all routes with the initial HTML document load.
    */
-  routeDiscovery: {
-    mode: "lazy" | "initial";
-    manifestPath: string;
-  };
+  routeDiscovery: ReactRouterConfig["routeDiscovery"];
   /**
    * An object of all available routes, keyed by route id.
    */
@@ -416,6 +411,10 @@ async function resolveConfig({
   let defaults = {
     basename: "/",
     buildDirectory: "build",
+    routeDiscovery: {
+      mode: "lazy",
+      manifestPath: "/__manifest",
+    },
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
@@ -432,7 +431,7 @@ async function resolveConfig({
     buildDirectory: userBuildDirectory,
     buildEnd,
     prerender,
-    routeDiscovery: userRouteDiscovery,
+    routeDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
@@ -459,43 +458,24 @@ async function resolveConfig({
     );
   }
 
-  let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"] = {
-    mode: "lazy",
-    manifestPath: "/__manifest",
-  };
-
-  if (userRouteDiscovery == null) {
+  if (userAndPresetConfigs.routeDiscovery == null) {
+    // Disable FOW when SSR is disabled, otherwise use defaults
     if (!ssr) {
-      // No FOW when SSR is disabled
-      routeDiscovery.mode = "initial";
-    } else {
-      // no-op - use defaults
+      routeDiscovery = { mode: "initial" };
     }
-  } else if (
-    userRouteDiscovery === "initial" ||
-    (typeof userRouteDiscovery === "object" &&
-      userRouteDiscovery.mode === "initial")
-  ) {
-    routeDiscovery.mode = "initial";
-  } else {
+  } else if (userAndPresetConfigs.routeDiscovery.mode === "lazy") {
     if (!ssr) {
       return err(
-        'The `routeDiscovery` config must be left unset or set to "initial" ' +
-          "when setting `ssr:false`"
+        'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`'
       );
     }
-    if (typeof userRouteDiscovery === "object") {
-      if (
-        userRouteDiscovery.manifestPath != null &&
-        !userRouteDiscovery.manifestPath.startsWith("/")
-      ) {
-        return err(
-          "The `routeDiscovery.manifestPath` config must be a root-relative " +
-            'pathname beginning with a slash (i.e., "/__manifest")'
-        );
-      }
-      routeDiscovery.manifestPath =
-        userRouteDiscovery.manifestPath ?? "/__manifest";
+
+    let manifestPath = userAndPresetConfigs.routeDiscovery.manifestPath;
+    if (manifestPath != null && !manifestPath.startsWith("/")) {
+      return err(
+        "The `routeDiscovery.manifestPath` config must be a root-relative " +
+          'pathname beginning with a slash (i.e., "/__manifest")'
+      );
     }
   }
 

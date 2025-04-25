@@ -1414,7 +1414,7 @@ test.describe("Fog of War", () => {
       files: {
         ...getFiles(),
         "react-router.config.ts": reactRouterConfig({
-          routeDiscovery: { manifestPath: "/custom-manifest" },
+          routeDiscovery: { mode: "lazy", manifestPath: "/custom-manifest" },
         }),
       },
     });
@@ -1461,7 +1461,7 @@ test.describe("Fog of War", () => {
         files: {
           ...getFiles(),
           "react-router.config.ts": reactRouterConfig({
-            routeDiscovery: "initial",
+            routeDiscovery: { mode: "initial" },
           }),
           "app/entry.client.tsx": js`
             import { HydratedRouter } from "react-router/dom";
@@ -1575,7 +1575,7 @@ test.describe("Fog of War", () => {
       let res = await fixture.requestDocument("/");
       let html = await res.text();
 
-      expect(html).toContain('"routeDiscovery":"initial"');
+      expect(html).toContain('"routeDiscovery":{"mode":"initial"}');
 
       await app.goto("/", true);
       await page.waitForSelector("#index");
@@ -1598,7 +1598,7 @@ test.describe("Fog of War", () => {
             ...getFiles(),
             "react-router.config.ts": reactRouterConfig({
               ssr: false,
-              routeDiscovery: "lazy",
+              routeDiscovery: { mode: "lazy" },
             }),
           },
         });
@@ -1617,7 +1617,7 @@ test.describe("Fog of War", () => {
 
       expect(err).toEqual(new Error("Build failed, check the output above"));
       expect(buildOutput).toContain(
-        'Error: The `routeDiscovery` config cannot be set to "lazy" when setting `ssr:false`'
+        'Error: The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`'
       );
       console.error = ogConsole;
     });

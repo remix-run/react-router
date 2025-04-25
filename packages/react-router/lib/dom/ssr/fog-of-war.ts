@@ -27,6 +27,13 @@ const discoveredPaths = new Set<string>();
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
+export function isFogOfWarEnabled(
+  routeDiscovery: ServerBuild["routeDiscovery"],
+  ssr: boolean
+) {
+  return routeDiscovery.mode === "lazy" && ssr === true;
+}
+
 export function getPartialManifest(
   { sri, ...manifest }: AssetsManifest,
   router: DataRouter
@@ -73,7 +80,7 @@ export function getPatchRoutesOnNavigationFunction(
   isSpaMode: boolean,
   basename: string | undefined
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (routeDiscovery.mode !== "lazy") {
+  if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
   }
 
@@ -107,7 +114,7 @@ export function useFogOFWarDiscovery(
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
     if (
-      routeDiscovery.mode !== "lazy" ||
+      !isFogOfWarEnabled(routeDiscovery, ssr) ||
       navigator.connection?.saveData === true
     ) {
       return;
@@ -188,6 +195,19 @@ export function useFogOFWarDiscovery(
   }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
 }
 
+export function getManifestPath(
+  _manifestPath: string | undefined,
+  basename: string | undefined
+) {
+  let manifestPath = _manifestPath || "/_manifest";
+
+  if (basename == null) {
+    return manifestPath;
+  }
+
+  return `${basename}${manifestPath}`.replace(/\/+/g, "/");
+}
+
 const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
 
 export async function fetchAndApplyManifestPatches(
@@ -198,14 +218,14 @@ export async function fetchAndApplyManifestPatches(
   ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined,
-  _manifestPath: string,
+  manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal
 ): Promise<void> {
-  let manifestPath = `${
-    basename != null ? basename : "/"
-  }${_manifestPath}`.replace(/\/+/g, "/");
-  let url = new URL(manifestPath, window.location.origin);
+  let url = new URL(
+    getManifestPath(manifestPath, basename),
+    window.location.origin
+  );
   paths.sort().forEach((path) => url.searchParams.append("p", path));
   url.searchParams.set("version", manifest.version);
 

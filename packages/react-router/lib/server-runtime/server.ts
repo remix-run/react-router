@@ -41,6 +41,7 @@ import type {
 } from "../dom/ssr/single-fetch";
 import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
+import { getManifestPath } from "../dom/ssr/fog-of-war";
 
 export type RequestHandler = (
   request: Request,
@@ -199,11 +200,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     // Manifest request for fog of war
-    let manifestUrl =
-      `${normalizedBasename}${_build.routeDiscovery.manifestPath}`.replace(
-        /\/+/g,
-        "/"
-      );
+    let manifestUrl = getManifestPath(
+      _build.routeDiscovery.manifestPath,
+      normalizedBasename
+    );
     if (url.pathname === manifestUrl) {
       try {
         let res = await handleManifestRequest(_build, routes, url);
