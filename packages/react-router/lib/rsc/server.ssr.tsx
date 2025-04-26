@@ -11,7 +11,7 @@ export async function routeRSCServerRequest(
   requestServer: (request: Request) => Promise<Response>,
   decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>,
   renderHTML: (
-    payload: ServerPayload
+    getPayload: () => Promise<ServerPayload>
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>
 ) {
   const url = new URL(request.url);
@@ -51,20 +51,17 @@ export async function routeRSCServerRequest(
     throw new Error("Failed to clone server response");
   }
 
-  const payload = (await decode(serverResponse.body)) as ServerPayload;
-
-  if (payload.type === "redirect") {
-    return new Response(null, {
-      status: payload.status,
-      headers: {
-        Location: payload.location,
-      },
-    });
-  }
-
-  const html = await renderHTML(payload);
+  const body = serverResponse.body;
+  let payloadPromise: Promise<ServerPayload>;
+  const getPayload = async () => {
+    if (payloadPromise) return payloadPromise;
+    payloadPromise = decode(body);
+    return payloadPromise;
+  };
 
   try {
+    const html = await renderHTML(getPayload);
+
     const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
 
     const headers = new Headers(serverResponse.headers);
@@ -75,6 +72,9 @@ export async function routeRSCServerRequest(
       headers,
     });
   } catch (reason) {
+    if (reason instanceof Response) {
+      return reason;
+    }
     throw reason;
     // TODO: Track deepest rendered boundary and re-try
     // Figure out how / if we need to transport the error,
@@ -83,7 +83,23 @@ export async function routeRSCServerRequest(
   }
 }
 
-export function RSCStaticRouter({ payload }: { payload: ServerPayload }) {
+export function RSCStaticRouter({
+  getPayload,
+}: {
+  getPayload: () => Promise<ServerPayload>;
+}) {
+  // @ts-expect-error - need to update the React types
+  const payload = React.use(getPayload()) as ServerPayload;
+
+  if (payload.type === "redirect") {
+    throw new Response(null, {
+      status: payload.status,
+      headers: {
+        Location: payload.location,
+      },
+    });
+  }
+
   if (payload.type !== "render") return null;
 
   const context = {
