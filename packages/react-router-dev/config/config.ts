@@ -545,15 +545,17 @@ export type ConfigLoader = {
 export async function createConfigLoader({
   rootDirectory: root,
   watch,
+  mode,
 }: {
   watch: boolean;
   rootDirectory?: string;
+  mode: string;
 }): Promise<ConfigLoader> {
   root = root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
   let viteNodeContext = await ViteNode.createContext({
     root,
-    mode: watch ? "development" : "production",
+    mode,
   });
 
   let reactRouterConfigFile = findEntry(root, "react-router.config", {
@@ -656,9 +658,16 @@ export async function createConfigLoader({
   };
 }
 
-export async function loadConfig({ rootDirectory }: { rootDirectory: string }) {
+export async function loadConfig({
+  rootDirectory,
+  mode,
+}: {
+  rootDirectory: string;
+  mode: string;
+}) {
   let configLoader = await createConfigLoader({
     rootDirectory,
+    mode,
     watch: false,
   });
   let config = await configLoader.getConfig();
