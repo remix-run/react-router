@@ -909,6 +909,85 @@ test.describe("Client Data", () => {
           expect(logs).toEqual(["running parent client loader"]);
           console.error = _consoleError;
         });
+
+        test("hydrating clientLoader redirects trigger new .data requests to the server", async ({
+          page,
+        }) => {
+          appFixture = await createAppFixture(
+            await createFixture({
+              files: {
+                "react-router.config.ts": reactRouterConfig({
+                  splitRouteModules,
+                }),
+                "app/root.tsx": js`
+                  import { Outlet, Scripts } from "react-router"
+
+                  let count = 1;
+                  export function loader() {
+                    return count++;
+                  }
+
+                  export default function Root({ loaderData }) {
+                    return (
+                      <html>
+                        <head></head>
+                        <body>
+                          <main>
+                            <p id="root-data">{loaderData}</p>
+                            <Outlet />
+                          </main>
+                          <Scripts />
+                        </body>
+                      </html>
+                    );
+                  }
+                `,
+                "app/routes/parent.tsx": js`
+                  import { Outlet } from 'react-router'
+                  let count = 1;
+                  export function loader() {
+                    return count++;
+                  }
+                  export default function Component({ loaderData }) {
+                    return (
+                      <>
+                        <p id="parent-data">{loaderData}</p>
+                        <Outlet/>
+                      </>
+                    );
+                  }
+                  export function shouldRevalidate() {
+                    return false;
+                  }
+                `,
+                "app/routes/parent.a.tsx": js`
+                  import { redirect } from 'react-router'
+                  export function clientLoader() {
+                    return redirect('/parent/b');
+                  }
+                  clientLoader.hydrate = true;
+                  export default function Component({ loaderData }) {
+                    return <p>Should not see me</p>;
+                  }
+                `,
+                "app/routes/parent.b.tsx": js`
+                  export default function Component({ loaderData }) {
+                    return <p id="b">Hi!</p>;
+                  }
+                `,
+              },
+            })
+          );
+          let app = new PlaywrightFixture(appFixture, page);
+
+          await app.goto("/parent/a");
+          await page.waitForSelector("#b");
+          // Root re-runs
+          await expect(page.locator("#root-data")).toHaveText("2");
+          // But parent opted out of revalidation
+          await expect(page.locator("#parent-data")).toHaveText("1");
+          await expect(page.locator("#b")).toHaveText("Hi!");
+        });
       });
 
       test.describe("clientLoader - lazy route module", () => {

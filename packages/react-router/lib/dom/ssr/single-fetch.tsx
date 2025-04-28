@@ -428,14 +428,19 @@ async function singleFetchLoaderNavigationStrategy(
   await Promise.all(routeDfds.map((d) => d.promise));
 
   // We can skip the server call:
-  // - On initial hydration - only clientLoaders can pass through via `clientLoader.hydrate`
+  // - On initial hydration - only clientLoaders can pass through via
+  //   `clientLoader.hydrate`. We check the navigation state below as well
+  //   because if a clientLoader redirected we'll still be `initialized=false`
+  //   but we want to call loaders for the new location
   // - If there are no routes to fetch from the server
   //
   // One exception - if we are performing an HDR revalidation we have to call
   // the server in case a new loader has shown up that the manifest doesn't yet
   // know about
+  let isInitialLoad =
+    !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    (!router.state.initialized || routesParams.size === 0) &&
+    (isInitialLoad || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });

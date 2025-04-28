@@ -686,7 +686,15 @@ interface ShortCircuitable {
   shortCircuited?: boolean;
 }
 
-type PendingActionResult = [string, SuccessResult | ErrorResult];
+// Track any pending errors from the action (or other pre-loader flows).
+// The format is [bubbledRouteId, result, actionRouteId?]
+// We should probably change this to an object now that we (optionally) track
+// the original action route id so we can clear out loaderData in the right in
+// processRouteLoaderData
+//
+type PendingActionResult =
+  | [string, SuccessResult | ErrorResult]
+  | [string, SuccessResult | ErrorResult, string];
 
 interface HandleActionResult extends ShortCircuitable {
   /**
@@ -1858,7 +1866,11 @@ export function createRouter(init: RouterInit): Router {
 
       return {
         matches,
-        pendingActionResult: [boundaryMatch.route.id, result],
+        pendingActionResult: [
+          boundaryMatch.route.id,
+          result,
+          actionMatch.route.id,
+        ],
       };
     }
 
@@ -6047,11 +6059,13 @@ function processRouteLoaderData(
   });
 
   // If we didn't consume the pending action error (i.e., all loaders
-  // resolved), then consume it here.  Also clear out any loaderData for the
-  // throwing route
+  // resolved), then consume it here
   if (pendingError !== undefined && pendingActionResult) {
     errors = { [pendingActionResult[0]]: pendingError };
-    loaderData[pendingActionResult[0]] = undefined;
+    // Clear out any loaderData for the throwing route
+    if (pendingActionResult[2]) {
+      loaderData[pendingActionResult[2]] = undefined;
+    }
   }
 
   return {

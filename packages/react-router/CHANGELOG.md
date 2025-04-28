@@ -1,5 +1,12 @@
 # `react-router`
 
+## 7.5.3
+
+### Patch Changes
+
+- Fix bug where bubbled action errors would result in `loaderData` being cleared at the handling `ErrorBoundary` route ([#13476](https://github.com/remix-run/react-router/pull/13476))
+- Handle redirects from `clientLoader.hydrate` initial load executions ([#13477](https://github.com/remix-run/react-router/pull/13477))
+
 ## 7.5.2
 
 ### Patch Changes
