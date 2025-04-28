@@ -254,7 +254,13 @@ export async function fetchAndApplyManifestPatches(
 
       sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
       window.location.href = errorReloadPath;
-      throw new Error("Detected manifest version mismatch, reloading...");
+      console.warn("Detected manifest version mismatch, reloading...");
+
+      // Stall here and let the browser reload and avoid triggering a flash of
+      // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
+      await new Promise(() => {
+        // check out of this hook cause the DJs never gonna re[s]olve this
+      });
     } else if (res.status >= 400) {
       throw new Error(await res.text());
     }
