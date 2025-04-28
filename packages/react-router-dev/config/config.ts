@@ -688,7 +688,20 @@ export async function resolveEntryFiles({
   let entryServerFile: string;
   let entryClientFile = userEntryClientFile || "entry.client.tsx";
 
-  let pkgJson = await PackageJson.load(rootDirectory);
+  let packageJsonPath = findEntry(rootDirectory, "package", {
+    extensions: [".json"],
+    absolute: true,
+    walkParents: true,
+  });
+
+  if (!packageJsonPath) {
+    throw new Error(
+      `Could not find package.json in ${rootDirectory} or any of its parent directories`
+    );
+  }
+
+  let packageJsonDirectory = path.dirname(packageJsonPath);
+  let pkgJson = await PackageJson.load(packageJsonDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
   if (userEntryServerFile) {
@@ -717,7 +730,7 @@ export async function resolveEntryFiles({
       let packageManager = detectPackageManager() ?? "npm";
 
       execSync(`${packageManager} install`, {
-        cwd: rootDirectory,
+        cwd: packageJsonDirectory,
         stdio: "inherit",
       });
     }
@@ -741,14 +754,34 @@ const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 function findEntry(
   dir: string,
   basename: string,
-  options?: { absolute?: boolean }
-): string | undefined {
-  for (let ext of entryExts) {
-    let file = path.resolve(dir, basename + ext);
-    if (fs.existsSync(file)) {
-      return options?.absolute ?? false ? file : path.relative(dir, file);
-    }
+  options?: {
+    absolute?: boolean;
+    extensions?: string[];
+    walkParents?: boolean;
   }
+): string | undefined {
+  let currentDir = path.resolve(dir);
+  let { root } = path.parse(currentDir);
 
-  return undefined;
+  while (true) {
+    for (let ext of options?.extensions ?? entryExts) {
+      let file = path.resolve(currentDir, basename + ext);
+      if (fs.existsSync(file)) {
+        return options?.absolute ?? false ? file : path.relative(dir, file);
+      }
+    }
+
+    if (!options?.walkParents) {
+      return undefined;
+    }
+
+    let parentDir = path.dirname(currentDir);
+    // Break out when we've reached the root directory or we're about to get
+    // stuck in a loop where `path.dirname` keeps returning "/"
+    if (currentDir === root || parentDir === currentDir) {
+      return undefined;
+    }
+
+    currentDir = parentDir;
+  }
 }
