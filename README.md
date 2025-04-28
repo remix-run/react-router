@@ -4,7 +4,7 @@
 [npm]: https://www.npmjs.org/package/react-router-dom
 [build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test.yml?branch=dev&style=square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
-[gitmcp-badge]: https://img.shields.io/endpoint?url=https://gitmcp.io/badge/remix-run/react-router
+[gitmcp-badge]: https://img.shields.io/endpoint?url=https://gitmcp.io/badge/remix-run/react-router "Documentation compatible with GitMCP"
 [gitmcp]: https://gitmcp.io/remix-run/react-router
 
 React Router is a multi-strategy router for React bridging the gap from React 18 to React 19. You can use it maximally as a React framework or minimally as a library with your own architecture.
