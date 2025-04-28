@@ -75,3 +75,12 @@ function NonCriticalUI({ p }: { p: Promise<string> }) {
   return <h3>Non critical value {value}</h3>;
 }
 ```
+
+## Timeouts
+
+By default, loaders and actions reject any outstanding promises after 4950ms. You can control this by exporting a `streamTimeout` numerical value from your `entry.server.tsx`.
+
+```ts filename=entry.server.tsx
+// Reject all pending promises from handler functions after 10 seconds
+export const streamTimeout = 10_000;
+```
