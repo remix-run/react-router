@@ -170,7 +170,7 @@ export type ReactRouterConfig = {
    */
   routeDiscovery?:
     | {
-        mode?: "lazy";
+        mode: "lazy";
         manifestPath?: string;
       }
     | {
@@ -412,10 +412,6 @@ async function resolveConfig({
   let defaults = {
     basename: "/",
     buildDirectory: "build",
-    routeDiscovery: {
-      mode: "lazy",
-      manifestPath: "/__manifest",
-    },
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
@@ -432,7 +428,7 @@ async function resolveConfig({
     buildDirectory: userBuildDirectory,
     buildEnd,
     prerender,
-    routeDiscovery,
+    routeDiscovery: userRouteDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
@@ -459,25 +455,34 @@ async function resolveConfig({
     );
   }
 
-  if (userAndPresetConfigs.routeDiscovery == null) {
-    // Disable FOW when SSR is disabled, otherwise use defaults
-    if (!ssr) {
+  let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
+  if (userRouteDiscovery == null) {
+    if (ssr) {
+      routeDiscovery = {
+        mode: "lazy",
+        manifestPath: "/__manifest",
+      };
+    } else {
       routeDiscovery = { mode: "initial" };
     }
-  } else if (userAndPresetConfigs.routeDiscovery.mode === "lazy") {
+  } else if (userRouteDiscovery.mode === "initial") {
+    routeDiscovery = userRouteDiscovery;
+  } else if (userRouteDiscovery.mode === "lazy") {
     if (!ssr) {
       return err(
         'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`'
       );
     }
 
-    let manifestPath = userAndPresetConfigs.routeDiscovery.manifestPath;
+    let { manifestPath } = userRouteDiscovery;
     if (manifestPath != null && !manifestPath.startsWith("/")) {
       return err(
         "The `routeDiscovery.manifestPath` config must be a root-relative " +
           'pathname beginning with a slash (i.e., "/__manifest")'
       );
     }
+
+    routeDiscovery = userRouteDiscovery;
   }
 
   let appDirectory = path.resolve(root, userAppDirectory || "app");
