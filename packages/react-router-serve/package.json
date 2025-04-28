@@ -1,6 +1,6 @@
 {
   "name": "@react-router/serve",
-  "version": "7.5.2",
+  "version": "0.0.0-experimental-701a32801",
   "description": "Production application server for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
