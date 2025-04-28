@@ -29,7 +29,7 @@ const files = {
     export default {
       // Ensure user config takes precedence over preset config
       appDirectory: "app",
-      
+
       presets: [
         // Ensure user config is passed to reactRouterConfig hook
         {
@@ -221,6 +221,7 @@ test.describe("Vite / presets", async () => {
         "future",
         "prerender",
         "routes",
+        "routeDiscovery",
         "serverBuildFile",
         "serverBundles",
         "serverModuleFormat",

@@ -22,6 +22,7 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
+import type { ServerHandoff } from "./serverHandoff";
 import { createServerHandoffString } from "./serverHandoff";
 import { getBuildTimeHeader, getDevServerHooks } from "./dev";
 import {
@@ -42,6 +43,7 @@ import {
   SingleFetchRedirectSymbol,
 } from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
+import { getManifestPath } from "../dom/ssr/fog-of-war";
 
 export type RequestHandler = (
   request: Request,
@@ -205,7 +207,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     // Manifest request for fog of war
-    let manifestUrl = `${normalizedBasename}/__manifest`.replace(/\/+/g, "/");
+    let manifestUrl = getManifestPath(
+      _build.routeDiscovery.manifestPath,
+      normalizedBasename
+    );
     if (url.pathname === manifestUrl) {
       try {
         let res = await handleManifestRequest(_build, routes, url);
@@ -482,17 +487,21 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: serializeErrors(context.errors, serverMode),
     };
+    let baseServerHandoff: ServerHandoff = {
+      basename: build.basename,
+      future: build.future,
+      routeDiscovery: build.routeDiscovery,
+      ssr: build.ssr,
+      isSpaMode,
+    };
     let entryContext: EntryContext = {
       manifest: build.assets,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
       serverHandoffString: createServerHandoffString({
-        basename: build.basename,
+        ...baseServerHandoff,
         criticalCss,
-        future: build.future,
-        ssr: build.ssr,
-        isSpaMode,
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,
@@ -503,6 +512,7 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
+      routeDiscovery: build.routeDiscovery,
       isSpaMode,
       serializeError: (err) => serializeError(err, serverMode),
     };
@@ -562,12 +572,7 @@ async function handleDocumentRequest(
       entryContext = {
         ...entryContext,
         staticHandlerContext: context,
-        serverHandoffString: createServerHandoffString({
-          basename: build.basename,
-          future: build.future,
-          ssr: build.ssr,
-          isSpaMode,
-        }),
+        serverHandoffString: createServerHandoffString(baseServerHandoff),
         serverHandoffStream: encodeViaTurboStream(
           state,
           request.signal,
