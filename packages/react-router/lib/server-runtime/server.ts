@@ -216,7 +216,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     }
 
-    let matches = matchServerRoutes(routes, url.pathname, _build.basename);
+    let matches = matchServerRoutes(routes, normalizedPath, _build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
