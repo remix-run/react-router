@@ -16,30 +16,29 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.5.2](#v752)
     - [Security Notice](#security-notice)
     - [Patch Changes](#patch-changes)
-    - [Unstable Changes](#unstable-changes)
   - [v7.5.1](#v751)
     - [Patch Changes](#patch-changes-1)
-    - [Unstable Changes](#unstable-changes-1)
+    - [Unstable Changes](#unstable-changes)
   - [v7.5.0](#v750)
     - [What's Changed](#whats-changed)
       - [`route.lazy` Object API](#routelazy-object-api)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes-2)
-    - [Unstable Changes](#unstable-changes-2)
+    - [Unstable Changes](#unstable-changes-1)
     - [Changes by Package](#changes-by-package)
   - [v7.4.1](#v741)
     - [Security Notice](#security-notice-1)
     - [Patch Changes](#patch-changes-3)
-    - [Unstable Changes](#unstable-changes-3)
+    - [Unstable Changes](#unstable-changes-2)
   - [v7.4.0](#v740)
     - [Minor Changes](#minor-changes-1)
     - [Patch Changes](#patch-changes-4)
-    - [Unstable Changes](#unstable-changes-4)
+    - [Unstable Changes](#unstable-changes-3)
     - [Changes by Package](#changes-by-package-1)
   - [v7.3.0](#v730)
     - [Minor Changes](#minor-changes-2)
     - [Patch Changes](#patch-changes-5)
-    - [Unstable Changes](#unstable-changes-5)
+    - [Unstable Changes](#unstable-changes-4)
       - [Client-side `context` (unstable)](#client-side-context-unstable)
       - [Middleware (unstable)](#middleware-unstable)
         - [Middleware `context` parameter](#middleware-context-parameter)
@@ -52,7 +51,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
       - [Allow a root `loader` in SPA Mode](#allow-a-root-loader-in-spa-mode)
     - [Minor Changes](#minor-changes-3)
     - [Patch Changes](#patch-changes-6)
-    - [Unstable Changes](#unstable-changes-6)
+    - [Unstable Changes](#unstable-changes-5)
       - [Split Route Modules (unstable)](#split-route-modules-unstable)
     - [Changes by Package](#changes-by-package-3)
   - [v7.1.5](#v715)
@@ -342,10 +341,6 @@ Fixed 2 security vulnerabilities that could result in cache-poisoning attacks by
     - Set an `X-Remix-Redirect: <new-location>` header
     - Optionally, set `X-Remix-Replace: true` or `X-Remix-Reload-Document: true` headers to replicate `replace()`/`redirectDocument()` functionality
   - ⚠️ Please note that these responses rely on implementation details that are subject to change without a SemVer major release, and it is recommended you set up integration tests for your application to confirm this functionality is working correctly with each future React Router upgrade
-
-### Unstable Changes
-
-⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 **Full Changelog**: [`v7.5.1...v7.5.2`](https://github.com/remix-run/react-router/compare/react-router@7.5.1...react-router@7.5.2)
 
