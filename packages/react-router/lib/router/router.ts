@@ -1,3 +1,4 @@
+import type { DataRouteMatch } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -20,8 +21,8 @@ import type {
   FormMethod,
   HTMLFormMethod,
   DataStrategyResult,
-  ImmutableRouteKey,
   MapRoutePropertiesFunction,
+  MaybePromise,
   MutationFormMethod,
   RedirectResult,
   RouteData,
@@ -47,7 +48,8 @@ import {
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   getResolveToMatches,
-  immutableRouteKeys,
+  isUnsupportedLazyRouteObjectKey,
+  isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -60,8 +62,6 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
-
-type MaybePromise<T> = T | Promise<T>;
 
 /**
  * A Router instance manages all navigation and data loading/mutations
@@ -380,6 +380,7 @@ export interface RouterInit {
   unstable_getContext?: () => MaybePromise<unstable_InitialContext>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
+  hydrationRouteProperties?: string[];
   hydrationData?: HydrationState;
   window?: Window;
   dataStrategy?: DataStrategyFunction;
@@ -685,7 +686,15 @@ interface ShortCircuitable {
   shortCircuited?: boolean;
 }
 
-type PendingActionResult = [string, SuccessResult | ErrorResult];
+// Track any pending errors from the action (or other pre-loader flows).
+// The format is [bubbledRouteId, result, actionRouteId?]
+// We should probably change this to an object now that we (optionally) track
+// the original action route id so we can clear out loaderData in the right in
+// processRouteLoaderData
+//
+type PendingActionResult =
+  | [string, SuccessResult | ErrorResult]
+  | [string, SuccessResult | ErrorResult, string];
 
 interface HandleActionResult extends ShortCircuitable {
   /**
@@ -729,7 +738,8 @@ interface FetchLoadMatch {
 interface RevalidatingFetcher extends FetchLoadMatch {
   key: string;
   match: AgnosticDataRouteMatch | null;
-  matches: AgnosticDataRouteMatch[] | null;
+  matches: DataStrategyMatch[] | null;
+  request: Request | null;
   controller: AbortController | null;
 }
 
@@ -818,6 +828,7 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
+  let hydrationRouteProperties = init.hydrationRouteProperties || [];
   let mapRouteProperties = init.mapRouteProperties || defaultMapRouteProperties;
 
   // Routes keyed by ID
@@ -1629,6 +1640,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         scopedContext,
         fogOfWar.active,
+        opts && opts.initialHydration === true,
         { replace: opts.replace, flushSync }
       );
 
@@ -1720,6 +1732,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
+    initialHydration: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
@@ -1782,11 +1795,18 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let results = await callDataStrategy(
-        "action",
+      let dsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
         request,
-        [actionMatch],
         matches,
+        actionMatch,
+        initialHydration ? [] : hydrationRouteProperties,
+        scopedContext
+      );
+      let results = await callDataStrategy(
+        request,
+        dsMatches,
         scopedContext,
         null
       );
@@ -1846,7 +1866,11 @@ export function createRouter(init: RouterInit): Router {
 
       return {
         matches,
-        pendingActionResult: [boundaryMatch.route.id, result],
+        pendingActionResult: [
+          boundaryMatch.route.id,
+          result,
+          actionMatch.route.id,
+        ],
       };
     }
 
@@ -1946,12 +1970,17 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
+    let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
+      request,
+      scopedContext,
+      mapRouteProperties,
+      manifest,
       init.history,
       state,
       matches,
       activeSubmission,
       location,
+      initialHydration ? [] : hydrationRouteProperties,
       initialHydration === true,
       isRevalidationRequired,
       cancelledFetcherLoads,
@@ -1965,8 +1994,13 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders to run
-    if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
+    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
+    // since they may have different revalidation rules (i.e., single fetch)
+    if (
+      !init.dataStrategy &&
+      !dsMatches.some((m) => m.shouldLoad) &&
+      revalidatingFetchers.length === 0
+    ) {
       let updatedFetchers = markFetchRedirectsDone();
       completeNavigation(
         location,
@@ -2024,8 +2058,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
-        matches,
-        matchesToLoad,
+        dsMatches,
         revalidatingFetchers,
         request,
         scopedContext
@@ -2300,11 +2333,18 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResults = await callDataStrategy(
-      "action",
+    let fetchMatches = getTargetedDataStrategyMatches(
+      mapRouteProperties,
+      manifest,
       fetchRequest,
-      [match],
       requestMatches,
+      match,
+      hydrationRouteProperties,
+      scopedContext
+    );
+    let actionResults = await callDataStrategy(
+      fetchRequest,
+      fetchMatches,
       scopedContext,
       key
     );
@@ -2376,12 +2416,17 @@ export function createRouter(init: RouterInit): Router {
     let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
 
-    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
+    let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
+      revalidationRequest,
+      scopedContext,
+      mapRouteProperties,
+      manifest,
       init.history,
       state,
       matches,
       submission,
       nextLocation,
+      hydrationRouteProperties,
       false,
       isRevalidationRequired,
       cancelledFetcherLoads,
@@ -2424,8 +2469,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
-        matches,
-        matchesToLoad,
+        dsMatches,
         revalidatingFetchers,
         revalidationRequest,
         scopedContext
@@ -2582,11 +2626,18 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let results = await callDataStrategy(
-      "loader",
+    let dsMatches = getTargetedDataStrategyMatches(
+      mapRouteProperties,
+      manifest,
       fetchRequest,
-      [match],
       matches,
+      match,
+      hydrationRouteProperties,
+      scopedContext
+    );
+    let results = await callDataStrategy(
+      fetchRequest,
+      dsMatches,
       scopedContext,
       key
     );
@@ -2775,10 +2826,8 @@ export function createRouter(init: RouterInit): Router {
   // Utility wrapper for calling dataStrategy client-side without having to
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
-    type: "loader" | "action",
     request: Request,
-    matchesToLoad: AgnosticDataRouteMatch[],
-    matches: AgnosticDataRouteMatch[],
+    matches: DataStrategyMatch[],
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
@@ -2787,25 +2836,23 @@ export function createRouter(init: RouterInit): Router {
     try {
       results = await callDataStrategyImpl(
         dataStrategyImpl as DataStrategyFunction<unknown>,
-        type,
         request,
-        matchesToLoad,
         matches,
         fetcherKey,
-        manifest,
-        mapRouteProperties,
         scopedContext,
-        future.unstable_middleware
+        false
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
       // matches - and it'll naturally bubble to the root
-      matchesToLoad.forEach((m) => {
-        dataResults[m.route.id] = {
-          type: ResultType.error,
-          error: e,
-        };
-      });
+      matches
+        .filter((m) => m.shouldLoad)
+        .forEach((m) => {
+          dataResults[m.route.id] = {
+            type: ResultType.error,
+            error: e,
+          };
+        });
       return dataResults;
     }
 
@@ -2833,17 +2880,14 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function callLoadersAndMaybeResolveData(
-    matches: AgnosticDataRouteMatch[],
-    matchesToLoad: AgnosticDataRouteMatch[],
+    matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
     scopedContext: unstable_RouterContextProvider
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
-      "loader",
       request,
-      matchesToLoad,
       matches,
       scopedContext,
       null
@@ -2851,11 +2895,9 @@ export function createRouter(init: RouterInit): Router {
 
     let fetcherResultsPromise = Promise.all(
       fetchersToLoad.map(async (f) => {
-        if (f.matches && f.match && f.controller) {
+        if (f.matches && f.match && f.request && f.controller) {
           let results = await callDataStrategy(
-            "loader",
-            createClientSideRequest(init.history, f.path, f.controller.signal),
-            [f.match],
+            f.request,
             f.matches,
             scopedContext,
             f.key
@@ -3483,13 +3525,25 @@ export function createStaticHandler(
       return respond ? respond(staticContext) : staticContext;
     }
 
-    if (respond && matches.some((m) => m.route.unstable_middleware)) {
+    if (
+      respond &&
+      matches.some(
+        (m) =>
+          m.route.unstable_middleware ||
+          (typeof m.route.lazy === "object" && m.route.lazy.unstable_middleware)
+      )
+    ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
-          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
       try {
+        await loadLazyMiddlewareForMatches(
+          matches,
+          manifest,
+          mapRouteProperties
+        );
         let renderedStaticContext: StaticHandlerContext | undefined;
         let response = await runMiddlewarePipeline(
           {
@@ -3526,9 +3580,9 @@ export function createStaticHandler(
 
             return res;
           },
-          async (e) => {
-            if (isResponse(e.error)) {
-              return e.error;
+          async (error, routeId) => {
+            if (isResponse(error)) {
+              return error;
             }
 
             if (renderedStaticContext) {
@@ -3539,16 +3593,16 @@ export function createStaticHandler(
               // to align server/client behavior.  Client side middleware uses
               // dataStrategy and a given route can only have one result, so the
               // error overwrites any prior loader data.
-              if (e.routeId in renderedStaticContext.loaderData) {
-                renderedStaticContext.loaderData[e.routeId] = undefined;
+              if (routeId in renderedStaticContext.loaderData) {
+                renderedStaticContext.loaderData[routeId] = undefined;
               }
 
               return respond(
                 getStaticContextFromError(
                   dataRoutes,
                   renderedStaticContext,
-                  e.error,
-                  findNearestBoundary(matches!, e.routeId).route.id
+                  error,
+                  findNearestBoundary(matches!, routeId).route.id
                 )
               );
             } else {
@@ -3569,11 +3623,9 @@ export function createStaticHandler(
                 loaderData: {},
                 actionData: null,
                 errors: {
-                  [boundary.route.id]: e.error,
+                  [boundary.route.id]: error,
                 },
-                statusCode: isRouteErrorResponse(e.error)
-                  ? e.error.status
-                  : 500,
+                statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
               });
@@ -3678,12 +3730,20 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (respond && matches.some((m) => m.route.unstable_middleware)) {
+    if (
+      respond &&
+      matches.some(
+        (m) =>
+          m.route.unstable_middleware ||
+          (typeof m.route.lazy === "object" && m.route.lazy.unstable_middleware)
+      )
+    ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
-          "`requestContext` must bean instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
       );
+      await loadLazyMiddlewareForMatches(matches, manifest, mapRouteProperties);
       let response = await runMiddlewarePipeline(
         {
           request,
@@ -3732,11 +3792,11 @@ export function createStaticHandler(
             ? new Response(value)
             : Response.json(value);
         },
-        (e) => {
-          if (isResponse(e.error)) {
-            return respond(e.error);
+        (error) => {
+          if (isResponse(error)) {
+            return respond(error);
           }
-          return new Response(String(e.error), {
+          return new Response(String(error), {
             status: 500,
             statusText: "Unexpected Server Error",
           });
@@ -3876,11 +3936,19 @@ export function createStaticHandler(
         error,
       };
     } else {
-      let results = await callDataStrategy(
-        "action",
+      let dsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
         request,
-        [actionMatch],
         matches,
+        actionMatch,
+        [],
+        requestContext
+      );
+
+      let results = await callDataStrategy(
+        request,
+        dsMatches,
         isRouteRequest,
         requestContext,
         dataStrategy
@@ -4061,26 +4129,56 @@ export function createStaticHandler(
       });
     }
 
-    let requestMatches = routeMatch
-      ? [routeMatch]
-      : pendingActionResult && isErrorResult(pendingActionResult[1])
-      ? getLoaderMatchesUntilBoundary(matches, pendingActionResult[0])
-      : matches;
-    let matchesToLoad = requestMatches.filter(
-      (m) =>
-        (m.route.loader || m.route.lazy) &&
-        (!filterMatchesToLoad || filterMatchesToLoad(m))
-    );
+    let dsMatches: DataStrategyMatch[];
+    if (routeMatch) {
+      dsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
+        request,
+        matches,
+        routeMatch,
+        [],
+        requestContext
+      );
+    } else {
+      let maxIdx =
+        pendingActionResult && isErrorResult(pendingActionResult[1])
+          ? // Up to but not including the boundary
+            matches.findIndex((m) => m.route.id === pendingActionResult[0]) - 1
+          : undefined;
 
-    // Short circuit if we have no loaders to run (query())
-    if (matchesToLoad.length === 0) {
+      dsMatches = matches.map((match, index) => {
+        if (maxIdx != null && index > maxIdx) {
+          return getDataStrategyMatch(
+            mapRouteProperties,
+            manifest,
+            request,
+            match,
+            [],
+            requestContext,
+            false
+          );
+        }
+
+        return getDataStrategyMatch(
+          mapRouteProperties,
+          manifest,
+          request,
+          match,
+          [],
+          requestContext,
+          (match.route.loader || match.route.lazy) != null &&
+            (!filterMatchesToLoad || filterMatchesToLoad(match))
+        );
+      });
+    }
+
+    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
+    // since they may have different revalidation rules (i.e., single fetch)
+    if (!dataStrategy && !dsMatches.some((m) => m.shouldLoad)) {
       return {
         matches,
-        // Add a null for all matched routes for proper revalidation on the client
-        loaderData: matches.reduce(
-          (acc, m) => Object.assign(acc, { [m.route.id]: null }),
-          {}
-        ),
+        loaderData: {},
         errors:
           pendingActionResult && isErrorResult(pendingActionResult[1])
             ? {
@@ -4093,10 +4191,8 @@ export function createStaticHandler(
     }
 
     let results = await callDataStrategy(
-      "loader",
       request,
-      matchesToLoad,
-      matches,
+      dsMatches,
       isRouteRequest,
       requestContext,
       dataStrategy
@@ -4115,16 +4211,6 @@ export function createStaticHandler(
       skipLoaderErrorBubbling
     );
 
-    // Add a null for any non-loader matches for proper revalidation on the client
-    let executedLoaders = new Set<string>(
-      matchesToLoad.map((match) => match.route.id)
-    );
-    matches.forEach((match) => {
-      if (!executedLoaders.has(match.route.id)) {
-        handlerContext.loaderData[match.route.id] = null;
-      }
-    });
-
     return {
       ...handlerContext,
       matches,
@@ -4134,25 +4220,19 @@ export function createStaticHandler(
   // Utility wrapper for calling dataStrategy server-side without having to
   // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
-    type: "loader" | "action",
     request: Request,
-    matchesToLoad: AgnosticDataRouteMatch[],
-    matches: AgnosticDataRouteMatch[],
+    matches: DataStrategyMatch[],
     isRouteRequest: boolean,
     requestContext: unknown,
     dataStrategy: DataStrategyFunction<unknown> | null
   ): Promise<Record<string, DataResult>> {
     let results = await callDataStrategyImpl(
       dataStrategy || defaultDataStrategy,
-      type,
       request,
-      matchesToLoad,
       matches,
       null,
-      manifest,
-      mapRouteProperties,
       requestContext,
-      false // middleware not done via dataStrategy in the static handler
+      true
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -4465,26 +4545,17 @@ function normalizeNavigateOptions(
   return { path: createPath(parsedPath), submission };
 }
 
-// Filter out all routes at/below any caught error as they aren't going to
-// render so we don't need to load them
-function getLoaderMatchesUntilBoundary(
-  matches: AgnosticDataRouteMatch[],
-  boundaryId: string,
-  includeBoundary = false
-) {
-  let index = matches.findIndex((m) => m.route.id === boundaryId);
-  if (index >= 0) {
-    return matches.slice(0, includeBoundary ? index + 1 : index);
-  }
-  return matches;
-}
-
 function getMatchesToLoad(
+  request: Request,
+  scopedContext: unknown,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
   history: History,
   state: RouterState,
   matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
+  lazyRoutePropertiesToSkip: string[],
   initialHydration: boolean,
   isRevalidationRequired: boolean,
   cancelledFetcherLoads: Set<string>,
@@ -4494,7 +4565,10 @@ function getMatchesToLoad(
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   pendingActionResult?: PendingActionResult
-): [AgnosticDataRouteMatch[], RevalidatingFetcher[]] {
+): {
+  dsMatches: DataStrategyMatch[];
+  revalidatingFetchers: RevalidatingFetcher[];
+} {
   let actionResult = pendingActionResult
     ? isErrorResult(pendingActionResult[1])
       ? pendingActionResult[1].error
@@ -4504,25 +4578,20 @@ function getMatchesToLoad(
   let nextUrl = history.createURL(location);
 
   // Pick navigation matches that are net-new or qualify for revalidation
-  let boundaryMatches = matches;
+  let maxIdx: number | undefined;
   if (initialHydration && state.errors) {
     // On initial hydration, only consider matches up to _and including_ the boundary.
     // This is inclusive to handle cases where a server loader ran successfully,
     // a child server loader bubbled up to this route, but this route has
     // `clientLoader.hydrate` so we want to still run the `clientLoader` so that
     // we have a complete version of `loaderData`
-    boundaryMatches = getLoaderMatchesUntilBoundary(
-      matches,
-      Object.keys(state.errors)[0],
-      true
-    );
+    let boundaryId = Object.keys(state.errors)[0];
+    maxIdx = matches.findIndex((m) => m.route.id === boundaryId);
   } else if (pendingActionResult && isErrorResult(pendingActionResult[1])) {
     // If an action threw an error, we call loaders up to, but not including the
     // boundary
-    boundaryMatches = getLoaderMatchesUntilBoundary(
-      matches,
-      pendingActionResult[0]
-    );
+    let boundaryId = pendingActionResult[0];
+    maxIdx = matches.findIndex((m) => m.route.id === boundaryId) - 1;
   }
 
   // Don't revalidate loaders by default after action 4xx/5xx responses
@@ -4533,51 +4602,84 @@ function getMatchesToLoad(
     : undefined;
   let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
-  let navigationMatches = boundaryMatches.filter((match, index) => {
+  let baseShouldRevalidateArgs = {
+    currentUrl,
+    currentParams: state.matches[0]?.params || {},
+    nextUrl,
+    nextParams: matches[0].params,
+    ...submission,
+    actionResult,
+    actionStatus,
+  };
+
+  let dsMatches: DataStrategyMatch[] = matches.map((match, index) => {
     let { route } = match;
-    if (route.lazy) {
+
+    // For these cases we don't let the user have control via shouldRevalidate
+    // and we either force the loader to run or not run
+    let forceShouldLoad: boolean | null = null;
+
+    if (maxIdx != null && index > maxIdx) {
+      // Don't call loaders below the boundary
+      forceShouldLoad = false;
+    } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
-      return true;
+      forceShouldLoad = true;
+    } else if (route.loader == null) {
+      // Nothing to load!
+      forceShouldLoad = false;
+    } else if (initialHydration) {
+      // Only run on hydration if this is a hydrating `clientLoader`
+      forceShouldLoad = shouldLoadRouteOnHydration(
+        route,
+        state.loaderData,
+        state.errors
+      );
+    } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
+      // Always call the loader on new route instances
+      forceShouldLoad = true;
     }
 
-    if (route.loader == null) {
-      return false;
-    }
-
-    if (initialHydration) {
-      return shouldLoadRouteOnHydration(route, state.loaderData, state.errors);
-    }
-
-    // Always call the loader on new route instances
-    if (isNewLoader(state.loaderData, state.matches[index], match)) {
-      return true;
+    if (forceShouldLoad !== null) {
+      return getDataStrategyMatch(
+        mapRouteProperties,
+        manifest,
+        request,
+        match,
+        lazyRoutePropertiesToSkip,
+        scopedContext,
+        forceShouldLoad
+      );
     }
 
     // This is the default implementation for when we revalidate.  If the route
     // provides it's own implementation, then we give them full control but
     // provide this value so they can leverage it if needed after they check
     // their own specific use cases
-    let currentRouteMatch = state.matches[index];
-    let nextRouteMatch = match;
-
-    return shouldRevalidateLoader(match, {
-      currentUrl,
-      currentParams: currentRouteMatch.params,
-      nextUrl,
-      nextParams: nextRouteMatch.params,
-      ...submission,
-      actionResult,
-      actionStatus,
-      defaultShouldRevalidate: shouldSkipRevalidation
-        ? false
-        : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-          isRevalidationRequired ||
-          currentUrl.pathname + currentUrl.search ===
-            nextUrl.pathname + nextUrl.search ||
-          // Search params affect all loaders
-          currentUrl.search !== nextUrl.search ||
-          isNewRouteInstance(currentRouteMatch, nextRouteMatch),
-    });
+    let defaultShouldRevalidate = shouldSkipRevalidation
+      ? false
+      : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
+        isRevalidationRequired ||
+        currentUrl.pathname + currentUrl.search ===
+          nextUrl.pathname + nextUrl.search ||
+        // Search params affect all loaders
+        currentUrl.search !== nextUrl.search ||
+        isNewRouteInstance(state.matches[index], match);
+    let shouldRevalidateArgs = {
+      ...baseShouldRevalidateArgs,
+      defaultShouldRevalidate,
+    };
+    let shouldLoad = shouldRevalidateLoader(match, shouldRevalidateArgs);
+    return getDataStrategyMatch(
+      mapRouteProperties,
+      manifest,
+      request,
+      match,
+      lazyRoutePropertiesToSkip,
+      scopedContext,
+      shouldLoad,
+      shouldRevalidateArgs
+    );
   });
 
   // Pick fetcher.loads that need to be revalidated
@@ -4609,8 +4711,14 @@ function getMatchesToLoad(
         path: f.path,
         matches: null,
         match: null,
+        request: null,
         controller: null,
       });
+      return;
+    }
+
+    if (fetchRedirectIds.has(key)) {
+      // Never trigger a revalidation of an actively redirecting fetcher
       return;
     }
 
@@ -4620,53 +4728,83 @@ function getMatchesToLoad(
     let fetcher = state.fetchers.get(key);
     let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
 
-    let shouldRevalidate = false;
-    if (fetchRedirectIds.has(key)) {
-      // Never trigger a revalidation of an actively redirecting fetcher
-      shouldRevalidate = false;
-    } else if (cancelledFetcherLoads.has(key)) {
+    let fetchController = new AbortController();
+    let fetchRequest = createClientSideRequest(
+      history,
+      f.path,
+      fetchController.signal
+    );
+
+    let fetcherDsMatches: DataStrategyMatch[] | null = null;
+
+    if (cancelledFetcherLoads.has(key)) {
       // Always mark for revalidation if the fetcher was cancelled
       cancelledFetcherLoads.delete(key);
-      shouldRevalidate = true;
+      fetcherDsMatches = getTargetedDataStrategyMatches(
+        mapRouteProperties,
+        manifest,
+        fetchRequest,
+        fetcherMatches,
+        fetcherMatch,
+        lazyRoutePropertiesToSkip,
+        scopedContext
+      );
     } else if (
       fetcher &&
       fetcher.state !== "idle" &&
       fetcher.data === undefined
     ) {
-      // If the fetcher hasn't ever completed loading yet, then this isn't a
-      // revalidation, it would just be a brand new load if an explicit
-      // revalidation is required
-      shouldRevalidate = isRevalidationRequired;
+      if (isRevalidationRequired) {
+        // If the fetcher hasn't ever completed loading yet, then this isn't a
+        // revalidation, it would just be a brand new load if an explicit
+        // revalidation is required
+        fetcherDsMatches = getTargetedDataStrategyMatches(
+          mapRouteProperties,
+          manifest,
+          fetchRequest,
+          fetcherMatches,
+          fetcherMatch,
+          lazyRoutePropertiesToSkip,
+          scopedContext
+        );
+      }
     } else {
       // Otherwise fall back on any user-defined shouldRevalidate, defaulting
       // to explicit revalidations only
-      shouldRevalidate = shouldRevalidateLoader(fetcherMatch, {
-        currentUrl,
-        currentParams: state.matches[state.matches.length - 1].params,
-        nextUrl,
-        nextParams: matches[matches.length - 1].params,
-        ...submission,
-        actionResult,
-        actionStatus,
+      let shouldRevalidateArgs: ShouldRevalidateFunctionArgs = {
+        ...baseShouldRevalidateArgs,
         defaultShouldRevalidate: shouldSkipRevalidation
           ? false
           : isRevalidationRequired,
-      });
+      };
+      if (shouldRevalidateLoader(fetcherMatch, shouldRevalidateArgs)) {
+        fetcherDsMatches = getTargetedDataStrategyMatches(
+          mapRouteProperties,
+          manifest,
+          fetchRequest,
+          fetcherMatches,
+          fetcherMatch,
+          lazyRoutePropertiesToSkip,
+          scopedContext,
+          shouldRevalidateArgs
+        );
+      }
     }
 
-    if (shouldRevalidate) {
+    if (fetcherDsMatches) {
       revalidatingFetchers.push({
         key,
         routeId: f.routeId,
         path: f.path,
-        matches: fetcherMatches,
+        matches: fetcherDsMatches,
         match: fetcherMatch,
-        controller: new AbortController(),
+        request: fetchRequest,
+        controller: fetchController,
       });
     }
   });
 
-  return [navigationMatches, revalidatingFetchers];
+  return { dsMatches, revalidatingFetchers };
 }
 
 function shouldLoadRouteOnHydration(
@@ -4684,7 +4822,7 @@ function shouldLoadRouteOnHydration(
     return false;
   }
 
-  let hasData = loaderData != null && loaderData[route.id] !== undefined;
+  let hasData = loaderData != null && route.id in loaderData;
   let hasError = errors != null && errors[route.id] !== undefined;
 
   // Don't run if we error'd during SSR
@@ -4832,81 +4970,277 @@ function isSameRoute(
   );
 }
 
-/**
- * Execute route.lazy() methods to lazily load route modules (loader, action,
- * shouldRevalidate) and update the routeManifest in place which shares objects
- * with dataRoutes so those get updated as well.
- */
-async function loadLazyRouteModule(
-  route: AgnosticDataRouteObject,
-  mapRouteProperties: MapRoutePropertiesFunction,
-  manifest: RouteManifest
-) {
-  if (!route.lazy) {
-    return;
-  }
+const lazyRoutePropertyCache = new WeakMap<
+  AgnosticDataRouteObject,
+  Partial<Record<keyof AgnosticDataRouteObject, Promise<void>>>
+>();
 
-  let lazyRoute = await route.lazy();
-
-  // If the lazy route function was executed and removed by another parallel
-  // call then we can return - first lazy() to finish wins because the return
-  // value of lazy is expected to be static
-  if (!route.lazy) {
-    return;
-  }
-
+const loadLazyRouteProperty = ({
+  key,
+  route,
+  manifest,
+  mapRouteProperties,
+}: {
+  key: keyof AgnosticDataRouteObject;
+  route: AgnosticDataRouteObject;
+  manifest: RouteManifest;
+  mapRouteProperties: MapRoutePropertiesFunction;
+}): Promise<void> | undefined => {
   let routeToUpdate = manifest[route.id];
   invariant(routeToUpdate, "No route found in manifest");
 
-  // Update the route in place.  This should be safe because there's no way
-  // we could yet be sitting on this route as we can't get there without
-  // resolving lazy() first.
-  //
-  // This is different than the HMR "update" use-case where we may actively be
-  // on the route being updated.  The main concern boils down to "does this
-  // mutation affect any ongoing navigations or any current state.matches
-  // values?".  If not, it should be safe to update in place.
-  let routeUpdates: Record<string, any> = {};
-  for (let lazyRouteProperty in lazyRoute) {
-    let staticRouteValue =
-      routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
+  if (!routeToUpdate.lazy || typeof routeToUpdate.lazy !== "object") {
+    return;
+  }
 
-    let isPropertyStaticallyDefined =
-      staticRouteValue !== undefined &&
-      // This property isn't static since it should always be updated based
-      // on the route updates
-      lazyRouteProperty !== "hasErrorBoundary";
+  let lazyFn = routeToUpdate.lazy[key as keyof typeof routeToUpdate.lazy];
 
-    warning(
-      !isPropertyStaticallyDefined,
-      `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
-        `defined but its lazy function is also returning a value for this property. ` +
-        `The lazy route property "${lazyRouteProperty}" will be ignored.`
-    );
+  if (!lazyFn) {
+    return;
+  }
 
-    if (
-      !isPropertyStaticallyDefined &&
-      !immutableRouteKeys.has(lazyRouteProperty as ImmutableRouteKey)
-    ) {
-      routeUpdates[lazyRouteProperty] =
-        lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
+  let cache = lazyRoutePropertyCache.get(routeToUpdate);
+  if (!cache) {
+    cache = {};
+    lazyRoutePropertyCache.set(routeToUpdate, cache);
+  }
+
+  let cachedPromise = cache[key];
+  if (cachedPromise) {
+    return cachedPromise;
+  }
+
+  let propertyPromise = (async () => {
+    let isUnsupported = isUnsupportedLazyRouteObjectKey(key);
+    let staticRouteValue = routeToUpdate[key as keyof typeof routeToUpdate];
+    let isStaticallyDefined =
+      staticRouteValue !== undefined && key !== "hasErrorBoundary";
+
+    if (isUnsupported) {
+      warning(
+        !isUnsupported,
+        "Route property " +
+          key +
+          " is not a supported lazy route property. This property will be ignored."
+      );
+      cache[key] = Promise.resolve();
+    } else if (isStaticallyDefined) {
+      warning(
+        false,
+        `Route "${routeToUpdate.id}" has a static property "${key}" ` +
+          `defined. The lazy property will be ignored.`
+      );
+    } else {
+      let value = await lazyFn();
+      if (value != null) {
+        Object.assign(routeToUpdate, { [key]: value });
+        Object.assign(routeToUpdate, mapRouteProperties(routeToUpdate));
+      }
+    }
+
+    // Clean up lazy property and clean up lazy object if it's now empty
+    if (typeof routeToUpdate.lazy === "object") {
+      routeToUpdate.lazy[key as keyof typeof routeToUpdate.lazy] = undefined;
+      if (
+        Object.values(routeToUpdate.lazy).every((value) => value === undefined)
+      ) {
+        routeToUpdate.lazy = undefined;
+      }
+    }
+  })();
+
+  cache[key] = propertyPromise;
+  return propertyPromise;
+};
+
+const lazyRouteFunctionCache = new WeakMap<
+  AgnosticDataRouteObject,
+  Promise<void>
+>();
+
+/**
+ * Execute route.lazy functions to lazily load route modules (loader, action,
+ * shouldRevalidate) and update the routeManifest in place which shares objects
+ * with dataRoutes so those get updated as well.
+ */
+function loadLazyRoute(
+  route: AgnosticDataRouteObject,
+  type: "loader" | "action",
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  lazyRoutePropertiesToSkip?: string[]
+): {
+  lazyRoutePromise: Promise<void> | undefined;
+  lazyHandlerPromise: Promise<void> | undefined;
+} {
+  let routeToUpdate = manifest[route.id];
+  invariant(routeToUpdate, "No route found in manifest");
+
+  if (!route.lazy) {
+    return {
+      lazyRoutePromise: undefined,
+      lazyHandlerPromise: undefined,
+    };
+  }
+
+  if (typeof route.lazy === "function") {
+    // Check if we have a cached promise from a previous call
+    let cachedPromise = lazyRouteFunctionCache.get(routeToUpdate);
+    if (cachedPromise) {
+      return {
+        lazyRoutePromise: cachedPromise,
+        lazyHandlerPromise: cachedPromise,
+      };
+    }
+
+    // We use `.then` to chain additional logic to the lazy route promise so that
+    // the consumer's lazy route logic is coupled to our logic for updating the
+    // route in place in a single task. This ensures that the cached promise
+    // contains all logic for managing the lazy route. This chained promise is
+    // then awaited so that consumers of this function see the updated route.
+    let lazyRoutePromise = (async () => {
+      invariant(
+        typeof route.lazy === "function",
+        "No lazy route function found"
+      );
+      let lazyRoute = await route.lazy();
+      // Here we update the route in place.  This should be safe because there's
+      // no way we could yet be sitting on this route as we can't get there
+      // without resolving lazy() first.
+      //
+      // This is different than the HMR "update" use-case where we may actively be
+      // on the route being updated.  The main concern boils down to "does this
+      // mutation affect any ongoing navigations or any current state.matches
+      // values?".  If not, it should be safe to update in place.
+      let routeUpdates: Record<string, any> = {};
+      for (let lazyRouteProperty in lazyRoute) {
+        let lazyValue = lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
+
+        if (lazyValue === undefined) {
+          continue;
+        }
+
+        let isUnsupported =
+          isUnsupportedLazyRouteFunctionKey(lazyRouteProperty);
+        let staticRouteValue =
+          routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
+        let isStaticallyDefined =
+          staticRouteValue !== undefined &&
+          // This property isn't static since it should always be updated based
+          // on the route updates
+          lazyRouteProperty !== "hasErrorBoundary";
+
+        if (isUnsupported) {
+          warning(
+            !isUnsupported,
+            "Route property " +
+              lazyRouteProperty +
+              " is not a supported property to be returned from a lazy route function. This property will be ignored."
+          );
+        } else if (isStaticallyDefined) {
+          warning(
+            !isStaticallyDefined,
+            `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
+              `defined but its lazy function is also returning a value for this property. ` +
+              `The lazy route property "${lazyRouteProperty}" will be ignored.`
+          );
+        } else {
+          routeUpdates[lazyRouteProperty] = lazyValue;
+        }
+      }
+
+      // Mutate the route with the provided updates.  Do this first so we pass
+      // the updated version to mapRouteProperties
+      Object.assign(routeToUpdate, routeUpdates);
+
+      // Mutate the `hasErrorBoundary` property on the route based on the route
+      // updates and remove the `lazy` function so we don't resolve the lazy
+      // route again.
+      Object.assign(routeToUpdate, {
+        // To keep things framework agnostic, we use the provided `mapRouteProperties`
+        // function to set the framework-aware properties (`element`/`hasErrorBoundary`)
+        // since the logic will differ between frameworks.
+        ...mapRouteProperties(routeToUpdate),
+        lazy: undefined,
+      });
+    })();
+
+    lazyRouteFunctionCache.set(routeToUpdate, lazyRoutePromise);
+
+    // Prevent unhandled rejection errors - handled inside of `callLoadOrAction`
+    lazyRoutePromise.catch(() => {});
+
+    return {
+      lazyRoutePromise,
+      lazyHandlerPromise: lazyRoutePromise,
+    };
+  }
+
+  let lazyKeys = Object.keys(route.lazy) as Array<keyof typeof route.lazy>;
+  let lazyPropertyPromises: Array<Promise<void>> = [];
+  let lazyHandlerPromise: Promise<void> | undefined = undefined;
+
+  for (let key of lazyKeys) {
+    if (lazyRoutePropertiesToSkip && lazyRoutePropertiesToSkip.includes(key)) {
+      continue;
+    }
+
+    let promise = loadLazyRouteProperty({
+      key,
+      route,
+      manifest,
+      mapRouteProperties,
+    });
+    if (promise) {
+      lazyPropertyPromises.push(promise);
+      if (key === type) {
+        lazyHandlerPromise = promise;
+      }
     }
   }
 
-  // Mutate the route with the provided updates.  Do this first so we pass
-  // the updated version to mapRouteProperties
-  Object.assign(routeToUpdate, routeUpdates);
+  let lazyRoutePromise =
+    lazyPropertyPromises.length > 0
+      ? Promise.all(lazyPropertyPromises)
+          // Ensure type is Promise<void>, not Promise<void[]>
+          .then(() => {})
+      : undefined;
 
-  // Mutate the `hasErrorBoundary` property on the route based on the route
-  // updates and remove the `lazy` function so we don't resolve the lazy
-  // route again.
-  Object.assign(routeToUpdate, {
-    // To keep things framework agnostic, we use the provided `mapRouteProperties`
-    // function to set the framework-aware properties (`element`/`hasErrorBoundary`)
-    // since the logic will differ between frameworks.
-    ...mapRouteProperties(routeToUpdate),
-    lazy: undefined,
-  });
+  // Prevent unhandled rejection errors - handled inside of `callLoadOrAction`
+  lazyRoutePromise?.catch(() => {});
+  lazyHandlerPromise?.catch(() => {});
+
+  return {
+    lazyRoutePromise,
+    lazyHandlerPromise,
+  };
+}
+
+function isNonNullable<T>(value: T): value is NonNullable<T> {
+  return value !== undefined;
+}
+
+function loadLazyMiddlewareForMatches(
+  matches: AgnosticDataRouteMatch[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction
+): Promise<void[]> | void {
+  let promises: Promise<void>[] = matches
+    .map(({ route }) => {
+      if (typeof route.lazy !== "object" || !route.lazy.unstable_middleware) {
+        return undefined;
+      }
+
+      return loadLazyRouteProperty({
+        key: "unstable_middleware",
+        route,
+        manifest,
+        mapRouteProperties,
+      });
+    })
+    .filter(isNonNullable);
+
+  return promises.length > 0 ? Promise.all(promises) : undefined;
 }
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
@@ -4936,13 +5270,21 @@ async function defaultDataStrategyWithMiddleware(
     args,
     false,
     () => defaultDataStrategy(args),
-    (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+    (error, routeId) => ({ [routeId]: { type: "error", result: error } })
   ) as Promise<Record<string, DataStrategyResult>>;
 }
 
 type MutableMiddlewareState = {
-  handlerResult: unknown;
-  propagateResult: boolean;
+  // Track the result of the user-provided handler at the bottom of the
+  // middleware chain so we can return it out from runMiddleware for them when
+  // we're not propagating results
+  handlerResult?: unknown;
+  // Capture the throwing routeId for middleware error so we can bubble from the
+  // correct spot
+  middlewareError?: {
+    routeId: string;
+    error: unknown;
+  };
 };
 
 export async function runMiddlewarePipeline<T extends boolean>(
@@ -4958,12 +5300,11 @@ export async function runMiddlewarePipeline<T extends boolean>(
   handler: () => T extends true
     ? MaybePromise<Response>
     : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (error: MiddlewareError) => unknown
+  errorHandler: (error: unknown, routeId: string) => unknown
 ): Promise<unknown> {
   let { matches, request, params, context } = args;
   let middlewareState: MutableMiddlewareState = {
     handlerResult: undefined,
-    propagateResult,
   };
   try {
     let tuples = matches.flatMap((m) =>
@@ -4974,32 +5315,25 @@ export async function runMiddlewarePipeline<T extends boolean>(
     let result = await callRouteMiddleware(
       { request, params, context },
       tuples,
+      propagateResult,
       middlewareState,
       handler
     );
-    return middlewareState.propagateResult
-      ? result
-      : middlewareState.handlerResult;
+    return propagateResult ? result : middlewareState.handlerResult;
   } catch (e) {
-    if (!(e instanceof MiddlewareError)) {
+    if (!middlewareState.middlewareError) {
       // This shouldn't happen?  This would have to come from a bug in our
       // library code...
       throw e;
     }
-    let result = await errorHandler(e);
+    let result = await errorHandler(
+      middlewareState.middlewareError.error,
+      middlewareState.middlewareError.routeId
+    );
     if (propagateResult || !middlewareState.handlerResult) {
       return result;
     }
     return Object.assign(middlewareState.handlerResult, result);
-  }
-}
-
-export class MiddlewareError {
-  routeId: string;
-  error: unknown;
-  constructor(routeId: string, error: unknown) {
-    this.routeId = routeId;
-    this.error = error;
   }
 }
 
@@ -5008,6 +5342,7 @@ async function callRouteMiddleware(
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
   middlewares: [string, unstable_MiddlewareFunction][],
+  propagateResult: boolean,
   middlewareState: MutableMiddlewareState,
   handler: () => void,
   idx = 0
@@ -5040,11 +5375,12 @@ async function callRouteMiddleware(
     let result = await callRouteMiddleware(
       args,
       middlewares,
+      propagateResult,
       middlewareState,
       handler,
       idx + 1
     );
-    if (middlewareState.propagateResult) {
+    if (propagateResult) {
       nextResult = result;
       return nextResult;
     }
@@ -5071,91 +5407,226 @@ async function callRouteMiddleware(
     } else {
       return next();
     }
-  } catch (e) {
-    if (e instanceof MiddlewareError) {
-      throw e;
+  } catch (error) {
+    if (!middlewareState.middlewareError) {
+      middlewareState.middlewareError = { routeId, error };
+    } else if (middlewareState.middlewareError.error !== error) {
+      // Another middleware already threw, so only capture this new routeId if
+      // it's a different error and not just bubbling up the existing error
+      middlewareState.middlewareError = { routeId, error };
     }
-    throw new MiddlewareError(routeId, e);
+    throw error;
   }
+}
+
+function getDataStrategyMatchLazyPromises(
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
+  request: Request,
+  match: DataRouteMatch,
+  lazyRoutePropertiesToSkip: string[]
+): DataStrategyMatch["_lazyPromises"] {
+  let lazyMiddlewarePromise = loadLazyRouteProperty({
+    key: "unstable_middleware",
+    route: match.route,
+    manifest,
+    mapRouteProperties,
+  });
+
+  let lazyRoutePromises = loadLazyRoute(
+    match.route,
+    isMutationMethod(request.method) ? "action" : "loader",
+    manifest,
+    mapRouteProperties,
+    lazyRoutePropertiesToSkip
+  );
+
+  return {
+    middleware: lazyMiddlewarePromise,
+    route: lazyRoutePromises.lazyRoutePromise,
+    handler: lazyRoutePromises.lazyHandlerPromise,
+  };
+}
+
+function getDataStrategyMatch(
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
+  request: Request,
+  match: DataRouteMatch,
+  lazyRoutePropertiesToSkip: string[],
+  scopedContext: unknown,
+  shouldLoad: boolean,
+  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
+): DataStrategyMatch {
+  // The hope here is to avoid a breaking change to the resolve behavior.
+  // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
+  // around when resolve calls through to the handler
+  let isUsingNewApi = false;
+
+  let _lazyPromises = getDataStrategyMatchLazyPromises(
+    mapRouteProperties,
+    manifest,
+    request,
+    match,
+    lazyRoutePropertiesToSkip
+  );
+
+  return {
+    ...match,
+    _lazyPromises,
+    shouldLoad,
+    unstable_shouldRevalidateArgs,
+    unstable_shouldCallHandler(defaultShouldRevalidate) {
+      isUsingNewApi = true;
+      if (!unstable_shouldRevalidateArgs) {
+        return shouldLoad;
+      }
+
+      if (typeof defaultShouldRevalidate === "boolean") {
+        return shouldRevalidateLoader(match, {
+          ...unstable_shouldRevalidateArgs,
+          defaultShouldRevalidate,
+        });
+      }
+      return shouldRevalidateLoader(match, unstable_shouldRevalidateArgs);
+    },
+    resolve(handlerOverride) {
+      if (
+        isUsingNewApi ||
+        shouldLoad ||
+        (handlerOverride &&
+          request.method === "GET" &&
+          (match.route.lazy || match.route.loader))
+      ) {
+        return callLoaderOrAction({
+          request,
+          match,
+          lazyHandlerPromise: _lazyPromises?.handler,
+          lazyRoutePromise: _lazyPromises?.route,
+          handlerOverride,
+          scopedContext,
+        });
+      }
+      return Promise.resolve({ type: ResultType.data, result: undefined });
+    },
+  };
+}
+
+function getTargetedDataStrategyMatches(
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest,
+  request: Request,
+  matches: AgnosticDataRouteMatch[],
+  targetMatch: AgnosticDataRouteMatch,
+  lazyRoutePropertiesToSkip: string[],
+  scopedContext: unknown,
+  shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
+): DataStrategyMatch[] {
+  return matches.map((match) => {
+    if (match.route.id !== targetMatch.route.id) {
+      // We don't use getDataStrategyMatch here because these are for actions/fetchers
+      // where we should _never_ call the handler for any matches other than the target
+      return {
+        ...match,
+        shouldLoad: false,
+        unstable_shouldRevalidateArgs: shouldRevalidateArgs,
+        unstable_shouldCallHandler: () => false,
+        _lazyPromises: getDataStrategyMatchLazyPromises(
+          mapRouteProperties,
+          manifest,
+          request,
+          match,
+          lazyRoutePropertiesToSkip
+        ),
+        resolve: () => Promise.resolve({ type: "data", result: undefined }),
+      };
+    }
+
+    return getDataStrategyMatch(
+      mapRouteProperties,
+      manifest,
+      request,
+      match,
+      lazyRoutePropertiesToSkip,
+      scopedContext,
+      true,
+      shouldRevalidateArgs
+    );
+  });
 }
 
 async function callDataStrategyImpl(
   dataStrategyImpl: DataStrategyFunction<unknown>,
-  type: "loader" | "action",
   request: Request,
-  matchesToLoad: AgnosticDataRouteMatch[],
-  matches: AgnosticDataRouteMatch[],
+  matches: DataStrategyMatch[],
   fetcherKey: string | null,
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
   scopedContext: unknown,
-  enableMiddleware: boolean
+  isStaticHandler: boolean
 ): Promise<Record<string, DataStrategyResult>> {
-  let loadRouteDefinitionsPromises = matches.map((m) =>
-    m.route.lazy
-      ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
-      : undefined
-  );
-
-  if (enableMiddleware) {
-    // TODO: For the initial implementation, we await route.lazy here to ensure
-    // client side middleware implementations have been loaded prior to running
-    // dataStrategy which will then run them.  This is a de-optimization and
-    // will be fixed before stable release by adding a new async middleware API
-    // allowing us to load middleware sin a split route module.
-    await Promise.all(loadRouteDefinitionsPromises);
+  // Ensure all middleware is loaded before we start executing routes
+  if (matches.some((m) => m._lazyPromises?.middleware)) {
+    await Promise.all(matches.map((m) => m._lazyPromises?.middleware));
   }
-
-  let dsMatches = matches.map((match, i) => {
-    let loadRoutePromise = loadRouteDefinitionsPromises[i];
-    let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
-    // `resolve` encapsulates route.lazy(), executing the loader/action,
-    // and mapping return values/thrown errors to a `DataStrategyResult`.  Users
-    // can pass a callback to take fine-grained control over the execution
-    // of the loader/action
-    let resolve: DataStrategyMatch["resolve"] = async (handlerOverride) => {
-      if (
-        handlerOverride &&
-        request.method === "GET" &&
-        (match.route.lazy || match.route.loader)
-      ) {
-        shouldLoad = true;
-      }
-      return shouldLoad
-        ? callLoaderOrAction(
-            type,
-            request,
-            match,
-            loadRoutePromise,
-            handlerOverride,
-            scopedContext
-          )
-        : Promise.resolve({ type: ResultType.data, result: undefined });
-    };
-
-    return {
-      ...match,
-      shouldLoad,
-      resolve,
-    };
-  });
 
   // Send all matches here to allow for a middleware-type implementation.
   // handler will be a no-op for unneeded routes and we filter those results
   // back out below.
-  let results = await dataStrategyImpl({
-    matches: dsMatches,
+  let dataStrategyArgs = {
     request,
     params: matches[0].params,
-    fetcherKey,
     context: scopedContext,
+    matches,
+  };
+  let unstable_runClientMiddleware = isStaticHandler
+    ? () => {
+        throw new Error(
+          "You cannot call `unstable_runClientMiddleware()` from a static handler " +
+            "`dataStrategy`. Middleware is run outside of `dataStrategy` during " +
+            "SSR in order to bubble up the Response.  You can enable middleware " +
+            "via the `respond` API in `query`/`queryRoute`"
+        );
+      }
+    : (cb: DataStrategyFunction<unstable_RouterContextProvider>) => {
+        let typedDataStrategyArgs = dataStrategyArgs as (
+          | LoaderFunctionArgs<unstable_RouterContextProvider>
+          | ActionFunctionArgs<unstable_RouterContextProvider>
+        ) & {
+          matches: DataStrategyMatch[];
+        };
+        return runMiddlewarePipeline(
+          typedDataStrategyArgs,
+          false,
+          () =>
+            cb({
+              ...typedDataStrategyArgs,
+              fetcherKey,
+              unstable_runClientMiddleware: () => {
+                throw new Error(
+                  "Cannot call `unstable_runClientMiddleware()` from within an " +
+                    "`unstable_runClientMiddleware` handler"
+                );
+              },
+            }),
+          (error: unknown, routeId: string) => ({
+            [routeId]: { type: "error", result: error },
+          })
+        ) as Promise<Record<string, DataStrategyResult>>;
+      };
+
+  let results = await dataStrategyImpl({
+    ...dataStrategyArgs,
+    fetcherKey,
+    unstable_runClientMiddleware,
   });
 
   // Wait for all routes to load here but swallow the error since we want
   // it to bubble up from the `await loadRoutePromise` in `callLoaderOrAction` -
-  // called from `match.resolve()`
+  // called from `match.resolve()`. We also ensure that all promises are
+  // awaited so that we don't inadvertently leave any hanging promises.
   try {
-    await Promise.all(loadRouteDefinitionsPromises);
+    await Promise.all(
+      matches.flatMap((m) => [m._lazyPromises?.handler, m._lazyPromises?.route])
+    );
   } catch (e) {
     // No-op
   }
@@ -5164,17 +5635,25 @@ async function callDataStrategyImpl(
 }
 
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
-async function callLoaderOrAction(
-  type: "loader" | "action",
-  request: Request,
-  match: AgnosticDataRouteMatch,
-  loadRoutePromise: Promise<void> | undefined,
-  handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
-  scopedContext: unknown
-): Promise<DataStrategyResult> {
+async function callLoaderOrAction({
+  request,
+  match,
+  lazyHandlerPromise,
+  lazyRoutePromise,
+  handlerOverride,
+  scopedContext,
+}: {
+  request: Request;
+  match: AgnosticDataRouteMatch;
+  lazyHandlerPromise: Promise<void> | undefined;
+  lazyRoutePromise: Promise<void> | undefined;
+  handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0];
+  scopedContext: unknown;
+}): Promise<DataStrategyResult> {
   let result: DataStrategyResult;
   let onReject: (() => void) | undefined;
-
+  let isAction = isMutationMethod(request.method);
+  let type = isAction ? "action" : "loader";
   let runHandler = (
     handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>
   ): Promise<DataStrategyResult> => {
@@ -5220,14 +5699,12 @@ async function callLoaderOrAction(
   };
 
   try {
-    let handler = match.route[type] as
-      | LoaderFunction<unknown>
-      | ActionFunction<unknown>;
+    let handler = isAction ? match.route.action : match.route.loader;
 
-    // If we have a route.lazy promise, await that first
-    if (loadRoutePromise) {
+    // If we have a promise for a lazy route, await that first
+    if (lazyHandlerPromise || lazyRoutePromise) {
       if (handler) {
-        // Run statically defined handler in parallel with lazy()
+        // Run statically defined handler in parallel with lazy route loading
         let handlerError;
         let [value] = await Promise.all([
           // If the handler throws, don't let it immediately bubble out,
@@ -5236,24 +5713,25 @@ async function callLoaderOrAction(
           runHandler(handler).catch((e) => {
             handlerError = e;
           }),
-          loadRoutePromise,
+          // Ensure all lazy route promises are resolved before continuing
+          lazyHandlerPromise,
+          lazyRoutePromise,
         ]);
         if (handlerError !== undefined) {
           throw handlerError;
         }
         result = value!;
       } else {
-        // Load lazy route module, then run any returned handler
-        await loadRoutePromise;
+        // Load lazy loader/action before running it
+        await lazyHandlerPromise;
 
-        handler = match.route[type] as
-          | LoaderFunction<unknown>
-          | ActionFunction<unknown>;
+        let handler = isAction ? match.route.action : match.route.loader;
         if (handler) {
           // Handler still runs even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
-          // previously-lazy-loaded routes
-          result = await runHandler(handler);
+          // previously-lazy-loaded routes. We also ensure all lazy route
+          // promises are resolved before continuing.
+          [result] = await Promise.all([runHandler(handler), lazyRoutePromise]);
         } else if (type === "action") {
           let url = new URL(request.url);
           let pathname = url.pathname + url.search;
@@ -5263,7 +5741,7 @@ async function callLoaderOrAction(
             routeId: match.route.id,
           });
         } else {
-          // lazy() route has no loader to run.  Short circuit here so we don't
+          // lazy route has no loader to run.  Short circuit here so we don't
           // hit the invariant below that errors on returning undefined.
           return { type: ResultType.data, result: undefined };
         }
@@ -5581,11 +6059,13 @@ function processRouteLoaderData(
   });
 
   // If we didn't consume the pending action error (i.e., all loaders
-  // resolved), then consume it here.  Also clear out any loaderData for the
-  // throwing route
+  // resolved), then consume it here
   if (pendingError !== undefined && pendingActionResult) {
     errors = { [pendingActionResult[0]]: pendingError };
-    loaderData[pendingActionResult[0]] = undefined;
+    // Clear out any loaderData for the throwing route
+    if (pendingActionResult[2]) {
+      loaderData[pendingActionResult[2]] = undefined;
+    }
   }
 
   return {
@@ -5614,33 +6094,37 @@ function processLoaderData(
   );
 
   // Process results from our revalidating fetchers
-  revalidatingFetchers.forEach((rf) => {
-    let { key, match, controller } = rf;
-    let result = fetcherResults[key];
-    invariant(result, "Did not find corresponding fetcher result");
+  revalidatingFetchers
+    // Keep those with no matches so we can bubble their 404's, otherwise only
+    // process fetchers that needed to load
+    .filter((f) => !f.matches || f.matches.some((m) => m.shouldLoad))
+    .forEach((rf) => {
+      let { key, match, controller } = rf;
+      let result = fetcherResults[key];
+      invariant(result, "Did not find corresponding fetcher result");
 
-    // Process fetcher non-redirect errors
-    if (controller && controller.signal.aborted) {
-      // Nothing to do for aborted fetchers
-      return;
-    } else if (isErrorResult(result)) {
-      let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
-      if (!(errors && errors[boundaryMatch.route.id])) {
-        errors = {
-          ...errors,
-          [boundaryMatch.route.id]: result.error,
-        };
+      // Process fetcher non-redirect errors
+      if (controller && controller.signal.aborted) {
+        // Nothing to do for aborted fetchers
+        return;
+      } else if (isErrorResult(result)) {
+        let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
+        if (!(errors && errors[boundaryMatch.route.id])) {
+          errors = {
+            ...errors,
+            [boundaryMatch.route.id]: result.error,
+          };
+        }
+        state.fetchers.delete(key);
+      } else if (isRedirectResult(result)) {
+        // Should never get here, redirects should get processed above, but we
+        // keep this to type narrow to a success result in the else
+        invariant(false, "Unhandled fetcher revalidation redirect");
+      } else {
+        let doneFetcher = getDoneFetcher(result.data);
+        state.fetchers.set(key, doneFetcher);
       }
-      state.fetchers.delete(key);
-    } else if (isRedirectResult(result)) {
-      // Should never get here, redirects should get processed above, but we
-      // keep this to type narrow to a success result in the else
-      invariant(false, "Unhandled fetcher revalidation redirect");
-    } else {
-      let doneFetcher = getDoneFetcher(result.data);
-      state.fetchers.set(key, doneFetcher);
-    }
-  });
+    });
 
   return { loaderData, errors };
 }

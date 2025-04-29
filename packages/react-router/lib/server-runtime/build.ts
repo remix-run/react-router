@@ -37,6 +37,10 @@ export interface ServerBuild {
    */
   isSpaMode: boolean;
   prerender: string[];
+  routeDiscovery: {
+    mode: "lazy" | "initial";
+    manifestPath: string;
+  };
 }
 
 export interface HandleDocumentRequestFunction {

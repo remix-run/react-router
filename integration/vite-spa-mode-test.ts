@@ -234,6 +234,37 @@ test.describe("SPA Mode", () => {
           expect(await res.text()).toMatch(/^<!DOCTYPE html><html lang="en">/);
         });
 
+        test("Ignores build-time headers at runtime", async () => {
+          let fixture = await createFixture({
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                splitRouteModules,
+              }),
+              "app/root.tsx": js`
+                import { Outlet, Scripts } from "react-router";
+
+                export default function Root() {
+                  return (
+                    <html lang="en">
+                      <head></head>
+                      <body>
+                        <h1 data-root>Root</h1>
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+              `,
+            },
+          });
+          let res = await fixture.requestDocument("/", {
+            headers: { "X-React-Router-SPA-Mode": "yes" },
+          });
+          let html = await res.text();
+          expect(html).toMatch('"isSpaMode":false');
+          expect(html).toMatch('<h1 data-root="true">Root</h1>');
+        });
+
         test("works when combined with a basename", async ({ page }) => {
           fixture = await createFixture({
             spaMode: true,
@@ -691,6 +722,79 @@ test.describe("SPA Mode", () => {
           await page.waitForSelector("h2");
           expect(await page.locator("h1").textContent()).toBe("Parent: 1");
           expect(await page.locator("h2").textContent()).toBe("Child");
+        });
+
+        test("does not hydrate root loaderData if there's no root loader", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            spaMode: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                splitRouteModules,
+              }),
+              "app/root.tsx": js`
+                import {
+                  Meta,
+                  Links,
+                  Outlet,
+                  Routes,
+                  Route,
+                  Scripts,
+                  ScrollRestoration,
+                } from "react-router";
+
+                export function Layout({ children }: { children: React.ReactNode }) {
+                  return (
+                    <html>
+                      <head>
+                        <Meta />
+                        <Links />
+                      </head>
+                      <body>
+                        {children}
+                        <ScrollRestoration />
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+
+                let count = 0;
+                export function clientLoader() {
+                  return ++count;
+                }
+
+                export default function Root({ loaderData }) {
+                  return (
+                    <>
+                      <h1>{loaderData}</h1>
+                      <Outlet />
+                    </>
+                  );
+                }
+              `,
+              "app/routes/_index.tsx": js`
+                import { redirect } from 'react-router';
+                export const clientLoader = () => redirect('/target');
+                export default function() { return null; }
+              `,
+              "app/routes/target.tsx": js`
+                import { useRouteLoaderData } from 'react-router';
+                export default function Comp() {
+                  return <h2>{useRouteLoaderData('root')}</h2>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/");
+          await page.waitForSelector("h2");
+          expect(await page.locator("h1").textContent()).toBe("2");
+          expect(await page.locator("h2").textContent()).toBe("2");
         });
       });
 

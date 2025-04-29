@@ -57,7 +57,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
   return {
     name: PLUGIN_NAME,
-    config: async (config) => {
+    config: async (config, configEnv) => {
       await preloadVite();
       const vite = getVite();
       // This is a compatibility layer for Vite 5. Default conditions were
@@ -74,6 +74,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
 
       let configResult = await loadConfig({
         rootDirectory: config.root ?? process.cwd(),
+        mode: configEnv.mode,
       });
 
       if (!configResult.ok) {

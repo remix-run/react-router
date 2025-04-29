@@ -11,10 +11,10 @@ import {
   ScrollRestoration,
   createBrowserRouter,
 } from "../../index";
-import type { FrameworkContextObject } from "../../lib/dom/ssr/entry";
 import { createMemoryRouter, redirect } from "react-router";
 import { FrameworkContext, Scripts } from "../../lib/dom/ssr/components";
 import "@testing-library/jest-dom/extend-expect";
+import { mockFrameworkContext } from "../utils/framework";
 
 describe(`ScrollRestoration`, () => {
   it("restores the scroll position for a page when re-visited", () => {
@@ -207,23 +207,7 @@ describe(`ScrollRestoration`, () => {
       window.scrollTo = scrollTo;
     });
 
-    let context: FrameworkContextObject = {
-      routeModules: { root: { default: () => null } },
-      manifest: {
-        routes: {
-          root: {
-            hasLoader: false,
-            hasAction: false,
-            hasErrorBoundary: false,
-            id: "root",
-            module: "root.js",
-          },
-        },
-        entry: { imports: [], module: "" },
-        url: "",
-        version: "",
-      },
-    };
+    let context = mockFrameworkContext();
 
     it("should render a <script> tag", () => {
       let router = createMemoryRouter([

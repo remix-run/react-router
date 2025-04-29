@@ -5,6 +5,10 @@ order: 6
 
 # Navigating
 
+[MODES: framework]
+
+## Introduction
+
 Users navigate your application with `<Link>`, `<NavLink>`, `<Form>`, `redirect`, and `useNavigate`.
 
 ## NavLink

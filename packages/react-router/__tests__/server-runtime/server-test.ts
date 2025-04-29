@@ -2,11 +2,13 @@
  * @jest-environment node
  */
 
-import type { StaticHandlerContext } from "react-router";
+import {
+  unstable_createContext,
+  type StaticHandlerContext,
+} from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
-import type { ServerBuild } from "../../lib/server-runtime/build";
 import { mockServerBuild } from "./utils";
 
 function spyConsole() {
@@ -24,45 +26,25 @@ function spyConsole() {
   return spy;
 }
 
-describe.skip("server", () => {
+describe("server", () => {
   let routeId = "root";
-  let build: ServerBuild = {
-    ssr: true,
-    entry: {
-      module: {
-        default: async (request) => {
-          return new Response(`${request.method}, ${request.url} COMPONENT`);
-        },
-      },
-    },
-    routes: {
+  let build = mockServerBuild(
+    {
       [routeId]: {
-        id: routeId,
         path: "",
-        module: {
-          action: ({ request }) =>
-            new Response(`${request.method} ${request.url} ACTION`),
-          loader: ({ request }) =>
-            new Response(`${request.method} ${request.url} LOADER`),
-          default: () => "COMPONENT",
-        },
+        action: ({ request }) =>
+          new Response(`${request.method} ${request.url} ACTION`),
+        loader: ({ request }) =>
+          new Response(`${request.method} ${request.url} LOADER`),
+        default: () => "COMPONENT",
       },
     },
-    assets: {
-      routes: {
-        [routeId]: {
-          hasAction: true,
-          hasErrorBoundary: false,
-          hasLoader: true,
-          id: routeId,
-          module: routeId,
-          path: "",
-        },
+    {
+      handleDocumentRequest(request) {
+        return new Response(`${request.method}, ${request.url} COMPONENT`);
       },
-    },
-    future: {},
-    prerender: [],
-  } as unknown as ServerBuild;
+    }
+  );
 
   describe("createRequestHandler", () => {
     let spy = spyConsole();
@@ -72,20 +54,20 @@ describe.skip("server", () => {
     });
 
     let allowThrough = [
-      ["GET", "/"],
-      ["GET", "/?_data=root"],
-      ["POST", "/"],
-      ["POST", "/?_data=root"],
-      ["PUT", "/"],
-      ["PUT", "/?_data=root"],
-      ["DELETE", "/"],
-      ["DELETE", "/?_data=root"],
-      ["PATCH", "/"],
-      ["PATCH", "/?_data=root"],
+      ["GET", "/", "COMPONENT"],
+      ["GET", "/_root.data", "LOADER"],
+      ["POST", "/", "COMPONENT"],
+      ["POST", "/_root.data", "ACTION"],
+      ["PUT", "/", "COMPONENT"],
+      ["PUT", "/_root.data", "ACTION"],
+      ["DELETE", "/", "COMPONENT"],
+      ["DELETE", "/_root.data", "ACTION"],
+      ["PATCH", "/", "COMPONENT"],
+      ["PATCH", "/_root.data", "ACTION"],
     ];
     it.each(allowThrough)(
       `allows through %s request to %s`,
-      async (method, to) => {
+      async (method, to, expected) => {
         let handler = createRequestHandler(build);
         let response = await handler(
           new Request(`http://localhost:3000${to}`, {
@@ -96,11 +78,6 @@ describe.skip("server", () => {
         expect(response.status).toBe(200);
         let text = await response.text();
         expect(text).toContain(method);
-        let expected = !to.includes("?_data=root")
-          ? "COMPONENT"
-          : method === "GET"
-          ? "LOADER"
-          : "ACTION";
         expect(text).toContain(expected);
         expect(spy.console).not.toHaveBeenCalled();
       }
@@ -115,6 +92,97 @@ describe.skip("server", () => {
       );
 
       expect(await response.text()).toBe("");
+    });
+
+    it("accepts proper values from getLoadContext (without middleware)", async () => {
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: ({ context }) => context.foo,
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        }
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        {
+          foo: "FOO",
+        }
+      );
+
+      expect(await response.text()).toContain("FOO");
+    });
+
+    it("accepts proper values from getLoadContext (with middleware)", async () => {
+      let fooContext = unstable_createContext<string>();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: ({ context }) => context.get(fooContext),
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        }
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        // @ts-expect-error In apps the expected type is handled via the Future interface
+        new Map([[fooContext, "FOO"]])
+      );
+
+      expect(await response.text()).toContain("FOO");
+    });
+
+    it("errors if an invalid value is returned from getLoadContext (with middleware)", async () => {
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            loader: ({ context }) => context.foo,
+            default: () => "COMPONENT",
+          },
+        },
+        {
+          future: {
+            unstable_middleware: true,
+          },
+          handleError: handleErrorSpy,
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        }
+      );
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/_root.data"),
+        {
+          foo: "FOO",
+        }
+      );
+
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain("Unexpected Server Error");
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0]).toMatchInlineSnapshot(`
+        [Error: Unable to create initial \`unstable_RouterContextProvider\` instance. Please confirm you are returning an instance of \`Map<unstable_routerContext, unknown>\` from your \`getLoadContext\` function.
+
+        Error: TypeError: init is not iterable]
+      `);
+      handleErrorSpy.mockRestore();
     });
   });
 });
@@ -1144,10 +1212,7 @@ describe("shared server runtime", () => {
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
       expect(context.errors!.root.status).toBe(400);
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/test": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("thrown action responses bubble up for index routes", async () => {
@@ -1191,10 +1256,7 @@ describe("shared server runtime", () => {
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
       expect(context.errors!.root.status).toBe(400);
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/_index": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("thrown action responses catch deep", async () => {
@@ -1240,7 +1302,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/test"].status).toBe(400);
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/test": null,
       });
     });
 
@@ -1287,7 +1348,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/_index"].status).toBe(400);
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/_index": null,
       });
     });
 
@@ -1342,8 +1402,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].data).toBe("action");
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/test": null,
       });
     });
 
@@ -1398,8 +1456,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].data).toBe("action");
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/index": null,
       });
     });
 
@@ -1533,10 +1589,7 @@ describe("shared server runtime", () => {
       expect(context.errors!.root).toBeInstanceOf(Error);
       expect(context.errors!.root.message).toBe("Unexpected Server Error");
       expect(context.errors!.root.stack).toBeUndefined();
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/test": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("action errors bubble up for index routes", async () => {
@@ -1582,10 +1635,7 @@ describe("shared server runtime", () => {
       expect(context.errors!.root).toBeInstanceOf(Error);
       expect(context.errors!.root.message).toBe("Unexpected Server Error");
       expect(context.errors!.root.stack).toBeUndefined();
-      expect(context.loaderData).toEqual({
-        root: null,
-        "routes/_index": null,
-      });
+      expect(context.loaderData).toEqual({});
     });
 
     test("action errors catch deep", async () => {
@@ -1635,7 +1685,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/test"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/test": null,
       });
     });
 
@@ -1686,7 +1735,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/_index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/_index": null,
       });
     });
 
@@ -1745,8 +1793,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/test": null,
       });
     });
 
@@ -1805,8 +1851,6 @@ describe("shared server runtime", () => {
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
-        "routes/__layout": null,
-        "routes/__layout/index": null,
       });
     });
 
@@ -2049,31 +2093,27 @@ describe("shared server runtime", () => {
     let indexLoader = jest.fn(() => {
       return "index";
     });
-    let build = mockServerBuild({
-      root: {
-        default: {},
-        loader: rootLoader,
-        ErrorBoundary: {},
+    let build = mockServerBuild(
+      {
+        root: {
+          default: {},
+          loader: rootLoader,
+          ErrorBoundary: {},
+        },
+        "routes/_index": {
+          parentId: "root",
+          default: {},
+          loader: indexLoader,
+        },
       },
-      "routes/_index": {
-        parentId: "root",
-        default: {},
-        loader: indexLoader,
-      },
-    });
-
-    build.entry.module.default = jest.fn(
-      async (
-        request,
-        responseStatusCode,
-        responseHeaders,
-        entryContext,
-        loadContext
-      ) =>
-        new Response(JSON.stringify(loadContext), {
-          status: responseStatusCode,
-          headers: responseHeaders,
-        })
+      {
+        handleDocumentRequest(request, responseStatusCode, responseHeaders) {
+          return new Response(JSON.stringify(loadContext), {
+            status: responseStatusCode,
+            headers: responseHeaders,
+          });
+        },
+      }
     );
 
     let handler = createRequestHandler(build, ServerMode.Development);

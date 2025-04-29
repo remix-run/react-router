@@ -335,7 +335,6 @@ test.describe("Client Data", () => {
               }),
               "app/routes/parent.child.tsx": js`
                 import * as React from 'react';
-                import { json } from "react-router"
                 import { Await, useLoaderData } from "react-router"
                 export function loader() {
                   return {
@@ -685,7 +684,6 @@ test.describe("Client Data", () => {
                 }),
                 "app/routes/parent.child.tsx": js`
                   import * as React from 'react';
-                  import { json } from "react-router";
                   import { useLoaderData, useRevalidator } from "react-router";
                   let isFirstCall = true;
                   export async function loader({ serverLoader }) {
@@ -763,7 +761,7 @@ test.describe("Client Data", () => {
                     childClientLoaderHydrate: false,
                   }),
                   "app/routes/parent.child.tsx": js`
-                    import { ClientLoaderFunctionArgs, useRouteError } from "react-router";
+                    import { useRouteError } from "react-router";
 
                     export function loader() {
                       throw new Error("Broken!")
@@ -910,6 +908,85 @@ test.describe("Client Data", () => {
           expect(html).not.toMatch("Should not see me");
           expect(logs).toEqual(["running parent client loader"]);
           console.error = _consoleError;
+        });
+
+        test("hydrating clientLoader redirects trigger new .data requests to the server", async ({
+          page,
+        }) => {
+          appFixture = await createAppFixture(
+            await createFixture({
+              files: {
+                "react-router.config.ts": reactRouterConfig({
+                  splitRouteModules,
+                }),
+                "app/root.tsx": js`
+                  import { Outlet, Scripts } from "react-router"
+
+                  let count = 1;
+                  export function loader() {
+                    return count++;
+                  }
+
+                  export default function Root({ loaderData }) {
+                    return (
+                      <html>
+                        <head></head>
+                        <body>
+                          <main>
+                            <p id="root-data">{loaderData}</p>
+                            <Outlet />
+                          </main>
+                          <Scripts />
+                        </body>
+                      </html>
+                    );
+                  }
+                `,
+                "app/routes/parent.tsx": js`
+                  import { Outlet } from 'react-router'
+                  let count = 1;
+                  export function loader() {
+                    return count++;
+                  }
+                  export default function Component({ loaderData }) {
+                    return (
+                      <>
+                        <p id="parent-data">{loaderData}</p>
+                        <Outlet/>
+                      </>
+                    );
+                  }
+                  export function shouldRevalidate() {
+                    return false;
+                  }
+                `,
+                "app/routes/parent.a.tsx": js`
+                  import { redirect } from 'react-router'
+                  export function clientLoader() {
+                    return redirect('/parent/b');
+                  }
+                  clientLoader.hydrate = true;
+                  export default function Component({ loaderData }) {
+                    return <p>Should not see me</p>;
+                  }
+                `,
+                "app/routes/parent.b.tsx": js`
+                  export default function Component({ loaderData }) {
+                    return <p id="b">Hi!</p>;
+                  }
+                `,
+              },
+            })
+          );
+          let app = new PlaywrightFixture(appFixture, page);
+
+          await app.goto("/parent/a");
+          await page.waitForSelector("#b");
+          // Root re-runs
+          await expect(page.locator("#root-data")).toHaveText("2");
+          // But parent opted out of revalidation
+          await expect(page.locator("#parent-data")).toHaveText("1");
+          await expect(page.locator("#b")).toHaveText("Hi!");
         });
       });
 
@@ -1286,7 +1363,6 @@ test.describe("Client Data", () => {
                 }),
                 "app/routes/parent.child.tsx": js`
                   import * as React from 'react';
-                  import { json } from "react-router";
                   import { Form, useRouteError } from "react-router";
                   export async function clientAction({ serverAction }) {
                     return await serverAction();
@@ -1508,7 +1584,6 @@ test.describe("Client Data", () => {
                 }),
                 "app/routes/parent.child.tsx": js`
                   import * as React from 'react';
-                  import { json } from "react-router";
                   import { Form, useRouteError } from "react-router";
                   export async function clientAction({ serverAction }) {
                     return await serverAction();

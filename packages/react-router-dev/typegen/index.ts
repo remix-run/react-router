@@ -14,8 +14,8 @@ import { getTypesDir, getTypesPath } from "./paths";
 import * as Params from "./params";
 import * as Route from "./route";
 
-export async function run(rootDirectory: string) {
-  const ctx = await createContext({ rootDirectory, watch: false });
+export async function run(rootDirectory: string, { mode }: { mode: string }) {
+  const ctx = await createContext({ rootDirectory, mode, watch: false });
   await writeAll(ctx);
 }
 
@@ -25,9 +25,9 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { logger }: { logger?: vite.Logger } = {}
+  { mode, logger }: { mode: string; logger?: vite.Logger }
 ): Promise<Watcher> {
-  const ctx = await createContext({ rootDirectory, watch: true });
+  const ctx = await createContext({ rootDirectory, mode, watch: true });
   await writeAll(ctx);
   logger?.info(pc.green("generated types"), { timestamp: true, clear: true });
 
@@ -55,11 +55,13 @@ export async function watch(
 async function createContext({
   rootDirectory,
   watch,
+  mode,
 }: {
   rootDirectory: string;
   watch: boolean;
+  mode: string;
 }): Promise<Context> {
-  const configLoader = await createConfigLoader({ rootDirectory, watch });
+  const configLoader = await createConfigLoader({ rootDirectory, mode, watch });
   const configResult = await configLoader.getConfig();
 
   if (!configResult.ok) {
@@ -89,7 +91,7 @@ async function writeAll(ctx: Context): Promise<void> {
   const registerPath = Path.join(typegenDir, "+register.ts");
   fs.writeFileSync(registerPath, register(ctx));
 
-  const virtualPath = Path.join(typegenDir, "+virtual.ts");
+  const virtualPath = Path.join(typegenDir, "+virtual.d.ts");
   fs.writeFileSync(virtualPath, virtual);
 }
 
@@ -161,6 +163,7 @@ const virtual = ts`
     export const isSpaMode: ServerBuild["isSpaMode"];
     export const prerender: ServerBuild["prerender"];
     export const publicPath: ServerBuild["publicPath"];
+    export const routeDiscovery: ServerBuild["routeDiscovery"];
     export const routes: ServerBuild["routes"];
     export const ssr: ServerBuild["ssr"];
     export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];

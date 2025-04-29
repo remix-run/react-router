@@ -1170,4 +1170,66 @@ describe("shouldRevalidate", () => {
 
     router.dispose();
   });
+
+  it("preserves ancestor loaderData on bubbled action errors when not revalidating with a custom data strategy", async () => {
+    let history = createMemoryHistory();
+    let router = createRouter({
+      history,
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          hasErrorBoundary: true,
+          loader: () => "NOPE",
+          children: [
+            {
+              id: "index",
+              index: true,
+              action: () => {
+                throw new Response("ERROR 400", { status: 400 });
+              },
+            },
+          ],
+        },
+      ],
+      hydrationData: {
+        loaderData: {
+          root: "ROOT",
+        },
+      },
+      async dataStrategy({ request, matches }) {
+        let keyedResults = {};
+        let matchesToLoad = matches.filter((match) =>
+          match.unstable_shouldCallHandler(
+            request.method === "POST"
+              ? undefined
+              : !match.unstable_shouldRevalidateArgs?.actionStatus ||
+                  match.unstable_shouldRevalidateArgs.actionStatus < 400
+          )
+        );
+        await Promise.all(
+          matchesToLoad.map(async (match) => {
+            keyedResults[match.route.id] = await match.resolve();
+          })
+        );
+        return keyedResults;
+      },
+    });
+    router.initialize();
+
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: null,
+      errors: { root: new ErrorResponseImpl(400, "", "ERROR 400") },
+    });
+
+    router.dispose();
+  });
 });

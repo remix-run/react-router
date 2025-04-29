@@ -56,7 +56,7 @@ const files = {
         }
       })();
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 2s")), 2000);
+        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 5s")), 5000);
       });
       await Promise.race([pollingPromise, timeoutPromise]);
       return {
@@ -131,7 +131,7 @@ const files = {
         }
       })();
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 2s")), 2000);
+        setTimeout(() => reject(new Error("Client loader wasn't unblocked after 5s")), 5000);
       });
       await Promise.race([pollingPromise, timeoutPromise]);
       return "clientLoader in main chunk: " + eval("typeof inUnsplittableMainChunk === 'function'");
@@ -419,8 +419,10 @@ test.describe("Split route modules", async () => {
 
       // Ensure splittable client loader works during SSR
       await page.goto(`http://localhost:${port}/splittable`);
-      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
-      expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
+      await expect(page.locator("[data-hydrate-fallback]")).toHaveText(
+        "Loading..."
+      );
+      await expect(page.locator("[data-hydrate-fallback]")).toHaveCSS(
         "padding",
         "20px"
       );
@@ -431,7 +433,9 @@ test.describe("Split route modules", async () => {
 
       // Ensure unsplittable client loader works during SSR
       await page.goto(`http://localhost:${port}/unsplittable`);
-      expect(page.locator("[data-hydrate-fallback]")).toHaveText("Loading...");
+      await expect(page.locator("[data-hydrate-fallback]")).toHaveText(
+        "Loading..."
+      );
       await unblockClientLoader(page);
       await expect(page.locator("[data-loader-data]")).toHaveText(
         `loaderData = "clientLoader in main chunk: true"`
@@ -450,6 +454,59 @@ test.describe("Split route modules", async () => {
         cwd = await createProject({
           "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
           "vite.config.js": await viteConfig.basic({ port }),
+          // Make unsplittable routes valid so the build can pass
+          "app/routes/unsplittable.tsx": "export default function(){}",
+          "app/routes/mixed.tsx": "export default function(){}",
+        });
+      });
+
+      test("build passes", async () => {
+        let { status } = build({ cwd });
+        expect(status).toBe(0);
+      });
+    });
+
+    test.describe("splittable routes with splittable root route exports", () => {
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject({
+          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "vite.config.js": await viteConfig.basic({ port }),
+          "app/root.tsx": js`
+            import { Outlet } from "react-router";
+            export const clientLoader = () => null;
+            export const clientAction = () => null;
+            export default function() {
+              return <Outlet />;
+            }
+          `,
+          // Make unsplittable routes valid so the build can pass
+          "app/routes/unsplittable.tsx": "export default function(){}",
+          "app/routes/mixed.tsx": "export default function(){}",
+        });
+      });
+
+      test("build passes", async () => {
+        let { status } = build({ cwd });
+        expect(status).toBe(0);
+      });
+    });
+
+    test.describe("splittable routes with unsplittable root route exports", () => {
+      test.beforeAll(async () => {
+        port = await getPort();
+        cwd = await createProject({
+          "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
+          "vite.config.js": await viteConfig.basic({ port }),
+          "app/root.tsx": js`
+            import { Outlet } from "react-router";
+            const shared = null;
+            export const clientLoader = () => shared;
+            export const clientAction = () => shared;
+            export default function() {
+              return <Outlet />;
+            }
+          `,
           // Make unsplittable routes valid so the build can pass
           "app/routes/unsplittable.tsx": "export default function(){}",
           "app/routes/mixed.tsx": "export default function(){}",

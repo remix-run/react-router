@@ -643,11 +643,17 @@ export type ScriptsProps = Omit<
   @category Components
  */
 export function Scripts(props: ScriptsProps) {
-  let { manifest, serverHandoffString, isSpaMode, ssr, renderMeta } =
-    useFrameworkContext();
+  let {
+    manifest,
+    serverHandoffString,
+    isSpaMode,
+    renderMeta,
+    routeDiscovery,
+    ssr,
+  } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = isFogOfWarEnabled(ssr);
+  let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
@@ -688,6 +694,7 @@ ${matches
     let {
       clientActionModule,
       clientLoaderModule,
+      clientMiddlewareModule,
       hydrateFallbackModule,
       module,
     } = manifestEntry;
@@ -706,6 +713,14 @@ ${matches
             {
               module: clientLoaderModule,
               varName: `${routeVarName}_clientLoader`,
+            },
+          ]
+        : []),
+      ...(clientMiddlewareModule
+        ? [
+            {
+              module: clientMiddlewareModule,
+              varName: `${routeVarName}_clientMiddleware`,
             },
           ]
         : []),
@@ -776,32 +791,54 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   let preloads = isHydrated
     ? []
-    : manifest.entry.imports.concat(
-        getModuleLinkHrefs(matches, manifest, {
-          includeHydrateFallback: true,
-        })
+    : dedupe(
+        manifest.entry.imports.concat(
+          getModuleLinkHrefs(matches, manifest, {
+            includeHydrateFallback: true,
+          })
+        )
       );
+
+  let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
   return isHydrated ? null : (
     <>
+      {typeof manifest.sri === "object" ? (
+        <script
+          rr-importmap=""
+          type="importmap"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              integrity: sri,
+            }),
+          }}
+        />
+      ) : null}
       {!enableFogOfWar ? (
         <link
           rel="modulepreload"
           href={manifest.url}
           crossOrigin={props.crossOrigin}
+          integrity={sri[manifest.url]}
+          suppressHydrationWarning
         />
       ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
+        integrity={sri[manifest.entry.module]}
+        suppressHydrationWarning
       />
-      {dedupe(preloads).map((path) => (
+      {preloads.map((path) => (
         <link
           key={path}
           rel="modulepreload"
           href={path}
           crossOrigin={props.crossOrigin}
+          integrity={sri[path]}
+          suppressHydrationWarning
         />
       ))}
       {initialScripts}

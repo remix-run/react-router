@@ -317,7 +317,10 @@ export {
 } from "./lib/context";
 
 /** @internal */
-export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
+export {
+  hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
+  mapRouteProperties as UNSAFE_mapRouteProperties,
+} from "./lib/components";
 
 /** @internal */
 export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
@@ -338,6 +341,9 @@ export {
 } from "./lib/dom/ssr/fog-of-war";
 
 /** @internal */
+export { getHydrationData as UNSAFE_getHydrationData } from "./lib/dom/ssr/hydration";
+
+/** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
 
 /** @internal */
@@ -348,7 +354,7 @@ export {
 } from "./lib/dom/ssr/routes";
 
 /** @internal */
-export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
+export { getTurboStreamSingleFetchDataStrategy as UNSAFE_getTurboStreamSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
 export {
