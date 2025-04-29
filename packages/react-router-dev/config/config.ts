@@ -3,7 +3,7 @@ import { execSync } from "node:child_process";
 import PackageJson from "@npmcli/package-json";
 import * as ViteNode from "../vite/vite-node";
 import type * as Vite from "vite";
-import path from "pathe";
+import Path from "pathe";
 import chokidar, {
   type FSWatcher,
   type EmitArgs as ChokidarEmitArgs,
@@ -485,14 +485,14 @@ async function resolveConfig({
     routeDiscovery = userRouteDiscovery;
   }
 
-  let appDirectory = path.resolve(root, userAppDirectory || "app");
-  let buildDirectory = path.resolve(root, userBuildDirectory);
+  let appDirectory = Path.resolve(root, userAppDirectory || "app");
+  let buildDirectory = Path.resolve(root, userBuildDirectory);
 
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
-    let rootRouteDisplayPath = path.relative(
+    let rootRouteDisplayPath = Path.relative(
       root,
-      path.join(appDirectory, "root.tsx")
+      Path.join(appDirectory, "root.tsx")
     );
     return err(
       `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
@@ -507,9 +507,9 @@ async function resolveConfig({
 
   try {
     if (!routeConfigFile) {
-      let routeConfigDisplayPath = path.relative(
+      let routeConfigDisplayPath = Path.relative(
         root,
-        path.join(appDirectory, "routes.ts")
+        Path.join(appDirectory, "routes.ts")
       );
       return err(`Route config file not found at "${routeConfigDisplayPath}".`);
     }
@@ -517,7 +517,7 @@ async function resolveConfig({
     setAppDirectory(appDirectory);
     let routeConfigExport = (
       await viteNodeContext.runner.executeFile(
-        path.join(appDirectory, routeConfigFile)
+        Path.join(appDirectory, routeConfigFile)
       )
     ).default;
     let routeConfig = await routeConfigExport;
@@ -542,7 +542,7 @@ async function resolveConfig({
         "",
         error.loc?.file && error.loc?.column && error.frame
           ? [
-              path.relative(appDirectory, error.loc.file) +
+              Path.relative(appDirectory, error.loc.file) +
                 ":" +
                 error.loc.line +
                 ":" +
@@ -595,7 +595,8 @@ type ChokidarEventName = ChokidarEmitArgs[0];
 
 type ChangeHandler = (args: {
   result: Result<ResolvedReactRouterConfig>;
-  configCodeUpdated: boolean;
+  configCodeChanged: boolean;
+  routeConfigCodeChanged: boolean;
   configChanged: boolean;
   routeConfigChanged: boolean;
   path: string;
@@ -617,16 +618,27 @@ export async function createConfigLoader({
   rootDirectory?: string;
   mode: string;
 }): Promise<ConfigLoader> {
-  root = root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+  root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
+  let vite = await import("vite");
   let viteNodeContext = await ViteNode.createContext({
     root,
     mode,
+    // Filter out any info level logs from vite-node
+    customLogger: vite.createLogger("warn", {
+      prefix: "[react-router]",
+    }),
   });
 
-  let reactRouterConfigFile = findEntry(root, "react-router.config", {
-    absolute: true,
-  });
+  let reactRouterConfigFile: string | undefined;
+
+  let updateReactRouterConfigFile = () => {
+    reactRouterConfigFile = findEntry(root, "react-router.config", {
+      absolute: true,
+    });
+  };
+
+  updateReactRouterConfigFile();
 
   let getConfig = () =>
     resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
@@ -639,9 +651,9 @@ export async function createConfigLoader({
     throw new Error(initialConfigResult.error);
   }
 
-  appDirectory = initialConfigResult.value.appDirectory;
+  appDirectory = Path.normalize(initialConfigResult.value.appDirectory);
 
-  let lastConfig = initialConfigResult.value;
+  let currentConfig = initialConfigResult.value;
 
   let fsWatcher: FSWatcher | undefined;
   let changeHandlers: ChangeHandler[] = [];
@@ -658,54 +670,108 @@ export async function createConfigLoader({
       changeHandlers.push(handler);
 
       if (!fsWatcher) {
-        fsWatcher = chokidar.watch(
-          [
-            ...(reactRouterConfigFile ? [reactRouterConfigFile] : []),
-            appDirectory,
-          ],
-          { ignoreInitial: true }
-        );
+        fsWatcher = chokidar.watch([root, appDirectory], {
+          ignoreInitial: true,
+          ignored: (path) => {
+            let dirname = Path.dirname(path);
+
+            return (
+              !dirname.startsWith(appDirectory) &&
+              // Ensure we're only watching files outside of the app directory
+              // that are at the root level, not nested in subdirectories
+              path !== root && // Watch the root directory itself
+              dirname !== root // Watch files at the root level
+            );
+          },
+        });
 
         fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
           let [event, rawFilepath] = args;
-          let filepath = path.normalize(rawFilepath);
+          let filepath = Path.normalize(rawFilepath);
+
+          let fileAddedOrRemoved = event === "add" || event === "unlink";
 
           let appFileAddedOrRemoved =
-            appDirectory &&
-            (event === "add" || event === "unlink") &&
-            filepath.startsWith(path.normalize(appDirectory));
+            fileAddedOrRemoved &&
+            filepath.startsWith(Path.normalize(appDirectory));
 
-          let configCodeUpdated = Boolean(
-            viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
-          );
+          let rootRelativeFilepath = Path.relative(root, filepath);
 
-          if (configCodeUpdated || appFileAddedOrRemoved) {
-            viteNodeContext.devServer?.moduleGraph.invalidateAll();
-            viteNodeContext.runner?.moduleCache.clear();
+          let configFileAddedOrRemoved =
+            fileAddedOrRemoved &&
+            isEntryFile("react-router.config", rootRelativeFilepath);
+
+          if (configFileAddedOrRemoved) {
+            updateReactRouterConfigFile();
           }
 
-          if (appFileAddedOrRemoved || configCodeUpdated) {
-            let result = await getConfig();
+          let moduleGraphChanged =
+            configFileAddedOrRemoved ||
+            Boolean(
+              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
+            );
 
-            let configChanged = result.ok && !isEqual(lastConfig, result.value);
+          // Bail out if no relevant changes detected
+          if (!moduleGraphChanged && !appFileAddedOrRemoved) {
+            return;
+          }
 
-            let routeConfigChanged =
-              result.ok && !isEqual(lastConfig?.routes, result.value.routes);
+          viteNodeContext.devServer?.moduleGraph.invalidateAll();
+          viteNodeContext.runner?.moduleCache.clear();
 
-            for (let handler of changeHandlers) {
-              handler({
-                result,
-                configCodeUpdated,
-                configChanged,
-                routeConfigChanged,
-                path: filepath,
-                event,
-              });
-            }
+          let result = await getConfig();
 
-            if (result.ok) {
-              lastConfig = result.value;
-            }
+          let prevAppDirectory = appDirectory;
+          appDirectory = Path.normalize(
+            (result.value ?? currentConfig).appDirectory
+          );
+
+          if (appDirectory !== prevAppDirectory) {
+            fsWatcher!.unwatch(prevAppDirectory);
+            fsWatcher!.add(appDirectory);
+          }
+
+          let configCodeChanged =
+            configFileAddedOrRemoved ||
+            (reactRouterConfigFile !== undefined &&
+              isEntryFileDependency(
+                viteNodeContext.devServer.moduleGraph,
+                reactRouterConfigFile,
+                filepath
+              ));
+
+          let routeConfigFile = findEntry(appDirectory, "routes", {
+            absolute: true,
+          });
+          let routeConfigCodeChanged =
+            routeConfigFile !== undefined &&
+            isEntryFileDependency(
+              viteNodeContext.devServer.moduleGraph,
+              routeConfigFile,
+              filepath
+            );
+
+          let configChanged =
+            result.ok &&
+            !isEqual(omitRoutes(currentConfig), omitRoutes(result.value));
+
+          let routeConfigChanged =
+            result.ok && !isEqual(currentConfig?.routes, result.value.routes);
+
+          for (let handler of changeHandlers) {
+            handler({
+              result,
+              configCodeChanged,
+              routeConfigCodeChanged,
+              configChanged,
+              routeConfigChanged,
+              path: filepath,
+              event,
+            });
+          }
+
+          if (result.ok) {
+            currentConfig = result.value;
           }
         });
       }
@@ -750,8 +816,8 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(
-    path.dirname(require.resolve("@react-router/dev/package.json")),
+  let defaultsDirectory = Path.resolve(
+    Path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "defaults"
@@ -775,7 +841,7 @@ export async function resolveEntryFiles({
     );
   }
 
-  let packageJsonDirectory = path.dirname(packageJsonPath);
+  let packageJsonDirectory = Path.dirname(packageJsonPath);
   let pkgJson = await PackageJson.load(packageJsonDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
@@ -814,17 +880,30 @@ export async function resolveEntryFiles({
   }
 
   let entryClientFilePath = userEntryClientFile
-    ? path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
-    : path.resolve(defaultsDirectory, entryClientFile);
+    ? Path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
+    : Path.resolve(defaultsDirectory, entryClientFile);
 
   let entryServerFilePath = userEntryServerFile
-    ? path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
-    : path.resolve(defaultsDirectory, entryServerFile);
+    ? Path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
+    : Path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
 }
 
+function omitRoutes(
+  config: ResolvedReactRouterConfig
+): ResolvedReactRouterConfig {
+  return {
+    ...config,
+    routes: {},
+  };
+}
+
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
+
+function isEntryFile(entryBasename: string, filename: string) {
+  return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
+}
 
 function findEntry(
   dir: string,
@@ -835,14 +914,14 @@ function findEntry(
     walkParents?: boolean;
   }
 ): string | undefined {
-  let currentDir = path.resolve(dir);
-  let { root } = path.parse(currentDir);
+  let currentDir = Path.resolve(dir);
+  let { root } = Path.parse(currentDir);
 
   while (true) {
     for (let ext of options?.extensions ?? entryExts) {
-      let file = path.resolve(currentDir, basename + ext);
+      let file = Path.resolve(currentDir, basename + ext);
       if (fs.existsSync(file)) {
-        return options?.absolute ?? false ? file : path.relative(dir, file);
+        return options?.absolute ?? false ? file : Path.relative(dir, file);
       }
     }
 
@@ -850,7 +929,7 @@ function findEntry(
       return undefined;
     }
 
-    let parentDir = path.dirname(currentDir);
+    let parentDir = Path.dirname(currentDir);
     // Break out when we've reached the root directory or we're about to get
     // stuck in a loop where `path.dirname` keeps returning "/"
     if (currentDir === root || parentDir === currentDir) {
@@ -859,4 +938,47 @@ function findEntry(
 
     currentDir = parentDir;
   }
+}
+
+function isEntryFileDependency(
+  moduleGraph: Vite.ModuleGraph,
+  entryFilepath: string,
+  filepath: string,
+  visited = new Set<string>()
+): boolean {
+  // Ensure normalized paths
+  entryFilepath = Path.normalize(entryFilepath);
+  filepath = Path.normalize(filepath);
+
+  if (visited.has(filepath)) {
+    return false;
+  }
+
+  visited.add(filepath);
+
+  if (filepath === entryFilepath) {
+    return true;
+  }
+
+  let mod = moduleGraph.getModuleById(filepath);
+
+  if (!mod) {
+    return false;
+  }
+
+  // Recursively check all importers to see if any of them are the entry file
+  for (let importer of mod.importers) {
+    if (!importer.id) {
+      continue;
+    }
+
+    if (
+      importer.id === entryFilepath ||
+      isEntryFileDependency(moduleGraph, entryFilepath, importer.id, visited)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -1559,7 +1559,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         reactRouterConfigLoader.onChange(
           async ({
             result,
-            configCodeUpdated,
+            configCodeChanged,
+            routeConfigCodeChanged,
             configChanged,
             routeConfigChanged,
           }) => {
@@ -1572,21 +1573,22 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return;
             }
 
-            if (routeConfigChanged) {
-              logger.info(colors.green("Route config changed."), {
-                clear: true,
-                timestamp: true,
-              });
-            } else if (configCodeUpdated) {
-              logger.info(colors.green("Config updated."), {
-                clear: true,
-                timestamp: true,
-              });
-            }
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
+
+            logger.info(colors.green(message), {
+              clear: true,
+              timestamp: true,
+            });
 
             await updatePluginContext();
 
-            if (configChanged) {
+            if (configChanged || routeConfigChanged) {
               invalidateVirtualModules(viteDevServer);
             }
           }
