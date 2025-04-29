@@ -1,10 +1,7 @@
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ErrorResponseImpl } from "../../lib/router/utils";
 import { mockServerBuild } from "./utils";
-import type {
-  HandleDocumentRequestFunction,
-  ServerBuild,
-} from "../../lib/server-runtime/build";
+import type { HandleDocumentRequestFunction } from "../../lib/server-runtime/build";
 
 function getHandler(
   routeModule = {},
@@ -160,50 +157,29 @@ describe("handleError", () => {
       let error = new Error("💥");
 
       let handleErrorSpy = jest.fn();
-      let build: ServerBuild = {
-        routes: {
-          param: {
-            id: "param",
-            path: "/:param",
-            module: {
-              default() {
-                return null;
-              },
-              loader() {
-                throw error;
-              },
-            },
-          },
-        },
-        entry: {
-          module: {
-            handleError: handleErrorSpy,
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
             default() {
-              return new Response("<html><body>Dummy document</body></html>");
+              return null;
+            },
+          },
+          param: {
+            path: ":param",
+            parentId: "root",
+            default() {
+              return null;
+            },
+            loader() {
+              throw error;
             },
           },
         },
-        routeDiscovery: {
-          mode: "lazy",
-          manifestPath: "/__manifest",
-        },
-        future: {
-          // Fill in the required values
-          unstable_middleware: false,
-          unstable_subResourceIntegrity: false,
-        },
-        prerender: [],
-        assets: {
-          entry: { imports: [], module: "" },
-          routes: {},
-          url: "",
-          version: "",
-        },
-        assetsBuildDirectory: "",
-        publicPath: "/",
-        ssr: true,
-        isSpaMode: false,
-      };
+        {
+          handleError: handleErrorSpy,
+        }
+      );
 
       let handler = createRequestHandler(build);
       let request = new Request("http://example.com/a.data");
