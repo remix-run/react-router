@@ -1645,8 +1645,6 @@ export class ErrorResponseImpl implements ErrorResponse {
   status: number;
   statusText: string;
   data: any;
-  private error?: Error;
-  private internal: boolean;
 
   constructor(
     status: number,
@@ -1656,10 +1654,8 @@ export class ErrorResponseImpl implements ErrorResponse {
   ) {
     this.status = status;
     this.statusText = statusText || "";
-    this.internal = internal;
     if (data instanceof Error) {
       this.data = data.toString();
-      this.error = data;
     } else {
       this.data = data;
     }

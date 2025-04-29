@@ -373,7 +373,7 @@ export function createBrowserHistory(
     );
   }
 
-  function createBrowserHref(window: Window, to: To) {
+  function createBrowserHref(_window: Window, to: To) {
     return typeof to === "string" ? to : createPath(to);
   }
 
