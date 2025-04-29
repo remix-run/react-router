@@ -35,7 +35,10 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   await preloadVite();
   let vite = getVite();
 
-  let configResult = await loadConfig({ rootDirectory: root });
+  let configResult = await loadConfig({
+    rootDirectory: root,
+    mode: viteBuildOptions.mode ?? "production",
+  });
 
   if (!configResult.ok) {
     throw new Error(configResult.error);
