@@ -32,7 +32,7 @@ export function logV6DeprecationWarnings(
 
   if (
     renderFuture?.v7_relativeSplatPath === undefined &&
-    (!routerFuture || !routerFuture.v7_relativeSplatPath)
+    (!routerFuture || routerFuture.v7_relativeSplatPath === undefined)
   ) {
     logDeprecation(
       "v7_relativeSplatPath",
