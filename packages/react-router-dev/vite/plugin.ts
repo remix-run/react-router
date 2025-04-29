@@ -3545,10 +3545,14 @@ export async function getEnvironmentOptionsResolvers(
                 let routeChunkSuffix = routeChunkName
                   ? `-${kebabCase(routeChunkName)}`
                   : "";
-                return path.posix.join(
+                let assetsDir =
                   (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
                     ? viteUserConfig?.environments?.client?.build?.assetsDir
-                    : viteUserConfig?.build?.assetsDir) ?? "assets",
+                    : null) ??
+                  viteUserConfig?.build?.assetsDir ??
+                  "assets";
+                return path.posix.join(
+                  assetsDir,
                   `[name]${routeChunkSuffix}-[hash].js`
                 );
               },
