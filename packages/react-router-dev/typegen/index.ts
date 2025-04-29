@@ -13,6 +13,7 @@ import type { Context } from "./context";
 import { getTypesDir, getTypesPath } from "./paths";
 import * as Params from "./params";
 import * as Route from "./route";
+import type { RouteManifestEntry } from "../config/routes";
 
 export async function run(rootDirectory: string, { mode }: { mode: string }) {
   const ctx = await createContext({ rootDirectory, mode, watch: false });
@@ -108,44 +109,41 @@ function register(ctx: Context) {
 
   const { t } = Babel;
 
-  const indexPaths = new Set(
-    Object.values(ctx.config.routes)
-      .filter((route) => route.index)
-      .map((route) => route.path)
-  );
+  const fullpaths: Record<string, RouteManifestEntry[]> = {};
+  for (const route of Object.values(ctx.config.routes)) {
+    // skip pathless (layout) routes
+    if (route.id !== "root" && !route.path) continue;
+
+    const lineage = Route.lineage(ctx.config.routes, route);
+    const fullpath = Route.fullpath(lineage);
+    const existing = fullpaths[fullpath];
+    if (!existing || existing.length < lineage.length) {
+      fullpaths[fullpath] = lineage;
+    }
+  }
 
   const typeParams = t.tsTypeAliasDeclaration(
     t.identifier("Params"),
     null,
     t.tsTypeLiteral(
-      Object.values(ctx.config.routes)
-        .map((route) => {
-          // filter out pathless (layout) routes
-          if (route.id !== "root" && !route.path) return undefined;
-
-          // filter out layout routes that have a corresponding index
-          if (!route.index && indexPaths.has(route.path)) return undefined;
-
-          const lineage = Route.lineage(ctx.config.routes, route);
-          const fullpath = Route.fullpath(lineage);
-          const params = Params.parse(fullpath);
-          return t.tsPropertySignature(
-            t.stringLiteral(fullpath),
-            t.tsTypeAnnotation(
-              t.tsTypeLiteral(
-                Object.entries(params).map(([param, isRequired]) => {
-                  const property = t.tsPropertySignature(
-                    t.stringLiteral(param),
-                    t.tsTypeAnnotation(t.tsStringKeyword())
-                  );
-                  property.optional = !isRequired;
-                  return property;
-                })
-              )
+      Object.keys(fullpaths).map((fullpath) => {
+        const params = Params.parse(fullpath);
+        return t.tsPropertySignature(
+          t.stringLiteral(fullpath),
+          t.tsTypeAnnotation(
+            t.tsTypeLiteral(
+              Object.entries(params).map(([param, isRequired]) => {
+                const property = t.tsPropertySignature(
+                  t.stringLiteral(param),
+                  t.tsTypeAnnotation(t.tsStringKeyword())
+                );
+                property.optional = !isRequired;
+                return property;
+              })
             )
-          );
-        })
-        .filter((x): x is Babel.Babel.TSPropertySignature => x !== undefined)
+          )
+        );
+      })
     )
   );
 
