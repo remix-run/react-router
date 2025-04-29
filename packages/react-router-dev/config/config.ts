@@ -159,6 +159,24 @@ export type ReactRouterConfig = {
    */
   presets?: Array<Preset>;
   /**
+   * Control the "Lazy Route Discovery" behavior
+   *
+   * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
+   *   lazily discover routes as the user navigates around your application.
+   *   You can set this to `initial` to opt-out of this behavior and load all
+   *   routes with the initial HTML document load.
+   * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
+   *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
+   */
+  routeDiscovery?:
+    | {
+        mode: "lazy";
+        manifestPath?: string;
+      }
+    | {
+        mode: "initial";
+      };
+  /**
    * The file name of the server build output. This file
    * should end in a `.js` extension and should be deployed to your server.
    * Defaults to `"index.js"`.
@@ -205,6 +223,17 @@ export type ResolvedReactRouterConfig = Readonly<{
    * function returning an array to dynamically generate URLs.
    */
   prerender: ReactRouterConfig["prerender"];
+  /**
+   * Control the "Lazy Route Discovery" behavior
+   *
+   * - `routeDiscovery.mode`: By default, this resolves to `lazy` which will
+   *   lazily discover routes as the user navigates around your application.
+   *   You can set this to `initial` to opt-out of this behavior and load all
+   *   routes with the initial HTML document load.
+   * - `routeDiscovery.manifestPath`: The path to serve the manifest file from.
+   *    Only applies to `mode: "lazy"` and defaults to `/__manifest`.
+   */
+  routeDiscovery: ReactRouterConfig["routeDiscovery"];
   /**
    * An object of all available routes, keyed by route id.
    */
@@ -388,19 +417,25 @@ async function resolveConfig({
     ssr: true,
   } as const satisfies Partial<ReactRouterConfig>;
 
+  let userAndPresetConfigs = mergeReactRouterConfig(
+    ...presets,
+    reactRouterUserConfig
+  );
+
   let {
     appDirectory: userAppDirectory,
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
     prerender,
+    routeDiscovery: userRouteDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
     ssr,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
-    ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
+    ...userAndPresetConfigs,
   };
 
   if (!ssr && serverBundles) {
@@ -418,6 +453,36 @@ async function resolveConfig({
       "The `prerender` config must be a boolean, an array of string paths, " +
         "or a function returning a boolean or array of string paths"
     );
+  }
+
+  let routeDiscovery: ResolvedReactRouterConfig["routeDiscovery"];
+  if (userRouteDiscovery == null) {
+    if (ssr) {
+      routeDiscovery = {
+        mode: "lazy",
+        manifestPath: "/__manifest",
+      };
+    } else {
+      routeDiscovery = { mode: "initial" };
+    }
+  } else if (userRouteDiscovery.mode === "initial") {
+    routeDiscovery = userRouteDiscovery;
+  } else if (userRouteDiscovery.mode === "lazy") {
+    if (!ssr) {
+      return err(
+        'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`'
+      );
+    }
+
+    let { manifestPath } = userRouteDiscovery;
+    if (manifestPath != null && !manifestPath.startsWith("/")) {
+      return err(
+        "The `routeDiscovery.manifestPath` config must be a root-relative " +
+          'pathname beginning with a slash (i.e., "/__manifest")'
+      );
+    }
+
+    routeDiscovery = userRouteDiscovery;
   }
 
   let appDirectory = path.resolve(root, userAppDirectory || "app");
@@ -512,11 +577,12 @@ async function resolveConfig({
     future,
     prerender,
     routes,
+    routeDiscovery,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
     ssr,
-  });
+  } satisfies ResolvedReactRouterConfig);
 
   for (let preset of reactRouterUserConfig.presets ?? []) {
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
@@ -697,7 +763,20 @@ export async function resolveEntryFiles({
   let entryServerFile: string;
   let entryClientFile = userEntryClientFile || "entry.client.tsx";
 
-  let pkgJson = await PackageJson.load(rootDirectory);
+  let packageJsonPath = findEntry(rootDirectory, "package", {
+    extensions: [".json"],
+    absolute: true,
+    walkParents: true,
+  });
+
+  if (!packageJsonPath) {
+    throw new Error(
+      `Could not find package.json in ${rootDirectory} or any of its parent directories`
+    );
+  }
+
+  let packageJsonDirectory = path.dirname(packageJsonPath);
+  let pkgJson = await PackageJson.load(packageJsonDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
   if (userEntryServerFile) {
@@ -726,7 +805,7 @@ export async function resolveEntryFiles({
       let packageManager = detectPackageManager() ?? "npm";
 
       execSync(`${packageManager} install`, {
-        cwd: rootDirectory,
+        cwd: packageJsonDirectory,
         stdio: "inherit",
       });
     }
@@ -750,14 +829,34 @@ const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 function findEntry(
   dir: string,
   basename: string,
-  options?: { absolute?: boolean }
-): string | undefined {
-  for (let ext of entryExts) {
-    let file = path.resolve(dir, basename + ext);
-    if (fs.existsSync(file)) {
-      return options?.absolute ?? false ? file : path.relative(dir, file);
-    }
+  options?: {
+    absolute?: boolean;
+    extensions?: string[];
+    walkParents?: boolean;
   }
+): string | undefined {
+  let currentDir = path.resolve(dir);
+  let { root } = path.parse(currentDir);
 
-  return undefined;
+  while (true) {
+    for (let ext of options?.extensions ?? entryExts) {
+      let file = path.resolve(currentDir, basename + ext);
+      if (fs.existsSync(file)) {
+        return options?.absolute ?? false ? file : path.relative(dir, file);
+      }
+    }
+
+    if (!options?.walkParents) {
+      return undefined;
+    }
+
+    let parentDir = path.dirname(currentDir);
+    // Break out when we've reached the root directory or we're about to get
+    // stuck in a loop where `path.dirname` keeps returning "/"
+    if (currentDir === root || parentDir === currentDir) {
+      return undefined;
+    }
+
+    currentDir = parentDir;
+  }
 }

@@ -5,7 +5,7 @@ order: 9
 
 # Testing
 
-[MODES: framework]
+[MODES: framework, data]
 
 ## Introduction
 

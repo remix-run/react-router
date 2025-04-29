@@ -17,14 +17,14 @@ import * as Typegen from "../typegen";
 import { preloadVite, getVite } from "../vite/vite";
 
 export async function routes(
-  reactRouterRoot?: string,
+  rootDirectory?: string,
   flags: {
     config?: string;
     json?: boolean;
     mode?: string;
   } = {}
 ): Promise<void> {
-  let rootDirectory = reactRouterRoot ?? process.cwd();
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
   let configResult = await loadConfig({
     rootDirectory,
     mode: flags.mode ?? "production",
@@ -43,9 +43,7 @@ export async function build(
   root?: string,
   options: ViteBuildOptions = {}
 ): Promise<void> {
-  if (!root) {
-    root = process.env.REACT_ROUTER_ROOT || process.cwd();
-  }
+  root = resolveRootDirectory(root, options);
 
   let { build } = await import("../vite/build");
   if (options.profile) {
@@ -58,12 +56,14 @@ export async function build(
   }
 }
 
-export async function dev(root: string, options: ViteDevOptions = {}) {
+export async function dev(root?: string, options: ViteDevOptions = {}) {
   let { dev } = await import("../vite/dev");
   if (options.profile) {
     await profiler.start();
   }
   exitHook(() => profiler.stop(console.info));
+
+  root = resolveRootDirectory(root, options);
   await dev(root, options);
 
   // keep `react-router dev` alive by waiting indefinitely
@@ -81,7 +81,7 @@ let conjunctionListFormat = new Intl.ListFormat("en", {
 
 export async function generateEntry(
   entry?: string,
-  reactRouterRoot?: string,
+  rootDirectory?: string,
   flags: {
     typescript?: boolean;
     config?: string;
@@ -90,12 +90,12 @@ export async function generateEntry(
 ) {
   // if no entry passed, attempt to create both
   if (!entry) {
-    await generateEntry("entry.client", reactRouterRoot, flags);
-    await generateEntry("entry.server", reactRouterRoot, flags);
+    await generateEntry("entry.client", rootDirectory, flags);
+    await generateEntry("entry.server", rootDirectory, flags);
     return;
   }
 
-  let rootDirectory = reactRouterRoot ?? process.cwd();
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
   let configResult = await loadConfig({
     rootDirectory,
     mode: flags.mode ?? "production",
@@ -170,6 +170,17 @@ export async function generateEntry(
   );
 }
 
+function resolveRootDirectory(root?: string, flags?: { config?: string }) {
+  if (root) {
+    return path.resolve(root);
+  }
+
+  return (
+    process.env.REACT_ROUTER_ROOT ||
+    (flags?.config ? path.dirname(path.resolve(flags.config)) : process.cwd())
+  );
+}
+
 async function checkForEntry(
   rootDirectory: string,
   appDirectory: string,
@@ -211,6 +222,7 @@ export async function typegen(
   flags: {
     watch: boolean;
     mode?: string;
+    config?: string;
   }
 ) {
   root ??= process.cwd();

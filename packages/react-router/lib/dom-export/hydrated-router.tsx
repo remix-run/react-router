@@ -185,6 +185,7 @@ function createHydratedRouter({
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
+      ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename
     ),
@@ -270,6 +271,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.manifest,
     ssrInfo.routeModules,
     ssrInfo.context.ssr,
+    ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode
   );
 
@@ -289,6 +291,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
           criticalCss,
           ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
+          routeDiscovery: ssrInfo.context.routeDiscovery,
         }}
       >
         <RemixErrorBoundary location={location}>

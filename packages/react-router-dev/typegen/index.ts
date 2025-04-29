@@ -163,6 +163,7 @@ const virtual = ts`
     export const isSpaMode: ServerBuild["isSpaMode"];
     export const prerender: ServerBuild["prerender"];
     export const publicPath: ServerBuild["publicPath"];
+    export const routeDiscovery: ServerBuild["routeDiscovery"];
     export const routes: ServerBuild["routes"];
     export const ssr: ServerBuild["ssr"];
     export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
