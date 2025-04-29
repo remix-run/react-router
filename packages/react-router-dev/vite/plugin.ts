@@ -1190,8 +1190,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         rootDirectory =
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
+        let mode = viteConfigEnv.mode;
+
         if (viteCommand === "serve") {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
+            mode,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1199,6 +1202,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
+          mode,
           watch: viteCommand === "serve",
         });
 

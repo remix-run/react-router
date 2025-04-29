@@ -21,10 +21,14 @@ export async function routes(
   flags: {
     config?: string;
     json?: boolean;
+    mode?: string;
   } = {}
 ): Promise<void> {
   rootDirectory = resolveRootDirectory(rootDirectory, flags);
-  let configResult = await loadConfig({ rootDirectory });
+  let configResult = await loadConfig({
+    rootDirectory,
+    mode: flags.mode ?? "production",
+  });
 
   if (!configResult.ok) {
     console.error(colors.red(configResult.error));
@@ -81,6 +85,7 @@ export async function generateEntry(
   flags: {
     typescript?: boolean;
     config?: string;
+    mode?: string;
   } = {}
 ) {
   // if no entry passed, attempt to create both
@@ -91,7 +96,10 @@ export async function generateEntry(
   }
 
   rootDirectory = resolveRootDirectory(rootDirectory, flags);
-  let configResult = await loadConfig({ rootDirectory });
+  let configResult = await loadConfig({
+    rootDirectory,
+    mode: flags.mode ?? "production",
+  });
 
   if (!configResult.ok) {
     console.error(colors.red(configResult.error));
@@ -212,7 +220,8 @@ async function createClientEntry(
 export async function typegen(
   root: string,
   flags: {
-    watch?: boolean;
+    watch: boolean;
+    mode?: string;
     config?: string;
   }
 ) {
@@ -223,9 +232,15 @@ export async function typegen(
     const vite = getVite();
     const logger = vite.createLogger("info", { prefix: "[react-router]" });
 
-    await Typegen.watch(root, { logger });
+    await Typegen.watch(root, {
+      mode: flags.mode ?? "development",
+      logger,
+    });
     await new Promise(() => {}); // keep alive
     return;
   }
-  await Typegen.run(root);
+
+  await Typegen.run(root, {
+    mode: flags.mode ?? "production",
+  });
 }
