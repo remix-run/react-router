@@ -12,6 +12,7 @@ const config = (enableDevWarnings: boolean) =>
     {
       clean: false,
       entry,
+      external: ["react", "react-dom", "react-router"],
       format: ["cjs"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
