@@ -225,7 +225,7 @@ export async function typegen(
     config?: string;
   }
 ) {
-  root ??= process.cwd();
+  root = resolveRootDirectory(root, flags);
 
   if (flags.watch) {
     await preloadVite();
