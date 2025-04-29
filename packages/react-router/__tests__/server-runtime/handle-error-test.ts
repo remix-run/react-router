@@ -1,7 +1,10 @@
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ErrorResponseImpl } from "../../lib/router/utils";
 import { mockServerBuild } from "./utils";
-import type { HandleDocumentRequestFunction } from "../../lib/server-runtime/build";
+import type {
+  HandleDocumentRequestFunction,
+  ServerBuild,
+} from "../../lib/server-runtime/build";
 
 function getHandler(
   routeModule = {},
@@ -179,6 +182,10 @@ describe("handleError", () => {
               return new Response("<html><body>Dummy document</body></html>");
             },
           },
+        },
+        routeDiscovery: {
+          mode: "lazy",
+          manifestPath: "/__manifest",
         },
         future: {
           // Fill in the required values
