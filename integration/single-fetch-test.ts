@@ -316,6 +316,24 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#date")).toContain(ISO_DATE);
   });
 
+  test("allows SSR loaders to return undefined", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          export function loader() {}
+          export default function Index() {
+            return <h1>Index</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    expect(await app.getHtml("h1")).toContain("Index");
+  });
+
   test("loads proper data on client side navigation", async ({ page }) => {
     let fixture = await createFixture({
       files,

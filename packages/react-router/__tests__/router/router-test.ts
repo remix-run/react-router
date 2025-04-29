@@ -961,6 +961,35 @@ describe("a router", () => {
       router.dispose();
     });
 
+    it("allows routes to be initialized with undefined loaderData", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: undefined,
+          },
+        },
+      });
+
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: undefined,
+        },
+      });
+    });
+
     it("handles interruptions of initial data load", async () => {
       let parentDfd = createDeferred();
       let parentSpy = jest.fn(() => parentDfd.promise);
