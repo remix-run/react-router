@@ -215,16 +215,20 @@ export async function typegen(
 ) {
   root ??= process.cwd();
 
-  let mode = flags.mode ?? "production";
-
   if (flags.watch) {
     await preloadVite();
     const vite = getVite();
     const logger = vite.createLogger("info", { prefix: "[react-router]" });
 
-    await Typegen.watch(root, { mode, logger });
+    await Typegen.watch(root, {
+      mode: flags.mode ?? "development",
+      logger,
+    });
     await new Promise(() => {}); // keep alive
     return;
   }
-  await Typegen.run(root, { mode });
+
+  await Typegen.run(root, {
+    mode: flags.mode ?? "production",
+  });
 }
