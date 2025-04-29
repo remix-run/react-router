@@ -870,6 +870,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
+  let initialized: boolean;
 
   if (initialMatches == null && !init.patchRoutesOnNavigation) {
     // If we do not match a user-provided-route, fall back to the root
@@ -878,69 +879,73 @@ export function createRouter(init: RouterInit): Router {
       pathname: init.history.location.pathname,
     });
     let { matches, route } = getShortCircuitMatches(dataRoutes);
+    initialized = true;
     initialMatches = matches;
     initialErrors = { [route.id]: error };
-  }
-
-  // In SPA apps, if the user provided a patchRoutesOnNavigation implementation and
-  // our initial match is a splat route, clear them out so we run through lazy
-  // discovery on hydration in case there's a more accurate lazy route match.
-  // In SSR apps (with `hydrationData`), we expect that the server will send
-  // up the proper matched routes so we don't want to run lazy discovery on
-  // initial hydration and want to hydrate into the splat route.
-  if (initialMatches && !init.hydrationData) {
-    let fogOfWar = checkFogOfWar(
-      initialMatches,
-      dataRoutes,
-      init.history.location.pathname
-    );
-    if (fogOfWar.active) {
-      initialMatches = null;
-    }
-  }
-
-  let initialized: boolean;
-  if (!initialMatches) {
-    initialized = false;
-    initialMatches = [];
-
-    // If partial hydration and fog of war is enabled, we will be running
-    // `patchRoutesOnNavigation` during hydration so include any partial matches as
-    // the initial matches so we can properly render `HydrateFallback`'s
-    let fogOfWar = checkFogOfWar(
-      null,
-      dataRoutes,
-      init.history.location.pathname
-    );
-    if (fogOfWar.active && fogOfWar.matches) {
-      initialMatchesIsFOW = true;
-      initialMatches = fogOfWar.matches;
-    }
-  } else if (initialMatches.some((m) => m.route.lazy)) {
-    // All initialMatches need to be loaded before we're ready.  If we have lazy
-    // functions around still then we'll need to run them in initialize()
-    initialized = false;
-  } else if (!initialMatches.some((m) => m.route.loader)) {
-    // If we've got no loaders to run, then we're good to go
-    initialized = true;
   } else {
-    // With "partial hydration", we're initialized so long as we were
-    // provided with hydrationData for every route with a loader, and no loaders
-    // were marked for explicit hydration
-    let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
-    let errors = init.hydrationData ? init.hydrationData.errors : null;
-    // If errors exist, don't consider routes below the boundary
-    if (errors) {
-      let idx = initialMatches.findIndex(
-        (m) => errors![m.route.id] !== undefined
+    // In SPA apps, if the user provided a patchRoutesOnNavigation implementation and
+    // our initial match is a splat route, clear them out so we run through lazy
+    // discovery on hydration in case there's a more accurate lazy route match.
+    // In SSR apps (with `hydrationData`), we expect that the server will send
+    // up the proper matched routes so we don't want to run lazy discovery on
+    // initial hydration and want to hydrate into the splat route.
+    if (initialMatches && !init.hydrationData) {
+      let fogOfWar = checkFogOfWar(
+        initialMatches,
+        dataRoutes,
+        init.history.location.pathname
       );
-      initialized = initialMatches
-        .slice(0, idx + 1)
-        .every((m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors));
+      if (fogOfWar.active) {
+        initialMatches = null;
+      }
+    }
+
+    if (!initialMatches) {
+      initialized = false;
+      initialMatches = [];
+
+      // If partial hydration and fog of war is enabled, we will be running
+      // `patchRoutesOnNavigation` during hydration so include any partial matches as
+      // the initial matches so we can properly render `HydrateFallback`'s
+      let fogOfWar = checkFogOfWar(
+        null,
+        dataRoutes,
+        init.history.location.pathname
+      );
+      if (fogOfWar.active && fogOfWar.matches) {
+        initialMatchesIsFOW = true;
+        initialMatches = fogOfWar.matches;
+      }
+    } else if (initialMatches.some((m) => m.route.lazy)) {
+      // All initialMatches need to be loaded before we're ready.  If we have lazy
+      // functions around still then we'll need to run them in initialize()
+      initialized = false;
+    } else if (!initialMatches.some((m) => m.route.loader)) {
+      // If we've got no loaders to run, then we're good to go
+      initialized = true;
     } else {
-      initialized = initialMatches.every(
-        (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
-      );
+      // With "partial hydration", we're initialized so long as we were
+      // provided with hydrationData for every route with a loader, and no loaders
+      // were marked for explicit hydration
+      let loaderData = init.hydrationData
+        ? init.hydrationData.loaderData
+        : null;
+      let errors = init.hydrationData ? init.hydrationData.errors : null;
+      // If errors exist, don't consider routes below the boundary
+      if (errors) {
+        let idx = initialMatches.findIndex(
+          (m) => errors![m.route.id] !== undefined
+        );
+        initialized = initialMatches
+          .slice(0, idx + 1)
+          .every(
+            (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+          );
+      } else {
+        initialized = initialMatches.every(
+          (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+        );
+      }
     }
   }
 
