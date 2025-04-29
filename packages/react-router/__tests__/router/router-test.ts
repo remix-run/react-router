@@ -1101,6 +1101,37 @@ describe("a router", () => {
       router.dispose();
     });
 
+    it("handles initial load 404s when the error boundary router has a loader", async () => {
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/404"] }),
+        routes: [
+          {
+            path: "/",
+            hasErrorBoundary: true,
+            loader: () => {},
+          },
+        ],
+      });
+
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/404" }),
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
+        errors: {
+          "0": new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/404"'),
+            true
+          ),
+        },
+      });
+
+      router.dispose();
+    });
+
     it("kicks off initial data load when hash is present", async () => {
       let loaderDfd = createDeferred();
       let loaderSpy = jest.fn(() => loaderDfd.promise);
