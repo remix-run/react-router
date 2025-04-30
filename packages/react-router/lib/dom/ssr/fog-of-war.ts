@@ -9,12 +9,6 @@ import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
 
-declare global {
-  interface Navigator {
-    connection?: { saveData: boolean };
-  }
-}
-
 // Currently rendered links that may need prefetching
 const nextPaths = new Set<string>();
 
@@ -115,7 +109,8 @@ export function useFogOFWarDiscovery(
     // Don't prefetch if not enabled or if the user has `saveData` enabled
     if (
       !isFogOfWarEnabled(routeDiscovery, ssr) ||
-      navigator.connection?.saveData === true
+      // @ts-expect-error - TS doesn't know about this yet
+      window.navigator?.connection?.saveData === true
     ) {
       return;
     }
