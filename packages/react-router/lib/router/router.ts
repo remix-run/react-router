@@ -4,6 +4,7 @@ import {
   Action as NavigationType,
   createLocation,
   createPath,
+  createBrowserURLImpl,
   invariant,
   parsePath,
   warning,
@@ -2748,7 +2749,9 @@ export function createRouter(init: RouterInit): Router {
         // Hard reload if the response contained X-Remix-Reload-Document
         isDocumentReload = true;
       } else if (ABSOLUTE_URL_REGEX.test(location)) {
-        const url = init.history.createURL(location);
+        // We skip `history.createURL` here for absolute URLs because we don't
+        // want to inherit the current `window.location` base URL
+        const url = createBrowserURLImpl(location, true);
         isDocumentReload =
           // Hard reload if it's an absolute URL to a new origin
           url.origin !== routerWindow.location.origin ||

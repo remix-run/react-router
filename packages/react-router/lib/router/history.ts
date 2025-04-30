@@ -682,24 +682,7 @@ function getUrlBasedHistory(
   }
 
   function createURL(to: To): URL {
-    // window.location.origin is "null" (the literal string value) in Firefox
-    // under certain conditions, notably when serving from a local HTML file
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
-    let base =
-      window.location.origin !== "null"
-        ? window.location.origin
-        : window.location.href;
-
-    let href = typeof to === "string" ? to : createPath(to);
-    // Treating this as a full URL will strip any trailing spaces so we need to
-    // pre-encode them since they might be part of a matching splat param from
-    // an ancestor route
-    href = href.replace(/ $/, "%20");
-    invariant(
-      base,
-      `No window.location.(origin|href) available to create URL for href: ${href}`
-    );
-    return new URL(href, base);
+    return createBrowserURLImpl(to);
   }
 
   let history: History = {
@@ -742,6 +725,40 @@ function getUrlBasedHistory(
   };
 
   return history;
+}
+
+export function createBrowserURLImpl(to: To, isAbsolute = false): URL {
+  let base = "http://localhost";
+  if (typeof window !== "undefined") {
+    // window.location.origin is "null" (the literal string value) in Firefox
+    // under certain conditions, notably when serving from a local HTML file
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
+    base =
+      window.location.origin !== "null"
+        ? window.location.origin
+        : window.location.href;
+  }
+
+  invariant(base, "No window.location.(origin|href) available to create URL");
+
+  let href = typeof to === "string" ? to : createPath(to);
+
+  // Treating this as a full URL will strip any trailing spaces so we need to
+  // pre-encode them since they might be part of a matching splat param from
+  // an ancestor route
+  href = href.replace(/ $/, "%20");
+
+  // If this isn't a usage for absolute URLs (currently only for redirects),
+  // then we need to avoid the URL constructor treating a leading double slash
+  // as a protocol-less URL. By prepending the base, it forces the double slash
+  // to be parsed correctly as part of the pathname.
+  if (!isAbsolute && href.startsWith("//")) {
+    // new URL('//', 'https://localhost') -> error!
+    // new URL('https://localhost//', 'https://localhost') -> no error!
+    href = base + href;
+  }
+
+  return new URL(href, base);
 }
 
 //#endregion
