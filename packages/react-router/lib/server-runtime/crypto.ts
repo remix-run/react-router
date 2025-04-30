@@ -1,4 +1,4 @@
-const encoder = /* #__PURE__ */ new TextEncoder();
+const encoder = /* @__PURE__ */ new TextEncoder();
 
 export const sign = async (value: string, secret: string): Promise<string> => {
   let data = encoder.encode(value);
