@@ -13,7 +13,6 @@ import type { Context } from "./context";
 import { getTypesDir, getTypesPath } from "./paths";
 import * as Params from "./params";
 import * as Route from "./route";
-import type { RouteManifestEntry } from "../config/routes";
 
 export async function run(rootDirectory: string, { mode }: { mode: string }) {
   const ctx = await createContext({ rootDirectory, mode, watch: false });
@@ -109,24 +108,19 @@ function register(ctx: Context) {
 
   const { t } = Babel;
 
-  const fullpaths: Record<string, RouteManifestEntry[]> = {};
-  for (const route of Object.values(ctx.config.routes)) {
-    // skip pathless (layout) routes
-    if (route.id !== "root" && !route.path) continue;
-
+  const fullpaths = new Set<string>();
+  Object.values(ctx.config.routes).forEach((route) => {
+    if (route.id !== "root" && !route.path) return;
     const lineage = Route.lineage(ctx.config.routes, route);
     const fullpath = Route.fullpath(lineage);
-    const existing = fullpaths[fullpath];
-    if (!existing || existing.length < lineage.length) {
-      fullpaths[fullpath] = lineage;
-    }
-  }
+    fullpaths.add(fullpath);
+  });
 
   const typeParams = t.tsTypeAliasDeclaration(
     t.identifier("Params"),
     null,
     t.tsTypeLiteral(
-      Object.keys(fullpaths).map((fullpath) => {
+      Array.from(fullpaths).map((fullpath) => {
         const params = Params.parse(fullpath);
         return t.tsPropertySignature(
           t.stringLiteral(fullpath),
