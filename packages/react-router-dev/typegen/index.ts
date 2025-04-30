@@ -31,21 +31,23 @@ export async function watch(
   await writeAll(ctx);
   logger?.info(pc.green("generated types"), { timestamp: true, clear: true });
 
-  ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
-    if (!result.ok) {
-      logger?.error(pc.red(result.error), { timestamp: true, clear: true });
-      return;
-    }
+  ctx.configLoader.onChange(
+    async ({ result, configChanged, routeConfigChanged }) => {
+      if (!result.ok) {
+        logger?.error(pc.red(result.error), { timestamp: true, clear: true });
+        return;
+      }
 
-    ctx.config = result.value;
-    if (routeConfigChanged) {
-      await writeAll(ctx);
-      logger?.info(pc.green("regenerated types"), {
-        timestamp: true,
-        clear: true,
-      });
+      ctx.config = result.value;
+      if (configChanged || routeConfigChanged) {
+        await writeAll(ctx);
+        logger?.info(pc.green("regenerated types"), {
+          timestamp: true,
+          clear: true,
+        });
+      }
     }
-  });
+  );
 
   return {
     close: async () => await ctx.configLoader.close(),
@@ -102,6 +104,10 @@ function register(ctx: Context) {
     declare module "react-router" {
       interface Register {
         params: Params;
+      }
+
+      interface Future {
+        unstable_middleware: ${ctx.config.future.unstable_middleware}
       }
     }
   `;
