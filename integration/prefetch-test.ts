@@ -221,7 +221,6 @@ test.describe("prefetch", () => {
             { state: "attached" }
           );
 
-          console.log(await app.getHtml());
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
