@@ -1,4 +1,3 @@
-import "@testing-library/jest-dom";
 import {
   act,
   fireEvent,
@@ -7862,6 +7861,129 @@ function testDomRouter(
         ]);
       });
     });
+
+    if (name === "<DataBrowserRouter>") {
+      describe("DataBrowserRouter-only tests", () => {
+        it("is defensive against double slash URLs in window.location", async () => {
+          let testWindow = getWindow("http://localhost//");
+          let router = createTestRouter(
+            [
+              {
+                path: "*",
+                Component() {
+                  return <Link to="/page">Go to Page</Link>;
+                },
+              },
+              {
+                path: "/page",
+                Component() {
+                  return <h1>Worked!</h1>;
+                },
+              },
+            ],
+            {
+              window: testWindow,
+            }
+          );
+          render(<RouterProvider router={router} />);
+          expect(testWindow.location.pathname).toBe("//");
+          expect(router.state.location.pathname).toBe("//");
+
+          fireEvent.click(screen.getByText("Go to Page"));
+          await waitFor(() => screen.getByText("Worked!"));
+          expect(testWindow.location.pathname).toBe("/page");
+          expect(router.state.location.pathname).toBe("/page");
+        });
+      });
+
+      it("handles different-origin absolute redirect URLs", async () => {
+        let testWindow = getWindow("http://localhost/");
+
+        // jsdom is making more and more properties non-configurable, so we inject
+        // our own jest-friendly window
+        testWindow = {
+          ...testWindow,
+          addEventListener: testWindow.addEventListener.bind(testWindow),
+          location: {
+            ...testWindow.location,
+            assign: jest.fn(),
+            replace: jest.fn(),
+          },
+        };
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return <Link to="/page">Go to Page</Link>;
+              },
+            },
+            {
+              path: "/page",
+              loader() {
+                return redirect("http://otherhost/parent");
+              },
+              Component() {
+                return null;
+              },
+            },
+          ],
+          {
+            window: testWindow,
+          }
+        );
+
+        await router.navigate("/page");
+        expect(testWindow.location.assign).toHaveBeenCalledWith(
+          "http://otherhost/parent"
+        );
+      });
+
+      it("handles different-origin protocol-less absolute redirect URLs", async () => {
+        let testWindow = getWindow("http://localhost/");
+
+        // jsdom is making more and more properties non-configurable, so we inject
+        // our own jest-friendly window
+        testWindow = {
+          ...testWindow,
+          addEventListener: testWindow.addEventListener.bind(testWindow),
+          location: {
+            ...testWindow.location,
+            assign: jest.fn(),
+            replace: jest.fn(),
+          },
+        };
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return <Link to="/page">Go to Page</Link>;
+              },
+            },
+            {
+              path: "/page",
+              loader() {
+                return redirect("//otherhost/parent");
+              },
+              Component() {
+                return null;
+              },
+            },
+          ],
+          {
+            window: testWindow,
+          }
+        );
+
+        await router.navigate("/page");
+        expect(testWindow.location.assign).toHaveBeenCalledWith(
+          "//otherhost/parent"
+        );
+      });
+    }
   });
 }
 
