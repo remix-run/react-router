@@ -12,8 +12,9 @@ const config = (enableDevWarnings: boolean) =>
     {
       clean: false,
       entry,
-      external: ["react", "react-dom", "react-router"],
       format: ["cjs"],
+      // Don't bundle `react-router` in sub-exports (i.e., `react-router/dom`)
+      external: ["react-router"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {
@@ -29,6 +30,8 @@ const config = (enableDevWarnings: boolean) =>
       clean: false,
       entry,
       format: ["esm"],
+      // Don't bundle `react-router` in sub-exports (i.e., `react-router/dom`)
+      external: ["react-router"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {
