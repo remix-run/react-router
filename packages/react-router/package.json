@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "7.1.5",
+  "version": "7.5.3",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -38,6 +38,9 @@
       }
     },
     "./route-module": {
+      "node": {
+        "types": "./dist/development/lib/types/route-module.d.ts"
+      },
       "import": {
         "types": "./dist/development/lib/types/route-module.d.mts"
       },
@@ -63,7 +66,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {
@@ -80,7 +84,6 @@
     }
   },
   "dependencies": {
-    "@types/cookie": "^0.6.0",
     "cookie": "^1.0.1",
     "set-cookie-parser": "^2.6.0",
     "turbo-stream": "2.4.0"

@@ -1,5 +1,69 @@
 # `@react-router/architect`
 
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+  - `@react-router/node@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.2`
+  - `@react-router/node@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.1`
+  - `@react-router/node@7.5.1`
+
+## 7.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+
+## 7.4.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.1`
+  - `@react-router/node@7.4.1`
+
+## 7.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
+
+## 7.3.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.3.0`
+  - `@react-router/node@7.3.0`
+
+## 7.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.2.0`
+  - `@react-router/node@7.2.0`
+
 ## 7.1.5
 
 ### Patch Changes

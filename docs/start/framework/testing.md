@@ -5,6 +5,10 @@ order: 9
 
 # Testing
 
+[MODES: framework, data]
+
+## Introduction
+
 When components use things like `useLoaderData`, `<Link>`, etc, they are required to be rendered in context of a React Router app. The `createRoutesStub` function creates that context to test components in isolation.
 
 Consider a login form component that relies on `useActionData`
@@ -13,7 +17,7 @@ Consider a login form component that relies on `useActionData`
 import { useActionData } from "react-router";
 
 export function LoginForm() {
-  const errors = useActionData();
+  const { errors } = useActionData();
   return (
     <Form method="post">
       <label>

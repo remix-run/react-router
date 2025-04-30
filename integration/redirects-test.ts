@@ -35,8 +35,7 @@ test.describe("redirects", () => {
         `,
 
         "app/routes/absolute._index.tsx": js`
-          import { redirect } from "react-router";
-          import { Form } from "react-router";
+          import { redirect, Form } from "react-router";
 
           export async function action({ request }) {
             return redirect(new URL(request.url).origin + "/absolute/landing");

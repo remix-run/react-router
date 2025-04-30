@@ -3,6 +3,7 @@ import type { StaticHandlerContext } from "../../router/router";
 import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
 import type { RouteManifest } from "../../router/utils";
+import type { ServerBuild } from "../../server-runtime/build";
 
 type SerializedError = {
   message: string;
@@ -13,11 +14,12 @@ type SerializedError = {
 export interface FrameworkContextObject {
   manifest: AssetsManifest;
   routeModules: RouteModules;
-  criticalCss?: string;
+  criticalCss?: CriticalCss;
   serverHandoffString?: string;
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  routeDiscovery: ServerBuild["routeDiscovery"];
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
@@ -41,7 +43,12 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export interface FutureConfig {}
+export interface FutureConfig {
+  unstable_subResourceIntegrity: boolean;
+  unstable_middleware: boolean;
+}
+
+export type CriticalCss = string | { rel: "stylesheet"; href: string };
 
 export interface AssetsManifest {
   entry: {
@@ -55,4 +62,5 @@ export interface AssetsManifest {
     timestamp?: number;
     runtime: string;
   };
+  sri?: Record<string, string> | true;
 }

@@ -5,6 +5,10 @@ order: 6
 
 # Navigating
 
+[MODES: framework]
+
+## Introduction
+
 Users navigate your application with `<Link>`, `<NavLink>`, `<Form>`, `redirect`, and `useNavigate`.
 
 ## NavLink
@@ -126,7 +130,7 @@ Forms with `<Form method="post" />` will also navigate to the action prop but wi
 
 ## redirect
 
-Inside of route loaders and actions, you can `redirect` to another URL.
+Inside of route loaders and actions, you can return a `redirect` to another URL.
 
 ```tsx
 import { redirect } from "react-router";

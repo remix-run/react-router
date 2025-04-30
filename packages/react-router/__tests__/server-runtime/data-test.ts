@@ -1,6 +1,6 @@
 import { decodeViaTurboStream } from "../../lib/dom/ssr/single-fetch";
-import type { ServerBuild } from "../../lib/server-runtime/build";
 import { createRequestHandler } from "../../lib/server-runtime/server";
+import { mockServerBuild } from "./utils";
 
 describe("loaders", () => {
   // so that HTML/Fetch requests are the same, and so redirects don't hang on to
@@ -11,18 +11,13 @@ describe("loaders", () => {
     };
 
     let routeId = "routes/random";
-    let build = {
-      routes: {
-        [routeId]: {
-          id: routeId,
-          path: "/random",
-          module: {
-            loader,
-          },
-        },
+    let build = mockServerBuild({
+      [routeId]: {
+        path: "/random",
+        default: {},
+        loader,
       },
-      entry: { module: {} },
-    } as unknown as ServerBuild;
+    });
 
     let handler = createRequestHandler(build);
 

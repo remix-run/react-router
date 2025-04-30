@@ -29,6 +29,8 @@ export async function loader({}: Route.LoaderArgs) {
 }
 ```
 
+Note you can't return a single promise, it must be an object with keys.
+
 ## 2. Render the fallback and resolved UI
 
 The promise will be available on `loaderData`, `<Await>` will await the promise and trigger `<Suspense>` to render the fallback UI.
@@ -74,4 +76,13 @@ function NonCriticalUI({ p }: { p: Promise<string> }) {
   let value = React.use(p);
   return <h3>Non critical value {value}</h3>;
 }
+```
+
+## Timeouts
+
+By default, loaders and actions reject any outstanding promises after 4950ms. You can control this by exporting a `streamTimeout` numerical value from your `entry.server.tsx`.
+
+```ts filename=entry.server.tsx
+// Reject all pending promises from handler functions after 10 seconds
+export const streamTimeout = 10_000;
 ```

@@ -42,8 +42,40 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: 3 invalid route export(s) in `routes/invalid-exports.tsx`: " +
-                "`headers`, `loader`, `action`. See https://remix.run/guides/spa-mode " +
+                "`headers`, `loader`, `action`. See https://reactrouter.com/how-to/spa " +
                 "for more information."
+            );
+          });
+
+          test("allows loader in root route", async () => {
+            let cwd = await createProject({
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                splitRouteModules,
+              }),
+              "app/root.tsx": String.raw`
+                // Invalid exports
+                export function headers() {}
+                export function action() {}
+
+                // Valid exports
+                export function loader() {}
+                export function clientLoader() {}
+                export function clientAction() {}
+                export default function Component() {}
+              `,
+              "app/routes/_index.tsx": String.raw`
+                // Valid exports
+                export function clientLoader() {}
+                export function clientAction() {}
+                export default function Component() {}
+              `,
+            });
+            let result = build({ cwd });
+            let stderr = result.stderr.toString("utf8");
+            expect(stderr).toMatch(
+              "SPA Mode: 2 invalid route export(s) in `root.tsx`: `headers`, `action`. " +
+                "See https://reactrouter.com/how-to/spa for more information."
             );
           });
 
@@ -68,7 +100,7 @@ test.describe("SPA Mode", () => {
             expect(stderr).toMatch(
               "SPA Mode: Invalid `HydrateFallback` export found in `routes/invalid-exports.tsx`. " +
                 "`HydrateFallback` is only permitted on the root route in SPA Mode. " +
-                "See https://remix.run/guides/spa-mode for more information."
+                "See https://reactrouter.com/how-to/spa for more information."
             );
           });
 
@@ -135,7 +167,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-                "prerendering the `/` path."
+                "prerendering your `index.html` file."
             );
             expect(stderr).toMatch("<h1>Loading...</h1>");
           });
@@ -155,8 +187,8 @@ test.describe("SPA Mode", () => {
             let result = build({ cwd });
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
-              "SPA Mode: Did you forget to include <Scripts/> in your root route? " +
-                "Your pre-rendered HTML files cannot hydrate without `<Scripts />`."
+              "SPA Mode: Did you forget to include `<Scripts/>` in your root route? " +
+                "Your pre-rendered HTML cannot hydrate without `<Scripts />`."
             );
           });
         });
@@ -200,6 +232,37 @@ test.describe("SPA Mode", () => {
           });
           let res = await fixture.requestDocument("/");
           expect(await res.text()).toMatch(/^<!DOCTYPE html><html lang="en">/);
+        });
+
+        test("Ignores build-time headers at runtime", async () => {
+          let fixture = await createFixture({
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                splitRouteModules,
+              }),
+              "app/root.tsx": js`
+                import { Outlet, Scripts } from "react-router";
+
+                export default function Root() {
+                  return (
+                    <html lang="en">
+                      <head></head>
+                      <body>
+                        <h1 data-root>Root</h1>
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+              `,
+            },
+          });
+          let res = await fixture.requestDocument("/", {
+            headers: { "X-React-Router-SPA-Mode": "yes" },
+          });
+          let html = await res.text();
+          expect(html).toMatch('"isSpaMode":false');
+          expect(html).toMatch('<h1 data-root="true">Root</h1>');
         });
 
         test("works when combined with a basename", async ({ page }) => {
@@ -605,6 +668,134 @@ test.describe("SPA Mode", () => {
           expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
           expect(html.match(/💿 Hey developer 👋/g)?.length).toBe(1);
         });
+
+        test("does not inherit single fetch revalidation behavior", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            spaMode: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                splitRouteModules,
+              }),
+              "app/routes/_index.tsx": js`
+                import { Link } from 'react-router';
+                export default function Component() {
+                  return <Link to="/parent">Go to parent</Link>;
+                }
+              `,
+              "app/routes/parent.tsx": js`
+                import { Link, Outlet } from 'react-router';
+                let count = 0;
+                export function clientLoader() {
+                  return ++count;
+                }
+                export default function Component({ loaderData }) {
+                  return (
+                    <>
+                      <h1>Parent: {loaderData}</h1>
+                      <Link to="./child">Go to child</Link>
+                      <Outlet />
+                    </>
+                  )
+                }
+              `,
+              "app/routes/parent.child.tsx": js`
+                import { Link } from 'react-router';
+                export default function Component({ loaderData }) {
+                  return <h2>Child</h2>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/", true);
+          await page.waitForSelector('a[href="/parent"]');
+          await app.clickLink("/parent");
+          await page.waitForSelector("h1");
+          expect(await page.locator("h1").textContent()).toBe("Parent: 1");
+
+          await app.clickLink("/parent/child");
+          await page.waitForSelector("h2");
+          expect(await page.locator("h1").textContent()).toBe("Parent: 1");
+          expect(await page.locator("h2").textContent()).toBe("Child");
+        });
+
+        test("does not hydrate root loaderData if there's no root loader", async ({
+          page,
+        }) => {
+          fixture = await createFixture({
+            spaMode: true,
+            files: {
+              "react-router.config.ts": reactRouterConfig({
+                ssr: false,
+                splitRouteModules,
+              }),
+              "app/root.tsx": js`
+                import {
+                  Meta,
+                  Links,
+                  Outlet,
+                  Routes,
+                  Route,
+                  Scripts,
+                  ScrollRestoration,
+                } from "react-router";
+
+                export function Layout({ children }: { children: React.ReactNode }) {
+                  return (
+                    <html>
+                      <head>
+                        <Meta />
+                        <Links />
+                      </head>
+                      <body>
+                        {children}
+                        <ScrollRestoration />
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+
+                let count = 0;
+                export function clientLoader() {
+                  return ++count;
+                }
+
+                export default function Root({ loaderData }) {
+                  return (
+                    <>
+                      <h1>{loaderData}</h1>
+                      <Outlet />
+                    </>
+                  );
+                }
+              `,
+              "app/routes/_index.tsx": js`
+                import { redirect } from 'react-router';
+                export const clientLoader = () => redirect('/target');
+                export default function() { return null; }
+              `,
+              "app/routes/target.tsx": js`
+                import { useRouteLoaderData } from 'react-router';
+                export default function Comp() {
+                  return <h2>{useRouteLoaderData('root')}</h2>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/");
+          await page.waitForSelector("h2");
+          expect(await page.locator("h1").textContent()).toBe("2");
+          expect(await page.locator("h2").textContent()).toBe("2");
+        });
       });
 
       test.describe("normal apps", () => {
@@ -637,7 +828,7 @@ test.describe("SPA Mode", () => {
               `,
               "app/root.tsx": js`
                 import * as React from "react";
-                import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router";
+                import { Form, Link, Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
 
                 export function meta({ data }) {
                   return [{
@@ -650,6 +841,10 @@ test.describe("SPA Mode", () => {
                     rel: "stylesheet",
                     href: "styles-root.css"
                   }];
+                }
+
+                export function loader() {
+                  return { message: "Root Loader Data" };
                 }
 
                 export default function Root() {
@@ -693,6 +888,7 @@ test.describe("SPA Mode", () => {
 
                 export function HydrateFallback() {
                   const id = React.useId();
+                  const loaderData = useLoaderData();
                   const [hydrated, setHydrated] = React.useState(false);
                   React.useEffect(() => setHydrated(true), []);
 
@@ -704,6 +900,7 @@ test.describe("SPA Mode", () => {
                       </head>
                       <body>
                         <h1 data-loading>Loading SPA...</h1>
+                        <p data-loader-data>{loaderData?.message}</p>
                         <pre data-use-id>{id}</pre>
                         {hydrated ? <h3 data-hydrated>Hydrated</h3> : null}
                         <Scripts />
@@ -731,7 +928,7 @@ test.describe("SPA Mode", () => {
 
                 export async function clientLoader({ request }) {
                   if (new URL(request.url).searchParams.has('slow')) {
-                    await new Promise(r => setTimeout(r, 500));
+                    await new Promise(r => setTimeout(r, 1000));
                   }
                   return "Index Loader Data";
                 }
@@ -812,10 +1009,13 @@ test.describe("SPA Mode", () => {
           appFixture.close();
         });
 
-        test("renders the root HydrateFallback initially", async ({ page }) => {
+        test("renders the root HydrateFallback initially with access to the root loader data", async () => {
           let res = await fixture.requestDocument("/");
           let html = await res.text();
           expect(html).toMatch('<h1 data-loading="true">Loading SPA...</h1>');
+          expect(html).toMatch(
+            '<p data-loader-data="true">Root Loader Data</p>'
+          );
         });
 
         test("does not include Meta/Links from routes below the root", async ({
@@ -862,20 +1062,22 @@ test.describe("SPA Mode", () => {
         });
 
         test("hydrates a proper useId value", async ({ page }) => {
-          // SSR'd useId value we can assert against pre- and post-hydration
-          let USE_ID_VALUE = ":R5:";
-
           // Ensure we SSR a proper useId value
           let res = await fixture.requestDocument("/");
           let html = await res.text();
-          expect(html).toMatch(`<pre data-use-id="true">${USE_ID_VALUE}</pre>`);
+          expect(html).toMatch(/<pre data-use-id="true">(:[a-zA-Z]\d:)<\/pre>/);
+          let matches = /<pre data-use-id="true">(:[a-zA-Z]\d:)<\/pre>/.exec(
+            html
+          );
+          expect(matches?.length).toBe(2);
+          let useIdValue = matches?.[1];
 
           // We should hydrate the same useId value in HydrateFallback
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/?slow");
           await page.waitForSelector("[data-hydrated]");
           expect(await page.locator("[data-use-id]").textContent()).toBe(
-            USE_ID_VALUE
+            useIdValue
           );
 
           // Once hydrated, we should get a different useId value from the root Component
@@ -884,7 +1086,7 @@ test.describe("SPA Mode", () => {
             "Index"
           );
           expect(await page.locator("[data-use-id]").textContent()).not.toBe(
-            USE_ID_VALUE
+            useIdValue
           );
         });
 
@@ -941,7 +1143,7 @@ test.describe("SPA Mode", () => {
           await app.clickLink("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You cannot call serverLoader() in SPA Mode (routeId: "routes/error")'
+            'Error: You are trying to call serverLoader() on a route that does not have a server loader (routeId: "routes/error")'
           );
         });
 
@@ -955,7 +1157,7 @@ test.describe("SPA Mode", () => {
           await app.clickSubmitButton("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You cannot call serverAction() in SPA Mode (routeId: "routes/error")'
+            'Error: You are trying to call serverAction() on a route that does not have a server action (routeId: "routes/error")'
           );
         });
 
@@ -968,5 +1170,116 @@ test.describe("SPA Mode", () => {
         });
       });
     });
+  });
+
+  test("only imports the root route in the server build when SSRing index.html", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      spaMode: true,
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          ssr: false,
+        }),
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [reactRouter()],
+          });
+        `,
+        "app/routeImportTracker.ts": js`
+          // this is kinda silly, but this way we can track imports
+          // that happen during SSR and during CSR
+          export async function logImport(url: string) {
+            try {
+              const fs = await import("node:fs");
+              const path = await import("node:path");
+              fs.appendFileSync(path.join(process.cwd(), "ssr-route-imports.txt"), url + "\n");
+            }
+            catch (e) {
+              (window.csrRouteImports ??= []).push(url);
+            }
+          }
+        `,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          import { logImport } from "./routeImportTracker";
+          logImport("app/root.tsx");
+
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  hello world
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          import { logImport } from "../routeImportTracker";
+          logImport("app/routes/_index.tsx");
+
+          // This should not cause an error on SSR because the module is not loaded
+          console.log(window);
+
+          export default function Component() {
+            return "index";
+          }
+        `,
+        "app/routes/about.tsx": js`
+          import * as React  from "react";
+          import { logImport } from "../routeImportTracker";
+          logImport("app/routes/about.tsx");
+
+          // This should not cause an error on SSR because the module is not loaded
+          console.log(window);
+
+          export default function Component() {
+            const [mounted, setMounted] = React.useState(false);
+            React.useEffect(() => setMounted(true), []);
+
+            return (
+              <>
+                {!mounted ? <span>Unmounted</span> : <span data-mounted>Mounted</span>}
+              </>
+            );
+          }
+        `,
+      },
+    });
+
+    let importedRoutes = (
+      await fs.promises.readFile(
+        path.join(fixture.projectDir, "ssr-route-imports.txt"),
+        "utf-8"
+      )
+    )
+      .trim()
+      .split("\n");
+    expect(importedRoutes).toStrictEqual([
+      "app/root.tsx",
+      // we should not have imported app/routes/_index.tsx
+      // we should not have imported app/routes/about.tsx
+    ]);
+
+    appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/about");
+    await page.waitForSelector("[data-mounted]");
+    // @ts-expect-error
+    expect(await page.evaluate(() => window.csrRouteImports)).toStrictEqual([
+      "app/root.tsx",
+      "app/routes/about.tsx",
+    ]);
   });
 });

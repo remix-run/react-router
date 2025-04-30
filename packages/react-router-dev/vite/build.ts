@@ -1,56 +1,20 @@
 import type * as Vite from "vite";
-import path from "node:path";
-import fse from "fs-extra";
 import colors from "picocolors";
 
+import { loadConfig } from "../config/config";
 import {
-  type ReactRouterPluginContext,
   type EnvironmentName,
   type EnvironmentBuildContext,
-  type EnvironmentOptionsResolvers,
   resolveViteConfig,
   extractPluginContext,
-  getBuildManifest,
+  cleanBuildDirectory,
+  cleanViteManifests,
   getEnvironmentOptionsResolvers,
+  resolveEnvironmentsOptions,
+  getServerEnvironmentKeys,
 } from "./plugin";
 import invariant from "../invariant";
 import { preloadVite, getVite } from "./vite";
-
-async function cleanBuildDirectory(
-  viteConfig: Vite.ResolvedConfig,
-  ctx: ReactRouterPluginContext
-) {
-  let buildDirectory = ctx.reactRouterConfig.buildDirectory;
-  let isWithinRoot = () => {
-    let relativePath = path.relative(ctx.rootDirectory, buildDirectory);
-    return !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
-  };
-
-  if (viteConfig.build.emptyOutDir ?? isWithinRoot()) {
-    await fse.remove(buildDirectory);
-  }
-}
-
-function getViteManifestPaths(
-  environmentOptionsResolvers: EnvironmentOptionsResolvers
-) {
-  return Object.entries(environmentOptionsResolvers).map(
-    ([environmentName, resolveOptions]) => {
-      invariant(
-        resolveOptions,
-        `Expected build environment options resolver for ${environmentName}`
-      );
-      let options = resolveOptions({
-        viteCommand: "build",
-        viteUserConfig: {},
-      });
-      let outDir = options.build.outDir;
-      invariant(outDir, `Expected build.outDir for ${environmentName}`);
-      return path.join(outDir, ".vite/manifest.json");
-    }
-  );
-}
-
 export interface ViteBuildOptions {
   assetsInlineLimit?: number;
   clearScreen?: boolean;
@@ -65,7 +29,37 @@ export interface ViteBuildOptions {
   sourcemapServer?: boolean | "inline" | "hidden";
 }
 
-export async function build(
+export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
+  // Ensure Vite's ESM build is preloaded at the start of the process
+  // so it can be accessed synchronously via `getVite`
+  await preloadVite();
+  let vite = getVite();
+
+  let configResult = await loadConfig({
+    rootDirectory: root,
+    mode: viteBuildOptions.mode ?? "production",
+  });
+
+  if (!configResult.ok) {
+    throw new Error(configResult.error);
+  }
+
+  let config = configResult.value;
+  let unstable_viteEnvironmentApi = config.future.unstable_viteEnvironmentApi;
+  let viteMajor = parseInt(vite.version.split(".")[0], 10);
+
+  if (unstable_viteEnvironmentApi && viteMajor === 5) {
+    throw new Error(
+      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5"
+    );
+  }
+
+  return await (unstable_viteEnvironmentApi
+    ? viteAppBuild(root, viteBuildOptions)
+    : viteBuild(root, viteBuildOptions));
+}
+
+async function viteAppBuild(
   root: string,
   {
     assetsInlineLimit,
@@ -80,13 +74,84 @@ export async function build(
     sourcemapServer,
   }: ViteBuildOptions
 ) {
-  // Ensure Vite's ESM build is preloaded at the start of the process
-  // so it can be accessed synchronously via `getVite`
-  await preloadVite();
+  let vite = getVite();
+  let builder = await vite.createBuilder({
+    root,
+    mode,
+    configFile,
+    build: {
+      assetsInlineLimit,
+      emptyOutDir,
+      minify,
+    },
+    optimizeDeps: { force },
+    clearScreen,
+    logLevel,
+    plugins: [
+      {
+        name: "react-router:cli-config",
+        configEnvironment(name) {
+          if (sourcemapClient && name === "client") {
+            return {
+              build: {
+                sourcemap: sourcemapClient,
+              },
+            };
+          }
+          if (sourcemapServer && name !== "client") {
+            return {
+              build: {
+                sourcemap: sourcemapServer,
+              },
+            };
+          }
+        },
+        configResolved(config) {
+          let hasReactRouterPlugin = config.plugins.find(
+            (plugin) => plugin.name === "react-router"
+          );
+          if (!hasReactRouterPlugin) {
+            throw new Error(
+              "React Router Vite plugin not found in Vite config"
+            );
+          }
+        },
+      },
+    ],
+  });
+  await builder.buildApp();
+}
 
-  let viteConfig = await resolveViteConfig({ configFile, mode, root });
-
-  const ctx = await extractPluginContext(viteConfig);
+async function viteBuild(
+  root: string,
+  {
+    assetsInlineLimit,
+    clearScreen,
+    config: configFile,
+    emptyOutDir,
+    force,
+    logLevel,
+    minify,
+    mode,
+    sourcemapClient,
+    sourcemapServer,
+  }: ViteBuildOptions
+) {
+  let viteUserConfig: Vite.UserConfig = {};
+  let viteConfig = await resolveViteConfig({
+    configFile,
+    mode,
+    root,
+    plugins: [
+      {
+        name: "react-router:extract-vite-user-config",
+        config(config) {
+          viteUserConfig = config;
+        },
+      },
+    ],
+  });
+  let ctx = extractPluginContext(viteConfig);
 
   if (!ctx) {
     console.error(
@@ -95,21 +160,12 @@ export async function build(
     process.exit(1);
   }
 
-  let { reactRouterConfig } = ctx;
-
-  let vite = getVite();
-
-  async function viteBuild(
-    environmentOptionsResolvers: EnvironmentOptionsResolvers,
-    environmentName: EnvironmentName
-  ) {
+  async function buildEnvironment(environmentName: EnvironmentName) {
+    let vite = getVite();
     let ssr = environmentName !== "client";
 
     let resolveOptions = environmentOptionsResolvers[environmentName];
-    invariant(
-      resolveOptions,
-      `Missing environment options resolver for ${environmentName}`
-    );
+    invariant(resolveOptions);
 
     let environmentBuildContext: EnvironmentBuildContext = {
       name: environmentName,
@@ -130,52 +186,39 @@ export async function build(
       optimizeDeps: { force },
       clearScreen,
       logLevel,
-      ...{ __reactRouterEnvironmentBuildContext: environmentBuildContext },
+      ...{
+        __reactRouterPluginContext: ctx,
+        __reactRouterEnvironmentBuildContext: environmentBuildContext,
+      },
     });
   }
 
-  await cleanBuildDirectory(viteConfig, ctx);
+  let { reactRouterConfig, buildManifest } = ctx;
+  invariant(buildManifest, "Expected build manifest to be present");
 
-  let buildManifest = await getBuildManifest(ctx);
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
-    buildManifest
+    "build"
   );
+  let environmentsOptions = resolveEnvironmentsOptions(
+    environmentOptionsResolvers,
+    { viteUserConfig }
+  );
+
+  await cleanBuildDirectory(viteConfig, ctx);
 
   // Run the Vite client build first
-  await viteBuild(environmentOptionsResolvers, "client");
+  await buildEnvironment("client");
 
   // Then run Vite SSR builds in parallel
-  let serverEnvironmentNames = (
-    Object.keys(
-      environmentOptionsResolvers
-    ) as (keyof typeof environmentOptionsResolvers)[]
-  ).filter((environmentName) => environmentName !== "client");
-  await Promise.all(
-    serverEnvironmentNames.map((environmentName) =>
-      viteBuild(environmentOptionsResolvers, environmentName)
-    )
+  let serverEnvironmentNames = getServerEnvironmentKeys(
+    ctx,
+    environmentOptionsResolvers
   );
 
-  let viteManifestPaths = getViteManifestPaths(environmentOptionsResolvers);
-  await Promise.all(
-    viteManifestPaths.map(async (viteManifestPath) => {
-      let manifestExists = await fse.pathExists(viteManifestPath);
-      if (!manifestExists) return;
+  await Promise.all(serverEnvironmentNames.map(buildEnvironment));
 
-      // Delete original Vite manifest file if consumer doesn't want it
-      if (!ctx.viteManifestEnabled) {
-        await fse.remove(viteManifestPath);
-      }
-
-      // Remove .vite dir if it's now empty
-      let viteDir = path.dirname(viteManifestPath);
-      let viteDirFiles = await fse.readdir(viteDir);
-      if (viteDirFiles.length === 0) {
-        await fse.remove(viteDir);
-      }
-    })
-  );
+  await cleanViteManifests(environmentsOptions, ctx);
 
   await reactRouterConfig.buildEnd?.({
     buildManifest,

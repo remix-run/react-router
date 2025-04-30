@@ -18,7 +18,7 @@ import {
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
 import { createReadableStreamFromReadable } from "@react-router/node";
 
-import { viteConfig, reactRouterConfig } from "./vite.js";
+import { type TemplateName, viteConfig, reactRouterConfig } from "./vite.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
@@ -31,6 +31,7 @@ export interface FixtureInit {
   spaMode?: boolean;
   prerender?: boolean;
   port?: number;
+  templateName?: TemplateName;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -94,9 +95,16 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       prerender: init.prerender,
       requestDocument(href: string) {
         let file = new URL(href, "test://test").pathname + "/index.html";
-        let html = fse.readFileSync(
-          path.join(projectDir, "build/client" + file)
+        let mainPath = path.join(projectDir, "build", "client", file);
+        let fallbackPath = path.join(
+          projectDir,
+          "build",
+          "client",
+          "__spa-fallback.html"
         );
+        let html = fse.existsSync(mainPath)
+          ? fse.readFileSync(mainPath)
+          : fse.readFileSync(fallbackPath);
         return new Response(html, {
           headers: {
             "Content-Type": "text/html",
@@ -284,15 +292,18 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       return new Promise(async (accept) => {
         let port = await getPort();
         let app = express();
-        app.use(express.static(path.join(fixture.projectDir, "build/client")));
+        app.use(
+          express.static(path.join(fixture.projectDir, "build", "client"))
+        );
         app.get("*", (req, res, next) => {
+          let dir = path.join(fixture.projectDir, "build", "client");
           let file = req.path.endsWith(".data")
             ? req.path
             : req.path + "/index.html";
-          res.sendFile(
-            path.join(fixture.projectDir, "build/client", file),
-            next
-          );
+          if (file.endsWith(".html") && !fse.existsSync(path.join(dir, file))) {
+            file = "__spa-fallback.html";
+          }
+          res.sendFile(path.join(dir, file), next);
         });
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });
@@ -352,7 +363,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = "vite-5-template";
+  let template = init.templateName ?? "vite-5-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -414,6 +425,9 @@ function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
     env: {
       ...process.env,
       NODE_ENV: mode || ServerMode.Production,
+      // Ensure build can pass in Rolldown. This can be removed once
+      // "preserveEntrySignatures" is supported in rolldown-vite.
+      ROLLDOWN_OPTIONS_VALIDATION: "loose",
     },
   });
 
