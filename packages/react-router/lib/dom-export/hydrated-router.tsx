@@ -208,7 +208,7 @@ function createHydratedRouter({
   return router;
 }
 
-interface HydratedRouterProps {
+export interface HydratedRouterProps {
   /**
    * Context object to passed through to `createBrowserRouter` and made available
    * to `clientLoader`/`clientActon` functions
