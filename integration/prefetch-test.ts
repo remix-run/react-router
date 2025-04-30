@@ -220,7 +220,6 @@ test.describe("prefetch", () => {
             "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
-
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
