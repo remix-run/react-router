@@ -166,7 +166,8 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              // Rollup bundles RR (and transitively React) into an index chunk
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -219,10 +220,13 @@ test.describe("prefetch", () => {
             "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
+
+          console.log(await app.getHtml());
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              // Rollup bundles RR (and transitively React) into an index chunk
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -241,7 +245,8 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              // Rollup bundles RR (and transitively React) into an index chunk
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -321,7 +326,8 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              // Rollup bundles RR (and transitively React) into an index chunk
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -340,7 +346,8 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              // Rollup bundles RR (and transitively React) into an index chunk
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
