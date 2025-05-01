@@ -1,5 +1,4 @@
-import { encode } from "turbo-stream";
-
+import { encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
 import {
   isRedirectResponse,

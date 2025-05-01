@@ -156,7 +156,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 5.2.0-canary-c69a5fc5-20250318(eslint@8.57.0)
+        version: 6.1.0-canary-408d055a-20250430(eslint@8.57.0)
       fs-extra:
         specifier: ^10.1.0
         version: 10.1.0
@@ -739,9 +739,6 @@ importers:
       set-cookie-parser:
         specifier: ^2.6.0
         version: 2.6.0
-      turbo-stream:
-        specifier: 2.4.0
-        version: 2.4.0
     devDependencies:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
@@ -5469,8 +5466,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@5.2.0-canary-c69a5fc5-20250318:
-    resolution: {integrity: sha512-NPceobfzu27xPs00tcceAF5rclbQ0FmBKqGO8CJP0d+FqSpPXCrvKLrjZL+42gwfIH+yjXJprjVd34BUL5WXcQ==}
+  eslint-plugin-react-hooks@6.1.0-canary-408d055a-20250430:
+    resolution: {integrity: sha512-alsX4a7wAQti0tP2CziiAIsGCtdEAb7KQkx41eHq98HN6Kl4d/j7wFpEJ3DicS6A0Sd4GIoBoFsLfth4OhAdsA==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -8542,9 +8539,6 @@ packages:
     resolution: {integrity: sha512-kRj5CBzOrakV4VRRY5kUWbNYvo/FpOsz65DzI5op9P+cHov3+IqPbo1JE1ZnQGkHdZgNFDsrEjrfqqy/Ply9fw==}
     engines: {node: '>=8.0.0'}
     hasBin: true
-
-  turbo-stream@2.4.0:
-    resolution: {integrity: sha512-FHncC10WpBd2eOmGwpmQsWLDoK4cqsA/UT/GqNoaKOQnT8uzhtCbg3EoUDMvqpOSAI0S26mr0rkjzbOO6S3v1g==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -13631,7 +13625,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@5.2.0-canary-c69a5fc5-20250318(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-408d055a-20250430(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.26.10
       '@babel/parser': 7.26.10
@@ -14794,7 +14788,7 @@ snapshots:
 
   jest-message-util@29.7.0:
     dependencies:
-      '@babel/code-frame': 7.24.2
+      '@babel/code-frame': 7.26.2
       '@jest/types': 29.6.3
       '@types/stack-utils': 2.0.1
       chalk: 4.1.2
@@ -16302,7 +16296,7 @@ snapshots:
 
   parse-json@5.2.0:
     dependencies:
-      '@babel/code-frame': 7.24.2
+      '@babel/code-frame': 7.26.2
       error-ex: 1.3.2
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
@@ -17609,8 +17603,6 @@ snapshots:
       strip-ansi: 6.0.1
       wcwidth: 1.0.1
       yargs: 17.7.2
-
-  turbo-stream@2.4.0: {}
 
   type-check@0.4.0:
     dependencies:
