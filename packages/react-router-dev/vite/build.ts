@@ -38,6 +38,9 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
   let configResult = await loadConfig({
     rootDirectory: root,
     mode: viteBuildOptions.mode ?? "production",
+    // In this scope we only need future flags, so we can skip evaluating
+    // routes.ts until we're within the Vite build context
+    skipRoutes: true,
   });
 
   if (!configResult.ok) {
