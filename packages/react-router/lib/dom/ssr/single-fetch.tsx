@@ -1,5 +1,6 @@
 import * as React from "react";
-import { decode } from "turbo-stream";
+
+import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
 import { isResponse } from "../../router/router";
 import type {
