@@ -2494,6 +2494,13 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
+    // Since we let revalidations complete even if the submitting fetcher was
+    // deleted, only put it back to idle if it hasn't been deleted
+    if (state.fetchers.has(key)) {
+      let doneFetcher = getDoneFetcher(actionResult.data);
+      state.fetchers.set(key, doneFetcher);
+    }
+
     let redirect = findRedirect(loaderResults);
     if (redirect) {
       return startRedirectNavigation(
@@ -2527,13 +2534,6 @@ export function createRouter(init: RouterInit): Router {
       revalidatingFetchers,
       fetcherResults
     );
-
-    // Since we let revalidations complete even if the submitting fetcher was
-    // deleted, only put it back to idle if it hasn't been deleted
-    if (state.fetchers.has(key)) {
-      let doneFetcher = getDoneFetcher(actionResult.data);
-      state.fetchers.set(key, doneFetcher);
-    }
 
     abortStaleFetchLoads(loadId);
 
