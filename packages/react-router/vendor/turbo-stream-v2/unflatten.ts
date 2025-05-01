@@ -117,7 +117,7 @@ function hydrate(this: ThisDecode, index: number): any {
           case TYPE_SET:
             const newSet = new Set();
             hydrated[index] = newSet;
-            for (let i = 1; i < value.length; i++)
+            for (let i = value.length - 1; i > 0; i--)
               stack.push([
                 value[i],
                 (v) => {
@@ -129,7 +129,7 @@ function hydrate(this: ThisDecode, index: number): any {
           case TYPE_MAP:
             const map = new Map();
             hydrated[index] = map;
-            for (let i = 1; i < value.length; i += 2) {
+            for (let i = value.length - 2; i > 0; i -= 2) {
               const r: any[] = [];
               stack.push([
                 value[i + 1],
