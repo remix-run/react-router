@@ -9,7 +9,9 @@ import {
   useLoaderData,
   useMatches,
   createRoutesStub,
+  type LoaderFunctionArgs,
 } from "../../index";
+import { unstable_createContext } from "../../lib/router/utils";
 
 test("renders a route", () => {
   let RoutesStub = createRoutesStub([
@@ -144,47 +146,46 @@ test("can pass a predefined loader", () => {
 });
 
 test("can pass context values", async () => {
+  let helloContext = unstable_createContext();
   let RoutesStub = createRoutesStub(
     [
       {
         path: "/",
         HydrateFallback: () => null,
         Component() {
-          let data = useLoaderData() as { context: string };
+          let data = useLoaderData() as string;
           return (
             <div>
-              <pre data-testid="root">Context: {data.context}</pre>
+              <pre data-testid="root">Context: {data}</pre>
               <Outlet />
             </div>
           );
         },
         loader({ context }) {
-          return Response.json(context);
+          return context.get(helloContext);
         },
         children: [
           {
             path: "hello",
             Component() {
-              let data = useLoaderData() as { context: string };
-              return <pre data-testid="hello">Context: {data.context}</pre>;
+              let data = useLoaderData() as string;
+              return <pre data-testid="hello">Context: {data}</pre>;
             },
             loader({ context }) {
-              return Response.json(context);
+              return context.get(helloContext);
             },
           },
         ],
       },
     ],
-    { context: "hello" }
+    () => new Map([[helloContext, "hello"]])
   );
 
   render(<RoutesStub initialEntries={["/hello"]} />);
 
-  expect(await screen.findByTestId("root")).toHaveTextContent(
-    /context: hello/i
-  );
+  expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
   expect(await screen.findByTestId("hello")).toHaveTextContent(
-    /context: hello/i
+    /Context: hello/
   );
 });
 

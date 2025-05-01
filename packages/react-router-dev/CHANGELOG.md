@@ -1,5 +1,217 @@
 # `@react-router/dev`
 
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+  - `@react-router/node@7.5.3`
+  - `@react-router/serve@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Adjust approach for Prerendering/SPA Mode via headers ([#13453](https://github.com/remix-run/react-router/pull/13453))
+- Updated dependencies:
+  - `react-router@7.5.2`
+  - `@react-router/node@7.5.2`
+  - `@react-router/serve@7.5.2`
+
+## 7.5.1
+
+### Patch Changes
+
+- Fix prerendering when a loader returns a redirect ([#13365](https://github.com/remix-run/react-router/pull/13365))
+- Updated dependencies:
+  - `react-router@7.5.1`
+  - `@react-router/node@7.5.1`
+  - `@react-router/serve@7.5.1`
+
+## 7.5.0
+
+### Patch Changes
+
+- Introduce `unstable_subResourceIntegrity` future flag that enables generation of an importmap with integrity for the scripts that will be loaded by the browser. ([#13163](https://github.com/remix-run/react-router/pull/13163))
+- Update optional Wrangler peer dependency range to support Wrangler v4 ([#13258](https://github.com/remix-run/react-router/pull/13258))
+- When `future.unstable_viteEnvironmentApi` is enabled, ensure critical CSS in development works when using a custom Vite `base` has been configured ([#13305](https://github.com/remix-run/react-router/pull/13305))
+- Reinstate dependency optimization in the child compiler to fix `depsOptimizer is required in dev mode` errors when using `vite-plugin-cloudflare` and importing Node.js builtins ([#13317](https://github.com/remix-run/react-router/pull/13317))
+- Updated dependencies:
+  - `react-router@7.5.0`
+  - `@react-router/node@7.5.0`
+  - `@react-router/serve@7.5.0`
+
+## 7.4.1
+
+### Patch Changes
+
+- Fix path in prerender error messages ([#13257](https://github.com/remix-run/react-router/pull/13257))
+- Fix typegen for virtual modules when `moduleDetection` is set to `force` ([#13267](https://github.com/remix-run/react-router/pull/13267))
+- When both `future.unstable_middleware` and `future.unstable_splitRouteModules` are enabled, split `unstable_clientMiddleware` route exports into separate chunks when possible ([#13210](https://github.com/remix-run/react-router/pull/13210))
+- Improve performance of `future.unstable_middleware` by ensuring that route modules are only blocking during the middleware phase when the `unstable_clientMiddleware` has been defined ([#13210](https://github.com/remix-run/react-router/pull/13210))
+- Updated dependencies:
+  - `react-router@7.4.1`
+  - `@react-router/node@7.4.1`
+  - `@react-router/serve@7.4.1`
+
+## 7.4.0
+
+### Minor Changes
+
+- Generate types for `virtual:react-router/server-build` module ([#13152](https://github.com/remix-run/react-router/pull/13152))
+
+### Patch Changes
+
+- When `future.unstable_splitRouteModules` is set to `"enforce"`, allow both splittable and unsplittable root route exports since it's always in a single chunk. ([#13238](https://github.com/remix-run/react-router/pull/13238))
+- When `future.unstable_viteEnvironmentApi` is enabled, allow plugins that override the default SSR environment (such as `@cloudflare/vite-plugin`) to be placed before or after the React Router plugin. ([#13183](https://github.com/remix-run/react-router/pull/13183))
+- Fix conflicts with other Vite plugins that use the `configureServer` and/or `configurePreviewServer` hooks ([#13184](https://github.com/remix-run/react-router/pull/13184))
+- Updated dependencies:
+  - `react-router@7.4.0`
+  - `@react-router/node@7.4.0`
+  - `@react-router/serve@7.4.0`
+
+## 7.3.0
+
+### Patch Changes
+
+- Fix support for custom client `build.rollupOptions.output.entryFileNames` ([#13098](https://github.com/remix-run/react-router/pull/13098))
+
+- Fix usage of `prerender` option when `serverBundles` option has been configured or provided by a preset, e.g. `vercelPreset` from `@vercel/react-router` ([#13082](https://github.com/remix-run/react-router/pull/13082))
+
+- Fix support for custom `build.assetsDir` ([#13077](https://github.com/remix-run/react-router/pull/13077))
+
+- Remove unused dependencies ([#13134](https://github.com/remix-run/react-router/pull/13134))
+
+- Stub all routes except root in "SPA Mode" server builds to avoid issues when route modules or their dependencies import non-SSR-friendly modules ([#13023](https://github.com/remix-run/react-router/pull/13023))
+
+- Fix errors with `future.unstable_viteEnvironmentApi` when the `ssr` environment has been configured by another plugin to be a custom `Vite.DevEnvironment` rather than the default `Vite.RunnableDevEnvironment` ([#13008](https://github.com/remix-run/react-router/pull/13008))
+
+- Remove unused Vite file system watcher ([#13133](https://github.com/remix-run/react-router/pull/13133))
+
+- Fix support for custom SSR build input when `serverBundles` option has been configured ([#13107](https://github.com/remix-run/react-router/pull/13107))
+
+  Note that for consumers using the `future.unstable_viteEnvironmentApi` and `serverBundles` options together, hyphens are no longer supported in server bundle IDs since they also need to be valid Vite environment names.
+
+- Fix dev server when using HTTPS by stripping HTTP/2 pseudo headers from dev server requests ([#12830](https://github.com/remix-run/react-router/pull/12830))
+
+- Lazy load Cloudflare platform proxy on first dev server request when using the `cloudflareDevProxy` Vite plugin to avoid creating unnecessary workerd processes ([#13016](https://github.com/remix-run/react-router/pull/13016))
+
+- When `future.unstable_viteEnvironmentApi` is enabled and the `ssr` environment has `optimizeDeps.noDiscovery` disabled, define `optimizeDeps.entries` and `optimizeDeps.include` ([#13007](https://github.com/remix-run/react-router/pull/13007))
+
+- Fix duplicated entries in typegen for layout routes and their corresponding index route ([#13140](https://github.com/remix-run/react-router/pull/13140))
+
+- Updated dependencies:
+  - `react-router@7.3.0`
+  - `@react-router/node@7.3.0`
+  - `@react-router/serve@7.3.0`
+
+## 7.2.0
+
+### Minor Changes
+
+- Generate a "SPA fallback" HTML file for scenarios where applications are prerendering the `/` route with `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
+
+  - If you specify `ssr:false` without a `prerender` config, this is considered "SPA Mode" and the generated `index.html` file will only render down to the root route and will be able to hydrate for any valid application path
+  - If you specify `ssr:false` with a `prerender` config but _do not_ include the `/` path (i.e., `prerender: ['/blog/post']`), then we still generate a "SPA Mode" `index.html` file that can hydrate for any path in the application
+  - However, previously if you specified `ssr:false` and included the `/` path in your `prerender` config, we would prerender the `/` route into `index.html` as a non-SPA page
+    - The generated HTML would include the root index route which prevented hydration for any other paths
+    - With this change, we now generate a "SPA Mode" file in `__spa-fallback.html` that will allow you to hydrate for any non-prerendered paths
+    - You can serve this file from your static file server for any paths that would otherwise 404 if you only want to pre-render _some_ routes in your `ssr:false` app and serve the others as a SPA
+    - `npx sirv-cli build/client --single __spa-fallback.html`
+
+- Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
+
+  - `Route.HydrateFallbackProps` now also receives `loaderData`
+    - This will be defined so long as the `HydrateFallback` is rendering while _children_ routes are loading
+    - This will be `undefined` if the `HydrateFallback` is rendering because the route has it's own hydrating `clientLoader`
+    - In SPA mode, this will allow you to render loader root data into the SPA `index.html`
+
+- New type-safe `href` utility that guarantees links point to actual paths in your app ([#13012](https://github.com/remix-run/react-router/pull/13012))
+
+  ```tsx
+  import { href } from "react-router";
+
+  export default function Component() {
+    const link = href("/blog/:slug", { slug: "my-first-post" });
+    return (
+      <main>
+        <Link to={href("/products/:id", { id: "asdf" })} />
+        <NavLink to={href("/:lang?/about", { lang: "en" })} />
+      </main>
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Handle custom `envDir` in Vite config ([#12969](https://github.com/remix-run/react-router/pull/12969))
+
+- Fix typegen for repeated params ([#13012](https://github.com/remix-run/react-router/pull/13012))
+
+  In React Router, path parameters are keyed by their name.
+  So for a path pattern like `/a/:id/b/:id?/c/:id`, the last `:id` will set the value for `id` in `useParams` and the `params` prop.
+  For example, `/a/1/b/2/c/3` will result in the value `{ id: 3 }` at runtime.
+
+  Previously, generated types for params incorrectly modeled repeated params with an array.
+  So `/a/1/b/2/c/3` generated a type like `{ id: [1,2,3] }`.
+
+  To be consistent with runtime behavior, the generated types now correctly model the "last one wins" semantics of path parameters.
+  So `/a/1/b/2/c/3` now generates a type like `{ id: 3 }`.
+
+- Fix CLI parsing to allow argumentless `npx react-router` usage ([#12925](https://github.com/remix-run/react-router/pull/12925))
+
+- Fix `ArgError: unknown or unexpected option: --version` when running `react-router --version` ([#13012](https://github.com/remix-run/react-router/pull/13012))
+
+- Skip action-only resource routes when using `prerender:true` ([#13004](https://github.com/remix-run/react-router/pull/13004))
+
+- Enhance invalid export detection when using `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
+
+  - `headers`/`action` are prohibited in all routes with `ssr:false` because there will be no runtime server on which to run them
+  - `loader` functions are more nuanced and depend on whether a given route is prerendered
+    - When using `ssr:false` without a `prerender` config, only the `root` route can have a `loader`
+      - This is "SPA mode" which generates a single `index.html` file with the root route `HydrateFallback` so it is capable of hydrating for any path in your application - therefore we can only call a root route `loader` at build time
+    - When using `ssr:false` with a `prerender` config, you can export a `loader` from routes matched by one of the `prerender` paths because those routes will be server rendered at build time
+      - Exporting a `loader` from a route that is never matched by a `prerender` path will throw a build time error because there will be no runtime server to ever run the loader
+
+- Limit prerendered resource route `.data` files to only the target route ([#13004](https://github.com/remix-run/react-router/pull/13004))
+
+- Add unstable support for splitting route modules in framework mode via `future.unstable_splitRouteModules` ([#11871](https://github.com/remix-run/react-router/pull/11871))
+
+- Fix prerendering of binary files ([#13039](https://github.com/remix-run/react-router/pull/13039))
+
+- Add `future.unstable_viteEnvironmentApi` flag to enable experimental Vite Environment API support ([#12936](https://github.com/remix-run/react-router/pull/12936))
+
+- Disable Lazy Route Discovery for all `ssr:false` apps and not just "SPA Mode" because there is no runtime server to serve the search-param-configured `__manifest` requests ([#12894](https://github.com/remix-run/react-router/pull/12894))
+
+  - We previously only disabled this for "SPA Mode" which is `ssr:false` and no `prerender` config but we realized it should apply to all `ssr:false` apps, including those prerendering multiple pages
+  - In those `prerender` scenarios we would prerender the `/__manifest` file assuming the static file server would serve it but that makes some unneccesary assumptions about the static file server behaviors
+
+- Updated dependencies:
+  - `react-router@7.2.0`
+  - `@react-router/node@7.2.0`
+  - `@react-router/serve@7.2.0`
+
+## 7.1.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.1.5`
+  - `@react-router/node@7.1.5`
+  - `@react-router/serve@7.1.5`
+
+## 7.1.4
+
+### Patch Changes
+
+- Properly resolve Windows file paths to scan for Vite's dependency optimization when using the `unstable_optimizeDeps` future flag. ([#12637](https://github.com/remix-run/react-router/pull/12637))
+- Fix prerendering when using a custom server - previously we ended up trying to import the users custom server when we actually want to import the virtual server build module ([#12759](https://github.com/remix-run/react-router/pull/12759))
+- Updated dependencies:
+  - `react-router@7.1.4`
+  - `@react-router/node@7.1.4`
+  - `@react-router/serve@7.1.4`
+
 ## 7.1.3
 
 ### Patch Changes
@@ -97,7 +309,7 @@
   +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
   ```
 
-- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
 

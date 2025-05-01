@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "7.1.3",
+  "version": "7.5.3",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
@@ -41,7 +41,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {

@@ -47,7 +47,7 @@ export async function loader({ params }: LoaderArgs) {
 
 ### 2. Return from `headers` export
 
-Headers from loaders and actions are not sent in a hidden way, you must return them from the `headers` export.
+Headers from loaders and actions are not sent automatically. You must explicitly return them from the `headers` export.
 
 ```tsx
 export function headers({

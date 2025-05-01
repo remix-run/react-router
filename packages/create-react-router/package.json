@@ -1,6 +1,6 @@
 {
   "name": "create-react-router",
-  "version": "7.1.3",
+  "version": "7.5.3",
   "description": "Create a new React Router app",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -19,7 +19,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {
@@ -54,8 +55,8 @@
     "@types/gunzip-maybe": "^1.4.0",
     "@types/recursive-readdir": "^2.2.1",
     "@types/tar-fs": "^2.0.1",
-    "esbuild": "0.17.6",
-    "esbuild-register": "^3.3.2",
+    "esbuild": "0.25.0",
+    "esbuild-register": "^3.6.0",
     "msw": "^1.2.3",
     "tiny-invariant": "^1.2.0",
     "tsup": "^8.3.0",

@@ -45,7 +45,12 @@ const enqueueUpdate = debounce(async () => {
 
     let needsRevalidation = new Set(
       Array.from(routeUpdates.values())
-        .filter((route) => route.hasLoader || route.hasClientLoader)
+        .filter(
+          (route) =>
+            route.hasLoader ||
+            route.hasClientLoader ||
+            route.hasClientMiddleware
+        )
         .map((route) => route.id)
     );
 
@@ -53,7 +58,7 @@ const enqueueUpdate = debounce(async () => {
       needsRevalidation,
       manifest.routes,
       window.__reactRouterRouteModules,
-      window.__reactRouterContext.future,
+      window.__reactRouterContext.ssr,
       window.__reactRouterContext.isSpaMode
     );
     __reactRouterDataRouter._internalSetRoutes(routes);

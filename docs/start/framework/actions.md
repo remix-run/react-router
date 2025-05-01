@@ -5,6 +5,10 @@ order: 6
 
 # Actions
 
+[MODES: framework]
+
+## Introduction
+
 Data mutations are done through Route actions. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it.
 
 Route actions defined with `action` are only called on the server while actions defined with `clientAction` are run in the browser.
@@ -23,7 +27,7 @@ export async function clientAction({
   request,
 }: Route.ClientActionArgs) {
   let formData = await request.formData();
-  let title = await formData.get("title");
+  let title = formData.get("title");
   let project = await someApi.updateProject({ title });
   return project;
 }
@@ -60,7 +64,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   let formData = await request.formData();
-  let title = await formData.get("title");
+  let title = formData.get("title");
   let project = await fakeDb.updateProject({ title });
   return project;
 }

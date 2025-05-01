@@ -1,6 +1,11 @@
-import type { StaticHandler } from "../router/router";
-import type { ErrorResponse } from "../router/utils";
-import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
+import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import type { ErrorResponse, unstable_InitialContext } from "../router/utils";
+import { unstable_RouterContextProvider } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  ErrorResponseImpl,
+  stripBasename,
+} from "../router/utils";
 import {
   getStaticContextFromError,
   createStaticHandler,
@@ -9,7 +14,7 @@ import {
 } from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
-import type { EntryContext } from "../dom/ssr/entry";
+import type { CriticalCss, EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
 import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
 import { ServerMode, isServerMode } from "./mode";
@@ -17,41 +22,40 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
+import type { ServerHandoff } from "./serverHandoff";
 import { createServerHandoffString } from "./serverHandoff";
-import { getDevServerHooks } from "./dev";
-import type { SingleFetchResult, SingleFetchResults } from "./single-fetch";
+import { getBuildTimeHeader, getDevServerHooks } from "./dev";
 import {
   encodeViaTurboStream,
   getSingleFetchRedirect,
   singleFetchAction,
   singleFetchLoaders,
-  SingleFetchRedirectSymbol,
-  SINGLE_FETCH_REDIRECT_STATUS,
+  SERVER_NO_BODY_STATUS_CODES,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
-import invariant from "./invariant";
 import type { EntryRoute } from "../dom/ssr/routes";
+import type {
+  SingleFetchResult,
+  SingleFetchResults,
+} from "../dom/ssr/single-fetch";
+import {
+  SINGLE_FETCH_REDIRECT_STATUS,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
+import type { MiddlewareEnabled } from "../types/future";
+import { getManifestPath } from "../dom/ssr/fog-of-war";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: AppLoadContext
+  loadContext?: MiddlewareEnabled extends true
+    ? unstable_InitialContext
+    : AppLoadContext
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>),
   mode?: string
 ) => RequestHandler;
-
-// Do not include a response body if the status code is one of these,
-// otherwise `undici` will throw an error when constructing the Response:
-//   https://github.com/nodejs/undici/blob/bd98a6303e45d5e0d44192a93731b1defdb415f3/lib/web/fetch/response.js#L522-L528
-//
-// Specs:
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-informational-1xx
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-204-no-content
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-205-reset-content
-//   https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
-const NO_BODY_STATUS_CODES = new Set([100, 101, 204, 205, 304]);
 
 function derive(build: ServerBuild, mode?: string) {
   let routes = createRoutes(build.routes);
@@ -90,8 +94,9 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
 
-  return async function requestHandler(request, loadContext = {}) {
+  return async function requestHandler(request, initialContext) {
     _build = typeof build === "function" ? await build() : build;
+
     if (typeof build === "function") {
       let derived = derive(_build, mode);
       routes = derived.routes;
@@ -106,8 +111,9 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       errorHandler = derived.errorHandler;
     }
 
-    let url = new URL(request.url);
     let params: RouteMatch<ServerRoute>["params"] = {};
+    let loadContext: AppLoadContext | unstable_RouterContextProvider;
+
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
         getDevServerHooks()?.processRequestError?.(error);
@@ -120,10 +126,90 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     };
 
+    if (_build.future.unstable_middleware) {
+      if (initialContext == null) {
+        loadContext = new unstable_RouterContextProvider();
+      } else {
+        try {
+          loadContext = new unstable_RouterContextProvider(
+            initialContext as unknown as unstable_InitialContext
+          );
+        } catch (e) {
+          let error = new Error(
+            "Unable to create initial `unstable_RouterContextProvider` instance. " +
+              "Please confirm you are returning an instance of " +
+              "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
+              `\n\nError: ${e instanceof Error ? e.toString() : e}`
+          );
+          handleError(error);
+          return returnLastResortErrorResponse(error, serverMode);
+        }
+      }
+    } else {
+      loadContext = initialContext || {};
+    }
+
+    let url = new URL(request.url);
+
+    let normalizedBasename = _build.basename || "/";
+    let normalizedPath = url.pathname;
+    if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
+      normalizedPath = normalizedBasename;
+    } else if (normalizedPath.endsWith(".data")) {
+      normalizedPath = normalizedPath.replace(/\.data$/, "");
+    }
+
+    if (
+      stripBasename(normalizedPath, normalizedBasename) !== "/" &&
+      normalizedPath.endsWith("/")
+    ) {
+      normalizedPath = normalizedPath.slice(0, -1);
+    }
+
+    let isSpaMode =
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
+
+    // When runtime SSR is disabled, make our dev server behave like the deployed
+    // pre-rendered site would
+    if (!_build.ssr) {
+      // When SSR is disabled this, file can only ever run during dev because we
+      // delete the server build at the end of the build
+      if (_build.prerender.length === 0) {
+        // ssr:false and no prerender config indicates "SPA Mode"
+        isSpaMode = true;
+      } else if (
+        !_build.prerender.includes(normalizedPath) &&
+        !_build.prerender.includes(normalizedPath + "/")
+      ) {
+        if (url.pathname.endsWith(".data")) {
+          // 404 on non-pre-rendered `.data` requests
+          errorHandler(
+            new ErrorResponseImpl(
+              404,
+              "Not Found",
+              `Refusing to SSR the path \`${normalizedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`
+            ),
+            {
+              context: loadContext,
+              params,
+              request,
+            }
+          );
+          return new Response("Not Found", {
+            status: 404,
+            statusText: "Not Found",
+          });
+        } else {
+          // Serve a SPA fallback for non-pre-rendered document requests
+          isSpaMode = true;
+        }
+      }
+    }
+
     // Manifest request for fog of war
-    let manifestUrl = `${_build.basename ?? "/"}/__manifest`.replace(
-      /\/+/g,
-      "/"
+    let manifestUrl = getManifestPath(
+      _build.routeDiscovery.manifestPath,
+      normalizedBasename
     );
     if (url.pathname === manifestUrl) {
       try {
@@ -135,7 +221,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     }
 
-    let matches = matchServerRoutes(routes, url.pathname, _build.basename);
+    let matches = matchServerRoutes(routes, normalizedPath, _build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
@@ -143,9 +229,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let response: Response;
     if (url.pathname.endsWith(".data")) {
       let handlerUrl = new URL(request.url);
-      handlerUrl.pathname = handlerUrl.pathname
-        .replace(/\.data$/, "")
-        .replace(/^\/_root$/, "/");
+      handlerUrl.pathname = normalizedPath;
 
       let singleFetchMatches = matchServerRoutes(
         routes,
@@ -201,12 +285,14 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         }
       }
     } else if (
+      !isSpaMode &&
       matches &&
       matches[matches.length - 1].route.module.default == null &&
       matches[matches.length - 1].route.module.ErrorBoundary == null
     ) {
       response = await handleResourceRequest(
         serverMode,
+        _build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -214,10 +300,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         handleError
       );
     } else {
-      let criticalCss =
-        mode === ServerMode.Development
-          ? await getDevServerHooks()?.getCriticalCss?.(_build, url.pathname)
-          : undefined;
+      let { pathname } = url;
+
+      let criticalCss: CriticalCss | undefined = undefined;
+      if (_build.unstable_getCriticalCss) {
+        criticalCss = await _build.unstable_getCriticalCss({ pathname });
+      } else if (
+        mode === ServerMode.Development &&
+        getDevServerHooks()?.getCriticalCss
+      ) {
+        criticalCss = await getDevServerHooks()?.getCriticalCss?.(pathname);
+      }
 
       response = await handleDocumentRequest(
         serverMode,
@@ -226,6 +319,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
         loadContext,
         handleError,
+        isSpaMode,
         criticalCss
       );
     }
@@ -247,10 +341,40 @@ async function handleManifestRequest(
   routes: ServerRoute[],
   url: URL
 ) {
+  if (build.assets.version !== url.searchParams.get("version")) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "X-Remix-Reload-Document": "true",
+      },
+    });
+  }
+
   let patches: Record<string, EntryRoute> = {};
 
   if (url.searchParams.has("p")) {
-    for (let path of url.searchParams.getAll("p")) {
+    let paths = new Set<string>();
+
+    // In addition to responding with the patches for the requested paths, we
+    // need to include patches for each partial path so that we pick up any
+    // pathless/index routes below ancestor segments.  So if we
+    // get a request for `/parent/child`, we need to look for a match on `/parent`
+    // so that if a `parent._index` route exists we return it so it's available
+    // for client side matching if the user routes back up to `/parent`.
+    // This is the same thing we do on initial load in <Scripts> via
+    // `getPartialManifest()`
+    url.searchParams.getAll("p").forEach((path) => {
+      if (!path.startsWith("/")) {
+        path = `/${path}`;
+      }
+      let segments = path.split("/").slice(1);
+      segments.forEach((_, i) => {
+        let partialPath = segments.slice(0, i + 1).join("/");
+        paths.add(`/${partialPath}`);
+      });
+    });
+
+    for (let path of paths) {
       let matches = matchServerRoutes(routes, path, build.basename);
       if (matches) {
         for (let match of matches) {
@@ -279,10 +403,10 @@ async function handleSingleFetchRequest(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void
 ): Promise<Response> {
-  let { result, headers, status } =
+  let response =
     request.method !== "GET"
       ? await singleFetchAction(
           build,
@@ -303,34 +427,7 @@ async function handleSingleFetchRequest(
           handleError
         );
 
-  // Mark all successful responses with a header so we can identify in-flight
-  // network errors that are missing this header
-  let resultHeaders = new Headers(headers);
-  resultHeaders.set("X-Remix-Response", "yes");
-
-  // Skip response body for unsupported status codes
-  if (NO_BODY_STATUS_CODES.has(status)) {
-    return new Response(null, { status, headers: resultHeaders });
-  }
-
-  // We use a less-descriptive `text/x-script` here instead of something like
-  // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
-  //  - https://github.com/remix-run/remix/issues/9884
-  //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
-  resultHeaders.set("Content-Type", "text/x-script");
-
-  return new Response(
-    encodeViaTurboStream(
-      result,
-      request.signal,
-      build.entry.module.streamTimeout,
-      serverMode
-    ),
-    {
-      status: status || 200,
-      headers: resultHeaders,
-    }
-  );
+  return response;
 }
 
 async function handleDocumentRequest(
@@ -338,115 +435,50 @@ async function handleDocumentRequest(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void,
-  criticalCss?: string
+  isSpaMode: boolean,
+  criticalCss?: CriticalCss
 ) {
-  let context;
   try {
-    context = await staticHandler.query(request, {
+    let response = await staticHandler.query(request, {
       requestContext: loadContext,
+      unstable_respond: build.future.unstable_middleware
+        ? (ctx) => renderHtml(ctx, isSpaMode)
+        : undefined,
     });
+    // while middleware is still unstable, we don't run the middleware pipeline
+    // if no routes have middleware, so we still might need to convert context
+    // to a response here
+    return isResponse(response) ? response : renderHtml(response, isSpaMode);
   } catch (error: unknown) {
     handleError(error);
     return new Response(null, { status: 500 });
   }
 
-  if (isResponse(context)) {
-    return context;
-  }
-
-  let headers = getDocumentHeaders(build, context);
-
-  // Skip response body for unsupported status codes
-  if (NO_BODY_STATUS_CODES.has(context.statusCode)) {
-    return new Response(null, { status: context.statusCode, headers });
-  }
-
-  // Sanitize errors outside of development environments
-  if (context.errors) {
-    Object.values(context.errors).forEach((err) => {
-      // @ts-expect-error This is "private" from users but intended for internal use
-      if (!isRouteErrorResponse(err) || err.error) {
-        handleError(err);
-      }
-    });
-    context.errors = sanitizeErrors(context.errors, serverMode);
-  }
-
-  // Server UI state to send to the client.
-  // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
-  // - Otherwise it's stringified into `serverHandoffString`
-  let state = {
-    loaderData: context.loaderData,
-    actionData: context.actionData,
-    errors: serializeErrors(context.errors, serverMode),
-  };
-  let entryContext: EntryContext = {
-    manifest: build.assets,
-    routeModules: createEntryRouteModules(build.routes),
-    staticHandlerContext: context,
-    criticalCss,
-    serverHandoffString: createServerHandoffString({
-      basename: build.basename,
-      criticalCss,
-      future: build.future,
-      isSpaMode: build.isSpaMode,
-    }),
-    serverHandoffStream: encodeViaTurboStream(
-      state,
-      request.signal,
-      build.entry.module.streamTimeout,
-      serverMode
-    ),
-    renderMeta: {},
-    future: build.future,
-    isSpaMode: build.isSpaMode,
-    serializeError: (err) => serializeError(err, serverMode),
-  };
-
-  let handleDocumentRequestFunction = build.entry.module.default;
-  try {
-    return await handleDocumentRequestFunction(
-      request,
-      context.statusCode,
-      headers,
-      entryContext,
-      loadContext
-    );
-  } catch (error: unknown) {
-    handleError(error);
-
-    let errorForSecondRender = error;
-
-    // If they threw a response, unwrap it into an ErrorResponse like we would
-    // have for a loader/action
-    if (isResponse(error)) {
-      try {
-        let data = await unwrapResponse(error);
-        errorForSecondRender = new ErrorResponseImpl(
-          error.status,
-          error.statusText,
-          data
-        );
-      } catch (e) {
-        // If we can't unwrap the response - just leave it as-is
-      }
+  async function renderHtml(context: StaticHandlerContext, isSpaMode: boolean) {
+    if (isResponse(context)) {
+      return context;
     }
 
-    // Get a new StaticHandlerContext that contains the error at the right boundary
-    context = getStaticContextFromError(
-      staticHandler.dataRoutes,
-      context,
-      errorForSecondRender
-    );
+    let headers = getDocumentHeaders(build, context);
+
+    // Skip response body for unsupported status codes
+    if (SERVER_NO_BODY_STATUS_CODES.has(context.statusCode)) {
+      return new Response(null, { status: context.statusCode, headers });
+    }
 
     // Sanitize errors outside of development environments
     if (context.errors) {
+      Object.values(context.errors).forEach((err) => {
+        // @ts-expect-error This is "private" from users but intended for internal use
+        if (!isRouteErrorResponse(err) || err.error) {
+          handleError(err);
+        }
+      });
       context.errors = sanitizeErrors(context.errors, serverMode);
     }
 
-    // Get a new entryContext for the second render pass
     // Server UI state to send to the client.
     // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
     // - Otherwise it's stringified into `serverHandoffString`
@@ -455,13 +487,21 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: serializeErrors(context.errors, serverMode),
     };
-    entryContext = {
-      ...entryContext,
+    let baseServerHandoff: ServerHandoff = {
+      basename: build.basename,
+      future: build.future,
+      routeDiscovery: build.routeDiscovery,
+      ssr: build.ssr,
+      isSpaMode,
+    };
+    let entryContext: EntryContext = {
+      manifest: build.assets,
+      routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
+      criticalCss,
       serverHandoffString: createServerHandoffString({
-        basename: build.basename,
-        future: build.future,
-        isSpaMode: build.isSpaMode,
+        ...baseServerHandoff,
+        criticalCss,
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,
@@ -470,29 +510,103 @@ async function handleDocumentRequest(
         serverMode
       ),
       renderMeta: {},
+      future: build.future,
+      ssr: build.ssr,
+      routeDiscovery: build.routeDiscovery,
+      isSpaMode,
+      serializeError: (err) => serializeError(err, serverMode),
     };
 
+    let handleDocumentRequestFunction = build.entry.module.default;
     try {
       return await handleDocumentRequestFunction(
         request,
         context.statusCode,
         headers,
         entryContext,
-        loadContext
+        loadContext as MiddlewareEnabled extends true
+          ? unstable_RouterContextProvider
+          : AppLoadContext
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleError(error);
-      return returnLastResortErrorResponse(error, serverMode);
+
+      let errorForSecondRender = error;
+
+      // If they threw a response, unwrap it into an ErrorResponse like we would
+      // have for a loader/action
+      if (isResponse(error)) {
+        try {
+          let data = await unwrapResponse(error);
+          errorForSecondRender = new ErrorResponseImpl(
+            error.status,
+            error.statusText,
+            data
+          );
+        } catch (e) {
+          // If we can't unwrap the response - just leave it as-is
+        }
+      }
+
+      // Get a new StaticHandlerContext that contains the error at the right boundary
+      context = getStaticContextFromError(
+        staticHandler.dataRoutes,
+        context,
+        errorForSecondRender
+      );
+
+      // Sanitize errors outside of development environments
+      if (context.errors) {
+        context.errors = sanitizeErrors(context.errors, serverMode);
+      }
+
+      // Get a new entryContext for the second render pass
+      // Server UI state to send to the client.
+      // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
+      // - Otherwise it's stringified into `serverHandoffString`
+      let state = {
+        loaderData: context.loaderData,
+        actionData: context.actionData,
+        errors: serializeErrors(context.errors, serverMode),
+      };
+      entryContext = {
+        ...entryContext,
+        staticHandlerContext: context,
+        serverHandoffString: createServerHandoffString(baseServerHandoff),
+        serverHandoffStream: encodeViaTurboStream(
+          state,
+          request.signal,
+          build.entry.module.streamTimeout,
+          serverMode
+        ),
+        renderMeta: {},
+      };
+
+      try {
+        return await handleDocumentRequestFunction(
+          request,
+          context.statusCode,
+          headers,
+          entryContext,
+          loadContext as MiddlewareEnabled extends true
+            ? unstable_RouterContextProvider
+            : AppLoadContext
+        );
+      } catch (error: any) {
+        handleError(error);
+        return returnLastResortErrorResponse(error, serverMode);
+      }
     }
   }
 }
 
 async function handleResourceRequest(
   serverMode: ServerMode,
+  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext,
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void
 ) {
   try {
@@ -502,6 +616,9 @@ async function handleResourceRequest(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
+      unstable_respond: build.future.unstable_middleware
+        ? (ctx) => ctx
+        : undefined,
     });
 
     if (isResponse(response)) {
@@ -526,6 +643,17 @@ async function handleResourceRequest(
         handleError(error);
       }
       return errorResponseToJson(error, serverMode);
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "Expected a response from queryRoute"
+    ) {
+      let newError = new Error(
+        "Expected a Response to be returned from resource route handler"
+      );
+      handleError(newError);
+      return returnLastResortErrorResponse(newError, serverMode);
     }
 
     handleError(error);

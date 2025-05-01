@@ -5,7 +5,13 @@ import { expect } from "@playwright/test";
 import { normalizePath } from "vite";
 import dedent from "dedent";
 
-import { build, test, createProject } from "./helpers/vite.js";
+import {
+  build,
+  test,
+  createProject,
+  viteMajorTemplates,
+  viteConfig,
+} from "./helpers/vite.js";
 
 const js = String.raw;
 
@@ -23,7 +29,7 @@ const files = {
     export default {
       // Ensure user config takes precedence over preset config
       appDirectory: "app",
-      
+
       presets: [
         // Ensure user config is passed to reactRouterConfig hook
         {
@@ -131,124 +137,122 @@ const files = {
       ],
     }
   `),
-  "vite.config.ts": dedent(js`
-    import { reactRouter } from "@react-router/dev/vite";
-
-    export default {
-      build: {
-        assetsDir: "custom-assets-dir",
-      },
-      plugins: [reactRouter()],
-    }
-  `),
+  "vite.config.ts": await viteConfig.basic({
+    assetsDir: "custom-assets-dir",
+  }),
 };
 
-test("Vite / presets", async () => {
-  let cwd = await createProject(files);
-  let { status, stderr } = build({ cwd });
-  expect(stderr.toString()).toBeFalsy();
-  expect(status).toBe(0);
+test.describe("Vite / presets", async () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(templateDisplayName, async () => {
+      let cwd = await createProject(files, templateName);
+      let { status, stderr } = build({ cwd });
+      expect(stderr.toString()).toBeFalsy();
+      expect(status).toBe(0);
 
-  function pathStartsWithCwd(pathname: string) {
-    return normalizePath(pathname).startsWith(normalizePath(cwd));
-  }
+      function pathStartsWithCwd(pathname: string) {
+        return normalizePath(pathname).startsWith(normalizePath(cwd));
+      }
 
-  function relativeToCwd(pathname: string) {
-    return normalizePath(path.relative(cwd, pathname));
-  }
+      function relativeToCwd(pathname: string) {
+        return normalizePath(path.relative(cwd, pathname));
+      }
 
-  let buildEndArgsMeta: any = await import(
-    URL.pathToFileURL(path.join(cwd, "BUILD_END_META.js")).href
-  );
+      let buildEndArgsMeta: any = await import(
+        URL.pathToFileURL(path.join(cwd, "BUILD_END_META.js")).href
+      );
 
-  let { reactRouterConfig } = buildEndArgsMeta;
+      let { reactRouterConfig } = buildEndArgsMeta;
 
-  // Smoke test Vite config
-  expect(buildEndArgsMeta.assetsDir).toBe("custom-assets-dir");
+      // Smoke test Vite config
+      expect(buildEndArgsMeta.assetsDir).toBe("custom-assets-dir");
 
-  // Before rewriting to relative paths, assert that paths are absolute within cwd
-  expect(pathStartsWithCwd(reactRouterConfig.buildDirectory)).toBe(true);
+      // Before rewriting to relative paths, assert that paths are absolute within cwd
+      expect(pathStartsWithCwd(reactRouterConfig.buildDirectory)).toBe(true);
 
-  // Rewrite path args to be relative and normalized for snapshot test
-  reactRouterConfig.buildDirectory = relativeToCwd(
-    reactRouterConfig.buildDirectory
-  );
+      // Rewrite path args to be relative and normalized for snapshot test
+      reactRouterConfig.buildDirectory = relativeToCwd(
+        reactRouterConfig.buildDirectory
+      );
 
-  // Ensure preset configs are merged in correct order, resulting in the correct build directory
-  expect(reactRouterConfig.buildDirectory).toBe("build");
+      // Ensure preset configs are merged in correct order, resulting in the correct build directory
+      expect(reactRouterConfig.buildDirectory).toBe("build");
 
-  // Ensure preset config takes lower precedence than user config
-  expect(reactRouterConfig.serverModuleFormat).toBe("esm");
+      // Ensure preset config takes lower precedence than user config
+      expect(reactRouterConfig.serverModuleFormat).toBe("esm");
 
-  // Ensure `reactRouterConfig` is called with a frozen user config
-  expect(
-    JSON.parse(
-      await fs.readFile(
-        path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_META.json"),
-        "utf-8"
-      )
-    )
-  ).toEqual({
-    reactRouterUserConfigFrozen: true,
-  });
+      // Ensure `reactRouterConfig` is called with a frozen user config
+      expect(
+        JSON.parse(
+          await fs.readFile(
+            path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_META.json"),
+            "utf-8"
+          )
+        )
+      ).toEqual({
+        reactRouterUserConfigFrozen: true,
+      });
 
-  // Ensure `reactRouterConfigResolved` is called with a frozen config
-  expect(
-    JSON.parse(
-      await fs.readFile(
-        path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_RESOLVED_META.json"),
-        "utf-8"
-      )
-    )
-  ).toEqual({
-    reactRouterUserConfigFrozen: true,
-  });
+      // Ensure `reactRouterConfigResolved` is called with a frozen config
+      expect(
+        JSON.parse(
+          await fs.readFile(
+            path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_RESOLVED_META.json"),
+            "utf-8"
+          )
+        )
+      ).toEqual({
+        reactRouterUserConfigFrozen: true,
+      });
 
-  // Snapshot the buildEnd args keys
-  expect(buildEndArgsMeta.keys).toEqual([
-    "buildManifest",
-    "reactRouterConfig",
-    "viteConfig",
-  ]);
+      // Snapshot the buildEnd args keys
+      expect(buildEndArgsMeta.keys).toEqual([
+        "buildManifest",
+        "reactRouterConfig",
+        "viteConfig",
+      ]);
 
-  // Smoke test the resolved config
-  expect(Object.keys(reactRouterConfig)).toEqual([
-    "appDirectory",
-    "basename",
-    "buildDirectory",
-    "buildEnd",
-    "future",
-    "prerender",
-    "routes",
-    "serverBuildFile",
-    "serverBundles",
-    "serverModuleFormat",
-    "ssr",
-  ]);
+      // Smoke test the resolved config
+      expect(Object.keys(reactRouterConfig)).toEqual([
+        "appDirectory",
+        "basename",
+        "buildDirectory",
+        "buildEnd",
+        "future",
+        "prerender",
+        "routes",
+        "routeDiscovery",
+        "serverBuildFile",
+        "serverBundles",
+        "serverModuleFormat",
+        "ssr",
+      ]);
 
-  // Ensure we get a valid build manifest
-  expect(buildEndArgsMeta.buildManifest).toEqual({
-    routeIdToServerBundleId: {
-      "routes/_index": "preset-server-bundle-id",
-    },
-    routes: {
-      root: {
-        file: "app/root.tsx",
-        id: "root",
-        path: "",
-      },
-      "routes/_index": {
-        file: "app/routes/_index.tsx",
-        id: "routes/_index",
-        index: true,
-        parentId: "root",
-      },
-    },
-    serverBundles: {
-      "preset-server-bundle-id": {
-        file: "build/server/preset-server-bundle-id/index.js",
-        id: "preset-server-bundle-id",
-      },
-    },
+      // Ensure we get a valid build manifest
+      expect(buildEndArgsMeta.buildManifest).toEqual({
+        routeIdToServerBundleId: {
+          "routes/_index": "preset-server-bundle-id",
+        },
+        routes: {
+          root: {
+            file: "app/root.tsx",
+            id: "root",
+            path: "",
+          },
+          "routes/_index": {
+            file: "app/routes/_index.tsx",
+            id: "routes/_index",
+            index: true,
+            parentId: "root",
+          },
+        },
+        serverBundles: {
+          "preset-server-bundle-id": {
+            file: "build/server/preset-server-bundle-id/index.js",
+            id: "preset-server-bundle-id",
+          },
+        },
+      });
+    });
   });
 });

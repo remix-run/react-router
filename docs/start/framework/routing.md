@@ -5,6 +5,8 @@ order: 2
 
 # Routing
 
+[MODES: framework]
+
 ## Configuring Routes
 
 Routes are configured in `app/routes.ts`. Each route has two required parts: a URL pattern to match the URL, and a file path to the route module that defines its behavior.
@@ -52,13 +54,16 @@ export default [
 If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention][file-route-conventions]. You can even combine different routing conventions if you like:
 
 ```ts filename=app/routes.ts
-import { type RouteConfig, route } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  route,
+} from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
-export default = [
+export default [
   route("/", "./home.tsx"),
 
-  ...await flatRoutes(),
+  ...(await flatRoutes()),
 ] satisfies RouteConfig;
 ```
 
@@ -164,22 +169,10 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-To see `projects/home.tsx` appear in the layout, we'll need an outlet:
+Note that:
 
-```tsx filename=./projects/project-layout.tsx lines=[8]
-import { Outlet } from "react-router";
-
-export default function ProjectLayout() {
-  return (
-    <div>
-      <aside>Example sidebar</aside>
-      <main>
-        <Outlet />
-      </main>
-    </div>
-  );
-}
-```
+- `home.tsx` and `contact.tsx` will be rendered into the `marketing/layout.tsx` outlet without creating any new URL paths
+- `project.tsx` and `edit-project.tsx` will be rendered into the `projects/project-layout.tsx` outlet at `/projects/:pid` and `/projects/:pid/edit` while `projects/home.tsx` will not.
 
 ## Index Routes
 
@@ -274,8 +267,6 @@ async function loader({ params }: LoaderArgs) {
 }
 ```
 
-You should ensure that all dynamic segments in a given path are unique. Otherwise, as the `params` object is populated - latter dynamic segment values will override earlier values.
-
 ## Optional Segments
 
 You can make a route segment optional by adding a `?` to the end of the segment.
@@ -324,7 +315,7 @@ function Wizard() {
       <Routes>
         <Route index element={<StepOne />} />
         <Route path="step-2" element={<StepTwo />} />
-        <Route path="step-3" element={<StepThree />}>
+        <Route path="step-3" element={<StepThree />} />
       </Routes>
     </div>
   );

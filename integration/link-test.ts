@@ -357,8 +357,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.$username.tsx": js`
-          import { data, redirect } from "react-router";
-          import { Link, useLoaderData, useParams } from "react-router";
+          import { data, redirect, Link, useLoaderData, useParams } from "react-router";
           export async function loader({ params }) {
             let { username } = params;
             if (username === "mjijackson") {

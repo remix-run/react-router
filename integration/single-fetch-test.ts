@@ -10,7 +10,14 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
+import {
+  EXPRESS_SERVER,
+  createProject,
+  customDev,
+  reactRouterConfig,
+  viteConfig,
+} from "./helpers/vite.js";
+import getPort from "get-port";
 
 const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
@@ -42,9 +49,9 @@ const files = {
             <Links />
           </head>
           <body>
-            <Link to="/">Home</Link><br/>
-            <Link to="/data">Data</Link><br/>
-            <Link to="/a/b/c">/a/b/c</Link><br/>
+            <Link to="/">Go to Home</Link><br/>
+            <Link to="/data">Go to Data</Link><br/>
+            <Link to="/a/b/c">Go to /a/b/c</Link><br/>
             <Form method="post" action="/data">
               <button type="submit" name="key" value="value">
                 Submit
@@ -101,7 +108,7 @@ const files = {
       let actionData = useActionData();
       return (
         <>
-          <h1 id="heading">Data</h1>
+          <h1 id="heading">Data Route</h1>
           <p id="message">{data.message}</p>
           <p id="date">{data.date.toISOString()}</p>
           {actionData ? <p id="action-data">{actionData.key}</p> : null}
@@ -186,9 +193,6 @@ test.describe("single-fetch", () => {
         data: {
           message: "ROOT",
         },
-      },
-      "routes/_index": {
-        data: null,
       },
     });
     expect(res.headers.get("Content-Type")).toBe("text/x-script");
@@ -312,6 +316,24 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#date")).toContain(ISO_DATE);
   });
 
+  test("allows SSR loaders to return undefined", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          export function loader() {}
+          export default function Index() {
+            return <h1>Index</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    expect(await app.getHtml("h1")).toContain("Index");
+  });
+
   test("loads proper data on client side navigation", async ({ page }) => {
     let fixture = await createFixture({
       files,
@@ -409,6 +431,80 @@ test.describe("single-fetch", () => {
       expect.stringMatching(/\/no-revalidate\.data$/),
       expect.stringMatching(/\/no-revalidate\.data\?_routes=root$/),
     ]);
+  });
+
+  test("revalidates on reused routes by default", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+          export default function Index() {
+            return <Link to="/parent">Go to Parent</Link>
+          }
+        `,
+        "app/routes/parent.tsx": js`
+          import { Link, Outlet } from "react-router";
+          import type { Route } from "./+types/parent";
+
+          let count = 0;
+          export function loader() {
+            return ++count;
+          }
+
+          export default function Parent({ loaderData }: Route.ComponentProps) {
+            return (
+              <>
+                <h1 data-parent={loaderData}>PARENT:{loaderData}</h1>
+                <Link to="/parent">Go to Parent</Link><br/>
+                <Link to="/parent/child">Go to Child</Link>
+                <Outlet />
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.child.tsx": js`
+          import { Outlet } from "react-router";
+          import type { Route } from "./+types/parent";
+
+          export function loader() {
+            return "CHILD"
+          }
+
+          export default function Parent({ loaderData }: Route.ComponentProps) {
+            return <h2 data-child>{loaderData}</h2>
+          }
+        `,
+      },
+    });
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (req.method() === "GET" && url.pathname.endsWith(".data")) {
+        urls.push(url.pathname + url.search);
+      }
+    });
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+
+    await app.clickLink("/parent");
+    await page.waitForSelector('[data-parent="1"]');
+    expect(urls).toEqual(["/parent.data"]);
+    urls.length = 0;
+
+    await app.clickLink("/parent/child");
+    await page.waitForSelector("[data-child]");
+    await expect(page.locator('[data-parent="2"]')).toBeDefined();
+    expect(urls).toEqual(["/parent/child.data"]);
+    urls.length = 0;
+
+    await app.clickLink("/parent");
+    await page.waitForSelector('[data-parent="3"]');
+    expect(urls).toEqual(["/parent.data"]);
+    urls.length = 0;
   });
 
   test("does not revalidate on 4xx/5xx action responses", async ({ page }) => {
@@ -1375,6 +1471,45 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#target")).toContain("Target");
   });
 
+  test("supports a basename", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        "vite.config.ts": js`
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default {
+            base: "/base/",
+            plugins: [reactRouter()]
+          }
+        `,
+        "react-router.config.ts": reactRouterConfig({
+          basename: "/base/",
+        }),
+        ...files,
+      },
+      useReactRouterServe: true,
+    });
+
+    let appFixture = await createAppFixture(fixture);
+
+    let requests: string[] = [];
+    page.on("request", (req) => {
+      let url = new URL(req.url());
+      if (url.pathname.endsWith(".data")) {
+        requests.push(url.pathname + url.search);
+      }
+    });
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/base/");
+    await app.clickLink("/base/data");
+    await expect(page.getByText("Data Route")).toBeVisible();
+    await app.clickLink("/base/");
+    await expect(page.getByText("Index")).toBeVisible();
+
+    expect(requests).toEqual(["/base/data.data", "/base/_root.data"]);
+  });
+
   test("processes redirects when a basename is present", async ({ page }) => {
     let fixture = await createFixture({
       files: {
@@ -1426,6 +1561,85 @@ test.describe("single-fetch", () => {
     await app.clickLink("/base/data");
     await page.waitForSelector("#target");
     expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes redirects returned outside of react router", async ({
+    page,
+  }) => {
+    let port = await getPort();
+    let cwd = await createProject({
+      "vite.config.js": await viteConfig.basic({ port }),
+      "server.mjs": EXPRESS_SERVER({
+        port,
+        customLogic: js`
+          app.use(async (req, res, next) => {
+            if (req.url === "/page.data") {
+              res.status(204);
+              res.append('X-Remix-Status', '302');
+              res.append('X-Remix-Redirect', '/target');
+              res.end();
+            } else {
+              next();
+            }
+          });
+        `,
+      }),
+      "app/routes/_index.tsx": js`
+        import { Link, Form } from "react-router";
+        export default function Component() {
+          return (
+            <div id="index">
+              <Link to="/page">Go to /page</Link>
+              <Form method="post" action="/page">
+                <button type="submit" name="key" value="value">Submit</button>
+              </Form>
+            </div>
+          );
+        }
+      `,
+      "app/routes/page.tsx": js`
+        export function action() {
+          return null
+        }
+        export function loader() {
+            return null
+        }
+        export default function Component() {
+          return <p>Should not see me</p>
+        }
+      `,
+      "app/routes/target.tsx": js`
+        import { Link } from "react-router";
+        export default function Component() {
+          return (
+            <>
+              <h1 id="target">Target</h1>
+              <Link to="/">Go home</Link>
+            </>
+          );
+        }
+      `,
+    });
+    let stop = await customDev({ cwd, port });
+
+    try {
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+
+      await page.locator('a[href="/page"]').click();
+      await page.waitForSelector("#target");
+      await expect(page.locator("#target")).toHaveText("Target");
+
+      await page.locator('a[href="/"]').click();
+      await page.waitForSelector("#index");
+
+      await page.locator('button[type="submit"]').click();
+      await page.waitForSelector("#target");
+      await expect(page.locator("#target")).toHaveText("Target");
+    } finally {
+      stop();
+    }
   });
 
   test("processes thrown loader errors", async ({ page }) => {
@@ -2162,6 +2376,97 @@ test.describe("single-fetch", () => {
       expect(
         urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
       ).toBe(true);
+    });
+
+    test("allows reused routes to opt out via shouldRevalidate (w/only clientLoader)", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export default function Component() {
+              return <Link to="/parent/a">Go to /parent/a</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useLoaderData } from "react-router";
+            let count = 0;
+            export function clientLoader({ request }) {
+              return { count: ++count };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Component() {
+              return (
+                <>
+                  <p id="parent">Parent Count: {useLoaderData().count}</p>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="a">A Count: {useLoaderData().count}</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="b">B Count: {useLoaderData().count}</p>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/");
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 1");
+      expect(urls.length).toBe(1);
+      // Client loader triggers 2 requests on the first navigation
+      expect(urls[0].endsWith("/parent/a.data")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#b")).toContain("B Count: 1");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/parent/b.data")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 2");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/parent/a.data")).toBe(true);
     });
 
     test("provides the proper defaultShouldRevalidate value", async ({
