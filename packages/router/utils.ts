@@ -908,7 +908,7 @@ export function generatePath<Path extends string>(
         const [, key, optional] = keyMatch;
         let param = params[key as PathParam<Path>];
         invariant(optional === "?" || param != null, `Missing ":${key}" param`);
-        return stringify(param);
+        return encodeURIComponent(stringify(param));
       }
 
       // Remove any optional markers from optional static segments
