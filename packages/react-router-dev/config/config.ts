@@ -350,10 +350,12 @@ async function resolveConfig({
   root,
   viteNodeContext,
   reactRouterConfigFile,
+  skipRoutes,
 }: {
   root: string;
   viteNodeContext: ViteNode.Context;
   reactRouterConfigFile?: string;
+  skipRoutes?: boolean;
 }): Promise<Result<ResolvedReactRouterConfig>> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -499,61 +501,67 @@ async function resolveConfig({
     );
   }
 
-  let routes: RouteManifest = {
-    root: { path: "", id: "root", file: rootRouteFile },
-  };
+  let routes: RouteManifest = {};
 
-  let routeConfigFile = findEntry(appDirectory, "routes");
-
-  try {
-    if (!routeConfigFile) {
-      let routeConfigDisplayPath = Path.relative(
-        root,
-        Path.join(appDirectory, "routes.ts")
-      );
-      return err(`Route config file not found at "${routeConfigDisplayPath}".`);
-    }
-
-    setAppDirectory(appDirectory);
-    let routeConfigExport = (
-      await viteNodeContext.runner.executeFile(
-        Path.join(appDirectory, routeConfigFile)
-      )
-    ).default;
-    let routeConfig = await routeConfigExport;
-
-    let result = validateRouteConfig({
-      routeConfigFile,
-      routeConfig,
-    });
-
-    if (!result.valid) {
-      return err(result.message);
-    }
-
+  if (!skipRoutes) {
     routes = {
-      ...routes,
-      ...configRoutesToRouteManifest(appDirectory, routeConfig),
+      root: { path: "", id: "root", file: rootRouteFile },
     };
-  } catch (error: any) {
-    return err(
-      [
-        colors.red(`Route config in "${routeConfigFile}" is invalid.`),
-        "",
-        error.loc?.file && error.loc?.column && error.frame
-          ? [
-              Path.relative(appDirectory, error.loc.file) +
-                ":" +
-                error.loc.line +
-                ":" +
-                error.loc.column,
-              error.frame.trim?.(),
-            ]
-          : error.stack,
-      ]
-        .flat()
-        .join("\n")
-    );
+
+    let routeConfigFile = findEntry(appDirectory, "routes");
+
+    try {
+      if (!routeConfigFile) {
+        let routeConfigDisplayPath = Path.relative(
+          root,
+          Path.join(appDirectory, "routes.ts")
+        );
+        return err(
+          `Route config file not found at "${routeConfigDisplayPath}".`
+        );
+      }
+
+      setAppDirectory(appDirectory);
+      let routeConfigExport = (
+        await viteNodeContext.runner.executeFile(
+          Path.join(appDirectory, routeConfigFile)
+        )
+      ).default;
+      let routeConfig = await routeConfigExport;
+
+      let result = validateRouteConfig({
+        routeConfigFile,
+        routeConfig,
+      });
+
+      if (!result.valid) {
+        return err(result.message);
+      }
+
+      routes = {
+        ...routes,
+        ...configRoutesToRouteManifest(appDirectory, routeConfig),
+      };
+    } catch (error: any) {
+      return err(
+        [
+          colors.red(`Route config in "${routeConfigFile}" is invalid.`),
+          "",
+          error.loc?.file && error.loc?.column && error.frame
+            ? [
+                Path.relative(appDirectory, error.loc.file) +
+                  ":" +
+                  error.loc.line +
+                  ":" +
+                  error.loc.column,
+                error.frame.trim?.(),
+              ]
+            : error.stack,
+        ]
+          .flat()
+          .join("\n")
+      );
+    }
   }
 
   let future: FutureConfig = {
@@ -613,10 +621,12 @@ export async function createConfigLoader({
   rootDirectory: root,
   watch,
   mode,
+  skipRoutes,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
+  skipRoutes?: boolean;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
@@ -641,7 +651,7 @@ export async function createConfigLoader({
   updateReactRouterConfigFile();
 
   let getConfig = () =>
-    resolveConfig({ root, viteNodeContext, reactRouterConfigFile });
+    resolveConfig({ root, viteNodeContext, reactRouterConfigFile, skipRoutes });
 
   let appDirectory: string;
 
@@ -740,9 +750,11 @@ export async function createConfigLoader({
                 filepath
               ));
 
-          let routeConfigFile = findEntry(appDirectory, "routes", {
-            absolute: true,
-          });
+          let routeConfigFile = !skipRoutes
+            ? findEntry(appDirectory, "routes", {
+                absolute: true,
+              })
+            : undefined;
           let routeConfigCodeChanged =
             routeConfigFile !== undefined &&
             isEntryFileDependency(
@@ -793,13 +805,16 @@ export async function createConfigLoader({
 export async function loadConfig({
   rootDirectory,
   mode,
+  skipRoutes,
 }: {
   rootDirectory: string;
   mode: string;
+  skipRoutes?: boolean;
 }) {
   let configLoader = await createConfigLoader({
     rootDirectory,
     mode,
+    skipRoutes,
     watch: false,
   });
   let config = await configLoader.getConfig();
