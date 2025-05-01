@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
-import { isResponse } from "../../router/router";
+import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -289,7 +289,11 @@ async function singleFetchActionStrategy(
     return result;
   });
 
-  if (isResponse(result.result) || isRouteErrorResponse(result.result)) {
+  if (
+    isResponse(result.result) ||
+    isRouteErrorResponse(result.result) ||
+    isDataWithResponseInit(result.result)
+  ) {
     return { [actionMatch.route.id]: result };
   }
 
