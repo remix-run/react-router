@@ -2864,6 +2864,10 @@ export function createRouter(init: RouterInit): Router {
       return dataResults;
     }
 
+    if (request.signal.aborted) {
+      return dataResults;
+    }
+
     for (let [routeId, result] of Object.entries(results)) {
       if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
