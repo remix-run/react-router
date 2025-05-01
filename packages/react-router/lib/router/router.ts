@@ -2864,12 +2864,10 @@ export function createRouter(init: RouterInit): Router {
       return dataResults;
     }
 
-    if (request.signal.aborted) {
-      return dataResults;
-    }
-
     for (let [routeId, result] of Object.entries(results)) {
-      if (isRedirectDataStrategyResult(result)) {
+      if (!result) {
+        dataResults[routeId] = { type: ResultType.error, error: result };
+      } else if (isRedirectDataStrategyResult(result)) {
         let response = result.result as Response;
         dataResults[routeId] = {
           type: ResultType.redirect,
