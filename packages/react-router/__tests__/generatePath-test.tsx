@@ -133,6 +133,14 @@ describe("generatePath", () => {
     });
   });
 
+  describe("with a param that contains a /", () => {
+    it("properly encodes the slash", () => {
+      expect(generatePath("/courses/:id/grades", { id: "a/b" })).toBe(
+        "/courses/a%2Fb/grades"
+      );
+    });
+  });
+
   it("throws only on on missing named parameters, but not missing splat params", () => {
     expect(() => generatePath(":foo")).toThrow();
     expect(() => generatePath("/:foo")).toThrow();
