@@ -2517,7 +2517,6 @@ export function createRouter(init: RouterInit): Router {
       // fetchRedirectIds so it doesn't get revalidated on the next set of
       // loader executions
       fetchRedirectIds.add(redirect.key);
-
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
