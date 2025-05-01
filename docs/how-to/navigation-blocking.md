@@ -6,13 +6,15 @@ title: Navigation Blocking
 
 [MODES: framework, data]
 
+## Overview
+
 When users are in the middle of a workflow, like filling out an important form, you may want to prevent them from navigating away from the page.
 
 This example will show:
 
-- Connecting a form to a route action with [`useFetcher`](../api/hooks/useFetcher)
+- Setting up a route with a form and action called with a fetcher
 - Blocking navigation when the form is dirty
-- Showing a confirmation dialog when the user tries to leave the page
+- Showing a confirmation when the user tries to leave the page
 
 ## 1. Set up a route with a form
 
