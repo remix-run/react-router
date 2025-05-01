@@ -45,10 +45,8 @@ describe("generatePath", () => {
       ).toBe("/courses/foo*");
     });
     it("handles a 0 parameter", () => {
-      // @ts-expect-error
       // incorrect usage but worked in 6.3.0 so keep it to avoid the regression
       expect(generatePath("/courses/:id", { id: 0 })).toBe("/courses/0");
-      // @ts-expect-error
       // incorrect usage but worked in 6.3.0 so keep it to avoid the regression
       expect(generatePath("/courses/*", { "*": 0 })).toBe("/courses/0");
     });
