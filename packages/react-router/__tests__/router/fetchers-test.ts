@@ -841,6 +841,43 @@ describe("fetchers", () => {
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.location.key).toBe(key);
     });
+
+    test("handles loader redirects after a fetcher submission", async () => {
+      let t = initializeTest();
+
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/foo" },
+        navigation: { state: "idle" },
+        loaderData: { root: "ROOT", foo: "FOO" },
+      });
+
+      let key = "key";
+      let B = await t.fetch("/bar", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await B.actions.bar.resolve("ACTION");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "loading",
+        data: "ACTION",
+      });
+      await B.loaders.root.resolve("ROOT*");
+
+      let C = await B.loaders.foo.redirect("/");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.index.resolve("INDEX*");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/" },
+        navigation: { state: "idle" },
+        loaderData: { root: "ROOT**", index: "INDEX*" },
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
+    });
   });
 
   describe("fetcher resubmissions/re-gets", () => {
