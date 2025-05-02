@@ -289,13 +289,28 @@ export function RouterProvider({
           "`window.startViewTransition` is not available."
       );
 
+      const resetTransition = () => {
+        setRenderDfd(undefined);
+        setTransition(undefined);
+        setPendingState(undefined);
+        setVtContext({ isTransitioning: false });
+      };
+
       // If this isn't a view transition or it's not available in this browser,
       // just update and be done with it
       if (!viewTransitionOpts || !isViewTransitionAvailable) {
+        renderDfd?.resolve();
+        transition?.skipTransition();
         if (reactDomFlushSyncImpl && flushSync) {
-          reactDomFlushSyncImpl(() => setStateImpl(newState));
+          reactDomFlushSyncImpl(() => {
+            setStateImpl(newState);
+            resetTransition();
+          });
         } else {
-          React.startTransition(() => setStateImpl(newState));
+          React.startTransition(() => {
+            setStateImpl(newState);
+            resetTransition();
+          });
         }
         return;
       }
@@ -324,12 +339,7 @@ export function RouterProvider({
 
         // Clean up after the animation completes
         t.finished.finally(() => {
-          reactDomFlushSyncImpl(() => {
-            setRenderDfd(undefined);
-            setTransition(undefined);
-            setPendingState(undefined);
-            setVtContext({ isTransitioning: false });
-          });
+          reactDomFlushSyncImpl(() => resetTransition());
         });
 
         reactDomFlushSyncImpl(() => setTransition(t));
