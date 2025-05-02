@@ -3263,6 +3263,63 @@ test.describe("single-fetch", () => {
       expect(urls[0].endsWith("/fetch.data?_routes=routes%2Ffetch")).toBe(true);
       expect(urls[1].endsWith("/parent/b.data")).toBe(true);
     });
+
+    test("Aborted fetcher loads don't cause console errors", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Form, redirect, useFetcher } from "react-router";
+
+            export function action() {
+              return redirect("/other");
+            }
+
+            export default function Page() {
+              const fetcher = useFetcher();
+              const isPending = fetcher.state !== "idle";
+
+              return (
+                <>
+                  <button id="fetch" onClick={() => fetcher.load("/fetch")}>
+                    {isPending ? "Loading..." : "First load data"}
+                  </button>
+                  <Form method="POST">
+                    <button type="submit">Then submit before load ends</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+          "app/routes/other.tsx": js`
+            export default function Component() {
+              return <p id="other">Other</p>;
+            }
+          `,
+          "app/routes/fetch.tsx": js`
+            export async function loader() {
+              await new Promise((r) => setTimeout(r, 10000));
+              return 'nope';
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      // Capture console logs and uncaught errors
+      let msgs: string[] = [];
+      page.on("console", (msg) => msgs.push(msg.text()));
+      page.on("pageerror", (error) => msgs.push(error.message));
+
+      await app.goto("/", true);
+      app.clickElement("#fetch");
+      await app.clickSubmitButton("/?index");
+      await page.waitForSelector("#other");
+      expect(msgs).toEqual([]);
+    });
   });
 
   test.describe("prefetching", () => {
