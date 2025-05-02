@@ -519,11 +519,7 @@ export function RouterProvider({
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
-      {
-        deletedFetchers,
-        flushSync: flushSync,
-        viewTransitionOpts: viewTransitionOpts,
-      }
+      { deletedFetchers, flushSync, viewTransitionOpts }
     ) => {
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
@@ -540,10 +536,24 @@ export function RouterProvider({
       // If this isn't a view transition or it's not available in this browser,
       // just update and be done with it
       if (!viewTransitionOpts || isViewTransitionUnavailable) {
+        renderDfd?.resolve();
+        transition?.skipTransition();
         if (flushSync) {
-          flushSyncSafe(() => setStateImpl(newState));
+          flushSyncSafe(() => {
+            setStateImpl(newState);
+            setRenderDfd(undefined);
+            setTransition(undefined);
+            setPendingState(undefined);
+            setVtContext({ isTransitioning: false });
+          });
         } else {
-          optInStartTransition(() => setStateImpl(newState));
+          optInStartTransition(() => {
+            setStateImpl(newState);
+            setRenderDfd(undefined);
+            setTransition(undefined);
+            setPendingState(undefined);
+            setVtContext({ isTransitioning: false });
+          });
         }
         return;
       }
@@ -606,7 +616,7 @@ export function RouterProvider({
         });
       }
     },
-    [router.window, transition, renderDfd, fetcherData, optInStartTransition]
+    [router.window, transition, renderDfd, optInStartTransition]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
