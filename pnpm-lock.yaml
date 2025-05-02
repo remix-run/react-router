@@ -220,7 +220,7 @@ importers:
   packages/react-router:
     dependencies:
       '@remix-run/router':
-        specifier: workspace:*
+        specifier: 0.0.0-experimental-e6fb6e074
         version: link:../router
     devDependencies:
       react:
@@ -233,10 +233,10 @@ importers:
   packages/react-router-dom:
     dependencies:
       '@remix-run/router':
-        specifier: workspace:*
+        specifier: 0.0.0-experimental-e6fb6e074
         version: link:../router
       react-router:
-        specifier: workspace:*
+        specifier: 0.0.0-experimental-e6fb6e074
         version: link:../react-router
     devDependencies:
       react:
@@ -261,7 +261,7 @@ importers:
         specifier: '>=16.8'
         version: 18.2.0(react@18.2.0)
       react-router:
-        specifier: workspace:*
+        specifier: 0.0.0-experimental-e6fb6e074
         version: link:../react-router
       react-router-dom:
         specifier: 4 || 5
@@ -273,7 +273,7 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
       react-router:
-        specifier: workspace:*
+        specifier: 0.0.0-experimental-e6fb6e074
         version: link:../react-router
     devDependencies:
       '@types/react-test-renderer':
