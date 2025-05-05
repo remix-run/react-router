@@ -3623,12 +3623,12 @@ export function createStaticHandler(
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
 
+              // Find the boundary at or above the source of the middleware
+              // error or the highest loader. We can't render any UI below
+              // the highest loader since we have no loader data available
               let boundaryRouteId = skipLoaderErrorBubbling
                 ? routeId
-                : // Find the boundary at or above the source of the middleware
-                  // error or the highest loader. We can't render any UI below
-                  // the highest loader since we have no loader data available
-                  findNearestBoundary(
+                : findNearestBoundary(
                     matches,
                     matches.find(
                       (m) => m.route.id === routeId || m.route.loader
@@ -6039,6 +6039,9 @@ function processRouteLoaderData(
       if (skipLoaderErrorBubbling) {
         errors[id] = error;
       } else {
+        // Look upwards from the matched route for the closest ancestor error
+        // boundary, defaulting to the root match.  Prefer higher error values
+        // if lower errors bubble to the same boundary
         let boundaryMatch = findNearestBoundary(matches, id);
         if (errors[boundaryMatch.route.id] == null) {
           errors[boundaryMatch.route.id] = error;
