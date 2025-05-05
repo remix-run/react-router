@@ -466,6 +466,20 @@ async function singleFetchLoaderNavigationStrategy(
 
   await resolvePromise;
 
+  // Capture any middleware errors from routes that weren't actually fetching
+  // data, these will be bubbled by the router in `processRouteLoaderData`
+  let fetchedData = await singleFetchDfd.promise;
+  if ("routes" in fetchedData) {
+    Object.entries(fetchedData.routes).forEach(([routeId, result]) => {
+      if ("error" in result && results[routeId]?.type !== "error") {
+        results[routeId] = {
+          type: "error",
+          result: result.error,
+        };
+      }
+    });
+  }
+
   return results;
 }
 
@@ -694,12 +708,14 @@ function unwrapSingleFetchResult(
   }
 
   let routeResult = result.routes[routeId];
-  if ("error" in routeResult) {
+  if (routeResult == null) {
+    throw new Error(`No result found for routeId "${routeId}"`);
+  } else if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
     return routeResult.data;
   } else {
-    throw new Error(`No response found for routeId "${routeId}"`);
+    throw new Error(`Invalid response found for routeId "${routeId}"`);
   }
 }
 
