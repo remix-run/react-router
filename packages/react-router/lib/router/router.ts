@@ -4226,7 +4226,6 @@ export function createStaticHandler(
       matches,
       results,
       pendingActionResult,
-      undefined,
       true,
       skipLoaderErrorBubbling
     );
@@ -5995,7 +5994,6 @@ function processRouteLoaderData(
   matches: AgnosticDataRouteMatch[],
   results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
-  currentLoaderData?: RouterState["loaderData"],
   isStaticHandler = false,
   skipLoaderErrorBubbling = false
 ): {
@@ -6108,8 +6106,7 @@ function processLoaderData(
   let { loaderData, errors } = processRouteLoaderData(
     matches,
     results,
-    pendingActionResult,
-    state.loaderData
+    pendingActionResult
   );
 
   // Process results from our revalidating fetchers
