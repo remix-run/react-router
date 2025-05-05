@@ -3635,26 +3635,11 @@ export function createStaticHandler(
                     )?.route.id || routeId
                   ).route.id;
 
-              // If we errored in the top-down middleware, stub in `undefined`
-              // for all loaders the front end is expecting results for
-              let loaderData: RouterState["loaderData"] = {};
-              if (!isMutationMethod(request.method)) {
-                matches
-                  .filter((m) =>
-                    filterMatchesToLoad
-                      ? filterMatchesToLoad(m)
-                      : m.route.loader
-                  )
-                  .forEach((m) => {
-                    loaderData[m.route.id] = undefined;
-                  });
-              }
-
               return respond({
                 matches: matches!,
                 location,
                 basename,
-                loaderData,
+                loaderData: {},
                 actionData: null,
                 errors: {
                   [boundaryRouteId]: error,
@@ -6056,22 +6041,7 @@ function processRouteLoaderData(
       if (skipLoaderErrorBubbling) {
         errors[id] = error;
       } else {
-        // Bubble the error to the proper error boundary by looking upwards from
-        // the highest route that defines a `loader` but doesn't currently have
-        // any `loaderData`.  This situation can happen if a middleware throws
-        // on the way down and thus a loader never executes for a given route.
-        // If such a route doesn't exist, then we just look upwards from the
-        // throwing route. Prefer higher error values if lower errors bubble to
-        // the same boundary
-        let highestLoaderRouteWithoutData = currentLoaderData
-          ? matches.find(
-              (m) => m.route.loader && !(m.route.id in currentLoaderData)
-            )
-          : undefined;
-        let boundaryMatch = findNearestBoundary(
-          matches,
-          highestLoaderRouteWithoutData?.route.id || id
-        );
+        let boundaryMatch = findNearestBoundary(matches, id);
         if (errors[boundaryMatch.route.id] == null) {
           errors[boundaryMatch.route.id] = error;
         }

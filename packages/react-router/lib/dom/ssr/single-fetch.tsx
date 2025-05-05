@@ -24,6 +24,8 @@ import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
+class SingleFetchNoResultError extends Error {}
+
 export type SingleFetchRedirectResult = {
   redirect: string;
   status: number;
@@ -466,16 +468,29 @@ async function singleFetchLoaderNavigationStrategy(
 
   await resolvePromise;
 
-  // Capture any middleware errors from routes that weren't actually fetching
-  // data, these will be bubbled by the router in `processRouteLoaderData`
+  // If a middleware threw on the way down, we won't have data for our requested
+  // loaders and they'll resolve to `SingleFetchNoResultError` results.  If this
+  // happens, take the highest error we find in our results (which is a middleware
+  // error if no loaders ever ran), and assign to these missing routes and let
+  // the router bubble accordingly
+  let middlewareError: unknown;
   let fetchedData = await singleFetchDfd.promise;
   if ("routes" in fetchedData) {
-    Object.entries(fetchedData.routes).forEach(([routeId, result]) => {
-      if ("error" in result && results[routeId]?.type !== "error") {
-        results[routeId] = {
-          type: "error",
-          result: result.error,
-        };
+    for (let match of args.matches) {
+      if (match.route.id in fetchedData.routes) {
+        let routeResult = fetchedData.routes[match.route.id];
+        if ("error" in routeResult) {
+          middlewareError = routeResult.error;
+          break;
+        }
+      }
+    }
+  }
+
+  if (middlewareError !== undefined) {
+    Array.from(routesParams.values()).forEach((routeId) => {
+      if (results[routeId].result instanceof SingleFetchNoResultError) {
+        results[routeId].result = middlewareError;
       }
     });
   }
@@ -709,7 +724,9 @@ function unwrapSingleFetchResult(
 
   let routeResult = result.routes[routeId];
   if (routeResult == null) {
-    throw new Error(`No result found for routeId "${routeId}"`);
+    throw new SingleFetchNoResultError(
+      `No result found for routeId "${routeId}"`
+    );
   } else if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
