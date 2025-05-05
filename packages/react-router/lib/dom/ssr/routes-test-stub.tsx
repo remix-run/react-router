@@ -21,30 +21,66 @@ import type {
 import { Outlet, RouterProvider, createMemoryRouter } from "../../components";
 import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
+import {
+  useParams,
+  useLoaderData,
+  useActionData,
+  useMatches,
+  useRouteError,
+} from "../../hooks";
+
+interface StubRouteExtensions {
+  Component?: React.ComponentType<{
+    params: ReturnType<typeof useParams>;
+    loaderData: ReturnType<typeof useLoaderData>;
+    actionData: ReturnType<typeof useActionData>;
+    matches: ReturnType<typeof useMatches>;
+  }>;
+  HydrateFallback?: React.ComponentType<{
+    params: ReturnType<typeof useParams>;
+    loaderData: ReturnType<typeof useLoaderData>;
+    actionData: ReturnType<typeof useActionData>;
+  }>;
+  ErrorBoundary?: React.ComponentType<{
+    params: ReturnType<typeof useParams>;
+    loaderData: ReturnType<typeof useLoaderData>;
+    actionData: ReturnType<typeof useActionData>;
+    error: ReturnType<typeof useRouteError>;
+  }>;
+  loader?: LoaderFunction;
+  action?: ActionFunction;
+  children?: StubRouteObject[];
+  meta?: MetaFunction;
+  links?: LinksFunction;
+}
 
 interface StubIndexRouteObject
   extends Omit<
-    IndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
-}
+      IndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
 
 interface StubNonIndexRouteObject
   extends Omit<
-    NonIndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
-}
+      NonIndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
 
@@ -141,6 +177,41 @@ export function createRoutesStub(
   };
 }
 
+// Implementations copied from packages/react-router-dev/vite/with-props.ts
+function withComponentProps(Component: React.ComponentType<any>) {
+  return function Wrapped() {
+    return React.createElement(Component, {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+      matches: useMatches(),
+    });
+  };
+}
+
+function withHydrateFallbackProps(HydrateFallback: React.ComponentType<any>) {
+  return function Wrapped() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+    };
+    return React.createElement(HydrateFallback, props);
+  };
+}
+
+function withErrorBoundaryProps(ErrorBoundary: React.ComponentType<any>) {
+  return function Wrapped() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+      error: useRouteError(),
+    };
+    return React.createElement(ErrorBoundary, props);
+  };
+}
+
 function processRoutes(
   routes: StubRouteObject[],
   manifest: AssetsManifest,
@@ -158,9 +229,15 @@ function processRoutes(
       id: route.id,
       path: route.path,
       index: route.index,
-      Component: route.Component,
-      HydrateFallback: route.HydrateFallback,
-      ErrorBoundary: route.ErrorBoundary,
+      Component: route.Component
+        ? withComponentProps(route.Component)
+        : undefined,
+      HydrateFallback: route.HydrateFallback
+        ? withHydrateFallbackProps(route.HydrateFallback)
+        : undefined,
+      ErrorBoundary: route.ErrorBoundary
+        ? withErrorBoundaryProps(route.ErrorBoundary)
+        : undefined,
       action: route.action,
       loader: route.loader,
       handle: route.handle,
@@ -193,8 +270,8 @@ function processRoutes(
 
     // Add the route to routeModules
     routeModules[route.id] = {
-      default: route.Component || Outlet,
-      ErrorBoundary: route.ErrorBoundary || undefined,
+      default: newRoute.Component || Outlet,
+      ErrorBoundary: newRoute.ErrorBoundary || undefined,
       handle: route.handle,
       links: route.links,
       meta: route.meta,

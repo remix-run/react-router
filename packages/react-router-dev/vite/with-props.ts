@@ -17,6 +17,9 @@ export const plugin: Plugin = {
   },
   async load(id) {
     if (id !== vmod.resolvedId) return;
+
+    // Note: If you make changes to these implementations, please also update
+    // the corresponding functions in packages/react-router/lib/dom/ssr/routes-test-stub.tsx
     return dedent`
       import { createElement as h } from "react";
       import { useActionData, useLoaderData, useMatches, useParams, useRouteError } from "react-router";
