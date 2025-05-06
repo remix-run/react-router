@@ -24,6 +24,8 @@ import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
+class SingleFetchNoResultError extends Error {}
+
 export type SingleFetchRedirectResult = {
   redirect: string;
   status: number;
@@ -466,7 +468,54 @@ async function singleFetchLoaderNavigationStrategy(
 
   await resolvePromise;
 
+  await bubbleMiddlewareErrors(
+    singleFetchDfd.promise,
+    args.matches,
+    routesParams,
+    results
+  );
+
   return results;
+}
+
+// If a middleware threw on the way down, we won't have data for our requested
+// loaders and they'll resolve to `SingleFetchNoResultError` results.  If this
+// happens, take the highest error we find in our results (which is a middleware
+// error if no loaders ever ran), and assign to these missing routes and let
+// the router bubble accordingly
+async function bubbleMiddlewareErrors(
+  singleFetchPromise: Promise<DecodedSingleFetchResults>,
+  matches: DataStrategyFunctionArgs["matches"],
+  routesParams: Set<string>,
+  results: Record<string, DataStrategyResult>
+) {
+  try {
+    let middlewareError: unknown;
+    let fetchedData = await singleFetchPromise;
+
+    if ("routes" in fetchedData) {
+      for (let match of matches) {
+        if (match.route.id in fetchedData.routes) {
+          let routeResult = fetchedData.routes[match.route.id];
+          if ("error" in routeResult) {
+            middlewareError = routeResult.error;
+            break;
+          }
+        }
+      }
+    }
+
+    if (middlewareError !== undefined) {
+      Array.from(routesParams.values()).forEach((routeId) => {
+        if (results[routeId].result instanceof SingleFetchNoResultError) {
+          results[routeId].result = middlewareError;
+        }
+      });
+    }
+  } catch (e) {
+    // No-op - this logic is only intended to process successful responses
+    // If the `.data` failed, the routes will handle those errors themselves
+  }
 }
 
 // Fetcher loader calls are much simpler than navigational loader calls
@@ -694,12 +743,16 @@ function unwrapSingleFetchResult(
   }
 
   let routeResult = result.routes[routeId];
-  if ("error" in routeResult) {
+  if (routeResult == null) {
+    throw new SingleFetchNoResultError(
+      `No result found for routeId "${routeId}"`
+    );
+  } else if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
     return routeResult.data;
   } else {
-    throw new Error(`No response found for routeId "${routeId}"`);
+    throw new Error(`Invalid response found for routeId "${routeId}"`);
   }
 }
 

@@ -3614,19 +3614,26 @@ export function createStaticHandler(
                   dataRoutes,
                   renderedStaticContext,
                   error,
-                  findNearestBoundary(matches!, routeId).route.id
+                  skipLoaderErrorBubbling
+                    ? routeId
+                    : findNearestBoundary(matches, routeId).route.id
                 )
               );
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
-              // Find the boundary at or above the highest loader.  We can't
-              // render any UI below there since we have no loader data available
-              let loaderIdx = matches!.findIndex((m) => m.route.loader);
-              let boundary =
-                loaderIdx >= 0
-                  ? findNearestBoundary(matches!, matches![loaderIdx].route.id)
-                  : findNearestBoundary(matches!);
+
+              // Find the boundary at or above the source of the middleware
+              // error or the highest loader. We can't render any UI below
+              // the highest loader since we have no loader data available
+              let boundaryRouteId = skipLoaderErrorBubbling
+                ? routeId
+                : findNearestBoundary(
+                    matches,
+                    matches.find(
+                      (m) => m.route.id === routeId || m.route.loader
+                    )?.route.id || routeId
+                  ).route.id;
 
               return respond({
                 matches: matches!,
@@ -3635,7 +3642,7 @@ export function createStaticHandler(
                 loaderData: {},
                 actionData: null,
                 errors: {
-                  [boundary.route.id]: error,
+                  [boundaryRouteId]: error,
                 },
                 statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
