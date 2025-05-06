@@ -490,7 +490,7 @@ export function stripIndexParam(url: URL) {
 export function singleFetchUrl(
   reqUrl: URL | string,
   basename: string | undefined,
-  extension: string
+  extension: "data" | "rsc"
 ) {
   let url =
     typeof reqUrl === "string"
