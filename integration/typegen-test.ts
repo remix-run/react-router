@@ -190,6 +190,79 @@ test.describe("typegen", () => {
       expect(proc.stderr.toString()).toBe("");
       expect(proc.status).toBe(0);
     });
+
+    test("normalized params", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/expect-type.ts": expectType,
+        "app/routes.ts": tsx`
+          import { type RouteConfig, route } from "@react-router/dev/routes";
+
+          export default [
+            route("parent/:p", "routes/parent.tsx", [
+              route("route/:r", "routes/route.tsx", [
+                route("child1/:c1a/:c1b", "routes/child1.tsx"),
+                route("child2/:c2a/:c2b", "routes/child2.tsx")
+              ]),
+            ]),
+          ] satisfies RouteConfig;
+        `,
+        "app/routes/parent.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/parent"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params,
+              | { p: string, r?: undefined, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
+            >>
+            return null
+          }
+        `,
+        "app/routes/route.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/route"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params,
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
+            >>
+            return null
+          }
+        `,
+        "app/routes/child1.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/child1"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params,
+              | { p: string, r: string, c1a: string,  c1b: string }
+            >>
+            return null
+          }
+        `,
+        "app/routes/child2.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/child2"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params,
+              | { p: string, r: string, c2a: string, c2b: string }
+            >>
+            return null
+          }
+        `,
+      });
+
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
   });
 
   test("clientLoader.hydrate = true", async () => {

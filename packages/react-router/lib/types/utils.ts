@@ -16,7 +16,8 @@ export type Normalize<T> = _Normalize<UnionKeys<T>, T>;
 type _Normalize<Key extends keyof any, T> =
   T extends infer U ?
     Pretty<
-      & { [K in Key as K extends keyof U ? K : never]: K extends keyof U ? U[K] : never }
+      & { [K in Key as K extends keyof U ? undefined extends U[K] ? never : K : never]: K extends keyof U ? U[K] : never }
+      & { [K in Key as K extends keyof U ? undefined extends U[K] ? K : never : never]?: K extends keyof U ? U[K] : never }
       & { [K in Key as K extends keyof U ? never : K]?: undefined}
     >
   :
