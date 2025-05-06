@@ -42,7 +42,9 @@ type GetChildren<Id extends RouteId> = _GetChildren<Id> extends []
 type GetBranch<Id extends RouteId> = [
   ...GetParents<Id>,
   Id,
-  ..._GetChildren<Id>
+  ...(RoutesPre[Id] extends { path: undefined }
+    ? GetChildren<Id>
+    : _GetChildren<Id>)
 ];
 
 type Branches = {

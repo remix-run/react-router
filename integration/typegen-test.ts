@@ -196,7 +196,7 @@ test.describe("typegen", () => {
         "vite.config.ts": viteConfig,
         "app/expect-type.ts": expectType,
         "app/routes.ts": tsx`
-          import { type RouteConfig, route } from "@react-router/dev/routes";
+          import { type RouteConfig, route, layout } from "@react-router/dev/routes";
 
           export default [
             route("parent/:p", "routes/parent.tsx", [
@@ -205,6 +205,10 @@ test.describe("typegen", () => {
                 route("child2/:c2a/:c2b", "routes/child2.tsx")
               ]),
             ]),
+            layout("routes/layout.tsx", [
+              route("in-layout1/:id", "routes/in-layout1.tsx"),
+              route("in-layout2/:id/:other", "routes/in-layout2.tsx")
+            ])
           ] satisfies RouteConfig;
         `,
         "app/routes/parent.tsx": tsx`
@@ -239,9 +243,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/child1"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params,
-              | { p: string, r: string, c1a: string,  c1b: string }
-            >>
+            type Test = Expect<Equal<typeof params, { p: string, r: string, c1a: string,  c1b: string }>>
             return null
           }
         `,
@@ -250,9 +252,34 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/child2"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params,
-              | { p: string, r: string, c2a: string, c2b: string }
-            >>
+            type Test = Expect<Equal<typeof params, { p: string, r: string, c2a: string, c2b: string }>>
+            return null
+          }
+        `,
+        "app/routes/layout.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/layout"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string, other?: undefined } | { id: string, other: string } >>
+            return null
+          }
+        `,
+        "app/routes/in-layout1.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/in-layout1"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string }>>
+            return null
+          }
+        `,
+        "app/routes/in-layout2.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/in-layout2"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string, other: string }>>
             return null
           }
         `,
