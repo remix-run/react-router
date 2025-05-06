@@ -28,5 +28,35 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-games-rush",
+    "angry-students-pay",
+    "breezy-pets-hug",
+    "bright-experts-grab",
+    "cold-seals-count",
+    "curvy-lobsters-accept",
+    "curvy-queens-hug",
+    "dirty-balloons-stare",
+    "eighty-mangos-move",
+    "fast-planets-matter",
+    "forty-ants-teach",
+    "healthy-readers-kick",
+    "large-lobsters-grin",
+    "late-hats-yell",
+    "little-cups-deliver",
+    "ninety-snails-shout",
+    "odd-tools-work",
+    "pink-candles-allow",
+    "proud-needles-destroy",
+    "rude-cobras-warn",
+    "silly-ligers-dress",
+    "six-squids-tickle",
+    "sour-eggs-give",
+    "stupid-kiwis-laugh",
+    "ten-pears-wash",
+    "thirty-bugs-jump",
+    "tough-dancers-own",
+    "twenty-snakes-love",
+    "witty-brooms-work"
+  ]
 }
