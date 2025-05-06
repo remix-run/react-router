@@ -334,7 +334,7 @@ Date: YYYY-MM-DD
 
 ## v7.6.0
 
-Date: 20245-05-08
+Date: 2025-05-08
 
 ### What's Changed
 
