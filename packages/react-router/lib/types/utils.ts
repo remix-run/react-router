@@ -23,3 +23,11 @@ type _Normalize<Key extends keyof any, T> =
   :
   never
 type UnionKeys<T> = T extends any ? keyof T : never;
+
+// prettier-ignore
+type __tests = [
+  Expect<Equal<Normalize<{}>, {}>>,
+  Expect<Equal<Normalize<{a: string}>, {a: string}>>,
+  Expect<Equal<Normalize<{a: string} | {b: string}>, {a: string, b?: undefined} | {a?: undefined , b: string}>>,
+  Expect<Equal<Normalize<{a?: string} | {b?: string}>, {a?: string, b?: undefined} | {a?: undefined , b?: string}>>,
+]
