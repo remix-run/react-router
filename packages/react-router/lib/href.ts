@@ -1,17 +1,23 @@
 import type { Register } from "./types/register";
 import type { Equal } from "./types/utils";
 
-type AnyParams = Record<string, Record<string, string | undefined>>;
-type Params = Register extends {
-  params: infer RegisteredParams extends AnyParams;
+type AnyParams = Record<string, string | undefined>;
+type AnyPages = Record<
+  string,
+  {
+    params: AnyParams;
+  }
+>;
+type Pages = Register extends {
+  pages: infer RegisteredPages extends AnyPages;
 }
-  ? RegisteredParams
-  : AnyParams;
+  ? RegisteredPages
+  : AnyPages;
 
-type Args = { [K in keyof Params]: ToArgs<Params[K]> };
+type Args = { [K in keyof Pages]: ToArgs<Pages[K]["params"]> };
 
 // prettier-ignore
-type ToArgs<T> =
+type ToArgs<T extends AnyParams> =
   // path without params -> no `params` arg
   Equal<T, {}> extends true ? [] :
   // path with only optional params -> optional `params` arg

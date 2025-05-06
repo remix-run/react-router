@@ -82,7 +82,7 @@ async function createContext({
 async function writeAll(ctx: Context): Promise<void> {
   const typegenDir = getTypesDir(ctx);
 
-  fs.rmSync(typegenDir, { recursive: true, force: true });
+  // fs.rmSync(typegenDir, { recursive: true, force: true });
   Object.values(ctx.config.routes).forEach((route) => {
     const typesPath = getTypesPath(ctx, route);
     const content = generate(ctx, route);
@@ -90,11 +90,11 @@ async function writeAll(ctx: Context): Promise<void> {
     fs.writeFileSync(typesPath, content);
   });
 
-  const registerPath = Path.join(typegenDir, "+register.ts");
-  fs.writeFileSync(registerPath, register(ctx));
+  // const registerPath = Path.join(typegenDir, "+register.ts");
+  // fs.writeFileSync(registerPath, register(ctx));
 
-  const virtualPath = Path.join(typegenDir, "+virtual.d.ts");
-  fs.writeFileSync(virtualPath, virtual);
+  // const virtualPath = Path.join(typegenDir, "+virtual.d.ts");
+  // fs.writeFileSync(virtualPath, virtual);
 }
 
 function register(ctx: Context) {

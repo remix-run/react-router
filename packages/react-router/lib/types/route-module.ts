@@ -22,27 +22,25 @@ type RouteModule = {
   clientLoader?: Func;
   action?: Func;
   clientAction?: Func;
-  HydrateFallback?: unknown;
-  default?: unknown;
-  ErrorBoundary?: unknown;
+  HydrateFallback?: Func;
+  default?: Func;
+  ErrorBoundary?: Func;
   [key: string]: unknown; // allow user-defined exports
 };
 
-export type LinkDescriptors = LinkDescriptor[];
-
-type RouteInfo = {
-  parents: RouteInfo[];
-  module: RouteModule;
-  id: unknown;
-  file: string;
-  path: string;
+type Props = {
   params: unknown;
   loaderData: unknown;
   actionData: unknown;
 };
 
-type MetaMatch<T extends RouteInfo> = Pretty<
-  Pick<T, "id" | "params"> & {
+type RouteInfo = Props & {
+  parents: Props[];
+  module: RouteModule;
+};
+
+type MetaMatch<T extends Props> = Pretty<
+  Pick<T, "params"> & {
     pathname: string;
     meta: MetaDescriptor[];
     data: T["loaderData"];
@@ -52,12 +50,12 @@ type MetaMatch<T extends RouteInfo> = Pretty<
 >;
 
 // prettier-ignore
-type MetaMatches<T extends RouteInfo[]> =
-  T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
+type MetaMatches<T extends Props[]> =
+  T extends [infer F extends Props, ...infer R extends Props[]]
     ? [MetaMatch<F>, ...MetaMatches<R>]
     : Array<MetaMatch<RouteInfo> | undefined>;
 
-export type CreateMetaArgs<T extends RouteInfo> = {
+type CreateMetaArgs<T extends RouteInfo> = {
   /** This is the current router `Location` object. This is useful for generating tags for routes at specific paths or query parameters. */
   location: Location;
   /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
@@ -69,9 +67,9 @@ export type CreateMetaArgs<T extends RouteInfo> = {
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
   matches: MetaMatches<[...T["parents"], T]>;
 };
-export type MetaDescriptors = MetaDescriptor[];
+type MetaDescriptors = MetaDescriptor[];
 
-export type HeadersArgs = {
+type HeadersArgs = {
   loaderHeaders: Headers;
   parentHeaders: Headers;
   actionHeaders: Headers;
@@ -188,42 +186,38 @@ type ServerDataFunctionArgs<T extends RouteInfo> = {
     : AppLoadContext;
 };
 
-export type CreateServerMiddlewareFunction<T extends RouteInfo> = (
+type CreateServerMiddlewareFunction<T extends RouteInfo> = (
   args: ServerDataFunctionArgs<T>,
   next: unstable_MiddlewareNextFunction<Response>
 ) => MaybePromise<Response | void>;
 
-export type CreateClientMiddlewareFunction<T extends RouteInfo> = (
+type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T>,
   next: unstable_MiddlewareNextFunction<undefined>
 ) => MaybePromise<void>;
 
-export type CreateServerLoaderArgs<T extends RouteInfo> =
-  ServerDataFunctionArgs<T>;
+type CreateServerLoaderArgs<T extends RouteInfo> = ServerDataFunctionArgs<T>;
 
-export type CreateClientLoaderArgs<T extends RouteInfo> =
-  ClientDataFunctionArgs<T> & {
-    /** This is an asynchronous function to get the data from the server loader for this route. On client-side navigations, this will make a {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API fetch} call to the React Router server loader. If you opt-into running your clientLoader on hydration, then this function will return the data that was already loaded on the server (via Promise.resolve). */
-    serverLoader: () => Promise<ServerDataFrom<T["module"]["loader"]>>;
-  };
+type CreateClientLoaderArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
+  /** This is an asynchronous function to get the data from the server loader for this route. On client-side navigations, this will make a {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API fetch} call to the React Router server loader. If you opt-into running your clientLoader on hydration, then this function will return the data that was already loaded on the server (via Promise.resolve). */
+  serverLoader: () => Promise<ServerDataFrom<T["module"]["loader"]>>;
+};
 
-export type CreateServerActionArgs<T extends RouteInfo> =
-  ServerDataFunctionArgs<T>;
+type CreateServerActionArgs<T extends RouteInfo> = ServerDataFunctionArgs<T>;
 
-export type CreateClientActionArgs<T extends RouteInfo> =
-  ClientDataFunctionArgs<T> & {
-    /** This is an asynchronous function that makes the {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API fetch} call to the React Router server action for this route. */
-    serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
-  };
+type CreateClientActionArgs<T extends RouteInfo> = ClientDataFunctionArgs<T> & {
+  /** This is an asynchronous function that makes the {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API fetch} call to the React Router server action for this route. */
+  serverAction: () => Promise<ServerDataFrom<T["module"]["action"]>>;
+};
 
-export type CreateHydrateFallbackProps<T extends RouteInfo> = {
+type CreateHydrateFallbackProps<T extends RouteInfo> = {
   params: T["params"];
   loaderData?: T["loaderData"];
   actionData?: T["actionData"];
 };
 
-type Match<T extends RouteInfo> = Pretty<
-  Pick<T, "id" | "params"> & {
+type Match<T extends Props> = Pretty<
+  Pick<T, "params"> & {
     pathname: string;
     data: T["loaderData"];
     handle: unknown;
@@ -231,12 +225,12 @@ type Match<T extends RouteInfo> = Pretty<
 >;
 
 // prettier-ignore
-type Matches<T extends RouteInfo[]> =
-  T extends [infer F extends RouteInfo, ...infer R extends RouteInfo[]]
+type Matches<T extends Props[]> =
+  T extends [infer F extends Props, ...infer R extends Props[]]
     ? [Match<F>, ...Matches<R>]
-    : Array<Match<RouteInfo> | undefined>;
+    : Array<Match<Props> | undefined>;
 
-export type CreateComponentProps<T extends RouteInfo> = {
+type CreateComponentProps<T extends RouteInfo> = {
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -260,7 +254,7 @@ export type CreateComponentProps<T extends RouteInfo> = {
   matches: Matches<[...T["parents"], T]>;
 };
 
-export type CreateErrorBoundaryProps<T extends RouteInfo> = {
+type CreateErrorBoundaryProps<T extends RouteInfo> = {
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
    * @example
@@ -279,6 +273,48 @@ export type CreateErrorBoundaryProps<T extends RouteInfo> = {
   error: unknown;
   loaderData?: T["loaderData"];
   actionData?: T["actionData"];
+};
+
+export type RouteModuleAnnotations<Info extends RouteInfo> = {
+  // links
+  LinkDescriptors: LinkDescriptor[];
+  LinksFunction: () => LinkDescriptor[];
+
+  // meta
+  MetaArgs: CreateMetaArgs<Info>;
+  MetaDescriptors: MetaDescriptors;
+  MetaFunction: (args: CreateMetaArgs<Info>) => MetaDescriptors;
+
+  // headers
+  HeadersArgs: HeadersArgs;
+  HeadersFunction: (args: HeadersArgs) => Headers | HeadersInit;
+
+  // middleware
+  unstable_MiddlewareFunction: CreateServerMiddlewareFunction<Info>;
+
+  // clientMiddleware
+  unstable_ClientMiddlewareFunction: CreateClientMiddlewareFunction<Info>;
+
+  // loader
+  LoaderArgs: CreateServerLoaderArgs<Info>;
+
+  // clientLoader
+  ClientLoaderArgs: CreateClientLoaderArgs<Info>;
+
+  // action
+  ActionArgs: CreateServerActionArgs<Info>;
+
+  // clientAction
+  ClientActionArgs: CreateClientActionArgs<Info>;
+
+  // HydrateFallback
+  HydrateFallbackProps: CreateHydrateFallbackProps<Info>;
+
+  // default (Component)
+  ComponentProps: CreateComponentProps<Info>;
+
+  // ErrorBoundary
+  ErrorBoundaryProps: CreateErrorBoundaryProps<Info>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

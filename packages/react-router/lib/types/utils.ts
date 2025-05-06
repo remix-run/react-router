@@ -10,3 +10,15 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 export type Func = (...args: any[]) => unknown;
 
 export type Pretty<T> = { [K in keyof T]: T[K] } & {};
+
+export type Normalize<T> = _Normalize<UnionKeys<T>, T>;
+// prettier-ignore
+type _Normalize<Key extends keyof any, T> =
+  T extends infer U ?
+    Pretty<
+      & { [K in Key as K extends keyof U ? K : never]: K extends keyof U ? U[K] : never }
+      & { [K in Key as K extends keyof U ? never : K]?: undefined}
+    >
+  :
+  never
+type UnionKeys<T> = T extends any ? keyof T : never;
