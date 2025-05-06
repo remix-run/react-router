@@ -28,7 +28,7 @@ import jsesc from "jsesc";
 import colors from "picocolors";
 import kebabCase from "lodash/kebabCase";
 
-import * as Typegen from "../typegen/_index";
+import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
 import type {
   ManifestRoute,
