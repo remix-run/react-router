@@ -445,9 +445,7 @@ Behind the scenes, React Router will generate the corresponding `declare module`
 - `react-router` - Inline `turbo-stream@2.4.1` dependency and fix decoding ordering of `Map`/`Set` instances ([#13518](https://github.com/remix-run/react-router/pull/13518))
 - `react-router` - Only render dev warnings during dev ([#13461](https://github.com/remix-run/react-router/pull/13461))
 - `react-router` - Short circuit post-processing on aborted `dataStrategy` requests ([#13521](https://github.com/remix-run/react-router/pull/13521))
-
   - This resolves non-user-facing console errors of the form `Cannot read properties of undefined (reading 'result')`
-
 - `@react-router/dev` - Support project root directories without a `package.json` if it exists in a parent directory ([#13472](https://github.com/remix-run/react-router/pull/13472))
 - `@react-router/dev` - When providing a custom Vite config path via the CLI `--config`/`-c` flag, default the project root directory to the directory containing the Vite config when not explicitly provided ([#13472](https://github.com/remix-run/react-router/pull/13472))
 - `@react-router/dev` - In a `routes.ts` context, ensure the `--mode` flag is respected for `import.meta.env.MODE` ([#13485](https://github.com/remix-run/react-router/pull/13485))
