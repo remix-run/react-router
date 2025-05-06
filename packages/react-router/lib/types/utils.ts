@@ -11,6 +11,7 @@ export type Func = (...args: any[]) => unknown;
 
 export type Pretty<T> = { [K in keyof T]: T[K] } & {};
 
+// Emulates https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-7.html#improved-type-inference-for-object-literals
 export type Normalize<T> = _Normalize<UnionKeys<T>, T>;
 // prettier-ignore
 type _Normalize<Key extends keyof any, T> =
