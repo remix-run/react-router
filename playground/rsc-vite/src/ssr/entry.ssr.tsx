@@ -22,9 +22,9 @@ export default {
         request,
         callServer,
         (body) => RSD.createFromReadableStream(body, manifest),
-        async (payload) => {
+        async (getPayload) => {
           return await RDS.renderToReadableStream(
-            <RSCStaticRouter payload={payload} />,
+            <RSCStaticRouter getPayload={getPayload} />,
             {
               bootstrapModules,
               signal: request.signal,
