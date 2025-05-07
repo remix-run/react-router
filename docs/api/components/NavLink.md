@@ -43,8 +43,8 @@ Changes the matching logic to make it case-sensitive:
 
 | Link                                         | URL           | isActive |
 | -------------------------------------------- | ------------- | -------- |
-| `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | true     |
-| `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/sponge-bob` | false    |
+| `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | false    |
+| `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/SpOnGe-bOB` | true     |
 
 ### children
 
