@@ -145,9 +145,7 @@ type ClientDataFunctionArgs<T extends RouteInfo> = {
    * `unstable_getContext` function and/or populated from route middleware
    * functions.
    */
-  context: MiddlewareEnabled extends true
-    ? unstable_RouterContextProvider
-    : undefined;
+  context: unstable_RouterContextProvider;
 };
 
 type ServerDataFunctionArgs<T extends RouteInfo> = {
