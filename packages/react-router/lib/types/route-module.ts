@@ -61,7 +61,7 @@ type CreateMetaArgs<T extends RouteInfo> = {
   /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
   params: T["params"];
   /** The return value for this route's server loader function */
-  data: T["loaderData"];
+  data: T["loaderData"] | undefined;
   /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
   error?: unknown;
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
