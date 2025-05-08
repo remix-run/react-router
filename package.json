@@ -124,6 +124,7 @@
       "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
     },
     "overrides": {
+      "react-is": "19.1.0",
       "workerd": "1.20241230.0"
     }
   }
