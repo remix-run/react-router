@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  act,
 } from "@testing-library/react";
 import * as React from "react";
 import {
@@ -3068,7 +3069,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(2);
+      expect(getAwaitRenderCount()).toBe(3);
 
       // complete /baz navigation
       bazDefer.resolve(null);
@@ -3100,7 +3101,7 @@ describe("createMemoryRouter", () => {
           </h1>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(2);
+      expect(getAwaitRenderCount()).toBe(3);
     });
 
     it("should permit direct access to resolved values", async () => {
@@ -3145,7 +3146,9 @@ describe("createMemoryRouter", () => {
 
       fireEvent.click(screen.getByText("Link to bar"));
       let barValueDefer = createDeferred();
-      await barDefer.resolve({ bar: barValueDefer.promise });
+      await act(async () => {
+        await barDefer.resolve({ bar: barValueDefer.promise });
+      });
       await waitFor(() => screen.getByText("Waiting for data..."));
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
