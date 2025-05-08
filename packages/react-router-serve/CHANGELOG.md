@@ -1,13 +1,13 @@
 # `@react-router/serve`
 
-## 7.6.0-pre.0
+## 7.6.0
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@7.6.0-pre.0`
-  - `@react-router/node@7.6.0-pre.0`
-  - `@react-router/express@7.6.0-pre.0`
+  - `react-router@7.6.0`
+  - `@react-router/node@7.6.0`
+  - `@react-router/express@7.6.0`
 
 ## 7.5.3
 
