@@ -2,7 +2,6 @@ import { render, fireEvent, waitFor, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import * as TestRenderer from "react-test-renderer";
 import {
   BrowserRouter,
   MemoryRouter,
@@ -18,27 +17,22 @@ import {
 describe("NavLink", () => {
   describe("when it does not match", () => {
     it("does not apply an 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route
-                path="/home"
-                element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/home"
+              element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).not.toMatch("active");
+      expect(screen.getByRole("link").classList).not.toContain("active");
     });
 
     it("does not change the content inside the <a>", () => {
-      let renderer = TestRenderer.create(
+      render(
         <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route
@@ -53,141 +47,114 @@ describe("NavLink", () => {
         </MemoryRouter>
       );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.children[0]).toMatch("Somewhere else");
+      expect(screen.getByRole("link")).toBeTruthy();
     });
 
     it("applies an 'undefined' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route
-                path="/home"
-                element={
-                  <NavLink
-                    to="somewhere-else"
-                    className={({ isActive }) =>
-                      isActive ? "some-active-classname" : undefined
-                    }
-                  >
-                    Home
-                  </NavLink>
-                }
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/home"
+              element={
+                <NavLink
+                  to="somewhere-else"
+                  className={({ isActive }) =>
+                    isActive ? "some-active-classname" : undefined
+                  }
+                >
+                  Home
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).toBeUndefined();
+      expect(screen.getByRole("link").classList).not.toContain(
+        "some-active-classname"
+      );
     });
   });
 
   describe("when it matches to the end", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route path="/home" element={<NavLink to=".">Home</NavLink>} />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route path="/home" element={<NavLink to=".">Home</NavLink>} />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
 
     it("when the current URL has a trailing slash", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home/"]}>
-            <Routes>
-              <Route
-                path="/home"
-                element={<NavLink to="/home/">Home</NavLink>}
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home/"]}>
+          <Routes>
+            <Route path="/home" element={<NavLink to="/home/">Home</NavLink>} />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
 
     it("applies its className correctly when provided as a function", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route
-                path="/home"
-                element={
-                  <NavLink
-                    to="."
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " highlighted" : " plain")
-                    }
-                  >
-                    Home
-                  </NavLink>
-                }
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/home"
+              element={
+                <NavLink
+                  to="."
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " highlighted" : " plain")
+                  }
+                >
+                  Home
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className.includes("nav-link")).toBe(true);
-      expect(anchor.props.className.includes("highlighted")).toBe(true);
-      expect(anchor.props.className.includes("plain")).toBe(false);
+      let anchor = screen.getByRole("link");
+      expect(anchor.classList).toContain("nav-link");
+      expect(anchor.classList).toContain("highlighted");
+      expect(anchor.classList).not.toContain("plain");
     });
 
     it("applies its style correctly when provided as a function", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route
-                path="/home"
-                element={
-                  <NavLink
-                    to="."
-                    style={({ isActive }) =>
-                      isActive ? { textTransform: "uppercase" } : {}
-                    }
-                  >
-                    Home
-                  </NavLink>
-                }
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/home"
+              element={
+                <NavLink
+                  to="."
+                  style={({ isActive }) =>
+                    isActive ? { textTransform: "uppercase" } : {}
+                  }
+                >
+                  Home
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.style).toMatchObject({ textTransform: "uppercase" });
+      expect(screen.getByRole("link").style.textTransform).toBe("uppercase");
     });
 
     it("applies its children correctly when provided as a function", () => {
-      let renderer = TestRenderer.create(
+      render(
         <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route
@@ -202,446 +169,375 @@ describe("NavLink", () => {
         </MemoryRouter>
       );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.children[0]).toMatch("Home (current)");
+      let anchor = screen.getByRole("link");
+      expect(anchor.textContent).toBe("Home (current)");
     });
 
     it("matches when portions of the url are encoded", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
+      render(
+        <BrowserRouter window={getWindow("/users/matt brophy")}>
+          <Routes>
+            <Route
+              path="/users/:name"
+              element={
+                <>
+                  <NavLink to=".">Matt</NavLink>
+                  <NavLink to="/users/matt brophy">Matt</NavLink>
+                  <NavLink to="/users/michael jackson">Michael</NavLink>
+                </>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      );
 
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <BrowserRouter window={getWindow("/users/matt brophy")}>
-            <Routes>
-              <Route
-                path="/users/:name"
-                element={
-                  <>
-                    <NavLink to=".">Matt</NavLink>
-                    <NavLink to="/users/matt brophy">Matt</NavLink>
-                    <NavLink to="/users/michael jackson">Michael</NavLink>
-                  </>
-                }
-              />
-            </Routes>
-          </BrowserRouter>
-        );
-      });
-
-      let anchors = renderer.root.findAllByType("a");
-
-      expect(anchors.map((a) => a.props.className)).toEqual([
-        "active",
-        "active",
-        "",
-      ]);
+      const anchors = screen.getAllByRole("link");
+      expect(anchors[0].classList).toContain("active");
+      expect(anchors[1].classList).toContain("active");
+      expect(anchors[2].classList).not.toContain("active");
     });
   });
 
   describe("when it matches a partial URL segment", () => {
     it("does not apply the 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home/children"]}>
-            <Routes>
-              <Route
-                path="home"
-                element={
-                  <div>
-                    <NavLink to="child">Home</NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-                <Route path="children" element={<div>Child</div>} />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home/children"]}>
+          <Routes>
+            <Route
+              path="home"
+              element={
+                <div>
+                  <NavLink to="child">Home</NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route path="children" element={<div>Child</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).not.toMatch("active");
+      expect(screen.getByRole("link").classList).not.toContain("active");
     });
 
     it("does not match when <Link to> path is a subset of the active url", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/user-preferences"]}>
-            <Routes>
+      render(
+        <MemoryRouter initialEntries={["/user-preferences"]}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <div>
+                  <NavLink to="user">Go to /user</NavLink>
+                  <NavLink to="user-preferences">
+                    Go to /user-preferences
+                  </NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route index element={<p>Index</p>} />
+              <Route path="user" element={<p>User</p>} />
               <Route
-                path="/"
-                element={
-                  <div>
-                    <NavLink to="user">Go to /user</NavLink>
-                    <NavLink to="user-preferences">
-                      Go to /user-preferences
-                    </NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-                <Route index element={<p>Index</p>} />
-                <Route path="user" element={<p>User</p>} />
-                <Route
-                  path="user-preferences"
-                  element={<p>User Preferences</p>}
-                />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+                path="user-preferences"
+                element={<p>User Preferences</p>}
+              />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchors = renderer.root.findAllByType("a");
-
-      expect(anchors.map((a) => a.props.className)).toEqual(["", "active"]);
+      let anchors = screen.getAllByRole("link");
+      expect(anchors[0].classList).not.toContain("active");
+      expect(anchors[1].classList).toContain("active");
     });
 
     it("does not match when active url is a subset of a <Route path> segment", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/user"]}>
-            <Routes>
+      render(
+        <MemoryRouter initialEntries={["/user"]}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <div>
+                  <NavLink to="user">Go to /user</NavLink>
+                  <NavLink to="user-preferences">
+                    Go to /user-preferences
+                  </NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route index element={<p>Index</p>} />
+              <Route path="user" element={<p>User</p>} />
               <Route
-                path="/"
-                element={
-                  <div>
-                    <NavLink to="user">Go to /user</NavLink>
-                    <NavLink to="user-preferences">
-                      Go to /user-preferences
-                    </NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-                <Route index element={<p>Index</p>} />
-                <Route path="user" element={<p>User</p>} />
-                <Route
-                  path="user-preferences"
-                  element={<p>User Preferences</p>}
-                />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+                path="user-preferences"
+                element={<p>User Preferences</p>}
+              />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchors = renderer.root.findAllByType("a");
-
-      expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
+      let anchors = screen.getAllByRole("link");
+      expect(anchors[0].classList).toContain("active");
+      expect(anchors[1].classList).not.toContain("active");
     });
 
     it("matches the root route with or without the end prop", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter>
-            <Routes>
-              <Route index element={<NavLink to="/">Root</NavLink>} />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      const { rerender } = render(
+        <MemoryRouter>
+          <Routes>
+            <Route index element={<NavLink to="/">Root</NavLink>} />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
 
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter>
-            <Routes>
-              <Route
-                index
-                element={
-                  <NavLink to="/" end>
-                    Root
-                  </NavLink>
-                }
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      rerender(
+        <MemoryRouter>
+          <Routes>
+            <Route
+              index
+              element={
+                <NavLink to="/" end>
+                  Root
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      anchor = renderer.root.findByType("a");
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
 
     it("does not automatically apply to root non-layout segments", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route index element={<h1>Root</h1>} />
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route index element={<h1>Root</h1>} />
+            <Route path="home" element={<NavLink to="/">Root</NavLink>}></Route>
+          </Routes>
+        </MemoryRouter>
+      );
+
+      expect(screen.getByRole("link").classList).not.toContain("active");
+    });
+
+    it("does not automatically apply to root layout segments", () => {
+      render(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <h1>Root</h1>
+                  <Outlet />
+                </>
+              }
+            >
               <Route
                 path="home"
                 element={<NavLink to="/">Root</NavLink>}
               ></Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).not.toMatch("active");
-    });
-
-    it("does not automatically apply to root layout segments", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <h1>Root</h1>
-                    <Outlet />
-                  </>
-                }
-              >
-                <Route
-                  path="home"
-                  element={<NavLink to="/">Root</NavLink>}
-                ></Route>
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
-
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).not.toMatch("active");
+      expect(screen.getByRole("link").classList).not.toContain("active");
     });
   });
 
   describe("when it matches just the beginning but not to the end", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home/child"]}>
-            <Routes>
-              <Route
-                path="home"
-                element={
-                  <div>
-                    <NavLink to=".">Home</NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-                <Route path="child" element={<div>Child</div>} />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home/child"]}>
+          <Routes>
+            <Route
+              path="home"
+              element={
+                <div>
+                  <NavLink to=".">Home</NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route path="child" element={<div>Child</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
 
     it("In case of trailing slash at the end of link", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/home/child"]}>
-            <Routes>
-              <Route
-                path="home"
-                element={
-                  <div>
-                    <NavLink to="/home/">Home</NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-                <Route path="child" element={<div>Child</div>} />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/home/child"]}>
+          <Routes>
+            <Route
+              path="home"
+              element={
+                <div>
+                  <NavLink to="/home/">Home</NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route path="child" element={<div>Child</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
 
     describe("when end=true", () => {
       it("does not apply the default 'active' className to the underlying <a>", () => {
-        let renderer: TestRenderer.ReactTestRenderer;
-        TestRenderer.act(() => {
-          renderer = TestRenderer.create(
-            <MemoryRouter initialEntries={["/home/child"]}>
-              <Routes>
-                <Route
-                  path="home"
-                  element={
-                    <div>
-                      <NavLink to="." end={true}>
-                        Home
-                      </NavLink>
-                      <Outlet />
-                    </div>
-                  }
-                >
-                  <Route path="child" element={<div>Child</div>} />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          );
-        });
+        render(
+          <MemoryRouter initialEntries={["/home/child"]}>
+            <Routes>
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <NavLink to="." end={true}>
+                      Home
+                    </NavLink>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route path="child" element={<div>Child</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
 
-        let anchor = renderer.root.findByType("a");
-
-        expect(anchor.props.className).not.toMatch("active");
+        expect(screen.getByRole("link").classList).not.toContain("active");
       });
 
       it("Handles trailing slashes accordingly when the URL does not have a trailing slash", () => {
-        let renderer: TestRenderer.ReactTestRenderer;
-        TestRenderer.act(() => {
-          renderer = TestRenderer.create(
-            <MemoryRouter initialEntries={["/home"]}>
-              <Routes>
-                <Route
-                  path="home"
-                  element={
-                    <div>
-                      <NavLink to="/home" end>
-                        Home
-                      </NavLink>
-                      <NavLink to="/home/" end>
-                        Home
-                      </NavLink>
-                      <Outlet />
-                    </div>
-                  }
-                >
-                  <Route path="child" element={<div>Child</div>} />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          );
-        });
+        render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <NavLink to="/home" end>
+                      Home
+                    </NavLink>
+                    <NavLink to="/home/" end>
+                      Home
+                    </NavLink>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route path="child" element={<div>Child</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
 
-        let anchors = renderer.root.findAllByType("a");
-        expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
+        let anchors = screen.getAllByRole("link");
+        expect(anchors[0].classList).toContain("active");
+        expect(anchors[1].classList).not.toContain("active");
       });
 
       it("Handles trailing slashes accordingly when the URL has a trailing slash", () => {
-        let renderer: TestRenderer.ReactTestRenderer;
-        TestRenderer.act(() => {
-          renderer = TestRenderer.create(
-            <MemoryRouter initialEntries={["/home/"]}>
-              <Routes>
-                <Route
-                  path="home"
-                  element={
-                    <div>
-                      <NavLink to="/home" end>
-                        Home
-                      </NavLink>
-                      <NavLink to="/home/" end>
-                        Home
-                      </NavLink>
-                      <Outlet />
-                    </div>
-                  }
-                >
-                  <Route path="child" element={<div>Child</div>} />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          );
-        });
+        render(
+          <MemoryRouter initialEntries={["/home/"]}>
+            <Routes>
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <NavLink to="/home" end>
+                      Home
+                    </NavLink>
+                    <NavLink to="/home/" end>
+                      Home
+                    </NavLink>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route path="child" element={<div>Child</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
 
-        let anchors = renderer.root.findAllByType("a");
-        expect(anchors.map((a) => a.props.className)).toEqual(["", "active"]);
+        let anchors = screen.getAllByRole("link");
+        expect(anchors[0].classList).not.toContain("active");
+        expect(anchors[1].classList).toContain("active");
       });
     });
   });
 
   describe("when it matches without matching case", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/Home"]}>
-            <Routes>
-              <Route path="home" element={<NavLink to=".">Home</NavLink>} />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter initialEntries={["/Home"]}>
+          <Routes>
+            <Route path="home" element={<NavLink to=".">Home</NavLink>} />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
 
     describe("when caseSensitive=true", () => {
       it("does not apply the default 'active' className to the underlying <a>", () => {
-        let renderer: TestRenderer.ReactTestRenderer;
-        TestRenderer.act(() => {
-          renderer = TestRenderer.create(
-            <MemoryRouter initialEntries={["/Home"]}>
-              <Routes>
-                <Route
-                  path="home"
-                  element={
-                    <NavLink to="/home" caseSensitive={true}>
-                      Home
-                    </NavLink>
-                  }
-                />
-              </Routes>
-            </MemoryRouter>
-          );
-        });
-
-        let anchor = renderer.root.findByType("a");
-
-        expect(anchor.props.className).not.toMatch("active");
-      });
-    });
-  });
-
-  describe("when it matches with relative=path links", () => {
-    it("applies the default 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/contacts/1"]}>
+        render(
+          <MemoryRouter initialEntries={["/Home"]}>
             <Routes>
               <Route
-                path="contacts/:id"
+                path="home"
                 element={
-                  <NavLink to="../1" relative="path">
-                    Link
+                  <NavLink to="/home" caseSensitive={true}>
+                    Home
                   </NavLink>
                 }
               />
             </Routes>
           </MemoryRouter>
         );
+
+        expect(screen.getByRole("link").classList).not.toContain("active");
       });
+    });
+  });
 
-      let anchor = renderer.root.findByType("a");
+  describe("when it matches with relative=path links", () => {
+    it("applies the default 'active' className to the underlying <a>", () => {
+      render(
+        <MemoryRouter initialEntries={["/contacts/1"]}>
+          <Routes>
+            <Route
+              path="contacts/:id"
+              element={
+                <NavLink to="../1" relative="path">
+                  Link
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      expect(anchor.props.href).toEqual("/contacts/1");
-      expect(anchor.props.className).toEqual("active");
+      let anchor = screen.getByRole("link");
+      expect(anchor.getAttribute("href")).toBe("/contacts/1");
+      expect(anchor.classList).toContain("active");
     });
   });
 });
@@ -834,14 +730,14 @@ describe("NavLink using a data router", () => {
       );
     }
 
-    expect(screen.getByText("Link to Bar (idle)")).toBeDefined();
+    expect(screen.getByText("Link to Bar (idle)")).toBeTruthy();
 
     fireEvent.click(screen.getByText("Link to Bar (idle)"));
-    expect(screen.getByText("Link to Bar (loading...)")).toBeDefined();
+    expect(screen.getByText("Link to Bar (loading...)")).toBeTruthy();
 
     dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
-    expect(screen.getByText("Link to Bar (current)")).toBeDefined();
+    expect(screen.getByText("Link to Bar (current)")).toBeTruthy();
   });
 
   it("does not apply during transitions to non-matching locations", async () => {
@@ -987,42 +883,32 @@ describe("NavLink using a data router", () => {
 describe("NavLink under a Routes with a basename", () => {
   describe("when it does not match", () => {
     it("does not apply the default 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
-            <Routes>
-              <Route
-                path="home"
-                element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
+          <Routes>
+            <Route
+              path="home"
+              element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
+            />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).not.toMatch("active");
+      expect(screen.getByRole("link").classList).not.toContain("active");
     });
   });
 
   describe("when it matches", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
-            <Routes>
-              <Route path="home" element={<NavLink to=".">Home</NavLink>} />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
+      render(
+        <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
+          <Routes>
+            <Route path="home" element={<NavLink to=".">Home</NavLink>} />
+          </Routes>
+        </MemoryRouter>
+      );
 
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.className).toMatch("active");
+      expect(screen.getByRole("link").classList).toContain("active");
     });
   });
 });
