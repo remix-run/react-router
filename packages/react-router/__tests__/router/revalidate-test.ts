@@ -1112,8 +1112,12 @@ describe("router.revalidate", () => {
       revalidation: "idle",
       loaderData: { root: "ROOT**" },
     });
+    // The interrupted revalidation hooks into the next completed navigation
+    // so it reflects the end state value
     expect(revalidationValue).toBe("ROOT**");
-    expect(navigationValue).toBe("ROOT**");
+    // The interim navigation gets interrupted and ends while the router still
+    // reflects the original value
+    expect(navigationValue).toBe("ROOT");
     expect(navigationValue2).toBe("ROOT**");
 
     // no-op
@@ -1126,7 +1130,7 @@ describe("router.revalidate", () => {
       loaderData: { root: "ROOT**" },
     });
     expect(revalidationValue).toBe("ROOT**");
-    expect(navigationValue).toBe("ROOT**");
+    expect(navigationValue).toBe("ROOT");
     expect(navigationValue2).toBe("ROOT**");
   });
 });

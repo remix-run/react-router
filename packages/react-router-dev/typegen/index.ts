@@ -14,8 +14,8 @@ import { getTypesDir, getTypesPath } from "./paths";
 import * as Params from "./params";
 import * as Route from "./route";
 
-export async function run(rootDirectory: string) {
-  const ctx = await createContext({ rootDirectory, watch: false });
+export async function run(rootDirectory: string, { mode }: { mode: string }) {
+  const ctx = await createContext({ rootDirectory, mode, watch: false });
   await writeAll(ctx);
 }
 
@@ -25,27 +25,29 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { logger }: { logger?: vite.Logger } = {}
+  { mode, logger }: { mode: string; logger?: vite.Logger }
 ): Promise<Watcher> {
-  const ctx = await createContext({ rootDirectory, watch: true });
+  const ctx = await createContext({ rootDirectory, mode, watch: true });
   await writeAll(ctx);
   logger?.info(pc.green("generated types"), { timestamp: true, clear: true });
 
-  ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
-    if (!result.ok) {
-      logger?.error(pc.red(result.error), { timestamp: true, clear: true });
-      return;
-    }
+  ctx.configLoader.onChange(
+    async ({ result, configChanged, routeConfigChanged }) => {
+      if (!result.ok) {
+        logger?.error(pc.red(result.error), { timestamp: true, clear: true });
+        return;
+      }
 
-    ctx.config = result.value;
-    if (routeConfigChanged) {
-      await writeAll(ctx);
-      logger?.info(pc.green("regenerated types"), {
-        timestamp: true,
-        clear: true,
-      });
+      ctx.config = result.value;
+      if (configChanged || routeConfigChanged) {
+        await writeAll(ctx);
+        logger?.info(pc.green("regenerated types"), {
+          timestamp: true,
+          clear: true,
+        });
+      }
     }
-  });
+  );
 
   return {
     close: async () => await ctx.configLoader.close(),
@@ -55,11 +57,13 @@ export async function watch(
 async function createContext({
   rootDirectory,
   watch,
+  mode,
 }: {
   rootDirectory: string;
   watch: boolean;
+  mode: string;
 }): Promise<Context> {
-  const configLoader = await createConfigLoader({ rootDirectory, watch });
+  const configLoader = await createConfigLoader({ rootDirectory, mode, watch });
   const configResult = await configLoader.getConfig();
 
   if (!configResult.ok) {
@@ -101,49 +105,45 @@ function register(ctx: Context) {
       interface Register {
         params: Params;
       }
+
+      interface Future {
+        unstable_middleware: ${ctx.config.future.unstable_middleware}
+      }
     }
   `;
 
   const { t } = Babel;
 
-  const indexPaths = new Set(
-    Object.values(ctx.config.routes)
-      .filter((route) => route.index)
-      .map((route) => route.path)
-  );
+  const fullpaths = new Set<string>();
+  Object.values(ctx.config.routes).forEach((route) => {
+    if (route.id !== "root" && !route.path) return;
+    const lineage = Route.lineage(ctx.config.routes, route);
+    const fullpath = Route.fullpath(lineage);
+    fullpaths.add(fullpath);
+  });
 
   const typeParams = t.tsTypeAliasDeclaration(
     t.identifier("Params"),
     null,
     t.tsTypeLiteral(
-      Object.values(ctx.config.routes)
-        .map((route) => {
-          // filter out pathless (layout) routes
-          if (route.id !== "root" && !route.path) return undefined;
-
-          // filter out layout routes that have a corresponding index
-          if (!route.index && indexPaths.has(route.path)) return undefined;
-
-          const lineage = Route.lineage(ctx.config.routes, route);
-          const fullpath = Route.fullpath(lineage);
-          const params = Params.parse(fullpath);
-          return t.tsPropertySignature(
-            t.stringLiteral(fullpath),
-            t.tsTypeAnnotation(
-              t.tsTypeLiteral(
-                Object.entries(params).map(([param, isRequired]) => {
-                  const property = t.tsPropertySignature(
-                    t.stringLiteral(param),
-                    t.tsTypeAnnotation(t.tsStringKeyword())
-                  );
-                  property.optional = !isRequired;
-                  return property;
-                })
-              )
+      Array.from(fullpaths).map((fullpath) => {
+        const params = Params.parse(fullpath);
+        return t.tsPropertySignature(
+          t.stringLiteral(fullpath),
+          t.tsTypeAnnotation(
+            t.tsTypeLiteral(
+              Object.entries(params).map(([param, isRequired]) => {
+                const property = t.tsPropertySignature(
+                  t.stringLiteral(param),
+                  t.tsTypeAnnotation(t.tsStringKeyword())
+                );
+                property.optional = !isRequired;
+                return property;
+              })
             )
-          );
-        })
-        .filter((x): x is Babel.Babel.TSPropertySignature => x !== undefined)
+          )
+        );
+      })
     )
   );
 
@@ -161,6 +161,7 @@ const virtual = ts`
     export const isSpaMode: ServerBuild["isSpaMode"];
     export const prerender: ServerBuild["prerender"];
     export const publicPath: ServerBuild["publicPath"];
+    export const routeDiscovery: ServerBuild["routeDiscovery"];
     export const routes: ServerBuild["routes"];
     export const ssr: ServerBuild["ssr"];
     export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];

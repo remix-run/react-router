@@ -6,6 +6,7 @@ import type { ResolvedReactRouterConfig } from "../config/config";
 import type { RouteManifest, RouteManifestEntry } from "../config/routes";
 import type { LoadCssContents } from "./plugin";
 import { resolveFileUrl } from "./resolve-file-url";
+import * as babel from "./babel";
 
 // Style collection logic adapted from solid-start: https://github.com/solidjs/solid-start
 
@@ -247,4 +248,27 @@ export const getStylesForPathname = async ({
   });
 
   return styles;
+};
+
+export const getCssStringFromViteDevModuleCode = (
+  code: string
+): string | undefined => {
+  let cssContent = undefined;
+
+  const ast = babel.parse(code, { sourceType: "module" });
+  babel.traverse(ast, {
+    VariableDeclaration(path) {
+      const declaration = path.node.declarations[0];
+      if (
+        declaration?.id?.type === "Identifier" &&
+        declaration.id.name === "__vite__css" &&
+        declaration.init?.type === "StringLiteral"
+      ) {
+        cssContent = declaration.init.value;
+        path.stop();
+      }
+    },
+  });
+
+  return cssContent;
 };

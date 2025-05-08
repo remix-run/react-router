@@ -283,4 +283,48 @@ describe("useRevalidator", () => {
 
     expect(count).toBe(1);
   });
+
+  it("is stable across revalidation changes", async () => {
+    let uiCount = 0;
+    let stableCount = 0;
+    let unstableCount = 0;
+    let router = createMemoryRouter(
+      [
+        {
+          id: "root",
+          path: "/",
+          loader: () => ++uiCount,
+          Component() {
+            let { revalidate, state } = useRevalidator();
+
+            React.useEffect(() => void stableCount++, [revalidate]);
+            React.useEffect(() => void unstableCount++, [state]);
+
+            return (
+              <button onClick={() => revalidate()}>
+                Revalidate: {useLoaderData()}
+              </button>
+            );
+          },
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: { root: 0 },
+        },
+      }
+    );
+
+    render(<RouterProvider router={router} />);
+
+    fireEvent.click(screen.getByText("Revalidate: 0"));
+    await waitFor(() => screen.getByText("Revalidate: 1"));
+
+    fireEvent.click(screen.getByText("Revalidate: 1"));
+    await waitFor(() => screen.getByText("Revalidate: 2"));
+
+    // idle -> loading -> idle -> loading -> idle
+    expect(unstableCount).toBe(5);
+    expect(stableCount).toBe(1);
+  });
 });

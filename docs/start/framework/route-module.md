@@ -351,7 +351,9 @@ export default function Root() {
 
 ## `shouldRevalidate`
 
-By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
+In framework mode, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode](../data/route-object#shouldrevalidate)). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
+
+Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
 
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
@@ -362,6 +364,8 @@ export function shouldRevalidate(
   return true;
 }
 ```
+
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
 
 ---
 

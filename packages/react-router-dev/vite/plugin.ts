@@ -39,7 +39,11 @@ import type { Cache } from "./cache";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
-import { getStylesForPathname, isCssModulesFile } from "./styles";
+import {
+  getCssStringFromViteDevModuleCode,
+  getStylesForPathname,
+  isCssModulesFile,
+} from "./styles";
 import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
@@ -136,10 +140,7 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName =
-  | "client"
-  | SsrEnvironmentName
-  | CssDevHelperEnvironmentName;
+export type EnvironmentName = "client" | SsrEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrBundleEnvironmentName = `${typeof SSR_BUNDLE_PREFIX}${string}`;
@@ -150,16 +151,6 @@ function isSsrBundleEnvironmentName(
 ): name is SsrBundleEnvironmentName {
   return name.startsWith(SSR_BUNDLE_PREFIX);
 }
-
-// We use a separate environment for loading the critical CSS during
-// development. This is because "ssrLoadModule" isn't available if the "ssr"
-// environment has been defined by another plugin (e.g.
-// vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
-// Vite.RunnableDevEnvironment:
-// https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
-const CSS_DEV_HELPER_ENVIRONMENT_NAME =
-  "__react_router_css_dev_helper__" as const;
-type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
 
 type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
@@ -742,6 +733,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const ssr = ${ctx.reactRouterConfig.ssr};
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
+      export const routeDiscovery = ${JSON.stringify(
+        ctx.reactRouterConfig.routeDiscovery
+      )};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -1118,40 +1112,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       return cssModulesManifest[dep.file];
     }
 
-    const vite = getVite();
-    const viteMajor = parseInt(vite.version.split(".")[0], 10);
-
-    const url =
-      viteMajor >= 6
-        ? // We need the ?inline query in Vite v6 when loading CSS in SSR
-          // since it does not expose the default export for CSS in a
-          // server environment. This is to align with non-SSR
-          // environments. For backwards compatibility with v5 we keep
-          // using the URL without ?inline query because the HMR code was
-          // relying on the implicit SSR-client module graph relationship.
-          injectQuery(dep.url, "inline")
-        : dep.url;
-
-    let cssMod: unknown;
-    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
-      const cssDevHelperEnvironment =
-        viteDevServer.environments[CSS_DEV_HELPER_ENVIRONMENT_NAME];
-      invariant(cssDevHelperEnvironment, "Missing CSS dev helper environment");
-      invariant(vite.isRunnableDevEnvironment(cssDevHelperEnvironment));
-      cssMod = await cssDevHelperEnvironment.runner.import(url);
-    } else {
-      cssMod = await viteDevServer.ssrLoadModule(url);
-    }
-
+    let transformedCssCode = (await viteDevServer.transformRequest(dep.url))
+      ?.code;
     invariant(
-      typeof cssMod === "object" &&
-        cssMod !== null &&
-        "default" in cssMod &&
-        typeof cssMod.default === "string",
+      transformedCssCode,
       `Failed to load CSS for ${dep.file ?? dep.url}`
     );
 
-    return cssMod.default;
+    let cssString = getCssStringFromViteDevModuleCode(transformedCssCode);
+    invariant(
+      typeof cssString === "string",
+      `Failed to extract CSS for ${dep.file ?? dep.url}`
+    );
+
+    return cssString;
   };
 
   return [
@@ -1187,8 +1161,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         rootDirectory =
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
+        let mode = viteConfigEnv.mode;
+
         if (viteCommand === "serve") {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
+            mode,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1196,6 +1173,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
+          mode,
           watch: viteCommand === "serve",
         });
 
@@ -1552,7 +1530,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         reactRouterConfigLoader.onChange(
           async ({
             result,
-            configCodeUpdated,
+            configCodeChanged,
+            routeConfigCodeChanged,
             configChanged,
             routeConfigChanged,
           }) => {
@@ -1565,21 +1544,22 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return;
             }
 
-            if (routeConfigChanged) {
-              logger.info(colors.green("Route config changed."), {
-                clear: true,
-                timestamp: true,
-              });
-            } else if (configCodeUpdated) {
-              logger.info(colors.green("Config updated."), {
-                clear: true,
-                timestamp: true,
-              });
-            }
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
+
+            logger.info(colors.green(message), {
+              clear: true,
+              timestamp: true,
+            });
 
             await updatePluginContext();
 
-            if (configChanged) {
+            if (configChanged || routeConfigChanged) {
               invalidateVirtualModules(viteDevServer);
             }
           }
@@ -3538,10 +3518,14 @@ export async function getEnvironmentOptionsResolvers(
                 let routeChunkSuffix = routeChunkName
                   ? `-${kebabCase(routeChunkName)}`
                   : "";
-                return path.posix.join(
+                let assetsDir =
                   (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
                     ? viteUserConfig?.environments?.client?.build?.assetsDir
-                    : viteUserConfig?.build?.assetsDir) ?? "assets",
+                    : null) ??
+                  viteUserConfig?.build?.assetsDir ??
+                  "assets";
+                return path.posix.join(
+                  assetsDir,
                   `[name]${routeChunkSuffix}-[hash].js`
                 );
               },
@@ -3578,13 +3562,6 @@ export async function getEnvironmentOptionsResolvers(
           outDir: getServerBuildDirectory(ctx.reactRouterConfig),
         },
       });
-  }
-
-  if (
-    ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-    viteCommand === "serve"
-  ) {
-    environmentOptionsResolvers[CSS_DEV_HELPER_ENVIRONMENT_NAME] = () => ({});
   }
 
   return environmentOptionsResolvers;

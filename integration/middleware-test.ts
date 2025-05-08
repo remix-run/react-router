@@ -2140,7 +2140,7 @@ test.describe("Middleware", () => {
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
               export default function Component({ loaderData }) {
-                return <Link to="/a/b">Link</Link>
+                return <Link to="/a/b/c/d">Link</Link>
               }
             `,
             "app/routes/a.tsx": js`
@@ -2158,7 +2158,7 @@ test.describe("Middleware", () => {
                 return null;
               }
               export default function Component() {
-                return <Outlet/>
+                return <Outlet />
               }
             `,
             "app/routes/a.b.c.tsx": js`
@@ -2190,6 +2190,109 @@ test.describe("Middleware", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/a/b/c/d");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
+      expect(await page.locator("pre").textContent()).toBe("broken!");
+
+      await app.goto("/");
+      await app.clickLink("/a/b/c/d");
+      expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
+      expect(await page.locator("pre").textContent()).toBe("broken!");
+
+      appFixture.close();
+    });
+
+    test("bubbles errors on the way down up to the deepest error boundary when loaders aren't revalidating", async ({
+      page,
+    }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return (
+                  <>
+                    <Link to="/a/b">/a/b</Link>
+                    <br/>
+                    <Link to="/a/b/c/d">/a/b/c/d</Link>
+                  </>
+                );
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1 data-error-a>A Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              import { Link, Outlet } from 'react-router'
+              export function loader() {
+                return { message: "DATA" };
+              }
+              export default function Component({ loaderData }) {
+                return (
+                  <>
+                    <h2 data-ab>AB: {loaderData.message}</h2>
+                    <Link to="/a/b/c/d">/a/b/c/d</Link>
+                    <Outlet/>
+                  </>
+                );
+              }
+              export function shouldRevalidate() {
+                return false;
+              }
+            `,
+            "app/routes/a.b.c.tsx": js`
+              import { Outlet } from 'react-router'
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1 data-error-c>C Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.c.d.tsx": js`
+              import { Outlet } from 'react-router'
+              export const unstable_middleware = [() => { throw new Error("broken!") }]
+              export const loader = () => null;
+              export default function Component() {
+                return <Outlet/>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development
+      );
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await app.clickLink("/a/b");
+      await page.waitForSelector("[data-ab]");
+      expect(await page.locator("[data-ab]").textContent()).toBe("AB: DATA");
+
+      await app.clickLink("/a/b/c/d");
+      await page.waitForSelector("[data-error-c]");
+      expect(await page.locator("h1").textContent()).toBe("C Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
 
       appFixture.close();

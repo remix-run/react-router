@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "7.5.3",
+  "version": "7.6.0",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -38,6 +38,9 @@
       }
     },
     "./route-module": {
+      "node": {
+        "types": "./dist/development/lib/types/route-module.d.ts"
+      },
       "import": {
         "types": "./dist/development/lib/types/route-module.d.mts"
       },
@@ -82,8 +85,7 @@
   },
   "dependencies": {
     "cookie": "^1.0.1",
-    "set-cookie-parser": "^2.6.0",
-    "turbo-stream": "2.4.0"
+    "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",

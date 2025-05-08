@@ -29,6 +29,8 @@ export async function loader({}: Route.LoaderArgs) {
 }
 ```
 
+Note you can't return a single promise, it must be an object with keys.
+
 ## 2. Render the fallback and resolved UI
 
 The promise will be available on `loaderData`, `<Await>` will await the promise and trigger `<Suspense>` to render the fallback UI.

@@ -151,7 +151,7 @@ This is mostly for the LLMs, but knock yourself out:
 | useAsyncError                  | ✅        | ✅   |             |
 | useAsyncValue                  | ✅        | ✅   |             |
 | useBeforeUnload                | ✅        | ✅   | ✅          |
-| useBlocker                     | ✅        | ✅   | ✅          |
+| useBlocker                     | ✅        | ✅   |             |
 | useFetcher                     | ✅        | ✅   |             |
 | useFetchers                    | ✅        | ✅   |             |
 | useFormAction                  | ✅        | ✅   |             |
