@@ -765,8 +765,8 @@ importers:
   packages/react-router-architect:
     dependencies:
       '@architect/functions':
-        specifier: ^5.2.0
-        version: 5.4.1
+        specifier: ^7.0.0
+        version: 7.0.0
       '@types/aws-lambda':
         specifier: ^8.10.82
         version: 8.10.141
@@ -1590,9 +1590,9 @@ packages:
     resolution: {integrity: sha512-lFMjJTrFL3j7L9yBxwYfCq2k6qqwHyzuUl/XBnif78PWTJYyL/dfowQHWE3sp6U6ZzqWiiIZnpTMO96zhkjwtg==}
     engines: {node: '>=6.0.0'}
 
-  '@architect/functions@5.4.1':
-    resolution: {integrity: sha512-F13FBUvVHjerUaSdnXIC3pZUnI10lxyVZ7HsrU8vM2qB5pFNqw5EgqcnVgORz/eqCcqevpIKayQ9yOUf/HuBAA==}
-    engines: {node: '>=12'}
+  '@architect/functions@7.0.0':
+    resolution: {integrity: sha512-6HumTH9885uMAZ9yIEBUi8RmgzFTQoGefd6CD6sNkVzoZM2QCyk4BRfKvo8hdgm+AxDjkZdvA/4kaj5K7680Bg==}
+    engines: {node: '>=14'}
 
   '@babel/code-frame@7.24.2':
     resolution: {integrity: sha512-y5+tLQyV8pg3fsiln67BVLD1P13Eg4lh5RW9mF0zUuvLrv9uIQ4MCL+CRT+FTsBlBjcIan6PGsLcBN0m3ClUyQ==}
@@ -9129,7 +9129,7 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@architect/functions@5.4.1':
+  '@architect/functions@7.0.0':
     dependencies:
       cookie: 0.5.0
       cookie-signature: 1.2.1

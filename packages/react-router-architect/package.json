@@ -50,7 +50,7 @@
     }
   },
   "dependencies": {
-    "@architect/functions": "^5.2.0",
+    "@architect/functions": "^7.0.0",
     "@types/aws-lambda": "^8.10.82"
   },
   "devDependencies": {
