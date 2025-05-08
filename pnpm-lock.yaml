@@ -104,8 +104,8 @@ importers:
         specifier: ^18.2.7
         version: 18.2.7
       '@types/react-test-renderer':
-        specifier: ^19.1.0
-        version: 19.1.0
+        specifier: ^18.0.0
+        version: 18.3.1
       '@types/semver':
         specifier: ^7.5.0
         version: 7.5.0
@@ -4166,8 +4166,8 @@ packages:
   '@types/react-dom@18.2.7':
     resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
 
-  '@types/react-test-renderer@19.1.0':
-    resolution: {integrity: sha512-XD0WZrHqjNrxA/MaR9O22w/RNidWR9YZmBdRGI7wcnWGrv/3dA8wKCJ8m63Sn+tLJhcjmuhOi629N66W6kgWzQ==}
+  '@types/react-test-renderer@18.3.1':
+    resolution: {integrity: sha512-vAhnk0tG2eGa37lkU9+s5SoroCsRI08xnsWFiAXOuPH2jqzMbcXvKExXViPi1P5fIklDeCvXqyrdmipFaSkZrA==}
 
   '@types/react@18.2.18':
     resolution: {integrity: sha512-da4NTSeBv/P34xoZPhtcLkmZuJ+oYaCxHmyHzwaDQo9RQPBeXV+06gEk2FpqEcsX9XrnNLvRpVh6bdavDSjtiQ==}
@@ -11872,7 +11872,7 @@ snapshots:
     dependencies:
       '@types/react': 18.2.18
 
-  '@types/react-test-renderer@19.1.0':
+  '@types/react-test-renderer@18.3.1':
     dependencies:
       '@types/react': 18.2.18
 
