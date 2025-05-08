@@ -9,8 +9,6 @@ import {
   type VirtualFile,
   typesDirectory,
   generateFuture,
-  generateRouteModuleAnnotations,
-  generatePages,
   generateRoutes,
   generateServerBuild,
 } from "./generate";
@@ -36,10 +34,8 @@ export async function run(rootDirectory: string, { mode }: { mode: string }) {
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(
     generateFuture(ctx),
-    generatePages(ctx),
-    generateRoutes(ctx),
     generateServerBuild(ctx),
-    ...generateRouteModuleAnnotations(ctx)
+    ...generateRoutes(ctx)
   );
 }
 
@@ -55,10 +51,8 @@ export async function watch(
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(
     generateFuture(ctx),
-    generatePages(ctx),
-    generateRoutes(ctx),
     generateServerBuild(ctx),
-    ...generateRouteModuleAnnotations(ctx)
+    ...generateRoutes(ctx)
   );
   logger?.info(green("generated types"), { timestamp: true, clear: true });
 
@@ -80,11 +74,7 @@ export async function watch(
 
       if (routeConfigChanged) {
         await clearRouteModuleAnnotations(ctx);
-        await write(
-          generatePages(ctx),
-          generateRoutes(ctx),
-          ...generateRouteModuleAnnotations(ctx)
-        );
+        await write(...generateRoutes(ctx));
         logger?.info(green("regenerated types"), {
           timestamp: true,
           clear: true,

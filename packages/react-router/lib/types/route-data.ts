@@ -4,6 +4,7 @@ import type {
 } from "../dom/ssr/routeModules";
 import type { DataWithResponseInit } from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
+import type { RouteModule } from "./route-module";
 import type { unstable_SerializesTo } from "./serializes-to";
 import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
 
@@ -67,7 +68,50 @@ export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
     : ServerDataFrom<T>
   : T;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
+
+// prettier-ignore
+type IsHydrate<ClientLoader> =
+  ClientLoader extends { hydrate: true } ? true :
+  ClientLoader extends { hydrate: false } ? false :
+  false
+
+export type GetLoaderData<T extends RouteModule> = _DataLoaderData<
+  ServerDataFrom<T["loader"]>,
+  ClientDataFrom<T["clientLoader"]>,
+  IsHydrate<T["clientLoader"]>,
+  T extends { HydrateFallback: Func } ? true : false
+>;
+
+// prettier-ignore
+type _DataLoaderData<
+  ServerLoaderData,
+  ClientLoaderData,
+  ClientLoaderHydrate extends boolean,
+  HasHydrateFallback
+> =
+  [HasHydrateFallback, ClientLoaderHydrate] extends [true, true] ?
+    IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
+    undefined
+  :
+  [IsDefined<ClientLoaderData>, IsDefined<ServerLoaderData>] extends [true, true] ? ServerLoaderData | ClientLoaderData :
+  IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
+  IsDefined<ServerLoaderData> extends true ? ServerLoaderData :
+  undefined
+
+export type GetActionData<T extends RouteModule> = _DataActionData<
+  ServerDataFrom<T["action"]>,
+  ClientDataFrom<T["clientAction"]>
+>;
+
+// prettier-ignore
+type _DataActionData<ServerActionData, ClientActionData> = Awaited<
+  [IsDefined<ServerActionData>, IsDefined<ClientActionData>] extends [true, true] ? ServerActionData | ClientActionData :
+  IsDefined<ClientActionData> extends true ? ClientActionData :
+  IsDefined<ServerActionData> extends true ? ServerActionData :
+  undefined
+>
+
 type __tests = [
   // ServerDataFrom
   Expect<Equal<ServerDataFrom<any>, undefined>>,
@@ -130,5 +174,98 @@ type __tests = [
       | { data: string; b: Date; c: () => boolean }
     >
   >,
-  Expect<Equal<ClientDataFrom<() => { a: string } | Response>, { a: string }>>
+  Expect<Equal<ClientDataFrom<() => { a: string } | Response>, { a: string }>>,
+
+  // GetLoaderData
+  Expect<Equal<GetLoaderData<{}>, undefined>>,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        clientLoader: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: () => { d: string; e: Date; f: () => boolean };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: () => { d: string; e: Date; f: () => boolean };
+        HydrateFallback: () => unknown;
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: (() => { d: string; e: Date; f: () => boolean }) & {
+          hydrate: true;
+        };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: (() => { d: string; e: Date; f: () => boolean }) & {
+          hydrate: true;
+        };
+        HydrateFallback: () => unknown;
+      }>,
+      { d: string; e: Date; f: () => boolean }
+    >
+  >,
+
+  // ActionData
+  Expect<Equal<GetActionData<{}>, undefined>>,
+  Expect<
+    Equal<
+      GetActionData<{
+        action: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+  Expect<
+    Equal<
+      GetActionData<{
+        clientAction: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetActionData<{
+        action: () => { a: string; b: Date; c: () => boolean };
+        clientAction: () => { d: string; e: Date; f: () => boolean };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >
 ];
