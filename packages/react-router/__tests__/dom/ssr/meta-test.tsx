@@ -5,7 +5,7 @@ import * as React from "react";
 import { Meta, Outlet, createRoutesStub } from "../../../index";
 
 const getDocumentHtmlForElement = (c: HTMLElement) =>
-  prettyDOM(c.ownerDocument.documentElement, undefined, { highlight: false });
+  prettyDOM(c.ownerDocument, undefined, { highlight: false });
 
 describe("meta", () => {
   it("no meta export renders meta from nearest route meta in the tree", () => {
