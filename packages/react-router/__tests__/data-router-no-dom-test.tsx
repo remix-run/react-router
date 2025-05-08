@@ -29,6 +29,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
       },
     ]);
     const component = renderer.create(<RouterProvider router={router} />);
+    await renderer.act(async () => {});
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -73,6 +74,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
       },
     ]);
     const component = renderer.create(<RouterProvider router={router} />);
+    await renderer.act(async () => {});
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -153,6 +155,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
       },
     ]);
     const component = renderer.create(<RouterProvider router={router} />);
+    await renderer.act(async () => {});
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -213,6 +216,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
       },
     ]);
     const component = renderer.create(<RouterProvider router={router} />);
+    await renderer.act(async () => {});
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -273,6 +277,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
       },
     ]);
     const component = renderer.create(<RouterProvider router={router} />);
+    await renderer.act(async () => {});
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
