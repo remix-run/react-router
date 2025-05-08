@@ -80,11 +80,11 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        let dataHref = container
+        let dataHref = container.ownerDocument
           .querySelector('link[rel="prefetch"][as="fetch"]')
           ?.getAttribute("href");
         expect(dataHref).toBe("/idk.data");
-        let moduleHref = container
+        let moduleHref = container.ownerDocument
           .querySelector('link[rel="modulepreload"]')
           ?.getAttribute("href");
         expect(moduleHref).toBe("idk.js");
@@ -132,7 +132,9 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        expect(container.querySelector("link[rel=prefetch]")).toBeTruthy();
+        expect(
+          container.ownerDocument.querySelector("link[rel=prefetch]")
+        ).toBeTruthy();
         expect(ranHandler).toBe(true);
         unmount();
       });
