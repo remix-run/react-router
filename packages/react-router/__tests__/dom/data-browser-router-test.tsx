@@ -5762,9 +5762,9 @@ function testDomRouter(
           expect(container.innerHTML).not.toMatch(/my-key/);
           fireEvent.click(screen.getByText("Load fetchers"));
           await waitFor(() =>
-            // React `useId()` results in something such as `:r2a:`, `:r2i:`,
-            // `:rt:`, or `:rp:` depending on `DataBrowserRouter`/`DataHashRouter`
-            expect(container.innerHTML).toMatch(/(:r[0-9]?[a-z]:),my-key/)
+            // React `useId()` results in something such as `«r2a»`, `«r2i»`,
+            // `«rt»`, or `«rp»` depending on `DataBrowserRouter`/`DataHashRouter`
+            expect(container.innerHTML).toMatch(/«r[0-9]?[a-z]»,my-key/)
           );
         });
 
