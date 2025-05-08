@@ -29,7 +29,7 @@
         "default": "./dist/development/index.js"
       },
       "import": {
-        "types": "./dist/development/index.d.mts",
+        "types": "./dist/development/index.d.ts",
         "default": "./dist/development/index.mjs"
       },
       "default": {
@@ -42,7 +42,7 @@
         "types": "./dist/development/lib/types/route-module.d.ts"
       },
       "import": {
-        "types": "./dist/development/lib/types/route-module.d.mts"
+        "types": "./dist/development/lib/types/route-module.d.ts"
       },
       "default": {
         "types": "./dist/development/lib/types/route-module.d.ts"
@@ -55,7 +55,7 @@
         "default": "./dist/development/dom-export.js"
       },
       "import": {
-        "types": "./dist/development/dom-export.d.mts",
+        "types": "./dist/development/dom-export.d.ts",
         "default": "./dist/development/dom-export.mjs"
       },
       "default": {
@@ -71,7 +71,7 @@
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup",
+      "command": "rimraf dist && vite build --mode development && vite build --mode production",
       "files": [
         "lib/**",
         "*.ts",
@@ -89,11 +89,13 @@
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",
+    "@vitejs/plugin-react": "^4.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "^6.0.1",
-    "tsup": "^8.3.0",
     "typescript": "^5.1.6",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.3",
     "wireit": "0.14.9"
   },
   "peerDependencies": {
