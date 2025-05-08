@@ -29,16 +29,9 @@ describe("creating routes from JSX", () => {
               "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
-              "element": {
-                "$$typeof": Symbol(react.transitional.element),
-                "_owner": null,
-                "_store": {},
-                "key": null,
-                "props": {
-                  "children": "home",
-                },
-                "type": "h1",
-              },
+              "element": <h1>
+                home
+              </h1>,
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
@@ -56,16 +49,9 @@ describe("creating routes from JSX", () => {
               "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
-              "element": {
-                "$$typeof": Symbol(react.transitional.element),
-                "_owner": null,
-                "_store": {},
-                "key": null,
-                "props": {
-                  "children": "about",
-                },
-                "type": "h1",
-              },
+              "element": <h1>
+                about
+              </h1>,
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
@@ -90,16 +76,9 @@ describe("creating routes from JSX", () => {
                   "HydrateFallback": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
-                  "element": {
-                    "$$typeof": Symbol(react.transitional.element),
-                    "_owner": null,
-                    "_store": {},
-                    "key": null,
-                    "props": {
-                      "children": "users index",
-                    },
-                    "type": "h1",
-                  },
+                  "element": <h1>
+                    users index
+                  </h1>,
                   "errorElement": undefined,
                   "handle": undefined,
                   "hasErrorBoundary": false,
@@ -117,16 +96,9 @@ describe("creating routes from JSX", () => {
                   "HydrateFallback": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
-                  "element": {
-                    "$$typeof": Symbol(react.transitional.element),
-                    "_owner": null,
-                    "_store": {},
-                    "key": null,
-                    "props": {
-                      "children": "user profile",
-                    },
-                    "type": "h1",
-                  },
+                  "element": <h1>
+                    user profile
+                  </h1>,
                   "errorElement": undefined,
                   "handle": undefined,
                   "hasErrorBoundary": false,
@@ -203,16 +175,9 @@ describe("creating routes from JSX", () => {
               "HydrateFallback": undefined,
               "action": undefined,
               "caseSensitive": undefined,
-              "element": {
-                "$$typeof": Symbol(react.transitional.element),
-                "_owner": null,
-                "_store": {},
-                "key": null,
-                "props": {
-                  "children": "home",
-                },
-                "type": "h1",
-              },
+              "element": <h1>
+                home
+              </h1>,
               "errorElement": undefined,
               "handle": undefined,
               "hasErrorBoundary": false,
@@ -237,16 +202,9 @@ describe("creating routes from JSX", () => {
                   "HydrateFallback": undefined,
                   "action": [Function],
                   "caseSensitive": undefined,
-                  "element": {
-                    "$$typeof": Symbol(react.transitional.element),
-                    "_owner": null,
-                    "_store": {},
-                    "key": null,
-                    "props": {
-                      "children": "users index",
-                    },
-                    "type": "h1",
-                  },
+                  "element": <h1>
+                    users index
+                  </h1>,
                   "errorElement": undefined,
                   "handle": undefined,
                   "hasErrorBoundary": false,
@@ -273,16 +231,9 @@ describe("creating routes from JSX", () => {
             },
           ],
           "element": undefined,
-          "errorElement": {
-            "$$typeof": Symbol(react.transitional.element),
-            "_owner": null,
-            "_store": {},
-            "key": null,
-            "props": {
-              "children": "💥",
-            },
-            "type": "h1",
-          },
+          "errorElement": <h1>
+            💥
+          </h1>,
           "handle": undefined,
           "hasErrorBoundary": true,
           "hydrateFallbackElement": undefined,
