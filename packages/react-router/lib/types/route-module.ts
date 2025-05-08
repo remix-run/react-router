@@ -141,12 +141,9 @@ type ClientDataFunctionArgs<T extends RouteInfo> = {
    **/
   params: T["params"];
   /**
-   * When `future.unstable_middleware` is not enabled, this is undefined.
-   *
-   * When `future.unstable_middleware` is enabled, this is an instance of
-   * `unstable_RouterContextProvider` and can be used to access context values
-   * from your route middlewares.  You may pass in initial context values in your
-   * `<HydratedRouter unstable_getContext>` prop
+   * This is a `RouterContextProvider` instance generated from your router's
+   * `unstable_getContext` function and/or populated from route middleware
+   * functions.
    */
   context: unstable_RouterContextProvider;
 };
