@@ -1,29 +1,16 @@
-import type { Register } from "./types/register";
+import type { Pages } from "./types/register";
 import type { Equal } from "./types/utils";
-
-type AnyParams = Record<string, string | undefined>;
-type AnyPages = Record<
-  string,
-  {
-    params: AnyParams;
-  }
->;
-type Pages = Register extends {
-  pages: infer RegisteredPages extends AnyPages;
-}
-  ? RegisteredPages
-  : AnyPages;
 
 type Args = { [K in keyof Pages]: ToArgs<Pages[K]["params"]> };
 
 // prettier-ignore
-type ToArgs<T extends AnyParams> =
+type ToArgs<Params extends Record<string, string | undefined>> =
   // path without params -> no `params` arg
-  Equal<T, {}> extends true ? [] :
+  Equal<Params, {}> extends true ? [] :
   // path with only optional params -> optional `params` arg
-  Partial<T> extends T ? [T] | [] :
+  Partial<Params> extends Params ? [Params] | [] :
   // otherwise, require `params` arg
-  [T];
+  [Params];
 
 /**
   Returns a resolved URL path for the specified route.
