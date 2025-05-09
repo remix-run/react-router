@@ -166,7 +166,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -222,7 +222,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -241,7 +241,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -321,7 +321,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -340,7 +340,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
+              "#nav link[rel='modulepreload'][href^='/assets/index-']",
               "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
