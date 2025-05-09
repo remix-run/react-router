@@ -51,6 +51,20 @@ createRoot(document.getElementById("root")).render(
 );
 ```
 
+This prop is provided automatically if the `RouterProvider` is imported from the `react-router/dom` package.
+
+```tsx
+import {
+  createBrowserRouter,
+} from "react-router";
+import { RouterProvider } from "react-router/dom";
+import { createRoot } from "react-dom/client";
+let router = createBrowserRouter();
+createRoot(document.getElementById("root")).render(
+  <RouterProvider router={router} />
+);
+```
+
 ### router
 
 [modes: data]
