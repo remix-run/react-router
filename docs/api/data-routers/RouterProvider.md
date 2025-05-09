@@ -31,7 +31,25 @@ createRoot(document.getElementById("root")).render(
 
 [modes: data]
 
-_No documentation_
+Provides `flushSync` implementation required for using the `flushSync` option in navigation functions provided by [`useNavigate`](/api/hooks/useNavigate#signature) and [`useSearchParams`](/api/hooks/useSearchParams#setsearchparams-function).
+
+```tsx
+import {
+  RouterProvider,
+  createBrowserRouter,
+} from "react-router";
+import { flushSync } from 'react-dom'
+import { createRoot } from "react-dom/client";
+let router = createBrowserRouter();
+createRoot(document.getElementById("root")).render(
+  <RouterProvider
+    router={router}
+    flushSync={(fn) => {
+      flushSync(fn);
+    }}
+  />
+);
+```
 
 ### router
 
