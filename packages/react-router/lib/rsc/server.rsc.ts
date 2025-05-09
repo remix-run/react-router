@@ -284,7 +284,7 @@ export async function matchRSCServerRequest({
     // Create the handler here with exploded routes
     const handler = createStaticHandler(routes);
     const respond = (staticContext: StaticHandlerContext) =>
-      staticContextToResponse(
+      generateStaticContextResponse(
         routes,
         generateResponse,
         statusCode,
@@ -301,25 +301,18 @@ export async function matchRSCServerRequest({
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
-      unstable_respond: respond,
+      unstable_respond(result) {
+        if (isResponse(result)) {
+          return generateRedirectResponse(statusCode, result, generateResponse);
+        }
+        return respond(result);
+      },
     });
 
     if (isRedirectResponse(result)) {
-      return generateResponse({
-        statusCode,
-        headers: new Headers({
-          "Content-Type": "text/x-component",
-          Vary: "Content-Type",
-        }),
-        payload: {
-          type: "redirect",
-          location: result.headers.get("Location") || "",
-          reload: result.headers.get("x-remix-reload-document") === "true",
-          replace: result.headers.get("x-remix-replace") === "true",
-          status: result.status,
-        },
-      });
+      return generateRedirectResponse(statusCode, result, generateResponse);
     }
+
     // while middleware is still unstable, we don't run the middleware pipeline
     // if no routes have middleware, so we still might need to convert context
     // to a response here
@@ -340,7 +333,28 @@ export async function matchRSCServerRequest({
   }
 }
 
-async function staticContextToResponse(
+function generateRedirectResponse(
+  statusCode: number,
+  response: Response,
+  generateResponse: (match: ServerMatch) => Response
+) {
+  return generateResponse({
+    statusCode,
+    headers: new Headers({
+      "Content-Type": "text/x-component",
+      Vary: "Content-Type",
+    }),
+    payload: {
+      type: "redirect",
+      location: response.headers.get("Location") || "",
+      reload: response.headers.get("X-Remix-Reload-Document") === "true",
+      replace: response.headers.get("X-Remix-Replace") === "true",
+      status: response.status,
+    },
+  });
+}
+
+async function generateStaticContextResponse(
   routes: ServerRouteObject[],
   generateResponse: (match: ServerMatch) => Response,
   statusCode: number,
@@ -350,23 +364,6 @@ async function staticContextToResponse(
   actionResult: Promise<unknown> | undefined,
   staticContext: StaticHandlerContext
 ): Promise<Response> {
-  if (staticContext instanceof Response) {
-    return generateResponse({
-      statusCode,
-      headers: new Headers({
-        "Content-Type": "text/x-component",
-        Vary: "Content-Type",
-      }),
-      payload: {
-        type: "redirect",
-        location: staticContext.headers.get("Location") || "",
-        reload: staticContext.headers.get("x-remix-reload-document") === "true",
-        replace: staticContext.headers.get("x-remix-replace") === "true",
-        status: staticContext.status,
-      },
-    });
-  }
-
   statusCode = staticContext.statusCode ?? statusCode;
 
   const errors = staticContext.errors
