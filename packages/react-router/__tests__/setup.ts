@@ -40,11 +40,10 @@ if (!globalThis.TransformStream) {
 }
 
 const consoleError = console.error;
-const ignoredErrors = ["react-test-renderer is deprecated"];
 console.error = (msg, ...args) => {
   if (
     typeof msg === "string" &&
-    ignoredErrors.some((warning) => msg.includes(warning))
+    msg.includes("react-test-renderer is deprecated")
   ) {
     return;
   }
