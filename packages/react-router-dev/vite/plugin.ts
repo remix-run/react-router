@@ -27,6 +27,7 @@ import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
 import kebabCase from "lodash/kebabCase";
+import { convertPathToPattern } from "tinyglobby";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";
@@ -1224,7 +1225,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
                     resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
                   ),
-                ]
+                ].map(convertPathToPattern)
               : [],
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
@@ -1361,7 +1362,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                             ctx.reactRouterConfig
                           )
                       ),
-                    ],
+                    ].map(convertPathToPattern),
                     include: [
                       "react",
                       "react/jsx-dev-runtime",
