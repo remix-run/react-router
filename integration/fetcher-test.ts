@@ -526,7 +526,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
   });
 });
 
-test.describe("fetcher aborts and adjacent forms", () => {
+test.describe("fetcher lazy route discovery", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
