@@ -610,4 +610,86 @@ test.describe("typegen", () => {
       expect(proc.status).toBe(0);
     });
   });
+
+  test("reuse route file at multiple paths", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+        export default [
+          route("base/:base", "routes/base.tsx", [
+            route("home/:home", "routes/route.tsx", { id: "home" }),
+            route("changelog/:changelog", "routes/route.tsx", { id: "changelog" }),
+            route("splat/*", "routes/route.tsx", { id: "splat" }),
+          ]),
+          route("other/:other", "routes/route.tsx", { id: "other" })
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/base.tsx": tsx`
+        import { Outlet } from "react-router"
+        import type { Route } from "./+types/base"
+
+        export function loader() {
+          return { base: "hello" }
+        }
+
+        export default function Component() {
+          return (
+            <>
+              <h1>Layout</h1>
+              <Outlet/>
+            </>
+          )
+        }
+      `,
+      "app/routes/route.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/route"
+
+        export function loader() {
+          return { route: "world" }
+        }
+
+        export default function Component({ params, matches }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof params,
+            | {
+                  base: string;
+                  home: string;
+                  changelog?: undefined;
+                  "*"?: undefined;
+                  other?: undefined;
+                }
+              | {
+                  base: string;
+                  home?: undefined;
+                  changelog: string;
+                  "*"?: undefined;
+                  other?: undefined;
+                }
+              | {
+                  base: string;
+                  home?: undefined;
+                  changelog?: undefined;
+                  "*": string;
+                  other?: undefined;
+                }
+              | {
+                  base?: undefined;
+                  home?: undefined;
+                  changelog?: undefined;
+                  "*"?: undefined;
+                  other: string;
+                }
+          >>
+          return <h1>Hello, world!</h1>
+        }
+      `,
+    });
+
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
 });
