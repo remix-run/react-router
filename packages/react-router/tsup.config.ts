@@ -46,6 +46,6 @@ export default defineConfig([
   ...config("index.ts", true),
   ...config("dom-export.ts", false),
   ...config("dom-export.ts", true),
-  ...config("lib/types/internal.ts", false),
-  ...config("lib/types/internal.ts", true),
+  ...config("internal.ts", false),
+  ...config("internal.ts", true),
 ]);
