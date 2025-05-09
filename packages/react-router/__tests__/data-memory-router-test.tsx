@@ -3049,7 +3049,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(1);
+      expect(getAwaitRenderCount()).toBe(2);
 
       // Abort the deferred by navigating to /baz
       fireEvent.click(screen.getByText("Link to Baz"));
@@ -3069,7 +3069,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(3);
+      expect(getAwaitRenderCount()).toBe(4);
 
       // complete /baz navigation
       bazDefer.resolve(null);
@@ -3101,7 +3101,7 @@ describe("createMemoryRouter", () => {
           </h1>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(3);
+      expect(getAwaitRenderCount()).toBe(4);
     });
 
     it("should permit direct access to resolved values", async () => {

@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import { act } from "@testing-library/react";
 import type { LinkProps } from "../../index";
 import {
   MemoryRouter,
@@ -8,7 +9,6 @@ import {
   useHref,
   useLinkClickHandler,
 } from "../../index";
-import { act } from "../utils/act";
 
 function CustomLink({ to, replace, state, target, ...rest }: LinkProps) {
   let href = useHref(to);

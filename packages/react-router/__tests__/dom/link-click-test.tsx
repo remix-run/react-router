@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import { act } from "@testing-library/react";
 import { MemoryRouter, Routes, Route, Link } from "../../index";
-import { act } from "../utils/act";
 
 function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {
   let event = new MouseEvent("click", {

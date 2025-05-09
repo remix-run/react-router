@@ -13,7 +13,7 @@ import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
 import { mockEntryContext, mockFrameworkContext } from "../../utils/framework";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
