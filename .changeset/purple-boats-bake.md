@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Avoid fetcher 404 error when fog of war is interrupted by a navigation
+Avoid initial fetcher execution 404 error when Lazy Route Discovery is interrupted by a navigation
