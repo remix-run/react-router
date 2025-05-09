@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
 import {
   BrowserRouter,
   Routes,
@@ -8,6 +7,7 @@ import {
   useNavigate,
   useParams,
 } from "../../index";
+import { act } from "../utils/act";
 
 describe("navigate with params", () => {
   let node: HTMLDivElement;

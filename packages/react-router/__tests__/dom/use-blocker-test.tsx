@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
 import type { Blocker, RouteObject } from "../../index";
 import {
   createMemoryRouter,
@@ -11,6 +10,7 @@ import {
   useBlocker,
   useNavigate,
 } from "../../index";
+import { act } from "../utils/act";
 
 type Router = ReturnType<typeof createMemoryRouter>;
 
