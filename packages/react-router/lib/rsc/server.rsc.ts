@@ -198,58 +198,16 @@ export async function matchRSCServerRequest({
   }
 
   let actionResult: Promise<unknown> | undefined;
-  const actionId = request.headers.get("rsc-action-id");
-  if (actionId) {
-    if (!decodeCallServer) {
-      throw new Error(
-        "Cannot handle enhanced server action without a decodeCallServer function"
-      );
-    }
-
-    const reply = canDecodeWithFormData(request.headers.get("Content-Type"))
-      ? await request.formData()
-      : await request.text();
-    const serverAction = await decodeCallServer(actionId, reply);
-
-    actionResult = Promise.resolve(serverAction());
-    try {
-      // Wait for actions to finish regardless of state
-      await actionResult;
-    } catch (error) {
-      // The error is propagated to the client through the result promise in the stream
-      onError?.(error);
-    }
-
-    request = new Request(request.url, {
-      method: "GET",
-      headers: request.headers,
-      signal: request.signal,
-    });
-  }
-
-  if (request.method === "POST") {
-    const formData = await request.formData();
-    if (
-      Array.from(formData.keys()).some((key) => key.startsWith("$ACTION_ID_"))
-    ) {
-      if (!decodeFormAction) {
-        throw new Error(
-          "Cannot handle form actions without a decodeFormAction function"
-        );
-      }
-
-      const action = await decodeFormAction(formData);
-      try {
-        await action();
-      } catch (error) {
-        onError?.(error);
-      }
-
-      request = new Request(request.url, {
-        method: "GET",
-        headers: request.headers,
-        signal: request.signal,
-      });
+  if (request.headers.get("rsc-action-id") || request.method === "POST") {
+    let result = await processServerAction(
+      request,
+      decodeCallServer,
+      decodeFormAction,
+      onError
+    );
+    if (result) {
+      actionResult = result.actionResult ?? undefined;
+      request = result.revalidationRequest ?? request;
     }
   }
 
@@ -263,6 +221,65 @@ export async function matchRSCServerRequest({
     return res;
   } catch (error) {
     throw error;
+  }
+}
+
+async function processServerAction(
+  request: Request,
+  decodeCallServer: DecodeCallServerFunction | undefined,
+  decodeFormAction: DecodeFormActionFunction | undefined,
+  onError: ((error: unknown) => void) | undefined
+): Promise<
+  { revalidationRequest: Request; actionResult?: Promise<unknown> } | undefined
+> {
+  const revalidationRequest = () =>
+    new Request(request.url, {
+      method: "GET",
+      headers: request.headers,
+      signal: request.signal,
+    });
+  const actionId = request.headers.get("rsc-action-id");
+  if (actionId) {
+    if (!decodeCallServer) {
+      throw new Error(
+        "Cannot handle enhanced server action without a decodeCallServer function"
+      );
+    }
+
+    const reply = canDecodeWithFormData(request.headers.get("Content-Type"))
+      ? await request.formData()
+      : await request.text();
+    const serverAction = await decodeCallServer(actionId, reply);
+
+    let actionResult = Promise.resolve(serverAction());
+    try {
+      // Wait for actions to finish regardless of state
+      await actionResult;
+    } catch (error) {
+      // The error is propagated to the client through the result promise in the stream
+      onError?.(error);
+    }
+    return { revalidationRequest: revalidationRequest(), actionResult };
+  }
+
+  if (request.method === "POST") {
+    const formData = await request.formData();
+    if (
+      Array.from(formData.keys()).some((key) => key.startsWith("$ACTION_ID_"))
+    ) {
+      if (!decodeFormAction) {
+        throw new Error(
+          "Cannot handle form actions without a decodeFormAction function"
+        );
+      }
+      const action = await decodeFormAction(formData);
+      try {
+        await action();
+      } catch (error) {
+        onError?.(error);
+      }
+      return { revalidationRequest: revalidationRequest() };
+    }
   }
 }
 
