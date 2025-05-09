@@ -1,20 +1,17 @@
-import { defineConfig } from "tsup";
+import { type Options, defineConfig } from "tsup";
 
 // @ts-ignore - out of scope
 import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["index.ts", "dom-export.ts", "lib/types/internal.ts"];
-
-const config = (enableDevWarnings: boolean) => [
+const config = (entry: string, enableDevWarnings: boolean): Options[] => [
   {
     clean: false,
-    entry,
+    entry: [entry],
     format: ["cjs"],
     // Don't bundle `react-router` in sub-exports (i.e., `react-router/dom`)
     external: ["react-router"],
-    splitting: false,
     outDir: enableDevWarnings ? "dist/development" : "dist/production",
     dts: true,
     banner: {
@@ -28,14 +25,10 @@ const config = (enableDevWarnings: boolean) => [
   },
   {
     clean: false,
-    entry,
+    entry: [entry],
     format: ["esm"],
-    // We don't do the external thing for `react-router` here because it
-    // doesn't get bundled by default in the ESM build, and when we tried it
-    // in https://github.com/remix-run/react-router/pull/13497 it changed up
-    // some chunk creation that we didn't want to risk having any side effects
+    // Don't bundle `react-router` in sub-exports (i.e., `react-router/dom`)
     external: ["react-router"],
-    splitting: false,
     outDir: enableDevWarnings ? "dist/development" : "dist/production",
     dts: true,
     banner: {
@@ -49,7 +42,10 @@ const config = (enableDevWarnings: boolean) => [
 ];
 
 export default defineConfig([
-  // @ts-expect-error
-  ...config(false),
-  ...config(true),
+  ...config("index.ts", false),
+  ...config("index.ts", true),
+  ...config("dom-export.ts", false),
+  ...config("dom-export.ts", true),
+  ...config("lib/types/internal.ts", false),
+  ...config("lib/types/internal.ts", true),
 ]);
