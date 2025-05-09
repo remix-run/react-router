@@ -1,6 +1,6 @@
 {
   "name": "@react-router/remix-routes-option-adapter",
-  "version": "7.6.0",
+  "version": "0.0.0-nightly-e4a178932-20250509",
   "description": "Adapter for Remix's \"routes\" config option, for use within routes.ts",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
