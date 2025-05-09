@@ -5,7 +5,6 @@ import {
   render,
   screen,
   waitFor,
-  act,
 } from "@testing-library/react";
 import * as React from "react";
 import {
@@ -3146,9 +3145,7 @@ describe("createMemoryRouter", () => {
 
       fireEvent.click(screen.getByText("Link to bar"));
       let barValueDefer = createDeferred();
-      await act(async () => {
-        await barDefer.resolve({ bar: barValueDefer.promise });
-      });
+      await barDefer.resolve({ bar: barValueDefer.promise });
       await waitFor(() => screen.getByText("Waiting for data..."));
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
