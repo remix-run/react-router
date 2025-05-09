@@ -171,30 +171,12 @@ export async function matchRSCServerRequest({
   const url = new URL(request.url);
 
   if (isManifestRequest(url)) {
-    const matches = matchRoutes(
+    let response = await generateManifestResponse(
       routes,
-      url.pathname.replace(/\.manifest$/, "")
+      request,
+      generateResponse
     );
-
-    return generateResponse({
-      statusCode: 200,
-      headers: new Headers({
-        "Content-Type": "text/x-component",
-        Vary: "Content-Type",
-      }),
-      payload: {
-        type: "manifest",
-        matches: await Promise.all(
-          matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ??
-            []
-        ),
-        patches: await getAdditionalRoutePatches(
-          url.pathname,
-          routes,
-          matches?.map((m) => m.route.id) ?? []
-        ),
-      },
-    });
+    return response;
   }
 
   let actionResult: Promise<unknown> | undefined;
@@ -212,16 +194,45 @@ export async function matchRSCServerRequest({
   }
 
   try {
-    let res = await getRenderPayload(
+    let response = await getRenderPayload(
       request,
       routes,
       generateResponse,
       actionResult
     );
-    return res;
+    return response;
   } catch (error) {
     throw error;
   }
+}
+
+async function generateManifestResponse(
+  routes: ServerRouteObject[],
+  request: Request,
+  generateResponse: (match: ServerMatch) => Response
+) {
+  let url = new URL(request.url);
+  const matches = matchRoutes(routes, url.pathname.replace(/\.manifest$/, ""));
+
+  return generateResponse({
+    statusCode: 200,
+    headers: new Headers({
+      "Content-Type": "text/x-component",
+      Vary: "Content-Type",
+    }),
+    payload: {
+      type: "manifest",
+      matches: await Promise.all(
+        matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ??
+          []
+      ),
+      patches: await getAdditionalRoutePatches(
+        url.pathname,
+        routes,
+        matches?.map((m) => m.route.id) ?? []
+      ),
+    },
+  });
 }
 
 async function processServerAction(
