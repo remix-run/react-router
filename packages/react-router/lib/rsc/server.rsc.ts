@@ -9,11 +9,11 @@ import type {
 } from "../dom/ssr/routeModules";
 import { type Location } from "../router/history";
 import {
-  type StaticHandler,
   createStaticHandler,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
+  type StaticHandlerContext,
 } from "../router/router";
 import {
   type ActionFunction,
@@ -272,234 +272,6 @@ export async function matchRSCServerRequest({
         ? searchParams.get("_routes")!.split(",")
         : null;
 
-    const respond: (
-      ctx: Awaited<ReturnType<StaticHandler["query"]>>
-    ) => Promise<Response> = async (staticContext) => {
-      if (staticContext instanceof Response) {
-        return generateResponse({
-          statusCode,
-          headers: new Headers({
-            "Content-Type": "text/x-component",
-            Vary: "Content-Type",
-          }),
-          payload: {
-            type: "redirect",
-            location: staticContext.headers.get("Location") || "",
-            reload:
-              staticContext.headers.get("x-remix-reload-document") === "true",
-            replace: staticContext.headers.get("x-remix-replace") === "true",
-            status: staticContext.status,
-          },
-        });
-      }
-
-      statusCode = staticContext.statusCode ?? statusCode;
-
-      const errors = staticContext.errors
-        ? Object.fromEntries(
-            Object.entries(staticContext.errors).map(([key, error]) => [
-              key,
-              isRouteErrorResponse(error)
-                ? Object.fromEntries(Object.entries(error))
-                : error,
-            ])
-          )
-        : staticContext.errors;
-
-      // In the RSC world we set `hasLoader:true` eve if a route doesn't have a
-      // loader so that we always make the single fetch call to get the rendered
-      // `element`.  We add a `null`value for any of the routes that don't
-      // actually have a loader so the single fetch logic can find a result for
-      // the route.  This is a bit of a hack but allows us to re-use all the
-      // existing logic.  This can go away if we ever fork off and re-implement a
-      // standalone RSC `dataStrategy`
-      staticContext.matches.forEach((m) => {
-        if (staticContext.loaderData[m.route.id] === undefined) {
-          staticContext.loaderData[m.route.id] = null;
-        }
-      });
-
-      let headers = getDocumentHeaders(
-        staticContext,
-        (match) =>
-          (match as RouteMatch<string, ServerRouteObject>).route.headers
-      );
-
-      const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
-        type: "render",
-        actionData: staticContext.actionData,
-        errors,
-        loaderData: staticContext.loaderData,
-        location: staticContext.location,
-      };
-
-      // Short circuit without matches on submissions
-      if (isSubmission) {
-        return generateResponse({
-          statusCode,
-          headers,
-          payload: {
-            ...payload,
-            matches: [],
-            patches: [],
-          },
-        });
-      }
-
-      let lastMatch: AgnosticDataRouteMatch | null = null;
-      let matchesPromise = Promise.all(
-        staticContext.matches.map(async (match) => {
-          if ("lazy" in match.route && match.route.lazy) {
-            Object.assign(match.route, {
-              // @ts-expect-error - FIXME: Fix the types here
-              ...((await match.route.lazy()) as any),
-              path: match.route.path,
-              index: (match.route as any).index,
-              id: match.route.id,
-            });
-            match.route.lazy = undefined;
-          }
-
-          const Layout = (match.route as any).Layout || React.Fragment;
-          const Component = (match.route as any).default;
-          const ErrorBoundary = (match.route as any).ErrorBoundary;
-          const HydrateFallback = (match.route as any).HydrateFallback;
-          const loaderData = staticContext.loaderData[match.route.id];
-          const actionData = staticContext.actionData?.[match.route.id];
-          const params = match.params;
-          // TODO: DRY this up once it's fully fleshed out
-          const element = Component
-            ? staticContext.errors?.[match.route.id]
-              ? (false as const)
-              : React.createElement(
-                  Layout,
-                  null,
-                  Component.$$typeof === Symbol.for("react.client.reference")
-                    ? React.createElement(
-                        WithRouteComponentProps,
-                        null,
-                        React.createElement(Component)
-                      )
-                    : React.createElement(Component, {
-                        loaderData,
-                        actionData,
-                        params,
-                        matches: staticContext.matches.map((match) =>
-                          convertRouteMatchToUiMatch(
-                            match,
-                            staticContext.loaderData
-                          )
-                        ),
-                      } satisfies RouteComponentProps)
-                )
-            : undefined;
-          const errorElement = ErrorBoundary
-            ? React.createElement(
-                Layout,
-                null,
-                Component.$$typeof === Symbol.for("react.client.reference")
-                  ? React.createElement(
-                      WithErrorBoundaryProps,
-                      null,
-                      React.createElement(ErrorBoundary)
-                    )
-                  : React.createElement(ErrorBoundary, {
-                      loaderData,
-                      actionData,
-                      params,
-                      error: [...staticContext.matches]
-                        .reverse()
-                        .find(
-                          (match) => staticContext.errors?.[match.route.id]
-                        ),
-                    } satisfies ErrorBoundaryProps)
-              )
-            : undefined;
-          const hydrateFallbackElement = HydrateFallback
-            ? React.createElement(
-                Layout,
-                null,
-                Component.$$typeof === Symbol.for("react.client.reference")
-                  ? React.createElement(
-                      WithHydrateFallbackProps,
-                      null,
-                      React.createElement(HydrateFallback)
-                    )
-                  : React.createElement(HydrateFallback, {
-                      loaderData,
-                      actionData,
-                      params,
-                    } satisfies HydrateFallbackProps)
-              )
-            : match.route.id === "root"
-            ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-              // currently uses a hook internally so it fails during RSC.  Restructure
-              // so it can be used safely in an RSC render pass.
-              React.createElement("p", null, "Loading!")
-            : undefined;
-
-          let result = {
-            clientAction: (match.route as any).clientAction,
-            clientLoader: (match.route as any).clientLoader,
-            element,
-            errorElement,
-            handle: (match.route as any).handle,
-            hasAction: !!match.route.action,
-            hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-            hasLoader: !!match.route.loader,
-            hydrateFallbackElement,
-            id: match.route.id,
-            index: match.route.index,
-            links: (match.route as any).links,
-            meta: (match.route as any).meta,
-            params,
-            parentId: lastMatch?.route.id,
-            path: match.route.path,
-            pathname: match.pathname,
-            pathnameBase: match.pathnameBase,
-            shouldRevalidate: (match.route as any).shouldRevalidate,
-          };
-          lastMatch = match;
-          return result;
-        })
-      );
-
-      const getPayload = async () => {
-        const matches = await matchesPromise;
-        return {
-          ...payload,
-          matches: routeIdsToLoad
-            ? matches.filter((m) => routeIdsToLoad.includes(m.id))
-            : matches,
-          patches: !isDataRequest
-            ? await getAdditionalRoutePatches(
-                staticContext.location.pathname,
-                routes,
-                matches.map((m) => m.id)
-              )
-            : undefined,
-        };
-      };
-
-      if (actionResult) {
-        return generateResponse({
-          statusCode,
-          headers,
-          payload: {
-            type: "action",
-            actionResult,
-            rerender: getPayload(),
-          },
-        });
-      } else {
-        return generateResponse({
-          statusCode,
-          headers,
-          payload: await getPayload(),
-        });
-      }
-    };
-
     // Explode lazy functions out the routes so we can use middleware
     // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
     // and if we move to `lazy: {}` then we lose all the other things from the
@@ -511,6 +283,17 @@ export async function matchRSCServerRequest({
 
     // Create the handler here with exploded routes
     const handler = createStaticHandler(routes);
+    const respond = (staticContext: StaticHandlerContext) =>
+      staticContextToResponse(
+        routes,
+        generateResponse,
+        statusCode,
+        routeIdsToLoad,
+        isDataRequest,
+        isSubmission,
+        actionResult,
+        staticContext
+      );
 
     const result = await handler.query(request, {
       skipLoaderErrorBubbling: true,
@@ -520,6 +303,7 @@ export async function matchRSCServerRequest({
         : null),
       unstable_respond: respond,
     });
+
     if (isRedirectResponse(result)) {
       return generateResponse({
         statusCode,
@@ -553,6 +337,237 @@ export async function matchRSCServerRequest({
     }
   } catch (error) {
     throw error;
+  }
+}
+
+async function staticContextToResponse(
+  routes: ServerRouteObject[],
+  generateResponse: (match: ServerMatch) => Response,
+  statusCode: number,
+  routeIdsToLoad: string[] | null,
+  isDataRequest: boolean,
+  isSubmission: boolean,
+  actionResult: Promise<unknown> | undefined,
+  staticContext: StaticHandlerContext
+): Promise<Response> {
+  if (staticContext instanceof Response) {
+    return generateResponse({
+      statusCode,
+      headers: new Headers({
+        "Content-Type": "text/x-component",
+        Vary: "Content-Type",
+      }),
+      payload: {
+        type: "redirect",
+        location: staticContext.headers.get("Location") || "",
+        reload: staticContext.headers.get("x-remix-reload-document") === "true",
+        replace: staticContext.headers.get("x-remix-replace") === "true",
+        status: staticContext.status,
+      },
+    });
+  }
+
+  statusCode = staticContext.statusCode ?? statusCode;
+
+  const errors = staticContext.errors
+    ? Object.fromEntries(
+        Object.entries(staticContext.errors).map(([key, error]) => [
+          key,
+          isRouteErrorResponse(error)
+            ? Object.fromEntries(Object.entries(error))
+            : error,
+        ])
+      )
+    : staticContext.errors;
+
+  // In the RSC world we set `hasLoader:true` eve if a route doesn't have a
+  // loader so that we always make the single fetch call to get the rendered
+  // `element`.  We add a `null`value for any of the routes that don't
+  // actually have a loader so the single fetch logic can find a result for
+  // the route.  This is a bit of a hack but allows us to re-use all the
+  // existing logic.  This can go away if we ever fork off and re-implement a
+  // standalone RSC `dataStrategy`
+  staticContext.matches.forEach((m) => {
+    if (staticContext.loaderData[m.route.id] === undefined) {
+      staticContext.loaderData[m.route.id] = null;
+    }
+  });
+
+  let headers = getDocumentHeaders(
+    staticContext,
+    (match) => (match as RouteMatch<string, ServerRouteObject>).route.headers
+  );
+
+  const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
+    type: "render",
+    actionData: staticContext.actionData,
+    errors,
+    loaderData: staticContext.loaderData,
+    location: staticContext.location,
+  };
+
+  // Short circuit without matches on submissions
+  if (isSubmission) {
+    return generateResponse({
+      statusCode,
+      headers,
+      payload: {
+        ...payload,
+        matches: [],
+        patches: [],
+      },
+    });
+  }
+
+  let lastMatch: AgnosticDataRouteMatch | null = null;
+  let matchesPromise = Promise.all(
+    staticContext.matches.map(async (match) => {
+      if ("lazy" in match.route && match.route.lazy) {
+        Object.assign(match.route, {
+          // @ts-expect-error - FIXME: Fix the types here
+          ...((await match.route.lazy()) as any),
+          path: match.route.path,
+          index: (match.route as any).index,
+          id: match.route.id,
+        });
+        match.route.lazy = undefined;
+      }
+
+      const Layout = (match.route as any).Layout || React.Fragment;
+      const Component = (match.route as any).default;
+      const ErrorBoundary = (match.route as any).ErrorBoundary;
+      const HydrateFallback = (match.route as any).HydrateFallback;
+      const loaderData = staticContext.loaderData[match.route.id];
+      const actionData = staticContext.actionData?.[match.route.id];
+      const params = match.params;
+      // TODO: DRY this up once it's fully fleshed out
+      const element = Component
+        ? staticContext.errors?.[match.route.id]
+          ? (false as const)
+          : React.createElement(
+              Layout,
+              null,
+              Component.$$typeof === Symbol.for("react.client.reference")
+                ? React.createElement(
+                    WithRouteComponentProps,
+                    null,
+                    React.createElement(Component)
+                  )
+                : React.createElement(Component, {
+                    loaderData,
+                    actionData,
+                    params,
+                    matches: staticContext.matches.map((match) =>
+                      convertRouteMatchToUiMatch(
+                        match,
+                        staticContext.loaderData
+                      )
+                    ),
+                  } satisfies RouteComponentProps)
+            )
+        : undefined;
+      const errorElement = ErrorBoundary
+        ? React.createElement(
+            Layout,
+            null,
+            Component.$$typeof === Symbol.for("react.client.reference")
+              ? React.createElement(
+                  WithErrorBoundaryProps,
+                  null,
+                  React.createElement(ErrorBoundary)
+                )
+              : React.createElement(ErrorBoundary, {
+                  loaderData,
+                  actionData,
+                  params,
+                  error: [...staticContext.matches]
+                    .reverse()
+                    .find((match) => staticContext.errors?.[match.route.id]),
+                } satisfies ErrorBoundaryProps)
+          )
+        : undefined;
+      const hydrateFallbackElement = HydrateFallback
+        ? React.createElement(
+            Layout,
+            null,
+            Component.$$typeof === Symbol.for("react.client.reference")
+              ? React.createElement(
+                  WithHydrateFallbackProps,
+                  null,
+                  React.createElement(HydrateFallback)
+                )
+              : React.createElement(HydrateFallback, {
+                  loaderData,
+                  actionData,
+                  params,
+                } satisfies HydrateFallbackProps)
+          )
+        : match.route.id === "root"
+        ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
+          // currently uses a hook internally so it fails during RSC.  Restructure
+          // so it can be used safely in an RSC render pass.
+          React.createElement("p", null, "Loading!")
+        : undefined;
+
+      let result = {
+        clientAction: (match.route as any).clientAction,
+        clientLoader: (match.route as any).clientLoader,
+        element,
+        errorElement,
+        handle: (match.route as any).handle,
+        hasAction: !!match.route.action,
+        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+        hasLoader: !!match.route.loader,
+        hydrateFallbackElement,
+        id: match.route.id,
+        index: match.route.index,
+        links: (match.route as any).links,
+        meta: (match.route as any).meta,
+        params,
+        parentId: lastMatch?.route.id,
+        path: match.route.path,
+        pathname: match.pathname,
+        pathnameBase: match.pathnameBase,
+        shouldRevalidate: (match.route as any).shouldRevalidate,
+      };
+      lastMatch = match;
+      return result;
+    })
+  );
+
+  const getPayload = async () => {
+    const matches = await matchesPromise;
+    return {
+      ...payload,
+      matches: routeIdsToLoad
+        ? matches.filter((m) => routeIdsToLoad.includes(m.id))
+        : matches,
+      patches: !isDataRequest
+        ? await getAdditionalRoutePatches(
+            staticContext.location.pathname,
+            routes,
+            matches.map((m) => m.id)
+          )
+        : undefined,
+    };
+  };
+
+  if (actionResult) {
+    return generateResponse({
+      statusCode,
+      headers,
+      payload: {
+        type: "action",
+        actionResult,
+        rerender: getPayload(),
+      },
+    });
+  } else {
+    return generateResponse({
+      statusCode,
+      headers,
+      payload: await getPayload(),
+    });
   }
 }
 
