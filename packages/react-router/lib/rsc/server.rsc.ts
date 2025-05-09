@@ -169,10 +169,6 @@ export async function matchRSCServerRequest({
   generateResponse: (match: ServerMatch) => Response;
 }): Promise<Response> {
   const url = new URL(request.url);
-  // TODO: Can this be done with a pathname extension instead of a header?
-  // If not, make sure we strip this at the SSR server and it can only be set
-  // by us to avoid cache-poisoning attempts
-  let isDataRequest = request.headers.has("X-React-Router-Data-Request");
 
   if (isManifestRequest(url)) {
     const matches = matchRoutes(
@@ -201,7 +197,6 @@ export async function matchRSCServerRequest({
     });
   }
 
-  let statusCode = 200;
   let actionResult: Promise<unknown> | undefined;
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
@@ -258,79 +253,85 @@ export async function matchRSCServerRequest({
     }
   }
 
-  const getRenderPayload = async (
-    isDataRequest: boolean,
-    actionResult?: Promise<unknown>
-  ): Promise<Response> => {
-    // If this is a RR submission, we just want the `actionData` but don't want
-    // to call any loaders or render any components back in the response - that
-    // will happen in the subsequent revalidation request
-    let isSubmission = isMutationMethod(request.method);
-    let searchParams = new URL(request.url).searchParams;
-    let routeIdsToLoad =
-      !isSubmission && searchParams.has("_routes")
-        ? searchParams.get("_routes")!.split(",")
-        : null;
-
-    // Explode lazy functions out the routes so we can use middleware
-    // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
-    // and if we move to `lazy: {}` then we lose all the other things from the
-    // `ServerRouteObject` like `Layout` etc.
-    let matches = matchRoutes(routes, url.pathname);
-    if (matches) {
-      await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
-    }
-
-    // Create the handler here with exploded routes
-    const handler = createStaticHandler(routes);
-    const respond = (staticContext: StaticHandlerContext) =>
-      generateStaticContextResponse(
-        routes,
-        generateResponse,
-        statusCode,
-        routeIdsToLoad,
-        isDataRequest,
-        isSubmission,
-        actionResult,
-        staticContext
-      );
-
-    const result = await handler.query(request, {
-      skipLoaderErrorBubbling: true,
-      skipRevalidation: isSubmission,
-      ...(routeIdsToLoad
-        ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
-        : null),
-      unstable_respond(result) {
-        if (isResponse(result)) {
-          return generateRedirectResponse(statusCode, result, generateResponse);
-        }
-        return respond(result);
-      },
-    });
-
-    if (isRedirectResponse(result)) {
-      return generateRedirectResponse(statusCode, result, generateResponse);
-    }
-
-    // while middleware is still unstable, we don't run the middleware pipeline
-    // if no routes have middleware, so we still might need to convert context
-    // to a response here
-    return isResponse(result) ? result : respond(result);
-  };
-
   try {
-    if (actionResult) {
-      let res = await getRenderPayload(isDataRequest, actionResult);
-      return res;
-    } else {
-      let res = await getRenderPayload(isDataRequest);
-
-      return res;
-    }
+    let res = await getRenderPayload(
+      request,
+      routes,
+      generateResponse,
+      actionResult
+    );
+    return res;
   } catch (error) {
     throw error;
   }
+}
+
+async function getRenderPayload(
+  request: Request,
+  routes: ServerRouteObject[],
+  generateResponse: (match: ServerMatch) => Response,
+  actionResult?: Promise<unknown>
+): Promise<Response> {
+  // If this is a RR submission, we just want the `actionData` but don't want
+  // to call any loaders or render any components back in the response - that
+  // will happen in the subsequent revalidation request
+  let statusCode = 200;
+  let url = new URL(request.url);
+  // TODO: Can this be done with a pathname extension instead of a header?
+  // If not, make sure we strip this at the SSR server and it can only be set
+  // by us to avoid cache-poisoning attempts
+  let isDataRequest = request.headers.has("X-React-Router-Data-Request");
+  let isSubmission = isMutationMethod(request.method);
+  let routeIdsToLoad =
+    !isSubmission && url.searchParams.has("_routes")
+      ? url.searchParams.get("_routes")!.split(",")
+      : null;
+
+  // Explode lazy functions out the routes so we can use middleware
+  // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
+  // and if we move to `lazy: {}` then we lose all the other things from the
+  // `ServerRouteObject` like `Layout` etc.
+  let matches = matchRoutes(routes, url.pathname);
+  if (matches) {
+    await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
+  }
+
+  // Create the handler here with exploded routes
+  const handler = createStaticHandler(routes);
+  const respond = (staticContext: StaticHandlerContext) =>
+    generateStaticContextResponse(
+      routes,
+      generateResponse,
+      statusCode,
+      routeIdsToLoad,
+      isDataRequest,
+      isSubmission,
+      actionResult,
+      staticContext
+    );
+
+  const result = await handler.query(request, {
+    skipLoaderErrorBubbling: true,
+    skipRevalidation: isSubmission,
+    ...(routeIdsToLoad
+      ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
+      : null),
+    unstable_respond(result) {
+      if (isResponse(result)) {
+        return generateRedirectResponse(statusCode, result, generateResponse);
+      }
+      return respond(result);
+    },
+  });
+
+  if (isRedirectResponse(result)) {
+    return generateRedirectResponse(statusCode, result, generateResponse);
+  }
+
+  // while middleware is still unstable, we don't run the middleware pipeline
+  // if no routes have middleware, so we still might need to convert context
+  // to a response here
+  return isResponse(result) ? result : respond(result);
 }
 
 function generateRedirectResponse(
