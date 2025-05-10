@@ -32,7 +32,6 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
-  AgnosticRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
@@ -445,7 +444,7 @@ export function useRoutesImpl(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let { navigator, static: isStatic } = React.useContext(NavigationContext);
+  let { navigator } = React.useContext(NavigationContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -532,17 +531,7 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  // Use data router matches when available to avoid another match routes call.
-  // Skip this during SSR because the matches coming in from StaticHandlerContext
-  // might be UI agnostic and we want the matches from the createStaticRouter's
-  // routes
-  let matches =
-    !isStatic &&
-    dataRouterState &&
-    dataRouterState.matches &&
-    dataRouterState.matches.length > 0
-      ? (dataRouterState.matches as AgnosticRouteMatch<string, RouteObject>[])
-      : matchRoutes(routes, { pathname: remainingPathname });
+  let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (ENABLE_DEV_WARNINGS) {
     warning(
