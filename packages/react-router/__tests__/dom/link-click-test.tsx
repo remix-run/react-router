@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import { MemoryRouter, Routes, Route, Link } from "../../index";
 
 function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {

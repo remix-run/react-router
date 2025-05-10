@@ -1,7 +1,7 @@
 import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 
 import type { To } from "../../index";
 import {

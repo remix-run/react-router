@@ -38,20 +38,26 @@ describe("NavLink", () => {
     });
 
     it("does not change the content inside the <a>", () => {
-      let renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route
-              path="/home"
-              element={
-                <NavLink to="somewhere-else">
-                  {({ isActive }) => (isActive ? "Current" : "Somewhere else")}
-                </NavLink>
-              }
-            />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="/home"
+                element={
+                  <NavLink to="somewhere-else">
+                    {({ isActive }) =>
+                      isActive ? "Current" : "Somewhere else"
+                    }
+                  </NavLink>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+      renderer = renderer!;
 
       let anchor = renderer.root.findByType("a");
 
@@ -187,20 +193,24 @@ describe("NavLink", () => {
     });
 
     it("applies its children correctly when provided as a function", () => {
-      let renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route
-              path="/home"
-              element={
-                <NavLink to=".">
-                  {({ isActive }) => (isActive ? "Home (current)" : "Home")}
-                </NavLink>
-              }
-            />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="/home"
+                element={
+                  <NavLink to=".">
+                    {({ isActive }) => (isActive ? "Home (current)" : "Home")}
+                  </NavLink>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+      renderer = renderer!;
 
       let anchor = renderer.root.findByType("a");
 

@@ -38,3 +38,14 @@ if (!globalThis.TransformStream) {
   const { TransformStream } = require("node:stream/web");
   globalThis.TransformStream = TransformStream;
 }
+
+const consoleError = console.error;
+console.error = (msg, ...args) => {
+  if (
+    typeof msg === "string" &&
+    msg.includes("react-test-renderer is deprecated")
+  ) {
+    return;
+  }
+  consoleError.call(console, msg, ...args);
+};

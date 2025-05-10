@@ -578,7 +578,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toContain(
-      '<form method="get" action="/path/with%20space" data-discover="true">👋</form>'
+      '<form data-discover="true" action="/path/with%20space" method="get">👋</form>'
     );
   });
 
@@ -603,7 +603,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toContain(
-      '<form method="get" action="/path/with%20space" data-discover="true">👋</form>'
+      '<form data-discover="true" action="/path/with%20space" method="get">👋</form>'
     );
   });
 
@@ -628,7 +628,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toContain(
-      '<form method="get" action="/path/with space" data-discover="true">👋</form>'
+      '<form data-discover="true" action="/path/with space" method="get">👋</form>'
     );
   });
 

@@ -28,7 +28,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -72,7 +76,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -152,7 +160,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -212,7 +224,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -272,7 +288,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
