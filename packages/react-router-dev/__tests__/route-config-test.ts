@@ -1,5 +1,5 @@
 import path from "node:path";
-import { normalizePath } from "vite";
+import { normalize as normalizePath } from "pathe";
 
 import {
   validateRouteConfig,
