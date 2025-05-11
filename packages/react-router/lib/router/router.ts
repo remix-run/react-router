@@ -1995,6 +1995,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
+      init.patchRoutesOnNavigation != null,
       pendingActionResult
     );
 
@@ -2441,6 +2442,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
+      init.patchRoutesOnNavigation != null,
       [match.route.id, actionResult]
     );
 
@@ -4583,6 +4585,7 @@ function getMatchesToLoad(
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
+  hasPatchRoutesOnNavigation: boolean,
   pendingActionResult?: PendingActionResult
 ): {
   dsMatches: DataStrategyMatch[];
@@ -4717,6 +4720,9 @@ function getMatchesToLoad(
       return;
     }
 
+    let fetcher = state.fetchers.get(key);
+    let isMidInitialLoad =
+      fetcher && fetcher.state !== "idle" && fetcher.data === undefined;
     let fetcherMatches = matchRoutes(routesToUse, f.path, basename);
 
     // If the fetcher path no longer matches, push it in with null matches so
@@ -4724,6 +4730,13 @@ function getMatchesToLoad(
     // currently only a use-case for Remix HMR where the route tree can change
     // at runtime and remove a route previously loaded via a fetcher
     if (!fetcherMatches) {
+      // If this fetcher is still in it's initial loading state, then this is
+      // most likely not a 404 and the fetcher is still in the middle of lazy
+      // route discovery so we can just skip revalidation and let it finish
+      // it's initial load
+      if (hasPatchRoutesOnNavigation && isMidInitialLoad) {
+        return;
+      }
       revalidatingFetchers.push({
         key,
         routeId: f.routeId,
@@ -4744,7 +4757,6 @@ function getMatchesToLoad(
     // Revalidating fetchers are decoupled from the route matches since they
     // load from a static href.  They revalidate based on explicit revalidation
     // (submission, useRevalidator, or X-Remix-Revalidate)
-    let fetcher = state.fetchers.get(key);
     let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
 
     let fetchController = new AbortController();
@@ -4768,11 +4780,7 @@ function getMatchesToLoad(
         lazyRoutePropertiesToSkip,
         scopedContext
       );
-    } else if (
-      fetcher &&
-      fetcher.state !== "idle" &&
-      fetcher.data === undefined
-    ) {
+    } else if (isMidInitialLoad) {
       if (isRevalidationRequired) {
         // If the fetcher hasn't ever completed loading yet, then this isn't a
         // revalidation, it would just be a brand new load if an explicit

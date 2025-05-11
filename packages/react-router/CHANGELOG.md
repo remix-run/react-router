@@ -1,5 +1,75 @@
 # `react-router`
 
+## 7.6.0
+
+### Minor Changes
+
+- Added a new `react-router.config.ts` `routeDiscovery` option to configure Lazy Route Discovery behavior. ([#13451](https://github.com/remix-run/react-router/pull/13451))
+
+  - By default, Lazy Route Discovery is enabled and makes manifest requests to the `/__manifest` path:
+    - `routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" }`
+  - You can modify the manifest path used:
+    - `routeDiscovery: { mode: "lazy", manifestPath: "/custom-manifest" }`
+  - Or you can disable this feature entirely and include all routes in the manifest on initial document load:
+    - `routeDiscovery: { mode: "initial" }`
+
+- Add support for route component props in `createRoutesStub`. This allows you to unit test your route components using the props instead of the hooks: ([#13528](https://github.com/remix-run/react-router/pull/13528))
+
+  ```tsx
+  let RoutesStub = createRoutesStub([
+    {
+      path: "/",
+      Component({ loaderData }) {
+        let data = loaderData as { message: string };
+        return <pre data-testid="data">Message: {data.message}</pre>;
+      },
+      loader() {
+        return { message: "hello" };
+      },
+    },
+  ]);
+
+  render(<RoutesStub />);
+
+  await waitFor(() => screen.findByText("Message: hello"));
+  ```
+
+### Patch Changes
+
+- Fix `react-router` module augmentation for `NodeNext` ([#13498](https://github.com/remix-run/react-router/pull/13498))
+
+- Don't bundle `react-router` in `react-router/dom` CJS export ([#13497](https://github.com/remix-run/react-router/pull/13497))
+
+- Fix bug where a submitting `fetcher` would get stuck in a `loading` state if a revalidating `loader` redirected ([#12873](https://github.com/remix-run/react-router/pull/12873))
+
+- Fix hydration error if a server `loader` returned `undefined` ([#13496](https://github.com/remix-run/react-router/pull/13496))
+
+- Fix initial load 404 scenarios in data mode ([#13500](https://github.com/remix-run/react-router/pull/13500))
+
+- Stabilize `useRevalidator`'s `revalidate` function ([#13542](https://github.com/remix-run/react-router/pull/13542))
+
+- Preserve status code if a `clientAction` throws a `data()` result in framework mode ([#13522](https://github.com/remix-run/react-router/pull/13522))
+
+- Be defensive against leading double slashes in paths to avoid `Invalid URL` errors from the URL constructor ([#13510](https://github.com/remix-run/react-router/pull/13510))
+
+  - Note we do not sanitize/normalize these paths - we only detect them so we can avoid the error that would be thrown by `new URL("//", window.location.origin)`
+
+- Remove `Navigator` declaration for `navigator.connection.saveData` to avoid messing with any other types beyond `saveData` in userland ([#13512](https://github.com/remix-run/react-router/pull/13512))
+
+- Fix `handleError` `params` values on `.data` requests for routes with a dynamic param as the last URL segment ([#13481](https://github.com/remix-run/react-router/pull/13481))
+
+- Don't trigger an `ErrorBoundary` UI before the reload when we detect a manifest verison mismatch in Lazy Route Discovery ([#13480](https://github.com/remix-run/react-router/pull/13480))
+
+- Inline `turbo-stream@2.4.1` dependency and fix decoding ordering of Map/Set instances ([#13518](https://github.com/remix-run/react-router/pull/13518))
+
+- Only render dev warnings in DEV mode ([#13461](https://github.com/remix-run/react-router/pull/13461))
+
+- UNSTABLE: Fix a few bugs with error bubbling in middleware use-cases ([#13538](https://github.com/remix-run/react-router/pull/13538))
+
+- Short circuit post-processing on aborted `dataStrategy` requests ([#13521](https://github.com/remix-run/react-router/pull/13521))
+
+  - This resolves non-user-facing console errors of the form `Cannot read properties of undefined (reading 'result')`
+
 ## 7.5.3
 
 ### Patch Changes
