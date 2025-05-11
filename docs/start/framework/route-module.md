@@ -311,6 +311,30 @@ export default function Root() {
 
 Route meta defines meta tags to be rendered in the `<head>` of the document.
 
+<docs-warning>
+
+Since the version 19 of React, the use of the built-in `<meta>` support is recommended other the use of the `meta` function. You can find the documentation [here](https://react.dev/reference/react-dom/components/meta).
+
+Here is an snippet code equivalent of the example below:
+
+```tsx
+export default function MyRoute() {
+  return (
+    <div>
+      <title>Very cool app</title>
+      <meta property="og:title" content="Very cool app" />
+      <meta
+        name="description"
+        content="This app is the best"
+      />
+      {/* The rest of your route content... */}
+    </div>
+  );
+}
+```
+
+</docs-warning>
+
 ```tsx
 export function meta() {
   return [
