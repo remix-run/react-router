@@ -2142,7 +2142,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (id !== virtualInjectHmrRuntime.resolvedId) return;
 
         return [
-          `import RefreshRuntime from "${virtualHmrRuntime.id}"`,
           "RefreshRuntime.injectIntoGlobalHook(window)",
           "window.$RefreshReg$ = () => {}",
           "window.$RefreshSig$ = () => (type) => type",
@@ -2349,8 +2348,6 @@ function addRefreshWrapper(
 }
 
 const REACT_REFRESH_HEADER = `
-import RefreshRuntime from "${virtualHmrRuntime.id}";
-
 const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 let prevRefreshReg;
 let prevRefreshSig;
