@@ -830,7 +830,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .digest()
           .toString("base64");
         let filepath = getVite().normalizePath(
-          path.relative(clientBuildDirectory, path.join(entryNormalizedPath, entry.name))
+          path.relative(
+            clientBuildDirectory,
+            path.join(entryNormalizedPath, entry.name)
+          )
         );
         sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
       }
