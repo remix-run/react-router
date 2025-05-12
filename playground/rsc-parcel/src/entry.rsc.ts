@@ -12,7 +12,7 @@ import {
   type DecodeFormActionFunction,
   matchRSCServerRequest,
 } from "react-router/rsc";
-import { unstable_ClientComponentPropsProvider as ClientComponentPropsProvider } from "react-router" assert { env: "client" };
+import { unstable_ClientComponentPropsProvider } from "react-router" assert { env: "client" };
 
 import { routes } from "./routes";
 
@@ -35,7 +35,7 @@ export function callServer(request: Request) {
     request,
     // @ts-expect-error
     routes,
-    ClientComponentPropsProvider,
+    unstable_ClientComponentPropsProvider,
     generateResponse(match) {
       return new Response(renderToReadableStream(match.payload), {
         status: match.statusCode,

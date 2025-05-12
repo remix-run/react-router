@@ -156,7 +156,7 @@ export async function matchRSCServerRequest({
   request,
   routes,
   generateResponse,
-  ClientComponentPropsProvider,
+  unstable_ClientComponentPropsProvider: ClientComponentPropsProvider,
 }: {
   decodeCallServer?: DecodeCallServerFunction;
   decodeFormAction?: DecodeFormActionFunction;
@@ -164,7 +164,7 @@ export async function matchRSCServerRequest({
   request: Request;
   routes: ServerRouteObject[];
   generateResponse: (match: ServerMatch) => Response;
-  ClientComponentPropsProvider?: ClientComponentPropsProviderType;
+  unstable_ClientComponentPropsProvider?: ClientComponentPropsProviderType;
 }): Promise<Response> {
   const url = new URL(request.url);
 
