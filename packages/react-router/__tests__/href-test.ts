@@ -17,6 +17,10 @@ describe("href", () => {
     );
   });
 
+  it("works with splats", () => {
+    expect(href("/a/*", { "*": "b/c" })).toBe("/a/b/c");
+  });
+
   it("throws when required params are missing", () => {
     expect(() => href("/a/:b")).toThrow(
       `Path '/a/:b' requires param 'b' but it was not provided`

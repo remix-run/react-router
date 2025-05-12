@@ -30,6 +30,10 @@ export function href<Path extends keyof Args>(
   return path
     .split("/")
     .map((segment) => {
+      if (segment === "*") {
+        return params ? params["*"] : undefined;
+      }
+
       const match = segment.match(/^:([\w-]+)(\?)?/);
       if (!match) return segment;
       const param = match[1];
