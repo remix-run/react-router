@@ -186,7 +186,10 @@ export async function matchRSCServerRequest({
       onError
     );
     if (result) {
+      // Only enhanced server actions return a result
       actionResult = result.actionResult ?? undefined;
+      // Both enhanced server actions and non-enhanced $ACTION_ID_ submissions
+      // return a new GET request for revalidation
       request = result.revalidationRequest ?? request;
     }
   }
@@ -199,6 +202,9 @@ export async function matchRSCServerRequest({
       ClientComponentPropsProvider,
       actionResult
     );
+    // The front end uses this to know whether a 404 status came from app code
+    // or 404'd and never reached the origin server
+    response.headers.set("X-Remix-Response", "yes");
     return response;
   } catch (error) {
     throw error;
@@ -242,12 +248,13 @@ async function processServerAction(
 ): Promise<
   { revalidationRequest: Request; actionResult?: Promise<unknown> } | undefined
 > {
-  const revalidationRequest = () =>
+  const getRevalidationRequest = () =>
     new Request(request.url, {
       method: "GET",
       headers: request.headers,
       signal: request.signal,
     });
+
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
     if (!decodeCallServer) {
@@ -269,14 +276,15 @@ async function processServerAction(
       // The error is propagated to the client through the result promise in the stream
       onError?.(error);
     }
-    return { revalidationRequest: revalidationRequest(), actionResult };
+    return {
+      actionResult,
+      revalidationRequest: getRevalidationRequest(),
+    };
   }
 
   if (request.method === "POST") {
     const formData = await request.formData();
-    if (
-      Array.from(formData.keys()).some((key) => key.startsWith("$ACTION_ID_"))
-    ) {
+    if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_ID_"))) {
       if (!decodeFormAction) {
         throw new Error(
           "Cannot handle form actions without a decodeFormAction function"
@@ -288,7 +296,9 @@ async function processServerAction(
       } catch (error) {
         onError?.(error);
       }
-      return { revalidationRequest: revalidationRequest() };
+      return {
+        revalidationRequest: getRevalidationRequest(),
+      };
     }
   }
 }
@@ -340,7 +350,7 @@ async function getRenderPayload(
     );
 
   const result = await handler.query(request, {
-    skipLoaderErrorBubbling: true,
+    skipLoaderErrorBubbling: isDataRequest,
     skipRevalidation: isSubmission,
     ...(routeIdsToLoad
       ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
@@ -592,10 +602,11 @@ async function generateStaticContextResponse(
       },
     });
   } else {
+    let payload = await getPayload();
     return generateResponse({
       statusCode,
       headers,
-      payload: await getPayload(),
+      payload,
     });
   }
 }

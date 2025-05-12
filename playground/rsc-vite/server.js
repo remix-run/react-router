@@ -10,6 +10,11 @@ const app = express();
 app.use(compression());
 app.use(express.static("dist/client"));
 
+app.get("/.well-known/appspecific/com.chrome.devtools.json", (req, res) => {
+  res.status(404);
+  res.end();
+});
+
 app.use(
   createRequestListener((request) => {
     return ssr.fetch(request, {

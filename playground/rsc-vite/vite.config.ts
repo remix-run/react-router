@@ -2,7 +2,7 @@ import * as path from "node:path";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 import reactServerDOM from "@jacob-ebey/vite-react-server-dom";
-import { defineConfig } from "vite";
+import { defineConfig, type ViteDevServer } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
@@ -39,6 +39,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    stupidChromeDevtoolsRequest(),
     tsconfigPaths({ configNames: ["tsconfig.client.json"] }),
     reactServerDOM({
       browserEnvironment: "client",
@@ -67,3 +68,18 @@ export default defineConfig({
     }),
   ],
 });
+
+function stupidChromeDevtoolsRequest() {
+  return {
+    name: "stupid-chrome-devtools-request",
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use(
+        "/.well-known/appspecific/com.chrome.devtools.json",
+        (_, res) => {
+          res.statusCode = 404;
+          res.end("Not Found");
+        }
+      );
+    },
+  };
+}

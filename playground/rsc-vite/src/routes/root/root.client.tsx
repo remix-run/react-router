@@ -1,6 +1,10 @@
 "use client";
 
-import { useRouteError, useNavigation } from "react-router";
+import {
+  useRouteError,
+  useNavigation,
+  isRouteErrorResponse,
+} from "react-router";
 
 export function ErrorReporter() {
   const error = useRouteError();
@@ -9,7 +13,22 @@ export function ErrorReporter() {
     console.log(error);
   }
 
-  return null;
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h2>Error Response</h2>
+        <p>Status: {error.status}</p>
+        <p>Data: {JSON.stringify(error.data)}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2>Error</h2>
+      <p>{error instanceof Error ? error.message : String(error)}</p>
+    </div>
+  );
 }
 
 export function NavigationState() {
