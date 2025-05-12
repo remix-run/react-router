@@ -688,7 +688,7 @@ export default function SidebarLayout() {
 
 👉 **Move route definitions under the sidebar layout**
 
-We can define a `layout` route to automatically render the sidebar for all matched routes within in. This is basically what our `root` was, but now we can scope it to specific routes.
+We can define a `layout` route to automatically render the sidebar for all matched routes within it. This is basically what our `root` was, but now we can scope it to specific routes.
 
 ```ts filename=app/routes.ts lines=[4,9,12]
 import type { RouteConfig } from "@react-router/dev/routes";
