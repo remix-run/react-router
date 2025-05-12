@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as reactRouterClient from "react-router";
 
 import type {
   ClientActionFunction,
@@ -403,7 +404,7 @@ async function generateStaticContextResponse(
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
   staticContext: StaticHandlerContext,
-  ClientComponentPropsProviderArg?: ClientComponentPropsProviderType
+  ClientComponentPropsProvider: ClientComponentPropsProviderType = reactRouterClient.unstable_ClientComponentPropsProvider
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -443,10 +444,6 @@ async function generateStaticContextResponse(
     loaderData: staticContext.loaderData,
     location: staticContext.location,
   };
-
-  const ClientComponentPropsProvider =
-    ClientComponentPropsProviderArg ??
-    (await import("react-router")).unstable_ClientComponentPropsProvider;
 
   // Short circuit without matches on submissions
   if (isSubmission) {
