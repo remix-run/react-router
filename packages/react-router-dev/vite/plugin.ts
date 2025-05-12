@@ -810,10 +810,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let sriManifest: ReactRouterManifest["sri"] = {};
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".js")) {
+        const entryNormalizedPath =
+          "parentPath" in entry && typeof entry.parentPath === "string"
+            ? entry.parentPath
+            : entry.path;
+
         let contents;
         try {
           contents = await fse.readFile(
-            path.join(entry.path, entry.name),
+            path.join(entryNormalizedPath, entry.name),
             "utf-8"
           );
         } catch (e) {
@@ -825,7 +830,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .digest()
           .toString("base64");
         let filepath = getVite().normalizePath(
-          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+          path.relative(clientBuildDirectory, path.join(entryNormalizedPath, entry.name))
         );
         sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
       }
