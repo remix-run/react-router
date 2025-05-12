@@ -5378,31 +5378,11 @@ export async function runMiddlewarePipeline<T extends boolean>(
     handlerResult: undefined,
   };
   try {
-    // This causes a runtime error in parcel :/
-    // @parcel/reporter-dev-server: TypeError: 'get' on proxy: property 'prototype' is a read-only and non-configurable data property on the proxy target but the proxy did not
-    //   return its actual value (expected '[object Array]' but got '[object Array]')
-    // @parcel/reporter-dev-server:     at Proxy.map (<anonymous>)
-    // @parcel/reporter-dev-server:     at Object.apply
-    //   (.../node_modules/.pnpm/@parcel+runtime-rsc@2.14.4_@parcel+core@2.14.4_@swc+helpers@0.5.15_/node_modules/@parcel/runtime-rsc/rsc-helpers.jsx:62:30)
-    // @parcel/reporter-dev-server:     at <anonymous>
-    //   (.../node_modules/.pnpm/react-router@0.0.0-experimental-e56aa53bc_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/react-router/dist/development/rsc-export.mjs:1434:72)
-    // @parcel/reporter-dev-server:     at Array.flatMap (<anonymous>)
-
-    // let tuples = matches.flatMap((m) =>
-    //   m.route.unstable_middleware
-    //     ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
-    //     : []
-    // ) as [string, unstable_MiddlewareFunction][];
-
-    let tuples: [string, unstable_MiddlewareFunction][] = [];
-    for (let m of matches) {
-      if (m.route.unstable_middleware) {
-        for (let fn of m.route.unstable_middleware) {
-          let tuple: [string, unstable_MiddlewareFunction] = [m.route.id, fn];
-          tuples.push(tuple);
-        }
-      }
-    }
+    let tuples = matches.flatMap((m) =>
+      m.route.unstable_middleware
+        ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
+        : []
+    ) as [string, unstable_MiddlewareFunction][];
     let result = await callRouteMiddleware(
       { request, params, context },
       tuples,
