@@ -1,19 +1,20 @@
-import type { ServerRouteObject } from "react-router";
+import type { ServerRouteObject } from "react-router/rsc";
 
 export const routes = [
   {
     id: "root",
-    // requiredCSS: ["/index.css"],
     lazy: () => import("./routes/root/root"),
     children: [
       {
         id: "home",
         index: true,
+        // @ts-expect-error
         lazy: () => import("./routes/home/home"),
       },
       {
         id: "about",
         path: "about",
+        // @ts-expect-error
         lazy: () => import("./routes/about/about"),
       },
     ],
