@@ -1,31 +1,40 @@
 "use client-entry";
 
-import { startTransition, StrictMode } from "react";
+import * as React from "react";
 import { hydrateRoot } from "react-dom/client";
-// @ts-expect-error
-import { createFromReadableStream } from "react-server-dom-parcel/client";
+import {
+  createCallServer,
+  getServerStream,
+  RSCHydratedRouter,
+} from "react-router";
+import type { ServerPayload } from "react-router/rsc";
+import {
+  createFromReadableStream,
+  encodeReply,
+  setServerCallback,
+  // @ts-expect-error
+} from "react-server-dom-parcel/client";
 
-import { getServerStream, RSCHydratedRouter } from "react-router";
-import { type ServerPayload } from "react-router/rsc";
-
-createFromReadableStream(
-  getServerStream(),
-  { assets: "manifest" },
-  {
-    temporaryReferences: {
-      clientId: () => <div>Client ID</div>,
-    },
-  }
-).then((payload: ServerPayload) => {
-  startTransition(() => {
-    hydrateRoot(
-      document,
-      <StrictMode>
-        <RSCHydratedRouter
-          decode={createFromReadableStream}
-          payload={payload}
-        />
-      </StrictMode>
-    );
-  });
+const callServer = createCallServer({
+  decode: (body) => createFromReadableStream(body, { callServer }),
+  encodeAction: (args) => encodeReply(args),
 });
+
+setServerCallback(callServer);
+
+createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
+  (payload: ServerPayload) => {
+    React.startTransition(() => {
+      hydrateRoot(
+        document,
+        <React.StrictMode>
+          <RSCHydratedRouter
+            decode={createFromReadableStream}
+            // @ts-expect-error
+            payload={payload}
+          />
+        </React.StrictMode>
+      );
+    });
+  }
+);

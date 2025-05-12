@@ -1147,7 +1147,7 @@ export type RouteComponentProps = {
   matches: ReturnType<typeof useMatches>;
 };
 
-export function WithRouteComponentProps({
+function RouteComponentPropsProvider({
   children,
 }: {
   children: React.ReactElement;
@@ -1167,7 +1167,7 @@ export type HydrateFallbackProps = {
   params: ReturnType<typeof useParams>;
 };
 
-export function WithHydrateFallbackProps({
+function HydrateFallbackPropsProvider({
   children,
 }: {
   children: React.ReactElement;
@@ -1187,7 +1187,7 @@ export type ErrorBoundaryProps = {
   error: ReturnType<typeof useRouteError>;
 };
 
-export function WithErrorBoundaryProps({
+function ErrorBoundaryPropsProvider({
   children,
 }: {
   children: React.ReactElement;
@@ -1200,6 +1200,31 @@ export function WithErrorBoundaryProps({
   };
   return React.cloneElement(children, props);
 }
+
+const clientComponentPropsProvidersByType = {
+  Component: RouteComponentPropsProvider,
+  ErrorBoundary: ErrorBoundaryPropsProvider,
+  HydrateFallback: HydrateFallbackPropsProvider,
+} as const;
+
+export function ClientComponentPropsProvider({
+  __type: type,
+  children,
+}: {
+  __type: keyof typeof clientComponentPropsProvidersByType;
+  children: React.ReactElement;
+}) {
+  const Provider = clientComponentPropsProvidersByType[type];
+
+  if (!Provider) {
+    throw new Error(`Invalid type: ${type}`);
+  }
+
+  return <Provider>{children}</Provider>;
+}
+
+export type ClientComponentPropsProviderType =
+  typeof ClientComponentPropsProvider;
 
 ///////////////////////////////////////////////////////////////////////////////
 // UTILS

@@ -31,12 +31,8 @@ import type {
   RouteComponentProps,
   HydrateFallbackProps,
   ErrorBoundaryProps,
+  ClientComponentPropsProviderType,
 } from "../components";
-import {
-  UNSAFE_WithRouteComponentProps as WithRouteComponentProps,
-  UNSAFE_WithHydrateFallbackProps as WithHydrateFallbackProps,
-  UNSAFE_WithErrorBoundaryProps as WithErrorBoundaryProps,
-} from "react-router";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -160,6 +156,7 @@ export async function matchRSCServerRequest({
   request,
   routes,
   generateResponse,
+  ClientComponentPropsProvider,
 }: {
   decodeCallServer?: DecodeCallServerFunction;
   decodeFormAction?: DecodeFormActionFunction;
@@ -167,6 +164,7 @@ export async function matchRSCServerRequest({
   request: Request;
   routes: ServerRouteObject[];
   generateResponse: (match: ServerMatch) => Response;
+  ClientComponentPropsProvider?: ClientComponentPropsProviderType;
 }): Promise<Response> {
   const url = new URL(request.url);
 
@@ -198,6 +196,7 @@ export async function matchRSCServerRequest({
       request,
       routes,
       generateResponse,
+      ClientComponentPropsProvider,
       actionResult
     );
     return response;
@@ -298,6 +297,7 @@ async function getRenderPayload(
   request: Request,
   routes: ServerRouteObject[],
   generateResponse: (match: ServerMatch) => Response,
+  ClientComponentPropsProvider?: ClientComponentPropsProviderType,
   actionResult?: Promise<unknown>
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
@@ -335,7 +335,8 @@ async function getRenderPayload(
       isDataRequest,
       isSubmission,
       actionResult,
-      staticContext
+      staticContext,
+      ClientComponentPropsProvider
     );
 
   const result = await handler.query(request, {
@@ -391,7 +392,8 @@ async function generateStaticContextResponse(
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
-  staticContext: StaticHandlerContext
+  staticContext: StaticHandlerContext,
+  ClientComponentPropsProviderArg?: ClientComponentPropsProviderType
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -431,6 +433,10 @@ async function generateStaticContextResponse(
     loaderData: staticContext.loaderData,
     location: staticContext.location,
   };
+
+  const ClientComponentPropsProvider =
+    ClientComponentPropsProviderArg ??
+    (await import("react-router")).unstable_ClientComponentPropsProvider;
 
   // Short circuit without matches on submissions
   if (isSubmission) {
@@ -474,11 +480,10 @@ async function generateStaticContextResponse(
               Layout,
               null,
               Component.$$typeof === Symbol.for("react.client.reference")
-                ? React.createElement(
-                    WithRouteComponentProps,
-                    null,
-                    React.createElement(Component)
-                  )
+                ? React.createElement(ClientComponentPropsProvider, {
+                    __type: "Component",
+                    children: React.createElement(Component),
+                  })
                 : React.createElement(Component, {
                     loaderData,
                     actionData,
@@ -497,11 +502,10 @@ async function generateStaticContextResponse(
             Layout,
             null,
             Component.$$typeof === Symbol.for("react.client.reference")
-              ? React.createElement(
-                  WithErrorBoundaryProps,
-                  null,
-                  React.createElement(ErrorBoundary)
-                )
+              ? React.createElement(ClientComponentPropsProvider, {
+                  __type: "ErrorBoundary",
+                  children: React.createElement(ErrorBoundary),
+                })
               : React.createElement(ErrorBoundary, {
                   loaderData,
                   actionData,
@@ -517,11 +521,10 @@ async function generateStaticContextResponse(
             Layout,
             null,
             Component.$$typeof === Symbol.for("react.client.reference")
-              ? React.createElement(
-                  WithHydrateFallbackProps,
-                  null,
-                  React.createElement(HydrateFallback)
-                )
+              ? React.createElement(ClientComponentPropsProvider, {
+                  __type: "HydrateFallback",
+                  children: React.createElement(HydrateFallback),
+                })
               : React.createElement(HydrateFallback, {
                   loaderData,
                   actionData,
