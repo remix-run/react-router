@@ -13,7 +13,7 @@ import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
 import { mockEntryContext, mockFrameworkContext } from "../../utils/framework";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
@@ -80,11 +80,11 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        let dataHref = container
+        let dataHref = container.ownerDocument
           .querySelector('link[rel="prefetch"][as="fetch"]')
           ?.getAttribute("href");
         expect(dataHref).toBe("/idk.data");
-        let moduleHref = container
+        let moduleHref = container.ownerDocument
           .querySelector('link[rel="modulepreload"]')
           ?.getAttribute("href");
         expect(moduleHref).toBe("idk.js");
@@ -132,7 +132,9 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        expect(container.querySelector("link[rel=prefetch]")).toBeTruthy();
+        expect(
+          container.ownerDocument.querySelector("link[rel=prefetch]")
+        ).toBeTruthy();
         expect(ranHandler).toBe(true);
         unmount();
       });

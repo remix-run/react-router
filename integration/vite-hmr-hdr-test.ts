@@ -194,20 +194,12 @@ async function workflow({
   expect(
     // When adding a loader, a harmless error is logged to the browser console.
     // HMR works as intended, so this seems like a React Fast Refresh bug caused by off-screen rendering with old server data or something like that 🤷
-    page.errors.filter((error) => {
-      let chromium =
-        browserName === "chromium" &&
-        error.message ===
-          "Cannot destructure property 'message' of 'useLoaderData(...)' as it is null.";
-      let firefox =
-        browserName === "firefox" &&
-        error.message === "(intermediate value)() is null";
-      let webkit =
-        browserName === "webkit" &&
-        error.message === "Right side of assignment cannot be destructured";
-      let expected = chromium || firefox || webkit;
-      return !expected;
-    })
+    page.errors.filter(
+      (error) =>
+        !error.message.includes(
+          "There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root."
+        )
+    )
   ).toEqual([]);
   page.errors = [];
 
