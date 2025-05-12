@@ -114,7 +114,7 @@
     "vite": "^6.1.0",
     "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2",
-    "react-server-dom-parcel": "0.0.0-experimental-93b58361-20250209"
+    "react-server-dom-parcel": "^19.1.0"
   },
   "engines": {
     "node": ">=20.0.0"

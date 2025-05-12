@@ -38,16 +38,9 @@
     "@mjackson/node-fetch-server": "0.6.1",
     "@parcel/runtime-rsc": "2.14.1",
     "express": "^4.21.2",
-    "react": "0.0.0-experimental-93b58361-20250209",
-    "react-dom": "0.0.0-experimental-93b58361-20250209",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-router": "workspace:*",
-    "react-server-dom-parcel": "0.0.0-experimental-93b58361-20250209"
-  },
-  "pnpm": {
-    "overrides": {
-      "react": "0.0.0-experimental-93b58361-20250209",
-      "react-dom": "0.0.0-experimental-93b58361-20250209",
-      "react-server-dom-parcel": "0.0.0-experimental-93b58361-20250209"
-    }
+    "react-server-dom-parcel": "^19.0.0"
   }
 }

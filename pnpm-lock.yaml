@@ -189,8 +189,8 @@ importers:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
       react-server-dom-parcel:
-        specifier: 0.0.0-experimental-93b58361-20250209
-        version: 0.0.0-experimental-93b58361-20250209(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^19.1.0
+        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-test-renderer:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
@@ -1457,17 +1457,17 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       react:
-        specifier: 0.0.0-experimental-93b58361-20250209
-        version: 0.0.0-experimental-93b58361-20250209
+        specifier: ^19.0.0
+        version: 19.1.0
       react-dom:
-        specifier: 0.0.0-experimental-93b58361-20250209
-        version: 0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209)
+        specifier: ^19.0.0
+        version: 19.1.0(react@19.1.0)
       react-router:
         specifier: workspace:*
         version: link:../../packages/react-router
       react-server-dom-parcel:
-        specifier: 0.0.0-experimental-93b58361-20250209
-        version: 0.0.0-experimental-93b58361-20250209(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209)
+        specifier: ^19.0.0
+        version: 19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4
@@ -8860,11 +8860,6 @@ packages:
     resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
     engines: {node: '>= 0.8'}
 
-  react-dom@0.0.0-experimental-93b58361-20250209:
-    resolution: {integrity: sha512-6DCQYyF220WyHjR3sbcoDkWlXf+2IEwPWoAAB+k328c+ETElboMP5e5FUVwAorpK6UaWgKuqeXbm7B3NLIixTQ==}
-    peerDependencies:
-      react: 0.0.0-experimental-93b58361-20250209
-
   react-dom@19.1.0:
     resolution: {integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==}
     peerDependencies:
@@ -8881,21 +8876,17 @@ packages:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
 
-  react-server-dom-parcel@0.0.0-experimental-93b58361-20250209:
-    resolution: {integrity: sha512-ASAqPoho6m+5fb9SuJY8hcA7Il9QV72og4ZhA8Q3SYM8yZnE1PxvUpt84cipNg0RmmT6BiRX1FpbxhtfhPCyGQ==}
+  react-server-dom-parcel@19.1.0:
+    resolution: {integrity: sha512-JkfPt/yV1ru8J1CTM0PD74HZZRQTjdoTU5eg2r6Xjn/TmFRS2J/4QsKdwu2X8NsA+ADnPHI8wKCgBh1HCmRr/A==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: 0.0.0-experimental-93b58361-20250209
-      react-dom: 0.0.0-experimental-93b58361-20250209
+      react: ^19.1.0
+      react-dom: ^19.1.0
 
   react-test-renderer@19.1.0:
     resolution: {integrity: sha512-jXkSl3CpvPYEF+p/eGDLB4sPoDX8pKkYvRl9+rR8HxLY0X04vW7hCm1/0zHoUSjPZ3bDa+wXWNTDVIw/R8aDVw==}
     peerDependencies:
       react: ^19.1.0
-
-  react@0.0.0-experimental-93b58361-20250209:
-    resolution: {integrity: sha512-/XlQy7qjc/uVVhsqtty/kO7ZONu0fOFGPgN55HosxJTkiqm1KThznjYk6QKT6xowLEE8elrQ2qFePQ2M2t5oGQ==}
-    engines: {node: '>=0.10.0'}
 
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
@@ -9219,9 +9210,6 @@ packages:
   saxes@6.0.0:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
-
-  scheduler@0.0.0-experimental-93b58361-20250209:
-    resolution: {integrity: sha512-/jHVwrXds2Amuht81tUvUBZsziu1rzbtd1TYnDWmFU+tHWeRGOw88DjGcUrWRGJem63nDzVZwl0wY+flJXj6JQ==}
 
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
@@ -19247,11 +19235,6 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
-  react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209):
-    dependencies:
-      react: 0.0.0-experimental-93b58361-20250209
-      scheduler: 0.0.0-experimental-93b58361-20250209
-
   react-dom@19.1.0(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -19263,12 +19246,7 @@ snapshots:
 
   react-refresh@0.14.2: {}
 
-  react-server-dom-parcel@0.0.0-experimental-93b58361-20250209(react-dom@0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209))(react@0.0.0-experimental-93b58361-20250209):
-    dependencies:
-      react: 0.0.0-experimental-93b58361-20250209
-      react-dom: 0.0.0-experimental-93b58361-20250209(react@0.0.0-experimental-93b58361-20250209)
-
-  react-server-dom-parcel@0.0.0-experimental-93b58361-20250209(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -19278,8 +19256,6 @@ snapshots:
       react: 19.1.0
       react-is: 19.1.0
       scheduler: 0.26.0
-
-  react@0.0.0-experimental-93b58361-20250209: {}
 
   react@19.1.0: {}
 
@@ -19672,8 +19648,6 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
-
-  scheduler@0.0.0-experimental-93b58361-20250209: {}
 
   scheduler@0.26.0: {}
 
