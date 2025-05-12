@@ -31,6 +31,7 @@ export const reactRouterConfig = ({
   splitRouteModules,
   viteEnvironmentApi,
   middleware,
+  routeDiscovery,
 }: {
   ssr?: boolean;
   basename?: string;
@@ -41,12 +42,14 @@ export const reactRouterConfig = ({
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
   middleware?: boolean;
+  routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
     ssr,
     basename,
     prerender,
     appDirectory,
+    routeDiscovery,
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
@@ -140,6 +143,7 @@ export const EXPRESS_SERVER = (args: {
   port: number;
   base?: string;
   loadContext?: Record<string, unknown>;
+  customLogic?: string;
 }) =>
   String.raw`
     import { createRequestHandler } from "@react-router/express";
@@ -165,6 +169,8 @@ export const EXPRESS_SERVER = (args: {
       );
     }
     app.use(express.static("build/client", { maxAge: "1h" }));
+
+    ${args?.customLogic || ""}
 
     app.all(
       "*",

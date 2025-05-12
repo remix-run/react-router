@@ -22,14 +22,14 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
+import type { ServerHandoff } from "./serverHandoff";
 import { createServerHandoffString } from "./serverHandoff";
-import { getDevServerHooks } from "./dev";
+import { getBuildTimeHeader, getDevServerHooks } from "./dev";
 import {
   encodeViaTurboStream,
   getSingleFetchRedirect,
   singleFetchAction,
   singleFetchLoaders,
-  SINGLE_FETCH_REDIRECT_STATUS,
   SERVER_NO_BODY_STATUS_CODES,
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
@@ -38,8 +38,12 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
+import {
+  SINGLE_FETCH_REDIRECT_STATUS,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
+import { getManifestPath } from "../dom/ssr/fog-of-war";
 
 export type RequestHandler = (
   request: Request,
@@ -162,12 +166,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       normalizedPath = normalizedPath.slice(0, -1);
     }
 
+    let isSpaMode =
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
+
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
     if (!_build.ssr) {
+      // When SSR is disabled this, file can only ever run during dev because we
+      // delete the server build at the end of the build
       if (_build.prerender.length === 0) {
-        // Add the header if we're in SPA mode
-        request.headers.set("X-React-Router-SPA-Mode", "yes");
+        // ssr:false and no prerender config indicates "SPA Mode"
+        isSpaMode = true;
       } else if (
         !_build.prerender.includes(normalizedPath) &&
         !_build.prerender.includes(normalizedPath + "/")
@@ -192,13 +201,16 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
           });
         } else {
           // Serve a SPA fallback for non-pre-rendered document requests
-          request.headers.set("X-React-Router-SPA-Mode", "yes");
+          isSpaMode = true;
         }
       }
     }
 
     // Manifest request for fog of war
-    let manifestUrl = `${normalizedBasename}/__manifest`.replace(/\/+/g, "/");
+    let manifestUrl = getManifestPath(
+      _build.routeDiscovery.manifestPath,
+      normalizedBasename
+    );
     if (url.pathname === manifestUrl) {
       try {
         let res = await handleManifestRequest(_build, routes, url);
@@ -209,7 +221,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     }
 
-    let matches = matchServerRoutes(routes, url.pathname, _build.basename);
+    let matches = matchServerRoutes(routes, normalizedPath, _build.basename);
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
     }
@@ -273,7 +285,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         }
       }
     } else if (
-      !request.headers.has("X-React-Router-SPA-Mode") &&
+      !isSpaMode &&
       matches &&
       matches[matches.length - 1].route.module.default == null &&
       matches[matches.length - 1].route.module.ErrorBoundary == null
@@ -307,6 +319,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
         loadContext,
         handleError,
+        isSpaMode,
         criticalCss
       );
     }
@@ -424,9 +437,9 @@ async function handleDocumentRequest(
   request: Request,
   loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void,
+  isSpaMode: boolean,
   criticalCss?: CriticalCss
 ) {
-  let isSpaMode = request.headers.has("X-React-Router-SPA-Mode");
   try {
     let response = await staticHandler.query(request, {
       requestContext: loadContext,
@@ -477,17 +490,21 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: serializeErrors(context.errors, serverMode),
     };
+    let baseServerHandoff: ServerHandoff = {
+      basename: build.basename,
+      future: build.future,
+      routeDiscovery: build.routeDiscovery,
+      ssr: build.ssr,
+      isSpaMode,
+    };
     let entryContext: EntryContext = {
       manifest: build.assets,
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
       serverHandoffString: createServerHandoffString({
-        basename: build.basename,
+        ...baseServerHandoff,
         criticalCss,
-        future: build.future,
-        ssr: build.ssr,
-        isSpaMode,
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,
@@ -498,6 +515,7 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
+      routeDiscovery: build.routeDiscovery,
       isSpaMode,
       serializeError: (err) => serializeError(err, serverMode),
     };
@@ -557,12 +575,7 @@ async function handleDocumentRequest(
       entryContext = {
         ...entryContext,
         staticHandlerContext: context,
-        serverHandoffString: createServerHandoffString({
-          basename: build.basename,
-          future: build.future,
-          ssr: build.ssr,
-          isSpaMode,
-        }),
+        serverHandoffString: createServerHandoffString(baseServerHandoff),
         serverHandoffStream: encodeViaTurboStream(
           state,
           request.signal,

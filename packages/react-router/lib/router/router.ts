@@ -4,6 +4,7 @@ import {
   Action as NavigationType,
   createLocation,
   createPath,
+  createBrowserURLImpl,
   invariant,
   parsePath,
   warning,
@@ -703,7 +704,15 @@ interface ShortCircuitable {
   shortCircuited?: boolean;
 }
 
-type PendingActionResult = [string, SuccessResult | ErrorResult];
+// Track any pending errors from the action (or other pre-loader flows).
+// The format is [bubbledRouteId, result, actionRouteId?]
+// We should probably change this to an object now that we (optionally) track
+// the original action route id so we can clear out loaderData in the right in
+// processRouteLoaderData
+//
+type PendingActionResult =
+  | [string, SuccessResult | ErrorResult]
+  | [string, SuccessResult | ErrorResult, string];
 
 interface HandleActionResult extends ShortCircuitable {
   /**
@@ -879,6 +888,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialMatchesIsFOW = false;
   let initialErrors: RouteData | null = null;
+  let initialized: boolean;
 
   if (initialMatches == null && !init.patchRoutesOnNavigation) {
     // If we do not match a user-provided-route, fall back to the root
@@ -887,69 +897,73 @@ export function createRouter(init: RouterInit): Router {
       pathname: init.history.location.pathname,
     });
     let { matches, route } = getShortCircuitMatches(dataRoutes);
+    initialized = true;
     initialMatches = matches;
     initialErrors = { [route.id]: error };
-  }
-
-  // In SPA apps, if the user provided a patchRoutesOnNavigation implementation and
-  // our initial match is a splat route, clear them out so we run through lazy
-  // discovery on hydration in case there's a more accurate lazy route match.
-  // In SSR apps (with `hydrationData`), we expect that the server will send
-  // up the proper matched routes so we don't want to run lazy discovery on
-  // initial hydration and want to hydrate into the splat route.
-  if (initialMatches && !init.hydrationData) {
-    let fogOfWar = checkFogOfWar(
-      initialMatches,
-      dataRoutes,
-      init.history.location.pathname
-    );
-    if (fogOfWar.active) {
-      initialMatches = null;
-    }
-  }
-
-  let initialized: boolean;
-  if (!initialMatches) {
-    initialized = false;
-    initialMatches = [];
-
-    // If partial hydration and fog of war is enabled, we will be running
-    // `patchRoutesOnNavigation` during hydration so include any partial matches as
-    // the initial matches so we can properly render `HydrateFallback`'s
-    let fogOfWar = checkFogOfWar(
-      null,
-      dataRoutes,
-      init.history.location.pathname
-    );
-    if (fogOfWar.active && fogOfWar.matches) {
-      initialMatchesIsFOW = true;
-      initialMatches = fogOfWar.matches;
-    }
-  } else if (initialMatches.some((m) => m.route.lazy)) {
-    // All initialMatches need to be loaded before we're ready.  If we have lazy
-    // functions around still then we'll need to run them in initialize()
-    initialized = false;
-  } else if (!initialMatches.some((m) => m.route.loader)) {
-    // If we've got no loaders to run, then we're good to go
-    initialized = true;
   } else {
-    // With "partial hydration", we're initialized so long as we were
-    // provided with hydrationData for every route with a loader, and no loaders
-    // were marked for explicit hydration
-    let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
-    let errors = init.hydrationData ? init.hydrationData.errors : null;
-    // If errors exist, don't consider routes below the boundary
-    if (errors) {
-      let idx = initialMatches.findIndex(
-        (m) => errors![m.route.id] !== undefined
+    // In SPA apps, if the user provided a patchRoutesOnNavigation implementation and
+    // our initial match is a splat route, clear them out so we run through lazy
+    // discovery on hydration in case there's a more accurate lazy route match.
+    // In SSR apps (with `hydrationData`), we expect that the server will send
+    // up the proper matched routes so we don't want to run lazy discovery on
+    // initial hydration and want to hydrate into the splat route.
+    if (initialMatches && !init.hydrationData) {
+      let fogOfWar = checkFogOfWar(
+        initialMatches,
+        dataRoutes,
+        init.history.location.pathname
       );
-      initialized = initialMatches
-        .slice(0, idx + 1)
-        .every((m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors));
+      if (fogOfWar.active) {
+        initialMatches = null;
+      }
+    }
+
+    if (!initialMatches) {
+      initialized = false;
+      initialMatches = [];
+
+      // If partial hydration and fog of war is enabled, we will be running
+      // `patchRoutesOnNavigation` during hydration so include any partial matches as
+      // the initial matches so we can properly render `HydrateFallback`'s
+      let fogOfWar = checkFogOfWar(
+        null,
+        dataRoutes,
+        init.history.location.pathname
+      );
+      if (fogOfWar.active && fogOfWar.matches) {
+        initialMatchesIsFOW = true;
+        initialMatches = fogOfWar.matches;
+      }
+    } else if (initialMatches.some((m) => m.route.lazy)) {
+      // All initialMatches need to be loaded before we're ready.  If we have lazy
+      // functions around still then we'll need to run them in initialize()
+      initialized = false;
+    } else if (!initialMatches.some((m) => m.route.loader)) {
+      // If we've got no loaders to run, then we're good to go
+      initialized = true;
     } else {
-      initialized = initialMatches.every(
-        (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
-      );
+      // With "partial hydration", we're initialized so long as we were
+      // provided with hydrationData for every route with a loader, and no loaders
+      // were marked for explicit hydration
+      let loaderData = init.hydrationData
+        ? init.hydrationData.loaderData
+        : null;
+      let errors = init.hydrationData ? init.hydrationData.errors : null;
+      // If errors exist, don't consider routes below the boundary
+      if (errors) {
+        let idx = initialMatches.findIndex(
+          (m) => errors![m.route.id] !== undefined
+        );
+        initialized = initialMatches
+          .slice(0, idx + 1)
+          .every(
+            (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+          );
+      } else {
+        initialized = initialMatches.every(
+          (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+        );
+      }
     }
   }
 
@@ -1895,7 +1909,11 @@ export function createRouter(init: RouterInit): Router {
 
       return {
         matches,
-        pendingActionResult: [boundaryMatch.route.id, result],
+        pendingActionResult: [
+          boundaryMatch.route.id,
+          result,
+          actionMatch.route.id,
+        ],
       };
     }
 
@@ -2014,6 +2032,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
+      init.patchRoutesOnNavigation != null,
       pendingActionResult
     );
 
@@ -2460,6 +2479,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
+      init.patchRoutesOnNavigation != null,
       [match.route.id, actionResult]
     );
 
@@ -2513,6 +2533,13 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
+    // Since we let revalidations complete even if the submitting fetcher was
+    // deleted, only put it back to idle if it hasn't been deleted
+    if (state.fetchers.has(key)) {
+      let doneFetcher = getDoneFetcher(actionResult.data);
+      state.fetchers.set(key, doneFetcher);
+    }
+
     let redirect = findRedirect(loaderResults);
     if (redirect) {
       return startRedirectNavigation(
@@ -2546,13 +2573,6 @@ export function createRouter(init: RouterInit): Router {
       revalidatingFetchers,
       fetcherResults
     );
-
-    // Since we let revalidations complete even if the submitting fetcher was
-    // deleted, only put it back to idle if it hasn't been deleted
-    if (state.fetchers.has(key)) {
-      let doneFetcher = getDoneFetcher(actionResult.data);
-      state.fetchers.set(key, doneFetcher);
-    }
 
     abortStaleFetchLoads(loadId);
 
@@ -2768,7 +2788,9 @@ export function createRouter(init: RouterInit): Router {
         // Hard reload if the response contained X-Remix-Reload-Document
         isDocumentReload = true;
       } else if (ABSOLUTE_URL_REGEX.test(location)) {
-        const url = init.history.createURL(location);
+        // We skip `history.createURL` here for absolute URLs because we don't
+        // want to inherit the current `window.location` base URL
+        const url = createBrowserURLImpl(location, true);
         isDocumentReload =
           // Hard reload if it's an absolute URL to a new origin
           url.origin !== routerWindow.location.origin ||
@@ -2878,6 +2900,10 @@ export function createRouter(init: RouterInit): Router {
             error: e,
           };
         });
+      return dataResults;
+    }
+
+    if (request.signal.aborted) {
       return dataResults;
     }
 
@@ -3633,19 +3659,26 @@ export function createStaticHandler(
                   dataRoutes,
                   renderedStaticContext,
                   error,
-                  findNearestBoundary(matches!, routeId).route.id
+                  skipLoaderErrorBubbling
+                    ? routeId
+                    : findNearestBoundary(matches, routeId).route.id
                 )
               );
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
-              // Find the boundary at or above the highest loader.  We can't
-              // render any UI below there since we have no loader data available
-              let loaderIdx = matches!.findIndex((m) => m.route.loader);
-              let boundary =
-                loaderIdx >= 0
-                  ? findNearestBoundary(matches!, matches![loaderIdx].route.id)
-                  : findNearestBoundary(matches!);
+
+              // Find the boundary at or above the source of the middleware
+              // error or the highest loader. We can't render any UI below
+              // the highest loader since we have no loader data available
+              let boundaryRouteId = skipLoaderErrorBubbling
+                ? routeId
+                : findNearestBoundary(
+                    matches,
+                    matches.find(
+                      (m) => m.route.id === routeId || m.route.loader
+                    )?.route.id || routeId
+                  ).route.id;
 
               return respond({
                 matches: matches!,
@@ -3654,7 +3687,7 @@ export function createStaticHandler(
                 loaderData: {},
                 actionData: null,
                 errors: {
-                  [boundary.route.id]: error,
+                  [boundaryRouteId]: error,
                 },
                 statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
@@ -4595,6 +4628,7 @@ function getMatchesToLoad(
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
+  hasPatchRoutesOnNavigation: boolean,
   pendingActionResult?: PendingActionResult
 ): {
   dsMatches: DataStrategyMatch[];
@@ -4729,6 +4763,9 @@ function getMatchesToLoad(
       return;
     }
 
+    let fetcher = state.fetchers.get(key);
+    let isMidInitialLoad =
+      fetcher && fetcher.state !== "idle" && fetcher.data === undefined;
     let fetcherMatches = matchRoutes(routesToUse, f.path, basename);
 
     // If the fetcher path no longer matches, push it in with null matches so
@@ -4736,6 +4773,13 @@ function getMatchesToLoad(
     // currently only a use-case for Remix HMR where the route tree can change
     // at runtime and remove a route previously loaded via a fetcher
     if (!fetcherMatches) {
+      // If this fetcher is still in it's initial loading state, then this is
+      // most likely not a 404 and the fetcher is still in the middle of lazy
+      // route discovery so we can just skip revalidation and let it finish
+      // it's initial load
+      if (hasPatchRoutesOnNavigation && isMidInitialLoad) {
+        return;
+      }
       revalidatingFetchers.push({
         key,
         routeId: f.routeId,
@@ -4756,7 +4800,6 @@ function getMatchesToLoad(
     // Revalidating fetchers are decoupled from the route matches since they
     // load from a static href.  They revalidate based on explicit revalidation
     // (submission, useRevalidator, or X-Remix-Revalidate)
-    let fetcher = state.fetchers.get(key);
     let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
 
     let fetchController = new AbortController();
@@ -4780,11 +4823,7 @@ function getMatchesToLoad(
         lazyRoutePropertiesToSkip,
         scopedContext
       );
-    } else if (
-      fetcher &&
-      fetcher.state !== "idle" &&
-      fetcher.data === undefined
-    ) {
+    } else if (isMidInitialLoad) {
       if (isRevalidationRequired) {
         // If the fetcher hasn't ever completed loading yet, then this isn't a
         // revalidation, it would just be a brand new load if an explicit
@@ -4853,7 +4892,7 @@ function shouldLoadRouteOnHydration(
     return false;
   }
 
-  let hasData = loaderData != null && loaderData[route.id] !== undefined;
+  let hasData = loaderData != null && route.id in loaderData;
   let hasError = errors != null && errors[route.id] !== undefined;
 
   // Don't run if we error'd during SSR
@@ -6130,11 +6169,13 @@ function processRouteLoaderData(
   });
 
   // If we didn't consume the pending action error (i.e., all loaders
-  // resolved), then consume it here.  Also clear out any loaderData for the
-  // throwing route
+  // resolved), then consume it here
   if (pendingError !== undefined && pendingActionResult) {
     errors = { [pendingActionResult[0]]: pendingError };
-    loaderData[pendingActionResult[0]] = undefined;
+    // Clear out any loaderData for the throwing route
+    if (pendingActionResult[2]) {
+      loaderData[pendingActionResult[2]] = undefined;
+    }
   }
 
   return {

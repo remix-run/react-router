@@ -429,6 +429,7 @@ export function RSCHydratedRouter({
         imports: [],
       },
     },
+    routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
     routeModules: {},
   };
 

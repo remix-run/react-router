@@ -643,11 +643,17 @@ export type ScriptsProps = Omit<
   @category Components
  */
 export function Scripts(props: ScriptsProps) {
-  let { manifest, serverHandoffString, isSpaMode, ssr, renderMeta } =
-    useFrameworkContext();
+  let {
+    manifest,
+    serverHandoffString,
+    isSpaMode,
+    renderMeta,
+    routeDiscovery,
+    ssr,
+  } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = isFogOfWarEnabled(ssr);
+  let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts

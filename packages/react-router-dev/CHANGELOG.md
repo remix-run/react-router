@@ -1,5 +1,117 @@
 # `@react-router/dev`
 
+## 7.6.0
+
+### Minor Changes
+
+- Added a new `react-router.config.ts` `routeDiscovery` option to configure Lazy Route Discovery behavior. ([#13451](https://github.com/remix-run/react-router/pull/13451))
+
+  - By default, Lazy Route Discovery is enabled and makes manifest requests to the `/__manifest` path:
+    - `routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" }`
+  - You can modify the manifest path used:
+    - `routeDiscovery: { mode: "lazy", manifestPath: "/custom-manifest" }`
+  - Or you can disable this feature entirely and include all routes in the manifest on initial document load:
+    - `routeDiscovery: { mode: "initial" }`
+
+- Automatic types for future flags ([#13506](https://github.com/remix-run/react-router/pull/13506))
+
+  Some future flags alter the way types should work in React Router.
+  Previously, you had to remember to manually opt-in to the new types.
+
+  For example, for `unstable_middleware`:
+
+  ```ts
+  // react-router.config.ts
+
+  // Step 1: Enable middleware
+  export default {
+    future: {
+      unstable_middleware: true,
+    },
+  };
+
+  // Step 2: Enable middleware types
+  declare module "react-router" {
+    interface Future {
+      unstable_middleware: true; // 👈 Enable middleware types
+    }
+  }
+  ```
+
+  It was up to you to keep the runtime future flags synced with the types for those future flags.
+  This was confusing and error-prone.
+
+  Now, React Router will automatically enable types for future flags.
+  That means you only need to specify the runtime future flag:
+
+  ```ts
+  // react-router.config.ts
+
+  // Step 1: Enable middleware
+  export default {
+    future: {
+      unstable_middleware: true,
+    },
+  };
+
+  // No step 2! That's it!
+  ```
+
+  Behind the scenes, React Router will generate the corresponding `declare module` into `.react-router/types`.
+  Currently this is done in `.react-router/types/+register.ts` but this is an implementation detail that may change in the future.
+
+### Patch Changes
+
+- Support project root directories without a `package.json` if it exists in a parent directory ([#13472](https://github.com/remix-run/react-router/pull/13472))
+
+- When providing a custom Vite config path via the CLI `--config`/`-c` flag, default the project root directory to the directory containing the Vite config when not explicitly provided ([#13472](https://github.com/remix-run/react-router/pull/13472))
+
+- In a `routes.ts` context, ensure the `--mode` flag is respected for `import.meta.env.MODE` ([#13485](https://github.com/remix-run/react-router/pull/13485))
+
+  Previously, `import.meta.env.MODE` within a `routes.ts` context was always `"development"` for the `dev` and `typegen --watch` commands, but otherwise resolved to `"production"`. These defaults are still in place, but if a `--mode` flag is provided, this will now take precedence.
+
+- Ensure consistent project root directory resolution logic in CLI commands ([#13472](https://github.com/remix-run/react-router/pull/13472))
+
+- When executing `react-router.config.ts` and `routes.ts` with `vite-node`, ensure that PostCSS config files are ignored ([#13489](https://github.com/remix-run/react-router/pull/13489))
+
+- When extracting critical CSS during development, ensure it's loaded from the client environment to avoid issues with plugins that handle the SSR environment differently ([#13503](https://github.com/remix-run/react-router/pull/13503))
+
+- When `future.unstable_viteEnvironmentApi` is enabled, ensure that `build.assetsDir` in Vite config is respected when `environments.client.build.assetsDir` is not configured ([#13491](https://github.com/remix-run/react-router/pull/13491))
+
+- Fix "Status message is not supported by HTTP/2" error during dev when using HTTPS ([#13460](https://github.com/remix-run/react-router/pull/13460))
+
+- Update config when `react-router.config.ts` is created or deleted during development. ([#12319](https://github.com/remix-run/react-router/pull/12319))
+
+- Skip unnecessary `routes.ts` evaluation before Vite build is started ([#13513](https://github.com/remix-run/react-router/pull/13513))
+
+- Fix `TS2300: Duplicate identifier` errors caused by generated types ([#13499](https://github.com/remix-run/react-router/pull/13499))
+
+  Previously, routes that had the same full path would cause duplicate entries in the generated types for `href` (`.react-router/types/+register.ts`), causing type checking errors.
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+  - `@react-router/node@7.6.0`
+  - `@react-router/serve@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+  - `@react-router/node@7.5.3`
+  - `@react-router/serve@7.5.3`
+
+## 7.5.2
+
+### Patch Changes
+
+- Adjust approach for Prerendering/SPA Mode via headers ([#13453](https://github.com/remix-run/react-router/pull/13453))
+- Updated dependencies:
+  - `react-router@7.5.2`
+  - `@react-router/node@7.5.2`
+  - `@react-router/serve@7.5.2`
+
 ## 7.5.1
 
 ### Patch Changes

@@ -1,7 +1,8 @@
 import * as React from "react";
-import { decode } from "turbo-stream";
+
+import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
-import { isResponse } from "../../router/router";
+import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -23,6 +24,8 @@ import type { RouteModules } from "./routeModules";
 import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
+
+class SingleFetchNoResultError extends Error {}
 
 export type SingleFetchRedirectResult = {
   redirect: string;
@@ -56,6 +59,13 @@ interface StreamTransferProps {
   textDecoder: TextDecoder;
   nonce?: string;
 }
+
+// We can't use a 3xx status or else the `fetch()` would follow the redirect.
+// We need to communicate the redirect back as data so we can act on it in the
+// client side router.  We use a 202 to avoid any automatic caching we might
+// get from a 200 since a "temporary" redirect should not be cached.  This lets
+// the user control cache behavior via Cache-Control
+export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
 // Some status codes are not permitted to have bodies, so we want to just
 // treat those as "no data" instead of throwing an exception:
@@ -282,7 +292,11 @@ async function singleFetchActionStrategy(
     return result;
   });
 
-  if (isResponse(result.result) || isRouteErrorResponse(result.result)) {
+  if (
+    isResponse(result.result) ||
+    isRouteErrorResponse(result.result) ||
+    isDataWithResponseInit(result.result)
+  ) {
     return { [actionMatch.route.id]: result };
   }
 
@@ -422,14 +436,19 @@ async function singleFetchLoaderNavigationStrategy(
   await Promise.all(routeDfds.map((d) => d.promise));
 
   // We can skip the server call:
-  // - On initial hydration - only clientLoaders can pass through via `clientLoader.hydrate`
+  // - On initial hydration - only clientLoaders can pass through via
+  //   `clientLoader.hydrate`. We check the navigation state below as well
+  //   because if a clientLoader redirected we'll still be `initialized=false`
+  //   but we want to call loaders for the new location
   // - If there are no routes to fetch from the server
   //
   // One exception - if we are performing an HDR revalidation we have to call
   // the server in case a new loader has shown up that the manifest doesn't yet
   // know about
+  let isInitialLoad =
+    !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    (!router.state.initialized || routesParams.size === 0) &&
+    (isInitialLoad || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
@@ -450,7 +469,54 @@ async function singleFetchLoaderNavigationStrategy(
 
   await resolvePromise;
 
+  await bubbleMiddlewareErrors(
+    singleFetchDfd.promise,
+    args.matches,
+    routesParams,
+    results
+  );
+
   return results;
+}
+
+// If a middleware threw on the way down, we won't have data for our requested
+// loaders and they'll resolve to `SingleFetchNoResultError` results.  If this
+// happens, take the highest error we find in our results (which is a middleware
+// error if no loaders ever ran), and assign to these missing routes and let
+// the router bubble accordingly
+async function bubbleMiddlewareErrors(
+  singleFetchPromise: Promise<DecodedSingleFetchResults>,
+  matches: DataStrategyFunctionArgs["matches"],
+  routesParams: Set<string>,
+  results: Record<string, DataStrategyResult>
+) {
+  try {
+    let middlewareError: unknown;
+    let fetchedData = await singleFetchPromise;
+
+    if ("routes" in fetchedData) {
+      for (let match of matches) {
+        if (match.route.id in fetchedData.routes) {
+          let routeResult = fetchedData.routes[match.route.id];
+          if ("error" in routeResult) {
+            middlewareError = routeResult.error;
+            break;
+          }
+        }
+      }
+    }
+
+    if (middlewareError !== undefined) {
+      Array.from(routesParams.values()).forEach((routeId) => {
+        if (results[routeId].result instanceof SingleFetchNoResultError) {
+          results[routeId].result = middlewareError;
+        }
+      });
+    }
+  } catch (e) {
+    // No-op - this logic is only intended to process successful responses
+    // If the `.data` failed, the routes will handle those errors themselves
+  }
 }
 
 // Fetcher loader calls are much simpler than navigational loader calls
@@ -535,6 +601,22 @@ async function fetchAndDecodeViaTurboStream(
   // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
   if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
     throw new ErrorResponseImpl(404, "Not Found", true);
+  }
+
+  // Handle non-RR redirects (i.e., from express middleware)
+  if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
+    return {
+      status: SINGLE_FETCH_REDIRECT_STATUS,
+      data: {
+        redirect: {
+          redirect: res.headers.get("X-Remix-Redirect")!,
+          status: Number(res.headers.get("X-Remix-Status") || "302"),
+          revalidate: res.headers.get("X-Remix-Revalidate") === "true",
+          reload: res.headers.get("X-Remix-Reload-Document") === "true",
+          replace: res.headers.get("X-Remix-Replace") === "true",
+        },
+      },
+    };
   }
 
   if (NO_BODY_STATUS_CODES.has(res.status)) {
@@ -663,8 +745,11 @@ function unwrapSingleFetchResult(
   }
 
   let routeResult = result.routes[routeId];
-  invariant(routeResult, `No response found for routeId "${routeId}"`);
-  if ("error" in routeResult) {
+  if (routeResult == null) {
+    throw new SingleFetchNoResultError(
+      `No result found for routeId "${routeId}"`
+    );
+  } else if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
     return routeResult.data;

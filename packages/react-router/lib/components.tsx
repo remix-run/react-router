@@ -44,6 +44,7 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
+  ENABLE_DEV_WARNINGS,
   FetchersContext,
   LocationContext,
   NavigationContext,
@@ -67,10 +68,6 @@ import {
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
  * @private

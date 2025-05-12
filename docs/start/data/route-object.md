@@ -139,7 +139,17 @@ export default function Items() {
 
 ## `shouldRevalidate`
 
-By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
+Loader data is automatically revalidated after certain events like navigations and form submissions.
+
+This hook enables you to opt in or out of the default revalidation behavior. The default behavior is nuanced to avoid calling loaders unnecessarily.
+
+A route loader is revalidated when:
+
+- its own route params change
+- any change to URL search params
+- after any actions are called
+
+By defining this function, you opt out of the default behavior completely and can manually control when loader data is revalidated for navigations and form submissions.
 
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
@@ -158,6 +168,10 @@ createBrowserRouter([
   },
 ]);
 ```
+
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
+
+Please note the default behavior is different in [Framework Mode](../modes).
 
 ## `lazy`
 

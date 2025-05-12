@@ -39,7 +39,11 @@ import type { Cache } from "./cache";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
-import { getStylesForPathname, isCssModulesFile } from "./styles";
+import {
+  getCssStringFromViteDevModuleCode,
+  getStylesForPathname,
+  isCssModulesFile,
+} from "./styles";
 import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
@@ -136,10 +140,7 @@ exports are only ever used on the server. Without this optimization we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
 
-export type EnvironmentName =
-  | "client"
-  | SsrEnvironmentName
-  | CssDevHelperEnvironmentName;
+export type EnvironmentName = "client" | SsrEnvironmentName;
 
 const SSR_BUNDLE_PREFIX = "ssrBundle_";
 type SsrBundleEnvironmentName = `${typeof SSR_BUNDLE_PREFIX}${string}`;
@@ -150,16 +151,6 @@ function isSsrBundleEnvironmentName(
 ): name is SsrBundleEnvironmentName {
   return name.startsWith(SSR_BUNDLE_PREFIX);
 }
-
-// We use a separate environment for loading the critical CSS during
-// development. This is because "ssrLoadModule" isn't available if the "ssr"
-// environment has been defined by another plugin (e.g.
-// vite-plugin-cloudflare) as a custom Vite.DevEnvironment rather than a
-// Vite.RunnableDevEnvironment:
-// https://vite.dev/guide/api-environment-frameworks.html#runtime-agnostic-ssr
-const CSS_DEV_HELPER_ENVIRONMENT_NAME =
-  "__react_router_css_dev_helper__" as const;
-type CssDevHelperEnvironmentName = typeof CSS_DEV_HELPER_ENVIRONMENT_NAME;
 
 type EnvironmentOptions = Pick<Vite.EnvironmentOptions, "build" | "resolve">;
 
@@ -742,6 +733,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const ssr = ${ctx.reactRouterConfig.ssr};
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
+      export const routeDiscovery = ${JSON.stringify(
+        ctx.reactRouterConfig.routeDiscovery
+      )};
       export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -816,10 +810,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let sriManifest: ReactRouterManifest["sri"] = {};
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".js")) {
+        const entryNormalizedPath =
+          "parentPath" in entry && typeof entry.parentPath === "string"
+            ? entry.parentPath
+            : entry.path;
+
         let contents;
         try {
           contents = await fse.readFile(
-            path.join(entry.path, entry.name),
+            path.join(entryNormalizedPath, entry.name),
             "utf-8"
           );
         } catch (e) {
@@ -831,7 +830,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .digest()
           .toString("base64");
         let filepath = getVite().normalizePath(
-          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+          path.relative(
+            clientBuildDirectory,
+            path.join(entryNormalizedPath, entry.name)
+          )
         );
         sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
       }
@@ -1118,40 +1120,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       return cssModulesManifest[dep.file];
     }
 
-    const vite = getVite();
-    const viteMajor = parseInt(vite.version.split(".")[0], 10);
-
-    const url =
-      viteMajor >= 6
-        ? // We need the ?inline query in Vite v6 when loading CSS in SSR
-          // since it does not expose the default export for CSS in a
-          // server environment. This is to align with non-SSR
-          // environments. For backwards compatibility with v5 we keep
-          // using the URL without ?inline query because the HMR code was
-          // relying on the implicit SSR-client module graph relationship.
-          injectQuery(dep.url, "inline")
-        : dep.url;
-
-    let cssMod: unknown;
-    if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
-      const cssDevHelperEnvironment =
-        viteDevServer.environments[CSS_DEV_HELPER_ENVIRONMENT_NAME];
-      invariant(cssDevHelperEnvironment, "Missing CSS dev helper environment");
-      invariant(vite.isRunnableDevEnvironment(cssDevHelperEnvironment));
-      cssMod = await cssDevHelperEnvironment.runner.import(url);
-    } else {
-      cssMod = await viteDevServer.ssrLoadModule(url);
-    }
-
+    let transformedCssCode = (await viteDevServer.transformRequest(dep.url))
+      ?.code;
     invariant(
-      typeof cssMod === "object" &&
-        cssMod !== null &&
-        "default" in cssMod &&
-        typeof cssMod.default === "string",
+      transformedCssCode,
       `Failed to load CSS for ${dep.file ?? dep.url}`
     );
 
-    return cssMod.default;
+    let cssString = getCssStringFromViteDevModuleCode(transformedCssCode);
+    invariant(
+      typeof cssString === "string",
+      `Failed to extract CSS for ${dep.file ?? dep.url}`
+    );
+
+    return cssString;
   };
 
   return [
@@ -1187,8 +1169,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         rootDirectory =
           viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
+        let mode = viteConfigEnv.mode;
+
         if (viteCommand === "serve") {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
+            mode,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1196,6 +1181,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         reactRouterConfigLoader = await createConfigLoader({
           rootDirectory,
+          mode,
           watch: viteCommand === "serve",
         });
 
@@ -1552,7 +1538,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         reactRouterConfigLoader.onChange(
           async ({
             result,
-            configCodeUpdated,
+            configCodeChanged,
+            routeConfigCodeChanged,
             configChanged,
             routeConfigChanged,
           }) => {
@@ -1565,21 +1552,22 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               return;
             }
 
-            if (routeConfigChanged) {
-              logger.info(colors.green("Route config changed."), {
-                clear: true,
-                timestamp: true,
-              });
-            } else if (configCodeUpdated) {
-              logger.info(colors.green("Config updated."), {
-                clear: true,
-                timestamp: true,
-              });
-            }
+            // prettier-ignore
+            let message =
+              configChanged ? "Config changed." :
+              routeConfigChanged ? "Route config changed." :
+              configCodeChanged ? "Config saved." :
+              routeConfigCodeChanged ? " Route config saved." :
+              "Config saved";
+
+            logger.info(colors.green(message), {
+              clear: true,
+              timestamp: true,
+            });
 
             await updatePluginContext();
 
-            if (configChanged) {
+            if (configChanged || routeConfigChanged) {
               invalidateVirtualModules(viteDevServer);
             }
           }
@@ -1679,50 +1667,125 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
 
-          // We only move assets that aren't in the client build, otherwise we
-          // remove them. These assets only exist because we explicitly set
-          // `ssrEmitAssets: true` in the SSR Vite config. These assets
-          // typically wouldn't exist by default, which is why we assume it's
-          // safe to remove them. We're aiming for a clean build output so that
-          // unnecessary assets don't get deployed alongside the server code.
+          // If the consumer has explicitly opted in to keeping the SSR build
+          // assets, we don't remove them. We only copy missing assets from the
+          // SSR to the client build.
+          let userSsrEmitAssets =
+            (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+              ? viteUserConfig.environments?.ssr?.build?.ssrEmitAssets ??
+                viteUserConfig.environments?.ssr?.build?.emitAssets
+              : null) ??
+            viteUserConfig.build?.ssrEmitAssets ??
+            false;
+
+          // We only move/copy assets that aren't in the client build, otherwise
+          // we remove them if the consumer hasn't explicitly enabled
+          // `ssrEmitAssets` in their Vite config. These assets only exist
+          // because we internally enable `ssrEmitAssets` within our plugin.
+          // These assets typically wouldn't exist by default, which is why we
+          // assume it's safe to remove them.
           let movedAssetPaths: string[] = [];
+          let removedAssetPaths: string[] = [];
+          let copiedAssetPaths: string[] = [];
           for (let ssrAssetPath of ssrAssetPaths) {
             let src = path.join(serverBuildDirectory, ssrAssetPath);
             let dest = path.join(clientBuildDirectory, ssrAssetPath);
 
-            if (!fse.existsSync(dest)) {
-              await fse.move(src, dest);
-              movedAssetPaths.push(dest);
-            } else {
-              await fse.remove(src);
+            if (!userSsrEmitAssets) {
+              if (!fse.existsSync(dest)) {
+                await fse.move(src, dest);
+                movedAssetPaths.push(dest);
+              } else {
+                await fse.remove(src);
+                removedAssetPaths.push(dest);
+              }
+            } else if (!fse.existsSync(dest)) {
+              await fse.copy(src, dest);
+              copiedAssetPaths.push(dest);
             }
           }
 
-          // We assume CSS assets from the SSR build are unnecessary and remove
-          // them for the same reasons as above.
-          let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
-            (chunk) => chunk.css ?? []
-          );
-          await Promise.all(
-            ssrCssPaths.map((cssPath) =>
-              fse.remove(path.join(serverBuildDirectory, cssPath))
-            )
-          );
-
-          if (movedAssetPaths.length) {
-            viteConfig.logger.info(
-              [
-                "",
-                `${colors.green("✓")} ${movedAssetPaths.length} asset${
-                  movedAssetPaths.length > 1 ? "s" : ""
-                } moved from React Router server build to client assets.`,
-                ...movedAssetPaths.map((movedAssetPath) =>
-                  colors.dim(path.relative(ctx.rootDirectory, movedAssetPath))
-                ),
-                "",
-              ].join("\n")
+          if (!userSsrEmitAssets) {
+            // We assume CSS assets from the SSR build are unnecessary and
+            // remove them for the same reasons as above.
+            let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
+              (chunk) => chunk.css ?? []
+            );
+            await Promise.all(
+              ssrCssPaths.map(async (cssPath) => {
+                let src = path.join(serverBuildDirectory, cssPath);
+                await fse.remove(src);
+                removedAssetPaths.push(src);
+              })
             );
           }
+
+          let cleanedAssetPaths = [...removedAssetPaths, ...movedAssetPaths];
+          let handledAssetPaths = [...cleanedAssetPaths, ...copiedAssetPaths];
+
+          // Clean empty asset directories
+          let cleanedAssetDirs = new Set(cleanedAssetPaths.map(path.dirname));
+          await Promise.all(
+            Array.from(cleanedAssetDirs).map(async (dir) => {
+              try {
+                const files = await fse.readdir(dir);
+                if (files.length === 0) {
+                  await fse.remove(dir);
+                }
+              } catch {}
+            })
+          );
+
+          // If we handled any assets, add some leading whitespace to
+          // our logs to make them more prominent
+          if (handledAssetPaths.length) {
+            viteConfig.logger.info("");
+          }
+
+          function logHandledAssets(paths: string[], message: string) {
+            invariant(viteConfig);
+            if (paths.length) {
+              viteConfig.logger.info(
+                [
+                  `${colors.green("✓")} ${message}`,
+                  ...paths.map((assetPath) =>
+                    colors.dim(path.relative(ctx.rootDirectory, assetPath))
+                  ),
+                ].join("\n")
+              );
+            }
+          }
+
+          logHandledAssets(
+            removedAssetPaths,
+            `${removedAssetPaths.length} asset${
+              removedAssetPaths.length > 1 ? "s" : ""
+            } cleaned from React Router server build.`
+          );
+
+          logHandledAssets(
+            movedAssetPaths,
+            `${movedAssetPaths.length} asset${
+              movedAssetPaths.length > 1 ? "s" : ""
+            } moved from React Router server build to client assets.`
+          );
+
+          logHandledAssets(
+            copiedAssetPaths,
+            `${copiedAssetPaths.length} asset${
+              copiedAssetPaths.length > 1 ? "s" : ""
+            } copied from React Router server build to client assets.`
+          );
+
+          // If we handled any assets, add some leading whitespace to our logs
+          // to make them more prominent
+          if (handledAssetPaths.length) {
+            viteConfig.logger.info("");
+          }
+
+          // Set an environment variable we can look for in the handler to
+          // enable some build-time-only logic
+          process.env.IS_RR_BUILD_REQUEST = "yes";
 
           if (isPrerenderingEnabled(ctx.reactRouterConfig)) {
             // If we have prerender routes, that takes precedence over SPA mode
@@ -2623,11 +2686,6 @@ async function handlePrerender(
   }
 
   let buildRoutes = createPrerenderRoutes(build.routes);
-  let headers = {
-    // Header that can be used in the loader to know if you're running at
-    // build time or runtime
-    "X-React-Router-Prerender": "yes",
-  };
   for (let path of build.prerender) {
     // Ensure we have a leading slash for matching
     let matches = matchRoutes(buildRoutes, `/${path}/`.replace(/^\/\/+/, "/"));
@@ -2655,8 +2713,7 @@ async function handlePrerender(
           [leafRoute.id],
           clientBuildDirectory,
           reactRouterConfig,
-          viteConfig,
-          { headers }
+          viteConfig
         );
         // Prerender a raw file for external consumption
         await prerenderResourceRoute(
@@ -2664,8 +2721,7 @@ async function handlePrerender(
           path,
           clientBuildDirectory,
           reactRouterConfig,
-          viteConfig,
-          { headers }
+          viteConfig
         );
       } else {
         viteConfig.logger.warn(
@@ -2684,8 +2740,7 @@ async function handlePrerender(
           null,
           clientBuildDirectory,
           reactRouterConfig,
-          viteConfig,
-          { headers }
+          viteConfig
         );
       }
 
@@ -2698,11 +2753,10 @@ async function handlePrerender(
         data
           ? {
               headers: {
-                ...headers,
                 "X-React-Router-Prerender-Data": encodeURI(data),
               },
             }
-          : { headers }
+          : undefined
       );
     }
   }
@@ -2746,7 +2800,7 @@ async function prerenderData(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${
     prerenderPath === "/"
@@ -2789,7 +2843,7 @@ async function prerenderRoute(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
     /\/\/+/g,
@@ -2845,7 +2899,7 @@ async function prerenderResourceRoute(
   clientBuildDirectory: string,
   reactRouterConfig: ResolvedReactRouterConfig,
   viteConfig: Vite.ResolvedConfig,
-  requestInit: RequestInit
+  requestInit?: RequestInit
 ) {
   let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`
     .replace(/\/\/+/g, "/")
@@ -3543,10 +3597,14 @@ export async function getEnvironmentOptionsResolvers(
                 let routeChunkSuffix = routeChunkName
                   ? `-${kebabCase(routeChunkName)}`
                   : "";
-                return path.posix.join(
+                let assetsDir =
                   (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
                     ? viteUserConfig?.environments?.client?.build?.assetsDir
-                    : viteUserConfig?.build?.assetsDir) ?? "assets",
+                    : null) ??
+                  viteUserConfig?.build?.assetsDir ??
+                  "assets";
+                return path.posix.join(
+                  assetsDir,
                   `[name]${routeChunkSuffix}-[hash].js`
                 );
               },
@@ -3583,13 +3641,6 @@ export async function getEnvironmentOptionsResolvers(
           outDir: getServerBuildDirectory(ctx.reactRouterConfig),
         },
       });
-  }
-
-  if (
-    ctx.reactRouterConfig.future.unstable_viteEnvironmentApi &&
-    viteCommand === "serve"
-  ) {
-    environmentOptionsResolvers[CSS_DEV_HELPER_ENVIRONMENT_NAME] = () => ({});
   }
 
   return environmentOptionsResolvers;

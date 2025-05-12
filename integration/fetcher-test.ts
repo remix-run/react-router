@@ -525,3 +525,76 @@ test.describe("fetcher aborts and adjacent forms", () => {
     await page.waitForSelector("#idle", { timeout: 2000 });
   });
 });
+
+test.describe("fetcher lazy route discovery", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.afterAll(() => {
+    appFixture.close();
+  });
+
+  test("skips revalidation of initial load fetchers performing lazy route discovery", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      files: {
+        "app/routes/parent.tsx": js`
+          import * as React from "react";
+          import { useFetcher, useNavigate, Outlet } from "react-router";
+
+          export default function Index() {
+            const fetcher = useFetcher();
+            const navigate = useNavigate();
+
+            React.useEffect(() => {
+              fetcher.load('/api');
+            }, []);
+
+            React.useEffect(() => {
+              navigate('/parent/child');
+            }, []);
+
+            return (
+              <>
+                <h1>Parent</h1>
+                {fetcher.data ?
+                  <pre data-fetcher>{fetcher.data}</pre> :
+                  null}
+                <Outlet/>
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.child.tsx": js`
+          export default function Index() {
+            return <h2>Child</h2>;
+          }
+        `,
+        "app/routes/api.tsx": js`
+          export async function loader() {
+            return "FETCHED!"
+          }
+        `,
+      },
+    });
+
+    // Slow down the fetcher discovery a tiny bit so it doesn't resolve prior
+    // to the navigation
+    page.route(/\/__manifest/, async (route) => {
+      console.log(route.request().url());
+      if (route.request().url().includes(encodeURIComponent("/api"))) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      route.continue();
+    });
+
+    appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/parent");
+    await page.waitForSelector("h2", { timeout: 3000 });
+    await expect(page.locator("h2")).toHaveText("Child");
+    await page.waitForSelector("[data-fetcher]", { timeout: 3000 });
+    await expect(page.locator("[data-fetcher]")).toHaveText("FETCHED!");
+  });
+});

@@ -303,7 +303,13 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           if (file.endsWith(".html") && !fse.existsSync(path.join(dir, file))) {
             file = "__spa-fallback.html";
           }
-          res.sendFile(path.join(dir, file), next);
+          let filePath = path.join(dir, file);
+          if (fse.existsSync(filePath)) {
+            res.sendFile(filePath, next);
+          } else {
+            // Avoid a built-in console error from `sendFile` on 404's
+            res.status(404).send("Not found");
+          }
         });
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });

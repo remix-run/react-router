@@ -9,7 +9,6 @@ import {
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
-import type { ServerBuild } from "../../lib/server-runtime/build";
 import { mockServerBuild } from "./utils";
 
 function spyConsole() {
@@ -29,43 +28,23 @@ function spyConsole() {
 
 describe("server", () => {
   let routeId = "root";
-  let build: ServerBuild = {
-    ssr: true,
-    entry: {
-      module: {
-        default: async (request) => {
-          return new Response(`${request.method}, ${request.url} COMPONENT`);
-        },
-      },
-    },
-    routes: {
+  let build = mockServerBuild(
+    {
       [routeId]: {
-        id: routeId,
         path: "",
-        module: {
-          action: ({ request }) =>
-            new Response(`${request.method} ${request.url} ACTION`),
-          loader: ({ request }) =>
-            new Response(`${request.method} ${request.url} LOADER`),
-          default: () => "COMPONENT",
-        },
+        action: ({ request }) =>
+          new Response(`${request.method} ${request.url} ACTION`),
+        loader: ({ request }) =>
+          new Response(`${request.method} ${request.url} LOADER`),
+        default: () => "COMPONENT",
       },
     },
-    assets: {
-      routes: {
-        [routeId]: {
-          hasAction: true,
-          hasErrorBoundary: false,
-          hasLoader: true,
-          id: routeId,
-          module: routeId,
-          path: "",
-        },
+    {
+      handleDocumentRequest(request) {
+        return new Response(`${request.method}, ${request.url} COMPONENT`);
       },
-    },
-    future: {},
-    prerender: [],
-  } as unknown as ServerBuild;
+    }
+  );
 
   describe("createRequestHandler", () => {
     let spy = spyConsole();
@@ -116,57 +95,21 @@ describe("server", () => {
     });
 
     it("accepts proper values from getLoadContext (without middleware)", async () => {
-      let handler = createRequestHandler({
-        ssr: true,
-        entry: {
-          module: {
-            default: async (request) => {
-              return new Response(
-                `${request.method}, ${request.url} COMPONENT`
-              );
-            },
-          },
-        },
-        routes: {
+      let build = mockServerBuild(
+        {
           root: {
-            id: "root",
             path: "",
-            module: {
-              loader: ({ context }) => context.foo,
-              default: () => "COMPONENT",
-            },
+            loader: ({ context }) => context.foo,
+            default: () => "COMPONENT",
           },
         },
-        assets: {
-          routes: {
-            root: {
-              clientActionModule: undefined,
-              clientLoaderModule: undefined,
-              clientMiddlewareModule: undefined,
-              hasAction: true,
-              hasClientAction: false,
-              hasClientLoader: false,
-              hasClientMiddleware: false,
-              hasErrorBoundary: false,
-              hasLoader: true,
-              hydrateFallbackModule: undefined,
-              id: routeId,
-              module: routeId,
-              path: "",
-            },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
           },
-          entry: { imports: [], module: "" },
-          url: "",
-          version: "",
-        },
-        future: {
-          unstable_middleware: false,
-        },
-        prerender: [],
-        publicPath: "/",
-        assetsBuildDirectory: "/",
-        isSpaMode: false,
-      });
+        }
+      );
+      let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/_root.data"),
         {
@@ -179,57 +122,21 @@ describe("server", () => {
 
     it("accepts proper values from getLoadContext (with middleware)", async () => {
       let fooContext = unstable_createContext<string>();
-      let handler = createRequestHandler({
-        ssr: true,
-        entry: {
-          module: {
-            default: async (request) => {
-              return new Response(
-                `${request.method}, ${request.url} COMPONENT`
-              );
-            },
-          },
-        },
-        routes: {
+      let build = mockServerBuild(
+        {
           root: {
-            id: "root",
             path: "",
-            module: {
-              loader: ({ context }) => context.get(fooContext),
-              default: () => "COMPONENT",
-            },
+            loader: ({ context }) => context.get(fooContext),
+            default: () => "COMPONENT",
           },
         },
-        assets: {
-          routes: {
-            root: {
-              clientActionModule: undefined,
-              clientLoaderModule: undefined,
-              clientMiddlewareModule: undefined,
-              hasAction: true,
-              hasClientAction: false,
-              hasClientLoader: false,
-              hasClientMiddleware: false,
-              hasErrorBoundary: false,
-              hasLoader: true,
-              hydrateFallbackModule: undefined,
-              id: routeId,
-              module: routeId,
-              path: "",
-            },
+        {
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
           },
-          entry: { imports: [], module: "" },
-          url: "",
-          version: "",
-        },
-        future: {
-          unstable_middleware: true,
-        },
-        prerender: [],
-        publicPath: "/",
-        assetsBuildDirectory: "/",
-        isSpaMode: false,
-      });
+        }
+      );
+      let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/_root.data"),
         // @ts-expect-error In apps the expected type is handled via the Future interface
@@ -241,59 +148,25 @@ describe("server", () => {
 
     it("errors if an invalid value is returned from getLoadContext (with middleware)", async () => {
       let handleErrorSpy = jest.fn();
-      let handler = createRequestHandler({
-        ssr: true,
-        entry: {
-          module: {
-            handleError: handleErrorSpy,
-            default: async (request) => {
-              return new Response(
-                `${request.method}, ${request.url} COMPONENT`
-              );
-            },
-          },
-        },
-        routes: {
+      let build = mockServerBuild(
+        {
           root: {
-            id: "root",
             path: "",
-            module: {
-              loader: ({ context }) => context.foo,
-              default: () => "COMPONENT",
-            },
+            loader: ({ context }) => context.foo,
+            default: () => "COMPONENT",
           },
         },
-        assets: {
-          routes: {
-            root: {
-              clientActionModule: undefined,
-              clientLoaderModule: undefined,
-              clientMiddlewareModule: undefined,
-              hasAction: true,
-              hasClientAction: false,
-              hasClientLoader: false,
-              hasClientMiddleware: false,
-              hasErrorBoundary: false,
-              hasLoader: true,
-              hydrateFallbackModule: undefined,
-              id: routeId,
-              module: routeId,
-              path: "",
-            },
+        {
+          future: {
+            unstable_middleware: true,
           },
-          entry: { imports: [], module: "" },
-          url: "",
-          version: "",
-        },
-        future: {
-          unstable_middleware: true,
-        },
-        prerender: [],
-        publicPath: "/",
-        assetsBuildDirectory: "/",
-        isSpaMode: false,
-      });
-
+          handleError: handleErrorSpy,
+          handleDocumentRequest(request) {
+            return new Response(`${request.method}, ${request.url} COMPONENT`);
+          },
+        }
+      );
+      let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/_root.data"),
         {
@@ -2220,31 +2093,27 @@ describe("shared server runtime", () => {
     let indexLoader = jest.fn(() => {
       return "index";
     });
-    let build = mockServerBuild({
-      root: {
-        default: {},
-        loader: rootLoader,
-        ErrorBoundary: {},
+    let build = mockServerBuild(
+      {
+        root: {
+          default: {},
+          loader: rootLoader,
+          ErrorBoundary: {},
+        },
+        "routes/_index": {
+          parentId: "root",
+          default: {},
+          loader: indexLoader,
+        },
       },
-      "routes/_index": {
-        parentId: "root",
-        default: {},
-        loader: indexLoader,
-      },
-    });
-
-    build.entry.module.default = jest.fn(
-      async (
-        request,
-        responseStatusCode,
-        responseHeaders,
-        entryContext,
-        loadContext
-      ) =>
-        new Response(JSON.stringify(loadContext), {
-          status: responseStatusCode,
-          headers: responseHeaders,
-        })
+      {
+        handleDocumentRequest(request, responseStatusCode, responseHeaders) {
+          return new Response(JSON.stringify(loadContext), {
+            status: responseStatusCode,
+            headers: responseHeaders,
+          });
+        },
+      }
     );
 
     let handler = createRequestHandler(build, ServerMode.Development);

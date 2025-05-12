@@ -56,7 +56,7 @@ createBrowserRouter([
 
 ## Route Objects
 
-Route objects define the behavior of a route beyond just the path and component, like data loading and actions. We'll go into more detail in the [Route Object guide](./route-objects), but here's a quick example of a loader.
+Route objects define the behavior of a route beyond just the path and component, like data loading and actions. We'll go into more detail in the [Route Object guide](./route-object), but here's a quick example of a loader.
 
 ```tsx filename=app/team.tsx
 import {
