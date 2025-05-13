@@ -57,7 +57,6 @@ Split any multi-segment splat `<Route>` into a parent route with the path and a 
   <Route path="/" element={<Home />} />
 -  <Route path="dashboard/*" element={<Dashboard />} />
 +  <Route path="dashboard">
-+    <Route index element={<Dashboard />} />
 +    <Route path="*" element={<Dashboard />} />
 +  </Route>
 </Routes>
