@@ -3548,6 +3548,18 @@ export function createStaticHandler(
         ? requestContext
         : new unstable_RouterContextProvider();
 
+    let respondOrStreamStaticContext = (
+      ctx: StaticHandlerContext
+    ): MaybePromise<Response> | undefined => {
+      return stream
+        ? stream(requestContext as unstable_RouterContextProvider, () =>
+            Promise.resolve(ctx)
+          )
+        : respond
+        ? respond(ctx)
+        : undefined;
+    };
+
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, { method });
@@ -3566,13 +3578,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return stream
-        ? stream(requestContext as unstable_RouterContextProvider, () =>
-            Promise.resolve(staticContext)
-          )
-        : respond
-        ? respond(staticContext)
-        : staticContext;
+      return respondOrStreamStaticContext(staticContext) || staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3590,13 +3596,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return stream
-        ? stream(requestContext as unstable_RouterContextProvider, () =>
-            Promise.resolve(staticContext)
-          )
-        : respond
-        ? respond(staticContext)
-        : staticContext;
+      return respondOrStreamStaticContext(staticContext) || staticContext;
     }
 
     if (
@@ -3729,17 +3729,6 @@ export function createStaticHandler(
             return res;
           },
           async (error, routeId) => {
-            if (stream) {
-              // FIXME: Implement!
-              invariant(
-                false,
-                "stream() Not implemented for middleware errors yet"
-              );
-            }
-
-            // Should always be true given the if statement above
-            invariant(respond, "Expected respond to be defined");
-
             if (isResponse(error)) {
               return error;
             }
@@ -3756,15 +3745,16 @@ export function createStaticHandler(
                 renderedStaticContext.loaderData[routeId] = undefined;
               }
 
-              return respond(
-                getStaticContextFromError(
-                  dataRoutes,
-                  renderedStaticContext,
-                  error,
-                  skipLoaderErrorBubbling
-                    ? routeId
-                    : findNearestBoundary(matches, routeId).route.id
-                )
+              let staticContext = getStaticContextFromError(
+                dataRoutes,
+                renderedStaticContext,
+                error,
+                skipLoaderErrorBubbling
+                  ? routeId
+                  : findNearestBoundary(matches, routeId).route.id
+              );
+              return (
+                respondOrStreamStaticContext(staticContext) || staticContext
               );
             } else {
               // We never even got to the handlers, so we've got no data -
@@ -3782,7 +3772,7 @@ export function createStaticHandler(
                     )?.route.id || routeId
                   ).route.id;
 
-              return respond({
+              let staticContext: StaticHandlerContext = {
                 matches: matches!,
                 location,
                 basename,
@@ -3794,7 +3784,10 @@ export function createStaticHandler(
                 statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
-              });
+              };
+              return (
+                respondOrStreamStaticContext(staticContext) || staticContext
+              );
             }
           }
         );
