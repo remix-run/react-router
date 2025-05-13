@@ -19,7 +19,7 @@ app.use(
   createRequestListener(async (request) => {
     return routeRSCServerRequest({
       request,
-      requestServer: callServer,
+      callServer,
       decode: createFromReadableStream,
       async renderHTML(getPayload) {
         return await renderHTMLToReadableStream(

@@ -20,7 +20,7 @@ export default {
     try {
       return await routeRSCServerRequest({
         request,
-        requestServer: callServer,
+        callServer,
         decode: (body) => RSD.createFromReadableStream(body, manifest),
         async renderHTML(getPayload) {
           return await RDS.renderToReadableStream(

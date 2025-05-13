@@ -8,12 +8,12 @@ import type { ServerPayload } from "./server.rsc";
 
 export async function routeRSCServerRequest({
   request,
-  requestServer,
+  callServer,
   decode,
   renderHTML,
 }: {
   request: Request;
-  requestServer: (request: Request) => Promise<Response>;
+  callServer: (request: Request) => Promise<Response>;
   decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>;
   renderHTML: (
     getPayload: () => Promise<ServerPayload>
@@ -41,7 +41,7 @@ export async function routeRSCServerRequest({
     } as RequestInit & { duplex?: "half" });
   }
 
-  const serverResponse = await requestServer(serverRequest);
+  const serverResponse = await callServer(serverRequest);
 
   if (respondWithRSCPayload) {
     return serverResponse;
