@@ -3566,7 +3566,13 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respond ? respond(staticContext) : staticContext;
+      return stream
+        ? stream(requestContext as unstable_RouterContextProvider, () =>
+            Promise.resolve(staticContext)
+          )
+        : respond
+        ? respond(staticContext)
+        : staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3584,7 +3590,13 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respond ? respond(staticContext) : staticContext;
+      return stream
+        ? stream(requestContext as unstable_RouterContextProvider, () =>
+            Promise.resolve(staticContext)
+          )
+        : respond
+        ? respond(staticContext)
+        : staticContext;
     }
 
     if (
