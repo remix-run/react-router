@@ -290,7 +290,6 @@ export type {
 export { createCallServer, RSCHydratedRouter } from "./lib/rsc/browser";
 export { routeRSCServerRequest, RSCStaticRouter } from "./lib/rsc/server.ssr";
 export { getServerStream } from "./lib/rsc/html-stream/browser";
-export { ClientComponentPropsProvider as unstable_ClientComponentPropsProvider } from "./lib/components";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

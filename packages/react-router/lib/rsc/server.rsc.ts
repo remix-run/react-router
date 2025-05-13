@@ -28,12 +28,6 @@ import {
 } from "../router/utils";
 import { getDocumentHeaders } from "../server-runtime/headers";
 import type { RouteMatch } from "../context";
-import type {
-  RouteComponentProps,
-  HydrateFallbackProps,
-  ErrorBoundaryProps,
-  ClientComponentPropsProviderType,
-} from "../components";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -157,7 +151,6 @@ export async function matchRSCServerRequest({
   request,
   routes,
   generateResponse,
-  unstable_ClientComponentPropsProvider: ClientComponentPropsProvider,
 }: {
   decodeCallServer?: DecodeCallServerFunction;
   decodeFormAction?: DecodeFormActionFunction;
@@ -165,7 +158,6 @@ export async function matchRSCServerRequest({
   request: Request;
   routes: ServerRouteObject[];
   generateResponse: (match: ServerMatch) => Response;
-  unstable_ClientComponentPropsProvider?: ClientComponentPropsProviderType;
 }): Promise<Response> {
   const url = new URL(request.url);
 
@@ -200,7 +192,6 @@ export async function matchRSCServerRequest({
       request,
       routes,
       generateResponse,
-      ClientComponentPropsProvider,
       actionResult
     );
     // The front end uses this to know whether a 404 status came from app code
@@ -308,7 +299,6 @@ async function getRenderPayload(
   request: Request,
   routes: ServerRouteObject[],
   generateResponse: (match: ServerMatch) => Response,
-  ClientComponentPropsProvider?: ClientComponentPropsProviderType,
   actionResult?: Promise<unknown>
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
@@ -346,8 +336,7 @@ async function getRenderPayload(
       isDataRequest,
       isSubmission,
       actionResult,
-      staticContext,
-      ClientComponentPropsProvider
+      staticContext
     );
 
   const result = await handler.query(request, {
@@ -403,8 +392,7 @@ async function generateStaticContextResponse(
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
-  staticContext: StaticHandlerContext,
-  ClientComponentPropsProvider: ClientComponentPropsProviderType = reactRouterClient.unstable_ClientComponentPropsProvider
+  staticContext: StaticHandlerContext
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -486,57 +474,39 @@ async function generateStaticContextResponse(
           : React.createElement(
               Layout,
               null,
-              Component.$$typeof === Symbol.for("react.client.reference")
-                ? React.createElement(ClientComponentPropsProvider, {
-                    __type: "Component",
-                    children: React.createElement(Component),
-                  })
-                : React.createElement(Component, {
-                    loaderData,
-                    actionData,
-                    params,
-                    matches: staticContext.matches.map((match) =>
-                      convertRouteMatchToUiMatch(
-                        match,
-                        staticContext.loaderData
-                      )
-                    ),
-                  } satisfies RouteComponentProps)
+              React.createElement(Component, {
+                loaderData,
+                actionData,
+                params,
+                matches: staticContext.matches.map((match) =>
+                  convertRouteMatchToUiMatch(match, staticContext.loaderData)
+                ),
+              })
             )
         : undefined;
       const errorElement = ErrorBoundary
         ? React.createElement(
             Layout,
             null,
-            Component.$$typeof === Symbol.for("react.client.reference")
-              ? React.createElement(ClientComponentPropsProvider, {
-                  __type: "ErrorBoundary",
-                  children: React.createElement(ErrorBoundary),
-                })
-              : React.createElement(ErrorBoundary, {
-                  loaderData,
-                  actionData,
-                  params,
-                  error: [...staticContext.matches]
-                    .reverse()
-                    .find((match) => staticContext.errors?.[match.route.id]),
-                } satisfies ErrorBoundaryProps)
+            React.createElement(ErrorBoundary, {
+              loaderData,
+              actionData,
+              params,
+              error: [...staticContext.matches]
+                .reverse()
+                .find((match) => staticContext.errors?.[match.route.id]),
+            })
           )
         : undefined;
       const hydrateFallbackElement = HydrateFallback
         ? React.createElement(
             Layout,
             null,
-            Component.$$typeof === Symbol.for("react.client.reference")
-              ? React.createElement(ClientComponentPropsProvider, {
-                  __type: "HydrateFallback",
-                  children: React.createElement(HydrateFallback),
-                })
-              : React.createElement(HydrateFallback, {
-                  loaderData,
-                  actionData,
-                  params,
-                } satisfies HydrateFallbackProps)
+            React.createElement(HydrateFallback, {
+              loaderData,
+              actionData,
+              params,
+            })
           )
         : match.route.id === "root"
         ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
