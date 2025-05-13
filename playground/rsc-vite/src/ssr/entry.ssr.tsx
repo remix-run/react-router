@@ -18,11 +18,11 @@ export default {
   async fetch(request, { SERVER }) {
     const callServer = async (request: Request) => await SERVER.fetch(request);
     try {
-      return await routeRSCServerRequest(
+      return await routeRSCServerRequest({
         request,
-        callServer,
-        (body) => RSD.createFromReadableStream(body, manifest),
-        async (getPayload) => {
+        requestServer: callServer,
+        decode: (body) => RSD.createFromReadableStream(body, manifest),
+        async renderHTML(getPayload) {
           return await RDS.renderToReadableStream(
             <RSCStaticRouter getPayload={getPayload} />,
             {
@@ -30,8 +30,8 @@ export default {
               signal: request.signal,
             }
           );
-        }
-      );
+        },
+      });
     } catch (reason) {
       console.error(reason);
       return new Response("Internal Server Error", { status: 500 });

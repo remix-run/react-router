@@ -17,11 +17,11 @@ app.use("/client", express.static("dist/client"));
 
 app.use(
   createRequestListener(async (request) => {
-    return routeRSCServerRequest(
+    return routeRSCServerRequest({
       request,
-      callServer,
-      createFromReadableStream,
-      async (getPayload) => {
+      requestServer: callServer,
+      decode: createFromReadableStream,
+      async renderHTML(getPayload) {
         return await renderHTMLToReadableStream(
           <RSCStaticRouter getPayload={getPayload} />,
           {
@@ -30,8 +30,8 @@ app.use(
             ).bootstrapScript,
           }
         );
-      }
-    );
+      },
+    });
   })
 );
 

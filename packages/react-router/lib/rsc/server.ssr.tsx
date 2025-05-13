@@ -6,14 +6,19 @@ import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import type { ServerPayload } from "./server.rsc";
 
-export async function routeRSCServerRequest(
-  request: Request,
-  requestServer: (request: Request) => Promise<Response>,
-  decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>,
+export async function routeRSCServerRequest({
+  request,
+  requestServer,
+  decode,
+  renderHTML,
+}: {
+  request: Request;
+  requestServer: (request: Request) => Promise<Response>;
+  decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>;
   renderHTML: (
     getPayload: () => Promise<ServerPayload>
-  ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>
-) {
+  ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
+}) {
   const url = new URL(request.url);
   let serverRequest = request;
   const isDataRequest = isReactServerRequest(url);
