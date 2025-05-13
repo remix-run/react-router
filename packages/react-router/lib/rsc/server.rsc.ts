@@ -28,6 +28,7 @@ import {
 } from "../router/utils";
 import { getDocumentHeaders } from "../server-runtime/headers";
 import type { RouteMatch } from "../context";
+import invariant from "../server-runtime/invariant";
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -170,37 +171,18 @@ export async function matchRSCServerRequest({
     return response;
   }
 
-  let actionResult: Promise<unknown> | undefined;
-  if (request.headers.get("rsc-action-id") || request.method === "POST") {
-    let result = await processServerAction(
-      request,
-      decodeCallServer,
-      decodeFormAction,
-      onError
-    );
-    if (result) {
-      // Only enhanced server actions return a result
-      actionResult = result.actionResult ?? undefined;
-      // Both enhanced server actions and non-enhanced $ACTION_ID_ submissions
-      // return a new GET request for revalidation
-      request = result.revalidationRequest ?? request;
-    }
-  }
-
-  try {
-    let response = await getRenderPayload(
-      request,
-      routes,
-      generateResponse,
-      actionResult
-    );
-    // The front end uses this to know whether a 404 status came from app code
-    // or 404'd and never reached the origin server
-    response.headers.set("X-Remix-Response", "yes");
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  let response = await getRenderPayload(
+    request,
+    routes,
+    decodeCallServer,
+    decodeFormAction,
+    onError,
+    generateResponse
+  );
+  // The front end uses this to know whether a 404 status came from app code
+  // or 404'd and never reached the origin server
+  response.headers.set("X-Remix-Response", "yes");
+  return response;
 }
 
 async function generateManifestResponse(
@@ -298,6 +280,9 @@ async function processServerAction(
 async function getRenderPayload(
   request: Request,
   routes: ServerRouteObject[],
+  decodeCallServer: DecodeCallServerFunction | undefined,
+  decodeFormAction: DecodeFormActionFunction | undefined,
+  onError: ((error: unknown) => void) | undefined,
   generateResponse: (match: ServerMatch) => Response,
   actionResult?: Promise<unknown>
 ): Promise<Response> {
@@ -327,7 +312,10 @@ async function getRenderPayload(
 
   // Create the handler here with exploded routes
   const handler = createStaticHandler(routes);
-  const respond = (staticContext: StaticHandlerContext) =>
+  const respond = (
+    staticContext: StaticHandlerContext,
+    actionResult?: Promise<unknown> | undefined
+  ) =>
     generateStaticContextResponse(
       routes,
       generateResponse,
@@ -345,11 +333,30 @@ async function getRenderPayload(
     ...(routeIdsToLoad
       ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
       : null),
-    unstable_respond(result) {
-      if (isResponse(result)) {
-        return generateRedirectResponse(statusCode, result, generateResponse);
+    async unstable_stream(context, query) {
+      let actionResult: Promise<unknown> | undefined;
+      if (request.method === "POST") {
+        let result = await processServerAction(
+          request,
+          decodeCallServer,
+          decodeFormAction,
+          onError
+        );
+        actionResult = result?.actionResult;
+        request = result?.revalidationRequest ?? request;
       }
-      return respond(result);
+
+      let staticContext = await query(request);
+
+      if (isResponse(staticContext)) {
+        return generateRedirectResponse(
+          statusCode,
+          staticContext,
+          generateResponse
+        );
+      }
+
+      return respond(staticContext, actionResult);
     },
   });
 
@@ -357,10 +364,8 @@ async function getRenderPayload(
     return generateRedirectResponse(statusCode, result, generateResponse);
   }
 
-  // while middleware is still unstable, we don't run the middleware pipeline
-  // if no routes have middleware, so we still might need to convert context
-  // to a response here
-  return isResponse(result) ? result : respond(result);
+  invariant(isResponse(result), "Expected a response from query");
+  return result;
 }
 
 function generateRedirectResponse(
@@ -409,7 +414,7 @@ async function generateStaticContextResponse(
 
   // In the RSC world we set `hasLoader:true` eve if a route doesn't have a
   // loader so that we always make the single fetch call to get the rendered
-  // `element`.  We add a `null`value for any of the routes that don't
+  // `element`.  We add a `null` value for any of the routes that don't
   // actually have a loader so the single fetch logic can find a result for
   // the route.  This is a bit of a hack but allows us to re-use all the
   // existing logic.  This can go away if we ever fork off and re-implement a
@@ -434,7 +439,7 @@ async function generateStaticContextResponse(
   };
 
   // Short circuit without matches on submissions
-  if (isSubmission) {
+  if (!actionResult && isSubmission) {
     return generateResponse({
       statusCode,
       headers,

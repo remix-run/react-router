@@ -437,6 +437,10 @@ export interface StaticHandler {
       unstable_respond?: (
         staticContext: StaticHandlerContext
       ) => MaybePromise<Response>;
+      unstable_stream?: (
+        context: unstable_RouterContextProvider,
+        query: (r: Request) => Promise<StaticHandlerContext | Response>
+      ) => MaybePromise<Response>;
     }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -3531,6 +3535,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
+      unstable_stream: stream,
       unstable_respond: respond,
     }: Parameters<StaticHandler["query"]>[1] = {}
   ): Promise<StaticHandlerContext | Response> {
@@ -3583,12 +3588,14 @@ export function createStaticHandler(
     }
 
     if (
-      respond &&
-      matches.some(
-        (m) =>
-          m.route.unstable_middleware ||
-          (typeof m.route.lazy === "object" && m.route.lazy.unstable_middleware)
-      )
+      stream ||
+      (respond &&
+        matches.some(
+          (m) =>
+            m.route.unstable_middleware ||
+            (typeof m.route.lazy === "object" &&
+              m.route.lazy.unstable_middleware)
+        ))
     ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
@@ -3613,6 +3620,78 @@ export function createStaticHandler(
           },
           true,
           async () => {
+            /**
+             * TODO: stream() is a potential breaking change to the unstable_respond()
+             * API, implemented as a sibling option for now so as not to break
+             * any existing middleware logic.
+             *
+             * stream() gives us 3 things:
+             *  - It _always_ runs the middleware pipeline down to the stream()
+             *    function even if middleware doesn't exist
+             *  - we can now insert arbitrary logic at the end of the middleware
+             *    chain (inside the leaf next() call) such as running a server
+             *    action and let route middlewares apply to that action.
+             *  - We have control over the calling./awaiting of query() which
+             *    theoretically would allow us to send down the actionResult
+             *    immediately and then stream the entirety of the query/staticContext
+             *    info.  That has other implications though which we may not want,
+             *    such as not being able to leverage headers(), or respect
+             *    redirects from loaders after a server action, etc.
+             *    - If we decide this isn't warranted than the stream implementation
+             *      can simplify and potentially even collapse back into respond()
+             *
+             * Another totally different approach (larger LOE) would be to extract
+             * static handler middleware to be fully composable:
+             *
+             * // Current behavior
+             * let res = handler.middleware(request, (context) => {
+             *   let results = handler.query(request, context);
+             *   return generateResponse({
+             *     type: 'render',
+             *     payload: results
+             *   });
+             * })
+             *
+             * // RSC Server Action behavior
+             * let res = handler.middleware(request, (context) => {
+             *   let actionResult = serverAction(request);
+             *   let revalidationRequest = new Request(...)
+             *   let payloadPromise = handler.query(revalidationRequest, context)
+             *                               .then(context => getPayload(context));
+             *   return generateResponse({
+             *     type: 'action',
+             *     actionResult,,
+             *     rerender: payloadPromise
+             *   });
+             * })
+             **/
+            if (stream) {
+              let res = await stream(
+                requestContext as unstable_RouterContextProvider,
+                async (revalidationRequest: Request) => {
+                  let result = await queryImpl(
+                    revalidationRequest,
+                    location,
+                    matches!,
+                    requestContext,
+                    dataStrategy || null,
+                    skipLoaderErrorBubbling === true,
+                    null,
+                    filterMatchesToLoad || null,
+                    skipRevalidation === true
+                  );
+
+                  return isResponse(result)
+                    ? result
+                    : { location, basename, ...result };
+                }
+              );
+              return res;
+            }
+
+            // Should always be true given the if statement above
+            invariant(respond, "Expected respond to be defined");
+
             let result = await queryImpl(
               request,
               location,
@@ -3638,6 +3717,17 @@ export function createStaticHandler(
             return res;
           },
           async (error, routeId) => {
+            if (stream) {
+              // FIXME: Implement!
+              invariant(
+                false,
+                "stream() Not implemented for middleware errors yet"
+              );
+            }
+
+            // Should always be true given the if statement above
+            invariant(respond, "Expected respond to be defined");
+
             if (isResponse(error)) {
               return error;
             }

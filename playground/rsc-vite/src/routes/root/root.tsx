@@ -11,9 +11,9 @@ export function headers() {
 
 export const unstable_middleware = [
   async ({ request, context }, next) => {
-    console.log("start middleware on RSC server");
+    console.log(">>> RSC middleware", request.url);
     let res = await next();
-    console.log("end middleware on RSC server");
+    console.log("<<< RSC middleware", request.url);
     return res;
   },
 ];
