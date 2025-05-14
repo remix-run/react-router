@@ -1576,8 +1576,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi) {
           viteDevServer.middlewares.use(async (req, res, next) => {
             let [reqPathname, reqSearch] = (req.url ?? "").split("?");
-            let publicPathname = new URL(`${ctx.publicPath}@react-router/critical.css`, "http://localhost").pathname;
-            if (reqPathname === publicPathname) {
+            if (reqPathname === getRelativePathName(`${ctx.publicPath}@react-router/critical.css`)) {
               let pathname = new URLSearchParams(reqSearch).get("pathname");
               if (!pathname) {
                 return next("No pathname provided");
@@ -2378,6 +2377,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
   ];
 };
+
+export function getRelativePathName(url: string) {
+  return new URL(url, "http://localhost").pathname;
+}
 
 function getParentClientNodes(
   clientModuleGraph: Vite.EnvironmentModuleGraph,
