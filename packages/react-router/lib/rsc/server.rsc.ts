@@ -191,7 +191,18 @@ async function generateManifestResponse(
   generateResponse: (match: ServerMatch) => Response
 ) {
   let url = new URL(request.url);
-  const matches = matchRoutes(routes, url.pathname.replace(/\.manifest$/, ""));
+  let matches = matchRoutes(routes, url.pathname.replace(/\.manifest$/, ""));
+  let payload: ServerManifestPayload = {
+    type: "manifest",
+    matches: await Promise.all(
+      matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ?? []
+    ),
+    patches: await getAdditionalRoutePatches(
+      url.pathname,
+      routes,
+      matches?.map((m) => m.route.id) ?? []
+    ),
+  };
 
   return generateResponse({
     statusCode: 200,
@@ -199,18 +210,7 @@ async function generateManifestResponse(
       "Content-Type": "text/x-component",
       Vary: "Content-Type",
     }),
-    payload: {
-      type: "manifest",
-      matches: await Promise.all(
-        matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ??
-          []
-      ),
-      patches: await getAdditionalRoutePatches(
-        url.pathname,
-        routes,
-        matches?.map((m) => m.route.id) ?? []
-      ),
-    },
+    payload,
   });
 }
 
@@ -371,19 +371,20 @@ function generateRedirectResponse(
   response: Response,
   generateResponse: (match: ServerMatch) => Response
 ) {
+  let payload: ServerRedirectPayload = {
+    type: "redirect",
+    location: response.headers.get("Location") || "",
+    reload: response.headers.get("X-Remix-Reload-Document") === "true",
+    replace: response.headers.get("X-Remix-Replace") === "true",
+    status: response.status,
+  };
   return generateResponse({
     statusCode,
     headers: new Headers({
       "Content-Type": "text/x-component",
       Vary: "Content-Type",
     }),
-    payload: {
-      type: "redirect",
-      location: response.headers.get("Location") || "",
-      reload: response.headers.get("X-Remix-Reload-Document") === "true",
-      replace: response.headers.get("X-Remix-Replace") === "true",
-      status: response.status,
-    },
+    payload,
   });
 }
 
@@ -428,7 +429,7 @@ async function generateStaticContextResponse(
     (match) => (match as RouteMatch<string, ServerRouteObject>).route.headers
   );
 
-  const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
+  const baseRenderPayload: Omit<ServerRenderPayload, "matches" | "patches"> = {
     type: "render",
     actionData: staticContext.actionData,
     errors: staticContext.errors,
@@ -436,45 +437,42 @@ async function generateStaticContextResponse(
     location: staticContext.location,
   };
 
-  // Short circuit without matches on submissions
-  if (!actionResult && isSubmission) {
-    return generateResponse({
-      statusCode,
-      headers,
-      payload: {
-        ...payload,
-        matches: [],
-        patches: [],
-      },
-    });
-  }
+  const renderPayloadPromise = () =>
+    getRenderPayload(
+      baseRenderPayload,
+      routes,
+      routeIdsToLoad,
+      isDataRequest,
+      staticContext
+    );
 
-  let payloadPromise = getRenderPayload(
-    payload,
-    routes,
-    routeIdsToLoad,
-    isDataRequest,
-    staticContext
-  );
+  let payload: ServerRenderPayload | ServerActionPayload;
 
   if (actionResult) {
-    return generateResponse({
-      statusCode,
-      headers,
-      payload: {
-        type: "action",
-        actionResult,
-        rerender: payloadPromise,
-      },
-    });
+    // Don't await the payload so we can stream down the actionResult immediately
+    payload = {
+      type: "action",
+      actionResult,
+      rerender: renderPayloadPromise(),
+    };
+  } else if (isSubmission) {
+    // Short circuit without matches on non server-action submissions since
+    // we'll revalidate in a separate request
+    payload = {
+      ...baseRenderPayload,
+      matches: [],
+      patches: [],
+    };
   } else {
-    let payload = await payloadPromise;
-    return generateResponse({
-      statusCode,
-      headers,
-      payload,
-    });
+    // Await the full RSC render on all normal requests
+    payload = await renderPayloadPromise();
   }
+
+  return generateResponse({
+    statusCode,
+    headers,
+    payload,
+  });
 }
 
 async function getRenderPayload(
