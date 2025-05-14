@@ -283,8 +283,7 @@ async function getRenderPayload(
   decodeCallServer: DecodeCallServerFunction | undefined,
   decodeFormAction: DecodeFormActionFunction | undefined,
   onError: ((error: unknown) => void) | undefined,
-  generateResponse: (match: ServerMatch) => Response,
-  actionResult?: Promise<unknown>
+  generateResponse: (match: ServerMatch) => Response
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -312,20 +311,6 @@ async function getRenderPayload(
 
   // Create the handler here with exploded routes
   const handler = createStaticHandler(routes);
-  const respond = (
-    staticContext: StaticHandlerContext,
-    actionResult?: Promise<unknown> | undefined
-  ) =>
-    generateStaticContextResponse(
-      routes,
-      generateResponse,
-      statusCode,
-      routeIdsToLoad,
-      isDataRequest,
-      isSubmission,
-      actionResult,
-      staticContext
-    );
 
   const result = await handler.query(request, {
     skipLoaderErrorBubbling: isDataRequest,
@@ -334,6 +319,10 @@ async function getRenderPayload(
       ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
       : null),
     async unstable_stream(context, query) {
+      // If this is an RSC server action, process that and then call query as a
+      // revalidation.  If this is a RR Form/Fetcher submission,
+      // `processServerAction` will fall through as a no-op and we'll pass the
+      // POST `request` to `query` and process our action there.
       let actionResult: Promise<unknown> | undefined;
       if (request.method === "POST") {
         let result = await processServerAction(
@@ -356,7 +345,16 @@ async function getRenderPayload(
         );
       }
 
-      return respond(staticContext, actionResult);
+      return generateStaticContextResponse(
+        routes,
+        generateResponse,
+        statusCode,
+        routeIdsToLoad,
+        isDataRequest,
+        isSubmission,
+        actionResult,
+        staticContext
+      );
     },
   });
 
@@ -401,16 +399,16 @@ async function generateStaticContextResponse(
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
-  const errors = staticContext.errors
-    ? Object.fromEntries(
-        Object.entries(staticContext.errors).map(([key, error]) => [
-          key,
-          isRouteErrorResponse(error)
-            ? Object.fromEntries(Object.entries(error))
-            : error,
-        ])
-      )
-    : staticContext.errors;
+  if (staticContext.errors) {
+    staticContext.errors = Object.fromEntries(
+      Object.entries(staticContext.errors).map(([key, error]) => [
+        key,
+        isRouteErrorResponse(error)
+          ? Object.fromEntries(Object.entries(error))
+          : error,
+      ])
+    );
+  }
 
   // In the RSC world we set `hasLoader:true` eve if a route doesn't have a
   // loader so that we always make the single fetch call to get the rendered
@@ -433,7 +431,7 @@ async function generateStaticContextResponse(
   const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
     type: "render",
     actionData: staticContext.actionData,
-    errors,
+    errors: staticContext.errors,
     loaderData: staticContext.loaderData,
     location: staticContext.location,
   };
@@ -451,9 +449,27 @@ async function generateStaticContextResponse(
     });
   }
 
-  let lastMatch: AgnosticDataRouteMatch | null = null;
+  // Figure out how deep we want to render server components based on any
+  // triggered error boundaries and/or `routeIdsToLoad`
+  let deepestRenderedRouteIdx = staticContext.matches.length - 1;
+  // Capture parentIds for assignment on the ServerRouteMatch later
+  let parentIds: Record<string, string | undefined> = {};
+
+  staticContext.matches.forEach((m, i) => {
+    if (i > 0) {
+      parentIds[m.route.id] = staticContext.matches[i - 1].route.id;
+    }
+    if (
+      staticContext.errors &&
+      m.route.id in staticContext.errors &&
+      deepestRenderedRouteIdx > i
+    ) {
+      deepestRenderedRouteIdx = i;
+    }
+  });
+
   let matchesPromise = Promise.all(
-    staticContext.matches.map(async (match) => {
+    staticContext.matches.map(async (match, i) => {
       if ("lazy" in match.route && match.route.lazy) {
         Object.assign(match.route, {
           // @ts-expect-error - FIXME: Fix the types here
@@ -473,10 +489,20 @@ async function generateStaticContextResponse(
       const actionData = staticContext.actionData?.[match.route.id];
       const params = match.params;
       // TODO: DRY this up once it's fully fleshed out
+
+      // Only bother rendering Server Components for routes that we're surfacing,
+      // so nothing at/below an error boundary and prune routes if included in
+      // `routeIdsToLoad`.  This is specifically important when a middleware
+      // or loader throws and we don't have any `loaderData` to pass through as
+      // props leading to render-time errors of the server component
+      let shouldRenderComponent =
+        i <= deepestRenderedRouteIdx &&
+        (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
+        (!staticContext.errors || !(match.route.id in staticContext.errors));
+
       const element = Component
-        ? staticContext.errors?.[match.route.id]
-          ? (false as const)
-          : React.createElement(
+        ? shouldRenderComponent
+          ? React.createElement(
               Layout,
               null,
               React.createElement(Component, {
@@ -488,6 +514,9 @@ async function generateStaticContextResponse(
                 ),
               })
             )
+          : // TODO: Is this necessary? In my quick testing undefined seemed to
+            // work as well so we could eliminate the nested ternary
+            (false as const)
         : undefined;
       const errorElement = ErrorBoundary
         ? React.createElement(
@@ -520,7 +549,7 @@ async function generateStaticContextResponse(
           React.createElement("p", null, "Loading!")
         : undefined;
 
-      let result = {
+      return {
         clientAction: (match.route as any).clientAction,
         clientLoader: (match.route as any).clientLoader,
         element,
@@ -535,14 +564,12 @@ async function generateStaticContextResponse(
         links: (match.route as any).links,
         meta: (match.route as any).meta,
         params,
-        parentId: lastMatch?.route.id,
+        parentId: parentIds[match.route.id],
         path: match.route.path,
         pathname: match.pathname,
         pathnameBase: match.pathnameBase,
         shouldRevalidate: (match.route as any).shouldRevalidate,
       };
-      lastMatch = match;
-      return result;
     })
   );
 
@@ -550,9 +577,7 @@ async function generateStaticContextResponse(
     const matches = await matchesPromise;
     return {
       ...payload,
-      matches: routeIdsToLoad
-        ? matches.filter((m) => routeIdsToLoad.includes(m.id))
-        : matches,
+      matches,
       patches: !isDataRequest
         ? await getAdditionalRoutePatches(
             staticContext.location.pathname,
