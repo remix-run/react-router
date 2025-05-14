@@ -572,8 +572,8 @@ async function getServerRouteMatch(
   const actionData = staticContext.actionData?.[match.route.id];
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
-  const element = Component
-    ? shouldRenderComponent
+  const element =
+    Component && shouldRenderComponent
       ? React.createElement(
           Layout,
           null,
@@ -590,10 +590,7 @@ async function getServerRouteMatch(
             ),
           })
         )
-      : // TODO: Is this necessary? In my quick testing undefined seemed to
-        // work as well so we could eliminate the nested ternary
-        (false as const)
-    : undefined;
+      : undefined;
   const errorElement = ErrorBoundary
     ? React.createElement(
         Layout,
