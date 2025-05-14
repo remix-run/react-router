@@ -11,6 +11,7 @@ export async function routeRSCServerRequest({
   callServer,
   decode,
   renderHTML,
+  hydrate,
 }: {
   request: Request;
   callServer: (request: Request) => Promise<Response>;
@@ -18,6 +19,7 @@ export async function routeRSCServerRequest({
   renderHTML: (
     getPayload: () => Promise<ServerPayload>
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
+  hydrate?: boolean;
 }) {
   const url = new URL(request.url);
   let serverRequest = request;
@@ -51,11 +53,6 @@ export async function routeRSCServerRequest({
     throw new Error("Missing body in server response");
   }
 
-  const serverResponseB = serverResponse.clone();
-  if (!serverResponseB.body) {
-    throw new Error("Failed to clone server response");
-  }
-
   const body = serverResponse.body;
   let payloadPromise: Promise<ServerPayload>;
   const getPayload = async () => {
@@ -67,11 +64,22 @@ export async function routeRSCServerRequest({
   try {
     const html = await renderHTML(getPayload);
 
-    const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
-
     const headers = new Headers(serverResponse.headers);
     headers.set("Content-Type", "text/html");
 
+    if (hydrate === false) {
+      return new Response(html, {
+        status: serverResponse.status,
+        headers,
+      });
+    }
+
+    const serverResponseB = serverResponse.clone();
+    if (!serverResponseB.body) {
+      throw new Error("Failed to clone server response");
+    }
+
+    const body = html.pipeThrough(injectRSCPayload(serverResponseB.body));
     return new Response(body, {
       status: serverResponse.status,
       headers,
