@@ -1,10 +1,17 @@
 export { createStaticHandler } from "./lib/router/router";
+export type {
+  unstable_MiddlewareFunction,
+  unstable_MiddlewareNextFunction,
+  unstable_RouterContext,
+  unstable_RouterContextProvider,
+} from "./lib/router/utils";
 export {
   data,
   matchRoutes,
   redirect,
   redirectDocument,
   replace,
+  unstable_createContext,
 } from "./lib/router/utils";
 
 export type {

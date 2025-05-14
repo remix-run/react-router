@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as reactRouterClient from "react-router";
 
 import type {
   ClientActionFunction,
@@ -25,6 +24,7 @@ import {
   isRouteErrorResponse,
   matchRoutes,
   convertRouteMatchToUiMatch,
+  unstable_RouterContextProvider,
 } from "../router/utils";
 import { getDocumentHeaders } from "../server-runtime/headers";
 import type { RouteMatch } from "../context";
@@ -195,7 +195,9 @@ async function generateManifestResponse(
   let payload: ServerManifestPayload = {
     type: "manifest",
     matches: await Promise.all(
-      matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ?? []
+      matches?.map((m, i) =>
+        getManifestRoute(m.route, matches[i - 1]?.route.id)
+      ) ?? []
     ),
     patches: await getAdditionalRoutePatches(
       url.pathname,
@@ -318,7 +320,7 @@ async function generateRenderResponse(
     ...(routeIdsToLoad
       ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
       : null),
-    async unstable_stream(context, query) {
+    async unstable_stream(contextProvider, query) {
       // If this is an RSC server action, process that and then call query as a
       // revalidation.  If this is a RR Form/Fetcher submission,
       // `processServerAction` will fall through as a no-op and we'll pass the
@@ -353,7 +355,8 @@ async function generateRenderResponse(
         isDataRequest,
         isSubmission,
         actionResult,
-        staticContext
+        staticContext,
+        contextProvider
       );
     },
   });
@@ -396,7 +399,8 @@ async function generateStaticContextResponse(
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
-  staticContext: StaticHandlerContext
+  staticContext: StaticHandlerContext,
+  contextProvider: unstable_RouterContextProvider
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -443,7 +447,8 @@ async function generateStaticContextResponse(
       routes,
       routeIdsToLoad,
       isDataRequest,
-      staticContext
+      staticContext,
+      contextProvider
     );
 
   let payload: ServerRenderPayload | ServerActionPayload;
@@ -480,7 +485,8 @@ async function getRenderPayload(
   routes: ServerRouteObject[],
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
-  staticContext: StaticHandlerContext
+  staticContext: StaticHandlerContext,
+  contextProvider: unstable_RouterContextProvider
 ) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
@@ -515,6 +521,7 @@ async function getRenderPayload(
 
       return getServerRouteMatch(
         staticContext,
+        contextProvider,
         match,
         shouldRenderComponent,
         parentIds[match.route.id]
@@ -541,6 +548,7 @@ async function getRenderPayload(
 
 async function getServerRouteMatch(
   staticContext: StaticHandlerContext,
+  contextProvider: unstable_RouterContextProvider,
   match: AgnosticDataRouteMatch,
   shouldRenderComponent: boolean,
   parentId: string | undefined
@@ -570,6 +578,10 @@ async function getServerRouteMatch(
           Layout,
           null,
           React.createElement(Component, {
+            // Pass context to server components so it can be used for data loading
+            ...(Component.$$typeof === Symbol.for("react.client.reference")
+              ? {}
+              : { context: contextProvider }),
             loaderData,
             actionData,
             params,
@@ -636,7 +648,7 @@ async function getServerRouteMatch(
   };
 }
 
-async function getRoute(
+async function getManifestRoute(
   route: ServerRouteObject,
   parentId: string | undefined
 ): Promise<RenderedRoute> {
@@ -715,7 +727,7 @@ async function getAdditionalRoutePatches(
   let patches = await Promise.all(
     [...patchRouteMatches.values()]
       .filter((route) => !matchedRouteIds.some((id) => id === route.id))
-      .map((route) => getRoute(route, route.parentId))
+      .map((route) => getManifestRoute(route, route.parentId))
   );
   return patches;
 }

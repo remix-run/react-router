@@ -1,4 +1,9 @@
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
+import {
+  type unstable_MiddlewareFunction,
+  type unstable_RouterContextProvider,
+  unstable_createContext,
+} from "react-router/rsc";
 
 import { Counter } from "../../counter";
 import { ErrorReporter, NavigationState } from "./root.client";
@@ -9,9 +14,12 @@ export function headers() {
   return new Headers({ "x-root": "yes" });
 }
 
-export const unstable_middleware = [
+let stringContext = unstable_createContext<string>();
+
+export const unstable_middleware: unstable_MiddlewareFunction<Response>[] = [
   async ({ request, context }, next) => {
     console.log(">>> RSC middleware", request.url);
+    context.set(stringContext, "Value from middleware");
     let res = await next();
     console.log("<<< RSC middleware", request.url);
     return res;
@@ -27,13 +35,16 @@ export async function loader() {
 }
 
 export default function Root({
+  context,
   loaderData,
 }: {
+  context: unstable_RouterContextProvider;
   loaderData: Awaited<ReturnType<typeof loader>>;
 }) {
   return (
     <div style={{ border: "1px solid black", padding: "10px" }}>
       <h1>Root Route</h1>
+      <p>Context value: {context.get(stringContext)}</p>
       <p>Loader data: {loaderData.message}</p>
       {loaderData.counter}
       <Outlet />
