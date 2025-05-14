@@ -109,8 +109,13 @@ export function createRemixRequest(
     : "";
   // Use req.hostname here as it respects the "trust proxy" setting
   let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
+  // Only allow http and https protocols to avoid security issues with forwarding protocol
+  const allowedProtocols = new Set(["http", "https"]);
+  const forwardedProtocol = req.get("X-Forwarded-Proto") ?? req.protocol;
+  // Fall back to default protocol if the requested protocol is not allowed
+  const protocol = allowedProtocols.has(forwardedProtocol) ? forwardedProtocol : req.protocol;
   // Use `req.originalUrl` so Remix is aware of the full path
-  let url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
+  let url = new URL(`${protocol}://${resolvedHost}${req.originalUrl}`);
 
   // Abort action/loaders once we can no longer write a response
   let controller: AbortController | null = new AbortController();

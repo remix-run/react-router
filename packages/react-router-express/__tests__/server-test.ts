@@ -241,4 +241,40 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.headers.get("host")).toBe("localhost:3000");
     expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
   });
+
+  it("respects forwarded protocol if allowed", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        "X-Forwarded-Proto": "https",
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("https://localhost:3000/foo/bar");
+  });
+
+  it("defaults to the original request protocol if the forwarded protocol is not allowed", async () => {
+    let expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        "X-Forwarded-Proto": "ws",
+        Host: "localhost:3000",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+  });
 });
