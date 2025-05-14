@@ -171,7 +171,7 @@ export async function matchRSCServerRequest({
     return response;
   }
 
-  let response = await getRenderPayload(
+  let response = await generateRenderResponse(
     request,
     routes,
     decodeCallServer,
@@ -191,7 +191,18 @@ async function generateManifestResponse(
   generateResponse: (match: ServerMatch) => Response
 ) {
   let url = new URL(request.url);
-  const matches = matchRoutes(routes, url.pathname.replace(/\.manifest$/, ""));
+  let matches = matchRoutes(routes, url.pathname.replace(/\.manifest$/, ""));
+  let payload: ServerManifestPayload = {
+    type: "manifest",
+    matches: await Promise.all(
+      matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ?? []
+    ),
+    patches: await getAdditionalRoutePatches(
+      url.pathname,
+      routes,
+      matches?.map((m) => m.route.id) ?? []
+    ),
+  };
 
   return generateResponse({
     statusCode: 200,
@@ -199,18 +210,7 @@ async function generateManifestResponse(
       "Content-Type": "text/x-component",
       Vary: "Content-Type",
     }),
-    payload: {
-      type: "manifest",
-      matches: await Promise.all(
-        matches?.map((m, i) => getRoute(m.route, matches[i - 1]?.route.id)) ??
-          []
-      ),
-      patches: await getAdditionalRoutePatches(
-        url.pathname,
-        routes,
-        matches?.map((m) => m.route.id) ?? []
-      ),
-    },
+    payload,
   });
 }
 
@@ -277,7 +277,7 @@ async function processServerAction(
   }
 }
 
-async function getRenderPayload(
+async function generateRenderResponse(
   request: Request,
   routes: ServerRouteObject[],
   decodeCallServer: DecodeCallServerFunction | undefined,
@@ -371,19 +371,20 @@ function generateRedirectResponse(
   response: Response,
   generateResponse: (match: ServerMatch) => Response
 ) {
+  let payload: ServerRedirectPayload = {
+    type: "redirect",
+    location: response.headers.get("Location") || "",
+    reload: response.headers.get("X-Remix-Reload-Document") === "true",
+    replace: response.headers.get("X-Remix-Replace") === "true",
+    status: response.status,
+  };
   return generateResponse({
     statusCode,
     headers: new Headers({
       "Content-Type": "text/x-component",
       Vary: "Content-Type",
     }),
-    payload: {
-      type: "redirect",
-      location: response.headers.get("Location") || "",
-      reload: response.headers.get("X-Remix-Reload-Document") === "true",
-      replace: response.headers.get("X-Remix-Replace") === "true",
-      status: response.status,
-    },
+    payload,
   });
 }
 
@@ -428,7 +429,7 @@ async function generateStaticContextResponse(
     (match) => (match as RouteMatch<string, ServerRouteObject>).route.headers
   );
 
-  const payload: Omit<ServerRenderPayload, "matches" | "patches"> = {
+  const baseRenderPayload: Omit<ServerRenderPayload, "matches" | "patches"> = {
     type: "render",
     actionData: staticContext.actionData,
     errors: staticContext.errors,
@@ -436,19 +437,51 @@ async function generateStaticContextResponse(
     location: staticContext.location,
   };
 
-  // Short circuit without matches on submissions
-  if (!actionResult && isSubmission) {
-    return generateResponse({
-      statusCode,
-      headers,
-      payload: {
-        ...payload,
-        matches: [],
-        patches: [],
-      },
-    });
+  const renderPayloadPromise = () =>
+    getRenderPayload(
+      baseRenderPayload,
+      routes,
+      routeIdsToLoad,
+      isDataRequest,
+      staticContext
+    );
+
+  let payload: ServerRenderPayload | ServerActionPayload;
+
+  if (actionResult) {
+    // Don't await the payload so we can stream down the actionResult immediately
+    payload = {
+      type: "action",
+      actionResult,
+      rerender: renderPayloadPromise(),
+    };
+  } else if (isSubmission) {
+    // Short circuit without matches on non server-action submissions since
+    // we'll revalidate in a separate request
+    payload = {
+      ...baseRenderPayload,
+      matches: [],
+      patches: [],
+    };
+  } else {
+    // Await the full RSC render on all normal requests
+    payload = await renderPayloadPromise();
   }
 
+  return generateResponse({
+    statusCode,
+    headers,
+    payload,
+  });
+}
+
+async function getRenderPayload(
+  baseRenderPayload: Omit<ServerRenderPayload, "matches" | "patches">,
+  routes: ServerRouteObject[],
+  routeIdsToLoad: string[] | null,
+  isDataRequest: boolean,
+  staticContext: StaticHandlerContext
+) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
   let deepestRenderedRouteIdx = staticContext.matches.length - 1;
@@ -469,27 +502,7 @@ async function generateStaticContextResponse(
   });
 
   let matchesPromise = Promise.all(
-    staticContext.matches.map(async (match, i) => {
-      if ("lazy" in match.route && match.route.lazy) {
-        Object.assign(match.route, {
-          // @ts-expect-error - FIXME: Fix the types here
-          ...((await match.route.lazy()) as any),
-          path: match.route.path,
-          index: (match.route as any).index,
-          id: match.route.id,
-        });
-        match.route.lazy = undefined;
-      }
-
-      const Layout = (match.route as any).Layout || React.Fragment;
-      const Component = (match.route as any).default;
-      const ErrorBoundary = (match.route as any).ErrorBoundary;
-      const HydrateFallback = (match.route as any).HydrateFallback;
-      const loaderData = staticContext.loaderData[match.route.id];
-      const actionData = staticContext.actionData?.[match.route.id];
-      const params = match.params;
-      // TODO: DRY this up once it's fully fleshed out
-
+    staticContext.matches.map((match, i) => {
       // Only bother rendering Server Components for routes that we're surfacing,
       // so nothing at/below an error boundary and prune routes if included in
       // `routeIdsToLoad`.  This is specifically important when a middleware
@@ -500,112 +513,127 @@ async function generateStaticContextResponse(
         (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
         (!staticContext.errors || !(match.route.id in staticContext.errors));
 
-      const element = Component
-        ? shouldRenderComponent
-          ? React.createElement(
-              Layout,
-              null,
-              React.createElement(Component, {
-                loaderData,
-                actionData,
-                params,
-                matches: staticContext.matches.map((match) =>
-                  convertRouteMatchToUiMatch(match, staticContext.loaderData)
-                ),
-              })
-            )
-          : // TODO: Is this necessary? In my quick testing undefined seemed to
-            // work as well so we could eliminate the nested ternary
-            (false as const)
-        : undefined;
-      const errorElement = ErrorBoundary
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(ErrorBoundary, {
-              loaderData,
-              actionData,
-              params,
-              error: [...staticContext.matches]
-                .reverse()
-                .find((match) => staticContext.errors?.[match.route.id]),
-            })
-          )
-        : undefined;
-      const hydrateFallbackElement = HydrateFallback
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(HydrateFallback, {
-              loaderData,
-              actionData,
-              params,
-            })
-          )
-        : match.route.id === "root"
-        ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-          // currently uses a hook internally so it fails during RSC.  Restructure
-          // so it can be used safely in an RSC render pass.
-          React.createElement("p", null, "Loading!")
-        : undefined;
-
-      return {
-        clientAction: (match.route as any).clientAction,
-        clientLoader: (match.route as any).clientLoader,
-        element,
-        errorElement,
-        handle: (match.route as any).handle,
-        hasAction: !!match.route.action,
-        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-        hasLoader: !!match.route.loader,
-        hydrateFallbackElement,
-        id: match.route.id,
-        index: match.route.index,
-        links: (match.route as any).links,
-        meta: (match.route as any).meta,
-        params,
-        parentId: parentIds[match.route.id],
-        path: match.route.path,
-        pathname: match.pathname,
-        pathnameBase: match.pathnameBase,
-        shouldRevalidate: (match.route as any).shouldRevalidate,
-      };
+      return getServerRouteMatch(
+        staticContext,
+        match,
+        shouldRenderComponent,
+        parentIds[match.route.id]
+      );
     })
   );
 
-  const getPayload = async () => {
-    const matches = await matchesPromise;
-    return {
-      ...payload,
-      matches,
-      patches: !isDataRequest
-        ? await getAdditionalRoutePatches(
-            staticContext.location.pathname,
-            routes,
-            matches.map((m) => m.id)
-          )
-        : undefined,
-    };
-  };
+  let patchesPromise = !isDataRequest
+    ? getAdditionalRoutePatches(
+        staticContext.location.pathname,
+        routes,
+        staticContext.matches.map((m) => m.route.id)
+      )
+    : undefined;
 
-  if (actionResult) {
-    return generateResponse({
-      statusCode,
-      headers,
-      payload: {
-        type: "action",
-        actionResult,
-        rerender: getPayload(),
-      },
+  let [matches, patches] = await Promise.all([matchesPromise, patchesPromise]);
+
+  return {
+    ...baseRenderPayload,
+    matches,
+    patches,
+  };
+}
+
+async function getServerRouteMatch(
+  staticContext: StaticHandlerContext,
+  match: AgnosticDataRouteMatch,
+  shouldRenderComponent: boolean,
+  parentId: string | undefined
+) {
+  if ("lazy" in match.route && match.route.lazy) {
+    Object.assign(match.route, {
+      // @ts-expect-error - FIXME: Fix the types here
+      ...((await match.route.lazy()) as any),
+      path: match.route.path,
+      index: (match.route as any).index,
+      id: match.route.id,
     });
-  } else {
-    let payload = await getPayload();
-    return generateResponse({
-      statusCode,
-      headers,
-      payload,
-    });
+    match.route.lazy = undefined;
   }
+
+  const Layout = (match.route as any).Layout || React.Fragment;
+  const Component = (match.route as any).default;
+  const ErrorBoundary = (match.route as any).ErrorBoundary;
+  const HydrateFallback = (match.route as any).HydrateFallback;
+  const loaderData = staticContext.loaderData[match.route.id];
+  const actionData = staticContext.actionData?.[match.route.id];
+  const params = match.params;
+  // TODO: DRY this up once it's fully fleshed out
+  const element = Component
+    ? shouldRenderComponent
+      ? React.createElement(
+          Layout,
+          null,
+          React.createElement(Component, {
+            loaderData,
+            actionData,
+            params,
+            matches: staticContext.matches.map((match) =>
+              convertRouteMatchToUiMatch(match, staticContext.loaderData)
+            ),
+          })
+        )
+      : // TODO: Is this necessary? In my quick testing undefined seemed to
+        // work as well so we could eliminate the nested ternary
+        (false as const)
+    : undefined;
+  const errorElement = ErrorBoundary
+    ? React.createElement(
+        Layout,
+        null,
+        React.createElement(ErrorBoundary, {
+          loaderData,
+          actionData,
+          params,
+          error: [...staticContext.matches]
+            .reverse()
+            .find((match) => staticContext.errors?.[match.route.id]),
+        })
+      )
+    : undefined;
+  const hydrateFallbackElement = HydrateFallback
+    ? React.createElement(
+        Layout,
+        null,
+        React.createElement(HydrateFallback, {
+          loaderData,
+          actionData,
+          params,
+        })
+      )
+    : match.route.id === "root"
+    ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
+      // currently uses a hook internally so it fails during RSC.  Restructure
+      // so it can be used safely in an RSC render pass.
+      React.createElement("p", null, "Loading!")
+    : undefined;
+
+  return {
+    clientAction: (match.route as any).clientAction,
+    clientLoader: (match.route as any).clientLoader,
+    element,
+    errorElement,
+    handle: (match.route as any).handle,
+    hasAction: !!match.route.action,
+    hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+    hasLoader: !!match.route.loader,
+    hydrateFallbackElement,
+    id: match.route.id,
+    index: match.route.index,
+    links: (match.route as any).links,
+    meta: (match.route as any).meta,
+    params,
+    parentId,
+    path: match.route.path,
+    pathname: match.pathname,
+    pathnameBase: match.pathnameBase,
+    shouldRevalidate: (match.route as any).shouldRevalidate,
+  };
 }
 
 async function getRoute(
