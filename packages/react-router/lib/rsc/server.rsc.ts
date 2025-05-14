@@ -171,7 +171,7 @@ export async function matchRSCServerRequest({
     return response;
   }
 
-  let response = await getRenderPayload(
+  let response = await generateRenderResponse(
     request,
     routes,
     decodeCallServer,
@@ -277,7 +277,7 @@ async function processServerAction(
   }
 }
 
-async function getRenderPayload(
+async function generateRenderResponse(
   request: Request,
   routes: ServerRouteObject[],
   decodeCallServer: DecodeCallServerFunction | undefined,
@@ -449,6 +449,41 @@ async function generateStaticContextResponse(
     });
   }
 
+  let payloadPromise = getRenderPayload(
+    payload,
+    routes,
+    routeIdsToLoad,
+    isDataRequest,
+    staticContext
+  );
+
+  if (actionResult) {
+    return generateResponse({
+      statusCode,
+      headers,
+      payload: {
+        type: "action",
+        actionResult,
+        rerender: payloadPromise,
+      },
+    });
+  } else {
+    let payload = await payloadPromise;
+    return generateResponse({
+      statusCode,
+      headers,
+      payload,
+    });
+  }
+}
+
+async function getRenderPayload(
+  baseRenderPayload: Omit<ServerRenderPayload, "matches" | "patches">,
+  routes: ServerRouteObject[],
+  routeIdsToLoad: string[] | null,
+  isDataRequest: boolean,
+  staticContext: StaticHandlerContext
+) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
   let deepestRenderedRouteIdx = staticContext.matches.length - 1;
@@ -489,39 +524,21 @@ async function generateStaticContextResponse(
     })
   );
 
-  const getPayload = async () => {
-    const matches = await matchesPromise;
-    return {
-      ...payload,
-      matches,
-      patches: !isDataRequest
-        ? await getAdditionalRoutePatches(
-            staticContext.location.pathname,
-            routes,
-            matches.map((m) => m.id)
-          )
-        : undefined,
-    };
-  };
+  let patchesPromise = !isDataRequest
+    ? getAdditionalRoutePatches(
+        staticContext.location.pathname,
+        routes,
+        staticContext.matches.map((m) => m.route.id)
+      )
+    : undefined;
 
-  if (actionResult) {
-    return generateResponse({
-      statusCode,
-      headers,
-      payload: {
-        type: "action",
-        actionResult,
-        rerender: getPayload(),
-      },
-    });
-  } else {
-    let payload = await getPayload();
-    return generateResponse({
-      statusCode,
-      headers,
-      payload,
-    });
-  }
+  let [matches, patches] = await Promise.all([matchesPromise, patchesPromise]);
+
+  return {
+    ...baseRenderPayload,
+    matches,
+    patches,
+  };
 }
 
 async function getServerRouteMatch(
