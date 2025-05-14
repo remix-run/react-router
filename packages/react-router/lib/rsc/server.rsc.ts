@@ -469,27 +469,7 @@ async function generateStaticContextResponse(
   });
 
   let matchesPromise = Promise.all(
-    staticContext.matches.map(async (match, i) => {
-      if ("lazy" in match.route && match.route.lazy) {
-        Object.assign(match.route, {
-          // @ts-expect-error - FIXME: Fix the types here
-          ...((await match.route.lazy()) as any),
-          path: match.route.path,
-          index: (match.route as any).index,
-          id: match.route.id,
-        });
-        match.route.lazy = undefined;
-      }
-
-      const Layout = (match.route as any).Layout || React.Fragment;
-      const Component = (match.route as any).default;
-      const ErrorBoundary = (match.route as any).ErrorBoundary;
-      const HydrateFallback = (match.route as any).HydrateFallback;
-      const loaderData = staticContext.loaderData[match.route.id];
-      const actionData = staticContext.actionData?.[match.route.id];
-      const params = match.params;
-      // TODO: DRY this up once it's fully fleshed out
-
+    staticContext.matches.map((match, i) => {
       // Only bother rendering Server Components for routes that we're surfacing,
       // so nothing at/below an error boundary and prune routes if included in
       // `routeIdsToLoad`.  This is specifically important when a middleware
@@ -500,76 +480,12 @@ async function generateStaticContextResponse(
         (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
         (!staticContext.errors || !(match.route.id in staticContext.errors));
 
-      const element = Component
-        ? shouldRenderComponent
-          ? React.createElement(
-              Layout,
-              null,
-              React.createElement(Component, {
-                loaderData,
-                actionData,
-                params,
-                matches: staticContext.matches.map((match) =>
-                  convertRouteMatchToUiMatch(match, staticContext.loaderData)
-                ),
-              })
-            )
-          : // TODO: Is this necessary? In my quick testing undefined seemed to
-            // work as well so we could eliminate the nested ternary
-            (false as const)
-        : undefined;
-      const errorElement = ErrorBoundary
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(ErrorBoundary, {
-              loaderData,
-              actionData,
-              params,
-              error: [...staticContext.matches]
-                .reverse()
-                .find((match) => staticContext.errors?.[match.route.id]),
-            })
-          )
-        : undefined;
-      const hydrateFallbackElement = HydrateFallback
-        ? React.createElement(
-            Layout,
-            null,
-            React.createElement(HydrateFallback, {
-              loaderData,
-              actionData,
-              params,
-            })
-          )
-        : match.route.id === "root"
-        ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-          // currently uses a hook internally so it fails during RSC.  Restructure
-          // so it can be used safely in an RSC render pass.
-          React.createElement("p", null, "Loading!")
-        : undefined;
-
-      return {
-        clientAction: (match.route as any).clientAction,
-        clientLoader: (match.route as any).clientLoader,
-        element,
-        errorElement,
-        handle: (match.route as any).handle,
-        hasAction: !!match.route.action,
-        hasErrorBoundary: !!(match.route as any).ErrorBoundary,
-        hasLoader: !!match.route.loader,
-        hydrateFallbackElement,
-        id: match.route.id,
-        index: match.route.index,
-        links: (match.route as any).links,
-        meta: (match.route as any).meta,
-        params,
-        parentId: parentIds[match.route.id],
-        path: match.route.path,
-        pathname: match.pathname,
-        pathnameBase: match.pathnameBase,
-        shouldRevalidate: (match.route as any).shouldRevalidate,
-      };
+      return getServerRouteMatch(
+        staticContext,
+        match,
+        shouldRenderComponent,
+        parentIds[match.route.id]
+      );
     })
   );
 
@@ -606,6 +522,103 @@ async function generateStaticContextResponse(
       payload,
     });
   }
+}
+
+async function getServerRouteMatch(
+  staticContext: StaticHandlerContext,
+  match: AgnosticDataRouteMatch,
+  shouldRenderComponent: boolean,
+  parentId: string | undefined
+) {
+  if ("lazy" in match.route && match.route.lazy) {
+    Object.assign(match.route, {
+      // @ts-expect-error - FIXME: Fix the types here
+      ...((await match.route.lazy()) as any),
+      path: match.route.path,
+      index: (match.route as any).index,
+      id: match.route.id,
+    });
+    match.route.lazy = undefined;
+  }
+
+  const Layout = (match.route as any).Layout || React.Fragment;
+  const Component = (match.route as any).default;
+  const ErrorBoundary = (match.route as any).ErrorBoundary;
+  const HydrateFallback = (match.route as any).HydrateFallback;
+  const loaderData = staticContext.loaderData[match.route.id];
+  const actionData = staticContext.actionData?.[match.route.id];
+  const params = match.params;
+  // TODO: DRY this up once it's fully fleshed out
+  const element = Component
+    ? shouldRenderComponent
+      ? React.createElement(
+          Layout,
+          null,
+          React.createElement(Component, {
+            loaderData,
+            actionData,
+            params,
+            matches: staticContext.matches.map((match) =>
+              convertRouteMatchToUiMatch(match, staticContext.loaderData)
+            ),
+          })
+        )
+      : // TODO: Is this necessary? In my quick testing undefined seemed to
+        // work as well so we could eliminate the nested ternary
+        (false as const)
+    : undefined;
+  const errorElement = ErrorBoundary
+    ? React.createElement(
+        Layout,
+        null,
+        React.createElement(ErrorBoundary, {
+          loaderData,
+          actionData,
+          params,
+          error: [...staticContext.matches]
+            .reverse()
+            .find((match) => staticContext.errors?.[match.route.id]),
+        })
+      )
+    : undefined;
+  const hydrateFallbackElement = HydrateFallback
+    ? React.createElement(
+        Layout,
+        null,
+        React.createElement(HydrateFallback, {
+          loaderData,
+          actionData,
+          params,
+        })
+      )
+    : match.route.id === "root"
+    ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
+      // currently uses a hook internally so it fails during RSC.  Restructure
+      // so it can be used safely in an RSC render pass.
+      React.createElement("p", null, "Loading!")
+    : undefined;
+
+  return {
+    clientAction: (match.route as any).clientAction,
+    clientLoader: (match.route as any).clientLoader,
+    element,
+    errorElement,
+    handle: (match.route as any).handle,
+    hasAction: !!match.route.action,
+    hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+    hasLoader: !!match.route.loader,
+    hydrateFallbackElement,
+    id: match.route.id,
+    index: match.route.index,
+    links: (match.route as any).links,
+    meta: (match.route as any).meta,
+    params,
+    parentId,
+    path: match.route.path,
+    pathname: match.pathname,
+    pathnameBase: match.pathnameBase,
+    shouldRevalidate: (match.route as any).shouldRevalidate,
+  };
 }
 
 async function getRoute(
