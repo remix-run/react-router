@@ -3399,10 +3399,10 @@ test.describe("single-fetch", () => {
       await app.goto("/", true);
       // No clientLoaders so we can make a single parameter-less fetch
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when one route has a client loader", async ({ page }) => {
@@ -3487,10 +3487,10 @@ test.describe("single-fetch", () => {
 
       // root/A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when multiple routes have client loaders", async ({ page }) => {
@@ -3580,10 +3580,10 @@ test.describe("single-fetch", () => {
 
       // root/A can get prefetched, B/C can't due to `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when all routes have client loaders", async ({ page }) => {
@@ -3703,7 +3703,7 @@ test.describe("single-fetch", () => {
       await app.goto("/", true);
 
       // No prefetching due to clientLoaders
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(0);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(0);
     });
 
     test("when a reused route opts out of revalidation", async ({ page }) => {
@@ -3775,7 +3775,7 @@ test.describe("single-fetch", () => {
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b%2Croutes%2Fa.b.c']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when a reused route opts out of revalidation and another route has a clientLoader", async ({
@@ -3850,10 +3850,10 @@ test.describe("single-fetch", () => {
 
       // A opted out of revalidation
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
   });
 
