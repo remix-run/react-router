@@ -516,7 +516,10 @@ async function getRenderPayload(
       // props leading to render-time errors of the server component
       let shouldRenderComponent =
         i <= deepestRenderedRouteIdx &&
-        (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
+        (!routeIdsToLoad ||
+          routeIdsToLoad.includes(match.route.id) ||
+          // @ts-expect-error - FIXME: Fix the type here
+          match.route.clientLoader) &&
         (!staticContext.errors || !(match.route.id in staticContext.errors));
 
       return getServerRouteMatch(
