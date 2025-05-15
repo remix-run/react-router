@@ -13,7 +13,7 @@ import type {
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
 import type { LinkDescriptor } from "../../router/links";
-import type { SerializeFrom } from "../../types/internal/route-data";
+import type { SerializeFrom } from "../../types/internal-export/route-data";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;

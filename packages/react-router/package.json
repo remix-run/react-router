@@ -39,13 +39,13 @@
     },
     "./internal": {
       "node": {
-        "types": "./dist/development/internal.d.ts"
+        "types": "./dist/development/internal-export.d.ts"
       },
       "import": {
-        "types": "./dist/development/internal.d.mts"
+        "types": "./dist/development/internal-export.d.mts"
       },
       "default": {
-        "types": "./dist/development/internal.d.ts"
+        "types": "./dist/development/internal-export.d.ts"
       }
     },
     "./dom": {

@@ -50,7 +50,7 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types/internal/route-data";
+import type { SerializeFrom } from "./types/internal-export/route-data";
 
 /**
   Resolves a URL against the current location.
