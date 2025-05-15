@@ -1,0 +1,45 @@
+{
+  "name": "@playground/rsc-parcel",
+  "private": true,
+  "source": "src/entry.ssr.tsx",
+  "server": "dist/server.js",
+  "targets": {
+    "server": {
+      "context": "react-server",
+      "includeNodeModules": {
+        "express": false
+      }
+    }
+  },
+  "scripts": {
+    "dev": "parcel --no-cache",
+    "build": "parcel build --no-cache --no-optimize",
+    "start": "node dist/server.js"
+  },
+  "devDependencies": {
+    "@parcel/packager-react-static": "2.15.0",
+    "@parcel/transformer-react-static": "2.15.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "@types/parcel-env": "0.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@types/react": "^19.0.8",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^5.5.0||^6.0.0",
+    "events": "^3.1.0",
+    "parcel": "2.15.0",
+    "path-browserify": "^1.0.0",
+    "querystring-es3": "^0.2.1",
+    "stream-http": "^3.1.0",
+    "url": "^0.11.0"
+  },
+  "dependencies": {
+    "@mjackson/node-fetch-server": "0.6.1",
+    "@parcel/runtime-rsc": "2.15.0",
+    "express": "^4.21.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "workspace:*",
+    "react-server-dom-parcel": "^19.1.0"
+  }
+}

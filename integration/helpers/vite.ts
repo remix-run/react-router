@@ -188,6 +188,8 @@ export const EXPRESS_SERVER = (args: {
 
 export type TemplateName =
   | "cloudflare-dev-proxy-template"
+  | "rsc-parcel"
+  | "rsc-vite"
   | "vite-5-template"
   | "vite-6-template"
   | "vite-plugin-cloudflare-template"
@@ -200,6 +202,8 @@ export const viteMajorTemplates = [
     templateName: "vite-rolldown-template",
     templateDisplayName: "Vite Rolldown",
   },
+  { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
+  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
 ] as const satisfies Array<{
   templateName: TemplateName;
   templateDisplayName: string;
@@ -319,7 +323,7 @@ type ServerArgs = {
   basename?: string;
 };
 
-const createDev =
+export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
     let proc = node(nodeArgs, { cwd, env });
