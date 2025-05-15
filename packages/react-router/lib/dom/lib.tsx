@@ -1428,7 +1428,8 @@ export function useSearchParams(
         typeof nextInit === "function" ? nextInit(searchParams) : nextInit
       );
 
-      if (newSearchParams === searchParams) return Promise.resolve();
+      const unchanged = newSearchParams === searchParams || newSearchParams.toString() === searchParams.toString()
+      if (unchanged) return Promise.resolve();
       hasSetSearchParamsRef.current = true;
 
       return navigate("?" + newSearchParams, navigateOptions);
