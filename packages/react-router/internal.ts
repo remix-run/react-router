@@ -1,12 +1,12 @@
-export type { GetAnnotations } from "./lib/types/internal/route-module-annotations";
-
-import type { Params } from "./lib/types/internal/params";
 import type { RouteFiles } from "react-router";
 import type {
   GetLoaderData,
   GetActionData,
 } from "./lib/types/internal/route-data";
-import type { RouteModule } from "./lib/types/internal/route-module.ts";
+import type { RouteModule } from "./lib/types/internal/route-module";
+import type { Params } from "./lib/types/internal/params";
+
+export type { GetAnnotations } from "./lib/types/internal/route-module-annotations";
 
 export type GetInfo<T extends { file: keyof RouteFiles; module: RouteModule }> =
   {
