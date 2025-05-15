@@ -1427,8 +1427,12 @@ export function useSearchParams(
       const newSearchParams = createSearchParams(
         typeof nextInit === "function" ? nextInit(searchParams) : nextInit
       );
+
+      const unchanged = newSearchParams === searchParams || newSearchParams.toString() === searchParams.toString()
+      if (unchanged) return Promise.resolve();
       hasSetSearchParamsRef.current = true;
-      navigate("?" + newSearchParams, navigateOptions);
+
+      return navigate("?" + newSearchParams, navigateOptions);
     },
     [navigate, searchParams]
   );
@@ -2270,3 +2274,4 @@ export function useViewTransitionState(
 }
 
 //#endregion
+
