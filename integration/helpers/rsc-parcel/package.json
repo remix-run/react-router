@@ -13,7 +13,7 @@
   },
   "scripts": {
     "dev": "parcel --no-cache",
-    "build": "parcel build --no-cache --no-optimize",
+    "build": "parcel build --no-cache",
     "start": "node dist/server.js"
   },
   "devDependencies": {
