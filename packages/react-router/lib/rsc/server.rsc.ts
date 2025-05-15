@@ -460,7 +460,7 @@ async function generateStaticContextResponse(
       actionResult,
       rerender: renderPayloadPromise(),
     };
-  } else if (isSubmission) {
+  } else if (isSubmission && isDataRequest) {
     // Short circuit without matches on non server-action submissions since
     // we'll revalidate in a separate request
     payload = {
