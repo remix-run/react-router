@@ -36,7 +36,7 @@ app.use(
 );
 
 const server = app.listen(3000);
-console.log("Server listening on port 3000");
+console.log("Server listening on port 3000 (http://localhost:3000)");
 
 // Restart the server when it changes.
 if (module.hot) {
