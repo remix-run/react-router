@@ -591,6 +591,15 @@ async function getServerRouteMatch(
           })
         )
       : undefined;
+  let error: unknown = undefined;
+  if (ErrorBoundary && staticContext.errors) {
+    for (const match of [...staticContext.matches].reverse()) {
+      if (match.route.id in staticContext.errors) {
+        error = staticContext.errors[match.route.id];
+        break;
+      }
+    }
+  }
   const errorElement = ErrorBoundary
     ? React.createElement(
         Layout,
@@ -599,9 +608,7 @@ async function getServerRouteMatch(
           loaderData,
           actionData,
           params,
-          error: [...staticContext.matches]
-            .reverse()
-            .find((match) => staticContext.errors?.[match.route.id]),
+          error,
         })
       )
     : undefined;
