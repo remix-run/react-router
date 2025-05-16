@@ -26,7 +26,7 @@ import {
   convertRouteMatchToUiMatch,
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
-import type { RouteMatch } from "../context";
+import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
 type ServerRouteObjectBase = {
@@ -311,7 +311,11 @@ async function generateRenderResponse(
   }
 
   // Create the handler here with exploded routes
-  const handler = createStaticHandler(routes);
+  const handler = createStaticHandler(routes, {
+    mapRouteProperties: (r) => ({
+      hasErrorBoundary: (r as RouteObject).ErrorBoundary != null,
+    }),
+  });
 
   const result = await handler.query(request, {
     skipLoaderErrorBubbling: isDataRequest,
@@ -581,6 +585,10 @@ async function getServerRouteMatch(
         )
       : undefined;
   let error: unknown = undefined;
+
+  // FIXME: Is this logic right?  We don't want to take any error - only the
+  // error pegged to our route because the staticHandler should have done the
+  // bubbling for us (on document requests at least)?
   if (ErrorBoundary && staticContext.errors) {
     for (const match of [...staticContext.matches].reverse()) {
       if (match.route.id in staticContext.errors) {
