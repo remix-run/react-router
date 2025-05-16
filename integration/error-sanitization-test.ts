@@ -212,7 +212,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Defer Route");
       expect(html).toMatch("RESOLVED");
       expect(html).not.toMatch("MESSAGE:");
-      // Defer errors are not not part of the JSON blob but rather rejected
+      // Defer errors are not part of the JSON blob but rather rejected
       // against a pending promise and therefore are inlined JS.
       expect(html).not.toMatch("x.stack=e.stack;");
     });
@@ -608,7 +608,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Defer Route");
       expect(html).toMatch("RESOLVED");
       expect(html).not.toMatch("MESSAGE:");
-      // Defer errors are not not part of the JSON blob but rather rejected
+      // Defer errors are not part of the JSON blob but rather rejected
       // against a pending promise and therefore are inlined JS.
       expect(html).not.toMatch("x.stack=e.stack;");
     });
