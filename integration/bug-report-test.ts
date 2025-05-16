@@ -64,27 +64,60 @@ test.beforeAll(async () => {
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
     files: {
-      "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+      "app/routes/_layout.tsx": js`
+        import { Outlet } from "react-router";
 
-        export function loader() {
-          return "pizza";
+        function dummyApiCall() {
+          return new Promise((resolve, reject) => {
+            setTimeout(resolve, 1000)
+          })
         }
 
-        export default function Index() {
-          let data = useLoaderData();
+        // [WORKAROUND 1]: If the layout does not define a loader (by commenting this out), the process does not crash
+        export async function loader() {
+          await dummyApiCall();
+          return {}
+        }
+
+        export default function Layout() {
           return (
             <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
+              Layout
+              <Outlet/>
             </div>
           )
         }
       `,
 
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+      "app/routes/_layout._index.tsx": js`
+        import { Suspense } from "react";
+        import { Await, useLoaderData } from "react-router";
+
+        function dummyApiCall() {
+          return new Promise<any>((_, reject) => {
+            // [WORKAROUND 2]: If the index's loader takes longer to resolve (e.g. 1500) than the layout's the process does not crash
+            setTimeout(reject, 500)
+          })
+        }
+
+        export function loader() {
+          return { promise: dummyApiCall() }
+        }
+
+        export default function Home() {
+          const { promise } = useLoaderData<typeof loader>()
+
+          return <Suspense fallback={<div>Loading</div>}>
+            <Await resolve={promise} errorElement={<HomeError />}>{() => <HomeSuccess />}</Await>
+          </Suspense>
+        }
+
+        function HomeSuccess() {
+          return <div>This is not expected because the promise was rejected</div>
+        }
+
+        function HomeError() {
+          return <div>Error, but the good kind!</div>
         }
       `,
     },
@@ -103,22 +136,10 @@ test.afterAll(() => {
 // add a good description for what you expect React Router to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
-  let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
+test("route renders suspense error when route loader rejects before layout loader completes", async ({ page }) => {
   let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
-
-  // If you need to test interactivity use the `app`
-  await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
-
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
+  expect(await response.text()).toMatch("Error, but the good kind");
   // await app.poke(20);
-
-  // Go check out the other tests to see what else you can do.
 });
 
 ////////////////////////////////////////////////////////////////////////////////
