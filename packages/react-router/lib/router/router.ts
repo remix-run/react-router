@@ -1015,6 +1015,7 @@ export function createRouter(init: RouterInit): Router {
   // the globally incrementing load when a fetcher load lands after a completed
   // navigation
   let pendingNavigationLoadId = -1;
+  let lastUserInitiatedNavigationLoadId = -1;
 
   // Fetchers that triggered data reloads as a result of their actions
   let fetchReloadIds = new Map<string, number>();
@@ -1530,6 +1531,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     opts?: {
       initialHydration?: boolean;
+      isRedirect?: boolean;
       submission?: Submission;
       fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
@@ -1697,20 +1699,17 @@ export function createRouter(init: RouterInit): Router {
       matches: updatedMatches,
       loaderData,
       errors,
-    } = await handleLoaders(
-      request,
-      location,
-      matches,
-      scopedContext,
-      fogOfWar.active,
-      loadingNavigation,
-      opts && opts.submission,
-      opts && opts.fetcherSubmission,
-      opts && opts.replace,
-      opts && opts.initialHydration === true,
+    } = await handleLoaders(request, location, matches, scopedContext, {
+      isFogOfWar: fogOfWar.active,
+      isRedirect: opts?.isRedirect === true,
+      overrideNavigation: loadingNavigation,
+      submission: opts?.submission,
+      fetcherSubmission: opts?.fetcherSubmission,
+      replace: opts?.replace === true,
+      initialHydration: opts?.initialHydration === true,
       flushSync,
-      pendingActionResult
-    );
+      pendingActionResult,
+    });
 
     if (shortCircuited) {
       return;
@@ -1893,15 +1892,30 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
-    isFogOfWar: boolean,
-    overrideNavigation?: Navigation,
-    submission?: Submission,
-    fetcherSubmission?: Submission,
-    replace?: boolean,
-    initialHydration?: boolean,
-    flushSync?: boolean,
-    pendingActionResult?: PendingActionResult
+    opts: {
+      initialHydration: boolean;
+      isRedirect: boolean;
+      isFogOfWar: boolean;
+      replace: boolean;
+      flushSync: boolean;
+      overrideNavigation: Navigation | undefined;
+      submission: Submission | undefined;
+      fetcherSubmission: Submission | undefined;
+      pendingActionResult: PendingActionResult | undefined;
+    }
   ): Promise<HandleLoadersResult> {
+    let {
+      initialHydration,
+      isRedirect,
+      isFogOfWar,
+      replace,
+      flushSync,
+      overrideNavigation,
+      submission,
+      fetcherSubmission,
+      pendingActionResult,
+    } = opts;
+
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
       overrideNavigation || getLoadingNavigation(location, submission);
@@ -2000,14 +2014,17 @@ export function createRouter(init: RouterInit): Router {
     );
 
     pendingNavigationLoadId = ++incrementingLoadId;
+    if (!isRedirect) {
+      lastUserInitiatedNavigationLoadId = pendingNavigationLoadId;
+    }
 
-    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
-    // since they may have different revalidation rules (i.e., single fetch)
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
       revalidatingFetchers.length === 0
     ) {
+      // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
+      // since they may have different revalidation rules (i.e., single fetch)
       let updatedFetchers = markFetchRedirectsDone();
       completeNavigation(
         location,
@@ -2377,7 +2394,24 @@ export function createRouter(init: RouterInit): Router {
     } else {
       if (isRedirectResult(actionResult)) {
         fetchControllers.delete(key);
-        if (pendingNavigationLoadId > originatingLoadId) {
+
+        // Only skip if the user has since initiated a new navigation to a
+        // different location. If other fetcher redirects have kicked off we
+        // still want to process this since it's the "newest"
+        let location = actionResult.response.headers.get("Location");
+        if (location) {
+          location = normalizeRedirectLocation(
+            location,
+            init.history.createURL(state.location),
+            basename
+          );
+        }
+        let pendingLocation = state.navigation.location;
+        if (
+          lastUserInitiatedNavigationLoadId > originatingLoadId &&
+          pendingLocation &&
+          init.history.createHref(pendingLocation) !== location
+        ) {
           // A new navigation was kicked off after our action started, so that
           // should take precedence over this redirect navigation.  We already
           // set isRevalidationRequired so all loaders for the new route should
@@ -2803,6 +2837,7 @@ export function createRouter(init: RouterInit): Router {
       isMutationMethod(activeSubmission.formMethod)
     ) {
       await startNavigation(redirectNavigationType, redirectLocation, {
+        isRedirect: true,
         submission: {
           ...activeSubmission,
           formAction: location,
@@ -2821,6 +2856,7 @@ export function createRouter(init: RouterInit): Router {
         submission
       );
       await startNavigation(redirectNavigationType, redirectLocation, {
+        isRedirect: true,
         overrideNavigation,
         // Send fetcher submissions through for shouldRevalidate
         fetcherSubmission,
