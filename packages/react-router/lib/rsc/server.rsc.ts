@@ -320,7 +320,7 @@ async function generateRenderResponse(
     ...(routeIdsToLoad
       ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
       : null),
-    async unstable_stream(contextProvider, query) {
+    async unstable_stream(_, query) {
       // If this is an RSC server action, process that and then call query as a
       // revalidation.  If this is a RR Form/Fetcher submission,
       // `processServerAction` will fall through as a no-op and we'll pass the
@@ -355,8 +355,7 @@ async function generateRenderResponse(
         isDataRequest,
         isSubmission,
         actionResult,
-        staticContext,
-        contextProvider
+        staticContext
       );
     },
   });
@@ -399,8 +398,7 @@ async function generateStaticContextResponse(
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
-  staticContext: StaticHandlerContext,
-  contextProvider: unstable_RouterContextProvider
+  staticContext: StaticHandlerContext
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -447,8 +445,7 @@ async function generateStaticContextResponse(
       routes,
       routeIdsToLoad,
       isDataRequest,
-      staticContext,
-      contextProvider
+      staticContext
     );
 
   let payload: ServerRenderPayload | ServerActionPayload;
@@ -485,8 +482,7 @@ async function getRenderPayload(
   routes: ServerRouteObject[],
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
-  staticContext: StaticHandlerContext,
-  contextProvider: unstable_RouterContextProvider
+  staticContext: StaticHandlerContext
 ) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
@@ -521,7 +517,6 @@ async function getRenderPayload(
 
       return getServerRouteMatch(
         staticContext,
-        contextProvider,
         match,
         shouldRenderComponent,
         parentIds[match.route.id]
@@ -548,7 +543,6 @@ async function getRenderPayload(
 
 async function getServerRouteMatch(
   staticContext: StaticHandlerContext,
-  contextProvider: unstable_RouterContextProvider,
   match: AgnosticDataRouteMatch,
   shouldRenderComponent: boolean,
   parentId: string | undefined
@@ -578,10 +572,6 @@ async function getServerRouteMatch(
           Layout,
           null,
           React.createElement(Component, {
-            // Pass context to server components so it can be used for data loading
-            ...(Component.$$typeof === Symbol.for("react.client.reference")
-              ? {}
-              : { context: contextProvider }),
             loaderData,
             actionData,
             params,
