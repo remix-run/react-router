@@ -1,6 +1,5 @@
 import * as React from "react";
 import type {
-  AgnosticRouteMatch,
   Blocker,
   BlockerFunction,
   Location,
@@ -359,7 +358,7 @@ export function useRoutesImpl(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let { navigator, static: isStatic } = React.useContext(NavigationContext);
+  let { navigator } = React.useContext(NavigationContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -446,13 +445,7 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  let matches =
-    !isStatic &&
-    dataRouterState &&
-    dataRouterState.matches &&
-    dataRouterState.matches.length > 0
-      ? (dataRouterState.matches as AgnosticRouteMatch<string, RouteObject>[])
-      : matchRoutes(routes, { pathname: remainingPathname });
+  let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
     warning(
