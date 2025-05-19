@@ -8,5 +8,8 @@
     "react-router-native": "6.30.0",
     "@remix-run/router": "1.23.0"
   },
-  "changesets": []
+  "changesets": [
+    "green-emus-greet",
+    "purple-gifts-bake"
+  ]
 }
