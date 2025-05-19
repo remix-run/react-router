@@ -28,5 +28,19 @@
     "@playground/split-route-modules-spa": "0.0.0",
     "@playground/vite-plugin-cloudflare": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "big-ladybugs-brush",
+    "flat-seas-own",
+    "funny-paws-divide",
+    "gold-baboons-roll",
+    "gold-socks-attack",
+    "loud-actors-shop",
+    "neat-candles-stare",
+    "odd-hounds-ring",
+    "purple-boats-bake",
+    "rude-lobsters-design",
+    "small-rocks-grab",
+    "sweet-parents-hug",
+    "unlucky-pigs-chew"
+  ]
 }
