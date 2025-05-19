@@ -53,16 +53,11 @@ import {
 } from "./context";
 import {
   _renderMatches,
-  useActionData,
   useAsyncValue,
   useInRouterContext,
-  useLoaderData,
   useLocation,
-  useMatches,
   useNavigate,
   useOutlet,
-  useParams,
-  useRouteError,
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
