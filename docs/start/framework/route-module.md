@@ -313,7 +313,7 @@ Route meta defines meta tags to be rendered in the `<head>` of the document.
 
 <docs-warning>
 
-Since the version 19 of React, the use of the built-in `<meta>` support is recommended other the use of the `meta` function. You can find the documentation [here](https://react.dev/reference/react-dom/components/meta).
+Since React 19, [using the built-in `<meta>` element](https://react.dev/reference/react-dom/components/meta) is recommended over the use of the route module's `meta` export.
 
 Here is an snippet code equivalent of the example below:
 
