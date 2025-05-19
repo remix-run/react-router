@@ -29,10 +29,12 @@ import { useNavigate } from "react-router";
 
 function NavigationButton() {
   const navigate = useNavigate();
-  
+
   return (
-    <button 
-      onClick={() => navigate("/about", { viewTransition: true })}
+    <button
+      onClick={() =>
+        navigate("/about", { viewTransition: true })
+      }
     >
       About
     </button>
