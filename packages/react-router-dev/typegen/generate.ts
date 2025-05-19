@@ -59,7 +59,7 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
   // precompute
   const fileToRoutes = new Map<string, Set<string>>();
   const lineages = new Map<string, Array<RouteManifestEntry>>();
-  const pages = new Set<string>();
+  const allPages = new Set<string>();
   const routeToPages = new Map<string, Set<string>>();
   for (const route of Object.values(ctx.config.routes)) {
     // fileToRoutes
@@ -75,9 +75,10 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
     lineages.set(route.id, lineage);
 
     // pages
-    const page = Route.fullpath(lineage);
-    if (!page) continue;
-    pages.add(page);
+    const fullpath = Route.fullpath(lineage);
+    if (!fullpath) continue;
+    const pages = explodeOptionalSegments(fullpath);
+    pages.forEach((page) => allPages.add(page));
 
     // routePages
     lineage.forEach(({ id }) => {
@@ -86,7 +87,7 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
         routePages = new Set<string>();
         routeToPages.set(id, routePages);
       }
-      routePages.add(page);
+      pages.forEach((page) => routePages.add(page));
     });
   }
 
@@ -107,7 +108,7 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
         }
       ` +
       "\n\n" +
-      Babel.generate(pagesType(pages)).code +
+      Babel.generate(pagesType(allPages)).code +
       "\n\n" +
       Babel.generate(routeFilesType({ fileToRoutes, routeToPages })).code,
   };
@@ -344,5 +345,51 @@ function paramsType(path: string) {
       property.optional = !isRequired;
       return property;
     })
+  );
+}
+
+// https://github.com/remix-run/react-router/blob/7a7f4b11ca8b26889ad328ba0ee5a749b0c6939e/packages/react-router/lib/router/utils.ts#L894C1-L937C2
+function explodeOptionalSegments(path: string): string[] {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+
+  // Optional path segments are denoted by a trailing `?`
+  let isOptional = first.endsWith("?");
+  // Compute the corresponding required segment: `foo?` -> `foo`
+  let required = first.replace(/\?$/, "");
+
+  if (rest.length === 0) {
+    // Interpret empty string as omitting an optional segment
+    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
+    return isOptional ? [required, ""] : [required];
+  }
+
+  let restExploded = explodeOptionalSegments(rest.join("/"));
+
+  let result: string[] = [];
+
+  // All child paths with the prefix.  Do this for all children before the
+  // optional version for all children, so we get consistent ordering where the
+  // parent optional aspect is preferred as required.  Otherwise, we can get
+  // child sections interspersed where deeper optional segments are higher than
+  // parent optional segments, where for example, /:two would explode _earlier_
+  // then /:one.  By always including the parent as required _for all children_
+  // first, we avoid this issue
+  result.push(
+    ...restExploded.map((subpath) =>
+      subpath === "" ? required : [required, subpath].join("/")
+    )
+  );
+
+  // Then, if this is an optional value, add all child versions without
+  if (isOptional) {
+    result.push(...restExploded);
+  }
+
+  // for absolute paths, ensure `/` instead of empty segment
+  return result.map((exploded) =>
+    path.startsWith("/") && exploded === "" ? "/" : exploded
   );
 }

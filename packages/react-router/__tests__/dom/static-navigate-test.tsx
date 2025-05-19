@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOMServer from "react-dom/server";
+import * as ReactDOMServer from "react-dom/server.edge";
 import { Navigate, Routes, Route, StaticRouter } from "../../index";
 
 describe("A <Navigate> in a <StaticRouter>", () => {

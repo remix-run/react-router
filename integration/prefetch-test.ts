@@ -49,11 +49,11 @@ function fixtureFactory(
                 <style>{styles}</style>
                 <h1>Root</h1>
                 <nav id="nav">
-                  <Link to="/with-loader" prefetch="${mode}">
+                  <Link to="/prefetch-with-loader" prefetch="${mode}">
                     Loader Page
                   </Link>
                   <br/>
-                  <Link to="/without-loader" prefetch="${mode}">
+                  <Link to="/prefetch-without-loader" prefetch="${mode}">
                     Non-Loader Page
                   </Link>
                 </nav>
@@ -71,18 +71,18 @@ function fixtureFactory(
         }
       `,
 
-      "app/routes/with-loader.tsx": js`
+      "app/routes/prefetch-with-loader.tsx": js`
         export function loader() {
           return { message: 'data from the loader' };
         }
         export default function() {
-          return <h2 className="with-loader">With Loader</h2>;
+          return <h2 className="prefetch-with-loader">With Loader</h2>;
         }
       `,
 
-      "app/routes/without-loader.tsx": js`
+      "app/routes/prefetch-without-loader.tsx": js`
         export default function() {
-          return <h2 className="without-loader">Without Loader</h2>;
+          return <h2 className="prefetch-without-loader">Without Loader</h2>;
         }
       `,
     },
@@ -108,13 +108,17 @@ test.describe("prefetch", () => {
         test("does not render prefetch tags during SSR", async ({ page }) => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
 
         test("does not add prefetch tags on hydration", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
       });
 
@@ -134,46 +138,48 @@ test.describe("prefetch", () => {
         test("does not render prefetch tags during SSR", async ({ page }) => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
 
         test("adds prefetch tags on hydration", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
 
-          // Both data and asset fetch for /with-loader
+          // Both data and asset fetch for /prefetch-with-loader
           await page.waitForSelector(
-            "#nav link[rel='prefetch'][as='fetch'][href='/with-loader.data']",
+            "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-loader-']",
+            "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
             { state: "attached" }
           );
 
-          // Only asset fetch for /without-loader
+          // Only asset fetch for /prefetch-without-loader
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/without-loader-']",
+            "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
             { state: "attached" }
           );
 
           // These 2 are common and duped for both - but they've already loaded on
           // page load so they don't trigger network requests
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+            "link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
-              "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
+              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
 
           // Ensure no other links in the #nav element
-          expect(await page.locator("#nav link").count()).toBe(7);
+          expect(await page.locator("link").count()).toBe(7);
         });
       });
 
@@ -193,60 +199,64 @@ test.describe("prefetch", () => {
         test("does not render prefetch tags during SSR", async ({ page }) => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
 
         test("does not add prefetch tags on hydration", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
 
         test("adds prefetch tags on hover", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
-          await page.hover("a[href='/with-loader']");
+          await page.hover("a[href='/prefetch-with-loader']");
           await page.waitForSelector(
-            "#nav link[rel='prefetch'][as='fetch'][href='/with-loader.data']",
+            "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
             { state: "attached" }
           );
           // Check href prefix due to hashed filenames
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-loader-']",
+            "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+            "link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
-              "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
+              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("#nav link").count()).toBe(4);
+          expect(await page.locator("link").count()).toBe(4);
 
-          await page.hover("a[href='/without-loader']");
+          await page.hover("a[href='/prefetch-without-loader']");
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/without-loader-']",
+            "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+            "link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
-              "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
+              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("#nav link").count()).toBe(3);
+          expect(await page.locator("link").count()).toBe(3);
         });
 
         test("removes prefetch tags after navigating to/from the page", async ({
@@ -256,21 +266,27 @@ test.describe("prefetch", () => {
           await app.goto("/");
 
           // Links added on hover
-          await page.hover("a[href='/with-loader']");
-          await page.waitForSelector("#nav link", { state: "attached" });
-          expect(await page.locator("#nav link").count()).toBe(4);
+          await page.hover("a[href='/prefetch-with-loader']");
+          await page.waitForSelector("link", { state: "attached" });
+          expect(await page.locator("link").count()).toBe(4);
 
           // Links removed upon navigating to the page
-          await page.click("a[href='/with-loader']");
-          await page.waitForSelector("h2.with-loader", { state: "attached" });
-          expect(await page.locator("#nav link").count()).toBe(0);
-
-          // Links stay removed upon navigating away from the page
-          await page.click("a[href='/without-loader']");
-          await page.waitForSelector("h2.without-loader", {
+          await page.click("a[href='/prefetch-with-loader']");
+          await page.waitForSelector("h2.prefetch-with-loader", {
             state: "attached",
           });
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
+
+          // Links stay removed upon navigating away from the page
+          await page.click("a[href='/prefetch-without-loader']");
+          await page.waitForSelector("h2.prefetch-without-loader", {
+            state: "attached",
+          });
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
       });
 
@@ -290,13 +306,17 @@ test.describe("prefetch", () => {
         test("does not render prefetch tags during SSR", async ({ page }) => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
 
         test("does not add prefetch tags on hydration", async ({ page }) => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
-          expect(await page.locator("#nav link").count()).toBe(0);
+          expect(
+            await page.locator("link[href^='/assets/prefetch-']").count()
+          ).toBe(0);
         });
 
         test("adds prefetch tags on focus", async ({ page }) => {
@@ -305,47 +325,47 @@ test.describe("prefetch", () => {
           // This click is needed to transfer focus to the main window, allowing
           // subsequent focus events to fire
           await page.click("body");
-          await page.focus("a[href='/with-loader']");
+          await page.focus("a[href='/prefetch-with-loader']");
           await page.waitForSelector(
-            "#nav link[rel='prefetch'][as='fetch'][href='/with-loader.data']",
+            "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-loader-']",
+            "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+            "link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
-              "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
+              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("#nav link").count()).toBe(4);
+          expect(await page.locator("link").count()).toBe(4);
 
-          await page.focus("a[href='/without-loader']");
+          await page.focus("a[href='/prefetch-without-loader']");
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/without-loader-']",
+            "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "#nav link[rel='modulepreload'][href^='/assets/with-props-']",
+            "link[rel='modulepreload'][href^='/assets/with-props-']",
             { state: "attached" }
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "#nav link[rel='modulepreload'][href^='/assets/chunk-']",
-              "#nav link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
+              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("#nav link").count()).toBe(3);
+          expect(await page.locator("link").count()).toBe(3);
         });
       });
 
@@ -397,7 +417,14 @@ test.describe("prefetch", () => {
           await app.goto("/");
 
           // No preloads to start
-          await expect(page.locator("div link")).toHaveCount(0);
+          await expect(
+            page.locator(
+              [
+                "link[rel='prefetch'][as='fetch'][href='/test.data']",
+                "link[rel='modulepreload'][href^='/assets/test-']",
+              ].join(",")
+            )
+          ).toHaveCount(0);
 
           // Preloads render on scroll down
           await page.evaluate(() =>
@@ -405,17 +432,24 @@ test.describe("prefetch", () => {
           );
 
           await page.waitForSelector(
-            "div link[rel='prefetch'][as='fetch'][href='/test.data']",
+            "link[rel='prefetch'][as='fetch'][href='/test.data']",
             { state: "attached" }
           );
           await page.waitForSelector(
-            "div link[rel='modulepreload'][href^='/assets/test-']",
+            "link[rel='modulepreload'][href^='/assets/test-']",
             { state: "attached" }
           );
 
           // Preloads removed on scroll up
           await page.evaluate(() => window.scrollTo(0, 0));
-          await expect(page.locator("div link")).toHaveCount(0);
+          await expect(
+            page.locator(
+              [
+                "link[rel='prefetch'][as='fetch'][href='/test.data']",
+                "link[rel='modulepreload'][href^='/assets/test-']",
+              ].join(",")
+            )
+          ).toHaveCount(0);
         });
       });
 
@@ -633,14 +667,14 @@ test.describe("prefetch", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           await page.hover("a[href='/with-nested-links/nested']");
-          await page.waitForSelector("#nav link[rel='prefetch'][as='style']", {
+          await page.waitForSelector("link[rel='prefetch'][as='style']", {
             state: "attached",
           });
           expect(
-            await page.locator("#nav link[rel='prefetch'][as='style']").count()
+            await page.locator("link[rel='prefetch'][as='style']").count()
           ).toBe(2);
           expect(
-            await page.locator("#nav link[rel='prefetch'][as='image']").count()
+            await page.locator("link[rel='prefetch'][as='image']").count()
           ).toBe(2);
         });
       });

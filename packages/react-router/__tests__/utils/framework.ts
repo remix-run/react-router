@@ -25,7 +25,7 @@ export function mockFrameworkContext(
           hydrateFallbackModule: undefined,
         },
       },
-      entry: { imports: [], module: "" },
+      entry: { imports: [], module: "/dummy-entry-module.js" },
       url: "",
       version: "",
     },
