@@ -61,7 +61,7 @@ async function setupRscTest({
     console.error("Error building project", {
       status,
       stdout: stdout.toString(),
-      stderr: stderr.toString,
+      stderr: stderr.toString(),
     });
     throw new Error("Error building project");
   }

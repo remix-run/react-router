@@ -21,12 +21,11 @@ import {
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
-  type unstable_RouterContextProvider,
   isRouteErrorResponse,
   matchRoutes,
   convertRouteMatchToUiMatch,
 } from "../router/utils";
-import { getDocumentHeaders } from "../server-runtime/headers";
+import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import type { RouteMatch } from "../context";
 import invariant from "../server-runtime/invariant";
 
@@ -426,7 +425,7 @@ async function generateStaticContextResponse(
     }
   });
 
-  let headers = getDocumentHeaders(
+  let headers = getDocumentHeadersImpl(
     staticContext,
     (match) => (match as RouteMatch<string, ServerRouteObject>).route.headers
   );

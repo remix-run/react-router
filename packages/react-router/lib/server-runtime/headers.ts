@@ -18,7 +18,7 @@ export function getDocumentHeaders(
   });
 }
 
-function getDocumentHeadersImpl(
+export function getDocumentHeadersImpl(
   context: StaticHandlerContext,
   getRouteHeadersFn: (match: DataRouteMatch) => ServerRouteModule["headers"]
 ): Headers {
