@@ -1,12 +1,12 @@
 import type {
   ClientLoaderFunctionArgs,
   ClientActionFunctionArgs,
-} from "../dom/ssr/routeModules";
-import type { DataWithResponseInit } from "../router/utils";
-import type { Serializable } from "../server-runtime/single-fetch";
+} from "../../dom/ssr/routeModules";
+import type { DataWithResponseInit } from "../../router/utils";
+import type { Serializable } from "../../server-runtime/single-fetch";
+import type { unstable_SerializesTo } from "../serializes-to";
+import type { Equal, Expect, Func, IsAny, Pretty } from "../utils";
 import type { RouteModule } from "./route-module";
-import type { unstable_SerializesTo } from "./serializes-to";
-import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
 
 // prettier-ignore
 type Serialize<T> =

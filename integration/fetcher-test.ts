@@ -582,7 +582,6 @@ test.describe("fetcher lazy route discovery", () => {
     // Slow down the fetcher discovery a tiny bit so it doesn't resolve prior
     // to the navigation
     page.route(/\/__manifest/, async (route) => {
-      console.log(route.request().url());
       if (route.request().url().includes(encodeURIComponent("/api"))) {
         await new Promise((r) => setTimeout(r, 100));
       }

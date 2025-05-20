@@ -1,10 +1,24 @@
 import { splitCookiesString } from "set-cookie-parser";
 
-import type { StaticHandlerContext } from "../router/router";
 import type { DataRouteMatch } from "../context";
+import type { StaticHandlerContext } from "../router/router";
 import type { ServerRouteModule } from "../dom/ssr/routeModules";
+import type { ServerBuild } from "./build";
+import invariant from "./invariant";
 
+// Version used by v7 framework mode
 export function getDocumentHeaders(
+  context: StaticHandlerContext,
+  build: ServerBuild
+): Headers {
+  return getDocumentHeadersImpl(context, (m) => {
+    let route = build.routes[m.route.id];
+    invariant(route, `Route with id "${m.route.id}" not found in build`);
+    return route.module.headers;
+  });
+}
+
+function getDocumentHeadersImpl(
   context: StaticHandlerContext,
   getRouteHeadersFn: (match: DataRouteMatch) => ServerRouteModule["headers"]
 ): Headers {

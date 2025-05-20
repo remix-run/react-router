@@ -99,7 +99,7 @@ test.describe("typegen", () => {
           import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/only-optional"
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id?: string }>>
+            type Test = Expect<Equal<typeof params.id, string | undefined>>
             return null
           }
         `,
@@ -107,7 +107,7 @@ test.describe("typegen", () => {
           import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/optional-then-required"
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id: string }>>
+            type Test = Expect<Equal<typeof params.id,  string>>
             return null
           }
         `,
@@ -116,7 +116,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/required-then-optional"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params, { id: string }>>
+            type Test = Expect<Equal<typeof params.id, string>>
             return null
           }
         `,
@@ -497,12 +497,16 @@ test.describe("typegen", () => {
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
         export default [
+          route("optional-static/opt?", "routes/optional-static.tsx"),
           route("no-params", "routes/no-params.tsx"),
           route("required-param/:req", "routes/required-param.tsx"),
           route("optional-param/:opt?", "routes/optional-param.tsx"),
           route("/leading-and-trailing-slash/", "routes/leading-and-trailing-slash.tsx"),
           route("some-other-route", "routes/some-other-route.tsx"),
         ] satisfies RouteConfig;
+      `,
+      "app/routes/optional-static.tsx": tsx`
+        export default function Component() {}
       `,
       "app/routes/no-params.tsx": tsx`
         export default function Component() {}
@@ -522,13 +526,22 @@ test.describe("typegen", () => {
         // @ts-expect-error
         href("/does-not-exist")
 
+        href("/optional-static")
+        href("/optional-static/opt")
+        // @ts-expect-error
+        href("/optional-static/opt?")
+
         href("/no-params")
 
         // @ts-expect-error
         href("/required-param/:req")
         href("/required-param/:req", { req: "hello" })
 
+        href("/optional-param")
+        href("/optional-param/:opt", { opt: "hello" })
+        // @ts-expect-error
         href("/optional-param/:opt?")
+        // @ts-expect-error
         href("/optional-param/:opt?", { opt: "hello" })
 
         href("/leading-and-trailing-slash")
