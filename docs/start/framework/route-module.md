@@ -326,6 +326,7 @@ export function meta() {
   ];
 }
 ```
+
 ```tsx filename=app/root.tsx
 import { Meta } from "react-router";
 
