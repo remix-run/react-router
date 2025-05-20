@@ -10,5 +10,5 @@ if [ ${IS_PRERELEASE} == "true" ]; then
   pnpm exec changeset publish
 else
   echo "Publishing with v6 tag (stable release)"
-  pnpm exec changeset publish --tag v6
+  pnpm exec changeset publish --tag version-6
 fi
