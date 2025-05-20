@@ -1,5 +1,12 @@
 # `react-router-dom`
 
+## 6.30.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.30.1`
+
 ## 6.30.0
 
 ### Minor Changes
