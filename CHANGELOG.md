@@ -230,7 +230,7 @@ Date: YYYY-MM-DD
 
 ## v6.30.1
 
-Date: 2025-05-19
+Date: 2025-05-20
 
 ### Patch Changes
 
