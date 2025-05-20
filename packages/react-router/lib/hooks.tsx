@@ -1178,7 +1178,7 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
 
   @category Hooks
  */
-export function useRouteError(): unknown {
+export function useRouteError<T = unknown>(): T {
   let error = React.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterStateHook.UseRouteError);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseRouteError);
