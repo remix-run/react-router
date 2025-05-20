@@ -1257,6 +1257,9 @@ export function compilePath(
           return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
         }
       );
+  // If the URL contains %0A (a newline character),
+  // the regular expression will not match correctly unless the s (single line) flag is set.
+  let regexpFlags = ["s"];
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
@@ -1280,7 +1283,9 @@ export function compilePath(
     // Nothing to match for "" or "/"
   }
 
-  let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
+  if (!caseSensitive) regexpFlags.push("i");
+
+  let matcher = new RegExp(regexpSource, regexpFlags.join(""));
 
   return [matcher, params];
 }

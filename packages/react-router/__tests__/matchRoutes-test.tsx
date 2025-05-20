@@ -65,6 +65,11 @@ describe("matchRoutes", () => {
     expect(pickPaths(routes, "/hometypo")).toEqual(["*"]);
   });
 
+  it("matches root * routes for URLs containing %0A (a newline character)", () => {
+    expect(pickPaths(routes, "/%0A")).toEqual(["*"]);
+    expect(pickPaths(routes, "/new%0Aline")).toEqual(["*"]);
+  });
+
   it("matches index routes with path correctly", () => {
     expect(pickPaths(routes, "/withpath")).toEqual(["/withpath"]);
   });
