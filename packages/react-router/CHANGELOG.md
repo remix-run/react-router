@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.30.1-pre-v6.0
+## 6.30.1
 
 ### Patch Changes
 
