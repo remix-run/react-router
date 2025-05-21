@@ -1,0 +1,52 @@
+[
+    {
+        "id": "srv001",
+        "name": "Classic Facial",
+        "price": 45
+    },
+    {
+        "id": "srv002",
+        "name": "Hair Cut & Style",
+        "price": 35
+    },
+    {
+        "id": "srv003",
+        "name": "Manicure",
+        "price": 25
+    },
+    {
+        "id": "srv004",
+        "name": "Hair Coloring",
+        "price": 75
+    },
+    {
+        "id": "srv005",
+        "name": "Eyebrow Threading",
+        "price": 15
+    },
+    {
+        "id": "srv006",
+        "name": "Deep Conditioning Treatment",
+        "price": 40
+    },
+    {
+        "id": "srv007",
+        "name": "Pedicure",
+        "price": 30
+    },
+    {
+        "id": "srv008",
+        "name": "Hair Spa",
+        "price": 55
+    },
+    {
+        "id": "srv009",
+        "name": "Waxing",
+        "price": 35
+    },
+    {
+        "id": "srv010",
+        "name": "Makeup Application",
+        "price": 65
+    }
+]
