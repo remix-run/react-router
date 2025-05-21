@@ -11,32 +11,19 @@ This repository contains the source code for the tutorial article "Creating a Mu
 - Includes mock data(for replicating db behaviour)
 - No third-party form libraries required
 
-## Tech Stack
+## Interacting with the App
 
-- React
-- React Router
-- TypeScript
-- Vite
+1. Clone it and run the development server:
 
-## Getting Started
+    ```bash
+    npm run dev
+    ```
 
-1. Clone the repository:
+2. Pick any phone number from the "app/data/clients.json" file, on form part1.
 
-```bash
-git clone <your-repo-url>
-```
+3. Choose any values for fields in form part2.
 
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Run the development server:
-
-```bash
-npm run dev
-```
+4. Once the form is submitted, it will redirect you to record details page.
 
 ## Project Structure
 
@@ -55,7 +42,7 @@ app/
 
 ## Tutorial Article
 
-For a detailed explanation of how this implementation works, check out the full tutorial article: [Creating a Multi-Part Form Easily with React-Router (No Third-Party Libraries)](article-url)
+For a detailed explanation of how this implementation works, check out the full tutorial article: [Creating a Multi-Part Form Easily with React-Router (No Third-Party Libraries)](https://dev.to/azfar731/creating-a-multi-part-form-easily-with-react-router-no-third-party-libraries-203e)
 
 ## Preview
 
