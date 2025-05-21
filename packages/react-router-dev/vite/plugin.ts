@@ -69,7 +69,7 @@ import {
   resolveEntryFiles,
   configRouteToBranchRoute,
 } from "../config/config";
-import * as WithProps from "./with-props";
+import { decorateComponentExportsWithProps } from "./with-props";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -2149,7 +2149,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
     },
-    WithProps.plugin,
     {
       name: "react-router:route-exports",
       async transform(code, id, options) {
@@ -2201,7 +2200,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
         }
-        WithProps.transform(ast);
+        decorateComponentExportsWithProps(ast);
         return generate(ast, {
           sourceMaps: true,
           filename: id,
