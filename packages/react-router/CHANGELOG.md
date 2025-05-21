@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.6.1-pre.1
+
+### Patch Changes
+
+- [REMOVE] test changeset to force prerelease ([`d79c4fcac`](https://github.com/remix-run/react-router/commit/d79c4fcac236fd3bd5041ba706b2c52370337915))
+
 ## 7.6.1-pre.0
 
 ### Patch Changes
