@@ -997,3 +997,7 @@ function isEntryFileDependency(
 
   return false;
 }
+
+export function defineConfig(config: ReactRouterConfig){
+  return config
+}
