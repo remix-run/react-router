@@ -320,6 +320,9 @@ export {
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  withComponentProps as UNSAFE_withComponentProps,
+  withHydrateFallbackProps as UNSAFE_withHydrateFallbackProps,
+  withErrorBoundaryProps as UNSAFE_withErrorBoundaryProps,
 } from "./lib/components";
 
 /** @internal */

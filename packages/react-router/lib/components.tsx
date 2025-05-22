@@ -53,11 +53,16 @@ import {
 } from "./context";
 import {
   _renderMatches,
+  useActionData,
   useAsyncValue,
   useInRouterContext,
+  useLoaderData,
   useLocation,
+  useMatches,
   useNavigate,
   useOutlet,
+  useParams,
+  useRouteError,
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
@@ -1228,4 +1233,59 @@ export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
   return _renderMatches(matches);
+}
+
+export type RouteComponentType = React.ComponentType<{
+  params: ReturnType<typeof useParams>;
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  matches: ReturnType<typeof useMatches>;
+}>;
+
+export function withComponentProps(Component: RouteComponentType) {
+  return function WithComponentProps() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+      matches: useMatches(),
+    };
+    return React.createElement(Component, props);
+  };
+}
+
+export type HydrateFallbackType = React.ComponentType<{
+  params: ReturnType<typeof useParams>;
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+}>;
+
+export function withHydrateFallbackProps(HydrateFallback: HydrateFallbackType) {
+  return function WithHydrateFallbackProps() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+    };
+    return React.createElement(HydrateFallback, props);
+  };
+}
+
+export type ErrorBoundaryType = React.ComponentType<{
+  params: ReturnType<typeof useParams>;
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  error: ReturnType<typeof useRouteError>;
+}>;
+
+export function withErrorBoundaryProps(ErrorBoundary: ErrorBoundaryType) {
+  return function WithErrorBoundaryProps() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+      error: useRouteError(),
+    };
+    return React.createElement(ErrorBoundary, props);
+  };
 }
