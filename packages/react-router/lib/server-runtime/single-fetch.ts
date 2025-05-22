@@ -280,6 +280,12 @@ function generateSingleFetchResponse(
   //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
   resultHeaders.set("Content-Type", "text/x-script");
 
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  resultHeaders.delete("Content-Length");
+
   return new Response(
     encodeViaTurboStream(
       result,
