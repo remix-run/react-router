@@ -8,8 +8,8 @@ import invariant from "./invariant";
 
 // Version used by v7 framework mode
 export function getDocumentHeaders(
-  context: StaticHandlerContext,
-  build: ServerBuild
+  build: ServerBuild,
+  context: StaticHandlerContext
 ): Headers {
   return getDocumentHeadersImpl(context, (m) => {
     let route = build.routes[m.route.id];
