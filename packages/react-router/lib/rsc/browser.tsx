@@ -271,7 +271,9 @@ export function getRSCSingleFetchDataStrategy(
     // pass map into fetchAndDecode so it can add payloads
     getFetchAndDecodeViaRSC(decode),
     ssr,
-    basename
+    basename,
+    // Only allow opting out of single fetch when match has an element
+    (match) => match.route.element != null
   );
   return async (args) =>
     args.unstable_runClientMiddleware(async () => {
@@ -288,17 +290,23 @@ export function getRSCSingleFetchDataStrategy(
       context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
-      const renderedRouteById = new Map(
-        context.get(renderedRoutesContext).map((r) => [r.id, r])
-      );
+      const renderedRoutesById = new Map<string, RenderedRoute[]>();
+      for (const route of context.get(renderedRoutesContext)) {
+        if (!renderedRoutesById.has(route.id)) {
+          renderedRoutesById.set(route.id, []);
+        }
+        renderedRoutesById.get(route.id)!.push(route);
+      }
       for (const match of args.matches) {
-        const rendered = renderedRouteById.get(match.route.id);
-        if (rendered) {
-          window.__router.patchRoutes(
-            rendered.parentId ?? null,
-            [createRouteFromServerManifest(rendered)],
-            true
-          );
+        const renderedRoutes = renderedRoutesById.get(match.route.id);
+        if (renderedRoutes) {
+          for (const rendered of renderedRoutes) {
+            window.__router.patchRoutes(
+              rendered.parentId ?? null,
+              [createRouteFromServerManifest(rendered)],
+              true
+            );
+          }
         }
       }
       return results;
@@ -457,7 +465,7 @@ function createRouteFromServerManifest(
   let hasInitialError = payload?.errors && match.id in payload.errors;
   let initialError = payload?.errors?.[match.id];
   let isHydrationRequest =
-    match.clientLoader?.hydrate === true || !match.hasLoader;
+    match.clientLoader?.hydrate === true || !match.hasLoader || !match.element;
 
   let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,
