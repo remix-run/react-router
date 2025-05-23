@@ -166,10 +166,13 @@ type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasShouldRevalidate: boolean;
 };
 
+type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
+
 export type FetchAndDecodeFunction = (
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
-  targetRoutes?: string[]
+  targetRoutes?: string[],
+  shouldAllowOptOut?: ShouldAllowOptOutFunction
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
 export function getTurboStreamSingleFetchDataStrategy(
@@ -203,7 +206,8 @@ export function getSingleFetchDataStrategyImpl(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined
+  basename: string | undefined,
+  shouldAllowOptOut: ShouldAllowOptOutFunction = () => true
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -266,7 +270,8 @@ export function getSingleFetchDataStrategyImpl(
       getRouteInfo,
       fetchAndDecode,
       ssr,
-      basename
+      basename,
+      shouldAllowOptOut
     );
   };
 }
@@ -354,7 +359,8 @@ async function singleFetchLoaderNavigationStrategy(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined
+  basename: string | undefined,
+  shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -396,7 +402,7 @@ async function singleFetchLoaderNavigationStrategy(
 
         // When a route has a client loader, it opts out of the singular call and
         // calls it's server loader via `serverLoader()` using a `?_routes` param
-        if (hasClientLoader) {
+        if (shouldAllowOptOut(m) && hasClientLoader) {
           if (hasLoader) {
             foundOptOutRoute = true;
           }
