@@ -94,7 +94,7 @@ import {
   useResolvedPath,
   useRouteId,
 } from "../hooks";
-import type { SerializeFrom } from "../types/internal-export/route-data";
+import type { SerializeFrom } from "../types/route-data";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff

@@ -277,7 +277,7 @@ export type {
   MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
 } from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
-export type { Register, Pages, RouteFiles } from "./lib/types/register";
+export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
 
 ///////////////////////////////////////////////////////////////////////////////
