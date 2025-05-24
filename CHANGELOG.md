@@ -341,7 +341,6 @@ Date: 2025-05-21
 
 ### Patch Changes
 
-- `react-router` - Remove hashes from files in `dist/` for easier usage with `patch-package` ([#13567](https://github.com/remix-run/react-router/pull/13567))
 - `react-router` - Partially revert optimization added in `7.1.4` to reduce calls to `matchRoutes` because it surfaced other issues ([#13562](https://github.com/remix-run/react-router/pull/13562))
 - `react-router` - Update `Route.MetaArgs` to reflect that `data` can be potentially `undefined` ([#13563](https://github.com/remix-run/react-router/pull/13563))
   - This is primarily for cases where a route `loader` threw an error to it's own `ErrorBoundary`, but it also arises in the case of a 404 which renders the root `ErrorBoundary`/`meta` but the root `loader` did not run because not routes matched
