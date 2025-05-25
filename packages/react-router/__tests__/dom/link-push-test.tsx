@@ -100,6 +100,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home?name=michael"
             onClick={[Function]}
+            ref={[Function]}
           >
             Michael
           </a>
@@ -155,6 +156,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home#bio"
             onClick={[Function]}
+            ref={[Function]}
           >
             Bio
           </a>
@@ -215,6 +217,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home"
             onClick={[Function]}
+            ref={[Function]}
           >
             Home
           </a>
@@ -277,6 +280,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home"
             onClick={[Function]}
+            ref={[Function]}
           >
             Home
           </a>

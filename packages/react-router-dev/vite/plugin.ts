@@ -810,10 +810,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     let sriManifest: ReactRouterManifest["sri"] = {};
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".js")) {
+        const entryNormalizedPath =
+          "parentPath" in entry && typeof entry.parentPath === "string"
+            ? entry.parentPath
+            : entry.path;
+
         let contents;
         try {
           contents = await fse.readFile(
-            path.join(entry.path, entry.name),
+            path.join(entryNormalizedPath, entry.name),
             "utf-8"
           );
         } catch (e) {
@@ -825,7 +830,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           .digest()
           .toString("base64");
         let filepath = getVite().normalizePath(
-          path.relative(clientBuildDirectory, path.join(entry.path, entry.name))
+          path.relative(
+            clientBuildDirectory,
+            path.join(entryNormalizedPath, entry.name)
+          )
         );
         sriManifest[`${ctx.publicPath}${filepath}`] = `sha384-${hash}`;
       }
@@ -1659,49 +1667,120 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
 
-          // We only move assets that aren't in the client build, otherwise we
-          // remove them. These assets only exist because we explicitly set
-          // `ssrEmitAssets: true` in the SSR Vite config. These assets
-          // typically wouldn't exist by default, which is why we assume it's
-          // safe to remove them. We're aiming for a clean build output so that
-          // unnecessary assets don't get deployed alongside the server code.
+          // If the consumer has explicitly opted in to keeping the SSR build
+          // assets, we don't remove them. We only copy missing assets from the
+          // SSR to the client build.
+          let userSsrEmitAssets =
+            (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
+              ? viteUserConfig.environments?.ssr?.build?.ssrEmitAssets ??
+                viteUserConfig.environments?.ssr?.build?.emitAssets
+              : null) ??
+            viteUserConfig.build?.ssrEmitAssets ??
+            false;
+
+          // We only move/copy assets that aren't in the client build, otherwise
+          // we remove them if the consumer hasn't explicitly enabled
+          // `ssrEmitAssets` in their Vite config. These assets only exist
+          // because we internally enable `ssrEmitAssets` within our plugin.
+          // These assets typically wouldn't exist by default, which is why we
+          // assume it's safe to remove them.
           let movedAssetPaths: string[] = [];
+          let removedAssetPaths: string[] = [];
+          let copiedAssetPaths: string[] = [];
           for (let ssrAssetPath of ssrAssetPaths) {
             let src = path.join(serverBuildDirectory, ssrAssetPath);
             let dest = path.join(clientBuildDirectory, ssrAssetPath);
 
-            if (!fse.existsSync(dest)) {
-              await fse.move(src, dest);
-              movedAssetPaths.push(dest);
-            } else {
-              await fse.remove(src);
+            if (!userSsrEmitAssets) {
+              if (!fse.existsSync(dest)) {
+                await fse.move(src, dest);
+                movedAssetPaths.push(dest);
+              } else {
+                await fse.remove(src);
+                removedAssetPaths.push(dest);
+              }
+            } else if (!fse.existsSync(dest)) {
+              await fse.copy(src, dest);
+              copiedAssetPaths.push(dest);
             }
           }
 
-          // We assume CSS assets from the SSR build are unnecessary and remove
-          // them for the same reasons as above.
-          let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
-            (chunk) => chunk.css ?? []
-          );
+          if (!userSsrEmitAssets) {
+            // We assume CSS assets from the SSR build are unnecessary and
+            // remove them for the same reasons as above.
+            let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
+              (chunk) => chunk.css ?? []
+            );
+            await Promise.all(
+              ssrCssPaths.map(async (cssPath) => {
+                let src = path.join(serverBuildDirectory, cssPath);
+                await fse.remove(src);
+                removedAssetPaths.push(src);
+              })
+            );
+          }
+
+          let cleanedAssetPaths = [...removedAssetPaths, ...movedAssetPaths];
+          let handledAssetPaths = [...cleanedAssetPaths, ...copiedAssetPaths];
+
+          // Clean empty asset directories
+          let cleanedAssetDirs = new Set(cleanedAssetPaths.map(path.dirname));
           await Promise.all(
-            ssrCssPaths.map((cssPath) =>
-              fse.remove(path.join(serverBuildDirectory, cssPath))
-            )
+            Array.from(cleanedAssetDirs).map(async (dir) => {
+              try {
+                const files = await fse.readdir(dir);
+                if (files.length === 0) {
+                  await fse.remove(dir);
+                }
+              } catch {}
+            })
           );
 
-          if (movedAssetPaths.length) {
-            viteConfig.logger.info(
-              [
-                "",
-                `${colors.green("✓")} ${movedAssetPaths.length} asset${
-                  movedAssetPaths.length > 1 ? "s" : ""
-                } moved from React Router server build to client assets.`,
-                ...movedAssetPaths.map((movedAssetPath) =>
-                  colors.dim(path.relative(ctx.rootDirectory, movedAssetPath))
-                ),
-                "",
-              ].join("\n")
-            );
+          // If we handled any assets, add some leading whitespace to
+          // our logs to make them more prominent
+          if (handledAssetPaths.length) {
+            viteConfig.logger.info("");
+          }
+
+          function logHandledAssets(paths: string[], message: string) {
+            invariant(viteConfig);
+            if (paths.length) {
+              viteConfig.logger.info(
+                [
+                  `${colors.green("✓")} ${message}`,
+                  ...paths.map((assetPath) =>
+                    colors.dim(path.relative(ctx.rootDirectory, assetPath))
+                  ),
+                ].join("\n")
+              );
+            }
+          }
+
+          logHandledAssets(
+            removedAssetPaths,
+            `${removedAssetPaths.length} asset${
+              removedAssetPaths.length > 1 ? "s" : ""
+            } cleaned from React Router server build.`
+          );
+
+          logHandledAssets(
+            movedAssetPaths,
+            `${movedAssetPaths.length} asset${
+              movedAssetPaths.length > 1 ? "s" : ""
+            } moved from React Router server build to client assets.`
+          );
+
+          logHandledAssets(
+            copiedAssetPaths,
+            `${copiedAssetPaths.length} asset${
+              copiedAssetPaths.length > 1 ? "s" : ""
+            } copied from React Router server build to client assets.`
+          );
+
+          // If we handled any assets, add some leading whitespace to our logs
+          // to make them more prominent
+          if (handledAssetPaths.length) {
+            viteConfig.logger.info("");
           }
 
           // Set an environment variable we can look for in the handler to
