@@ -1,28 +1,11 @@
 # `@react-router/dev`
 
-## 7.6.1-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.6.1-pre.2`
-  - `@react-router/node@7.6.1-pre.2`
-  - `@react-router/serve@7.6.1-pre.2`
-
-## 7.6.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.6.1-pre.1`
-  - `@react-router/node@7.6.1-pre.1`
-  - `@react-router/serve@7.6.1-pre.1`
-
-## 7.6.1-pre.0
+## 7.6.1
 
 ### Patch Changes
 
 - Prevent typegen with route files are outside the app directory ([#12996](https://github.com/remix-run/react-router/pull/12996))
+
 - Fix typegen when same route is used at multiple paths ([#13574](https://github.com/remix-run/react-router/pull/13574))
 
   For example, `routes/route.tsx` is used at 4 different paths here:
@@ -43,6 +26,7 @@
   Now, typegen creates unions as necessary for alternate paths for the same route file.
 
 - Add additional logging to `build` command output when cleaning assets from server build ([#13547](https://github.com/remix-run/react-router/pull/13547))
+
 - Better types for `params` ([#13543](https://github.com/remix-run/react-router/pull/13543))
 
   For example:
@@ -53,7 +37,7 @@
 
   export default [
     route("parent/:p", "routes/parent.tsx", [
-      route("route/:r", "routes/route.tsx", [
+      route("layout/:l", "routes/layout.tsx", [
         route("child1/:c1a/:c1b", "routes/child1.tsx"),
         route("child2/:c2a/:c2b", "routes/child2.tsx"),
       ]),
@@ -61,9 +45,9 @@
   ] satisfies RouteConfig;
   ```
 
-  Previously, `params` for `routes/route` were calculated as `{ p: string, r: string }`.
+  Previously, `params` for the `routes/layout.tsx` route were calculated as `{ p: string, l: string }`.
   This incorrectly ignores params that could come from child routes.
-  If visiting `/parent/1/route/2/child1/3/4`, the actual params passed to `routes/route` will have a type of `{ p: string, r: string, c1a: string, c1b: string }`.
+  If visiting `/parent/1/layout/2/child1/3/4`, the actual params passed to `routes/layout.tsx` will have a type of `{ p: string, l: string, c1a: string, c1b: string }`.
 
   Now, `params` are aware of child routes and autocompletion will include child params as optionals:
 
@@ -71,21 +55,21 @@
   params.|
   //     ^ cursor is here and you ask for autocompletion
   // p: string
-  // r: string
+  // l: string
   // c1a?: string
   // c1b?: string
   // c2a?: string
   // c2b?: string
   ```
 
-  You can also narrow the types for `params` as it is implemented as a normalized union of params for each page that includes `routes/route`:
+  You can also narrow the types for `params` as it is implemented as a normalized union of params for each page that includes `routes/layout.tsx`:
 
   ```ts
   if (typeof params.c1a === 'string') {
     params.|
     //     ^ cursor is here and you ask for autocompletion
     // p: string
-    // r: string
+    // l: string
     // c1a: string
     // c1b: string
   }
@@ -96,8 +80,10 @@
   UNSTABLE: renamed internal `react-router/route-module` export to `react-router/internal`
   UNSTABLE: removed `Info` export from generated `+types/*` files
 
-- [UNSTABLE] Normalize dirent entry path across node versions when generating SRI manifest ([#13591](https://github.com/remix-run/react-router/pull/13591))
+- \[UNSTABLE] Normalize dirent entry path across node versions when generating SRI manifest ([#13591](https://github.com/remix-run/react-router/pull/13591))
+
 - Don't clean assets from server build when `build.ssrEmitAssets` has been enabled in Vite config ([#13547](https://github.com/remix-run/react-router/pull/13547))
+
 - Fix `href` for optional segments ([#13595](https://github.com/remix-run/react-router/pull/13595))
 
   Type generation now expands paths with optionals into their corresponding non-optional paths.
@@ -126,9 +112,9 @@
   ```
 
 - Updated dependencies:
-  - `react-router@7.6.1-pre.0`
-  - `@react-router/node@7.6.1-pre.0`
-  - `@react-router/serve@7.6.1-pre.0`
+  - `react-router@7.6.1`
+  - `@react-router/node@7.6.1`
+  - `@react-router/serve@7.6.1`
 
 ## 7.6.0
 
