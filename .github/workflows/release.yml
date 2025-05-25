@@ -51,7 +51,7 @@ jobs:
         # publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
-        uses: changesets/action@v1.4.10
+        uses: changesets/action@v1.5.3
         with:
           version: pnpm run changeset:version
           commit: "chore: Update version for release"
