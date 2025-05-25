@@ -1,10 +1,8 @@
 # `create-react-router`
 
-## 7.6.1-pre.2
+## 7.6.1
 
-## 7.6.1-pre.1
-
-## 7.6.1-pre.0
+_No changes_
 
 ## 7.6.0
 
