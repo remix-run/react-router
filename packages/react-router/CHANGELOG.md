@@ -29,8 +29,6 @@
   Previously, typegen would arbitrarily pick one of these paths to be the "winner" and generate types for the route module based on that path.
   Now, typegen creates unions as necessary for alternate paths for the same route file.
 
-- \[REMOVE] Revert tsup changes ([#13667](https://github.com/remix-run/react-router/pull/13667))
-
 - Better types for `params` ([#13543](https://github.com/remix-run/react-router/pull/13543))
 
   For example:
@@ -85,8 +83,6 @@
   UNSTABLE: removed `Info` export from generated `+types/*` files
 
 - Avoid initial fetcher execution 404 error when Lazy Route Discovery is interrupted by a navigation ([#13564](https://github.com/remix-run/react-router/pull/13564))
-
-- \[REMOVE] test changeset to force prerelease ([`d79c4fcac`](https://github.com/remix-run/react-router/commit/d79c4fcac236fd3bd5041ba706b2c52370337915))
 
 - href replaces splats `*` ([#13593](https://github.com/remix-run/react-router/pull/13593))
 
@@ -500,8 +496,6 @@
   To fix this, the branded property of `unstable_SerializesTo` is marked as required instead of optional.
 
   For library and framework authors using `unstable_SerializesTo`, you may need to add `as unknown` casts before casting to `unstable_SerializesTo`.
-
-- \[REMOVE] Remove middleware depth logic and always call middlware for all matches ([#13172](https://github.com/remix-run/react-router/pull/13172))
 
 - Fix single fetch `_root.data` requests when a `basename` is used ([#12898](https://github.com/remix-run/react-router/pull/12898))
 

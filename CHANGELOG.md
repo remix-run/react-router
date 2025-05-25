@@ -337,7 +337,7 @@ Date: YYYY-MM-DD
 
 ## v7.6.1
 
-Date: 2025-05-21
+Date: 2025-05-25
 
 ### Patch Changes
 
@@ -448,8 +448,8 @@ Date: 2025-05-21
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- `@react-router/dev` - Renamed internal `react-router/route-module` export to `react-router/internal` ([#13547](https://github.com/remix-run/react-router/pull/13547))
-- `@react-router/dev` - Removed `Info` export from generated `+types/*` files ([#13547](https://github.com/remix-run/react-router/pull/13547))
+- `@react-router/dev` - Renamed internal `react-router/route-module` export to `react-router/internal` ([#13543](https://github.com/remix-run/react-router/pull/13543))
+- `@react-router/dev` - Removed `Info` export from generated `+types/*` files ([#13543](https://github.com/remix-run/react-router/pull/13543))
 - `@react-router/dev` - Normalize dirent entry path across node versions when generating SRI manifest ([#13591](https://github.com/remix-run/react-router/pull/13591))
 
 **Full Changelog**: [`v7.6.0...v7.6.1`](https://github.com/remix-run/react-router/compare/react-router@7.6.0...react-router@7.6.1)
