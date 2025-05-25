@@ -1269,6 +1269,11 @@ export function createRouter(init: RouterInit): Router {
       blockers.forEach((_, k) => blockers.set(k, IDLE_BLOCKER));
     }
 
+    // Don't restore on revalidation
+    let restoreScrollPosition =
+      state.revalidation === "idle" &&
+      getSavedScrollPosition(location, newState.matches || state.matches);
+
     // Always respect the user flag.  Otherwise don't reset on mutation
     // submission navigations unless they redirect
     let preventScrollReset =
@@ -1337,10 +1342,7 @@ export function createRouter(init: RouterInit): Router {
         initialized: true,
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
-        restoreScrollPosition: getSavedScrollPosition(
-          location,
-          newState.matches || state.matches
-        ),
+        restoreScrollPosition,
         preventScrollReset,
         blockers,
       },
