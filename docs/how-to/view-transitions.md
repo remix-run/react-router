@@ -20,13 +20,37 @@ The simplest way to enable view transitions is by adding the `viewTransition` pr
 
 Without any additional CSS, this provides a basic cross-fade animation between pages.
 
+### 2. Enable view transitions with programmatic navigation
+
+When using programmatic navigation with the `useNavigate` hook, you can enable view transitions by passing the `viewTransition: true` option:
+
+```tsx
+import { useNavigate } from "react-router";
+
+function NavigationButton() {
+  const navigate = useNavigate();
+
+  return (
+    <button
+      onClick={() =>
+        navigate("/about", { viewTransition: true })
+      }
+    >
+      About
+    </button>
+  );
+}
+```
+
+This provides the same cross-fade animation as using the `viewTransition` prop on Link components.
+
 For more information on using the View Transitions API, please refer to the ["Smooth transitions with the View Transition API" guide][view-transitions-guide] from the Google Chrome team.
 
 ## Image Gallery Example
 
 Let's build an image gallery that demonstrates how to trigger and use view transitions. We'll create a list of images that expand into a detail view with smooth animations.
 
-### 2. Create the image gallery route
+### 1. Create the image gallery route
 
 ```tsx filename=routes/image-gallery.tsx
 import { NavLink } from "react-router";
@@ -62,7 +86,7 @@ export default function ImageGalleryRoute() {
 }
 ```
 
-### 3. Add transition styles
+### 2. Add transition styles
 
 Define view transition names and animations for elements that should transition smoothly between routes.
 
@@ -98,7 +122,7 @@ Define view transition names and animations for elements that should transition 
 }
 ```
 
-### 4. Create the image detail route
+### 3. Create the image detail route
 
 The detail view needs to use the same view transition names to create a seamless animation.
 
@@ -122,7 +146,7 @@ export default function ImageDetailsRoute({
 }
 ```
 
-### 5. Add matching transition styles for the detail view
+### 4. Add matching transition styles for the detail view
 
 ```css filename=app.css
 /* Match transition names from the list view */

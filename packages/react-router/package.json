@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "7.6.0",
+  "version": "7.6.1",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -39,13 +39,13 @@
     },
     "./internal": {
       "node": {
-        "types": "./dist/development/internal-export.d.ts"
+        "types": "./dist/development/lib/types/internal.d.ts"
       },
       "import": {
-        "types": "./dist/development/internal-export.d.mts"
+        "types": "./dist/development/lib/types/internal.d.mts"
       },
       "default": {
-        "types": "./dist/development/internal-export.d.ts"
+        "types": "./dist/development/lib/types/index.d.ts"
       }
     },
     "./dom": {
