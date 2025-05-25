@@ -1,5 +1,14 @@
 # `@react-router/architect`
 
+## 7.6.1
+
+### Patch Changes
+
+- Update `@architect/functions` from `^5.2.0` to `^7.0.0` ([#13556](https://github.com/remix-run/react-router/pull/13556))
+- Updated dependencies:
+  - `react-router@7.6.1`
+  - `@react-router/node@7.6.1`
+
 ## 7.6.0
 
 ### Patch Changes
