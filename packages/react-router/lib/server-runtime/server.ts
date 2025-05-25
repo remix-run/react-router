@@ -461,7 +461,7 @@ async function handleDocumentRequest(
       return context;
     }
 
-    let headers = getDocumentHeaders(build, context);
+    let headers = getDocumentHeaders(context, build);
 
     // Skip response body for unsupported status codes
     if (SERVER_NO_BODY_STATUS_CODES.has(context.statusCode)) {
