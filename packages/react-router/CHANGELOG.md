@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.6.1-pre.2
+
+### Patch Changes
+
+- [REMOVE] Revert tsup changes ([#13667](https://github.com/remix-run/react-router/pull/13667))
+
 ## 7.6.1-pre.1
 
 ### Patch Changes

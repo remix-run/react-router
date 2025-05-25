@@ -1,5 +1,14 @@
 # `@react-router/dev`
 
+## 7.6.1-pre.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.6.1-pre.2`
+  - `@react-router/node@7.6.1-pre.2`
+  - `@react-router/serve@7.6.1-pre.2`
+
 ## 7.6.1-pre.1
 
 ### Patch Changes
