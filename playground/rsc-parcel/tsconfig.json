@@ -8,7 +8,6 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "target": "es2022",
-    "noEmit": true,
-    "rootDir": "."
+    "noEmit": true
   }
 }
