@@ -247,10 +247,10 @@ test.describe("single-fetch", () => {
           invalidDate: expect.any(Date),
         },
       },
-    })
+    });
 
-    let date = (res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } })["routes/invalid-date"].data.invalidDate
-    expect(isNaN(date.getTime())).toBe(true)
+    let date = (res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } })["routes/invalid-date"].data.invalidDate;
+    expect(isNaN(date.getTime())).toBe(true);
   });
 
   test("loads proper errors on single fetch loader requests", async () => {
