@@ -16,6 +16,7 @@
     "release": "changeset publish",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
+    "typegen": "pnpm run --recursive --parallel typegen",
     "typecheck": "pnpm run --recursive --parallel typecheck",
     "test:integration:run": "pnpm playwright:integration",
     "test:integration": "pnpm build && pnpm test:integration:run",
