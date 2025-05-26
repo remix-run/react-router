@@ -14,7 +14,8 @@
   "scripts": {
     "dev": "parcel --no-cache",
     "build": "parcel build --no-cache",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "typecheck": "tsc"
   },
   "devDependencies": {
     "@parcel/packager-react-static": "2.15.0",
@@ -31,6 +32,7 @@
     "path-browserify": "^1.0.0",
     "querystring-es3": "^0.2.1",
     "stream-http": "^3.1.0",
+    "typescript": "^5.1.6",
     "url": "^0.11.0"
   },
   "dependencies": {
