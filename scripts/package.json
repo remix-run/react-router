@@ -1,0 +1,19 @@
+{
+  "name": "scripts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "deps needed for scripts",
+  "type": "module",
+  "dependencies": {
+    "@manypkg/get-packages": "^1.1.3",
+    "chalk": "^4.1.2",
+    "jsonfile": "^6.1.0",
+    "prompts": "^2.4.2",
+    "remark-gfm": "^3.0.1",
+    "remark-parse": "^10.0.2",
+    "remark-stringify": "^10.0.3",
+    "semver": "^7.7.2",
+    "unified": "^10.1.2",
+    "unist-util-remove": "^3.1.1"
+  }
+}
