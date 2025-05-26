@@ -10,7 +10,7 @@ import {
 import {
   type DecodeCallServerFunction,
   type DecodeFormActionFunction,
-  matchRSCServerRequest,
+  unstable_matchRSCServerRequest as matchRSCServerRequest,
 } from "react-router/rsc";
 
 import { routes } from "./routes";

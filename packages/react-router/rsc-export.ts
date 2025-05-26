@@ -50,4 +50,4 @@ export type {
   ServerRouteMatch,
   ServerRouteObject,
 } from "./lib/rsc/server.rsc";
-export { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export { matchRSCServerRequest as unstable_matchRSCServerRequest } from "./lib/rsc/server.rsc";

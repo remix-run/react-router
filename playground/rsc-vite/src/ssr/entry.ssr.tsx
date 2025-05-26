@@ -7,7 +7,10 @@ import RDS from "react-dom/server.edge";
 // @ts-expect-error
 import { bootstrapModules, manifest } from "virtual:react-manifest";
 
-import { routeRSCServerRequest, RSCStaticRouter } from "react-router";
+import {
+  unstable_routeRSCServerRequest as routeRSCServerRequest,
+  unstable_RSCStaticRouter as RSCStaticRouter,
+} from "react-router";
 
 type CloudflareEnv = {
   ASSETS: Fetcher;

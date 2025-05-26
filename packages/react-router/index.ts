@@ -287,9 +287,15 @@ export type {
   DecodeServerResponseFunction,
   EncodeActionFunction,
 } from "./lib/rsc/browser";
-export { createCallServer, RSCHydratedRouter } from "./lib/rsc/browser";
-export { routeRSCServerRequest, RSCStaticRouter } from "./lib/rsc/server.ssr";
-export { getServerStream } from "./lib/rsc/html-stream/browser";
+export {
+  createCallServer as unstable_createCallServer,
+  RSCHydratedRouter as unstable_RSCHydratedRouter,
+} from "./lib/rsc/browser";
+export {
+  routeRSCServerRequest as unstable_routeRSCServerRequest,
+  RSCStaticRouter as unstable_RSCStaticRouter,
+} from "./lib/rsc/server.ssr";
+export { getServerStream as unstable_getServerStream } from "./lib/rsc/html-stream/browser";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

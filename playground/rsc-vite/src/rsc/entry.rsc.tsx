@@ -6,7 +6,7 @@ import { manifest } from "virtual:react-manifest";
 
 import {
   type DecodeCallServerFunction,
-  matchRSCServerRequest,
+  unstable_matchRSCServerRequest as matchRSCServerRequest,
 } from "react-router/rsc";
 
 import { routes } from "../routes";
