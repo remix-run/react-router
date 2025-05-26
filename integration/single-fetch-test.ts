@@ -183,7 +183,7 @@ const files = {
       return (
         <>
           <h1 id="heading">Invalid Date</h1>
-          <p id="date">{data.date.toISOString()}</p>
+          <p id="date">{data.invalidDate.toISOString()}</p>
         </>
       )
     }
