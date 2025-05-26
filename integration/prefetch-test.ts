@@ -239,7 +239,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
@@ -340,7 +340,7 @@ test.describe("prefetch", () => {
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
