@@ -31,7 +31,7 @@ let router = createBrowserRouter([
         path: "shows/:showId",
         Component: Show,
         loader: ({ request, params }) =>
-          fetch(`/api/show/${params.id}.json`, {
+          fetch(`/api/show/${params.showId}.json`, {
             signal: request.signal,
           }),
       },
