@@ -355,6 +355,17 @@ describe("matchPath *", () => {
       pathnameBase: "/users/foo*",
     });
   });
+
+  it("matches a URL with %0A (a newline character)", () => {
+    expect(matchPath("*", "/%0A")).toMatchObject({
+      pathname: "/%0A",
+      pathnameBase: "/",
+    })
+    expect(matchPath("*", "/new%0Aline")).toMatchObject({
+      pathname: "/new%0Aline",
+      pathnameBase: "/",
+    })
+  })
 });
 
 describe("matchPath warnings", () => {
