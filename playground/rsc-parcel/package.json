@@ -14,7 +14,8 @@
   "scripts": {
     "dev": "parcel --no-cache",
     "build": "parcel build --no-cache",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "typecheck": "tsc"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

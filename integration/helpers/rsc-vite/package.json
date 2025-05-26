@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "node server.js"
+    "start": "node server.js",
+    "typecheck": "tsc"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -16,6 +17,7 @@
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "typescript": "^5.1.6",
     "vite": "^6.2.0",
     "vite-tsconfig-paths": "^5.1.4",
     "wrangler": "^3.111.0"
