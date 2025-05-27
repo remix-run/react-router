@@ -463,7 +463,7 @@ async function waitForServer(
 
   await waitOn({
     resources: [
-      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/"}`,
+      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/favicon.ico"}`,
     ],
     timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {

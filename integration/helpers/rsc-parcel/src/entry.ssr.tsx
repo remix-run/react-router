@@ -1,4 +1,3 @@
-import { parseArgs } from "node:util";
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
 // @ts-expect-error - no types
@@ -13,6 +12,8 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge" a
 import { callServer } from "./entry.rsc" assert { env: "react-server" };
 
 const app = express();
+
+app.use(express.static("public"));
 
 app.use("/client", express.static("dist/client"));
 
