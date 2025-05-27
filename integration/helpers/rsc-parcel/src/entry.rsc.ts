@@ -8,8 +8,8 @@ import {
   // @ts-expect-error
 } from "react-server-dom-parcel/server.edge";
 import {
-  type DecodeCallServerFunction,
-  type DecodeFormActionFunction,
+  type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
+  type unstable_DecodeFormActionFunction as DecodeFormActionFunction,
   unstable_matchRSCServerRequest as matchRSCServerRequest,
 } from "react-router/rsc";
 

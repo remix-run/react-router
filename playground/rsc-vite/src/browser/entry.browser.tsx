@@ -9,13 +9,13 @@ import {
 import { manifest } from "virtual:react-manifest";
 
 import {
-  type DecodeServerResponseFunction,
-  type EncodeActionFunction,
+  type unstable_DecodeServerResponseFunction as DecodeServerResponseFunction,
+  type unstable_EncodeActionFunction as EncodeActionFunction,
   unstable_createCallServer as createCallServer,
   unstable_getServerStream as getServerStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
-import { type ServerPayload } from "react-router/rsc";
+import type { unstable_ServerPayload as ServerPayload } from "react-router/rsc";
 
 const encodeAction: EncodeActionFunction = (args: unknown[]) =>
   encodeReply(args);

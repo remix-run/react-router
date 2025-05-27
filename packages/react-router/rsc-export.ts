@@ -40,14 +40,14 @@ export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookie
 export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
 
 export type {
-  DecodeCallServerFunction,
-  DecodeFormActionFunction,
-  ServerManifestPayload,
-  ServerMatch,
-  ServerPayload,
-  ServerRenderPayload,
+  DecodeCallServerFunction as unstable_DecodeCallServerFunction,
+  DecodeFormActionFunction as unstable_DecodeFormActionFunction,
+  ServerManifestPayload as unstable_ServerManifestPayload,
+  ServerMatch as unstable_ServerMatch,
+  ServerPayload as unstable_ServerPayload,
+  ServerRenderPayload as unstable_ServerRenderPayload,
   RenderedRoute as ServerRouteManifest,
-  ServerRouteMatch,
-  ServerRouteObject,
+  ServerRouteMatch as unstable_ServerRouteMatch,
+  ServerRouteObject as unstable_ServerRouteObject,
 } from "./lib/rsc/server.rsc";
 export { matchRSCServerRequest as unstable_matchRSCServerRequest } from "./lib/rsc/server.rsc";

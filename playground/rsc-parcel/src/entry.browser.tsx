@@ -7,7 +7,7 @@ import {
   unstable_getServerStream as getServerStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
-import type { ServerPayload } from "react-router/rsc";
+import type { unstable_ServerPayload as ServerPayload } from "react-router/rsc";
 import {
   createFromReadableStream,
   encodeReply,

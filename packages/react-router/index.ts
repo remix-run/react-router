@@ -284,8 +284,8 @@ export { href } from "./lib/href";
 
 // RSC
 export type {
-  DecodeServerResponseFunction,
-  EncodeActionFunction,
+  DecodeServerResponseFunction as unstable_DecodeServerResponseFunction,
+  EncodeActionFunction as unstable_EncodeActionFunction,
 } from "./lib/rsc/browser";
 export {
   createCallServer as unstable_createCallServer,
