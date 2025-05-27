@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 import {
-  type DecodeCallServerFunction,
-  matchRSCServerRequest,
+  type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
+  unstable_matchRSCServerRequest as matchRSCServerRequest,
 } from "react-router/rsc";
 // @ts-expect-error - no types yet
 import { manifest } from "virtual:react-manifest";
