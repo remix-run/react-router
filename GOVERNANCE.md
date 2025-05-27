@@ -52,7 +52,7 @@ In order to reduce friction the SC will primarily operate asynchronously via Git
 
 Due to the # of React Router applications out there, we have to be a bit strict on the process for filing issues to avoid an overload in Github.
 
-- **All** bugs must have a **minimal** reproduction
+- **All** bugs must have a **minimal** reproduction [^3]
   - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
   - The preferred method is StackBlitz via [https://reactrouter.com/new](https://reactrouter.com/new)
   - If Stackblitz is not an option, a Github repo based on a fresh `create-react-router` app is acceptable
@@ -66,9 +66,11 @@ Due to the # of React Router applications out there, we have to be a bit strict 
   - These issues will generally be ones that are likely to have a small surface area fix
   - However, anyone can work on any issue but there's no guarantee the PR will be accepted if the surface area is too large for expedient review by a core team member
 
+[^3]: https://antfu.me/posts/why-reproductions-are-required
+
 ## New Feature Process
 
-The process for new features being added to React Router will follow a series of stages loosely based on the [TC39 Process](https://tc39.es/process-document/). It is important to note that entrance into any given stage does not imply that an RFC will proceed any further. The stages will act as a funnel with fewer and fewer RFCs making it into subsequent stages such that only the strongest RFCs make it into a React Router release in a stable fashion. This table gives a high-level overview of the Stages but please see the individual stage sections below for more detailed information on the stages and the process for moving an FC through them.
+The process for new features being added to React Router will follow a series of stages loosely based on the [TC39 Process](https://tc39.es/process-document/). It is important to note that entrance into any given stage does not imply that an RFC will proceed any further. The stages will act as a funnel with fewer RFCs making it into subsequent stages such that only the strongest RFCs make it into a React Router release in a stable fashion. This table gives a high-level overview of the Stages but please see the individual stage sections below for more detailed information on the stages and the process for moving an FC through them.
 
 | Stage | Name          | Entrance Criteria                                                                                                                                                                                                                                                                                             | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
