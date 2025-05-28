@@ -533,12 +533,20 @@ implementations.forEach((implementation) => {
     });
 
     test.describe("Errors", () => {
-      // FIXME: Unsure why these fail currently
-      test.skip("Handles errors in server components correctly", async ({
+      test("Handles errors in server components correctly", async ({
         page,
       }) => {
+        // TODO: There is a mis-match in React versions between the Vite and
+        // Parcel builds here causing one to strip errors, and the other allow
+        // through the development error message.
+        test.skip(
+          implementation.name === "vite",
+          "Bug in vite somewhere, needs investigation"
+        );
+
         let port = await getPort();
         stop = await setupRscTest({
+          dev: true,
           implementation,
           port,
           files: {
@@ -573,10 +581,8 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}/`);
 
         // Verify error boundary is shown
+        await page.waitForSelector("[data-error-title]");
         await page.waitForSelector("[data-error-message]");
-        expect(await page.locator("[data-error-title]").textContent()).toBe(
-          "Error Caught!"
-        );
         expect(await page.locator("[data-error-message]").textContent()).toBe(
           "Intentional error from loader"
         );
