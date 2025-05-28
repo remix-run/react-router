@@ -152,7 +152,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let url = new URL(request.url);
 
     let normalizedBasename = _build.basename || "/";
-    let normalizedPath = url.pathname;
+    let normalizedPath = decodeURIComponent(url.pathname);
     if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
       normalizedPath = normalizedBasename;
     } else if (normalizedPath.endsWith(".data")) {
