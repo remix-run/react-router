@@ -273,6 +273,8 @@ export function getRSCSingleFetchDataStrategy(
     ssr,
     basename,
     // Only allow opting out of single fetch when match has an element
+    // TODO: Do we need to account for API routes? Do we need a
+    // `match.hasComponent` flag?
     (match) => match.route.element != null
   );
   return async (args) =>
