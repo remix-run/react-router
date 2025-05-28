@@ -8,9 +8,9 @@ import {
   // @ts-expect-error
 } from "react-server-dom-parcel/server.edge";
 import {
-  type DecodeCallServerFunction,
-  type DecodeFormActionFunction,
-  matchRSCServerRequest,
+  type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
+  type unstable_DecodeFormActionFunction as DecodeFormActionFunction,
+  unstable_matchRSCServerRequest as matchRSCServerRequest,
 } from "react-router/rsc";
 
 import { routes } from "./routes";
