@@ -533,7 +533,6 @@ implementations.forEach((implementation) => {
     });
 
     test.describe("Errors", () => {
-      // FIXME: Unsure why these fail currently
       test("Handles errors in server components correctly", async ({
         page,
       }) => {
