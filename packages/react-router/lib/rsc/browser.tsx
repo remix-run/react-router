@@ -290,6 +290,10 @@ export function getRSCSingleFetchDataStrategy(
       context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
+      // TODO: Confirm that it's correct for us to have multiple rendered routes
+      // with the same id. This is currently happening in `clientLoader` cases
+      // where we render before the server loader has run, and then render again
+      // afterwards.
       const renderedRoutesById = new Map<string, RenderedRoute[]>();
       for (const route of context.get(renderedRoutesContext)) {
         if (!renderedRoutesById.has(route.id)) {
@@ -465,7 +469,14 @@ function createRouteFromServerManifest(
   let hasInitialError = payload?.errors && match.id in payload.errors;
   let initialError = payload?.errors?.[match.id];
   let isHydrationRequest =
-    match.clientLoader?.hydrate === true || !match.hasLoader || !match.element;
+    match.clientLoader?.hydrate === true ||
+    !match.hasLoader ||
+    // If we don't have an element, we need to hit the server loader flow
+    // regardless of whether the client loader calls `serverLoader` or not,
+    // otherwise we'll have nothing to render.
+    // TODO: Do we need to account for API routes? Do we need a
+    // `match.hasComponent` flag?
+    !match.element;
 
   let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,
