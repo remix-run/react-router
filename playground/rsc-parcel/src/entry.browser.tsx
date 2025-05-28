@@ -32,6 +32,7 @@ createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
             decode={createFromReadableStream}
             // @ts-expect-error
             payload={payload}
+            routeDiscovery="eager"
           />
         </React.StrictMode>
       );
