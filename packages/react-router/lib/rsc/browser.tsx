@@ -272,7 +272,9 @@ export function getRSCSingleFetchDataStrategy(
     getFetchAndDecodeViaRSC(decode),
     ssr,
     basename,
-    // Only allow opting out of single fetch when match has an element
+    // If we don't have an element, we need to hit the server loader flow
+    // regardless of whether the client loader calls `serverLoader` or not,
+    // otherwise we'll have nothing to render.
     // TODO: Do we need to account for API routes? Do we need a
     // `match.hasComponent` flag?
     (match) => match.route.element != null
