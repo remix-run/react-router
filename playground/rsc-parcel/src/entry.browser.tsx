@@ -3,11 +3,11 @@
 import * as React from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
-  createCallServer,
-  getServerStream,
-  RSCHydratedRouter,
+  unstable_createCallServer as createCallServer,
+  unstable_getServerStream as getServerStream,
+  unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
-import type { ServerPayload } from "react-router/rsc";
+import type { unstable_ServerPayload as ServerPayload } from "react-router/rsc";
 import {
   createFromReadableStream,
   encodeReply,
@@ -32,6 +32,7 @@ createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
             decode={createFromReadableStream}
             // @ts-expect-error
             payload={payload}
+            routeDiscovery="eager"
           />
         </React.StrictMode>
       );

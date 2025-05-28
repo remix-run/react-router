@@ -207,7 +207,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { ServerRouteObject } from "react-router/rsc";
+              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
 
               export const routes = [
                 {
@@ -338,7 +338,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { ServerRouteObject } from "react-router/rsc";
+              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
 
               export const routes = [
                 {

@@ -188,27 +188,11 @@ function createRouterFromPayload({
       undefined,
       false
     ),
-    async patchRoutesOnNavigation({ patch, path, signal }) {
-      let response = await fetch(`${path}.manifest`, { signal });
-      if (!response.body || response.status < 200 || response.status >= 300) {
-        throw new Error("Unable to fetch new route matches from the server");
+    async patchRoutesOnNavigation({ path, signal }) {
+      if (discoveredPaths.has(path)) {
+        return;
       }
-
-      let payload = await decode(response.body);
-      if (payload.type !== "manifest") {
-        throw new Error("Failed to patch routes on navigation");
-      }
-
-      // Without the `allowElementMutations` flag, this will no-op if the route
-      // already exists so we can just call it for all returned matches
-      payload.matches.forEach((match, i) =>
-        patch(payload.matches[i - 1]?.id ?? null, [
-          createRouteFromServerManifest(match),
-        ])
-      );
-      payload.patches.forEach((p) => {
-        patch(p.parentId ?? null, [createRouteFromServerManifest(p)]);
-      });
+      await fetchAndApplyManifestPatches([path], decode, signal);
     },
     // FIXME: Pass `build.ssr` and `build.basename` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
@@ -271,7 +255,13 @@ export function getRSCSingleFetchDataStrategy(
     // pass map into fetchAndDecode so it can add payloads
     getFetchAndDecodeViaRSC(decode),
     ssr,
-    basename
+    basename,
+    // If we don't have an element, we need to hit the server loader flow
+    // regardless of whether the client loader calls `serverLoader` or not,
+    // otherwise we'll have nothing to render.
+    // TODO: Do we need to account for API routes? Do we need a
+    // `match.hasComponent` flag?
+    (match) => match.route.element != null
   );
   return async (args) =>
     args.unstable_runClientMiddleware(async () => {
@@ -288,17 +278,27 @@ export function getRSCSingleFetchDataStrategy(
       context.set(renderedRoutesContext, []);
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
-      const renderedRouteById = new Map(
-        context.get(renderedRoutesContext).map((r) => [r.id, r])
-      );
+      // TODO: Confirm that it's correct for us to have multiple rendered routes
+      // with the same ID. This is currently happening in `clientLoader` cases
+      // where we're calling `fetchAndDecode` multiple times. This may be a
+      // sign of a logical error in how we're handling client loader routes.
+      const renderedRoutesById = new Map<string, RenderedRoute[]>();
+      for (const route of context.get(renderedRoutesContext)) {
+        if (!renderedRoutesById.has(route.id)) {
+          renderedRoutesById.set(route.id, []);
+        }
+        renderedRoutesById.get(route.id)!.push(route);
+      }
       for (const match of args.matches) {
-        const rendered = renderedRouteById.get(match.route.id);
-        if (rendered) {
-          window.__router.patchRoutes(
-            rendered.parentId ?? null,
-            [createRouteFromServerManifest(rendered)],
-            true
-          );
+        const renderedRoutes = renderedRoutesById.get(match.route.id);
+        if (renderedRoutes) {
+          for (const rendered of renderedRoutes) {
+            window.__router.patchRoutes(
+              rendered.parentId ?? null,
+              [createRouteFromServerManifest(rendered)],
+              true
+            );
+          }
         }
       }
       return results;
@@ -389,9 +389,11 @@ function getFetchAndDecodeViaRSC(
 export function RSCHydratedRouter({
   decode,
   payload,
+  routeDiscovery = "eager",
 }: {
   decode: DecodeServerResponseFunction;
   payload: ServerPayload;
+  routeDiscovery?: "eager" | "lazy";
 }) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
@@ -409,6 +411,75 @@ export function RSCHydratedRouter({
       window.__router.initialize();
     }
   }, []);
+
+  React.useEffect(() => {
+    if (
+      routeDiscovery === "lazy" ||
+      // @ts-expect-error - TS doesn't know about this yet
+      window.navigator?.connection?.saveData === true
+    ) {
+      return;
+    }
+
+    // Register a link href for patching
+    function registerElement(el: Element) {
+      let path =
+        el.tagName === "FORM"
+          ? el.getAttribute("action")
+          : el.getAttribute("href");
+      if (!path) {
+        return;
+      }
+      // optimization: use the already-parsed pathname from links
+      let pathname =
+        el.tagName === "A"
+          ? (el as HTMLAnchorElement).pathname
+          : new URL(path, window.location.origin).pathname;
+      if (!discoveredPaths.has(pathname)) {
+        nextPaths.add(pathname);
+      }
+    }
+
+    // Register and fetch patches for all initially-rendered links/forms
+    async function fetchPatches() {
+      // re-check/update registered links
+      document
+        .querySelectorAll("a[data-discover], form[data-discover]")
+        .forEach(registerElement);
+
+      let paths = Array.from(nextPaths.keys()).filter((path) => {
+        if (discoveredPaths.has(path)) {
+          nextPaths.delete(path);
+          return false;
+        }
+        return true;
+      });
+
+      if (paths.length === 0) {
+        return;
+      }
+
+      try {
+        await fetchAndApplyManifestPatches(paths, decode);
+      } catch (e) {
+        console.error("Failed to fetch manifest patches", e);
+      }
+    }
+
+    let debouncedFetchPatches = debounce(fetchPatches, 100);
+
+    // scan and fetch initial links
+    fetchPatches();
+
+    let observer = new MutationObserver(() => debouncedFetchPatches());
+
+    observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-discover", "href", "action"],
+    });
+  }, [routeDiscovery, decode]);
 
   const frameworkContext: FrameworkContextObject = {
     future: {
@@ -457,7 +528,14 @@ function createRouteFromServerManifest(
   let hasInitialError = payload?.errors && match.id in payload.errors;
   let initialError = payload?.errors?.[match.id];
   let isHydrationRequest =
-    match.clientLoader?.hydrate === true || !match.hasLoader;
+    match.clientLoader?.hydrate === true ||
+    !match.hasLoader ||
+    // If we don't have an element, we need to hit the server loader flow
+    // regardless of whether the client loader calls `serverLoader` or not,
+    // otherwise we'll have nothing to render.
+    // TODO: Do we need to account for API routes? Do we need a
+    // `match.hasComponent` flag?
+    !match.element;
 
   let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,
@@ -555,4 +633,73 @@ function preventInvalidServerHandlerCall(
     console.error(msg);
     throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
+}
+
+// Currently rendered links that may need prefetching
+const nextPaths = new Set<string>();
+
+// FIFO queue of previously discovered routes to prevent re-calling on
+// subsequent navigations to the same path
+const discoveredPathsMaxSize = 1000;
+const discoveredPaths = new Set<string>();
+
+// 7.5k to come in under the ~8k limit for most browsers
+// https://stackoverflow.com/a/417184
+const URL_LIMIT = 7680;
+
+async function fetchAndApplyManifestPatches(
+  paths: string[],
+  decode: DecodeServerResponseFunction,
+  signal?: AbortSignal
+) {
+  let basename = (window.__router.basename ?? "").replace(/^\/|\/$/g, "");
+  let url = new URL(`${basename}/.manifest`, window.location.origin);
+  paths.sort().forEach((path) => url.searchParams.append("p", path));
+
+  // If the URL is nearing the ~8k limit on GET requests, skip this optimization
+  // step and just let discovery happen on link click.  We also wipe out the
+  // nextPaths Set here so we can start filling it with fresh links
+  if (url.toString().length > URL_LIMIT) {
+    nextPaths.clear();
+    return;
+  }
+
+  let response = await fetch(url, { signal });
+  if (!response.body || response.status < 200 || response.status >= 300) {
+    throw new Error("Unable to fetch new route matches from the server");
+  }
+
+  let payload = await decode(response.body);
+  if (payload.type !== "manifest") {
+    throw new Error("Failed to patch routes");
+  }
+
+  // Track discovered paths so we don't have to fetch them again
+  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
+
+  // Without the `allowElementMutations` flag, this will no-op if the route
+  // already exists so we can just call it for all returned patches
+  payload.patches.forEach((p) => {
+    window.__router.patchRoutes(p.parentId ?? null, [
+      createRouteFromServerManifest(p),
+    ]);
+  });
+}
+
+function addToFifoQueue(path: string, queue: Set<string>) {
+  if (queue.size >= discoveredPathsMaxSize) {
+    let first = queue.values().next().value;
+    queue.delete(first);
+  }
+  queue.add(path);
+}
+
+// Thanks Josh!
+// https://www.joshwcomeau.com/snippets/javascript/debounce/
+function debounce(callback: (...args: unknown[]) => unknown, wait: number) {
+  let timeoutId: number | undefined;
+  return (...args: unknown[]) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => callback(...args), wait);
+  };
 }

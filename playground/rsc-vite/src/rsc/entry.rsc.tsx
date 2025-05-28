@@ -5,8 +5,8 @@ import { decodeReply, renderToReadableStream } from "../../framework/server";
 import { manifest } from "virtual:react-manifest";
 
 import {
-  type DecodeCallServerFunction,
-  matchRSCServerRequest,
+  type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
+  unstable_matchRSCServerRequest as matchRSCServerRequest,
 } from "react-router/rsc";
 
 import { routes } from "../routes";

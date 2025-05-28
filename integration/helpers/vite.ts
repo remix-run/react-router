@@ -186,14 +186,21 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-export type TemplateName =
-  | "cloudflare-dev-proxy-template"
-  | "rsc-parcel"
-  | "rsc-vite"
+type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
   | "vite-6-template"
-  | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
+
+type FrameworkModeCloudflareTemplateName =
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
+
+export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+
+export type TemplateName =
+  | FrameworkModeViteMajorTemplateName
+  | FrameworkModeCloudflareTemplateName
+  | RscBundlerTemplateName;
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
@@ -202,10 +209,16 @@ export const viteMajorTemplates = [
     templateName: "vite-rolldown-template",
     templateDisplayName: "Vite Rolldown",
   },
+] as const satisfies Array<{
+  templateName: FrameworkModeViteMajorTemplateName;
+  templateDisplayName: string;
+}>;
+
+export const rscBundlerTemplates = [
   { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
   { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
 ] as const satisfies Array<{
-  templateName: TemplateName;
+  templateName: RscBundlerTemplateName;
   templateDisplayName: string;
 }>;
 

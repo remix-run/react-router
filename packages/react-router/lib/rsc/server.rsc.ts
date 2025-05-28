@@ -101,11 +101,7 @@ export type ServerRenderPayload = {
 
 export type ServerManifestPayload = {
   type: "manifest";
-  // Current rendered matches
-  matches: RenderedRoute[];
-  // Additional routes we should patch into the router for subsequent navigations.
-  // Mostly a collection of pathless/index routes that may be needed for complete
-  // matching on upward navigations.
+  // Routes we should patch into the router for subsequent navigations.
   patches: RenderedRoute[];
 };
 
@@ -190,19 +186,36 @@ async function generateManifestResponse(
   generateResponse: (match: ServerMatch) => Response
 ) {
   let url = new URL(request.url);
-  let matches = matchRoutes(routes, url.pathname.replace(/\.manifest$/, ""));
+  let pathnameParams = url.searchParams.getAll("p");
+  let pathnames = pathnameParams.length
+    ? pathnameParams
+    : [url.pathname.replace(/\.manifest$/, "")];
+  let routeIds = new Set<string>();
+  let matchedRoutes = pathnames
+    .flatMap((pathname) => {
+      let pathnameMatches = matchRoutes(routes, pathname);
+      return (
+        pathnameMatches?.map((m, i) => ({
+          ...m.route,
+          parentId: pathnameMatches[i - 1]?.route.id,
+        })) ?? []
+      );
+    })
+    .filter((route) => {
+      if (!routeIds.has(route.id)) {
+        routeIds.add(route.id);
+        return true;
+      }
+      return false;
+    });
   let payload: ServerManifestPayload = {
     type: "manifest",
-    matches: await Promise.all(
-      matches?.map((m, i) =>
-        getManifestRoute(m.route, matches[i - 1]?.route.id)
-      ) ?? []
-    ),
-    patches: await getAdditionalRoutePatches(
-      url.pathname,
-      routes,
-      matches?.map((m) => m.route.id) ?? []
-    ),
+    patches: (
+      await Promise.all([
+        ...matchedRoutes.map((route) => getManifestRoute(route)),
+        getAdditionalRoutePatches(pathnames, routes, Array.from(routeIds)),
+      ])
+    ).flat(1),
   };
 
   return generateResponse({
@@ -529,7 +542,7 @@ async function getRenderPayload(
 
   let patchesPromise = !isDataRequest
     ? getAdditionalRoutePatches(
-        staticContext.location.pathname,
+        [staticContext.location.pathname],
         routes,
         staticContext.matches.map((m) => m.route.id)
       )
@@ -650,8 +663,7 @@ async function getServerRouteMatch(
 }
 
 async function getManifestRoute(
-  route: ServerRouteObject,
-  parentId: string | undefined
+  route: ServerRouteObject & { parentId: string | undefined }
 ): Promise<RenderedRoute> {
   await explodeLazyRoute(route);
 
@@ -675,7 +687,7 @@ async function getManifestRoute(
     errorElement,
     hasLoader: !!route.loader,
     id: route.id,
-    parentId,
+    parentId: route.parentId,
     path: route.path,
     index: "index" in route ? route.index : undefined,
     links: route.links,
@@ -694,7 +706,7 @@ async function explodeLazyRoute(route: ServerRouteObject) {
 }
 
 async function getAdditionalRoutePatches(
-  pathname: string,
+  pathnames: string[],
   routes: ServerRouteObject[],
   matchedRouteIds: string[]
 ): Promise<RenderedRoute[]> {
@@ -702,33 +714,44 @@ async function getAdditionalRoutePatches(
     string,
     ServerRouteObject & { parentId: string | undefined }
   >();
-  let segments = pathname.split("/").filter(Boolean);
-  let paths: string[] = ["/"];
+  let matchedPaths = new Set<string>();
 
-  // We've already matched to the last segment
-  segments.pop();
+  for (const pathname of pathnames) {
+    let segments = pathname.split("/").filter(Boolean);
+    let paths: string[] = ["/"];
 
-  // Traverse each path for our parents and match in case they have pathless/index
-  // children we need to include in the initial manifest
-  while (segments.length > 0) {
-    paths.push(`/${segments.join("/")}`);
+    // We've already matched to the last segment
     segments.pop();
-  }
 
-  paths.forEach((path) => {
-    let matches = matchRoutes(routes, path) || [];
-    matches.forEach((m, i) =>
-      patchRouteMatches.set(m.route.id, {
-        ...m.route,
-        parentId: matches[i - 1]?.route.id,
-      })
-    );
-  });
+    // Traverse each path for our parents and match in case they have pathless/index
+    // children we need to include in the initial manifest
+    while (segments.length > 0) {
+      paths.push(`/${segments.join("/")}`);
+      segments.pop();
+    }
+
+    paths.forEach((path) => {
+      if (matchedPaths.has(path)) {
+        return;
+      }
+      matchedPaths.add(path);
+      let matches = matchRoutes(routes, path) || [];
+      matches.forEach((m, i) => {
+        if (patchRouteMatches.get(m.route.id)) {
+          return;
+        }
+        patchRouteMatches.set(m.route.id, {
+          ...m.route,
+          parentId: matches[i - 1]?.route.id,
+        });
+      });
+    });
+  }
 
   let patches = await Promise.all(
     [...patchRouteMatches.values()]
       .filter((route) => !matchedRouteIds.some((id) => id === route.id))
-      .map((route) => getManifestRoute(route, route.parentId))
+      .map((route) => getManifestRoute(route))
   );
   return patches;
 }
