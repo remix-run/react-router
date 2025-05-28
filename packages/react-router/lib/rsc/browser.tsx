@@ -291,9 +291,9 @@ export function getRSCSingleFetchDataStrategy(
       let results = await dataStrategy(args);
       // patch into router from all payloads in map
       // TODO: Confirm that it's correct for us to have multiple rendered routes
-      // with the same id. This is currently happening in `clientLoader` cases
-      // where we render before the server loader has run, and then render again
-      // afterwards.
+      // with the same ID. This is currently happening in `clientLoader` cases
+      // where we're calling `fetchAndDecode` multiple times. This may be a
+      // sign of a logical error in how we're handling client loader routes.
       const renderedRoutesById = new Map<string, RenderedRoute[]>();
       for (const route of context.get(renderedRoutesContext)) {
         if (!renderedRoutesById.has(route.id)) {
