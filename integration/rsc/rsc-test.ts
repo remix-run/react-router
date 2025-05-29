@@ -591,6 +591,85 @@ implementations.forEach((implementation) => {
         // Ensure this is using RSC
         validateRSCHtml(await page.content());
       });
+
+      test("Supports React Server Functions thrown redirects", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.actions.ts": js`
+              "use server";
+              import { redirect } from "react-router/rsc";
+
+              export function redirectAction(formData: FormData) {
+                throw redirect("/?redirected=true");
+              }
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+              import { useState } from "react";
+
+              export function Counter() {
+                const [count, setCount] = useState(0);
+                return <button type="button" onClick={() => setCount(c => c + 1)} data-count>Count: {count}</button>;
+              }
+            `,
+            "src/routes/home.tsx": js`
+              import { redirectAction } from "./home.actions";
+              import { Counter } from "./home.client";
+
+              export default function ServerComponent(props) {
+                console.log({props});
+                return (
+                  <div>
+                    <form action={redirectAction}>
+                      <button type="submit" data-submit>
+                        Redirect via Server Function
+                      </button>
+                    </form>
+                    <Counter />
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify initial server render
+        await page.waitForSelector("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 0"
+        );
+        await page.click("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 1"
+        );
+
+        // Submit the form to trigger server function redirect
+        await page.click("[data-submit]");
+
+        await expect(page).toHaveURL(
+          `http://localhost:${port}/?redirected=true`
+        );
+
+        // Validate things are still interactive after redirect
+        await page.click("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 2"
+        );
+        await page.click("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 3"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
     });
 
     test.describe("Errors", () => {
