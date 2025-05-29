@@ -464,6 +464,67 @@ implementations.forEach((implementation) => {
 
     test.describe("Server Actions", () => {
       test("Supports React Server Functions", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.actions.ts": js`
+              "use server";
+
+              export function incrementCounter(count: number, formData: FormData) {
+                return count + parseInt(formData.get("by") as string || "1", 10);
+              }
+            `,
+            "src/routes/home.tsx": js`
+              "use client";
+
+              import { useActionState } from "react";
+
+              import { incrementCounter } from "./home.actions";
+
+              export default function ClientComponent() {
+                const [count, incrementCounterAction, incrementing] = useActionState(incrementCounter, 0);
+
+                return (
+                  <div>
+                    <h2 data-home>Home: ({count})</h2>
+                    <form action={incrementCounterAction}>
+                      <input type="hidden" name="name" value="Updated" />
+                      <button type="submit" data-submit>
+                        {incrementing ? "Updating via Server Function" : "Update via Server Function"}
+                      </button>
+                    </form>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify initial server render
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home: (0)"
+        );
+
+        // Submit the form to trigger server function
+        await page.click("[data-submit]");
+
+        // Verify server function updated the UI
+        await expect(page.locator("[data-home]")).toHaveText("Home: (1)");
+
+        // Submit again to ensure server functions work repeatedly
+        await page.click("[data-submit]");
+        await expect(page.locator("[data-home]")).toHaveText("Home: (2)");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Supports Inline React Server Functions", async ({ page }) => {
         // FIXME: Waiting on parcel support: https://github.com/parcel-bundler/parcel/pull/10165
         test.skip(
           implementation.name === "parcel",

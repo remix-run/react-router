@@ -1,11 +1,15 @@
 import {
   createServerReference as createServerReferenceImp,
+  createFromReadableStream,
+  encodeReply,
   // @ts-expect-error - no types yet
 } from "@jacob-ebey/react-server-dom-vite/client";
+import { unstable_createCallServer as createCallServer } from "react-router";
 
-export async function callServer(id: string, args: unknown) {
-  throw new Error("callServer not implemented");
-}
+export const callServer = createCallServer({
+  decode: (body) => createFromReadableStream(body, { callServer }),
+  encodeAction: (args) => encodeReply(args),
+});
 
 export function createServerReference(imp: unknown, id: string, name: string) {
   return createServerReferenceImp(`${id}#${name}`, callServer);
