@@ -272,7 +272,7 @@ async function processServerAction(
 
   if (request.method === "POST") {
     const formData = await request.formData();
-    if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_ID_"))) {
+    if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
       if (!decodeFormAction) {
         throw new Error(
           "Cannot handle form actions without a decodeFormAction function"
