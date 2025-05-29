@@ -53,6 +53,7 @@ import {
 } from "./context";
 import {
   _renderMatches,
+  useAbsoluteRoutes,
   useActionData,
   useAsyncValue,
   useInRouterContext,
@@ -863,6 +864,39 @@ export function Routes({
   location,
 }: RoutesProps): React.ReactElement | null {
   return useRoutes(createRoutesFromChildren(children), location);
+}
+
+export interface AbsoluteRoutesProps extends RoutesProps {}
+
+/**
+ * An alternate implementation of `<Routes>` that expects absolute paths even
+ * when used as descendant routes. Note that these routes do not participate in
+ * data loading, actions, code splitting, or any other route module features.
+ *
+ * ```tsx
+ * import { AbsoluteRoutes, Route } from "react-router"
+ *
+ * <AbsoluteRoutes>
+ *   <Route path="/dashboard/*" element={<Dashboard />} />
+ * </AbsoluteRoutes>
+ *
+ * function Dashboard() {
+ *   return (
+ *     <AbsoluteRoutes>
+ *       <Route path="/dashboard/settings" element={<Settings />} />
+ *       <Route path="/dashboard/users" element={<Users />} />
+ *     </AbsoluteRoutes>
+ *   );
+ * }
+ * ```
+ *
+ * @category Components
+ */
+export function AbsoluteRoutes({
+  children,
+  location,
+}: AbsoluteRoutesProps): React.ReactElement | null {
+  return useAbsoluteRoutes(createRoutesFromChildren(children), location);
 }
 
 export interface AwaitResolveRenderFunction<Resolve = any> {

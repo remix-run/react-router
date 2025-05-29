@@ -426,6 +426,19 @@ export function useRoutes(
 }
 
 /**
+ * Returns the element of the route that matched the current location using
+ * absolute path matching, prepared with the correct context to render the
+ * remainder of the route tree. Route elements in the tree must render an
+ * `<Outlet>` to render their child route's element.
+ */
+export function useAbsoluteRoutes(
+  routes: RouteObject[],
+  locationArg?: Partial<Location> | string
+): React.ReactElement | null {
+  return useRoutesImpl(routes, locationArg, undefined, undefined, true);
+}
+
+/**
  * Internal implementation with accept optional param for RouterProvider usage
  *
  * @private
@@ -435,7 +448,8 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  future?: DataRouter["future"]
+  future?: DataRouter["future"],
+  absolute?: boolean
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -511,7 +525,7 @@ export function useRoutesImpl(
   let pathname = location.pathname || "/";
 
   let remainingPathname = pathname;
-  if (parentPathnameBase !== "/") {
+  if (!absolute && parentPathnameBase !== "/") {
     // Determine the remaining pathname by removing the # of URL segments the
     // parentPathnameBase has, instead of removing based on character count.
     // This is because we can't guarantee that incoming/outgoing encodings/
