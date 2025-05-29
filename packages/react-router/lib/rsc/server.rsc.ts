@@ -234,7 +234,9 @@ async function processServerAction(
   decodeFormAction: DecodeFormActionFunction | undefined,
   onError: ((error: unknown) => void) | undefined
 ): Promise<
-  { revalidationRequest: Request; actionResult?: Promise<unknown> } | undefined
+  | { revalidationRequest: Request; actionResult?: Promise<unknown> }
+  | Response
+  | undefined
 > {
   const getRevalidationRequest = () =>
     new Request(request.url, {
@@ -261,6 +263,9 @@ async function processServerAction(
       // Wait for actions to finish regardless of state
       await actionResult;
     } catch (error) {
+      if (isResponse(error)) {
+        return error;
+      }
       // The error is propagated to the client through the result promise in the stream
       onError?.(error);
     }
@@ -282,6 +287,9 @@ async function processServerAction(
       try {
         await action();
       } catch (error) {
+        if (isResponse(error)) {
+          return error;
+        }
         onError?.(error);
       }
       return {
@@ -349,6 +357,9 @@ async function generateRenderResponse(
           decodeFormAction,
           onError
         );
+        if (isResponse(result)) {
+          return generateRedirectResponse(statusCode, result, generateResponse);
+        }
         actionResult = result?.actionResult;
         request = result?.revalidationRequest ?? request;
       }

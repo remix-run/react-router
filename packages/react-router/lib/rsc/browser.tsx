@@ -45,6 +45,7 @@ declare global {
   }
 }
 
+const neverResolvedPromise = new Promise<never>(() => {});
 export function createCallServer({
   decode,
   encodeAction,
@@ -69,6 +70,17 @@ export function createCallServer({
       throw new Error("No response body");
     }
     const payload = await decode(response.body);
+
+    if (payload.type === "redirect") {
+      if (payload.reload) {
+        window.location.href = payload.location;
+        return;
+      }
+      window.__router.navigate(payload.location, {
+        replace: payload.replace,
+      });
+      return neverResolvedPromise;
+    }
 
     if (payload.type !== "action") {
       throw new Error("Unexpected payload type");
