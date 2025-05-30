@@ -657,14 +657,13 @@ implementations.forEach((implementation) => {
           `http://localhost:${port}/?redirected=true`
         );
 
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 0"
+        );
         // Validate things are still interactive after redirect
         await page.click("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 2"
-        );
-        await page.click("[data-count]");
-        expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 3"
+          "Count: 1"
         );
 
         // Ensure this is using RSC
