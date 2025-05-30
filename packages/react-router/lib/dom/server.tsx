@@ -374,6 +374,9 @@ export function createStaticRouter(
     _internalSetRoutes() {
       throw msg("_internalSetRoutes");
     },
+    _internalSetStateDoNotUseOrYouWillBreakYourApp() {
+      throw msg("_internalSetStateDoNotUseOrYouWillBreakYourApp");
+    },
   };
 }
 
