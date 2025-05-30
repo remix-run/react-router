@@ -45,7 +45,6 @@ declare global {
   }
 }
 
-const neverResolvedPromise = new Promise<never>(() => {});
 export function createCallServer({
   decode,
   encodeAction,
@@ -76,10 +75,23 @@ export function createCallServer({
         window.location.href = payload.location;
         return;
       }
+
+      let reject!: (e: unknown) => void;
+      const promise = new Promise<void>((resolve, rejectFn) => {
+        reject = rejectFn;
+      });
+      
+      const unsubscribe = window.__router.subscribe(({ navigation }) => {
+        if (navigation.state === "idle") {
+          unsubscribe();
+          reject(Symbol.for("react-router.redirect"));
+        }
+      });
       window.__router.navigate(payload.location, {
         replace: payload.replace,
       });
-      return neverResolvedPromise;
+
+      return promise;
     }
 
     if (payload.type !== "action") {
