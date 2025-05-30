@@ -2258,7 +2258,6 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let match = getTargetMatch(matches, path);
     // Create a new context per fetch
     let scopedContext = new unstable_RouterContextProvider(
       init.unstable_getContext ? await init.unstable_getContext() : undefined
@@ -2270,7 +2269,6 @@ export function createRouter(init: RouterInit): Router {
         key,
         routeId,
         path,
-        match,
         matches,
         scopedContext,
         fogOfWar.active,
@@ -2288,7 +2286,6 @@ export function createRouter(init: RouterInit): Router {
       key,
       routeId,
       path,
-      match,
       matches,
       scopedContext,
       fogOfWar.active,
@@ -2304,7 +2301,6 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
@@ -2314,23 +2310,6 @@ export function createRouter(init: RouterInit): Router {
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
-
-    function detectAndHandle405Error(m: AgnosticDataRouteMatch) {
-      if (!m.route.action && !m.route.lazy) {
-        let error = getInternalRouterError(405, {
-          method: submission.formMethod,
-          pathname: path,
-          routeId: routeId,
-        });
-        setFetcherError(key, routeId, error, { flushSync });
-        return true;
-      }
-      return false;
-    }
-
-    if (!isFogOfWar && detectAndHandle405Error(match)) {
-      return;
-    }
 
     // Put this fetcher into it's submitting state
     let existingFetcher = state.fetchers.get(key);
@@ -2369,12 +2348,19 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         requestMatches = discoverResult.matches;
-        match = getTargetMatch(requestMatches, path);
-
-        if (detectAndHandle405Error(match)) {
-          return;
-        }
       }
+    }
+
+    let match = getTargetMatch(requestMatches, path);
+
+    if (!match.route.action && !match.route.lazy) {
+      let error = getInternalRouterError(405, {
+        method: submission.formMethod,
+        pathname: path,
+        routeId: routeId,
+      });
+      setFetcherError(key, routeId, error, { flushSync });
+      return;
     }
 
     // Call the action for the fetcher
@@ -2619,7 +2605,6 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
@@ -2667,9 +2652,10 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         matches = discoverResult.matches;
-        match = getTargetMatch(matches, path);
       }
     }
+
+    let match = getTargetMatch(matches, path);
 
     // Call the loader for this fetcher route match
     fetchControllers.set(key, abortController);

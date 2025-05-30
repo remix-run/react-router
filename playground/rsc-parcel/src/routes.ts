@@ -17,6 +17,16 @@ export const routes = [
         // @ts-expect-error
         lazy: () => import("./routes/about/about"),
       },
+      {
+        id: "fetcher",
+        path: "fetcher",
+        lazy: () => import("./routes/fetcher/fetcher"),
+      },
     ],
+  },
+  {
+    id: "resource",
+    path: "resource",
+    lazy: () => import("./routes/resource/resource"),
   },
 ] satisfies ServerRouteObject[];
