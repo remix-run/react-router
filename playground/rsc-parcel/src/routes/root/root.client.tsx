@@ -39,6 +39,9 @@ export default function Root() {
         <li>
           <Link to="/about">About</Link>
         </li>
+        <li>
+          <Link to="/fetcher">Fetcher</Link>
+        </li>
       </ul>
       {counter}
       <Outlet />
