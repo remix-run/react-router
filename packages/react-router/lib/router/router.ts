@@ -2237,56 +2237,27 @@ export function createRouter(init: RouterInit): Router {
       matches = fogOfWar.matches;
     }
 
+    if (!matches) {
+      setFetcherError(
+        key,
+        routeId,
+        getInternalRouterError(404, { pathname: normalizedPath }),
+        { flushSync }
+      );
+      return;
+    }
+
     let { path, submission, error } = normalizeNavigateOptions(
       true,
       normalizedPath,
       opts
     );
 
-    let abortController = new AbortController();
-
-    if (!matches) {
-      if (!fogOfWar.active) {
-        setFetcherError(
-          key,
-          routeId,
-          getInternalRouterError(404, { pathname: normalizedPath }),
-          { flushSync }
-        );
-        return;
-      } else {
-        let discoverResult = await discoverRoutes(
-          matches ?? [],
-          path,
-          abortController.signal,
-          key
-        );
-
-        if (discoverResult.type === "aborted") {
-          return;
-        } else if (discoverResult.type === "error") {
-          setFetcherError(key, routeId, discoverResult.error, { flushSync });
-          return;
-        } else if (!discoverResult.matches) {
-          setFetcherError(
-            key,
-            routeId,
-            getInternalRouterError(404, { pathname: path }),
-            { flushSync }
-          );
-          return;
-        } else {
-          matches = discoverResult.matches;
-        }
-      }
-    }
-
     if (error) {
       setFetcherError(key, routeId, error, { flushSync });
       return;
     }
 
-    let match = getTargetMatch(matches, path);
     // Create a new context per fetch
     let scopedContext = new unstable_RouterContextProvider(
       init.unstable_getContext ? await init.unstable_getContext() : undefined
@@ -2298,10 +2269,9 @@ export function createRouter(init: RouterInit): Router {
         key,
         routeId,
         path,
-        match,
         matches,
         scopedContext,
-        abortController,
+        fogOfWar.active,
         flushSync,
         preventScrollReset,
         submission
@@ -2316,10 +2286,9 @@ export function createRouter(init: RouterInit): Router {
       key,
       routeId,
       path,
-      match,
       matches,
       scopedContext,
-      abortController,
+      fogOfWar.active,
       flushSync,
       preventScrollReset,
       submission
@@ -2332,10 +2301,9 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
-    abortController: AbortController,
+    isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
     submission: Submission
@@ -2343,14 +2311,17 @@ export function createRouter(init: RouterInit): Router {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    if (!match.route.action && !match.route.lazy) {
-      let error = getInternalRouterError(405, {
-        method: submission.formMethod,
-        pathname: path,
-        routeId: routeId,
-      });
-      setFetcherError(key, routeId, error, { flushSync });
-      return;
+    function detectAndHandle405Error(m: AgnosticDataRouteMatch) {
+      if (!m.route.action && !m.route.lazy) {
+        let error = getInternalRouterError(405, {
+          method: submission.formMethod,
+          pathname: path,
+          routeId: routeId,
+        });
+        setFetcherError(key, routeId, error, { flushSync });
+        return true;
+      }
+      return false;
     }
 
     // Put this fetcher into it's submitting state
@@ -2359,12 +2330,45 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
     });
 
+    let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
       abortController.signal,
       submission
     );
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        requestMatches,
+        path,
+        fetchRequest.signal,
+        key
+      );
+
+      if (discoverResult.type === "aborted") {
+        return;
+      } else if (discoverResult.type === "error") {
+        setFetcherError(key, routeId, discoverResult.error, { flushSync });
+        return;
+      } else if (!discoverResult.matches) {
+        setFetcherError(
+          key,
+          routeId,
+          getInternalRouterError(404, { pathname: path }),
+          { flushSync }
+        );
+        return;
+      } else {
+        requestMatches = discoverResult.matches;
+      }
+    }
+
+    let match = getTargetMatch(requestMatches, path);
+
+    if (detectAndHandle405Error(match)) {
+      return;
+    }
 
     // Call the action for the fetcher
     fetchControllers.set(key, abortController);
@@ -2608,10 +2612,9 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
-    abortController: AbortController,
+    isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
     submission?: Submission
@@ -2626,11 +2629,40 @@ export function createRouter(init: RouterInit): Router {
       { flushSync }
     );
 
+    let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
       abortController.signal
     );
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        matches,
+        path,
+        fetchRequest.signal,
+        key
+      );
+
+      if (discoverResult.type === "aborted") {
+        return;
+      } else if (discoverResult.type === "error") {
+        setFetcherError(key, routeId, discoverResult.error, { flushSync });
+        return;
+      } else if (!discoverResult.matches) {
+        setFetcherError(
+          key,
+          routeId,
+          getInternalRouterError(404, { pathname: path }),
+          { flushSync }
+        );
+        return;
+      } else {
+        matches = discoverResult.matches;
+      }
+    }
+
+    let match = getTargetMatch(matches, path);
 
     // Call the loader for this fetcher route match
     fetchControllers.set(key, abortController);
@@ -3236,7 +3268,7 @@ export function createRouter(init: RouterInit): Router {
           true
         );
 
-        return { active: true, matches: fogMatches };
+        return { active: true, matches: fogMatches || [] };
       } else {
         if (Object.keys(matches[0].params).length > 0) {
           // If we matched a dynamic param or a splat, it might only be because
