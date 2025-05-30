@@ -41,3 +41,16 @@ export function HomeForm({ fn }: { fn: () => unknown }) {
     </form>
   );
 }
+
+export function RedirectForm({ fn }: { fn: () => unknown }) {
+  const [state, formAction, isPending] = React.useActionState(fn, null);
+
+  return (
+    <form action={formAction}>
+      <button type="submit">
+        Redirect{isPending ? " (pending)" : null}
+      </button>
+      {state ? <p>Action state: {state}</p> : null}
+    </form>
+  );
+}
