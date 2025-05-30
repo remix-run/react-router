@@ -20,7 +20,6 @@ export const routes = [
       {
         id: "fetcher",
         path: "fetcher",
-        // @ts-expect-error
         lazy: () => import("./routes/fetcher/fetcher"),
       },
     ],
