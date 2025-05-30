@@ -2311,19 +2311,6 @@ export function createRouter(init: RouterInit): Router {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    function detectAndHandle405Error(m: AgnosticDataRouteMatch) {
-      if (!m.route.action && !m.route.lazy) {
-        let error = getInternalRouterError(405, {
-          method: submission.formMethod,
-          pathname: path,
-          routeId: routeId,
-        });
-        setFetcherError(key, routeId, error, { flushSync });
-        return true;
-      }
-      return false;
-    }
-
     // Put this fetcher into it's submitting state
     let existingFetcher = state.fetchers.get(key);
     updateFetcherState(key, getSubmittingFetcher(submission, existingFetcher), {
@@ -2366,7 +2353,13 @@ export function createRouter(init: RouterInit): Router {
 
     let match = getTargetMatch(requestMatches, path);
 
-    if (detectAndHandle405Error(match)) {
+    if (!match.route.action && !match.route.lazy) {
+      let error = getInternalRouterError(405, {
+        method: submission.formMethod,
+        pathname: path,
+        routeId: routeId,
+      });
+      setFetcherError(key, routeId, error, { flushSync });
       return;
     }
 
