@@ -170,9 +170,6 @@ importers:
       jest:
         specifier: ^29.6.4
         version: 29.7.0(@types/node@20.11.30)(babel-plugin-macros@3.1.0)
-      jest-environment-jsdom:
-        specifier: ^29.6.2
-        version: 29.6.2
       jsonfile:
         specifier: ^6.1.0
         version: 6.1.0
@@ -215,9 +212,6 @@ importers:
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
-      undici:
-        specifier: ^6.10.1
-        version: 6.20.1
       unified:
         specifier: ^10.1.2
         version: 10.1.2
@@ -744,6 +738,12 @@ importers:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
         version: 2.4.7
+      jest-environment-jsdom:
+        specifier: ^29.6.2
+        version: 29.6.2
+      jest-fixed-jsdom:
+        specifier: ^0.0.9
+        version: 0.0.9(jest-environment-jsdom@29.6.2)
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -6385,6 +6385,12 @@ packages:
     resolution: {integrity: sha512-DOSwCRqXirTOyheM+4d5YZOrWcdu0LNZ87ewUoywbcb2XR4wKgqiG8vNeYwhjFMbEkfju7wx2GYH0P2gevGvFw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
+  jest-fixed-jsdom@0.0.9:
+    resolution: {integrity: sha512-KPfqh2+sn5q2B+7LZktwDcwhCpOpUSue8a1I+BcixWLOQoEVyAjAGfH+IYZGoxZsziNojoHGRTC8xRbB1wDD4g==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      jest-environment-jsdom: '>=28.0.0'
+
   jest-get-type@29.6.3:
     resolution: {integrity: sha512-zrteXnqYxfQh7l5FHyL38jL39di8H8rHoecLH3JNxH3BwOrBsNeabdap5e0I23lD4HHI8W5VFBZqG4Eaq5LNcw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -8426,10 +8432,6 @@ packages:
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
-
-  tough-cookie@4.1.2:
-    resolution: {integrity: sha512-G9fqXWoYFZgTc2z8Q5zaHy/vJMjm+WV0AkAeHxVCQiEB1b+dGvWzFW6QV07cY5jQ5gRkeid2qIkzkxUnmoQZUQ==}
-    engines: {node: '>=6'}
 
   tough-cookie@4.1.4:
     resolution: {integrity: sha512-Loo5UUvLD9ScZ6jh8beX1T6sO1w2/MpCRpEP7V280GKMVUQ0Jzar2U3UJPsrdbziLEMMhu3Ujnq//rhiFuIeag==}
@@ -11800,7 +11802,7 @@ snapshots:
   '@types/jsdom@20.0.1':
     dependencies:
       '@types/node': 20.11.30
-      '@types/tough-cookie': 4.0.2
+      '@types/tough-cookie': 4.0.5
       parse5: 7.1.2
 
   '@types/jsdom@21.1.1':
@@ -14753,6 +14755,10 @@ snapshots:
       jest-mock: 29.7.0
       jest-util: 29.7.0
 
+  jest-fixed-jsdom@0.0.9(jest-environment-jsdom@29.6.2):
+    dependencies:
+      jest-environment-jsdom: 29.6.2
+
   jest-get-type@29.6.3: {}
 
   jest-haste-map@29.7.0:
@@ -14994,7 +15000,7 @@ snapshots:
       rrweb-cssom: 0.6.0
       saxes: 6.0.0
       symbol-tree: 3.2.4
-      tough-cookie: 4.1.2
+      tough-cookie: 4.1.4
       w3c-xmlserializer: 4.0.0
       webidl-conversions: 7.0.0
       whatwg-encoding: 2.0.0
@@ -17451,13 +17457,6 @@ snapshots:
       is-number: 7.0.0
 
   toidentifier@1.0.1: {}
-
-  tough-cookie@4.1.2:
-    dependencies:
-      psl: 1.9.0
-      punycode: 2.3.0
-      universalify: 0.2.0
-      url-parse: 1.5.10
 
   tough-cookie@4.1.4:
     dependencies:
