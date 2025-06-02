@@ -44,5 +44,5 @@ href("/users/:id?", params); // ❌
 "id" in params ? href("/users/:id", params) : href("/users"); // works... but is annoying
 
 // 7.6.2
-href("/users/:id?", params); // restores convenience of 7.6.0
+href("/users/:id?", params); // restores behavior of 7.6.0
 ```
