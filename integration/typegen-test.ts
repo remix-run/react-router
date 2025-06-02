@@ -537,11 +537,11 @@ test.describe("typegen", () => {
         href("/required-param/:req")
         href("/required-param/:req", { req: "hello" })
 
+        // @ts-expect-error
         href("/optional-param")
+        // @ts-expect-error
         href("/optional-param/:opt", { opt: "hello" })
-        // @ts-expect-error
         href("/optional-param/:opt?")
-        // @ts-expect-error
         href("/optional-param/:opt?", { opt: "hello" })
 
         href("/leading-and-trailing-slash")
