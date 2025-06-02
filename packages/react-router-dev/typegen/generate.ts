@@ -322,11 +322,20 @@ function getRouteAnnotations({
 
 function relativeImportSource(from: string, to: string) {
   let path = Path.relative(Path.dirname(from), to);
+
+  let extension = Path.extname(path);
+
   // no extension
   path = Path.join(Path.dirname(path), Pathe.filename(path));
   if (!path.startsWith("../")) path = "./" + path;
 
-  return path + ".js";
+  // In typescript, we want to support "moduleResolution": "nodenext" as well as not having "allowImportingTsExtensions": true,
+  // so we normalize all JS like files to `.js`, but allow other extensions such as `.mdx` and others that might be used as routes.
+  if (!extension || /\.(js|ts)x?$/.test(extension)) {
+    extension = ".js";
+  }
+
+  return path + extension;
 }
 
 function rootDirsPath(ctx: Context, typesPath: string): string {
