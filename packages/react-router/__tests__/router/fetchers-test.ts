@@ -3320,36 +3320,6 @@ describe("fetchers", () => {
       expect((await request.formData()).get("a")).toBe("1");
     });
 
-    it("serializes body as application/x-www-form-urlencoded", async () => {
-      let t = setup({
-        routes: [{ id: "root", path: "/", action: true }],
-      });
-
-      let body = { a: "1" };
-      let F = await t.fetch("/", "key", {
-        formMethod: "post",
-        formEncType: "application/x-www-form-urlencoded",
-        body,
-      });
-      expect(t.router.getFetcher("key")?.formData?.get("a")).toBe("1");
-
-      await F.actions.root.resolve("ACTION");
-
-      expect(F.actions.root.stub).toHaveBeenCalledWith({
-        params: {},
-        request: expect.any(Request),
-        context: {},
-      });
-
-      let request = F.actions.root.stub.mock.calls[0][0].request;
-      expect(request.method).toBe("POST");
-      expect(request.url).toBe("http://localhost/");
-      expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
-      );
-      expect((await request.formData()).get("a")).toBe("1");
-    });
-
     it("serializes body as application/json if specified (object)", async () => {
       let t = setup({
         routes: [{ id: "root", path: "/", action: true }],
