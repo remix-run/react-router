@@ -116,6 +116,50 @@ describe("fetchers", () => {
       expect(router._internalFetchControllers.size).toBe(0);
     });
 
+    it("unabstracted loader fetch with fog of war", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            // Note: No path is provided on the root route in this test to
+            // ensure nothing matches before routes are patched
+          },
+        ],
+        hydrationData: {
+          loaderData: { root: "ROOT DATA" },
+        },
+        async patchRoutesOnNavigation({ path, patch }) {
+          if (path === "/lazy") {
+            patch("root", [
+              {
+                id: "lazy",
+                path: "/lazy",
+                loader: () => dfd.promise,
+              },
+            ]);
+          }
+        },
+      });
+      let fetcherData = getFetcherData(router);
+
+      let key = "key";
+      router.fetch(key, "lazy", "/lazy");
+      expect(router.getFetcher(key)).toEqual({
+        state: "loading",
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+      });
+
+      await dfd.resolve("DATA");
+      expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
+      expect(fetcherData.get(key)).toBe("DATA");
+
+      expect(router._internalFetchControllers.size).toBe(0);
+    });
+
     it("loader fetch", async () => {
       let t = initializeTest({
         url: "/foo",
@@ -3246,6 +3290,36 @@ describe("fetchers", () => {
   });
 
   describe("fetcher submissions", () => {
+    it("serializes body as application/x-www-form-urlencoded", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = { a: "1" };
+      let F = await t.fetch("/", "key", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        body,
+      });
+      expect(t.router.getFetcher("key")?.formData?.get("a")).toBe("1");
+
+      await F.actions.root.resolve("ACTION");
+
+      expect(F.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        context: {},
+      });
+
+      let request = F.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      expect((await request.formData()).get("a")).toBe("1");
+    });
+
     it("serializes body as application/x-www-form-urlencoded", async () => {
       let t = setup({
         routes: [{ id: "root", path: "/", action: true }],
