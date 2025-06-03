@@ -43,7 +43,6 @@
     "gunzip-maybe": "^1.4.2",
     "log-update": "^5.0.1",
     "proxy-agent": "^6.3.0",
-    "recursive-readdir": "^2.2.3",
     "semver": "^7.3.7",
     "sisteransi": "^1.0.5",
     "sort-package-json": "^1.55.0",
