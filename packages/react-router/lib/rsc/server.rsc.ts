@@ -33,7 +33,7 @@ type ServerRouteObjectBase = {
   action?: ActionFunction;
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  default?: React.ComponentType<any>;
+  Component?: React.ComponentType<any>;
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   headers?: HeadersFunction;
