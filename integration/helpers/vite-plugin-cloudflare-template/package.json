@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
-    "typecheck": "wrangler types && react-router typegen && tsc"
+    "typegen": "wrangler types && react-router typegen",
+    "typecheck": "pnpm typegen && tsc"
   },
   "dependencies": {
     "express": "^4.19.2",
