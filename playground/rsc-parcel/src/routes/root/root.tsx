@@ -1,4 +1,4 @@
-export { default, ErrorBoundary, Layout } from "./root.client";
+export { Component, ErrorBoundary, Layout } from "./root.client";
 
 import { Counter } from "../../counter";
 

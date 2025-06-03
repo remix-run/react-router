@@ -5,7 +5,7 @@ async function loader() {
   };
 }
 
-export default async function Component() {
+export async function Component() {
   let loaderData = await loader();
   return (
     <div style={{ border: "1px solid black", padding: "10px" }}>

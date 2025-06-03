@@ -5,7 +5,7 @@ export {
   // clientLazy,
   clientLoader,
   clientAction,
-  default,
+  Component,
 } from "./about.client";
 
 export function headers({

@@ -109,7 +109,7 @@ implementations.forEach((implementation) => {
               export function loader() {
                 return { message: "Loader Data" };
               }
-              export default function ServerComponent({ loaderData }) {
+              export function Component({ loaderData }) {
                 return <h2 data-home>Home: {loaderData.message}</h2>;
               }
             `,
@@ -141,7 +141,7 @@ implementations.forEach((implementation) => {
                 return { message: "Loader Data" };
               }
 
-              export default function ServerComponent({ loaderData }) {
+              export function Component({ loaderData }) {
                 return (
                   <div>
                     <h2 data-home>Home: {loaderData.message}</h2>
@@ -236,7 +236,7 @@ implementations.forEach((implementation) => {
                 return { message: "Home Page Data" };
               }
 
-              export default function Home({ loaderData }) {
+              export function Component({ loaderData }) {
                 return (
                   <div>
                     <h1 data-page="home">Home Page</h1>
@@ -251,7 +251,7 @@ implementations.forEach((implementation) => {
                 return { count: 1 };
               }
 
-              export { Dashboard as default } from "./dashboard.client";
+              export { Component } from "./dashboard.client";
             `,
             "src/routes/dashboard.client.tsx": js`
               "use client";
@@ -260,7 +260,7 @@ implementations.forEach((implementation) => {
               import { Link } from "react-router";
 
               // Export the entire route as a client component
-              export function Dashboard({ loaderData }) {
+              export function Component({ loaderData }) {
                 const [count, setCount] = useState(loaderData.count);
 
                 return (
@@ -367,7 +367,7 @@ implementations.forEach((implementation) => {
                 return { message: "Home Page Data" };
               }
 
-              export default function Home({ loaderData }) {
+              export function Component({ loaderData }) {
                 return (
                   <div>
                     <h1 data-page="home">Home Page</h1>
@@ -382,7 +382,7 @@ implementations.forEach((implementation) => {
                 return { count: 1 };
               }
 
-              export { Dashboard as default } from "./dashboard.client";
+              export { Dashboard as Component } from "./dashboard.client";
             `,
             "src/routes/dashboard.client.tsx": js`
               "use client";
@@ -477,13 +477,16 @@ implementations.forEach((implementation) => {
               }
             `,
             "src/routes/home.tsx": js`
+              export { Component } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
               "use client";
 
               import { useActionState } from "react";
 
               import { incrementCounter } from "./home.actions";
 
-              export default function ClientComponent() {
+              export function Component() {
                 const [count, incrementCounterAction, incrementing] = useActionState(incrementCounter, 0);
 
                 return (
@@ -544,7 +547,7 @@ implementations.forEach((implementation) => {
                 return { name, count };
               }
 
-              export default function ServerComponent({ loaderData }) {
+              export function Component({ loaderData }) {
                 const updateCounter = async (formData: FormData) => {
                   "use server";
                   name = formData.get("name");
@@ -621,7 +624,7 @@ implementations.forEach((implementation) => {
               import { redirectAction } from "./home.actions";
               import { Counter } from "./home.client";
 
-              export default function ServerComponent(props) {
+              export function Component(props) {
                 console.log({props});
                 return (
                   <div>
@@ -694,7 +697,7 @@ implementations.forEach((implementation) => {
                 throw new Error("Intentional error from loader");
               }
 
-              export default function Home() {
+              export function Component() {
                 return <h2>This shouldn't render</h2>;
               }
 

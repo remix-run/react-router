@@ -31,7 +31,7 @@ export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
 
 clientLoader.hydrate = true;
 
-export default function About() {
+export function Component() {
   const loaderData = useLoaderData<typeof clientLoader>();
   const actionData = useActionData<typeof clientAction>();
 

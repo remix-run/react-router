@@ -6,7 +6,7 @@ export function loader() {
   };
 }
 
-export default function Component({
+export function Component({
   loaderData,
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
