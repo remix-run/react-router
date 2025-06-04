@@ -1429,7 +1429,9 @@ export function useSearchParams(
       );
 
       const unchanged = newSearchParams === searchParams || newSearchParams.toString() === searchParams.toString()
-      if (unchanged) return Promise.resolve();
+      // Do not trigger a navigation for unchanged searchParams 
+      // unless if it is meant to update state OR it is used for a flushSync
+      if (unchanged && navigateOptions.state === undefined && !navigateOptions.flushSync) return Promise.resolve();
       hasSetSearchParamsRef.current = true;
 
       return navigate("?" + newSearchParams, navigateOptions);
