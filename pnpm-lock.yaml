@@ -83,9 +83,6 @@ importers:
       '@types/cross-spawn':
         specifier: ^6.0.2
         version: 6.0.6
-      '@types/fs-extra':
-        specifier: ^8.1.2
-        version: 8.1.2
       '@types/glob':
         specifier: 7.2.0
         version: 7.2.0
@@ -158,9 +155,6 @@ importers:
       eslint-plugin-react-hooks:
         specifier: next
         version: 6.1.0-canary-c0464aed-20250523(eslint@8.57.0)
-      fs-extra:
-        specifier: ^10.1.0
-        version: 10.1.0
       history:
         specifier: ^5.3.0
         version: 5.3.0
@@ -278,9 +272,6 @@ importers:
       express:
         specifier: ^4.19.2
         version: 4.19.2
-      fs-extra:
-        specifier: ^10.0.0
-        version: 10.1.0
       get-port:
         specifier: ^5.1.1
         version: 5.1.1
@@ -667,9 +658,6 @@ importers:
       execa:
         specifier: 5.1.1
         version: 5.1.1
-      fs-extra:
-        specifier: ^10.0.0
-        version: 10.1.0
       gunzip-maybe:
         specifier: ^1.4.2
         version: 1.4.2
@@ -868,9 +856,6 @@ importers:
       exit-hook:
         specifier: 2.2.1
         version: 2.2.1
-      fs-extra:
-        specifier: ^10.0.0
-        version: 10.1.0
       jsesc:
         specifier: 3.0.2
         version: 3.0.2
@@ -920,9 +905,6 @@ importers:
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
-      '@types/fs-extra':
-        specifier: ^8.1.2
-        version: 8.1.2
       '@types/jsesc':
         specifier: ^3.0.1
         version: 3.0.3
@@ -3851,9 +3833,6 @@ packages:
   '@types/express@4.17.21':
     resolution: {integrity: sha512-ejlPM315qwLpaQlQDTjPdsUFSc6ZsP4AN6AlWnogPjQ7CVi7PYF3YVz+CY3jE2pwYf7E/7HlDAN0rV2GxTG0HQ==}
 
-  '@types/fs-extra@8.1.2':
-    resolution: {integrity: sha512-SvSrYXfWSc7R4eqnOzbQF4TZmfpNSM9FrSWLU3EUnWBuyZqNBOrv1B1JA3byUDPUl9z4Ab3jeZG2eDdySlgNMg==}
-
   '@types/glob@7.2.0':
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
 
@@ -5509,10 +5488,6 @@ packages:
 
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
-
-  fs-extra@10.1.0:
-    resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
-    engines: {node: '>=12'}
 
   fs-extra@11.2.0:
     resolution: {integrity: sha512-PmDi3uwK5nFuXh7XDTlVnS17xJS7vW36is2+w3xcv8SVxiB4NyATf4ctkVY5bkSjX0Y4nbvZCq1/EjtEyr9ktw==}
@@ -11231,10 +11206,6 @@ snapshots:
       '@types/qs': 6.9.14
       '@types/serve-static': 1.15.5
 
-  '@types/fs-extra@8.1.2':
-    dependencies:
-      '@types/node': 20.11.30
-
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
@@ -13441,12 +13412,6 @@ snapshots:
   fresh@0.5.2: {}
 
   fs-constants@1.0.0: {}
-
-  fs-extra@10.1.0:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.1.0
-      universalify: 2.0.0
 
   fs-extra@11.2.0:
     dependencies:
