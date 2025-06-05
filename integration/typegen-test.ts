@@ -1,9 +1,10 @@
 import { spawnSync } from "node:child_process";
+import { mkdirSync, renameSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 
 import { expect, test } from "@playwright/test";
 import dedent from "dedent";
-import fse from "fs-extra";
 
 import { createProject } from "./helpers/vite";
 
@@ -379,7 +380,8 @@ test.describe("typegen", () => {
         }
       `,
     });
-    fse.moveSync(path.join(cwd, "app"), path.join(cwd, "src/myapp"));
+    mkdirSync(path.join(cwd, "src"));
+    renameSync(path.join(cwd, "app"), path.join(cwd, "src/myapp"));
 
     const proc = typecheck(cwd);
     expect(proc.stdout.toString()).toBe("");
@@ -622,9 +624,15 @@ test.describe("typegen", () => {
         `,
       });
 
-      const tsconfig = await fse.readJson(path.join(cwd, "tsconfig.json"));
+      const tsconfig = JSON.parse(
+        await readFile(path.join(cwd, "tsconfig.json"), "utf-8")
+      );
       tsconfig.compilerOptions.moduleDetection = "force";
-      await fse.writeJson(path.join(cwd, "tsconfig.json"), tsconfig);
+      await writeFile(
+        path.join(cwd, "tsconfig.json"),
+        JSON.stringify(tsconfig),
+        "utf-8"
+      );
 
       const proc = typecheck(cwd);
       expect(proc.stdout.toString()).toBe("");
