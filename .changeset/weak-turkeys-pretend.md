@@ -2,7 +2,7 @@
 "react-router": patch
 ---
 
-Do not serialize types for `useRouteLoaderData<typeof clientLoader()>`
+Do not serialize types for `useRouteLoaderData<typeof clientLoader>`
 
 For types to distinguish a `clientLoader` from a `serverLoader`, you MUST annotate `clientLoader` args:
 
