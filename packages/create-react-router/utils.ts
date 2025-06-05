@@ -81,14 +81,8 @@ export function log(message: string) {
   return process.stdout.write(message + "\n");
 }
 
-export let stderr = process.stderr;
-/** @internal Used to mock `process.stderr.write` for testing purposes */
-export function setStderr(writable: typeof process.stderr) {
-  stderr = writable;
-}
-
 export function logError(message: string) {
-  return stderr.write(message + "\n");
+  return process.stderr.write(message + "\n");
 }
 
 function logBullet(
@@ -124,10 +118,6 @@ export function debug(prefix: string, text?: string | string[]) {
 
 export function info(prefix: string, text?: string | string[]) {
   logBullet(log, color.cyan, color.dim, "◼", prefix, text);
-}
-
-export function success(text: string) {
-  logBullet(log, color.green, color.dim, "✔", text);
 }
 
 export function error(prefix: string, text?: string | string[]) {
