@@ -101,7 +101,6 @@
     "remark-parse": "^10.0.1",
     "remark-stringify": "^10.0.2",
     "semver": "^7.5.4",
-    "tslib": "^2.6.2",
     "type-fest": "^2.19.0",
     "typedoc": "^0.26.11",
     "typescript": "^5.4.5",
