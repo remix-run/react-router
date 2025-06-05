@@ -5,7 +5,7 @@ on:
     branches:
       - dev
     paths:
-      - ./pnpm-lock.yaml
+      - pnpm-lock.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -34,8 +34,9 @@ jobs:
 
       - name: 💪 Commit
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+
           git add .
           if [ -z "$(git status --porcelain)" ]; then
             echo "💿 no deduplication needed"
