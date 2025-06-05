@@ -1,4 +1,4 @@
-export { clientLoader, default } from "./about.client";
+export { clientLoader, Component } from "./about.client";
 
 export function loader() {
   return {

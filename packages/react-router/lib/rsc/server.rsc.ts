@@ -33,7 +33,7 @@ type ServerRouteObjectBase = {
   action?: ActionFunction;
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  default?: React.ComponentType<any>;
+  Component?: React.ComponentType<any>;
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   headers?: HeadersFunction;
@@ -586,7 +586,7 @@ async function getServerRouteMatch(
   }
 
   const Layout = (match.route as any).Layout || React.Fragment;
-  const Component = (match.route as any).default;
+  const Component = (match.route as any).Component;
   const ErrorBoundary = (match.route as any).ErrorBoundary;
   const HydrateFallback = (match.route as any).HydrateFallback;
   const loaderData = staticContext.loaderData[match.route.id];

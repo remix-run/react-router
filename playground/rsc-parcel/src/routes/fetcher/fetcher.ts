@@ -1,1 +1,1 @@
-export { default } from "./fetcher.client";
+export { Component } from "./fetcher.client";

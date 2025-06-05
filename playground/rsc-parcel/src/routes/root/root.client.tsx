@@ -27,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function Root() {
+export function Component() {
   const { counter, message } = useLoaderData<typeof loader>();
   return (
     <>

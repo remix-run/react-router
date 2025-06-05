@@ -3,7 +3,7 @@
 import { useFetcher } from "react-router";
 import type { loader } from "../resource/resource";
 
-export default function Fetcher() {
+export function Component() {
   const fetcher = useFetcher<typeof loader>();
 
   return (
