@@ -276,6 +276,7 @@ async function processServerAction(
   }
 
   if (request.method === "POST") {
+    const clone = request.clone();
     const formData = await request.formData();
     if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
       if (!decodeFormAction) {
@@ -296,6 +297,9 @@ async function processServerAction(
         revalidationRequest: getRevalidationRequest(),
       };
     }
+    return {
+      revalidationRequest: clone,
+    };
   }
 }
 
