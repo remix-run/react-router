@@ -89,7 +89,7 @@ To get a feature accepted and implemented in React Router, it will go through th
 
 - All new features begin at **Stage 0 — Proposal** when a Request For Comments (RFC) is written up in a GitHub Proposal Discussion
 - Anyone can write an RFC, including core team members and community members
-- The RFC should outline the use-case for the new feature, why current APIs are not enough for the use-case, and provide potential API surfaces for the feature
+- The RFC should outline the use-case for the new feature, why current APIs are insufficient for the use-case, and provide potential API surfaces for the feature
 - The proposal should be clear, concise, and provide enough context for the Steering Committee (SC) and community to evaluate its merit
 - Community upvotes on the proposal are used as a signal of interest and demand for the SC — higher upvoted issues are more likely to be considered by the SC members
 - At this stage, community members may feel free to work on sample implementations in a fork of the repo and provide links in the RFC, but a pull request **should not** be opened until it reaches Stage 1
@@ -114,7 +114,7 @@ To get a feature accepted and implemented in React Router, it will go through th
 - SC members will review and approve the PR via GitHub reviews
 - Approval at this stage communicates:
   - The feature is valuable for React Router
-  - The API/code is enough for unstable/beta testing, though further iteration may be needed
+  - The API/code is sufficient for unstable/beta testing, though further iteration may be needed
   - Code is not required to be in a final state yet, but it must be coded in such a way so as not to introduce regressions to other areas of the API
   - We have seen enough positive feedback from Alpha testers to move the feature along
 
