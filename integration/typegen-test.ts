@@ -325,6 +325,36 @@ test.describe("typegen", () => {
     expect(proc.status).toBe(0);
   });
 
+  test("clientLoader data should not be serialized", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes/_index.tsx": tsx`
+        import { useRouteLoaderData } from "react-router"
+
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/_index"
+
+        export function clientLoader({}: Route.ClientLoaderArgs) {
+          return { fn: () => 0 }
+        }
+
+        export default function Component({ loaderData }: Route.ComponentProps) {
+          type Test1 = Expect<Equal<typeof loaderData, { fn: () => number }>>
+
+          const routeLoaderData = useRouteLoaderData<typeof clientLoader>("routes/_index")
+          type Test2 = Expect<Equal<typeof routeLoaderData, { fn: () => number} | undefined>>
+
+          return <h1>Hello, world!</h1>
+        }
+      `,
+    });
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
+  });
+
   test("custom app dir", async () => {
     const cwd = await createProject({
       "vite.config.ts": viteConfig,
