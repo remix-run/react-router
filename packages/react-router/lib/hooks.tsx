@@ -894,6 +894,9 @@ export function _renderMatches(
       } else {
         children = outlet;
       }
+
+      children = <RedirectBoundary>{children}</RedirectBoundary>;
+
       return (
         <RenderedRoute
           match={match}
@@ -923,6 +926,21 @@ export function _renderMatches(
       getChildren()
     );
   }, null as React.ReactElement | null);
+}
+
+class RedirectBoundary extends React.Component<{ children?: React.ReactNode }> {
+  // If the error is Symbol.for("react-router.redirect"), keep rendering children.
+  // If it's anything else, re-throw to bubble it up.
+  static getDerivedStateFromError(error: any) {
+    if (error === Symbol.for("react-router.redirect")) {
+      return null; // Keep rendering children
+    }
+    throw error; // Re-throw to bubble up
+  }
+
+  render() {
+    return this.props.children;
+  }
 }
 
 enum DataRouterHook {
