@@ -71,7 +71,6 @@ import {
   configRouteToBranchRoute,
 } from "../config/config";
 import { decorateComponentExportsWithProps } from "./with-props";
-import { l } from "../../react-router/dist/development/lib-C1JSsICm.mjs";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
