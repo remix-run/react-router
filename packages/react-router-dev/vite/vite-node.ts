@@ -1,5 +1,5 @@
-import { ViteNodeServer } from "vite-node/server";
-import { ViteNodeRunner } from "vite-node/client";
+import type { ViteNodeServer as ViteNodeServerType } from "vite-node/server";
+import type { ViteNodeRunner as ViteNodeRunnerType } from "vite-node/client";
 import { installSourcemapsSupport } from "vite-node/source-map";
 import type * as Vite from "vite";
 
@@ -8,8 +8,8 @@ import { ssrExternals } from "./ssr-externals";
 
 export type Context = {
   devServer: Vite.ViteDevServer;
-  server: ViteNodeServer;
-  runner: ViteNodeRunner;
+  server: ViteNodeServerType;
+  runner: ViteNodeRunnerType;
 };
 
 export async function createContext({
@@ -23,6 +23,11 @@ export async function createContext({
 }): Promise<Context> {
   await preloadVite();
   const vite = getVite();
+
+  const [{ ViteNodeServer }, { ViteNodeRunner }] = await Promise.all([
+    import("vite-node/server"),
+    import("vite-node/client"),
+  ]);
 
   const devServer = await vite.createServer({
     root,
