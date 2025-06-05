@@ -189,12 +189,14 @@ export type TemplateName =
   | "cloudflare-dev-proxy-template"
   | "vite-5-template"
   | "vite-6-template"
+  | "vite-7-beta-template"
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+  { templateName: "vite-7-beta-template", templateDisplayName: "Vite 7 Beta" },
   {
     templateName: "vite-rolldown-template",
     templateDisplayName: "Vite Rolldown",

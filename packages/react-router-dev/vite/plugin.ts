@@ -1,5 +1,5 @@
 // We can only import types from Vite at the top level since we're in a CJS
-// context but want to use Vite's ESM build to avoid deprecation warnings
+// context but want to use Vite's ESM build since Vite 7+ is ESM only
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
@@ -31,6 +31,7 @@ import {
   init as initEsModuleLexer,
   parse as esModuleLexer,
 } from "es-module-lexer";
+import { escapePath as escapePathAsGlob } from "tinyglobby";
 import pick from "lodash/pick";
 import jsesc from "jsesc";
 import colors from "picocolors";
@@ -1153,6 +1154,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         // Ensure sync import of Vite works after async preload
         let vite = getVite();
+        let viteMajorVersion = parseInt(vite.version.split(".")[0], 10);
 
         viteUserConfig = _viteUserConfig;
         viteConfigEnv = _viteConfigEnv;
@@ -1240,7 +1242,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   ...Object.values(ctx.reactRouterConfig.routes).map((route) =>
                     resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
                   ),
-                ]
+                ].map((entry) =>
+                  // In Vite 7, the `optimizeDeps.entries` option only accepts glob patterns.
+                  // In prior versions, absolute file paths were treated differently.
+                  viteMajorVersion >= 7 ? escapePathAsGlob(entry) : entry
+                )
               : [],
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
