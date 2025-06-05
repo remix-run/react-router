@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import { RouterProvider } from "../components";
 import type { DataRouteMatch, DataRouteObject } from "../context";
@@ -80,7 +81,7 @@ export function createCallServer({
       const promise = new Promise<void>((resolve, rejectFn) => {
         reject = rejectFn;
       });
-      
+
       const unsubscribe = window.__router.subscribe(({ navigation }) => {
         if (navigation.state === "idle") {
           unsubscribe();
@@ -530,7 +531,7 @@ export function RSCHydratedRouter({
 
   return (
     <FrameworkContext.Provider value={frameworkContext}>
-      <RouterProvider router={router} />
+      <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
     </FrameworkContext.Provider>
   );
 }
