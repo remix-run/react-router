@@ -5,7 +5,7 @@ on:
     branches:
       - dev
     paths:
-      - ./pnpm-lock.yaml
+      - pnpm-lock.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
