@@ -29,27 +29,8 @@
         "default": "./dist/index.js"
       }
     },
-    "./install": {
-      "node": {
-        "types": "./dist/install.d.ts",
-        "module-sync": "./dist/install.mjs",
-        "default": "./dist/install.js"
-      },
-      "import": {
-        "types": "./dist/install.d.mts",
-        "default": "./dist/install.mjs"
-      },
-      "default": {
-        "types": "./dist/install.d.ts",
-        "default": "./dist/install.js"
-      }
-    },
     "./package.json": "./package.json"
   },
-  "sideEffects": [
-    "./dist/install.js",
-    "./dist/install.mjs"
-  ],
   "scripts": {
     "build": "wireit",
     "typecheck": "tsc"
@@ -91,9 +72,6 @@
   },
   "files": [
     "dist/",
-    "globals.d.ts",
-    "install.d.ts",
-    "install.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
