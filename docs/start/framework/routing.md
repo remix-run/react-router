@@ -313,7 +313,6 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
