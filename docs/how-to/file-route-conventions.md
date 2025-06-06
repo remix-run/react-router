@@ -291,6 +291,17 @@ export async function serverLoader({ params }) {
 }
 ```
 
+## Catch-all Route
+
+To create a route that will match any requests that don't match other defined routes (such as a 404 page), create a file named `$.tsx` within your routes directory:
+
+| URL                                          | Matched Route            |
+| -------------------------------------------- | ------------------------ |
+| `/`                                          | `app/routes/_index.tsx`  |
+| `/about`                                     | `app/routes/about.tsx`   |
+| `/any-invalid-path-will-match`               | `app/routes/$.tsx`       |
+
+
 ## Escaping Special Characters
 
 If you want one of the special characters used for these route conventions to actually be a part of the URL, you can escape the conventions with `[]` characters. This can be especially helpful for [resource routes][resource_routes] that include an extension in the URL.
