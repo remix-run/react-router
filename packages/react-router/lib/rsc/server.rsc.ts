@@ -167,15 +167,30 @@ export async function matchRSCServerRequest({
   routes: ServerRouteObject[];
   generateResponse: (match: ServerMatch) => Response;
 }): Promise<Response> {
-  const url = new URL(request.url);
+  let requestUrl = new URL(request.url);
 
-  if (isManifestRequest(url)) {
+  if (isManifestRequest(requestUrl)) {
     let response = await generateManifestResponse(
       routes,
       request,
       generateResponse
     );
     return response;
+  }
+
+  let isDataRequest = isReactServerRequest(requestUrl);
+
+  const url = new URL(request.url);
+  let routerRequest = request;
+  if (isDataRequest) {
+    url.pathname = url.pathname.replace(/(_root)?\.rsc$/, "");
+    routerRequest = new Request(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+      signal: request.signal,
+      duplex: request.body ? "half" : undefined,
+    } as RequestInit);
   }
 
   // Explode lazy functions out the routes so we can use middleware
@@ -187,8 +202,6 @@ export async function matchRSCServerRequest({
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
 
-  let isDataRequest = request.headers.has("X-React-Router-Data-Request");
-
   const leafMatch = matches?.[matches.length - 1];
   if (
     !isDataRequest &&
@@ -197,7 +210,7 @@ export async function matchRSCServerRequest({
     !leafMatch.route.ErrorBoundary
   ) {
     return generateResourceResponse(
-      request,
+      routerRequest,
       routes,
       leafMatch.route.id,
       onError
@@ -205,7 +218,7 @@ export async function matchRSCServerRequest({
   }
 
   let response = await generateRenderResponse(
-    request,
+    routerRequest,
     routes,
     isDataRequest,
     decodeCallServer,
