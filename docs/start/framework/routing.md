@@ -301,6 +301,18 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 const { "*": splat } = params;
 ```
 
+You can also use a splat to catch requests that don't match any route:
+
+```ts filename=app/routes.ts lines=[6]
+import { type RouteConfig, route,  index } from "@react-router/dev/routes";
+
+export default [
+  index("./home.tsx"),
+  route("about", "./about.tsx"),
+  route("*", "./404.tsx")
+] satisfies RouteConfig;
+```
+
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
