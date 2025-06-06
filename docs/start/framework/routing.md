@@ -314,8 +314,6 @@ export default [
 ```
 
 
-If you use the `flatRoutes` convention, create a route file named `$.tsx`.
-
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
