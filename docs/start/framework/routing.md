@@ -303,7 +303,7 @@ const { "*": splat } = params;
 
 You can also use a splat to catch requests that don't match any route:
 
-```ts filename=app/routes.ts lines=[6]
+```ts filename=app/routes.ts lines=[10]
 import {
   type RouteConfig,
   route,
