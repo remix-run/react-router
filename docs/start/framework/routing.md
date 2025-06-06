@@ -301,6 +301,12 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 const { "*": splat } = params;
 ```
 
+## 404 Catch-All Route
+
+To create a route to catch non-matching routes, you can use the `route("*", "file-path")` route helper.
+
+If you use the `flatRoutes` convention, create a route file named `$.tsx`.
+
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
