@@ -45,7 +45,10 @@ export async function routeRSCServerRequest({
 
   const serverResponse = await callServer(serverRequest);
 
-  if (respondWithRSCPayload) {
+  if (
+    respondWithRSCPayload ||
+    serverResponse.headers.get("React-Router-Resource") === "true"
+  ) {
     return serverResponse;
   }
 

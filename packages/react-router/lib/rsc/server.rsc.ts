@@ -178,9 +178,36 @@ export async function matchRSCServerRequest({
     return response;
   }
 
+  // Explode lazy functions out the routes so we can use middleware
+  // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
+  // and if we move to `lazy: {}` then we lose all the other things from the
+  // `ServerRouteObject` like `Layout` etc.
+  let matches = matchRoutes(routes, url.pathname);
+  if (matches) {
+    await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
+  }
+
+  let isDataRequest = request.headers.has("X-React-Router-Data-Request");
+
+  const leafMatch = matches?.[matches.length - 1];
+  if (
+    !isDataRequest &&
+    leafMatch &&
+    !leafMatch.route.Component &&
+    !leafMatch.route.ErrorBoundary
+  ) {
+    return generateResourceResponse(
+      request,
+      routes,
+      leafMatch.route.id,
+      onError
+    );
+  }
+
   let response = await generateRenderResponse(
     request,
     routes,
+    isDataRequest,
     decodeCallServer,
     decodeFormAction,
     onError,
@@ -287,37 +314,87 @@ async function processServerAction(
     };
   }
 
-  if (request.method === "POST") {
-    const clone = request.clone();
-    const formData = await request.formData();
-    if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
-      if (!decodeFormAction) {
-        throw new Error(
-          "Cannot handle form actions without a decodeFormAction function"
-        );
+  const clone = request.clone();
+  const formData = await request.formData();
+  if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
+    if (!decodeFormAction) {
+      throw new Error(
+        "Cannot handle form actions without a decodeFormAction function"
+      );
+    }
+    const action = await decodeFormAction(formData);
+    try {
+      await action();
+    } catch (error) {
+      if (isResponse(error)) {
+        return error;
       }
-      const action = await decodeFormAction(formData);
-      try {
-        await action();
-      } catch (error) {
-        if (isResponse(error)) {
-          return error;
-        }
-        onError?.(error);
-      }
-      return {
-        revalidationRequest: getRevalidationRequest(),
-      };
+      onError?.(error);
     }
     return {
-      revalidationRequest: clone,
+      revalidationRequest: getRevalidationRequest(),
     };
   }
+  return {
+    revalidationRequest: clone,
+  };
+}
+
+async function generateResourceResponse(
+  request: Request,
+  routes: ServerRouteObject[],
+  routeId: string,
+  onError: ((error: unknown) => void) | undefined
+) {
+  let result: Response;
+  try {
+    const staticHandler = createStaticHandler(routes, {
+      // TODO: Support basename
+      // basename
+    });
+
+    let response = await staticHandler.queryRoute(request, {
+      routeId,
+      // TODO: Support loadContext
+      // requestContext: loadContext,
+      unstable_respond: (ctx) => ctx,
+    });
+
+    if (isResponse(response)) {
+      result = response;
+    } else {
+      if (typeof response === "string") {
+        result = new Response(response);
+      } else {
+        result = Response.json(response);
+      }
+    }
+  } catch (error) {
+    if (isResponse(error)) {
+      result = error;
+    } else {
+      // TODO: Do we need to handle ErrorResponse?
+      onError?.(error);
+
+      result = new Response("Internal Server Error", {
+        status: 500,
+      });
+    }
+  }
+
+  const headers = new Headers(result.headers);
+  headers.set("React-Router-Resource", "true");
+  return new Response(result.body, {
+    status: result.status,
+    statusText: result.statusText,
+    headers,
+  });
 }
 
 async function generateRenderResponse(
   request: Request,
   routes: ServerRouteObject[],
+  isDataRequest: boolean,
   decodeCallServer: DecodeCallServerFunction | undefined,
   decodeFormAction: DecodeFormActionFunction | undefined,
   onError: ((error: unknown) => void) | undefined,
@@ -331,21 +408,12 @@ async function generateRenderResponse(
   // TODO: Can this be done with a pathname extension instead of a header?
   // If not, make sure we strip this at the SSR server and it can only be set
   // by us to avoid cache-poisoning attempts
-  let isDataRequest = request.headers.has("X-React-Router-Data-Request");
+
   let isSubmission = isMutationMethod(request.method);
   let routeIdsToLoad =
     !isSubmission && url.searchParams.has("_routes")
       ? url.searchParams.get("_routes")!.split(",")
       : null;
-
-  // Explode lazy functions out the routes so we can use middleware
-  // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
-  // and if we move to `lazy: {}` then we lose all the other things from the
-  // `ServerRouteObject` like `Layout` etc.
-  let matches = matchRoutes(routes, url.pathname);
-  if (matches) {
-    await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
-  }
 
   // Create the handler here with exploded routes
   const handler = createStaticHandler(routes, {
