@@ -6,7 +6,7 @@ export function loader() {
   };
 }
 
-export function Component({
+export default function ParentRoute({
   loaderData,
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;

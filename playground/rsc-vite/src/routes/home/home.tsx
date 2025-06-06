@@ -14,7 +14,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   };
 }
 
-export function Component({
+export default function HomeRoute({
   loaderData: { message, wasRedirected },
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;

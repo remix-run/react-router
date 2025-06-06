@@ -5,7 +5,7 @@ export async function loader() {
   };
 }
 
-export function Component({
+export default function ParentIndexRoute({
   loaderData,
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;

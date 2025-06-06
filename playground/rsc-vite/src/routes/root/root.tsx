@@ -27,7 +27,7 @@ export async function loader() {
   };
 }
 
-export function Component({
+export default function RootRoute({
   loaderData,
 }: {
   loaderData: Awaited<ReturnType<typeof loader>>;
