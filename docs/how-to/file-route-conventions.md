@@ -295,12 +295,11 @@ export async function serverLoader({ params }) {
 
 To create a route that will match any requests that don't match other defined routes (such as a 404 page), create a file named `$.tsx` within your routes directory:
 
-| URL                                          | Matched Route            |
-| -------------------------------------------- | ------------------------ |
-| `/`                                          | `app/routes/_index.tsx`  |
-| `/about`                                     | `app/routes/about.tsx`   |
-| `/any-invalid-path-will-match`               | `app/routes/$.tsx`       |
-
+| URL                            | Matched Route           |
+| ------------------------------ | ----------------------- |
+| `/`                            | `app/routes/_index.tsx` |
+| `/about`                       | `app/routes/about.tsx`  |
+| `/any-invalid-path-will-match` | `app/routes/$.tsx`      |
 
 ## Escaping Special Characters
 

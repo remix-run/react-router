@@ -304,12 +304,16 @@ const { "*": splat } = params;
 You can also use a splat to catch requests that don't match any route:
 
 ```ts filename=app/routes.ts lines=[6]
-import { type RouteConfig, route,  index } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  route,
+  index,
+} from "@react-router/dev/routes";
 
 export default [
   index("./home.tsx"),
   route("about", "./about.tsx"),
-  route("*", "./404.tsx")
+  route("*", "./404.tsx"),
 ] satisfies RouteConfig;
 ```
 
