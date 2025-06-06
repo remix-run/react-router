@@ -22,6 +22,18 @@ export function isInputElement(object: any): object is HTMLInputElement {
   return isHtmlElement(object) && object.tagName.toLowerCase() === "input";
 }
 
+// for a custom element to be a form submitter it must also be a form associated custom element
+// https://webkit.org/blog/13711/elementinternals-and-form-associated-custom-elements/
+// https://web.dev/articles/more-capable-form-controls
+function isFormAssociatedCustomElement(object : any) : object is HTMLElement {
+  return isHtmlCustomElement(object)
+    && (object.constructor as any).formAssociated === true;
+}
+
+function isHtmlCustomElement(object : any): object is HTMLElement {
+  return isHtmlElement(object) && object.localName.includes('-') && Boolean(customElements.get(object.localName));
+}
+
 type LimitedMouseEvent = Pick<
   MouseEvent,
   "button" | "metaKey" | "altKey" | "ctrlKey" | "shiftKey"
@@ -278,6 +290,7 @@ export function getFormSubmissionInfo(
     formData = new FormData(target);
   } else if (
     isButtonElement(target) ||
+    isFormAssociatedCustomElement(target) ||
     (isInputElement(target) &&
       (target.type === "submit" || target.type === "image"))
   ) {
