@@ -304,6 +304,7 @@ To create a route that will match any requests that don't match other defined ro
 To have this route serve as a 404 page, be sure to modify the response code with a [`loader`](https://reactrouter.com/start/framework/data-loading#server-data-loading) function:
 
 ```tsx
+import type { Route } from './+types/$';
 export const loader = async ({ request }: Route.LoaderArgs) => {
   return data({}, 404);
 };
