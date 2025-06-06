@@ -291,9 +291,9 @@ export async function serverLoader({ params }) {
 }
 ```
 
-## 404 Catch-all Route
+## Catch-all Route
 
-To create a global 404 catch-all route, create a file named `$.tsx` within your routes directory:
+To create a route that will match any requests that don't match other defined routes (such as a 404 page), create a file named `$.tsx` within your routes directory:
 
 | URL                                          | Matched Route            |
 | -------------------------------------------- | ------------------------ |
