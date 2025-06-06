@@ -15,7 +15,7 @@ export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
   };
 }
 
-export function Component() {
+export default function HomeRoute() {
   const { client, message } = useLoaderData<typeof clientLoader>();
 
   return (

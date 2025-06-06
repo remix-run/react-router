@@ -109,7 +109,7 @@ implementations.forEach((implementation) => {
               export function loader() {
                 return { message: "Loader Data" };
               }
-              export function Component({ loaderData }) {
+              export default function HomeRoute({ loaderData }) {
                 return <h2 data-home>Home: {loaderData.message}</h2>;
               }
             `,
@@ -141,7 +141,7 @@ implementations.forEach((implementation) => {
                 return { message: "Loader Data" };
               }
 
-              export function Component({ loaderData }) {
+              export default function HomeRoute({ loaderData }) {
                 return (
                   <div>
                     <h2 data-home>Home: {loaderData.message}</h2>
@@ -236,7 +236,7 @@ implementations.forEach((implementation) => {
                 return { message: "Home Page Data" };
               }
 
-              export function Component({ loaderData }) {
+              export default function HomeRoute({ loaderData }) {
                 return (
                   <div>
                     <h1 data-page="home">Home Page</h1>
@@ -251,7 +251,7 @@ implementations.forEach((implementation) => {
                 return { count: 1 };
               }
 
-              export { Component } from "./dashboard.client";
+              export { default } from "./dashboard.client";
             `,
             "src/routes/dashboard.client.tsx": js`
               "use client";
@@ -260,7 +260,7 @@ implementations.forEach((implementation) => {
               import { Link } from "react-router";
 
               // Export the entire route as a client component
-              export function Component({ loaderData }) {
+              export default function DashboardRoute({ loaderData }) {
                 const [count, setCount] = useState(loaderData.count);
 
                 return (
@@ -367,7 +367,7 @@ implementations.forEach((implementation) => {
                 return { message: "Home Page Data" };
               }
 
-              export function Component({ loaderData }) {
+              export default function HomeRoute({ loaderData }) {
                 return (
                   <div>
                     <h1 data-page="home">Home Page</h1>
@@ -477,7 +477,7 @@ implementations.forEach((implementation) => {
               }
             `,
             "src/routes/home.tsx": js`
-              export { Component } from "./home.client";
+              export { default } from "./home.client";
             `,
             "src/routes/home.client.tsx": js`
               "use client";
@@ -486,7 +486,7 @@ implementations.forEach((implementation) => {
 
               import { incrementCounter } from "./home.actions";
 
-              export function Component() {
+              export default function HomeRoute() {
                 const [count, incrementCounterAction, incrementing] = useActionState(incrementCounter, 0);
 
                 return (
@@ -547,7 +547,7 @@ implementations.forEach((implementation) => {
                 return { name, count };
               }
 
-              export function Component({ loaderData }) {
+              export default function HomeRoute({ loaderData }) {
                 const updateCounter = async (formData: FormData) => {
                   "use server";
                   name = formData.get("name");
@@ -624,7 +624,7 @@ implementations.forEach((implementation) => {
               import { redirectAction } from "./home.actions";
               import { Counter } from "./home.client";
 
-              export function Component(props) {
+              export default function HomeRoute(props) {
                 console.log({props});
                 return (
                   <div>
@@ -697,7 +697,7 @@ implementations.forEach((implementation) => {
                 throw new Error("Intentional error from loader");
               }
 
-              export function Component() {
+              export default function HomeRoute() {
                 return <h2>This shouldn't render</h2>;
               }
 

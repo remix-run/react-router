@@ -33,7 +33,6 @@ type ServerRouteObjectBase = {
   action?: ActionFunction;
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
-  Component?: React.ComponentType<any>;
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   headers?: HeadersFunction;
@@ -48,7 +47,20 @@ type ServerRouteObjectBase = {
 export type ServerRouteObject = ServerRouteObjectBase & {
   id: string;
   path?: string;
-  lazy?: () => Promise<ServerRouteObjectBase>;
+  Component?: React.ComponentType<any>;
+  lazy?: () => Promise<
+    ServerRouteObjectBase &
+      (
+        | {
+            default?: React.ComponentType<any>;
+            Component?: never;
+          }
+        | {
+            default?: never;
+            Component?: React.ComponentType<any>;
+          }
+      )
+  >;
 } & (
     | {
         index: true;
@@ -578,17 +590,8 @@ async function getServerRouteMatch(
   shouldRenderComponent: boolean,
   parentId: string | undefined
 ) {
-  if ("lazy" in match.route && match.route.lazy) {
-    Object.assign(match.route, {
-      // @ts-expect-error - FIXME: Fix the types here
-      ...((await match.route.lazy()) as any),
-      path: match.route.path,
-      index: (match.route as any).index,
-      id: match.route.id,
-    });
-    match.route.lazy = undefined;
-  }
-
+  // @ts-expect-error - FIXME: Fix the types here
+  await explodeLazyRoute(match.route);
   const Layout = (match.route as any).Layout || React.Fragment;
   const Component = (match.route as any).Component;
   const ErrorBoundary = (match.route as any).ErrorBoundary;
@@ -712,9 +715,25 @@ async function getManifestRoute(
 
 async function explodeLazyRoute(route: ServerRouteObject) {
   if ("lazy" in route && route.lazy) {
-    let impl = (await route.lazy()) as any;
-    for (let [k, v] of Object.entries(impl)) {
-      route[k as keyof ServerRouteObject] = v;
+    let {
+      default: lazyDefaultExport,
+      Component: lazyComponentExport,
+      ...lazyProperties
+    } = (await route.lazy()) as any;
+    let Component = lazyComponentExport || lazyDefaultExport;
+    if (Component && !route.Component) {
+      route.Component = Component;
+    }
+    for (let [k, v] of Object.entries(lazyProperties)) {
+      if (
+        k !== "id" &&
+        k !== "path" &&
+        k !== "index" &&
+        k !== "children" &&
+        route[k as keyof ServerRouteObject] == null
+      ) {
+        route[k as keyof ServerRouteObject] = v;
+      }
     }
     route.lazy = undefined;
   }
