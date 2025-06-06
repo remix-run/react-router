@@ -42,6 +42,6 @@ jobs:
             echo "💿 no deduplication needed"
             exit 0
           fi
-          git commit -m "chore: deduplicate `pnpm-lock.yaml`"
+          git commit -m "chore: deduplicate \`pnpm-lock.yaml\`"
           git push
           echo "💿 https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
