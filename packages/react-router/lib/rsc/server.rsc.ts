@@ -297,6 +297,9 @@ async function processServerAction(
       signal: request.signal,
     });
 
+  const isFormRequest = canDecodeWithFormData(
+    request.headers.get("Content-Type")
+  );
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
     if (!decodeCallServer) {
@@ -305,7 +308,7 @@ async function processServerAction(
       );
     }
 
-    const reply = canDecodeWithFormData(request.headers.get("Content-Type"))
+    const reply = isFormRequest
       ? await request.formData()
       : await request.text();
     const serverAction = await decodeCallServer(actionId, reply);
@@ -325,32 +328,28 @@ async function processServerAction(
       actionResult,
       revalidationRequest: getRevalidationRequest(),
     };
-  }
-
-  const clone = request.clone();
-  const formData = await request.formData();
-  if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
-    if (!decodeFormAction) {
-      throw new Error(
-        "Cannot handle form actions without a decodeFormAction function"
-      );
-    }
-    const action = await decodeFormAction(formData);
-    try {
-      await action();
-    } catch (error) {
-      if (isResponse(error)) {
-        return error;
+  } else if (isFormRequest) {
+    const formData = await request.clone().formData();
+    if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
+      if (!decodeFormAction) {
+        throw new Error(
+          "Cannot handle form actions without a decodeFormAction function"
+        );
       }
-      onError?.(error);
+      const action = await decodeFormAction(formData);
+      try {
+        await action();
+      } catch (error) {
+        if (isResponse(error)) {
+          return error;
+        }
+        onError?.(error);
+      }
+      return {
+        revalidationRequest: getRevalidationRequest(),
+      };
     }
-    return {
-      revalidationRequest: getRevalidationRequest(),
-    };
   }
-  return {
-    revalidationRequest: clone,
-  };
 }
 
 async function generateResourceResponse(
