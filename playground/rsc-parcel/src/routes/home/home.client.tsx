@@ -24,7 +24,7 @@ export default function HomeRoute() {
       <h1>{message}</h1>
       <p>Did client loader run? {client ? "Yes" : "No"}</p>
       <Counter />
-      <form action={redirectAction}>
+      <form action={redirectAction as any}>
         <button type="submit" data-submit>
           Redirect via Server Function
         </button>
