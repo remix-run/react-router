@@ -65,6 +65,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.21.8",
+    "isbot": "^5.1.11",
     "@babel/generator": "^7.21.5",
     "@babel/parser": "^7.21.8",
     "@babel/plugin-syntax-decorators": "^7.22.10",
