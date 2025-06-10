@@ -2,4 +2,4 @@
 "@react-router/cloudflare": minor
 ---
 
-Allow prefix on createWorkersKVSessionStorare
+Allow prefix on createWorkersKVSessionStorage
