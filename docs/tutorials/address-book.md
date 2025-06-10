@@ -42,7 +42,7 @@ npm install
 npm run dev
 ```
 
-You should be able to open up [http://localhost:5173][http-localhost-5173] and see an unstyled screen that looks like this:
+You should now be able to open up [http://localhost:5173][http-localhost-5173] and see your app running, though there's not much going on just yet.
 
 ## The Root Route
 
