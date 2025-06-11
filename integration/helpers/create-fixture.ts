@@ -45,7 +45,10 @@ export function json(value: JsonObject) {
   return JSON.stringify(value, null, 2);
 }
 
+const defaultTemplateName = "vite-5-template" satisfies TemplateName;
+
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
+  let templateName = init.templateName ?? defaultTemplateName;
   let projectDir = await createFixtureProject(init, mode);
   let buildPath = url.pathToFileURL(
     path.join(projectDir, "build/server/index.js")
@@ -141,7 +144,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let build: ServerBuild | null = null;
   type RequestHandler = (request: Request) => Promise<Response>;
   let handler: RequestHandler;
-  if (init.templateName?.includes("parcel")) {
+  if (templateName.includes("parcel")) {
     let serverBuild = await import(buildPath);
     handler = (serverBuild?.requestHandler ??
       serverBuild?.default?.requestHandler) as RequestHandler;
@@ -202,7 +205,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   };
 
   return {
-    templateName: init.templateName,
+    templateName,
     projectDir,
     build,
     handler,
@@ -404,9 +407,9 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = init.templateName ?? "vite-5-template";
-  let integrationTemplateDir = path.resolve(__dirname, template);
-  let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
+  let templateName = init.templateName ?? defaultTemplateName;
+  let integrationTemplateDir = path.resolve(__dirname, templateName);
+  let projectName = `rr-${templateName}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
   let port = init.port ?? (await getPort());
 
@@ -444,7 +447,7 @@ export async function createFixtureProject(
     projectDir
   );
 
-  if (template.includes("parcel")) {
+  if (templateName.includes("parcel")) {
     parcelBuild(projectDir, init.buildStdio, mode);
   } else {
     reactRouterBuild(projectDir, init.buildStdio, mode);
