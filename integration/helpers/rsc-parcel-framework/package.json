@@ -1,26 +1,31 @@
 {
-  "name": "@playground/rsc-parcel",
+  "name": "@playground/rsc-parcel-framework",
   "private": true,
-  "source": "src/entry.ssr.tsx",
-  "server": "dist/server.js",
   "targets": {
     "server": {
+      "source": "app/index.ts",
+      "distDir": "build",
       "context": "react-server",
+      "scopeHoist": false,
       "includeNodeModules": {
         "express": false
       }
     }
   },
   "scripts": {
-    "dev": "parcel --no-cache",
-    "build": "parcel build --no-cache",
-    "start": "node dist/server.js",
-    "typecheck": "tsc"
+    "clean": "rm -rf dist .parcel-cache .react-router .react-router-parcel",
+    "dev": "parcel --no-cache --no-autoinstall",
+    "build": "parcel build --no-cache --no-autoinstall",
+    "start": "node start.js",
+    "typecheck": "pnpm build && tsc"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@parcel/packager-react-static": "2.15.0",
     "@parcel/transformer-react-static": "2.15.0",
+    "@react-router/parcel-config-experimental": "workspace:*",
+    "@react-router/dev": "workspace:*",
+    "@react-router/fs-routes": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/parcel-env": "0.0.8",
@@ -33,6 +38,7 @@
     "path-browserify": "^1.0.0",
     "querystring-es3": "^0.2.1",
     "stream-http": "^3.1.0",
+    "typescript": "^5.1.6",
     "url": "^0.11.0"
   },
   "dependencies": {
@@ -42,6 +48,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "workspace:*",
-    "react-server-dom-parcel": "^19.0.0"
+    "react-server-dom-parcel": "^19.0.0",
+    "remix-utils": "^8.7.0"
   }
 }

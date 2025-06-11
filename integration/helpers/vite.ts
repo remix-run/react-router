@@ -191,6 +191,8 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-6-template"
   | "vite-rolldown-template";
 
+type FrameworkModeRscTemplateName = "rsc-parcel-framework";
+
 type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
   | "vite-plugin-cloudflare-template";
@@ -199,6 +201,7 @@ export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
 
 export type TemplateName =
   | FrameworkModeViteMajorTemplateName
+  | FrameworkModeRscTemplateName
   | FrameworkModeCloudflareTemplateName
   | RscBundlerTemplateName;
 
@@ -476,7 +479,9 @@ async function waitForServer(
 
   await waitOn({
     resources: [
-      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/favicon.ico"}`,
+      `http://${args.host ?? "localhost"}:${args.port}${
+        args.basename ?? "/favicon.ico"
+      }`,
     ],
     timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {

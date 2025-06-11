@@ -1,0 +1,32 @@
+{
+  "name": "@react-router/parcel-config-experimental",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "files": [
+    "config.json"
+  ],
+  "main": "config.json",
+  "keywords": [
+    "react-router",
+    "parcel"
+  ],
+  "dependencies": {
+    "@parcel/config-default": "^2.15.0",
+    "@react-router/parcel-resolver-experimental": "workspace:*",
+    "@react-router/parcel-resolver-typegen-experimental": "workspace:*",
+    "@react-router/parcel-transformer-experimental": "workspace:*"
+  },
+  "engines": {
+    "parcel": ">=2.15.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "*",
+    "parcel-resolver-react-router-experimental": "^1.1.2",
+    "parcel-resolver-react-router-typegen-experimental": "^1.1.2",
+    "react": "*",
+    "react-dom": "*",
+    "react-router": "*",
+    "react-server-dom-parcel": "*"
+  }
+}

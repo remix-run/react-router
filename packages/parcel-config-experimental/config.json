@@ -1,0 +1,11 @@
+{
+  "extends": "@parcel/config-default",
+  "resolvers": [
+    "@react-router/parcel-resolver-experimental",
+    "@react-router/parcel-resolver-typegen-experimental",
+    "..."
+  ],
+  "transformers": {
+    "route-module:*": ["@react-router/parcel-transformer-experimental", "..."]
+  }
+}

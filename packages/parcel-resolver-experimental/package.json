@@ -1,0 +1,45 @@
+{
+  "name": "@react-router/parcel-resolver-experimental",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/resolver.js",
+  "keywords": [
+    "react-router",
+    "parcel"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "peerDependencies": {
+    "@react-router/dev": "*",
+    "react": "*",
+    "react-dom": "*",
+    "react-router": "workspace:*",
+    "react-server-dom-parcel": "*"
+  },
+  "dependencies": {
+    "@mjackson/node-fetch-server": "^0.6.1",
+    "@parcel/plugin": "^2.15.0",
+    "express": "^5.1.0",
+    "jiti": "^2.4.2"
+  },
+  "devDependencies": {
+    "@parcel/types": "^2.15.0",
+    "@react-router/dev": "workspace:*",
+    "@types/express": "^5.0.1",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "workspace:*",
+    "react-server-dom-parcel": "^19.1.0",
+    "tsup": "^8.4.0"
+  },
+  "engines": {
+    "parcel": ">=2.15.0"
+  }
+}
