@@ -112,7 +112,12 @@ export const routeConfigEntrySchema: v.BaseSchema<
     );
   }, "Invalid type: Expected object but received a promise. Did you forget to await?"),
   v.object({
-    id: v.optional(v.string()),
+    id: v.optional(
+      v.pipe(
+        v.string(),
+        v.notValue("root", "A route cannot use the reserved id 'root'.")
+      )
+    ),
     path: v.optional(v.string()),
     index: v.optional(v.boolean()),
     caseSensitive: v.optional(v.boolean()),
