@@ -122,6 +122,7 @@ declare module "virtual:react-router/routes" {
       filePath: routesPath,
     });
 
+    // @ts-expect-error
     global.__reactRouterAppDirectory = appDirectory;
     let routes = await routesLoader
       .import(routesPath)

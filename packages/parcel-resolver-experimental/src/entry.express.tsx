@@ -1,6 +1,6 @@
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
-import reactRouterRequestHandler from "./entry.request-handler.ts";
+import reactRouterRequestHandler from "./entry.request-handler";
 
 function createExpressApp({ distDir = "dist" }: { distDir?: string } = {}) {
   const app = express();

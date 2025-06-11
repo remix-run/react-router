@@ -12,6 +12,7 @@ import {
   createFromReadableStream,
   encodeReply,
   setServerCallback,
+  // @ts-expect-error
 } from "react-server-dom-parcel/client";
 
 const callServer = unstable_createCallServer({

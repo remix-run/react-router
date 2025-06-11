@@ -5,6 +5,7 @@ import {
   decodeReply,
   loadServerAction,
   renderToReadableStream,
+  // @ts-expect-error
 } from "react-server-dom-parcel/server.edge";
 import {
   type unstable_DecodeCallServerFunction,

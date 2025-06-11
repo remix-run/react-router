@@ -3,8 +3,8 @@ import oxcTransform from "oxc-transform";
 import { Transformer } from "@parcel/plugin";
 import type { TransformerResult, MutableAsset } from "@parcel/types";
 
-import * as babel from "./babel/babel.ts";
-import { removeExports } from "./babel/remove-exports.ts";
+import * as babel from "./babel/babel";
+import { removeExports } from "./babel/remove-exports";
 
 const SERVER_ONLY_ROUTE_EXPORTS = [
   "loader",

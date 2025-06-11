@@ -12,7 +12,8 @@
     "parcel"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "typecheck": "tsc"
   },
   "peerDependencies": {
     "@react-router/dev": "*",

@@ -3,7 +3,7 @@ import {
   deadCodeElimination,
 } from "babel-dead-code-elimination";
 
-import * as babel from "./babel.ts";
+import * as babel from "./babel";
 
 export const removeExports = (
   ast: babel.ParseResult<babel.File>,
