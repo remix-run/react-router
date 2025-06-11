@@ -31,6 +31,7 @@
     "oxc-transform": "^0.64.0"
   },
   "devDependencies": {
+    "@parcel/types": "^2.15.0",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
     "@types/babel__traverse": "^7.20.7",

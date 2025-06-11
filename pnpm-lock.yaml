@@ -1095,6 +1095,9 @@ importers:
         specifier: ^0.64.0
         version: 0.64.0
     devDependencies:
+      '@parcel/types':
+        specifier: ^2.15.0
+        version: 2.15.0(@parcel/core@2.15.0)
       '@types/babel__core':
         specifier: ^7.20.5
         version: 7.20.5
