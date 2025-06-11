@@ -16,7 +16,7 @@
     "dev": "parcel --no-cache --no-autoinstall",
     "build": "parcel build --no-cache --no-autoinstall",
     "start": "node dist/server/server.js",
-    "typecheck": "pnpm build && tsc"
+    "typecheck": "react-router typegen && pnpm build && tsc"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
