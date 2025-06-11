@@ -166,6 +166,16 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       normalizedPath = normalizedPath.slice(0, -1);
     }
 
+    let pathForPrerenderCheck = stripBasename(
+      normalizedPath,
+      normalizedBasename
+    );
+
+    // handle root path
+    if (pathForPrerenderCheck === "/") {
+      pathForPrerenderCheck = "";
+    }
+
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
@@ -178,8 +188,9 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !_build.prerender.includes(normalizedPath) &&
-        !_build.prerender.includes(normalizedPath + "/")
+        pathForPrerenderCheck !== null &&
+        !_build.prerender.includes(pathForPrerenderCheck) &&
+        !_build.prerender.includes(pathForPrerenderCheck + "/")
       ) {
         if (url.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
