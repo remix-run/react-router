@@ -26,4 +26,8 @@ describe("href", () => {
       `Path '/a/:b' requires param 'b' but it was not provided`
     );
   });
+
+  it("works with periods", () => {
+    expect(href("/a/:b.zip", { b: "hello" })).toBe("/a/hello.zip");
+  })
 });
