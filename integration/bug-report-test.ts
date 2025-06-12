@@ -64,27 +64,52 @@ test.beforeAll(async () => {
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
     files: {
+      "app/routes.ts": js`
+        import { type RouteConfig } from "@react-router/dev/routes";  
+        import { flatRoutes } from "@react-router/fs-routes";
+
+        export default flatRoutes() satisfies RouteConfig;
+      `,
+
       "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+        import { href } from "react-router";
+        import type { Route } from "./+types/_index";
 
         export function loader() {
-          return "pizza";
+          return { id: "a123" };
         }
 
-        export default function Index() {
-          let data = useLoaderData();
+        export default function Home({ loaderData }: Route.ComponentProps) {
           return (
             <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
+              <ul>
+                <li>
+                  <a href={href("/text/:id.txt", { id: loaderData.id })} id="with-href">
+                    View text file for id {loaderData.id} with href()
+                  </a>
+                </li>
+                <li>
+                  <a href={${"`"}/text/\${loaderData.id}.txt${"`"}} id="with-template-string">
+                    View text file for id {loaderData.id} with template string
+                  </a>
+                </li>
+              </ul>
             </div>
-          )
+          );
         }
       `,
 
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+      "app/routes/text.$id[.txt].ts": js`
+        import type { Route } from "./+types/text.$id[.txt]";
+
+        export async function loader({ params }: Route.LoaderArgs) {
+          const text = "The text file content for id: " + params.id;
+          return new Response(text, {
+            status: 200,
+            headers: {
+              "Content-Type": "text/plain",
+            },
+          });
         }
       `,
     },
@@ -103,22 +128,22 @@ test.afterAll(() => {
 // add a good description for what you expect React Router to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
+test("link from template string is correct", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
-
-  // If you need to test interactivity use the `app`
   await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
+  await app.clickElement("a#with-template-string");
+  await page.waitForURL("**/text/**");
+  let content = await page.content();
+  await expect(content).toContain("The text file content for id:");
+});
 
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
-  // await app.poke(20);
-
-  // Go check out the other tests to see what else you can do.
+test("link from href is correct", async ({ page }) => {
+  let app = new PlaywrightFixture(appFixture, page);
+  await app.goto("/");
+  await app.clickElement("a#with-href");
+  await page.waitForURL("**/text/**");
+  let content = await page.content();
+  await expect(content).toContain("The text file content for id:");
 });
 
 ////////////////////////////////////////////////////////////////////////////////
