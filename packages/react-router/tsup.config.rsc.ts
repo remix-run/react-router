@@ -45,7 +45,4 @@ const config = (enableDevWarnings: boolean) =>
     },
   ]) as Options[];
 
-export default defineConfig([
-  ...config(false),
-  ...config(true),
-]);
+export default defineConfig([...config(false), ...config(true)]);
