@@ -8,6 +8,20 @@ body:
       value: |
         Thank you for helping to improve React Router!
 
+        - **All** bugs must have a **minimal** reproduction
+          - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
+          - The preferred method is StackBlitz via [https://reactrouter.com/new](https://reactrouter.com/new)
+          - If Stackblitz is not an option, a Github repo based on a fresh `create-react-router` app is acceptable
+          - Only in extraordinary circumstances will code snippets or maximal reproductions be accepted
+        - Issue Review
+          - Issues not meeting the above criteria will be closed and pointed to this document
+          - Non-issues (feature requests, usage questions) will also be closed with a link to this document
+          - The SC will triage issues regularly
+        - Fixing Issues
+          - The SC will mark good community issues with an `Accepting PRs` label
+          - These issues will generally be ones that are likely to have a small surface area fix
+          - However, anyone can work on any issue but there's no guarantee the PR will be accepted if the surface area is too large for expedient review by a core team member
+
         ## Option 1: Submit a PR with a failing test
 
         🏆 The most helpful reproduction is to use our _bug report integration test_ template:

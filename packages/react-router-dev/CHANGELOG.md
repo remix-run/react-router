@@ -1,5 +1,67 @@
 # `@react-router/dev`
 
+## 7.6.2
+
+### Patch Changes
+
+- Avoid additional `with-props` chunk in Framework Mode by moving route module component prop logic from the Vite plugin to `react-router` ([#13650](https://github.com/remix-run/react-router/pull/13650))
+
+- When `future.unstable_viteEnvironmentApi` is enabled and an absolute Vite `base` has been configured, ensure critical CSS is handled correctly during development ([#13598](https://github.com/remix-run/react-router/pull/13598))
+
+- Update `vite-node` ([#13673](https://github.com/remix-run/react-router/pull/13673))
+
+- Fix typegen for non-{.js,.jsx,.ts,.tsx} routes like .mdx ([#12453](https://github.com/remix-run/react-router/pull/12453))
+
+- Fix href types for optional dynamic params ([#13725](https://github.com/remix-run/react-router/pull/13725))
+
+  7.6.1 introduced fixes for `href` when using optional static segments,
+  but those fixes caused regressions with how optional dynamic params worked in 7.6.0:
+
+  ```ts
+  // 7.6.0
+  href("/users/:id?"); // ✅
+  href("/users/:id?", { id: 1 }); // ✅
+
+  // 7.6.1
+  href("/users/:id?"); // ❌
+  href("/users/:id?", { id: 1 }); // ❌
+  ```
+
+  Now, optional static segments are expanded into different paths for `href`, but optional dynamic params are not.
+  This way `href` can unambiguously refer to an exact URL path, all while keeping the number of path options to a minimum.
+
+  ```ts
+  // 7.6.2
+
+  // path: /users/:id?/edit?
+  href("
+  //    ^ suggestions when cursor is here:
+  //
+  //    /users/:id?
+  //    /users/:id?/edit
+  ```
+
+  Additionally, you can pass `params` from component props without needing to narrow them manually:
+
+  ```ts
+  declare const params: { id?: number };
+
+  // 7.6.0
+  href("/users/:id?", params);
+
+  // 7.6.1
+  href("/users/:id?", params); // ❌
+  "id" in params ? href("/users/:id", params) : href("/users"); // works... but is annoying
+
+  // 7.6.2
+  href("/users/:id?", params); // restores behavior of 7.6.0
+  ```
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+  - `@react-router/node@7.6.2`
+  - `@react-router/serve@7.6.2`
+
 ## 7.6.1
 
 ### Patch Changes

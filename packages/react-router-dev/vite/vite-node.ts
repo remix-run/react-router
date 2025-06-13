@@ -1,6 +1,7 @@
-import { ViteNodeServer } from "vite-node/server";
-import { ViteNodeRunner } from "vite-node/client";
-import { installSourcemapsSupport } from "vite-node/source-map";
+// We can only import types from vite-node at the top level since we're in a CJS
+// context but want to use vite-node's ESM build since Vite 7+ is ESM only
+import type { ViteNodeServer as ViteNodeServerType } from "vite-node/server";
+import type { ViteNodeRunner as ViteNodeRunnerType } from "vite-node/client";
 import type * as Vite from "vite";
 
 import { preloadVite, getVite } from "./vite";
@@ -8,8 +9,8 @@ import { ssrExternals } from "./ssr-externals";
 
 export type Context = {
   devServer: Vite.ViteDevServer;
-  server: ViteNodeServer;
-  runner: ViteNodeRunner;
+  server: ViteNodeServerType;
+  runner: ViteNodeRunnerType;
 };
 
 export async function createContext({
@@ -23,6 +24,14 @@ export async function createContext({
 }): Promise<Context> {
   await preloadVite();
   const vite = getVite();
+
+  // Ensure we're using the ESM build of vite-node since Vite 7+ is ESM only
+  const [{ ViteNodeServer }, { ViteNodeRunner }, { installSourcemapsSupport }] =
+    await Promise.all([
+      import("vite-node/server"),
+      import("vite-node/client"),
+      import("vite-node/source-map"),
+    ]);
 
   const devServer = await vite.createServer({
     root,
