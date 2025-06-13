@@ -902,8 +902,8 @@ importers:
         specifier: ^0.41.0
         version: 0.41.0(typescript@5.4.5)
       vite-node:
-        specifier: ^3.1.4
-        version: 3.1.4(@types/node@20.11.30)(jiti@1.21.0)(lightningcss@1.29.3)(tsx@4.19.3)(yaml@2.6.0)
+        specifier: ^3.2.2
+        version: 3.2.2(@types/node@20.11.30)(jiti@1.21.0)(lightningcss@1.29.3)(tsx@4.19.3)(yaml@2.6.0)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -5129,6 +5129,15 @@ packages:
       supports-color:
         optional: true
 
+  debug@4.4.1:
+    resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
   decamelize-keys@1.1.0:
     resolution: {integrity: sha512-ocLWuYzRPoS9bfiSdDd3cxvrzovVMZnRDVEzAs+hWIVXGDbHxWMECij2OBuyB/An0FFW/nLuq6Kv1i/YC5Qfzg==}
     engines: {node: '>=0.10.0'}
@@ -8813,8 +8822,8 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
-  vite-node@3.1.4:
-    resolution: {integrity: sha512-6enNwYnpyDo4hEgytbmc6mYWHXDHYEn0D1/rw4Q+tnHUGtKTJsn8T1YkX6Q18wI5LCrS8CTYlBaiCqxOy2kvUA==}
+  vite-node@3.2.2:
+    resolution: {integrity: sha512-Xj/jovjZvDXOq2FgLXu8NsY4uHUMWtzVmMC2LkCu9HWdr9Qu1Is5sanX3Z4jOFKdohfaWDnEJWp9pRP0vVpAcA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
 
@@ -13084,6 +13093,10 @@ snapshots:
       ms: 2.1.3
 
   debug@4.4.0:
+    dependencies:
+      ms: 2.1.3
+
+  debug@4.4.1:
     dependencies:
       ms: 2.1.3
 
@@ -17919,10 +17932,10 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@3.1.4(@types/node@20.11.30)(jiti@1.21.0)(lightningcss@1.29.3)(tsx@4.19.3)(yaml@2.6.0):
+  vite-node@3.2.2(@types/node@20.11.30)(jiti@1.21.0)(lightningcss@1.29.3)(tsx@4.19.3)(yaml@2.6.0):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.0
+      debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 2.0.3
       vite: 6.1.1(@types/node@20.11.30)(jiti@1.21.0)(lightningcss@1.29.3)(tsx@4.19.3)(yaml@2.6.0)
