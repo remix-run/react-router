@@ -25,7 +25,7 @@ When the client scripts in React Router are loaded, React Router takes control o
 - **Focus management:** What element receives focus when the route changes? This is important for keyboard users and can be helpful for screen-reader users.
 - **Live-region announcements:** Screen-reader users also benefit from announcements when a route has changed. You may want to also notify them during certain transition states depending on the nature of the change and how long loading is expected to take.
 
-In 2019, [Marcy Sutton led and published findings from user research][marcy-sutton-led-and-published-findings-from-user-research] to help developers build accessible client-side routing experiences. We encourage you to read the article in detail. We are actively investigating and testing internal solutions as well as new APIs to simplify this process.
+In 2019, [Marcy Sutton led and published findings from user research][marcy-sutton-led-and-published-findings-from-user-research] to help developers build accessible client-side routing experiences.
 
 [link]: ../api/components/Link
 [navlink]: ../api/components/NavLink
