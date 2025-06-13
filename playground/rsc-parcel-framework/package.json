@@ -19,9 +19,6 @@
     "typecheck": "react-router typegen && pnpm build && tsc"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@parcel/packager-react-static": "2.15.0",
-    "@parcel/transformer-react-static": "2.15.0",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@types/express": "^5.0.0",
@@ -29,15 +26,8 @@
     "@types/parcel-env": "0.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react": "^19.0.8",
-    "browserify-zlib": "^0.2.0",
-    "buffer": "^5.5.0||^6.0.0",
-    "events": "^3.1.0",
     "parcel": "2.15.0",
-    "parcel-config-react-router-experimental": "1.0.20",
-    "path-browserify": "^1.0.0",
-    "querystring-es3": "^0.2.1",
-    "stream-http": "^3.1.0",
-    "url": "^0.11.0"
+    "parcel-config-react-router-experimental": "1.0.20"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",

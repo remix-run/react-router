@@ -494,15 +494,6 @@ importers:
         specifier: ^8.7.0
         version: 8.7.0(react-router@packages+react-router)(react@19.1.0)(zod@3.24.2)
     devDependencies:
-      '@biomejs/biome':
-        specifier: ^1.9.4
-        version: 1.9.4
-      '@parcel/packager-react-static':
-        specifier: 2.15.0
-        version: 2.15.0(@parcel/core@2.15.0)
-      '@parcel/transformer-react-static':
-        specifier: 2.15.0
-        version: 2.15.0(@parcel/core@2.15.0)
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
@@ -524,36 +515,15 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
-      browserify-zlib:
-        specifier: ^0.2.0
-        version: 0.2.0
-      buffer:
-        specifier: ^5.5.0||^6.0.0
-        version: 5.7.1
-      events:
-        specifier: ^3.1.0
-        version: 3.3.0
       parcel:
         specifier: 2.15.0
         version: 2.15.0
       parcel-config-react-router-experimental:
         specifier: 1.0.20
         version: 1.0.20(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
-      path-browserify:
-        specifier: ^1.0.0
-        version: 1.0.1
-      querystring-es3:
-        specifier: ^0.2.1
-        version: 0.2.1
-      stream-http:
-        specifier: ^3.1.0
-        version: 3.2.0
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
-      url:
-        specifier: ^0.11.0
-        version: 0.11.4
 
   integration/helpers/rsc-vite:
     dependencies:
@@ -1847,15 +1817,6 @@ importers:
         specifier: ^8.7.0
         version: 8.7.0(react-router@packages+react-router)(react@19.1.0)(zod@3.24.2)
     devDependencies:
-      '@biomejs/biome':
-        specifier: ^1.9.4
-        version: 1.9.4
-      '@parcel/packager-react-static':
-        specifier: 2.15.0
-        version: 2.15.0(@parcel/core@2.15.0)
-      '@parcel/transformer-react-static':
-        specifier: 2.15.0
-        version: 2.15.0(@parcel/core@2.15.0)
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../packages/react-router-dev
@@ -1877,33 +1838,12 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
-      browserify-zlib:
-        specifier: ^0.2.0
-        version: 0.2.0
-      buffer:
-        specifier: ^5.5.0||^6.0.0
-        version: 5.7.1
-      events:
-        specifier: ^3.1.0
-        version: 3.3.0
       parcel:
         specifier: 2.15.0
         version: 2.15.0
       parcel-config-react-router-experimental:
         specifier: 1.0.20
         version: 1.0.20(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
-      path-browserify:
-        specifier: ^1.0.0
-        version: 1.0.1
-      querystring-es3:
-        specifier: ^0.2.1
-        version: 0.2.1
-      stream-http:
-        specifier: ^3.1.0
-        version: 3.2.0
-      url:
-        specifier: ^0.11.0
-        version: 0.11.4
 
   playground/rsc-vite:
     dependencies:
