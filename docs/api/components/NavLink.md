@@ -20,7 +20,7 @@ import { NavLink } from "react-router";
 <NavLink to="/message" />;
 ```
 
-States are available through the className, style, and children render props. See [NavLinkRenderProps](../Other/NavLinkRenderProps).
+States are available through the className, style, and children render props. See [NavLinkRenderProps](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps).
 
 ```tsx
 <NavLink
@@ -233,7 +233,7 @@ Note that `pending` is only available with Framework and Data modes.
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [Path](../Other/Path):
+Can be a string or a partial [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path):
 
 ```tsx
 <Link to="/some/path" />
