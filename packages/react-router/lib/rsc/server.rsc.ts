@@ -87,6 +87,10 @@ export type RenderedRoute = {
   parentId?: string;
   path?: string;
   shouldRevalidate?: ShouldRevalidateFunction;
+  // TODO: Add "hasComponent" or similar to help with the `shouldAllowOptOut`
+  // logic in the browser RSC single fetch implementation. The issue is that
+  // if there is no element, we have to go to the server. This helps with "route
+  // has no component therefore can opt out".
 };
 
 export type ServerRouteMatch = RenderedRoute & {
@@ -695,7 +699,8 @@ async function getServerRouteMatch(
             ),
           })
         )
-      : undefined;
+      : // TODO: Render outet instead?
+        undefined;
   let error: unknown = undefined;
 
   // FIXME: Is this logic right?  We don't want to take any error - only the

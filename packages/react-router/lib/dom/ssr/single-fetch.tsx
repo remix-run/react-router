@@ -7,7 +7,6 @@ import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyResult,
-  unstable_RouterContextProvider,
 } from "../../router/utils";
 import {
   ErrorResponseImpl,

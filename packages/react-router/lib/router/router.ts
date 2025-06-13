@@ -3536,14 +3536,14 @@ export function createStaticHandler(
 
     let respondOrStreamStaticContext = (
       ctx: StaticHandlerContext
-    ): MaybePromise<Response> | undefined => {
+    ): MaybePromise<Response> | StaticHandlerContext => {
       return stream
         ? stream(requestContext as unstable_RouterContextProvider, () =>
             Promise.resolve(ctx)
           )
         : respond
         ? respond(ctx)
-        : undefined;
+        : ctx;
     };
 
     // SSR supports HEAD requests while SPA doesn't
@@ -3564,7 +3564,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext) || staticContext;
+      return respondOrStreamStaticContext(staticContext);
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3582,7 +3582,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext) || staticContext;
+      return respondOrStreamStaticContext(staticContext);
     }
 
     if (
@@ -3739,9 +3739,7 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id
               );
-              return (
-                respondOrStreamStaticContext(staticContext) || staticContext
-              );
+              return respondOrStreamStaticContext(staticContext);
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3771,9 +3769,7 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return (
-                respondOrStreamStaticContext(staticContext) || staticContext
-              );
+              return respondOrStreamStaticContext(staticContext);
             }
           }
         );
@@ -6570,6 +6566,9 @@ function isValidMethod(method: string): method is FormMethod {
 }
 
 export function isMutationMethod(method: string): method is MutationFormMethod {
+  // TODO: This should probably check against GET and HEAD, and consider any other
+  // method, including non-standard methods as mutations. We should also consider
+  // allowing "non-standard" method through, right now we 405 on anything non-standard.
   return validMutationMethods.has(method.toUpperCase() as MutationFormMethod);
 }
 
