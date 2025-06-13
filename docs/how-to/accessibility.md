@@ -6,7 +6,7 @@ title: Accessibility
 
 Accessibility in a React Router app looks a lot like accessibility on the web in general. Using proper semantic markup and following the [Web Content Accessibility Guidelines (WCAG)][wcag] will get you most of the way there.
 
-React Router makes certain accessibility practices the default where possible and provides APIs to help where it's not. We are actively exploring and developing new APIs to make this even easier in the future.
+React Router makes certain accessibility practices the default where possible and provides APIs to help where it's not.
 
 ## Links
 
