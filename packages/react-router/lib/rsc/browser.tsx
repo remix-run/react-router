@@ -2,7 +2,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { RouterProvider } from "../components";
-import { RSCRouterContext, type DataRouteMatch, type DataRouteObject } from "../context";
+import {
+  RSCRouterContext,
+  type DataRouteMatch,
+  type DataRouteObject,
+} from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
@@ -255,23 +259,27 @@ export function getRSCSingleFetchDataStrategy(
   basename: string | undefined,
   decode: DecodeServerResponseFunction
 ): DataStrategyFunction {
+  // TODO: Clean this up with a shared type
+  type RSCDataRouteMatch = DataRouteMatch & {
+    route: DataRouteObject & {
+      hasLoader: boolean;
+      hasClientLoader: boolean;
+      hasComponent: boolean;
+      hasAction: boolean;
+      hasClientAction: boolean;
+      hasShouldRevalidate: boolean;
+    };
+  };
+
   // create map
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
-    (match: DataRouteMatch) => {
-      // TODO: Clean this up with a shared type
-      let M = match as DataRouteMatch & {
-        route: DataRouteObject & {
-          hasLoader: boolean;
-          hasClientLoader: boolean;
-          hasAction: boolean;
-          hasClientAction: boolean;
-          hasShouldRevalidate: boolean;
-        };
-      };
+    (match) => {
+      let M = match as RSCDataRouteMatch;
       return {
         hasLoader: M.route.hasLoader,
         hasClientLoader: M.route.hasClientLoader,
+        hasComponent: M.route.hasComponent,
         hasAction: M.route.hasAction,
         hasClientAction: M.route.hasClientAction,
         hasShouldRevalidate: M.route.hasShouldRevalidate,
@@ -281,12 +289,13 @@ export function getRSCSingleFetchDataStrategy(
     getFetchAndDecodeViaRSC(decode),
     ssr,
     basename,
-    // If we don't have an element, we need to hit the server loader flow
-    // regardless of whether the client loader calls `serverLoader` or not,
-    // otherwise we'll have nothing to render.
-    // TODO: Do we need to account for API routes? Do we need a
-    // `match.hasComponent` flag?
-    (match) => match.route.element != null
+    // If the route has a component but we don't have an element, we need to hit
+    // the server loader flow regardless of whether the client loader calls
+    // `serverLoader` or not, otherwise we'll have nothing to render.
+    (match) => {
+      let M = match as RSCDataRouteMatch;
+      return M.route.hasComponent && !M.route.element;
+    }
   );
   return async (args) =>
     args.unstable_runClientMiddleware(async () => {
@@ -557,12 +566,10 @@ function createRouteFromServerManifest(
   let isHydrationRequest =
     match.clientLoader?.hydrate === true ||
     !match.hasLoader ||
-    // If we don't have an element, we need to hit the server loader flow
-    // regardless of whether the client loader calls `serverLoader` or not,
-    // otherwise we'll have nothing to render.
-    // TODO: Do we need to account for API routes? Do we need a
-    // `match.hasComponent` flag?
-    !match.element;
+    // If the route has a component but we don't have an element, we need to hit
+    // the server loader flow regardless of whether the client loader calls
+    // `serverLoader` or not, otherwise we'll have nothing to render.
+    (match.hasComponent && !match.element);
 
   let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,
