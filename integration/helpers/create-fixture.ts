@@ -336,7 +336,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       });
     }
 
-    if (fixture.templateName?.includes("parcel")) {
+    if (fixture.templateName.includes("parcel")) {
       return new Promise(async (accept) => {
         let port = await getPort();
         let app = express();
