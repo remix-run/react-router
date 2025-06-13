@@ -537,8 +537,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       parcel-config-react-router-experimental:
-        specifier: 1.0.19
-        version: 1.0.19(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.20
+        version: 1.0.20(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       path-browserify:
         specifier: ^1.0.0
         version: 1.0.1
@@ -1890,8 +1890,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       parcel-config-react-router-experimental:
-        specifier: 1.0.19
-        version: 1.0.19(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.20
+        version: 1.0.20(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       path-browserify:
         specifier: ^1.0.0
         version: 1.0.1
@@ -8693,12 +8693,12 @@ packages:
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
 
-  parcel-config-react-router-experimental@1.0.19:
-    resolution: {integrity: sha512-QKRyvRSAN0yXADsMCMHT4R6hWWM5k26qjqt+bTYz+UGKuE1YBvRMx8gARciWx6f0ujMx62CmSy3iWjHkTUDV/Q==}
+  parcel-config-react-router-experimental@1.0.20:
+    resolution: {integrity: sha512-/iQsfPrR9TXX9lWkIv5768jfnPXSW5MCyGWiIimiP+vNf8C1PRtKohI3MFcJeN8lMzpRpNyulmimMD8kIRUPEQ==}
     engines: {parcel: '>=2.15.0'}
 
-  parcel-resolver-react-router-experimental@1.1.3:
-    resolution: {integrity: sha512-YPfARug3g7B7BNyEqMymBY2OZN734JAZdj2EN9fpublySx4kra48PllAQVBVJPqt/V4g7MdECS6jp4636LCXwA==}
+  parcel-resolver-react-router-experimental@1.1.4:
+    resolution: {integrity: sha512-vkYOjNgLXMPYmcPhu3+0qYbaxwLIJR7EWKmx88M9FmvBWNuRGmaqBF3KH5ATW0hXoaREv6daGFgVUcrq4OT7+Q==}
     engines: {parcel: '>=2.15.0'}
     peerDependencies:
       '@react-router/dev': '*'
@@ -18797,10 +18797,10 @@ snapshots:
 
   pako@1.0.11: {}
 
-  parcel-config-react-router-experimental@1.0.19(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
+  parcel-config-react-router-experimental@1.0.20(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
     dependencies:
       '@parcel/config-default': 2.15.0(@parcel/core@2.15.0)
-      parcel-resolver-react-router-experimental: 1.1.3(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+      parcel-resolver-react-router-experimental: 1.1.4(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       parcel-resolver-react-router-typegen-experimental: 1.1.2(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)
       parcel-transformer-react-router-experimental: 1.1.2(@parcel/core@2.15.0)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react@19.1.0)
     transitivePeerDependencies:
@@ -18814,7 +18814,7 @@ snapshots:
       - react-server-dom-parcel
       - supports-color
 
-  parcel-resolver-react-router-experimental@1.1.3(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
+  parcel-resolver-react-router-experimental@1.1.4(@parcel/core@2.15.0)(@react-router/dev@packages+react-router-dev)(react-dom@19.1.0(react@19.1.0))(react-router@packages+react-router)(react-server-dom-parcel@19.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
     dependencies:
       '@mjackson/node-fetch-server': 0.6.1
       '@parcel/plugin': 2.15.0(@parcel/core@2.15.0)
