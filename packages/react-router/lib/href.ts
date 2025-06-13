@@ -44,7 +44,7 @@ export function href<Path extends keyof Args>(
     // treat trailing splat the same way as compilePath, and force it to be as if it were `/*`.
     // `react-router typegen` will not generate the params for a malformed splat, causing a type error, but we can still do the correct thing here.
     result = result.slice(0, result.endsWith("/*") ? -2 : -1);
-    if (params && params["*"]) {
+    if (params && params["*"] != null) {
       result += "/" + params["*"];
     }
   }
