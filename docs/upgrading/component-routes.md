@@ -1,5 +1,6 @@
 ---
 title: Framework Adoption from Component Routes
+order: 4
 ---
 
 # Framework Adoption from Component Routes
