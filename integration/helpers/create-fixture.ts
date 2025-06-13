@@ -1,8 +1,9 @@
+import { existsSync, readFileSync } from "node:fs";
+import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 import type { Writable } from "node:stream";
 import { Readable } from "node:stream";
-import path from "node:path";
 import url from "node:url";
-import fse from "fs-extra";
 import express from "express";
 import getPort from "get-port";
 import stripIndent from "strip-indent";
@@ -55,7 +56,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   ).href;
 
   let getBrowserAsset = async (asset: string) => {
-    return fse.readFile(
+    return readFile(
       path.join(projectDir, "public", asset.replace(/^\//, "")),
       "utf8"
     );
@@ -68,7 +69,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       isSpaMode: init.spaMode,
       prerender: init.prerender,
       requestDocument() {
-        let html = fse.readFileSync(
+        let html = readFileSync(
           path.join(projectDir, "build/client/index.html")
         );
         return new Response(html, {
@@ -106,9 +107,9 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
           "client",
           "__spa-fallback.html"
         );
-        let html = fse.existsSync(mainPath)
-          ? fse.readFileSync(mainPath)
-          : fse.readFileSync(fallbackPath);
+        let html = existsSync(mainPath)
+          ? readFileSync(mainPath)
+          : readFileSync(fallbackPath);
         return new Response(html, {
           headers: {
             "Content-Type": "text/html",
@@ -116,15 +117,11 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
         });
       },
       requestResource(href: string) {
-        let data = fse.readFileSync(
-          path.join(projectDir, "build/client", href)
-        );
+        let data = readFileSync(path.join(projectDir, "build/client", href));
         return new Response(data);
       },
       async requestSingleFetchData(href: string) {
-        let data = fse.readFileSync(
-          path.join(projectDir, "build/client", href)
-        );
+        let data = readFileSync(path.join(projectDir, "build/client", href));
         let stream = createReadableStreamFromReadable(Readable.from(data));
         return {
           status: 200,
@@ -300,7 +297,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         let port = await getPort();
         let app = express();
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
-        app.get("*", (_, res, next) =>
+        app.get("*", (_, res) =>
           res.sendFile(path.join(fixture.projectDir, "build/client/index.html"))
         );
         let server = app.listen(port);
@@ -320,11 +317,11 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           let file = req.path.endsWith(".data")
             ? req.path
             : req.path + "/index.html";
-          if (file.endsWith(".html") && !fse.existsSync(path.join(dir, file))) {
+          if (file.endsWith(".html") && !existsSync(path.join(dir, file))) {
             file = "__spa-fallback.html";
           }
           let filePath = path.join(dir, file);
-          if (fse.existsSync(filePath)) {
+          if (existsSync(filePath)) {
             res.sendFile(filePath, next);
           } else {
             // Avoid a built-in console error from `sendFile` on 404's
@@ -413,8 +410,8 @@ export async function createFixtureProject(
   let projectDir = path.join(TMP_DIR, projectName);
   let port = init.port ?? (await getPort());
 
-  await fse.ensureDir(projectDir);
-  await fse.copy(integrationTemplateDir, projectDir);
+  await mkdir(projectDir, { recursive: true });
+  await cp(integrationTemplateDir, projectDir, { recursive: true });
 
   let hasViteConfig = Object.keys(init.files ?? {}).some((filename) =>
     filename.startsWith("vite.config.")
@@ -552,10 +549,10 @@ async function writeTestFiles(
   await Promise.all(
     Object.keys(files ?? {}).map(async (filename) => {
       let filePath = path.join(dir, filename);
-      await fse.ensureDir(path.dirname(filePath));
+      await mkdir(path.dirname(filePath), { recursive: true });
       let file = files![filename];
 
-      await fse.writeFile(filePath, stripIndent(file));
+      await writeFile(filePath, stripIndent(file));
     })
   );
 }

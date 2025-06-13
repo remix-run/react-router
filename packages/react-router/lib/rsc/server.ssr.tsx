@@ -1,5 +1,5 @@
 import * as React from "react";
-import { type DataRouteObject } from "../context";
+import { RSCRouterContext, type DataRouteObject } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
@@ -22,30 +22,18 @@ export async function routeRSCServerRequest({
   hydrate?: boolean;
 }) {
   const url = new URL(request.url);
-  let serverRequest = request;
   const isDataRequest = isReactServerRequest(url);
   const respondWithRSCPayload =
     isDataRequest ||
     isManifestRequest(url) ||
     request.headers.has("rsc-action-id");
 
-  if (isDataRequest) {
-    const serverURL = new URL(request.url);
-    serverURL.pathname = serverURL.pathname.replace(/(_root)?\.rsc$/, "");
-    let headers = new Headers(request.headers);
-    headers.set("X-React-Router-Data-Request", "true");
-    serverRequest = new Request(serverURL, {
-      body: request.body,
-      duplex: request.body ? "half" : undefined,
-      headers,
-      method: request.method,
-      signal: request.signal,
-    } as RequestInit & { duplex?: "half" });
-  }
+  const serverResponse = await callServer(request);
 
-  const serverResponse = await callServer(serverRequest);
-
-  if (respondWithRSCPayload) {
+  if (
+    respondWithRSCPayload ||
+    serverResponse.headers.get("React-Router-Resource") === "true"
+  ) {
     return serverResponse;
   }
 
@@ -192,14 +180,16 @@ export function RSCStaticRouter({
   };
 
   return (
-    <FrameworkContext.Provider value={frameworkContext}>
-      <StaticRouterProvider
-        context={context}
-        router={router}
-        hydrate={false}
-        nonce={payload.nonce}
-      />
-    </FrameworkContext.Provider>
+    <RSCRouterContext.Provider value={true}>
+      <FrameworkContext.Provider value={frameworkContext}>
+        <StaticRouterProvider
+          context={context}
+          router={router}
+          hydrate={false}
+          nonce={payload.nonce}
+        />
+      </FrameworkContext.Provider>
+    </RSCRouterContext.Provider>
   );
 }
 

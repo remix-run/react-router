@@ -13,6 +13,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.6.2](#v762)
+    - [Patch Changes](#patch-changes)
   - [v7.6.1](#v761)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -336,6 +338,78 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v7.X.Y...v7.X.Y`](https://github.com/remix-run/react-router/compare/react-router@7.X.Y...react-router@7.X.Y)
 -->
+
+## v7.6.2
+
+Date: 2025-06-03
+
+### Patch Changes
+
+- `create-react-router` - Update `tar-fs` ([#13675](https://github.com/remix-run/react-router/pull/13675))
+- `react-router` - (INTERNAL) Slight refactor of internal `headers()` function processing for use with RSC ([#13639](https://github.com/remix-run/react-router/pull/13639))
+- `react-router` `@react-router/dev` - Avoid additional `with-props` chunk in Framework Mode by moving route module component prop logic from the Vite plugin to `react-router` ([#13650](https://github.com/remix-run/react-router/pull/13650))
+- `@react-router/dev` - When `future.unstable_viteEnvironmentApi` is enabled and an absolute Vite `base` has been configured, ensure critical CSS is handled correctly during development ([#13598](https://github.com/remix-run/react-router/pull/13598))
+- `@react-router/dev` - Update `vite-node` ([#13673](https://github.com/remix-run/react-router/pull/13673))
+- `@react-router/dev` - Fix typegen for non-{.js,.jsx,.ts,.tsx} routes like .mdx ([#12453](https://github.com/remix-run/react-router/pull/12453))
+- `@react-router/dev` - Fix href types for optional dynamic params ([#13725](https://github.com/remix-run/react-router/pull/13725))
+
+  7.6.1 introduced fixes for `href` when using optional static segments,
+  but those fixes caused regressions with how optional dynamic params worked in 7.6.0:
+
+  ```ts
+  // 7.6.0
+  href("/users/:id?"); // ✅
+  href("/users/:id?", { id: 1 }); // ✅
+
+  // 7.6.1
+  href("/users/:id?"); // ❌
+  href("/users/:id?", { id: 1 }); // ❌
+  ```
+
+  Now, optional static segments are expanded into different paths for `href`, but optional dynamic params are not.
+  This way `href` can unambiguously refer to an exact URL path, all while keeping the number of path options to a minimum.
+
+  ```ts
+  // 7.6.2
+
+  // path: /users/:id?/edit?
+  href("
+  //    ^ suggestions when cursor is here:
+  //
+  //    /users/:id?
+  //    /users/:id?/edit
+  ```
+
+  Additionally, you can pass `params` from component props without needing to narrow them manually:
+
+  ```ts
+  declare const params: { id?: number };
+
+  // 7.6.0
+  href("/users/:id?", params);
+
+  // 7.6.1
+  href("/users/:id?", params); // ❌
+  "id" in params ? href("/users/:id", params) : href("/users"); // works... but is annoying
+
+  // 7.6.2
+  href("/users/:id?", params); // restores behavior of 7.6.0
+  ```
+
+### Changes by Package
+
+- [`create-react-router`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/create-react-router/CHANGELOG.md#762)
+- [`react-router`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router/CHANGELOG.md#762)
+- [`@react-router/architect`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-architect/CHANGELOG.md#762)
+- [`@react-router/cloudflare`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-cloudflare/CHANGELOG.md#762)
+- [`@react-router/dev`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-dev/CHANGELOG.md#762)
+- [`@react-router/express`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-express/CHANGELOG.md#762)
+- [`@react-router/fs-routes`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-fs-routes/CHANGELOG.md#762)
+- [`@react-router/node`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-node/CHANGELOG.md#762)
+- [`@react-router/remix-config-routes-adapter`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-remix-config-routes-adapter/CHANGELOG.md#762)
+- [`@react-router/serve`](https://github.com/remix-run/react-router/blob/react-router%407.6.2/packages/react-router-serve/CHANGELOG.md#762)
+
+**Full Changelog**: [`v7.6.1...v7.6.2`](https://github.com/remix-run/react-router/compare/react-router@7.6.1...react-router@7.6.2)
 
 ## v7.6.1
 

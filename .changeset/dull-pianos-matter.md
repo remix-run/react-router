@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Update `vite-node`
+Add Vite 7 support

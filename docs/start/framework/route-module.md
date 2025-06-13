@@ -309,7 +309,7 @@ export default function Root() {
 
 ## `meta`
 
-Route meta defines meta tags to be rendered in the `<head>` of the document.
+Route meta defines meta tags to be rendered in the `<Meta />` component, usually placed in the `<head>`.
 
 <docs-warning>
 
@@ -335,7 +335,7 @@ export default function MyRoute() {
 
 </docs-warning>
 
-```tsx
+```tsx filename=app/product.tsx
 export function meta() {
   return [
     { title: "Very cool app" },
@@ -351,9 +351,7 @@ export function meta() {
 }
 ```
 
-All routes' meta will be aggregated and rendered through the `<Meta />` component, usually rendered in your app root:
-
-```tsx
+```tsx filename=app/root.tsx
 import { Meta } from "react-router";
 
 export default function Root() {
@@ -368,6 +366,8 @@ export default function Root() {
   );
 }
 ```
+
+The meta of the last matching route is used, allowing you to override parent routes' meta. It's important to note that the entire meta descriptor array is replaced, not merged. This gives you the flexibility to build your own meta composition logic across pages at different levels.
 
 **See also**
 

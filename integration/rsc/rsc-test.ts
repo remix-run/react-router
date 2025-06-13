@@ -460,6 +460,92 @@ implementations.forEach((implementation) => {
         // Ensure this is using RSC
         validateRSCHtml(await page.content());
       });
+
+      test("Supports resource routes as URL and fetchers", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes.ts": js`
+              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                    {
+                      id: "resource",
+                      path: "resource",
+                      lazy: () => import("./routes/resource"),
+                    },
+                  ],
+                },
+              ] satisfies ServerRouteObject[];
+            `,
+            "src/routes/resource.tsx": js`
+              export function loader() {
+                return {
+                  message: "Hello from resource route!",
+                };
+              }
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              import { useFetcher } from "react-router";
+
+              export function ResourceFetcher() {
+                const fetcher = useFetcher();
+
+                const loadResource = () => {
+                  fetcher.load("/resource");
+                };
+
+                return (
+                  <div>
+                    <button type="button" onClick={loadResource}>
+                      Load Resource
+                    </button>
+                    {!!fetcher.data && (
+                      <pre data-testid="resource-data">
+                        {JSON.stringify(fetcher.data)}
+                      </pre>
+                    )}
+                  </div>
+                );
+              }
+            `,
+            "src/routes/home.tsx": js`
+              import { ResourceFetcher } from "./home.client";
+              
+              export default function HomeRoute() {
+                return <ResourceFetcher />;
+              }
+            `,
+          },
+        });
+        const response = await page.goto(`http://localhost:${port}/resource`);
+        expect(response?.status()).toBe(200);
+        expect(await response?.json()).toEqual({
+          message: "Hello from resource route!",
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+        await page.click("button");
+
+        await page.waitForSelector("[data-testid=resource-data]");
+        expect(
+          await page.locator("[data-testid=resource-data]").textContent()
+        ).toBe(JSON.stringify({ message: "Hello from resource route!" }));
+      });
     });
 
     test.describe("Server Actions", () => {

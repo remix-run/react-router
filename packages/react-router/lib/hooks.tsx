@@ -15,6 +15,7 @@ import {
   NavigationContext,
   RouteContext,
   RouteErrorContext,
+  useIsRSCRouterContext,
 } from "./context";
 import type { Location, Path, To } from "./router/history";
 import {
@@ -444,6 +445,8 @@ export function useRoutesImpl(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
+  let isRSCRouterContext = useIsRSCRouterContext();
+
   let { navigator } = React.useContext(NavigationContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
@@ -576,7 +579,8 @@ export function useRoutesImpl(
       ),
     parentMatches,
     dataRouterState,
-    future
+    future,
+    isRSCRouterContext
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -766,7 +770,8 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  future: DataRouter["future"] | null = null
+  future: DataRouter["future"] | null = null,
+  isRSCRouterContext: boolean = false
 ): React.ReactElement | null {
   if (matches == null) {
     if (!dataRouterState) {
@@ -895,7 +900,9 @@ export function _renderMatches(
         children = outlet;
       }
 
-      children = <RedirectBoundary>{children}</RedirectBoundary>;
+      if (isRSCRouterContext) {
+        children = <RedirectBoundary>{children}</RedirectBoundary>;
+      }
 
       return (
         <RenderedRoute
