@@ -23,7 +23,7 @@ type Implementation = {
 };
 
 // Run tests against vite and parcel to ensure our code is bundler agnostic
-const implementations = (
+const implementations: Implementation[] = (
   [
     {
       name: "vite",
