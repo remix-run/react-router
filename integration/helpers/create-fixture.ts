@@ -458,13 +458,6 @@ function parcelBuild(
   buildStdio?: Writable,
   mode?: ServerMode
 ) {
-  // We have a "require" instead of a dynamic import in readConfig gated
-  // behind mode === ServerMode.Test to make jest happy, but that doesn't
-  // work for ESM configs, those MUST be dynamic imports. So we need to
-  // force the mode to be production for ESM configs when runtime mode is
-  // tested.
-  mode = mode === ServerMode.Test ? ServerMode.Production : mode;
-
   let parcelBin = "node_modules/parcel/lib/bin.js";
 
   let buildArgs: string[] = [parcelBin, "build"];
