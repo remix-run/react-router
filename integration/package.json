@@ -8,6 +8,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@mjackson/node-fetch-server": "0.6.1",
     "@playwright/test": "^1.49.1",
     "@react-router/dev": "workspace:*",
     "@react-router/express": "workspace:*",

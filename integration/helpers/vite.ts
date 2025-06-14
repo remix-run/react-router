@@ -185,13 +185,26 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-export type TemplateName =
-  | "cloudflare-dev-proxy-template"
+type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
   | "vite-6-template"
   | "vite-7-beta-template"
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
+
+type FrameworkModeRscTemplateName = "rsc-parcel-framework";
+
+type FrameworkModeCloudflareTemplateName =
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
+
+export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+
+export type TemplateName =
+  | FrameworkModeViteMajorTemplateName
+  | FrameworkModeRscTemplateName
+  | FrameworkModeCloudflareTemplateName
+  | RscBundlerTemplateName;
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
@@ -202,7 +215,15 @@ export const viteMajorTemplates = [
     templateDisplayName: "Vite Rolldown",
   },
 ] as const satisfies Array<{
-  templateName: TemplateName;
+  templateName: FrameworkModeViteMajorTemplateName;
+  templateDisplayName: string;
+}>;
+
+export const rscBundlerTemplates = [
+  { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
+  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
+] as const satisfies Array<{
+  templateName: RscBundlerTemplateName;
   templateDisplayName: string;
 }>;
 
@@ -320,7 +341,7 @@ type ServerArgs = {
   basename?: string;
 };
 
-const createDev =
+export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
     let proc = node(nodeArgs, { cwd, env });
@@ -460,7 +481,9 @@ async function waitForServer(
 
   await waitOn({
     resources: [
-      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/"}`,
+      `http://${args.host ?? "localhost"}:${args.port}${
+        args.basename ?? "/favicon.ico"
+      }`,
     ],
     timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {
