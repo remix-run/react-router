@@ -53,7 +53,7 @@ When the component is rendered, it is provided the props defined in `Route.Compo
 3. `params`: An object containing the route parameters (if any).
 4. `matches`: An array of all the matches in the current route tree.
 
-You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferrable because they will be automatically typed correctly for the route.
+You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferable because they will be automatically typed correctly for the route.
 
 ### Using props
 
