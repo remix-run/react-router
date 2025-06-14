@@ -59,6 +59,7 @@
     "@octokit/graphql": "^4.8.0",
     "@octokit/plugin-paginate-rest": "^2.21.3",
     "@octokit/rest": "^18.12.0",
+    "@parcel/runtime-rsc": "2.15.0",
     "@playwright/test": "^1.49.1",
     "@remix-run/changelog-github": "^0.0.5",
     "@testing-library/jest-dom": "6.6.3",

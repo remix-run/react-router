@@ -77,6 +77,7 @@ export type RenderedRoute = {
   errorElement?: React.ReactElement;
   handle?: any;
   hasAction: boolean;
+  hasComponent: boolean;
   hasErrorBoundary: boolean;
   hasLoader: boolean;
   hydrateFallbackElement?: React.ReactElement;
@@ -87,10 +88,6 @@ export type RenderedRoute = {
   parentId?: string;
   path?: string;
   shouldRevalidate?: ShouldRevalidateFunction;
-  // TODO: Add "hasComponent" or similar to help with the `shouldAllowOptOut`
-  // logic in the browser RSC single fetch implementation. The issue is that
-  // if there is no element, we have to go to the server. This helps with "route
-  // has no component therefore can opt out".
 };
 
 export type ServerRouteMatch = RenderedRoute & {
@@ -301,6 +298,9 @@ async function processServerAction(
       signal: request.signal,
     });
 
+  const isFormRequest = canDecodeWithFormData(
+    request.headers.get("Content-Type")
+  );
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
     if (!decodeCallServer) {
@@ -309,7 +309,7 @@ async function processServerAction(
       );
     }
 
-    const reply = canDecodeWithFormData(request.headers.get("Content-Type"))
+    const reply = isFormRequest
       ? await request.formData()
       : await request.text();
     const serverAction = await decodeCallServer(actionId, reply);
@@ -329,32 +329,28 @@ async function processServerAction(
       actionResult,
       revalidationRequest: getRevalidationRequest(),
     };
-  }
-
-  const clone = request.clone();
-  const formData = await request.formData();
-  if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
-    if (!decodeFormAction) {
-      throw new Error(
-        "Cannot handle form actions without a decodeFormAction function"
-      );
-    }
-    const action = await decodeFormAction(formData);
-    try {
-      await action();
-    } catch (error) {
-      if (isResponse(error)) {
-        return error;
+  } else if (isFormRequest) {
+    const formData = await request.clone().formData();
+    if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
+      if (!decodeFormAction) {
+        throw new Error(
+          "Cannot handle form actions without a decodeFormAction function"
+        );
       }
-      onError?.(error);
+      const action = await decodeFormAction(formData);
+      try {
+        await action();
+      } catch (error) {
+        if (isResponse(error)) {
+          return error;
+        }
+        onError?.(error);
+      }
+      return {
+        revalidationRequest: getRevalidationRequest(),
+      };
     }
-    return {
-      revalidationRequest: getRevalidationRequest(),
-    };
   }
-  return {
-    revalidationRequest: clone,
-  };
 }
 
 async function generateResourceResponse(
@@ -750,7 +746,8 @@ async function getServerRouteMatch(
     errorElement,
     handle: (match.route as any).handle,
     hasAction: !!match.route.action,
-    hasErrorBoundary: !!(match.route as any).ErrorBoundary,
+    hasComponent: !!Component,
+    hasErrorBoundary: !!ErrorBoundary,
     hasLoader: !!match.route.loader,
     hydrateFallbackElement,
     id: match.route.id,
@@ -787,6 +784,7 @@ async function getManifestRoute(
     clientLoader: route.clientLoader,
     handle: route.handle,
     hasAction: !!route.action,
+    hasComponent: !!route.Component,
     hasErrorBoundary: !!route.ErrorBoundary,
     errorElement,
     hasLoader: !!route.loader,

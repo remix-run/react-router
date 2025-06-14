@@ -470,7 +470,10 @@ implementations.forEach((implementation) => {
         validateRSCHtml(await page.content());
       });
 
-      test("Supports resource routes as URL and fetchers", async ({ page }) => {
+      test("Supports resource routes as URL and fetchers", async ({
+        page,
+        request,
+      }) => {
         let port = await getPort();
         stop = await setupRscTest({
           implementation,
@@ -490,19 +493,24 @@ implementations.forEach((implementation) => {
                       index: true,
                       lazy: () => import("./routes/home"),
                     },
-                    {
-                      id: "resource",
-                      path: "resource",
-                      lazy: () => import("./routes/resource"),
-                    },
                   ],
+                },
+                {
+                  id: "resource",
+                  path: "resource",
+                  lazy: () => import("./routes/resource"),
                 },
               ] satisfies ServerRouteObject[];
             `,
             "src/routes/resource.tsx": js`
               export function loader() {
+                return Response.json({ message: "Hello from resource route!" });
+              }
+
+              export async function action({ request }) {
                 return {
                   message: "Hello from resource route!",
+                  echo: await request.text(),
                 };
               }
             `,
@@ -515,7 +523,7 @@ implementations.forEach((implementation) => {
                 const fetcher = useFetcher();
 
                 const loadResource = () => {
-                  fetcher.load("/resource");
+                  fetcher.submit({ hello: "world" }, { method: "post", action: "/resource" });
                 };
 
                 return (
@@ -541,10 +549,24 @@ implementations.forEach((implementation) => {
             `,
           },
         });
-        const response = await page.goto(`http://localhost:${port}/resource`);
-        expect(response?.status()).toBe(200);
-        expect(await response?.json()).toEqual({
+        const getResponse = await request.get(
+          `http://localhost:${port}/resource`
+        );
+        expect(getResponse?.status()).toBe(200);
+        expect(await getResponse?.json()).toEqual({
           message: "Hello from resource route!",
+        });
+
+        const postResponse = await request.post(
+          `http://localhost:${port}/resource`,
+          {
+            data: { hello: "world" },
+          }
+        );
+        expect(postResponse?.status()).toBe(200);
+        expect(await postResponse?.json()).toEqual({
+          message: "Hello from resource route!",
+          echo: JSON.stringify({ hello: "world" }),
         });
 
         await page.goto(`http://localhost:${port}/`);
@@ -553,7 +575,12 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-testid=resource-data]");
         expect(
           await page.locator("[data-testid=resource-data]").textContent()
-        ).toBe(JSON.stringify({ message: "Hello from resource route!" }));
+        ).toBe(
+          JSON.stringify({
+            message: "Hello from resource route!",
+            echo: "hello=world",
+          })
+        );
       });
     });
 
