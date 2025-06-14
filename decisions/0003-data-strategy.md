@@ -141,7 +141,7 @@ We considered how to handle `shouldRevalidate` behavior. There's sort of 2 basic
 
 I _think_ (1) is preferred to keep the API at a minimum and avoid leaking into _other_ ways to opt-out of revalidation. We already have an API for that so let's lean into it.
 
-Additionally, another big con of (2) is that if we want to let them make revalidation decisions inside `dataStrategy` - we need to expose all of the informaiton required for that (`currentUrl`, `currentParams`, `nextUrl`, `nextParams`, `submission` info, `actionResult`, etc.) - the API becomes a mess.
+Additionally, another big con of (2) is that if we want to let them make revalidation decisions inside `dataStrategy` - we need to expose all of the information required for that (`currentUrl`, `currentParams`, `nextUrl`, `nextParams`, `submission` info, `actionResult`, etc.) - the API becomes a mess.
 
 Therefore we are aiming to stick with one and let `shouldRevalidate` be the only way to opt-out of revalidation.
 
