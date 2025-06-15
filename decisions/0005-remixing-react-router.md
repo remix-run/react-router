@@ -300,7 +300,7 @@ if (import.meta.hot) {
 }
 ```
 
-And finally since `<RouterProvider>` accepts a router, it makes unit testing easer since you can create a fresh router with each test.
+And finally since `<RouterProvider>` accepts a router, it makes unit testing easier since you can create a fresh router with each test.
 
 [remixing router]: https://remix.run/blog/remixing-react-router
 [navigation api]: https://developer.chrome.com/docs/web-platform/navigation-api/
