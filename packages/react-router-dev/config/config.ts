@@ -855,7 +855,7 @@ export async function resolveEntryFiles({
 
     if (!packageJsonPath) {
       throw new Error(
-        `Could not find package.json in ${rootDirectory} or any of its parent directories`
+        `Could not find package.json in ${rootDirectory} or any of its parent directories. Please add a package.json, or provide a custom entry.server.tsx/jsx file in your app directory.`
       );
     }
 
