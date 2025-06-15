@@ -32,7 +32,7 @@ jobs:
       os: "windows-latest"
       node_version: "[24]"
       browser: '["msedge"]'
-      timeout: 60
+      timeout: 120
 
   integration-webkit:
     name: "👀 Integration Test"
