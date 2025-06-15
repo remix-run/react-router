@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20
           - 22
+          - 24
 
     runs-on: ubuntu-latest
 
