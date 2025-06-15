@@ -29,7 +29,7 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     uses: ./.github/workflows/shared-integration.yml
     with:
-      os: "windows-latest"
+      os: "windows-2019"
       node_version: "[24]"
       browser: '["msedge"]'
       timeout: 120
