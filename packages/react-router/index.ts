@@ -352,7 +352,13 @@ export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entr
 export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
 
 /** @internal */
-export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";
+export {
+  RemixErrorBoundary as UNSAFE_RemixErrorBoundary,
+  RemixRootDefaultErrorBoundary as UNSAFE_RootDefaultErrorBoundary,
+} from "./lib/dom/ssr/errorBoundaries";
+
+/** @internal */
+export { RemixRootDefaultHydrateFallback as UNSAFE_RootDefaultHydrateFallback } from "./lib/dom/ssr/fallback";
 
 /** @internal */
 export {
