@@ -106,7 +106,8 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
                 (i in input ? flatten.call(this, input[i]) : HOLE);
             str[index] = `${result}]`;
           } else if (input instanceof Date) {
-            str[index] = `["${TYPE_DATE}",${input.getTime()}]`;
+            const dateTime = input.getTime();
+            str[index] = `["${TYPE_DATE}",${Number.isNaN(dateTime)? JSON.stringify("invalid") : dateTime}]`;
           } else if (input instanceof URL) {
             str[index] = `["${TYPE_URL}",${JSON.stringify(input.href)}]`;
           } else if (input instanceof RegExp) {
