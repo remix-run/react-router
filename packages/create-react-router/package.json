@@ -1,6 +1,6 @@
 {
   "name": "create-react-router",
-  "version": "7.6.2",
+  "version": "0.0.0-nightly-70dba2943-20250616",
   "description": "Create a new React Router app",
   "homepage": "https://reactrouter.com",
   "bugs": {
