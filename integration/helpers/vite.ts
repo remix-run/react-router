@@ -1,4 +1,5 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
+import { sync as spawnSync, spawn } from "cross-spawn";
 import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { platform } from "node:os";
