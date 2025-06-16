@@ -85,7 +85,7 @@ async function setupRscTest({
   if (status !== 0) {
     console.error("Error building project", {
       status,
-  error,
+      error,
       stdout: stdout?.toString(),
       stderr: stderr?.toString(),
     });
