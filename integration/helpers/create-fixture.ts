@@ -461,7 +461,7 @@ function parcelBuild(
 ) {
   let parcelBin = "node_modules/parcel/lib/bin.js";
 
-  let buildArgs: string[] = [parcelBin, "build"];
+  let buildArgs: string[] = [parcelBin, "build", "--no-cache"];
 
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,
