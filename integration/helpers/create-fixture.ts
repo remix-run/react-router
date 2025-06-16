@@ -337,6 +337,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       return new Promise(async (accept) => {
         let port = await getPort();
         let app = express();
+        app.use(express.static(path.join(fixture.projectDir, "public")));
         app.use(
           "/client",
           express.static(path.join(fixture.projectDir, "build/client"))
