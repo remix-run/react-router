@@ -1,4 +1,3 @@
-import * as os from "node:os";
 import { test, expect } from "@playwright/test";
 import { sync as spawnSync } from "cross-spawn";
 import getPort from "get-port";
@@ -64,12 +63,7 @@ const implementations: Implementation[] = (
         }),
     },
   ] as Implementation[]
-).filter((imp) => {
-  if (imp.name === "vite" && os.platform() === "win32") {
-    return false;
-  }
-  return true;
-});
+);
 
 async function setupRscTest({
   implementation,
