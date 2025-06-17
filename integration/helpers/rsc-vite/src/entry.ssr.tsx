@@ -1,6 +1,5 @@
 import bootstrapScriptContent from "virtual:vite-rsc/bootstrap-script-content";
 import { createFromReadableStream } from "@hiogawa/vite-rsc/ssr";
-// @ts-expect-error
 import * as ReactDomServer from "react-dom/server.edge";
 import {
   unstable_RSCStaticRouter as RSCStaticRouter,
