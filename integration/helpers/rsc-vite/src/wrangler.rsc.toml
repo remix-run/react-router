@@ -1,4 +1,0 @@
-name = "server"
-main = "./entry.rsc.tsx"
-compatibility_date = "2024-12-05"
-compatibility_flags = ["nodejs_compat"]

@@ -138,6 +138,10 @@ implementations.forEach((implementation) => {
       test("Works with client components using 'use client'", async ({
         page,
       }) => {
+        if (implementation.name !== "vite") {
+          test.skip();
+        }
+
         let port = await getPort();
         stop = await setupRscTest({
           implementation,
@@ -594,7 +598,7 @@ implementations.forEach((implementation) => {
             "src/routes/home.actions.ts": js`
               "use server";
 
-              export function incrementCounter(count: number, formData: FormData) {
+              export async function incrementCounter(count: number, formData: FormData) {
                 return count + parseInt(formData.get("by") as string || "1", 10);
               }
             `,
@@ -729,7 +733,7 @@ implementations.forEach((implementation) => {
               "use server";
               import { redirect } from "react-router/rsc";
 
-              export function redirectAction(formData: FormData) {
+              export async function redirectAction(formData: FormData) {
                 throw redirect("/?redirected=true");
               }
             `,

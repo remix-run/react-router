@@ -1,6 +1,0 @@
-name = "ssr"
-main = "./entry.ssr.tsx"
-compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
-assets = { binding = "ASSETS" }
-services = [{ binding = "SERVER", service = "server" }]

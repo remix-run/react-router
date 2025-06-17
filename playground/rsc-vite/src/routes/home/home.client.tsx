@@ -30,6 +30,7 @@ export default function Home() {
 }
 
 export function HomeForm({ fn }: { fn: () => unknown }) {
+  // @ts-expect-error React types for the repo are set to v18
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (
@@ -43,13 +44,12 @@ export function HomeForm({ fn }: { fn: () => unknown }) {
 }
 
 export function RedirectForm({ fn }: { fn: () => unknown }) {
+  // @ts-expect-error React types for the repo are set to v18
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (
     <form action={formAction}>
-      <button type="submit">
-        Redirect{isPending ? " (pending)" : null}
-      </button>
+      <button type="submit">Redirect{isPending ? " (pending)" : null}</button>
       {state ? <p>Action state: {state}</p> : null}
     </form>
   );

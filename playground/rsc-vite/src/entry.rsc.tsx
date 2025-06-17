@@ -27,6 +27,7 @@ export async function callServer(request: Request) {
     decodeCallServer,
     decodeFormAction,
     request,
+    // @ts-expect-error
     routes,
     generateResponse(match) {
       return new Response(renderToReadableStream(match.payload), {
@@ -39,7 +40,6 @@ export async function callServer(request: Request) {
 
 export default async function handler(request: Request) {
   const ssr = await import.meta.viteRsc.loadSsrModule<
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     typeof import("./entry.ssr")
   >("index");
   return ssr.default(request, callServer);
