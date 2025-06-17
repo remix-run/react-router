@@ -157,7 +157,7 @@ export interface MemoryRouterOpts {
    */
   hydrationData?: HydrationState;
   /**
-   * Initial entires in the in-memory history stack
+   * Initial entries in the in-memory history stack
    */
   initialEntries?: InitialEntry[];
   /**
