@@ -526,7 +526,7 @@ export interface LinkProps
   state?: any;
 
   /**
-    Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using {@link ScrollRestoration}. This only prevents new locations reseting scroll to the top, scroll position will be restored for back/forward button navigation.
+    Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using {@link ScrollRestoration}. This only prevents new locations resetting scroll to the top, scroll position will be restored for back/forward button navigation.
 
     ```tsx
     <Link to="?tab=one" preventScrollReset />
