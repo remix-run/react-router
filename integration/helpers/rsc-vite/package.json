@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --app",
-    "start": "node server.js",
+    "start": "cross-env NODE_ENV=production node server.js",
     "typecheck": "tsc"
   },
   "devDependencies": {

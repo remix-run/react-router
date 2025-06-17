@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --app",
-    "start": "node server.js",
+    "start": "cross-env NODE_ENV=production node server.js",
     "typecheck": "tsc"
   },
   "devDependencies": {
@@ -15,6 +15,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
+    "cross-env": "^7.0.3",
     "typescript": "^5.1.6",
     "vite": "^6.2.0"
   },
