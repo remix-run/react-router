@@ -34,6 +34,9 @@ const implementations: Implementation[] = (
         createDev(["server.js", "-p", String(port)])({
           cwd,
           port,
+          env: {
+            NODE_ENV: "production",
+          },
         }),
       dev: ({ cwd, port }) =>
         createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
@@ -138,10 +141,6 @@ implementations.forEach((implementation) => {
       test("Works with client components using 'use client'", async ({
         page,
       }) => {
-        if (implementation.name !== "vite") {
-          test.skip();
-        }
-
         let port = await getPort();
         stop = await setupRscTest({
           implementation,
@@ -804,14 +803,6 @@ implementations.forEach((implementation) => {
       test("Handles errors in server components correctly", async ({
         page,
       }) => {
-        // TODO: There is a mis-match in React versions between the Vite and
-        // Parcel builds here causing one to strip errors, and the other allow
-        // through the development error message.
-        test.skip(
-          implementation.name === "vite",
-          "Bug in vite somewhere, needs investigation"
-        );
-
         let port = await getPort();
         stop = await setupRscTest({
           dev: true,
