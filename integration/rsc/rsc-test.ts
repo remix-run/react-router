@@ -1,4 +1,3 @@
-import * as os from "node:os";
 import { test, expect } from "@playwright/test";
 import { sync as spawnSync } from "cross-spawn";
 import getPort from "get-port";
@@ -34,6 +33,9 @@ const implementations: Implementation[] = (
         createDev(["server.js", "-p", String(port)])({
           cwd,
           port,
+          env: {
+            NODE_ENV: "production",
+          },
         }),
       dev: ({ cwd, port }) =>
         createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
@@ -61,12 +63,7 @@ const implementations: Implementation[] = (
         }),
     },
   ] as Implementation[]
-).filter((imp) => {
-  if (imp.name === "vite" && os.platform() === "win32") {
-    return false;
-  }
-  return true;
-});
+);
 
 async function setupRscTest({
   implementation,
@@ -594,7 +591,7 @@ implementations.forEach((implementation) => {
             "src/routes/home.actions.ts": js`
               "use server";
 
-              export function incrementCounter(count: number, formData: FormData) {
+              export async function incrementCounter(count: number, formData: FormData) {
                 return count + parseInt(formData.get("by") as string || "1", 10);
               }
             `,
@@ -729,7 +726,7 @@ implementations.forEach((implementation) => {
               "use server";
               import { redirect } from "react-router/rsc";
 
-              export function redirectAction(formData: FormData) {
+              export async function redirectAction(formData: FormData) {
                 throw redirect("/?redirected=true");
               }
             `,
@@ -800,14 +797,6 @@ implementations.forEach((implementation) => {
       test("Handles errors in server components correctly", async ({
         page,
       }) => {
-        // TODO: There is a mis-match in React versions between the Vite and
-        // Parcel builds here causing one to strip errors, and the other allow
-        // through the development error message.
-        test.skip(
-          implementation.name === "vite",
-          "Bug in vite somewhere, needs investigation"
-        );
-
         let port = await getPort();
         stop = await setupRscTest({
           dev: true,

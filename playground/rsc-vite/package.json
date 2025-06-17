@@ -4,24 +4,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "start": "node server.js"
+    "build": "vite build --app",
+    "start": "cross-env NODE_ENV=production node server.js",
+    "typecheck": "tsc"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@cloudflare/vite-plugin": "0.1.7",
-    "@cloudflare/workers-types": "^4.20250224.0",
-    "@jacob-ebey/vite-react-server-dom": "0.0.12",
+    "@hiogawa/vite-rsc": "0.4.1",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
-    "vite": "^6.2.0",
-    "vite-tsconfig-paths": "^5.1.4",
-    "wrangler": "^3.111.0"
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.1.6",
+    "vite": "^6.2.0"
   },
   "dependencies": {
-    "@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.0",
     "express": "^4.21.2",

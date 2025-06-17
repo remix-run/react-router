@@ -22,7 +22,7 @@ export const unstable_middleware: unstable_MiddlewareFunction<Response>[] = [
 export async function loader() {
   await new Promise((r) => setTimeout(r, 500));
   return {
-    counter: <Counter />,
+    counter: <Counter key="counter" />,
     message: `Root route loader ran at ${new Date().toISOString()}`,
   };
 }

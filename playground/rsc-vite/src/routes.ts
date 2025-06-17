@@ -10,11 +10,13 @@ export const routes = [
       {
         id: "home",
         index: true,
+        // @ts-expect-error
         lazy: () => import("./routes/home/home"),
       },
       {
         id: "about",
         path: "about",
+        // @ts-expect-error
         lazy: () => import("./routes/about/about"),
       },
       {
@@ -30,6 +32,7 @@ export const routes = [
           {
             id: "child",
             path: "child",
+            // @ts-expect-error
             lazy: () => import("./routes/child/child"),
           },
         ],
