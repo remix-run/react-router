@@ -2661,7 +2661,7 @@ async function handleSpaMode(
 
   // Write out the HTML file for the SPA
   await writeFile(path.join(clientBuildDirectory, filename), html);
-  let prettyDir = path.relative(process.cwd(), clientBuildDirectory);
+  let prettyDir = path.relative(viteConfig.root, clientBuildDirectory);
   let prettyPath = path.join(prettyDir, filename);
   if (build.prerender.length > 0) {
     viteConfig.logger.info(
@@ -2835,7 +2835,7 @@ async function prerenderData(
   }
 
   // Write out the .data file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outdir = path.relative(viteConfig.root, clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, data);
@@ -2894,7 +2894,7 @@ async function prerenderRoute(
   }
 
   // Write out the HTML file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outdir = path.relative(viteConfig.root, clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, html);
@@ -2927,7 +2927,7 @@ async function prerenderResourceRoute(
   }
 
   // Write out the resource route file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outdir = path.relative(viteConfig.root, clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, content);
