@@ -1,9 +1,9 @@
-import "./root.css"
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
 import { type unstable_MiddlewareFunction } from "react-router/rsc";
 
 import { Counter } from "../../counter";
 import { ErrorReporter, NavigationState } from "./root.client";
+import "./root.css"
 
 export { shouldRevalidate } from "./root.client";
 
@@ -67,7 +67,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {import.meta.viteRsc.loadCss()}
       </head>
       <body>
-        <div className="box">
+        <div className="server-box">
           <header>
             <Link to="/">Home</Link>
             {" | "}

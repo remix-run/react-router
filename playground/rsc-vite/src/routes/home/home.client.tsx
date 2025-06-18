@@ -4,6 +4,7 @@ import * as React from "react";
 import { type ClientLoaderFunctionArgs, useLoaderData } from "react-router";
 
 import { Counter } from "../../counter";
+import "./home.client.css";
 
 import type { loader } from "./home";
 
@@ -34,7 +35,7 @@ export function HomeForm({ fn }: { fn: () => unknown }) {
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="client-box">
       <button type="submit">
         Log on server{isPending ? " (pending)" : null}
       </button>
