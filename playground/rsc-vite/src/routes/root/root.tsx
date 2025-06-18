@@ -3,6 +3,7 @@ import { type unstable_MiddlewareFunction } from "react-router/rsc";
 
 import { Counter } from "../../counter";
 import { ErrorReporter, NavigationState } from "./root.client";
+import "./root.css"
 
 export { shouldRevalidate } from "./root.client";
 
@@ -63,9 +64,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>React Server</title>
         <Links />
+        {import.meta.viteRsc.loadCss()}
       </head>
       <body>
-        <div style={{ border: "1px solid black", padding: "10px" }}>
+        <div className="server-box">
           <header>
             <Link to="/">Home</Link>
             {" | "}

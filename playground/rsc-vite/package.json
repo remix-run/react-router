@@ -9,7 +9,7 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@hiogawa/vite-rsc": "0.4.1",
+    "@hiogawa/vite-rsc": "0.4.2",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
