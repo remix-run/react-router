@@ -8,21 +8,25 @@ title: Network Concurrency Management
 
 ## Overview
 
-When building web applications, managing network requests can be a daunting task. The challenges of ensuring up-to-date data and handling simultaneous requests often lead to complex logic in the application to deal with interruptions and race conditions. React Router simplifies this process by automating network management, mirroring, and expanding the intuitive behavior of web browsers.
+When building web applications, managing network requests can be a daunting task. The challenges of ensuring up-to-date data and handling simultaneous requests often lead to complex logic in the application to deal with interruptions and race conditions. React Router simplifies this process by automating network management while mirroring and expanding upon the intuitive behavior of web browsers.
 
-To help understand how React Router handles concurrency, it's important to remember that after `form` submissions, React Router will fetch fresh data from the loaders. This is called revalidation.
+To help understand how React Router handles concurrency, it's important to remember that after `form` submissions, React Router will fetch fresh data from the `loader`s. This is called revalidation.
 
 ## Natural Alignment with Browser Behavior
 
-React Router's handling of network concurrency is heavily inspired by the default behavior of web browsers when processing documents:
+React Router's handling of network concurrency is heavily inspired by the default behavior of web browsers when processing documents.
 
-- **Browser Link Navigation**: When you click on a link in a browser and then click on another before the page transition completes, the browser prioritizes the most recent `action`. It cancels the initial request, focusing solely on the latest link clicked.
+### Link Navigation
 
-  - **React Router's Approach**: React Router manages client-side navigation the same way. When a link is clicked within a React Router application, it initiates fetch requests for each loader tied to the target URL. If another navigation interrupts the initial navigation, React Router cancels the previous fetch requests, ensuring that only the latest requests proceed.
+**Browser Behavior**: When you click on a link in a browser and then click on another before the page transition completes, the browser prioritizes the most recent `action`. It cancels the initial request, focusing solely on the latest link clicked.
 
-- **Browser Form Submission**: If you initiate a form submission in a browser and then quickly submit another form again, the browser disregards the first submission, processing only the latest one.
+**React Router Behavior**: React Router manages client-side navigation the same way. When a link is clicked within a React Router application, it initiates fetch requests for each `loader` tied to the target URL. If another navigation interrupts the initial navigation, React Router cancels the previous fetch requests, ensuring that only the latest requests proceed.
 
-  - **React Router's Approach**: React Router mimics this behavior when working with forms. If a form is submitted and another submission occurs before the first completes, React Router cancels the original fetch requests. It then waits for the latest submission to complete before triggering page revalidation again.
+### Form Submission
+
+**Browser Behavior**: If you initiate a form submission in a browser and then quickly submit another form again, the browser disregards the first submission, processing only the latest one.
+
+**React Router Behavior**: React Router mimics this behavior when working with forms. If a form is submitted and another submission occurs before the first completes, React Router cancels the original fetch requests. It then waits for the latest submission to complete before triggering page revalidation again.
 
 ## Concurrent Submissions and Revalidation
 
@@ -32,12 +36,14 @@ React Router is designed to handle multiple form submissions to server `action`s
 
 For instance, if three form submissions are in progress, and one completes, React Router updates the UI with that data immediately without waiting for the other two so that the UI remains responsive and dynamic. As the remaining submissions finalize, React Router continues to update the UI, ensuring that the most recent data is displayed.
 
-To help understand some visualizations, below is a key for the symbols used in the diagrams:
+Using this key:
 
 - `|`: Submission begins
 - ✓: Action complete, data revalidation begins
 - ✅: Revalidated data is committed to the UI
 - ❌: Request cancelled
+
+We can visualize this scenario in the following diagram:
 
 ```text
 submission 1: |----✓-----✅
@@ -45,7 +51,7 @@ submission 2:    |-----✓-----✅
 submission 3:             |-----✓-----✅
 ```
 
-However, if a subsequent submission's revalidation completes before an earlier one, React Router discards the earlier data, ensuring that only the most up-to-date information is reflected in the UI.
+However, if a subsequent submission's revalidation completes before an earlier one, React Router discards the earlier data, ensuring that only the most up-to-date information is reflected in the UI:
 
 ```text
 submission 1: |----✓---------❌
@@ -73,7 +79,7 @@ The user is now looking at different data than what is on the server. Note that 
 
 ## Example
 
-In UI components like combo boxes, each keystroke can trigger a network request. Managing such rapid, consecutive requests can be tricky, especially when ensuring that the displayed results match the most recent query. However, with React Router, this challenge is automatically handled, ensuring that users see the correct results without developers having to micromanage the network.
+In UI components like comboboxes, each keystroke can trigger a network request. Managing such rapid, consecutive requests can be tricky, especially when ensuring that the displayed results match the most recent query. However, with React Router, this challenge is automatically handled, ensuring that users see the correct results without developers having to micromanage the network.
 
 ```tsx filename=app/pages/city-search.tsx
 export async function loader({ request }) {
@@ -119,7 +125,7 @@ export function CitySearchCombobox() {
 }
 ```
 
-All the application needs to know is how to query the data and how to render it; React Router handles the network.
+All the application needs to know is how to query the data and how to render it. React Router handles the network.
 
 ## Conclusion
 
