@@ -4,6 +4,7 @@ import * as React from "react";
 import { type ClientLoaderFunctionArgs, useLoaderData } from "react-router";
 
 import { Counter } from "../../counter";
+import "./home.client.css";
 
 import type { loader } from "./home";
 
@@ -30,10 +31,11 @@ export default function Home() {
 }
 
 export function HomeForm({ fn }: { fn: () => unknown }) {
+  // @ts-expect-error React types for the repo are set to v18
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="client-box">
       <button type="submit">
         Log on server{isPending ? " (pending)" : null}
       </button>
@@ -43,13 +45,12 @@ export function HomeForm({ fn }: { fn: () => unknown }) {
 }
 
 export function RedirectForm({ fn }: { fn: () => unknown }) {
+  // @ts-expect-error React types for the repo are set to v18
   const [state, formAction, isPending] = React.useActionState(fn, null);
 
   return (
     <form action={formAction}>
-      <button type="submit">
-        Redirect{isPending ? " (pending)" : null}
-      </button>
+      <button type="submit">Redirect{isPending ? " (pending)" : null}</button>
       {state ? <p>Action state: {state}</p> : null}
     </form>
   );

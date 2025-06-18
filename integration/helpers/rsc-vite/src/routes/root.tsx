@@ -17,6 +17,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function ServerComponent() {
+export default function RootRoute() {
   return <Outlet />;
 }

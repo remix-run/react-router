@@ -1,5 +1,5 @@
-import { spawnSync } from "node:child_process";
 import { test, expect } from "@playwright/test";
+import { sync as spawnSync } from "cross-spawn";
 import getPort from "get-port";
 
 import {
@@ -22,43 +22,48 @@ type Implementation = {
 };
 
 // Run tests against vite and parcel to ensure our code is bundler agnostic
-const implementations: Implementation[] = [
-  {
-    name: "vite",
-    template: "rsc-vite",
-    build: ({ cwd }: { cwd: string }) =>
-      spawnSync("node_modules/.bin/vite", ["build"], { cwd }),
-    run: ({ cwd, port }) =>
-      createDev(["server.js", "-p", String(port)])({
-        cwd,
-        port,
-      }),
-    dev: ({ cwd, port }) =>
-      createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
-        cwd,
-        port,
-      }),
-  },
-  {
-    name: "parcel",
-    template: "rsc-parcel",
-    build: ({ cwd }: { cwd: string }) =>
-      spawnSync("node_modules/.bin/parcel", ["build"], { cwd }),
-    run: ({ cwd, port }) =>
-      // FIXME: Parcel prod builds seems to have dup copies of react in them :/
-      // Not reproducible in the playground though - only in integration/helpers...
-      implementations.find((i) => i.name === "parcel")!.dev({ cwd, port }),
-    dev: ({ cwd, port }) =>
-      createDev(["node_modules/parcel/lib/bin.js"])({
-        // Since we run through parcels dev server we can't use `-p` because that
-        // only changes the dev server and doesn't pass through to the internal
-        // server.  So we setup the internal server to choose from `RR_PORT`
-        env: { RR_PORT: String(port) },
-        cwd,
-        port,
-      }),
-  },
-];
+const implementations: Implementation[] = (
+  [
+    {
+      name: "vite",
+      template: "rsc-vite",
+      build: ({ cwd }: { cwd: string }) =>
+        spawnSync("pnpm", ["build"], { cwd }),
+      run: ({ cwd, port }) =>
+        createDev(["server.js", "-p", String(port)])({
+          cwd,
+          port,
+          env: {
+            NODE_ENV: "production",
+          },
+        }),
+      dev: ({ cwd, port }) =>
+        createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
+          cwd,
+          port,
+        }),
+    },
+    {
+      name: "parcel",
+      template: "rsc-parcel",
+      build: ({ cwd }: { cwd: string }) =>
+        spawnSync("pnpm", ["build"], { cwd }),
+      run: ({ cwd, port }) =>
+        // FIXME: Parcel prod builds seems to have dup copies of react in them :/
+        // Not reproducible in the playground though - only in integration/helpers...
+        implementations.find((i) => i.name === "parcel")!.dev({ cwd, port }),
+      dev: ({ cwd, port }) =>
+        createDev(["node_modules/parcel/lib/bin.js"])({
+          // Since we run through parcels dev server we can't use `-p` because that
+          // only changes the dev server and doesn't pass through to the internal
+          // server.  So we setup the internal server to choose from `RR_PORT`
+          env: { RR_PORT: String(port) },
+          cwd,
+          port,
+        }),
+    },
+  ] as Implementation[]
+);
 
 async function setupRscTest({
   implementation,
@@ -73,12 +78,13 @@ async function setupRscTest({
 }) {
   let cwd = await createProject(files, implementation.template);
 
-  let { status, stderr, stdout } = implementation.build({ cwd });
+  let { error, status, stderr, stdout } = implementation.build({ cwd });
   if (status !== 0) {
     console.error("Error building project", {
       status,
-      stdout: stdout.toString(),
-      stderr: stderr.toString(),
+      error,
+      stdout: stdout?.toString(),
+      stderr: stderr?.toString(),
     });
     throw new Error("Error building project");
   }
@@ -585,7 +591,7 @@ implementations.forEach((implementation) => {
             "src/routes/home.actions.ts": js`
               "use server";
 
-              export function incrementCounter(count: number, formData: FormData) {
+              export async function incrementCounter(count: number, formData: FormData) {
                 return count + parseInt(formData.get("by") as string || "1", 10);
               }
             `,
@@ -720,7 +726,7 @@ implementations.forEach((implementation) => {
               "use server";
               import { redirect } from "react-router/rsc";
 
-              export function redirectAction(formData: FormData) {
+              export async function redirectAction(formData: FormData) {
                 throw redirect("/?redirected=true");
               }
             `,
@@ -791,14 +797,6 @@ implementations.forEach((implementation) => {
       test("Handles errors in server components correctly", async ({
         page,
       }) => {
-        // TODO: There is a mis-match in React versions between the Vite and
-        // Parcel builds here causing one to strip errors, and the other allow
-        // through the development error message.
-        test.skip(
-          implementation.name === "vite",
-          "Bug in vite somewhere, needs investigation"
-        );
-
         let port = await getPort();
         stop = await setupRscTest({
           dev: true,
