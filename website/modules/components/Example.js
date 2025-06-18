@@ -6,7 +6,7 @@ import SandboxExample from "./SandboxExample.js";
 
 export default function Example({ data, match }) {
   const { example: exampleParam, environment } = match.params;
-  const example = data.examples.find((e) => e.slug === exampleParam);
+  const example = data.examples.find(e => e.slug === exampleParam);
   const isNative = environment === "native";
 
   return example ? (
@@ -15,11 +15,13 @@ export default function Example({ data, match }) {
         label={example.label}
         path={example.path}
         dependencies={{
-          "react-router-native": "latest",
+          "react-router-native": "^5.3.0",
           "react-native-web": "latest",
           "react-art": "latest",
           "react-scripts": "latest",
-          ...(example.extraDependencies || {}),
+          react: "^18",
+          "react-dom": "^18",
+          ...(example.extraDependencies || {})
         }}
         code={example.code}
         extraEmbedOptions={{ editorsize: 66, hidenavigation: true }}
@@ -31,7 +33,9 @@ export default function Example({ data, match }) {
         dependencies={{
           "react-router-dom": "^5.3.0",
           "react-scripts": "latest",
-          ...(example.extraDependencies || {}),
+          react: "^18",
+          "react-dom": "^18",
+          ...(example.extraDependencies || {})
         }}
         code={example.code}
       />
@@ -46,7 +50,7 @@ Example.propTypes = {
   match: PropTypes.shape({
     params: PropTypes.shape({
       example: PropTypes.string,
-      environment: PropTypes.string,
-    }),
-  }),
+      environment: PropTypes.string
+    })
+  })
 };
