@@ -6,9 +6,6 @@ title: Single Page App (SPA)
 
 [MODES: framework]
 
-<br />
-<br />
-
 This guides focuses on how to build Single Page Apps with React Router Framework mode. If you're using React Router as a library, you can use it to build your own SPA architecture.
 
 ## Overview
