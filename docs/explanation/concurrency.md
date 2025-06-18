@@ -96,7 +96,7 @@ export function CitySearchCombobox() {
       <Combobox aria-label="Cities">
         <ComboboxInput
           name="q"
-          onChange={event =>
+          onChange={(event) =>
             // submit the form onChange to get the list of cities
             fetcher.submit(event.target.form)
           }
@@ -107,7 +107,7 @@ export function CitySearchCombobox() {
           <ComboboxPopover className="shadow-popup">
             {fetcher.data.length > 0 ? (
               <ComboboxList>
-                {fetcher.data.map(city => (
+                {fetcher.data.map((city) => (
                   <ComboboxOption
                     key={city.id}
                     value={city.name}
