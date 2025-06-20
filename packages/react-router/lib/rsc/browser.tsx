@@ -57,23 +57,27 @@ declare global {
 export function createCallServer({
   decode,
   encodeAction,
+  fetch: fetchImplementation = fetch,
 }: {
   decode: DecodeServerResponseFunction;
   encodeAction: EncodeActionFunction;
+  fetch?: (request: Request) => Promise<Response>;
 }) {
   let landedActionId = 0;
   return async (id: string, args: unknown[]) => {
     let actionId = (window.__routerActionID =
       (window.__routerActionID ??= 0) + 1);
 
-    const response = await fetch(location.href, {
-      body: await encodeAction(args),
-      method: "POST",
-      headers: {
-        Accept: "text/x-component",
-        "rsc-action-id": id,
-      },
-    });
+    const response = await fetchImplementation(
+      new Request(location.href, {
+        body: await encodeAction(args),
+        method: "POST",
+        headers: {
+          Accept: "text/x-component",
+          "rsc-action-id": id,
+        },
+      })
+    );
     if (!response.body) {
       throw new Error("No response body");
     }
@@ -162,11 +166,13 @@ export function createCallServer({
 }
 
 function createRouterFromPayload({
+  fetchImplementation,
   decode,
   payload,
 }: {
   payload: ServerPayload;
   decode: DecodeServerResponseFunction;
+  fetchImplementation: (request: Request) => Promise<Response>;
 }) {
   if (window.__router) return window.__router;
 
@@ -225,14 +231,20 @@ function createRouterFromPayload({
       if (discoveredPaths.has(path)) {
         return;
       }
-      await fetchAndApplyManifestPatches([path], decode, signal);
+      await fetchAndApplyManifestPatches(
+        [path],
+        decode,
+        fetchImplementation,
+        signal
+      );
     },
     // FIXME: Pass `build.ssr` and `build.basename` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
       () => window.__router,
       true,
       undefined,
-      decode
+      decode,
+      fetchImplementation
     ),
   });
 
@@ -261,7 +273,8 @@ export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
   basename: string | undefined,
-  decode: DecodeServerResponseFunction
+  decode: DecodeServerResponseFunction,
+  fetchImplementation: (request: Request) => Promise<Response>
 ): DataStrategyFunction {
   // TODO: Clean this up with a shared type
   type RSCDataRouteMatch = DataRouteMatch & {
@@ -290,7 +303,7 @@ export function getRSCSingleFetchDataStrategy(
       };
     },
     // pass map into fetchAndDecode so it can add payloads
-    getFetchAndDecodeViaRSC(decode),
+    getFetchAndDecodeViaRSC(decode, fetchImplementation),
     ssr,
     basename,
     // If the route has a component but we don't have an element, we need to hit
@@ -344,7 +357,8 @@ export function getRSCSingleFetchDataStrategy(
 }
 
 function getFetchAndDecodeViaRSC(
-  decode: DecodeServerResponseFunction
+  decode: DecodeServerResponseFunction,
+  fetchImplementation: (request: Request) => Promise<Response>
 ): FetchAndDecodeFunction {
   return async (
     args: DataStrategyFunctionArgs<unknown>,
@@ -360,7 +374,9 @@ function getFetchAndDecodeViaRSC(
       }
     }
 
-    let res = await fetch(url, await createRequestInit(request));
+    let res = await fetchImplementation(
+      new Request(url, await createRequestInit(request))
+    );
 
     // If this 404'd without hitting the running server (most likely in a
     // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
@@ -426,19 +442,25 @@ function getFetchAndDecodeViaRSC(
 
 export function RSCHydratedRouter({
   decode,
+  fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
 }: {
   decode: DecodeServerResponseFunction;
+  fetch?: (request: Request) => Promise<Response>;
   payload: ServerPayload;
   routeDiscovery?: "eager" | "lazy";
 }) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let router = React.useMemo(
-    () => createRouterFromPayload({ decode, payload }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    () =>
+      createRouterFromPayload({
+        decode,
+        payload,
+        fetchImplementation,
+      }),
+    [decode, payload, fetchImplementation]
   );
 
   React.useLayoutEffect(() => {
@@ -510,7 +532,7 @@ export function RSCHydratedRouter({
       }
 
       try {
-        await fetchAndApplyManifestPatches(paths, decode);
+        await fetchAndApplyManifestPatches(paths, decode, fetchImplementation);
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
       }
@@ -529,7 +551,7 @@ export function RSCHydratedRouter({
       attributes: true,
       attributeFilter: ["data-discover", "href", "action"],
     });
-  }, [routeDiscovery, decode]);
+  }, [routeDiscovery, decode, fetchImplementation]);
 
   const frameworkContext: FrameworkContextObject = {
     future: {
@@ -704,6 +726,7 @@ const URL_LIMIT = 7680;
 async function fetchAndApplyManifestPatches(
   paths: string[],
   decode: DecodeServerResponseFunction,
+  fetchImplementation: (request: Request) => Promise<Response>,
   signal?: AbortSignal
 ) {
   let basename = (window.__router.basename ?? "").replace(/^\/|\/$/g, "");
@@ -718,7 +741,7 @@ async function fetchAndApplyManifestPatches(
     return;
   }
 
-  let response = await fetch(url, { signal });
+  let response = await fetchImplementation(new Request(url, { signal }));
   if (!response.body || response.status < 200 || response.status >= 300) {
     throw new Error("Unable to fetch new route matches from the server");
   }
