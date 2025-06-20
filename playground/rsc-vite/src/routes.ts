@@ -4,14 +4,13 @@ export const routes = [
   {
     id: "root",
     path: "",
-    // @ts-expect-error
-    lazy: () => import("./routes/root/root?vite-rsc-css-export=Layout"),
+    lazy: () => import("./routes/root/root"),
     children: [
       {
         id: "home",
         index: true,
         // @ts-expect-error
-        lazy: () => import("./routes/home/home?vite-rsc-css-export=default"),
+        lazy: () => import("./routes/home/home"),
       },
       {
         id: "about",

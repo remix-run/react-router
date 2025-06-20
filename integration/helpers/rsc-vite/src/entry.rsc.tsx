@@ -38,9 +38,9 @@ export async function callServer(request: Request) {
 }
 
 export default async function handler(request: Request) {
-  const ssr = await import.meta.viteRsc.loadSsrModule<
+  const ssr = await import.meta.viteRsc.loadModule<
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     typeof import("./entry.ssr")
-  >("index");
+  >("ssr", "index");
   return ssr.default(request, callServer);
 }
