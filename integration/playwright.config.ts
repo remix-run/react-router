@@ -18,7 +18,8 @@ const config: PlaywrightTestConfig = {
   },
   /* Maximum time one test can run for. */
   timeout: isWindows ? 60_000 : 30_000,
-  fullyParallel: true,
+  fullyParallel: !(isWindows && process.env.CI),
+  workers: isWindows && process.env.CI ? 1 : undefined,
   expect: {
     /* Maximum time expect() should wait for the condition to be met. */
     timeout: isWindows ? 10_000 : 5_000,

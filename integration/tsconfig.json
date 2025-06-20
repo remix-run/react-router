@@ -1,6 +1,6 @@
 {
   "include": ["**/*.ts"],
-  "exclude": ["helpers/*-template"],
+  "exclude": ["helpers/*"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "target": "ES2022",

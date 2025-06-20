@@ -9,7 +9,7 @@ on:
       node_version:
         required: true
         # this is limited to string | boolean | number (https://github.community/t/can-action-inputs-be-arrays/16457)
-        # but we want to pass an array (node_version: "[20, 22]"),
+        # but we want to pass an array (node_version: "[22, 24]"),
         # so we'll need to manually stringify it for now
         type: string
       browser:

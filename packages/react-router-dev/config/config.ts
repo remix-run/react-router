@@ -695,7 +695,7 @@ export async function createConfigLoader({
           },
         });
 
-        fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
+        fsWatcher.on("all", async (...args) => {
           let [event, rawFilepath] = args;
           let filepath = Path.normalize(rawFilepath);
 
