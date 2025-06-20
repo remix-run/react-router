@@ -64,7 +64,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>React Server</title>
         <Links />
-        {import.meta.viteRsc.loadCss()}
       </head>
       <body>
         <div className="server-box">
