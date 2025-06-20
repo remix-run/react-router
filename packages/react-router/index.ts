@@ -296,6 +296,7 @@ export {
   RSCStaticRouter as unstable_RSCStaticRouter,
 } from "./lib/rsc/server.ssr";
 export { getServerStream as unstable_getServerStream } from "./lib/rsc/html-stream/browser";
+export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
