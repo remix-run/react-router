@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import type net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
@@ -71,6 +72,25 @@ async function run() {
     }
   };
 
+  let onFdListen = (server: net.Server, fd: number) => {
+    const address = server.address();
+    if (typeof address === "string") {
+      console.log(`[react-router-serve] http://${address} (from fd ${fd})`);
+    } else if (!address) {
+      console.log(
+        `[react-router-serve] listening on unknown address (from fd ${fd})`
+      );
+    } else if (address.family === "IPv4") {
+      console.log(
+        `[react-router-serve] http://${address.address}:${address.port} (from fd ${fd})`
+      );
+    } else {
+      console.log(
+        `[react-router-serve] http://[${address.address}]:${address.port} (from fd ${fd})`
+      );
+    }
+  };
+
   let app = express();
   app.disable("x-powered-by");
   app.use(compression());
@@ -93,11 +113,40 @@ async function run() {
     })
   );
 
-  let server = process.env.HOST
-    ? app.listen(port, process.env.HOST, onListen)
-    : app.listen(port, onListen);
+  let listenFds = getListenFds();
+  let servers = [];
+  if (!listenFds) {
+    servers = [
+      process.env.HOST
+        ? app.listen(port, process.env.HOST, onListen)
+        : app.listen(port, onListen),
+    ];
+  } else {
+    servers = listenFds.map((fd) => {
+      let server: net.Server | undefined;
+      server = app.listen({ fd }, () => onFdListen(server!, fd));
+      return server;
+    });
+  }
 
   ["SIGTERM", "SIGINT"].forEach((signal) => {
-    process.once(signal, () => server?.close(console.error));
+    process.once(signal, () =>
+      servers.forEach((server) => server.close(console.error))
+    );
   });
+}
+
+function getListenFds() {
+  if (parseNumber(process.env.LISTEN_PID) === process.pid) {
+    const listenFdsCount = parseNumber(process.env.LISTEN_FDS);
+    if (!listenFdsCount || listenFdsCount < 1) {
+      console.error(
+        "Expected LISTEN_FDS to be a number bigger than zero, got: %s",
+        process.env.LISTEN_FDS
+      );
+      process.exit(1);
+    }
+    // i + 3 to skip fds for stdin/out/err
+    return Array.from({ length: listenFdsCount }, (v, i) => i + 3);
+  }
 }
