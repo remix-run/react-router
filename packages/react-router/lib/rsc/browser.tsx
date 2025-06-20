@@ -407,7 +407,6 @@ function getFetchAndDecodeViaRSC(
       for (let [routeId, data] of Object.entries(payload[dataKey] || {})) {
         results.routes[routeId] = { data };
       }
-      console.log("payload.errors", payload.errors);
       if (payload.errors) {
         for (let [routeId, error] of Object.entries(payload.errors)) {
           results.routes[routeId] = { error };
