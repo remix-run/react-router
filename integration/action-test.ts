@@ -166,11 +166,6 @@ test.describe("actions", () => {
       });
 
       test("throws a 405 when no action exists", async ({ page }) => {
-        // FIXME: Support in RSC
-        if (templateName === "rsc-parcel-framework") {
-          test.skip();
-        }
-
         let app = new PlaywrightFixture(appFixture, page);
         await app.goto(`/no-action`);
         await page.click("button[type=submit]");

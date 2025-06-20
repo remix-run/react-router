@@ -28,7 +28,7 @@
     "@types/react-dom": "^19.0.3",
     "@types/react": "^19.0.8",
     "parcel": "2.15.0",
-    "parcel-config-react-router-experimental": "1.0.20",
+    "parcel-config-react-router-experimental": "1.0.21",
     "typescript": "^5.1.6"
   },
   "dependencies": {
