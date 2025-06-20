@@ -34,7 +34,11 @@ import {
 } from "../dom/ssr/single-fetch";
 import { createRequestInit } from "../dom/ssr/data";
 import { getHydrationData } from "../dom/ssr/hydration";
-import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
+import {
+  noActionDefinedError,
+  shouldHydrateRouteLoader,
+} from "../dom/ssr/routes";
+import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 
 export type DecodeServerResponseFunction = (
   body: ReadableStream<Uint8Array>
@@ -446,6 +450,18 @@ export function RSCHydratedRouter({
     }
   }, []);
 
+  let [location, setLocation] = React.useState(router.state.location);
+
+  React.useLayoutEffect(
+    () =>
+      router.subscribe((newState) => {
+        if (newState.location !== location) {
+          setLocation(newState.location);
+        }
+      }),
+    [router, location]
+  );
+
   React.useEffect(() => {
     if (
       routeDiscovery === "lazy" ||
@@ -540,9 +556,11 @@ export function RSCHydratedRouter({
 
   return (
     <RSCRouterContext.Provider value={true}>
-      <FrameworkContext.Provider value={frameworkContext}>
-        <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
-      </FrameworkContext.Provider>
+      <RSCRouterGlobalErrorBoundary location={location}>
+        <FrameworkContext.Provider value={frameworkContext}>
+          <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
+        </FrameworkContext.Provider>
+      </RSCRouterGlobalErrorBoundary>
     </RSCRouterContext.Provider>
   );
 }
@@ -625,7 +643,9 @@ function createRouteFromServerManifest(
           })
       : match.hasAction
       ? (_, singleFetch) => callSingleFetch(singleFetch)
-      : undefined,
+      : () => {
+          throw noActionDefinedError("action", match.id);
+        },
     path: match.path,
     shouldRevalidate: match.shouldRevalidate,
     // We always have a "loader" in this RSC world since even if we don't

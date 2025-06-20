@@ -4,6 +4,7 @@ import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
+import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type { ServerPayload } from "./server.rsc";
 
 export async function routeRSCServerRequest({
@@ -181,14 +182,16 @@ export function RSCStaticRouter({
 
   return (
     <RSCRouterContext.Provider value={true}>
-      <FrameworkContext.Provider value={frameworkContext}>
-        <StaticRouterProvider
-          context={context}
-          router={router}
-          hydrate={false}
-          nonce={payload.nonce}
-        />
-      </FrameworkContext.Provider>
+      <RSCRouterGlobalErrorBoundary location={payload.location}>
+        <FrameworkContext.Provider value={frameworkContext}>
+          <StaticRouterProvider
+            context={context}
+            router={router}
+            hydrate={false}
+            nonce={payload.nonce}
+          />
+        </FrameworkContext.Provider>
+      </RSCRouterGlobalErrorBoundary>
     </RSCRouterContext.Provider>
   );
 }
