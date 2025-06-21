@@ -23,10 +23,17 @@ export const unsign = async (
   let data = encoder.encode(value);
 
   let key = await createKey(secret, ["verify"]);
-  let signature = byteStringToUint8Array(atob(hash));
-  let valid = await crypto.subtle.verify("HMAC", key, signature, data);
+  try {
+    let signature = byteStringToUint8Array(atob(hash));
+    let valid = await crypto.subtle.verify("HMAC", key, signature, data);
 
-  return valid ? value : false;
+    return valid ? value : false;
+  } catch (error: unknown) {
+    // atob will throw a DOMException with name === 'InvalidCharacterError'
+    // if the signature contains a non-base64 character, which should just
+    // be treated as an invalid signature.
+    return false;
+  }
 };
 
 const createKey = async (
