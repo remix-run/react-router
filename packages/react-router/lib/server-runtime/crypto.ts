@@ -29,7 +29,7 @@ export const unsign = async (
 
     return valid ? value : false;
   } catch (error: unknown) {
-    // atob will throw a DOMException with name === 'InvalidCharacterValue'
+    // atob will throw a DOMException with name === 'InvalidCharacterError'
     // if the signature contains a non-base64 character, which should just
     // be treated as an invalid signature.
     return false;
