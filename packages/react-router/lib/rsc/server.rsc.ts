@@ -110,6 +110,7 @@ export type ServerRenderPayload = {
   // for SPA navigations the manifest call will handle these patches.
   patches?: RenderedRoute[];
   nonce?: string;
+  formState?: unknown;
 };
 
 export type ServerManifestPayload = {
@@ -153,9 +154,15 @@ export type DecodeFormActionFunction = (
   formData: FormData
 ) => Promise<() => Promise<void>>;
 
+export type DecodeFormStateFunction = (
+  result: unknown,
+  formData: FormData
+) => unknown;
+
 export async function matchRSCServerRequest({
   decodeCallServer,
   decodeFormAction,
+  decodeFormState,
   onError,
   request,
   routes,
@@ -163,6 +170,7 @@ export async function matchRSCServerRequest({
 }: {
   decodeCallServer?: DecodeCallServerFunction;
   decodeFormAction?: DecodeFormActionFunction;
+  decodeFormState?: DecodeFormStateFunction;
   onError?: (error: unknown) => void;
   request: Request;
   routes: ServerRouteObject[];
@@ -224,6 +232,7 @@ export async function matchRSCServerRequest({
     isDataRequest,
     decodeCallServer,
     decodeFormAction,
+    decodeFormState,
     onError,
     generateResponse
   );
@@ -285,9 +294,14 @@ async function processServerAction(
   request: Request,
   decodeCallServer: DecodeCallServerFunction | undefined,
   decodeFormAction: DecodeFormActionFunction | undefined,
+  decodeFormState: DecodeFormStateFunction | undefined,
   onError: ((error: unknown) => void) | undefined
 ): Promise<
-  | { revalidationRequest: Request; actionResult?: Promise<unknown> }
+  | {
+      revalidationRequest: Request;
+      actionResult?: Promise<unknown>;
+      formState?: unknown;
+    }
   | Response
   | undefined
 > {
@@ -338,8 +352,10 @@ async function processServerAction(
         );
       }
       const action = await decodeFormAction(formData);
+      let formState = undefined;
       try {
-        await action();
+        const result = await action();
+        formState = decodeFormState?.(result, formData);
       } catch (error) {
         if (isResponse(error)) {
           return error;
@@ -347,6 +363,7 @@ async function processServerAction(
         onError?.(error);
       }
       return {
+        formState,
         revalidationRequest: getRevalidationRequest(),
       };
     }
@@ -410,6 +427,7 @@ async function generateRenderResponse(
   isDataRequest: boolean,
   decodeCallServer: DecodeCallServerFunction | undefined,
   decodeFormAction: DecodeFormActionFunction | undefined,
+  decodeFormState: DecodeFormStateFunction | undefined,
   onError: ((error: unknown) => void) | undefined,
   generateResponse: (match: ServerMatch) => Response
 ): Promise<Response> {
@@ -447,17 +465,20 @@ async function generateRenderResponse(
       // `processServerAction` will fall through as a no-op and we'll pass the
       // POST `request` to `query` and process our action there.
       let actionResult: Promise<unknown> | undefined;
+      let formState: unknown;
       if (request.method === "POST") {
         let result = await processServerAction(
           request,
           decodeCallServer,
           decodeFormAction,
+          decodeFormState,
           onError
         );
         if (isResponse(result)) {
           return generateRedirectResponse(statusCode, result, generateResponse);
         }
         actionResult = result?.actionResult;
+        formState = result?.formState;
         request = result?.revalidationRequest ?? request;
       }
 
@@ -479,6 +500,7 @@ async function generateRenderResponse(
         isDataRequest,
         isSubmission,
         actionResult,
+        formState,
         staticContext
       );
     },
@@ -522,6 +544,7 @@ async function generateStaticContextResponse(
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
+  formState: unknown | undefined,
   staticContext: StaticHandlerContext
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
@@ -561,6 +584,7 @@ async function generateStaticContextResponse(
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
     location: staticContext.location,
+    formState,
   };
 
   const renderPayloadPromise = () =>
