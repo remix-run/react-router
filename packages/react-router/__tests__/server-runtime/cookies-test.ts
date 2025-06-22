@@ -77,7 +77,7 @@ describe("cookies", () => {
     expect(value).toBe(null);
   });
 
-  it("fails to parses signed string values with invalid signature encoding", async () => {
+  it("fails to parse signed string values with invalid signature encoding", async () => {
     let cookie = createCookie("my-cookie", {
       secrets: ["secret1"],
     });
