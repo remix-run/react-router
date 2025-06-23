@@ -4,7 +4,6 @@ export const routes = [
   {
     id: "root",
     path: "",
-    // requiredCSS: ["/index.css"],
     lazy: () => import("./routes/root/root"),
     children: [
       {

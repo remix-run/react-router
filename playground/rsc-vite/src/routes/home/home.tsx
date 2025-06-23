@@ -5,6 +5,8 @@ import { Counter } from "../../counter";
 import { redirect } from "react-router/rsc";
 import type { LoaderFunctionArgs } from "react-router";
 
+import "./home.css";
+
 export async function loader({ request }: LoaderFunctionArgs) {
   await new Promise((r) => setTimeout(r, 500));
   return {
@@ -39,7 +41,7 @@ export default function HomeRoute({
   };
 
   return (
-    <div style={{ border: "1px solid black", padding: "10px" }}>
+    <div className="server-box-home">
       <h2>Home Route</h2>
       <p>Loader data: {message}</p>
       <Counter />
