@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RSCRouterContext, type DataRouteObject } from "../context";
+import type { DataRouteObject } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
@@ -181,18 +181,16 @@ export function RSCStaticRouter({
   };
 
   return (
-    <RSCRouterContext.Provider value={true}>
-      <RSCRouterGlobalErrorBoundary location={payload.location}>
-        <FrameworkContext.Provider value={frameworkContext}>
-          <StaticRouterProvider
-            context={context}
-            router={router}
-            hydrate={false}
-            nonce={payload.nonce}
-          />
-        </FrameworkContext.Provider>
-      </RSCRouterGlobalErrorBoundary>
-    </RSCRouterContext.Provider>
+    <RSCRouterGlobalErrorBoundary location={payload.location}>
+      <FrameworkContext.Provider value={frameworkContext}>
+        <StaticRouterProvider
+          context={context}
+          router={router}
+          hydrate={false}
+          nonce={payload.nonce}
+        />
+      </FrameworkContext.Provider>
+    </RSCRouterGlobalErrorBoundary>
   );
 }
 

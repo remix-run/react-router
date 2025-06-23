@@ -15,7 +15,6 @@ import {
   NavigationContext,
   RouteContext,
   RouteErrorContext,
-  useIsRSCRouterContext,
 } from "./context";
 import type { Location, Path, To } from "./router/history";
 import {
@@ -445,8 +444,6 @@ export function useRoutesImpl(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let isRSCRouterContext = useIsRSCRouterContext();
-
   let { navigator } = React.useContext(NavigationContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
@@ -579,8 +576,7 @@ export function useRoutesImpl(
       ),
     parentMatches,
     dataRouterState,
-    future,
-    isRSCRouterContext
+    future
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -770,8 +766,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  future: DataRouter["future"] | null = null,
-  isRSCRouterContext: boolean = false
+  future: DataRouter["future"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
     if (!dataRouterState) {
@@ -900,10 +895,6 @@ export function _renderMatches(
         children = outlet;
       }
 
-      if (isRSCRouterContext) {
-        children = <RedirectBoundary>{children}</RedirectBoundary>;
-      }
-
       return (
         <RenderedRoute
           match={match}
@@ -933,21 +924,6 @@ export function _renderMatches(
       getChildren()
     );
   }, null as React.ReactElement | null);
-}
-
-class RedirectBoundary extends React.Component<{ children?: React.ReactNode }> {
-  // If the error is Symbol.for("react-router.redirect"), keep rendering children.
-  // If it's anything else, re-throw to bubble it up.
-  static getDerivedStateFromError(error: any) {
-    if (error === Symbol.for("react-router.redirect")) {
-      return null; // Keep rendering children
-    }
-    throw error; // Re-throw to bubble up
-  }
-
-  render() {
-    return this.props.children;
-  }
 }
 
 enum DataRouterHook {
