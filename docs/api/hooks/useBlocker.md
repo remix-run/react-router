@@ -52,7 +52,7 @@ The [Blocker](https://api.reactrouter.com/v7/types/react_router.Blocker.html) ob
 
 ### `location`
 
-When in a `blocked` state, this represents the location to which we blocked a navigation. When in a `proceeding` state, this is the location being navigated to after a `blocker.proceed()` call.
+When in a `blocked` state, this represents the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to which we blocked a navigation. When in a `proceeding` state, this is the location being navigated to after a `blocker.proceed()` call.
 
 ### `proceed()`
 
