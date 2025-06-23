@@ -51,6 +51,8 @@ jobs:
         # publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
+        # PLEASE KEEP THIS PINNED TO 1.4.10 to avoid a regression in 1.5.*
+        # See https://github.com/changesets/action/issues/465
         uses: changesets/action@v1.4.10
         with:
           version: pnpm run changeset:version
