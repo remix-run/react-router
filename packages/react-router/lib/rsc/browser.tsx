@@ -723,15 +723,32 @@ const discoveredPaths = new Set<string>();
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
+function getManifestUrl(paths: string[]): URL | null {
+  if (paths.length === 0) {
+    return null;
+  }
+
+  if (paths.length === 1) {
+    return new URL(`${paths[0]}.manifest`, window.location.origin);
+  }
+
+  let basename = (window.__router.basename ?? "").replace(/^\/|\/$/g, "");
+  let url = new URL(`${basename}/.manifest`, window.location.origin);
+  paths.sort().forEach((path) => url.searchParams.append("p", path));
+
+  return url;
+}
+
 async function fetchAndApplyManifestPatches(
   paths: string[],
   decode: DecodeServerResponseFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
   signal?: AbortSignal
 ) {
-  let basename = (window.__router.basename ?? "").replace(/^\/|\/$/g, "");
-  let url = new URL(`${basename}/.manifest`, window.location.origin);
-  paths.sort().forEach((path) => url.searchParams.append("p", path));
+  let url = getManifestUrl(paths);
+  if (url == null) {
+    return;
+  }
 
   // If the URL is nearing the ~8k limit on GET requests, skip this optimization
   // step and just let discovery happen on link click.  We also wipe out the
