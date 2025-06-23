@@ -215,8 +215,8 @@ test.describe("actions", () => {
         await page.waitForSelector(`#${REDIRECT_TARGET}`);
 
         // In RSC, every route implicitly has a loader, so we get an extra
-        // response for the page we've redirected to. To keep the test simple,
-        // we drop the last response.
+        // response for the page we've redirected to. To keep the rest of the
+        // test RSC-agnostic, we drop the last response.
         if (templateName.includes("rsc")) {
           responses = responses.slice(0, -1);
         }
