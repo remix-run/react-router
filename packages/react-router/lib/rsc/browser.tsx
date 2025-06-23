@@ -394,7 +394,7 @@ function getFetchAndDecodeViaRSC(
           data: {
             redirect: {
               redirect: payload.location,
-              reload: false,
+              reload: payload.reload,
               replace: payload.replace,
               revalidate: false,
               status: payload.status,
