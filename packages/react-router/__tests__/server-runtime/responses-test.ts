@@ -87,4 +87,16 @@ describe("redirect", () => {
     let response = redirect("/profile", 301);
     expect(response.status).toEqual(301);
   });
+
+  it("handles Unicode characters in URLs", () => {
+    let response = redirect("/こんにちは");
+    expect(response.headers.get("Location")).toEqual("/%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF");
+    expect(response.status).toEqual(302);
+  });
+
+  it("handles Unicode characters with emoji in URLs", () => {
+    let response = redirect("/hello/🌟");
+    expect(response.headers.get("Location")).toEqual("/hello/%F0%9F%8C%9F");
+    expect(response.status).toEqual(302);
+  });
 });

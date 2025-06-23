@@ -1595,7 +1595,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   }
 
   let headers = new Headers(responseInit.headers);
-  headers.set("Location", url);
+  headers.set("Location", encodeURI(url));
 
   return new Response(null, { ...responseInit, headers });
 };
