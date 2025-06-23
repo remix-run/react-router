@@ -51,7 +51,6 @@ export const redirect: typeof baseRedirect = (...args) => {
   const response = baseRedirect(...args);
 
   const ctx = ServerStorage.getStore();
-  console.log({ REDIRECT: ctx });
   if (ctx) {
     ctx.redirect = response;
   }
@@ -542,7 +541,6 @@ async function generateRenderResponse(
           request = result?.revalidationRequest ?? request;
         }
 
-        console.log(ctx);
         if (ctx.redirect) {
           return generateRedirectResponse(
             statusCode,
