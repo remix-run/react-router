@@ -22,48 +22,44 @@ type Implementation = {
 };
 
 // Run tests against vite and parcel to ensure our code is bundler agnostic
-const implementations: Implementation[] = (
-  [
-    {
-      name: "vite",
-      template: "rsc-vite",
-      build: ({ cwd }: { cwd: string }) =>
-        spawnSync("pnpm", ["build"], { cwd }),
-      run: ({ cwd, port }) =>
-        createDev(["server.js", "-p", String(port)])({
-          cwd,
-          port,
-          env: {
-            NODE_ENV: "production",
-          },
-        }),
-      dev: ({ cwd, port }) =>
-        createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
-          cwd,
-          port,
-        }),
-    },
-    {
-      name: "parcel",
-      template: "rsc-parcel",
-      build: ({ cwd }: { cwd: string }) =>
-        spawnSync("pnpm", ["build"], { cwd }),
-      run: ({ cwd, port }) =>
-        // FIXME: Parcel prod builds seems to have dup copies of react in them :/
-        // Not reproducible in the playground though - only in integration/helpers...
-        implementations.find((i) => i.name === "parcel")!.dev({ cwd, port }),
-      dev: ({ cwd, port }) =>
-        createDev(["node_modules/parcel/lib/bin.js"])({
-          // Since we run through parcels dev server we can't use `-p` because that
-          // only changes the dev server and doesn't pass through to the internal
-          // server.  So we setup the internal server to choose from `RR_PORT`
-          env: { RR_PORT: String(port) },
-          cwd,
-          port,
-        }),
-    },
-  ] as Implementation[]
-);
+const implementations: Implementation[] = [
+  {
+    name: "vite",
+    template: "rsc-vite",
+    build: ({ cwd }: { cwd: string }) => spawnSync("pnpm", ["build"], { cwd }),
+    run: ({ cwd, port }) =>
+      createDev(["server.js", "-p", String(port)])({
+        cwd,
+        port,
+        env: {
+          NODE_ENV: "production",
+        },
+      }),
+    dev: ({ cwd, port }) =>
+      createDev(["node_modules/vite/bin/vite.js", "--port", String(port)])({
+        cwd,
+        port,
+      }),
+  },
+  {
+    name: "parcel",
+    template: "rsc-parcel",
+    build: ({ cwd }: { cwd: string }) => spawnSync("pnpm", ["build"], { cwd }),
+    run: ({ cwd, port }) =>
+      // FIXME: Parcel prod builds seems to have dup copies of react in them :/
+      // Not reproducible in the playground though - only in integration/helpers...
+      implementations.find((i) => i.name === "parcel")!.dev({ cwd, port }),
+    dev: ({ cwd, port }) =>
+      createDev(["node_modules/parcel/lib/bin.js"])({
+        // Since we run through parcels dev server we can't use `-p` because that
+        // only changes the dev server and doesn't pass through to the internal
+        // server.  So we setup the internal server to choose from `RR_PORT`
+        env: { RR_PORT: String(port) },
+        cwd,
+        port,
+      }),
+  },
+] as Implementation[];
 
 async function setupRscTest({
   implementation,
@@ -780,12 +776,94 @@ implementations.forEach((implementation) => {
         );
 
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 0"
+          "Count: 1"
         );
         // Validate things are still interactive after redirect
         await page.click("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 2"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Supports React Server Functions side-effect redirects", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.actions.ts": js`
+              "use server";
+              import { redirect } from "react-router/rsc";
+
+              export async function redirectAction() {
+                redirect("/?redirected=true");
+                return "redirected";
+              }
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+              import { useState } from "react";
+
+              export function Counter() {
+                const [count, setCount] = useState(0);
+                return <button type="button" onClick={() => setCount(c => c + 1)} data-count>Count: {count}</button>;
+              }
+            `,
+            "src/routes/home.tsx": js`
+              "use client";
+              import {useActionState} from "react";
+              import { redirectAction } from "./home.actions";
+              import { Counter } from "./home.client";
+
+              export default function HomeRoute(props) {
+                const [state, action] = useActionState(redirectAction, null);
+                return (
+                  <div>
+                    <form action={action}>
+                      <button type="submit" data-submit>
+                        Redirect via Server Function
+                      </button>
+                    </form>
+                    {state && <div data-testid="state">{state}</div>}
+                    <Counter />
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify initial server render
+        await page.waitForSelector("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 0"
+        );
+        await page.click("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
           "Count: 1"
+        );
+
+        // Submit the form to trigger server function redirect
+        await page.click("[data-submit]");
+
+        await expect(page.getByTestId("state")).toHaveText("redirected");
+
+        await page.waitForURL(`http://localhost:${port}/?redirected=true`);
+
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 1"
+        );
+        // Validate things are still interactive after redirect
+        await page.click("[data-count]");
+        expect(await page.locator("[data-count]").textContent()).toBe(
+          "Count: 2"
         );
 
         // Ensure this is using RSC

@@ -101,12 +101,6 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
 
-export const RSCRouterContext = React.createContext<boolean>(false);
-
-export function useIsRSCRouterContext(): boolean {
-  return React.useContext(RSCRouterContext);
-}
-
 export type ViewTransitionContextObject =
   | {
       isTransitioning: false;

@@ -38,13 +38,3 @@ createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
     });
   }
 );
-
-if (process.env.NODE_ENV !== "production") {
-  const ogError = console.error.bind(console);
-  console.error = (...args) => {
-    if (args[1] === Symbol.for("react-router.redirect")) {
-      return;
-    }
-    ogError(...args);
-  };
-}

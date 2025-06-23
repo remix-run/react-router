@@ -35,9 +35,10 @@ export default function HomeRoute({
     "use server";
     await new Promise((r) => setTimeout(r, 500));
     if (wasRedirected) {
-      throw redirect("/");
+      redirect("/");
+    } else {
+      redirect("/?redirected=true");
     }
-    throw redirect("/?redirected=true");
   };
 
   return (
