@@ -15,3 +15,26 @@ export {
 } from "./lib/server-runtime/sessions";
 export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookieStorage";
 export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
+
+// Client component re-exports
+export {
+  Await,
+  BrowserRouter,
+  Form,
+  HashRouter,
+  Link,
+  Links,
+  MemoryRouter,
+  Meta,
+  Navigate,
+  NavLink,
+  Outlet,
+  Route,
+  Router,
+  RouterProvider,
+  Routes,
+  ScrollRestoration,
+  StaticRouter,
+  StaticRouterProvider,
+  unstable_HistoryRouter,
+} from "react-router";
