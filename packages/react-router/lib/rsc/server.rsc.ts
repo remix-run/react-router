@@ -476,7 +476,7 @@ async function generateRenderResponse(
           onError
         );
         if (isResponse(result)) {
-          return generateRedirectResponse(statusCode, result, generateResponse);
+          return generateRedirectResponse(result, generateResponse);
         }
         actionResult = result?.actionResult;
         formState = result?.formState;
@@ -486,11 +486,7 @@ async function generateRenderResponse(
       let staticContext = await query(request);
 
       if (isResponse(staticContext)) {
-        return generateRedirectResponse(
-          statusCode,
-          staticContext,
-          generateResponse
-        );
+        return generateRedirectResponse(staticContext, generateResponse);
       }
 
       return generateStaticContextResponse(
@@ -508,7 +504,7 @@ async function generateRenderResponse(
   });
 
   if (isRedirectResponse(result)) {
-    return generateRedirectResponse(statusCode, result, generateResponse);
+    return generateRedirectResponse(result, generateResponse);
   }
 
   invariant(isResponse(result), "Expected a response from query");
@@ -516,7 +512,6 @@ async function generateRenderResponse(
 }
 
 function generateRedirectResponse(
-  statusCode: number,
   response: Response,
   generateResponse: (match: ServerMatch) => Response
 ) {
