@@ -23,6 +23,10 @@
   "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
+      "react-server": {
+        "module": "./dist/development/index-react-server.mjs",
+        "default": "./dist/development/index-react-server.js"
+      },
       "node": {
         "types": "./dist/development/index.d.ts",
         "module": "./dist/development/index.mjs",

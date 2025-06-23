@@ -26,6 +26,7 @@ import {
   convertRouteMatchToUiMatch,
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
+import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
@@ -527,7 +528,7 @@ function generateRedirectResponse(
     status: response.status,
   };
   return generateResponse({
-    statusCode,
+    statusCode: SINGLE_FETCH_REDIRECT_STATUS,
     headers: new Headers({
       "Content-Type": "text/x-component",
       Vary: "Content-Type",

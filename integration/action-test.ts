@@ -198,11 +198,6 @@ test.describe("actions", () => {
       });
 
       test("redirects a thrown response on document requests", async () => {
-        // FIXME: Support in RSC
-        if (templateName === "rsc-parcel-framework") {
-          test.skip();
-        }
-
         let params = new URLSearchParams();
         let res = await fixture.postDocument(`/${THROWS_REDIRECT}`, params);
         expect(res.status).toBe(302);
@@ -212,11 +207,6 @@ test.describe("actions", () => {
       test("redirects a thrown response on script transitions", async ({
         page,
       }) => {
-        // FIXME: Support in RSC
-        if (templateName === "rsc-parcel-framework") {
-          test.skip();
-        }
-
         let app = new PlaywrightFixture(appFixture, page);
         await app.goto(`/${THROWS_REDIRECT}`);
         let responses = app.collectSingleFetchResponses();
@@ -224,7 +214,14 @@ test.describe("actions", () => {
 
         await page.waitForSelector(`#${REDIRECT_TARGET}`);
 
-        expect(responses.length).toBe(1);
+        // In RSC, every route implicitly has a loader, so we get an extra
+        // response for the page we've redirected to. To keep the test simple,
+        // we drop the last response.
+        if (templateName.includes("rsc")) {
+          responses = responses.slice(0, -1);
+        }
+
+        expect(responses).toHaveLength(1);
         expect(responses[0].status()).toBe(202);
 
         expect(new URL(page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
