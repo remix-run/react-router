@@ -16,7 +16,7 @@ export {
 export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookieStorage";
 export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
 
-// Client component re-exports
+// "use client" re-exports
 export {
   Await,
   BrowserRouter,
@@ -37,4 +37,4 @@ export {
   StaticRouter,
   StaticRouterProvider,
   unstable_HistoryRouter,
-} from "react-router";
+} from "react-router/internal/react-server-client";

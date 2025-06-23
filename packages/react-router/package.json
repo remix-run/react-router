@@ -46,17 +46,6 @@
         "default": "./dist/development/index.js"
       }
     },
-    "./internal": {
-      "node": {
-        "types": "./dist/development/lib/types/internal.d.ts"
-      },
-      "import": {
-        "types": "./dist/development/lib/types/internal.d.mts"
-      },
-      "default": {
-        "types": "./dist/development/lib/types/index.d.ts"
-      }
-    },
     "./dom": {
       "node": {
         "types": "./dist/development/dom-export.d.ts",
@@ -95,6 +84,29 @@
       "default": {
         "types": "./dist/development/rsc-export.d.ts",
         "default": "./dist/development/rsc-export.js"
+      }
+    },
+    "./internal": {
+      "node": {
+        "types": "./dist/development/lib/types/internal.d.ts"
+      },
+      "import": {
+        "types": "./dist/development/lib/types/internal.d.mts"
+      },
+      "default": {
+        "types": "./dist/development/lib/types/index.d.ts"
+      }
+    },
+    "./internal/react-server-client": {
+      "react-server": {
+        "module": "./dist/development/index-react-server-client.mjs",
+        "default": "./dist/development/index-react-server-client.js"
+      },
+      "import": {
+        "types": "./dist/development/index-react-server-client.d.mts"
+      },
+      "default": {
+        "types": "./dist/development/index-react-server-client.d.ts"
       }
     },
     "./package.json": "./package.json"
