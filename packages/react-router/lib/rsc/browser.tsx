@@ -2,11 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { RouterProvider } from "../components";
-import {
-  RSCRouterContext,
-  type DataRouteMatch,
-  type DataRouteObject,
-} from "../context";
+import type { DataRouteMatch, DataRouteObject } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
@@ -89,22 +85,11 @@ export function createCallServer({
         return;
       }
 
-      let reject!: (e: unknown) => void;
-      const promise = new Promise<void>((resolve, rejectFn) => {
-        reject = rejectFn;
-      });
-
-      const unsubscribe = window.__router.subscribe(({ navigation }) => {
-        if (navigation.state === "idle") {
-          unsubscribe();
-          reject(Symbol.for("react-router.redirect"));
-        }
-      });
       window.__router.navigate(payload.location, {
         replace: payload.replace,
       });
 
-      return promise;
+      return payload.actionResult;
     }
 
     if (payload.type !== "action") {
@@ -577,13 +562,11 @@ export function RSCHydratedRouter({
   };
 
   return (
-    <RSCRouterContext.Provider value={true}>
-      <RSCRouterGlobalErrorBoundary location={location}>
-        <FrameworkContext.Provider value={frameworkContext}>
-          <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
-        </FrameworkContext.Provider>
-      </RSCRouterGlobalErrorBoundary>
-    </RSCRouterContext.Provider>
+    <RSCRouterGlobalErrorBoundary location={location}>
+      <FrameworkContext.Provider value={frameworkContext}>
+        <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
+      </FrameworkContext.Provider>
+    </RSCRouterGlobalErrorBoundary>
   );
 }
 

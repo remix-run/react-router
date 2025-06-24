@@ -1,3 +1,5 @@
+// eslint-disable-next-line import/no-nodejs-modules
+import { AsyncLocalStorage } from "node:async_hooks";
 import * as React from "react";
 
 import type {
@@ -24,11 +26,60 @@ import {
   isRouteErrorResponse,
   matchRoutes,
   convertRouteMatchToUiMatch,
+  redirect as baseRedirect,
+  redirectDocument as baseRedirectDocument,
+  replace as baseReplace,
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
+
+type ServerContext = {
+  redirect?: Response;
+};
+
+declare global {
+  var ___reactRouterServerStorage___:
+    | AsyncLocalStorage<ServerContext>
+    | undefined;
+}
+
+const ServerStorage = (global.___reactRouterServerStorage___ ??=
+  new AsyncLocalStorage<ServerContext>());
+
+export const redirect: typeof baseRedirect = (...args) => {
+  const response = baseRedirect(...args);
+
+  const ctx = ServerStorage.getStore();
+  if (ctx) {
+    ctx.redirect = response;
+  }
+
+  return response;
+};
+
+export const redirectDocument: typeof baseRedirectDocument = (...args) => {
+  const response = baseRedirectDocument(...args);
+
+  const ctx = ServerStorage.getStore();
+  if (ctx) {
+    ctx.redirect = response;
+  }
+
+  return response;
+};
+
+export const replace: typeof baseReplace = (...args) => {
+  const response = baseReplace(...args);
+
+  const ctx = ServerStorage.getStore();
+  if (ctx) {
+    ctx.redirect = response;
+  }
+
+  return response;
+};
 
 type ServerRouteObjectBase = {
   action?: ActionFunction;
@@ -132,6 +183,7 @@ export type ServerRedirectPayload = {
   location: string;
   replace: boolean;
   reload: boolean;
+  actionResult?: Promise<unknown>;
 };
 
 export type ServerPayload =
@@ -454,57 +506,76 @@ async function generateRenderResponse(
     }),
   });
 
-  const result = await handler.query(request, {
-    skipLoaderErrorBubbling: isDataRequest,
-    skipRevalidation: isSubmission,
-    ...(routeIdsToLoad
-      ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
-      : null),
-    async unstable_stream(_, query) {
-      // If this is an RSC server action, process that and then call query as a
-      // revalidation.  If this is a RR Form/Fetcher submission,
-      // `processServerAction` will fall through as a no-op and we'll pass the
-      // POST `request` to `query` and process our action there.
-      let actionResult: Promise<unknown> | undefined;
-      let formState: unknown;
-      if (request.method === "POST") {
-        let result = await processServerAction(
-          request,
-          decodeCallServer,
-          decodeFormAction,
-          decodeFormState,
-          onError
-        );
-        if (isResponse(result)) {
-          return generateRedirectResponse(result, generateResponse);
+  let actionResult: Promise<unknown> | undefined;
+  const ctx: ServerContext = {};
+  const result = await ServerStorage.run(ctx, () =>
+    handler.query(request, {
+      skipLoaderErrorBubbling: isDataRequest,
+      skipRevalidation: isSubmission,
+      ...(routeIdsToLoad
+        ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
+        : null),
+      async unstable_stream(_, query) {
+        // If this is an RSC server action, process that and then call query as a
+        // revalidation.  If this is a RR Form/Fetcher submission,
+        // `processServerAction` will fall through as a no-op and we'll pass the
+        // POST `request` to `query` and process our action there.
+        let formState: unknown;
+        if (request.method === "POST") {
+          let result = await processServerAction(
+            request,
+            decodeCallServer,
+            decodeFormAction,
+            decodeFormState,
+            onError
+          );
+          if (isResponse(result)) {
+            return generateRedirectResponse(
+              result,
+              actionResult,
+              generateResponse
+            );
+          }
+          actionResult = result?.actionResult;
+          formState = result?.formState;
+          request = result?.revalidationRequest ?? request;
         }
-        actionResult = result?.actionResult;
-        formState = result?.formState;
-        request = result?.revalidationRequest ?? request;
-      }
 
-      let staticContext = await query(request);
+        if (ctx.redirect) {
+          return generateRedirectResponse(
+            ctx.redirect,
+            actionResult,
+            generateResponse
+          );
+        }
 
-      if (isResponse(staticContext)) {
-        return generateRedirectResponse(staticContext, generateResponse);
-      }
+        let staticContext = await query(request);
 
-      return generateStaticContextResponse(
-        routes,
-        generateResponse,
-        statusCode,
-        routeIdsToLoad,
-        isDataRequest,
-        isSubmission,
-        actionResult,
-        formState,
-        staticContext
-      );
-    },
-  });
+        if (isResponse(staticContext)) {
+          return generateRedirectResponse(
+            staticContext,
+            actionResult,
+            generateResponse
+          );
+        }
+
+        return generateStaticContextResponse(
+          routes,
+          generateResponse,
+          statusCode,
+          routeIdsToLoad,
+          isDataRequest,
+          isSubmission,
+          actionResult,
+          formState,
+          staticContext
+        );
+      },
+    })
+  );
 
   if (isRedirectResponse(result)) {
-    return generateRedirectResponse(result, generateResponse);
+    return generateRedirectResponse(result, actionResult, generateResponse);
   }
 
   invariant(isResponse(result), "Expected a response from query");
@@ -513,6 +584,7 @@ async function generateRenderResponse(
 
 function generateRedirectResponse(
   response: Response,
+  actionResult: Promise<unknown> | undefined,
   generateResponse: (match: ServerMatch) => Response
 ) {
   let payload: ServerRedirectPayload = {
@@ -521,6 +593,7 @@ function generateRedirectResponse(
     reload: response.headers.get("X-Remix-Reload-Document") === "true",
     replace: response.headers.get("X-Remix-Replace") === "true",
     status: response.status,
+    actionResult,
   };
   return generateResponse({
     statusCode: SINGLE_FETCH_REDIRECT_STATUS,

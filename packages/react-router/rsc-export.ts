@@ -5,14 +5,7 @@ export type {
   unstable_RouterContext,
   unstable_RouterContextProvider,
 } from "./lib/router/utils";
-export {
-  data,
-  matchRoutes,
-  redirect,
-  redirectDocument,
-  replace,
-  unstable_createContext,
-} from "./lib/router/utils";
+export { data, matchRoutes, unstable_createContext } from "./lib/router/utils";
 
 export type {
   Cookie,
@@ -50,4 +43,9 @@ export type {
   ServerRouteMatch as unstable_ServerRouteMatch,
   ServerRouteObject as unstable_ServerRouteObject,
 } from "./lib/rsc/server.rsc";
-export { matchRSCServerRequest as unstable_matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export {
+  redirect,
+  redirectDocument,
+  replace,
+  matchRSCServerRequest as unstable_matchRSCServerRequest,
+} from "./lib/rsc/server.rsc";
