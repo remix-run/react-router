@@ -10,7 +10,7 @@ order: 1
 <br />
 <br />
 
-This guide will get you familiar with the basic plumbing required to run a React Router app as quickly as possible. While there are many starter templates with different runtimes, deploy targets, and databases, we're going to create a bare-bones project from scratch.
+This guide will familiarize you with the basic plumbing required to run a React Router app as quickly as possible. While there are many starter templates with different runtimes, deploy targets, and databases, we're going to create a bare-bones project from scratch.
 
 ## Installation
 
@@ -20,7 +20,7 @@ If you prefer to initialize a batteries-included React Router project, you can u
 npx create-react-router@latest
 ```
 
-However, this guide will explain everything the CLI does to set up your project, and instead of using the CLI, you can follow these steps. If you're just getting started with React Router, we recommend following this guide to understand all the different pieces that make up a React Router app.
+However, this guide will explain everything the CLI does to set up your project. Instead of using the CLI, you can follow these steps. If you're just getting started with React Router, we recommend following this guide to understand all the different pieces that make up a React Router app.
 
 ```shellscript nonumber
 mkdir my-react-router-app
@@ -56,7 +56,6 @@ export default defineConfig({
 ```shellscript nonumber
 mkdir app
 touch app/root.jsx
-touch app/routes.js
 ```
 
 `app/root.jsx` is what we call the "Root Route". It's the root layout of your entire app. Here's the basic set of elements you'll need for any project:
@@ -83,6 +82,12 @@ export default function App() {
 }
 ```
 
+## Additional Routes
+
+```shellscript nonumber
+touch app/routes.js
+```
+
 `app/routes.js` is where you define your routes. This guide focuses on the minimal setup to get a React Router app up and running, so we don't need to define any routes and can just export an empty array:
 
 ```js filename=app/routes.js
@@ -93,7 +98,7 @@ The existence of `routes.js` is required to build a React Router app; if you're 
 
 ## Build and Run
 
-First you will need to specify the type as `module` in `package.json` to satisfy esmodule requirements for `react-router` and future versions of `vite`.
+First, you will need to specify the type as `module` in `package.json` to satisfy ES module requirements for `react-router` and future versions of Vite.
 
 ```shellscript nonumber
 npm pkg set type="module"
@@ -105,7 +110,7 @@ Next build the app for production:
 npx react-router build
 ```
 
-You should now see a `build` folder containing a `server` folder (the server version of your app) and a `client` folder (the browser version) with some build artifacts in them. (This is all [configurable][vite-config].)
+You should now see a `build` folder containing a `server` folder (the server version of your app) and a `client` folder (the browser version) with some build artifacts in them. (This is all [configurable][react-router-config].)
 
 👉 **Run the app with `react-router-serve`**
 
@@ -133,13 +138,13 @@ The `build/server` directory created by `react-router build` is just a module th
 
 <docs-info>
 
-You can also use React Router as a pure Single Page Application with no server. For more information, see our guide on [Single Page Apps][spa].
+You can also use React Router as a Single Page Application with no server. For more information, see our guide on [Single Page Apps][spa].
 
 </docs-info>
 
-If you don't care to set up your own server, you can use `react-router-serve`. It's a simple express-based server maintained by the React Router maintainers. However, React Router is specifically designed to run in _any_ JavaScript environment so that you own your stack. It is expected many —if not most— production apps will have their own server.
+If you don't care to set up your own server, you can use `react-router-serve`. It's a simple `express`-based server maintained by the React Router maintainers. However, React Router is specifically designed to run in _any_ JavaScript environment so that you own your stack. It is expected many —if not most— production apps will have their own server.
 
-Just for kicks, let's stop using `react-router-serve` and use express instead.
+Just for kicks, let's stop using `react-router-serve` and use `express` instead.
 
 👉 **Install Express, the React Router Express adapter, and [cross-env] for running in production mode**
 
@@ -164,23 +169,25 @@ const app = express();
 app.use(express.static("build/client"));
 
 // notice that your app is "just a request handler"
-createRequestHandler({
-  // and the result of `react-router build` is "just a module"
-  build: await import("./build/server/index.js"),
-});
+app.use(
+  createRequestHandler({
+    // and the result of `react-router build` is "just a module"
+    build: await import("./build/server/index.js"),
+  })
+);
 
 app.listen(3000, () => {
   console.log("App listening on http://localhost:3000");
 });
 ```
 
-👉 **Run your app with express**
+👉 **Run your app with `express`**
 
 ```shellscript nonumber
 node server.js
 ```
 
-Now that you own your server, you can debug your app with whatever tooling your server has. For example, you can inspect your app with chrome devtools with the [Node.js inspect flag][inspect]:
+Now that you own your server, you can debug your app with whatever tooling your server has. For example, you can inspect your app with Chrome DevTools using the [Node.js inspect flag][inspect]:
 
 ```shellscript nonumber
 node --inspect server.js
@@ -208,7 +215,7 @@ First, as a convenience, add `dev` and `start` commands in `package.json` that w
 
 Vite middleware is not applied if `process.env.NODE_ENV` is set to `"production"`, in which case you'll still be running the regular build output as you did earlier.
 
-```js filename=server.js lines=[14-27]
+```js filename=server.js lines=[6,13-28]
 import { createRequestHandler } from "@react-router/express";
 import express from "express";
 
@@ -249,7 +256,7 @@ app.listen(3000, () => {
 npm run dev
 ```
 
-Now you can work on your app with immediate feedback. Give it a try, change the text in `root.jsx` and watch!
+Now you can work on your app with immediate feedback. Give it a try by changing the text in `root.jsx` and watch the changes appear instantly!
 
 ## Controlling Server and Browser Entries
 
@@ -268,13 +275,13 @@ Entry file entry.server created at app/entry.server.tsx.
 
 Congrats, you can add React Router to your resume! Summing things up, we've learned:
 
-- React Router compiles your app into two things:
+- React Router framework mode compiles your app into two things:
   - A request handler that you add to your own JavaScript server
   - A pile of static assets in your public directory for the browser
 - You can bring your own server with adapters to deploy anywhere
 - You can set up a development workflow with HMR built-in
 
-In general, React Router is a bit "guts out". A few minutes of boilerplate but now you own your stack.
+In general, React Router is a bit "guts out". It requires a few minutes of boilerplate, but now you own your stack.
 
 What's next?
 
@@ -283,12 +290,12 @@ What's next?
 [templates]: ../start/framework/deploying#templates
 [spa]: ../how-to/spa
 [inspect]: https://nodejs.org/en/docs/guides/debugging-getting-started/
-[vite-config]: ../file-conventions/vite-config
+[vite-config]: https://vite.dev/config
 [routing]: ../start/framework/routing
 [templates]: /resources?category=templates
 [http-localhost-3000]: http://localhost:3000
 [vite]: https://vitejs.dev
-[vite-config]: https://vitejs.dev/config
+[react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
 [vite-middleware]: https://vitejs.dev/guide/ssr#setting-up-the-dev-server
 [cross-env]: https://www.npmjs.com/package/cross-env
 [address-book-tutorial]: ./address-book
