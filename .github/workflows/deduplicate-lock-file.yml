@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
+  dedupe:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
