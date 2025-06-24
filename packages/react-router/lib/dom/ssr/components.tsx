@@ -27,7 +27,12 @@ import type {
   MetaMatches,
 } from "./routeModules";
 import { singleFetchUrl } from "./single-fetch";
-import { DataRouterContext, DataRouterStateContext } from "../../context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  useIsRSCRouterContext,
+} from "../../context";
+import { warnOnce } from "../../server-runtime/warnings";
 import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
@@ -653,6 +658,7 @@ export function Scripts(props: ScriptsProps) {
   } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
+  let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
@@ -668,6 +674,10 @@ export function Scripts(props: ScriptsProps) {
   }, []);
 
   let initialScripts = React.useMemo(() => {
+    if (isRSCRouterContext) {
+      return null;
+    }
+
     let streamScript =
       "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
@@ -789,19 +799,25 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  let preloads = isHydrated
-    ? []
-    : dedupe(
-        manifest.entry.imports.concat(
-          getModuleLinkHrefs(matches, manifest, {
-            includeHydrateFallback: true,
-          })
-        )
-      );
+  let preloads =
+    isHydrated || isRSCRouterContext
+      ? []
+      : dedupe(
+          manifest.entry.imports.concat(
+            getModuleLinkHrefs(matches, manifest, {
+              includeHydrateFallback: true,
+            })
+          )
+        );
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
-  return isHydrated ? null : (
+  warnOnce(
+    !isRSCRouterContext,
+    "The <Scripts /> element is a no-op when using RSC and can be safely removed."
+  );
+
+  return isHydrated || isRSCRouterContext ? null : (
     <>
       {typeof manifest.sri === "object" ? (
         <script

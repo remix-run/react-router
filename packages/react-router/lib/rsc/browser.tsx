@@ -2,7 +2,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { RouterProvider } from "../components";
-import type { DataRouteMatch, DataRouteObject } from "../context";
+import {
+  RSCRouterContext,
+  type DataRouteMatch,
+  type DataRouteObject,
+} from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
@@ -562,11 +566,13 @@ export function RSCHydratedRouter({
   };
 
   return (
-    <RSCRouterGlobalErrorBoundary location={location}>
-      <FrameworkContext.Provider value={frameworkContext}>
-        <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
-      </FrameworkContext.Provider>
-    </RSCRouterGlobalErrorBoundary>
+    <RSCRouterContext.Provider value={true}>
+      <RSCRouterGlobalErrorBoundary location={location}>
+        <FrameworkContext.Provider value={frameworkContext}>
+          <RouterProvider router={router} flushSync={ReactDOM.flushSync} />
+        </FrameworkContext.Provider>
+      </RSCRouterGlobalErrorBoundary>
+    </RSCRouterContext.Provider>
   );
 }
 
