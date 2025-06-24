@@ -23,6 +23,10 @@
   "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
+      "react-server": {
+        "module": "./dist/development/index-react-server.mjs",
+        "default": "./dist/development/index-react-server.js"
+      },
       "node": {
         "types": "./dist/development/index.d.ts",
         "module": "./dist/development/index.mjs",
@@ -40,17 +44,6 @@
       "default": {
         "types": "./dist/development/index.d.ts",
         "default": "./dist/development/index.js"
-      }
-    },
-    "./internal": {
-      "node": {
-        "types": "./dist/development/lib/types/internal.d.ts"
-      },
-      "import": {
-        "types": "./dist/development/lib/types/internal.d.mts"
-      },
-      "default": {
-        "types": "./dist/development/lib/types/index.d.ts"
       }
     },
     "./dom": {
@@ -73,24 +66,27 @@
         "default": "./dist/development/dom-export.js"
       }
     },
-    "./rsc": {
+    "./internal": {
       "node": {
-        "types": "./dist/development/rsc-export.d.ts",
-        "module": "./dist/development/rsc-export.mjs",
-        "module-sync": "./dist/development/rsc-export.mjs",
-        "default": "./dist/development/rsc-export.js"
-      },
-      "module": {
-        "types": "./dist/development/rsc-export.d.mts",
-        "default": "./dist/development/rsc-export.mjs"
+        "types": "./dist/development/lib/types/internal.d.ts"
       },
       "import": {
-        "types": "./dist/development/rsc-export.d.mts",
-        "default": "./dist/development/rsc-export.mjs"
+        "types": "./dist/development/lib/types/internal.d.mts"
       },
       "default": {
-        "types": "./dist/development/rsc-export.d.ts",
-        "default": "./dist/development/rsc-export.js"
+        "types": "./dist/development/lib/types/index.d.ts"
+      }
+    },
+    "./internal/react-server-client": {
+      "react-server": {
+        "module": "./dist/development/index-react-server-client.mjs",
+        "default": "./dist/development/index-react-server-client.js"
+      },
+      "import": {
+        "types": "./dist/development/index-react-server-client.d.mts"
+      },
+      "default": {
+        "types": "./dist/development/index-react-server-client.d.ts"
       }
     },
     "./package.json": "./package.json"

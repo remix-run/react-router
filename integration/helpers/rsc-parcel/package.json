@@ -1,11 +1,11 @@
 {
   "name": "@playground/rsc-parcel",
   "private": true,
-  "source": "src/entry.ssr.tsx",
-  "server": "dist/server.js",
   "targets": {
     "server": {
       "context": "react-server",
+      "source": "src/server.tsx",
+      "scopeHoist": false,
       "includeNodeModules": {
         "express": false
       }

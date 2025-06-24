@@ -1,4 +1,4 @@
-import { data } from "react-router/rsc";
+import { data } from "react-router";
 
 export {
   ErrorBoundary,

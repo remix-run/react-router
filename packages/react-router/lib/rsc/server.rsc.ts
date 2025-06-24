@@ -31,6 +31,7 @@ import {
   replace as baseReplace,
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
+import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
@@ -530,7 +531,6 @@ async function generateRenderResponse(
           );
           if (isResponse(result)) {
             return generateRedirectResponse(
-              statusCode,
               result,
               actionResult,
               generateResponse
@@ -543,7 +543,6 @@ async function generateRenderResponse(
 
         if (ctx.redirect) {
           return generateRedirectResponse(
-            statusCode,
             ctx.redirect,
             actionResult,
             generateResponse
@@ -554,7 +553,6 @@ async function generateRenderResponse(
 
         if (isResponse(staticContext)) {
           return generateRedirectResponse(
-            statusCode,
             staticContext,
             actionResult,
             generateResponse
@@ -577,12 +575,7 @@ async function generateRenderResponse(
   );
 
   if (isRedirectResponse(result)) {
-    return generateRedirectResponse(
-      statusCode,
-      result,
-      actionResult,
-      generateResponse
-    );
+    return generateRedirectResponse(result, actionResult, generateResponse);
   }
 
   invariant(isResponse(result), "Expected a response from query");
@@ -590,7 +583,6 @@ async function generateRenderResponse(
 }
 
 function generateRedirectResponse(
-  statusCode: number,
   response: Response,
   actionResult: Promise<unknown> | undefined,
   generateResponse: (match: ServerMatch) => Response
@@ -604,7 +596,7 @@ function generateRedirectResponse(
     actionResult,
   };
   return generateResponse({
-    statusCode,
+    statusCode: SINGLE_FETCH_REDIRECT_STATUS,
     headers: new Headers({
       "Content-Type": "text/x-component",
       Vary: "Content-Type",

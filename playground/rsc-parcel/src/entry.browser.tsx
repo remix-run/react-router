@@ -7,7 +7,7 @@ import {
   unstable_getServerStream as getServerStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
-import type { unstable_ServerPayload as ServerPayload } from "react-router/rsc";
+import type { unstable_ServerPayload as ServerPayload } from "react-router";
 import {
   createFromReadableStream,
   encodeReply,
@@ -30,7 +30,6 @@ createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
         <React.StrictMode>
           <RSCHydratedRouter
             decode={createFromReadableStream}
-            // @ts-expect-error
             payload={payload}
             routeDiscovery="eager"
           />

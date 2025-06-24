@@ -11,7 +11,7 @@ import {
   type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
   type unstable_DecodeFormActionFunction as DecodeFormActionFunction,
   unstable_matchRSCServerRequest as matchRSCServerRequest,
-} from "react-router/rsc";
+} from "react-router";
 
 import { routes } from "./routes";
 
@@ -32,7 +32,6 @@ export function callServer(request: Request) {
     decodeCallServer,
     decodeFormAction,
     request,
-    // @ts-expect-error
     routes,
     generateResponse(match) {
       return new Response(renderToReadableStream(match.payload), {

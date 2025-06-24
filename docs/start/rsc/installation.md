@@ -77,8 +77,8 @@ import {
 import type {
   unstable_DecodeCallServerFunction as DecodeCallServerFunction,
   unstable_DecodeFormActionFunction as DecodeFormActionFunction,
-} from "react-router/rsc";
-import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router/rsc";
+} from "react-router";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 // Import the prerender function from the client envrionment
 import { prerender } from "./prerender" with { env: "react-client" };
@@ -246,7 +246,7 @@ Create a `src/routes/routes.ts` file that will define our routes with dynamic im
 ```ts nonumber
 "use server-entry";
 
-import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
 
 import "../browser";
 

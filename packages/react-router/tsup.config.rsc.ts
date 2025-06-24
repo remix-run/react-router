@@ -5,8 +5,8 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["rsc-export.ts"];
-const external = ["react-router"];
+const entry = ["index-react-server.ts", "rsc-export.ts"];
+const external = ["react-router", "react-router/internal/react-server-client"];
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([
@@ -15,6 +15,7 @@ const config = (enableDevWarnings: boolean) =>
       entry,
       external,
       format: ["cjs"],
+      splitting: true,
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {
@@ -32,6 +33,7 @@ const config = (enableDevWarnings: boolean) =>
       entry,
       external,
       format: ["esm"],
+      splitting: true,
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {

@@ -209,7 +209,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
 
               export const routes = [
                 {
@@ -340,7 +340,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
 
               export const routes = [
                 {
@@ -473,7 +473,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
 
               export const routes = [
                 {
@@ -720,7 +720,7 @@ implementations.forEach((implementation) => {
           files: {
             "src/routes/home.actions.ts": js`
               "use server";
-              import { redirect } from "react-router/rsc";
+              import { redirect } from "react-router";
 
               export async function redirectAction(formData: FormData) {
                 throw redirect("/?redirected=true");
@@ -798,7 +798,7 @@ implementations.forEach((implementation) => {
           files: {
             "src/routes/home.actions.ts": js`
               "use server";
-              import { redirect } from "react-router/rsc";
+              import { redirect } from "react-router";
 
               export async function redirectAction() {
                 redirect("/?redirected=true");
