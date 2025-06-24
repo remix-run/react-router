@@ -53,7 +53,7 @@ body:
       placeholder: System, Binaries, Browsers
     validations:
       required: true
-h  - type: dropdown
+  - type: dropdown
     id: package-manager
     attributes:
       label: Used Package Manager
