@@ -15,6 +15,7 @@ const config = (enableDevWarnings: boolean) =>
       entry,
       external,
       format: ["cjs"],
+      splitting: true,
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {
@@ -32,6 +33,7 @@ const config = (enableDevWarnings: boolean) =>
       entry,
       external,
       format: ["esm"],
+      splitting: true,
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
       dts: true,
       banner: {

@@ -18,6 +18,7 @@ const config = (enableDevWarnings: boolean) =>
       clean: false,
       entry,
       format: ["cjs"],
+      splitting: true,
       // Don't bundle `react-router` in sub-exports (i.e., `react-router/dom`)
       external: ["react-router"],
       outDir: enableDevWarnings ? "dist/development" : "dist/production",
@@ -35,6 +36,7 @@ const config = (enableDevWarnings: boolean) =>
       clean: false,
       entry,
       format: ["esm"],
+      splitting: true,
       // We don't do the external thing for `react-router` here because it
       // doesn't get bundled by default in the ESM build, and when we tried it
       // in https://github.com/remix-run/react-router/pull/13497 it changed up
