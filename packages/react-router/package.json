@@ -82,11 +82,23 @@
         "module": "./dist/development/index-react-server-client.mjs",
         "default": "./dist/development/index-react-server-client.js"
       },
+      "node": {
+        "types": "./dist/development/index.d.ts",
+        "module": "./dist/development/index.mjs",
+        "module-sync": "./dist/development/index.mjs",
+        "default": "./dist/development/index.js"
+      },
+      "module": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
+      },
       "import": {
-        "types": "./dist/development/index-react-server-client.d.mts"
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "default": {
-        "types": "./dist/development/index-react-server-client.d.ts"
+        "types": "./dist/development/index.d.ts",
+        "default": "./dist/development/index.js"
       }
     },
     "./package.json": "./package.json"
