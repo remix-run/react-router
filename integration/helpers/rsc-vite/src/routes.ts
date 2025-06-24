@@ -1,4 +1,4 @@
-import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
 
 export const routes = [
   {

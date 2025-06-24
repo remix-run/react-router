@@ -298,6 +298,22 @@ export {
 export { getServerStream as unstable_getServerStream } from "./lib/rsc/html-stream/browser";
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
+// Re-export of RSC types
+import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
+
+export type {
+  DecodeCallServerFunction as unstable_DecodeCallServerFunction,
+  DecodeFormActionFunction as unstable_DecodeFormActionFunction,
+  ServerManifestPayload as unstable_ServerManifestPayload,
+  ServerMatch as unstable_ServerMatch,
+  ServerPayload as unstable_ServerPayload,
+  ServerRenderPayload as unstable_ServerRenderPayload,
+  RenderedRoute as ServerRouteManifest,
+  ServerRouteMatch as unstable_ServerRouteMatch,
+  ServerRouteObject as unstable_ServerRouteObject,
+} from "./lib/rsc/server.rsc";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any

@@ -1,4 +1,4 @@
-import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router/rsc";
+import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
 
 export const routes = [
   {
@@ -8,13 +8,11 @@ export const routes = [
       {
         id: "home",
         index: true,
-        // @ts-expect-error
         lazy: () => import("./routes/home/home"),
       },
       {
         id: "about",
         path: "about",
-        // @ts-expect-error
         lazy: () => import("./routes/about/about"),
       },
       {

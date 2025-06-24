@@ -1,9 +1,9 @@
 import { Link, Links, Outlet, ScrollRestoration } from "react-router";
-import { type unstable_MiddlewareFunction } from "react-router/rsc";
+import { type unstable_MiddlewareFunction } from "react-router";
 
 import { Counter } from "../../counter";
 import { ErrorReporter, NavigationState } from "./root.client";
-import "./root.css"
+import "./root.css";
 
 export { shouldRevalidate } from "./root.client";
 

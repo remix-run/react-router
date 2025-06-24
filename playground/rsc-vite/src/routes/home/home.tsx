@@ -2,7 +2,7 @@ import { HomeForm, RedirectForm } from "./home.client";
 export { clientLoader } from "./home.client";
 
 import { Counter } from "../../counter";
-import { redirect } from "react-router/rsc";
+import { redirect } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 
 import "./home.css";

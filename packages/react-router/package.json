@@ -66,26 +66,6 @@
         "default": "./dist/development/dom-export.js"
       }
     },
-    "./rsc": {
-      "node": {
-        "types": "./dist/development/rsc-export.d.ts",
-        "module": "./dist/development/rsc-export.mjs",
-        "module-sync": "./dist/development/rsc-export.mjs",
-        "default": "./dist/development/rsc-export.js"
-      },
-      "module": {
-        "types": "./dist/development/rsc-export.d.mts",
-        "default": "./dist/development/rsc-export.mjs"
-      },
-      "import": {
-        "types": "./dist/development/rsc-export.d.mts",
-        "default": "./dist/development/rsc-export.mjs"
-      },
-      "default": {
-        "types": "./dist/development/rsc-export.d.ts",
-        "default": "./dist/development/rsc-export.js"
-      }
-    },
     "./internal": {
       "node": {
         "types": "./dist/development/lib/types/internal.d.ts"
