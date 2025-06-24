@@ -38,7 +38,7 @@ function Dashboard() {
 
 [modes: framework, data, declarative]
 
-Nested [Route](../components/Route) elements
+Nested [Route](../components/Route) elements using absolute paths
 
 ### location
 
