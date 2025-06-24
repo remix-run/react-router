@@ -1,5 +1,7 @@
 # `create-react-router`
 
+## 7.6.3-pre.0
+
 ## 7.6.2
 
 ### Patch Changes
