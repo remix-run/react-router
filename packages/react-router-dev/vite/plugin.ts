@@ -3451,8 +3451,7 @@ export async function getEnvironmentOptionsResolvers(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
   );
   let vite = getVite();
-  let viteServerConditions: string[] = [
-    ...(vite.defaultServerConditions ?? []),
+  let baseServerLikeConditions: string[] = [
     ...(moduleSyncEnabled ? ["module-sync"] : []),
   ];
 
@@ -3512,8 +3511,8 @@ export async function getEnvironmentOptionsResolvers(
   }): EnvironmentOptions {
     let conditions =
       viteCommand === "build"
-        ? viteServerConditions
-        : ["development", ...viteServerConditions];
+        ? baseServerLikeConditions
+        : ["development", ...baseServerLikeConditions];
 
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
       resolve: {
@@ -3522,8 +3521,8 @@ export async function getEnvironmentOptionsResolvers(
           ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? undefined
             : ssrExternals,
-        conditions,
-        externalConditions: conditions,
+        conditions: [...conditions, ...(vite.defaultServerConditions || [])],
+        externalConditions: [...conditions, "node"],
       },
       build: {
         // We move SSR-only assets to client assets. Note that the
