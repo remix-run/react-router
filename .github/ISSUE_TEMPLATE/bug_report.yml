@@ -8,46 +8,34 @@ body:
       value: |
         Thank you for helping to improve React Router!
 
-        - **All** bugs must have a **minimal** reproduction
-          - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
-          - The preferred method is StackBlitz via [https://reactrouter.com/new](https://reactrouter.com/new)
-          - If Stackblitz is not an option, a GitHub repo based on a fresh `create-react-router` app is acceptable
-          - Only in extraordinary circumstances will code snippets or maximal reproductions be accepted
-        - Issue Review
-          - Issues not meeting the above criteria will be closed and pointed to this document
-          - Non-issues (feature requests, usage questions) will also be closed with a link to this document
-          - The SC will triage issues regularly
-        - Fixing Issues
-          - The SC will mark good community issues with an `Accepting PRs` label
-          - These issues will generally be ones that are likely to have a small surface area fix
-          - However, anyone can work on any issue but there's no guarantee the PR will be accepted if the surface area is too large for expedient review by a core team member
+        Please note that **all** bugs must have a **minimal** reproduction, meaning
+        that it is not just pointing to a deployed site or a branch in your existing
+        application.  Please refer to the [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process)
+        for more information.
 
-        ## Option 1: Submit a PR with a failing test
+        ## If you are using **Framework Mode**, you have 2 preferred options:
+
+        **Option 1** - Create a failing integration test
 
         🏆 The most helpful reproduction is to use our _bug report integration test_ template:
 
         1. [Fork `remix-run/react-router`](https://github.com/remix-run/react-router/fork)
         2. Open [`integration/bug-report-test.ts`](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts) in your editor
-        3. Follow the instructions and submit a pull request with a failing bug report test!
+        3. Follow the instructions to create a failing bug report test
+        4. Link to your forked branch with the failing test in this issue
 
-        ## Option 2: Continue filling out this form
-
-        If you'd rather open a GitHub issue, here are other ways to share a reproduction (ordered from most helpful to least):
+        ## Option 2: Create a **minimal** reproduction
 
         - 🥇 Link to a [StackBlitz](https://reactrouter.com/new) environment
-        - 🥈 Link to a GitHub repository
-        - 🥉 Description of project including template, config files, `package.json` scripts, etc.
+        - 🥈 Link to a GitHub repository containing a minimal reproduction app
 
-  - type: dropdown
-    id: mode
-    attributes:
-      label: I'm using React Router as a...
-      description: See https://reactrouter.com/home for explanation
-      options:
-        - library
-        - framework
-    validations:
-      required: true
+        ## If you are using **Data** or **Declarative Mode**:
+
+        Create a **minimal** reproduction
+
+        - 🥇 Link to a CodeSandbox repro: [TS](https://codesandbox.io/templates/react-vite-ts) | [JS](https://codesandbox.io/templates/react-vite)
+        - 🥈 Link to a GitHub repository containing a minimal reproduction app
+
   - type: textarea
     id: reproduction
     attributes:
@@ -65,7 +53,7 @@ body:
       placeholder: System, Binaries, Browsers
     validations:
       required: true
-  - type: dropdown
+h  - type: dropdown
     id: package-manager
     attributes:
       label: Used Package Manager
