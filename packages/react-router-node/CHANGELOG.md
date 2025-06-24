@@ -1,5 +1,13 @@
 # `@react-router/node`
 
+## 7.6.3-pre.0
+
+### Patch Changes
+
+- Remove old "install" package exports ([#13762](https://github.com/remix-run/react-router/pull/13762))
+- Updated dependencies:
+  - `react-router@7.6.3-pre.0`
+
 ## 7.6.2
 
 ### Patch Changes
