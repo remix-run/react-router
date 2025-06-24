@@ -126,7 +126,7 @@ describe("cookies", () => {
     let oldValue = await cookie.parse(getCookieFromSetCookie(setCookie));
     expect(oldValue).toMatchObject(value);
 
-    // New Set-Cookie should be different, it uses a differet secret.
+    // New Set-Cookie should be different, it uses a different secret.
     let setCookie2 = await cookie.serialize(value);
     expect(setCookie).not.toEqual(setCookie2);
   });
