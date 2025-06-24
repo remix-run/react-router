@@ -32,7 +32,6 @@ export function callServer(request: Request) {
     decodeCallServer,
     decodeFormAction,
     request,
-    // @ts-expect-error
     routes,
     generateResponse(match) {
       return new Response(renderToReadableStream(match.payload), {

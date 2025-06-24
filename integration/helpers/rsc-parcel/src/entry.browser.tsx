@@ -30,7 +30,6 @@ createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
         <React.StrictMode>
           <RSCHydratedRouter
             decode={createFromReadableStream}
-            // @ts-expect-error
             payload={payload}
           />
         </React.StrictMode>
