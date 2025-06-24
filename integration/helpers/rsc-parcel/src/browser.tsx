@@ -28,6 +28,7 @@ setServerCallback(
 
 // Get and decode the initial server payload
 decode(getServerStream()).then((payload) => {
+  // @ts-expect-error - on 18 types, requires 19.
   startTransition(async () => {
     const formState =
       payload.type === "render" ? await payload.formState : undefined;
