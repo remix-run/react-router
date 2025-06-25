@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-support unencoded UTF-8 routes in prerender config with ssr:false
+Support unencoded UTF-8 routes in prerender config with `ssr` set to `false`
