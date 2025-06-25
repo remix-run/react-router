@@ -1,0 +1,34 @@
+name: 🚪 Close issues without a reproduction
+
+on:
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  close-no-repro-issues:
+    name: 🚪 Close issues without a reproduction
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          # required for --experimental-strip-types
+          node-version: 22
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🚪 Close Issues
+        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts --dryRun

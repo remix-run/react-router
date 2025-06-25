@@ -52,11 +52,12 @@ To reduce friction, the SC will primarily operate asynchronously via GitHub, but
 
 Due to the large number of React Router applications out there, we have to be a bit strict on the process for filing issues to avoid an overload in GitHub.
 
-- **All** bugs must have a **minimal** reproduction [^3]
-  - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
+- **All** bugs must have a **minimal** and **runnable** reproduction [^3]
+  - _Minimal_ means that it is not just pointing to a deployed site or a branch in your existing application
+  - _Runnable_ means that it is a working application where we can see the issue, not just a few snippets of code that need to be manually reassembled into a running application
   - The preferred methods for reproductions are:
-    - StackBlitz for **Framework Mode**: https://reactrouter.com/new
-    - CodeSandbox for **Data/Declarative Modes**: [TypeScript](https://codesandbox.io/templates/react-vite-ts) | [Javascript](https://codesandbox.io/templates/react-vite)
+    - **Framework Mode**: [StackBlitz](https://reactrouter.com/new) or a GitHub fork with a failing integration test based on `bug_reeport_test.ts`
+    - **Data/Declarative Modes**: [CodeSandbox (TS)](https://codesandbox.io/templates/react-vite-ts) or [CodeSandbox (JS)](https://codesandbox.io/templates/react-vite)
   - If StackBlitz/CodeSandbox is not an option, a GitHub repo based on a fresh `npx create-react-router` app is acceptable
   - Only in extraordinary circumstances will code snippets or maximal reproductions be accepted
 - Issue Review
@@ -139,5 +140,3 @@ To get a feature accepted and implemented in React Router, it will go through th
 
 - A proposal enters **Stage 5 — Stable** once it receives **Stage 4 — Stabilization** PR approvals from at least 50% of the SC members and is merged to `dev`
 - This will include the stable feature in `nightly` releases and the next normal SemVer release
-
-[mermaid]: https://mermaid.live/edit#pako:eNqVkm9r2zAQxr_KcTDYwAn-E8eOGYXGScdeFEYzGLQuQ4nPjsCWjCx3beN89yn2rJKX06tDd8_vnpPuhAeZEyZYVPLP4ciUhp-bTIA5t0_fc2LPMJvd9L8U1wQ_lGxky6oe1k8Z7jQrCdyve3Xzecp8yfB5VK8H3XQPrGmUfDFBoWQNPuxSuKd6T6rtIbUwD2aQStHynBTTXAqLS0fcA_C6qagmobkogbXQiVazfUW_e9hYjm84t1VzZFa_mfTXRpiGilirIXQ_gSyubG0tLjC4NekP2naiKarly8WJtQGNooK_9nBn5QsjN9GeV_z9eqq7_3f1zWLDf9iKDA8drEnVjOfmL08Xeob6aB4qw8SEORWsq3SGmTib0q7JmaZtzrVUmBSsaslB1mm5exMHTLTqaCracFYqVtuqhglMTviKySqYh4toFUfxIo6DyPUdfMPEW0ZzNwjNvb9wYz8Ko7OD71IagjuPo1UQL1dLb7F0PS8IB9zjkBx70mDpflzJYTMdVLIrj7Z_qS4jjtWKhFmUVHZCYxKe_wLxVeMU

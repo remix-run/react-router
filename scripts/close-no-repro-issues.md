@@ -1,0 +1,9 @@
+To align with our new [Open Governance](https://remix.run/blog/rr-governance) model, we are now requiring that all issues have a [**minimal** and **runnable** reproduction](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process). To that end, we're doing some housekeeping in the repo to clean up existing issues that do not have a valid reproduction. This should get us down to a more manageable number of issues and allow us to be more responsive to existing and newly filed issues.
+
+We're using a Github actions script to identify issues without a reproduction by looking for a [StackBlitz](https://stackblitz.com/), [CodeSandbox](https://codesandbox.io/), or [Github](https://github.com) link in the issue body. This won't be perfect, so if this issue has a reproduction on another platform, please comment back on here and we can re-open the issue. Similarly, if there's a reproduction buried in a comment, please move the link into the description and comment back. Please tag `@brophdawg11` or `@brookslybrand` in your comment so we get a notification as well 🙂.
+
+If this issue did not have a reproduction but is still valid, or if you wish to start with a fresh issue, please [create a new issue](https://github.com/remix-run/react-router/issues/new?template=bug_report.yml) with a fresh reproduction against v7 and link to this issue in the new description.
+
+If this a feature request, please open a new [Proposal Discussion](https://github.com/remix-run/react-router/discussions/new?category=proposals) in React Router, and if it gets enough community support it can be considered for implementation.
+
+If you have any questions you can always reach out on [Discord](https://rmx.as/discord). Thanks again for providing feedback and helping us make React Router even better!
