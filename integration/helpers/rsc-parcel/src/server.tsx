@@ -14,7 +14,7 @@ import {
   // @ts-expect-error - no types for this yet
 } from "react-server-dom-parcel/server.edge";
 
-// Import the prerender function from the client envrionment
+// Import the prerender function from the client environment
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
 import { assets } from "./parcel-entry-wrapper"

@@ -80,7 +80,7 @@ import type {
 } from "react-router";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
-// Import the prerender function from the client envrionment
+// Import the prerender function from the client environment
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes/routes";
 
@@ -275,7 +275,7 @@ export function routes() {
 
 ## Create our Root Route
 
-Create a `src/routes/root/route.tsx` file. This is the "server" portion of our route. We will make the ErrorBoundary and Layout client compnoents so we have access to stateful hooks.
+Create a `src/routes/root/route.tsx` file. This is the "server" portion of our route. We will make the ErrorBoundary and Layout client components so we have access to stateful hooks.
 
 ```tsx nonumber
 import { Outlet } from "react-router";
