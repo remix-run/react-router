@@ -31,4 +31,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🚪 Close Issues
-        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts --dryRun
+        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts
