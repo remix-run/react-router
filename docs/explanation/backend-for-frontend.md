@@ -38,8 +38,8 @@ export async function loader() {
 
 There are several benefits of this approach vs. fetching directly from the browser. The highlighted lines above show how you can:
 
-1. Simplify third-party integrations and keep tokens and secrets out of client bundles.
-2. Prune the data down to send less kB over the network, speeding up your app significantly.
-3. Move a lot of code from browser bundles to the server, like `escapeHtml`, which speeds up your app. Additionally, moving code to the server usually makes your code easier to maintain since server-side code doesn't have to worry about UI states for async operations.
+1. Simplify third-party integrations and keep tokens and secrets out of client bundles
+2. Prune the data down to send less kB over the network, speeding up your app significantly
+3. Move a lot of code from browser bundles to the server, like `escapeHtml`, which speeds up your app. Additionally, moving code to the server usually makes your code easier to maintain since server-side code doesn't have to worry about UI states for async operations
 
 Again, React Router can be used as your only server by talking directly to the database and other services with server-side JavaScript APIs, but it also works perfectly as a backend for your frontend. Go ahead and keep your existing API server for application logic and let React Router connect the UI to it.
