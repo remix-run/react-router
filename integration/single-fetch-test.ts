@@ -170,6 +170,24 @@ const files = {
       )
     }
   `,
+
+  "app/routes/invalid-date.tsx": js`
+    import { useLoaderData, data } from "react-router";
+
+    export function loader({ request }) {
+      return data({ invalidDate: new Date("invalid") });
+    }
+
+    export default function InvalidDate() {
+      let data = useLoaderData();
+      return (
+        <>
+          <h1 id="heading">Invalid Date</h1>
+          <p id="date">{data.invalidDate.toISOString()}</p>
+        </>
+      )
+    }
+  `
 };
 
 test.describe("single-fetch", () => {
@@ -216,6 +234,23 @@ test.describe("single-fetch", () => {
         },
       },
     });
+
+    res = await fixture.requestSingleFetchData("/invalid-date.data");
+    expect(res.data).toEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/invalid-date": {
+        data: {
+          invalidDate: expect.any(Date),
+        },
+      },
+    });
+
+    let date = (res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } })["routes/invalid-date"].data.invalidDate;
+    expect(isNaN(date.getTime())).toBe(true);
   });
 
   test("loads proper errors on single fetch loader requests", async () => {
