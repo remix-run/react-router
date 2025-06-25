@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Handle InvalidCharacterError when validating cookie signature
+Handle `InvalidCharacterError` when validating cookie signature
