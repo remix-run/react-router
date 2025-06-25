@@ -45,7 +45,9 @@ declare global {
     | undefined;
 }
 
-const ServerStorage = (global.___reactRouterServerStorage___ ??=
+const globalVar = typeof globalThis !== "undefined" ? globalThis : global;
+
+const ServerStorage = (globalVar.___reactRouterServerStorage___ ??=
   new AsyncLocalStorage<ServerContext>());
 
 export const redirect: typeof baseRedirect = (...args) => {
