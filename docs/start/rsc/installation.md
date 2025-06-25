@@ -185,6 +185,7 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
   type unstable_ServerPayload as ServerPayload,
+  unstable_createCallServer as createCallServer,
   unstable_getServerStream as getServerStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
