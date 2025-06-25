@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-support encoding and decoding of invalid Date in turbo-stream
+Support invalid `Date` in `turbo-stream` v2 fork
