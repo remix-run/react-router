@@ -17,7 +17,7 @@ const { values: args } = parseArgs({
 run();
 
 async function run() {
-  let issuesCmd = `gh issue list --search "is:issue state:open label:bug" --limit 100 --json number,body`;
+  let issuesCmd = `gh issue list --search "is:issue state:open label:bug" --limit 250 --json number,body`;
   console.log(`Executing command: ${issuesCmd}`);
   let result = execSync(issuesCmd).toString();
   let issues = JSON.parse(result) as { number: number; body: string }[];
@@ -30,9 +30,9 @@ async function run() {
     );
   });
 
-  let issuesStr = issues.map((i) => i.number).join(",");
   console.log(
-    `Found ${noReproIssues.length} issues without a reproduction:\n${issuesStr}`
+    `Found ${noReproIssues.length} issues without a reproduction:\n` +
+      noReproIssues.map((i) => i.number).join(",")
   );
 
   for (let issue of issues) {
