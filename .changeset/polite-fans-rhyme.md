@@ -1,5 +1,4 @@
 ---
-"integration": patch
 "react-router": patch
 ---
 
