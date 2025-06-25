@@ -12,13 +12,10 @@ Mature apps already have a lot of backend application code in Ruby, Elixir, PHP,
 
 You can use `fetch` right from your loaders and actions to your backend.
 
-```tsx lines=[10,16,20]
-import type { Route } from "./+types/some-route";
+```tsx lines=[7,13,17]
 import escapeHtml from "escape-html";
 
-export async function loader({
-  request,
-}: Route.LoaderArgs) {
+export async function loader() {
   const apiUrl = "https://api.example.com/some-data.json";
   const res = await fetch(apiUrl, {
     headers: {
