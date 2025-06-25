@@ -50,12 +50,14 @@ To reduce friction, the SC will primarily operate asynchronously via GitHub, but
 
 ## Bug/Issue Process
 
-Due to the # of React Router applications out there, we have to be a bit strict on the process for filing issues to avoid an overload in GitHub.
+Due to the large number of React Router applications out there, we have to be a bit strict on the process for filing issues to avoid an overload in GitHub.
 
 - **All** bugs must have a **minimal** reproduction [^3]
   - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
-  - The preferred method is StackBlitz via [https://reactrouter.com/new](https://reactrouter.com/new)
-  - If Stackblitz is not an option, a GitHub repo based on a fresh `create-react-router` app is acceptable
+  - The preferred methods for reproductions are:
+    - StackBlitz for **Framework Mode**: https://reactrouter.com/new
+    - CodeSandbox for **Data/Declarative Modes**: [TypeScript](https://codesandbox.io/templates/react-vite-ts) | [Javascript](https://codesandbox.io/templates/react-vite)
+  - If StackBlitz/CodeSandbox is not an option, a GitHub repo based on a fresh `npx create-react-router` app is acceptable
   - Only in extraordinary circumstances will code snippets or maximal reproductions be accepted
 - Issue Review
   - Issues not meeting the above criteria will be closed and pointed to this document

@@ -117,7 +117,7 @@ Usually your URLs aren't static but data-driven. Dynamic segments allow you to m
 The value will be parsed from the URL and passed to various APIs. We call these values "URL Parameters". The most useful places to access the URL params are in [loaders] and [actions].
 
 ```tsx
-export async function serverLoader({ params }) {
+export async function loader({ params }) {
   return fakeDb.getAllConcertsForCity(params.city);
 }
 ```
@@ -127,7 +127,7 @@ You'll note the property name on the `params` object maps directly to the name o
 Routes can have multiple dynamic segments, like `concerts.$city.$date`, both are accessed on the params object by name:
 
 ```tsx
-export async function serverLoader({ params }) {
+export async function loader({ params }) {
   return fake.db.getConcerts({
     date: params.date,
     city: params.city,
@@ -285,7 +285,7 @@ While [dynamic segments][dynamic_segments] match a single path segment (the stuf
 Similar to dynamic route parameters, you can access the value of the matched path on the splat route's `params` with the `"*"` key.
 
 ```tsx filename=app/routes/files.$.tsx
-export async function serverLoader({ params }) {
+export async function loader({ params }) {
   const filePath = params["*"];
   return fake.getFileInfo(filePath);
 }
@@ -301,15 +301,12 @@ To create a route that will match any requests that don't match other defined ro
 | `/about`                       | `app/routes/about.tsx`  |
 | `/any-invalid-path-will-match` | `app/routes/$.tsx`      |
 
-To have this route serve as a 404 page, be sure to modify the response code with a [`loader`](https://reactrouter.com/start/framework/data-loading#server-data-loading) function:
+By default the matched route will return a 200 response, so be sure to modify your catchall route to return a 404 instead:
 
-```tsx
-import type { Route } from "./+types/$";
-export const loader = async ({
-  request,
-}: Route.LoaderArgs) => {
+```tsx filename=app/routes/$.tsx
+export async function loader() {
   return data({}, 404);
-};
+}
 ```
 
 ## Escaping Special Characters

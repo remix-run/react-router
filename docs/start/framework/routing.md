@@ -303,18 +303,14 @@ const { "*": splat } = params;
 
 You can also use a splat to catch requests that don't match any route:
 
-```ts filename=app/routes.ts lines=[10]
-import {
-  type RouteConfig,
-  route,
-  index,
-} from "@react-router/dev/routes";
+```ts filename=app/routes.ts
+route("*", "./catchall.tsx"); // catcall route,
+```
 
-export default [
-  index("./home.tsx"),
-  route("about", "./about.tsx"),
-  route("*", "./404.tsx"),
-] satisfies RouteConfig;
+```tsx filename=app/catchall.tsx
+export function loader() {
+  throw new Response("Page not found", { status: 404 });
+}
 ```
 
 ## Component Routes

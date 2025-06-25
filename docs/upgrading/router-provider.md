@@ -1,5 +1,6 @@
 ---
 title: Framework Adoption from RouterProvider
+order: 5
 ---
 
 # Framework Adoption from RouterProvider
