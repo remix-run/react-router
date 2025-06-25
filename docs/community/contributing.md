@@ -47,7 +47,7 @@ If you need a bug fixed and nobody is fixing it, your best bet is to provide a f
 
 ⚠️ _Please do not start with a PR for a new feature._
 
-New features need to go through the process outlined in the [Open Goverrnance Model](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process) and can be started by opening a [Proposal Discussion](https://github.com/remix-run/react-router/discussions/new?category=proposals) on GitHub. Please provide thoughtful comments and some sample code that show what you'd like to do with React Router in your app. It helps the conversation if you can show us how you're limited by the current API first before jumping to a conclusion about what needs to be changed and/or added.
+New features need to go through the process outlined in the [Open Governance Model](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process) and can be started by opening a [Proposal Discussion](https://github.com/remix-run/react-router/discussions/new?category=proposals) on GitHub. Please provide thoughtful comments and some sample code that show what you'd like to do with React Router in your app. It helps the conversation if you can show us how you're limited by the current API first before jumping to a conclusion about what needs to be changed and/or added.
 
 We have learned by experience that small APIs are usually better, so we may be a little reluctant to add something new unless there's an obvious limitation with the current API. That being said, we are always anxious to hear about cases that we just haven't considered before, so please don't be shy! :)
 
