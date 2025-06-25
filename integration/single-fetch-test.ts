@@ -187,7 +187,7 @@ const files = {
         </>
       )
     }
-  `
+  `,
 };
 
 test.describe("single-fetch", () => {
@@ -249,7 +249,9 @@ test.describe("single-fetch", () => {
       },
     });
 
-    let date = (res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } })["routes/invalid-date"].data.invalidDate;
+    let date = (
+      res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } }
+    )["routes/invalid-date"].data.invalidDate;
     expect(isNaN(date.getTime())).toBe(true);
   });
 
