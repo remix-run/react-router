@@ -198,12 +198,7 @@ export type ServerMatch = {
   payload: ServerPayload;
 };
 
-export type DecodeCallServerFunction = (
-  id: string,
-  reply: FormData | string
-) => Promise<() => Promise<unknown>>;
-
-export type DecodeFormActionFunction = (
+export type DecodeActionFunction = (
   formData: FormData
 ) => Promise<() => Promise<void>>;
 
@@ -212,18 +207,26 @@ export type DecodeFormStateFunction = (
   formData: FormData
 ) => unknown;
 
+export type DecodeReplyFunction = (
+  reply: FormData | string
+) => Promise<unknown[]>;
+
+export type LoadServerActionFunction = (id: string) => Promise<Function>;
+
 export async function matchRSCServerRequest({
-  decodeCallServer,
-  decodeFormAction,
+  decodeReply,
+  loadServerAction,
+  decodeAction,
   decodeFormState,
   onError,
   request,
   routes,
   generateResponse,
 }: {
-  decodeCallServer?: DecodeCallServerFunction;
-  decodeFormAction?: DecodeFormActionFunction;
+  decodeReply?: DecodeReplyFunction;
+  decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
+  loadServerAction?: LoadServerActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
   routes: ServerRouteObject[];
@@ -283,8 +286,9 @@ export async function matchRSCServerRequest({
     routerRequest,
     routes,
     isDataRequest,
-    decodeCallServer,
-    decodeFormAction,
+    decodeReply,
+    loadServerAction,
+    decodeAction,
     decodeFormState,
     onError,
     generateResponse
@@ -345,8 +349,9 @@ async function generateManifestResponse(
 
 async function processServerAction(
   request: Request,
-  decodeCallServer: DecodeCallServerFunction | undefined,
-  decodeFormAction: DecodeFormActionFunction | undefined,
+  decodeReply: DecodeReplyFunction | undefined,
+  loadServerAction: LoadServerActionFunction | undefined,
+  decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
   onError: ((error: unknown) => void) | undefined
 ): Promise<
@@ -370,16 +375,19 @@ async function processServerAction(
   );
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
-    if (!decodeCallServer) {
+    if (!decodeReply || !loadServerAction) {
       throw new Error(
-        "Cannot handle enhanced server action without a decodeCallServer function"
+        "Cannot handle enhanced server action without decodeReply and loadServerAction functions"
       );
     }
 
     const reply = isFormRequest
       ? await request.formData()
       : await request.text();
-    const serverAction = await decodeCallServer(actionId, reply);
+
+    const actionArgs = await decodeReply(reply);
+    const action = await loadServerAction(actionId);
+    const serverAction = action.bind(null, ...actionArgs);
 
     let actionResult = Promise.resolve(serverAction());
     try {
@@ -399,12 +407,12 @@ async function processServerAction(
   } else if (isFormRequest) {
     const formData = await request.clone().formData();
     if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
-      if (!decodeFormAction) {
+      if (!decodeAction) {
         throw new Error(
-          "Cannot handle form actions without a decodeFormAction function"
+          "Cannot handle form actions without a decodeAction function"
         );
       }
-      const action = await decodeFormAction(formData);
+      const action = await decodeAction(formData);
       let formState = undefined;
       try {
         const result = await action();
@@ -478,8 +486,9 @@ async function generateRenderResponse(
   request: Request,
   routes: ServerRouteObject[],
   isDataRequest: boolean,
-  decodeCallServer: DecodeCallServerFunction | undefined,
-  decodeFormAction: DecodeFormActionFunction | undefined,
+  decodeReply: DecodeReplyFunction | undefined,
+  loadServerAction: LoadServerActionFunction | undefined,
+  decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
   onError: ((error: unknown) => void) | undefined,
   generateResponse: (match: ServerMatch) => Response
@@ -524,8 +533,9 @@ async function generateRenderResponse(
         if (request.method === "POST") {
           let result = await processServerAction(
             request,
-            decodeCallServer,
-            decodeFormAction,
+            decodeReply,
+            loadServerAction,
+            decodeAction,
             decodeFormState,
             onError
           );

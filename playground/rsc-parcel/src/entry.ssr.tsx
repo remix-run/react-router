@@ -9,7 +9,7 @@ import {
 // @ts-expect-error
 import { createFromReadableStream } from "react-server-dom-parcel/client.edge" assert { env: "react-client" };
 
-import { callServer } from "./entry.rsc" assert { env: "react-server" };
+import { fetchServer } from "./entry.rsc" assert { env: "react-server" };
 
 const app = express();
 
@@ -19,14 +19,14 @@ app.use(
   createRequestListener(async (request) => {
     return routeRSCServerRequest({
       request,
-      callServer,
+      fetchServer,
       decode: createFromReadableStream,
       async renderHTML(getPayload) {
         return await renderHTMLToReadableStream(
           <RSCStaticRouter getPayload={getPayload} />,
           {
             bootstrapScriptContent: (
-              callServer as unknown as { bootstrapScript: string }
+              fetchServer as unknown as { bootstrapScript: string }
             ).bootstrapScript,
           }
         );

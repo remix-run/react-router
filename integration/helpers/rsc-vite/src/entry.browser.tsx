@@ -5,7 +5,6 @@ import {
   encodeReply,
   setServerCallback,
 } from "@hiogawa/vite-rsc/browser";
-import type { unstable_DecodeServerResponseFunction as DecodeServerResponseFunction } from "react-router";
 import {
   unstable_createCallServer as createCallServer,
   unstable_getServerStream as getServerStream,
@@ -13,14 +12,10 @@ import {
 } from "react-router";
 import type { unstable_ServerPayload as ServerPayload } from "react-router";
 
-const decode: DecodeServerResponseFunction = (
-  body: ReadableStream<Uint8Array>
-) => createFromReadableStream(body);
-
 setServerCallback(
   createCallServer({
-    decode,
-    encodeAction: (args) => encodeReply(args),
+    createFromReadableStream,
+    encodeReply,
   })
 );
 
@@ -29,7 +24,10 @@ createFromReadableStream<ServerPayload>(getServerStream()).then((payload) => {
     hydrateRoot(
       document,
       <StrictMode>
-        <RSCHydratedRouter decode={decode} payload={payload as any} />
+        <RSCHydratedRouter
+          payload={payload}
+          createFromReadableStream={createFromReadableStream}
+        />
       </StrictMode>
     );
   });

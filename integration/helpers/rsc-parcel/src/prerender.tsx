@@ -9,14 +9,14 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
 
 export async function prerender(
   request: Request,
-  callServer: (request: Request) => Promise<Response>,
+  fetchServer: (request: Request) => Promise<Response>,
   bootstrapScriptContent: string | undefined
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
     request,
-    // How to call the React Server.
-    callServer,
+    // How to fetch from the React Server.
+    fetchServer,
     // Provide the React Server touchpoints.
     decode: createFromReadableStream,
     // Render the router to HTML.

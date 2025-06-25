@@ -9,13 +9,13 @@ import type { ServerPayload } from "./server.rsc";
 
 export async function routeRSCServerRequest({
   request,
-  callServer,
+  fetchServer,
   decode,
   renderHTML,
   hydrate = true,
 }: {
   request: Request;
-  callServer: (request: Request) => Promise<Response>;
+  fetchServer: (request: Request) => Promise<Response>;
   decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>;
   renderHTML: (
     getPayload: () => Promise<ServerPayload>
@@ -29,7 +29,7 @@ export async function routeRSCServerRequest({
     isManifestRequest(url) ||
     request.headers.has("rsc-action-id");
 
-  const serverResponse = await callServer(request);
+  const serverResponse = await fetchServer(request);
 
   if (
     respondWithRSCPayload ||

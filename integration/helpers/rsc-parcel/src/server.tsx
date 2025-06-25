@@ -1,9 +1,5 @@
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
-import type {
-  unstable_DecodeCallServerFunction as DecodeCallServerFunction,
-  unstable_DecodeFormActionFunction as DecodeFormActionFunction,
-} from "react-router";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 import {
   decodeAction,
@@ -19,24 +15,13 @@ import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
 import { assets } from "./parcel-entry-wrapper"
 
-// Decode and load actions by ID to support post-hydration server actions.
-const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
-  const args = await decodeReply(reply);
-  const action = await loadServerAction(actionId);
-  return action.bind(null, ...args);
-};
-
-// Decode and load actions by form data to pre-hydration server actions.
-const decodeFormAction: DecodeFormActionFunction = async (formData) => {
-  return await decodeAction(formData);
-};
-
-function callServer(request: Request) {
+function fetchServer(request: Request) {
   return matchRSCServerRequest({
     // Provide the React Server touchpoints.
-    decodeCallServer,
-    decodeFormAction,
+    decodeReply,
+    decodeAction,
     decodeFormState,
+    loadServerAction,
     // The incoming request.
     request,
     // The app routes.
@@ -74,7 +59,7 @@ app.use(
   createRequestListener((request) =>
     prerender(
       request,
-      callServer,
+      fetchServer,
       (assets as unknown as { bootstrapScript?: string }).bootstrapScript
     )
   )
