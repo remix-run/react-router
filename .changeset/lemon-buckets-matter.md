@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Do not use "module" condition when running Vitest tests
+Don't use `"module"` server conditions in Vitest
