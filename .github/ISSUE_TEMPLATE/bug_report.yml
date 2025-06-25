@@ -8,10 +8,11 @@ body:
       value: |
         Thank you for helping to improve React Router!
 
-        Please note that **all** bugs must have a **minimal** reproduction, meaning
-        that it is not just pointing to a deployed site or a branch in your existing
-        application.  Please refer to the [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process)
-        for more information.
+        Please note that **all** bugs must have a **minimal** and **runnable**
+        reproduction, meaning that it is not just pointing to a deployed site or
+        a branch in your existing application, or showing a small code snippet.
+        For more information, please refer to the
+        [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process).
 
         ## If you are using **Framework Mode**, you have 2 preferred options:
 
