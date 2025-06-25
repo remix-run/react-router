@@ -35,8 +35,6 @@ async function run() {
       noReproIssues.map((i) => i.number).join(",")
   );
 
-  noReproIssues = noReproIssues.slice(0, 5);
-
   for (let issue of noReproIssues) {
     console.log(`--- Processing issue #${issue.number} ---`);
     let commentCmd = `gh issue comment ${issue.number} -F ./scripts/close-no-repro-issues.md`;
