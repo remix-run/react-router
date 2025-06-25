@@ -10,7 +10,7 @@ order: 3
 ## Summary
 
 <docs-info>
-  This file is required.
+This file is required
 </docs-info>
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/_react_router_dev.routes.RouteConfigEntry.html)

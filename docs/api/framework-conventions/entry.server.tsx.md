@@ -10,9 +10,7 @@ order: 5
 ## Summary
 
 <docs-info>
-
 This file is optional
-
 </docs-info>
 
 This file is the server-side entry point that controls how your React Router application generates HTTP responses on the server.
