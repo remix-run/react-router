@@ -35,7 +35,7 @@ async function run() {
       noReproIssues.map((i) => i.number).join(",")
   );
 
-  noReproIssues = noReproIssues.slice(0, 1); // Limit to first 1 for safety
+  noReproIssues = noReproIssues.slice(0, 5);
 
   for (let issue of noReproIssues) {
     console.log(`--- Processing issue #${issue.number} ---`);

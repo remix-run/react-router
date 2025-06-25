@@ -8,15 +8,11 @@ body:
       value: |
         Thank you for helping to improve React Router!
 
-        Please note that **all** bugs must have a **minimal** and **runnable**
-        reproduction, meaning that it is not just pointing to a deployed site or
-        a branch in your existing application, or showing a small code snippet.
-        For more information, please refer to the
-        [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process).
+        Please note that **all** bugs must have a **minimal** and **runnable** reproduction, meaning that it is not just pointing to a deployed site or a branch in your existing application, or showing a small code snippet. For more information, please refer to the [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process).
 
-        ## If you are using **Framework Mode**, you have 2 preferred options:
+        ## If you are using **Framework Mode**, you have 2 preferred options
 
-        **Option 1** - Create a failing integration test
+        ### Option 1 - Create a failing integration test
 
         🏆 The most helpful reproduction is to use our _bug report integration test_ template:
 
@@ -25,12 +21,12 @@ body:
         3. Follow the instructions to create a failing bug report test
         4. Link to your forked branch with the failing test in this issue
 
-        ## Option 2: Create a **minimal** reproduction
+        ### Option 2 - Create a **minimal** reproduction
 
         - 🥇 Link to a [StackBlitz](https://reactrouter.com/new) environment
         - 🥈 Link to a GitHub repository containing a minimal reproduction app
 
-        ## If you are using **Data** or **Declarative Mode**:
+        ## If you are using **Data** or **Declarative Mode**
 
         Create a **minimal** reproduction
 
