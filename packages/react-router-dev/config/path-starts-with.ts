@@ -11,7 +11,9 @@ export default function pathStartsWith(a: string, b: string) {
     (a.length === b.length ||
       // or b is a directory path
       b.endsWith("/") ||
+      b.endsWith("\\") ||
       // or a is `${b}/${subpath}`
-      a[b.length] === "/")
+      a[b.length] === "/" ||
+      a[b.length] === "\\")
   );
 }
