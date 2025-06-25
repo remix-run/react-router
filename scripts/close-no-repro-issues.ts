@@ -17,11 +17,11 @@ const { values: args } = parseArgs({
 run();
 
 async function run() {
-  let issuesCmd = `gh issue list --search "is:issue state:open label:bug" --limit 250 --json number,body`;
+  let issuesCmd = `gh issue list --search "is:issue state:open label:bug sort:created-asc" --limit 250 --json number,body`;
   console.log(`Executing command: ${issuesCmd}`);
   let result = execSync(issuesCmd).toString();
-  let issues = JSON.parse(result) as { number: number; body: string }[];
-  let noReproIssues = issues.filter(({ body }) => {
+  let allIssues = JSON.parse(result) as { number: number; body: string }[];
+  let noReproIssues = allIssues.filter(({ body }) => {
     return (
       !/https?:\/\/stackblitz\.com\//.test(body) &&
       !/https?:\/\/codesandbox\.io\//.test(body) &&
@@ -35,7 +35,9 @@ async function run() {
       noReproIssues.map((i) => i.number).join(",")
   );
 
-  for (let issue of issues) {
+  noReproIssues = noReproIssues.slice(0, 1); // Limit to first 1 for safety
+
+  for (let issue of noReproIssues) {
     console.log(`--- Processing issue #${issue.number} ---`);
     let commentCmd = `gh issue comment ${issue.number} -F ./scripts/close-no-repro-issues.md`;
     let commentResult = runCmdIfTokenExists(commentCmd);
