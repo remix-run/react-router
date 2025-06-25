@@ -1,22 +1,22 @@
 ---
-title: useAbsoluteRoutes
+title: unstable_useAbsoluteRoutes
 ---
 
-# useAbsoluteRoutes
+# unstable_useAbsoluteRoutes
 
 [MODES: framework, data, declarative]
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useAbsoluteRoutes.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_useAbsoluteRoutes.html)
 
 An alternate version of [useRoutes](./useRoutes) that expects absolute paths on routes instead of relative paths. This is mostly intended to be used as a tool to help migrate from v5 where absolute paths were a common pattern, or for when you want to define your paths in a separate data structure using absolute paths. This hook expects absolute paths both when used at the top level of your application, or within a set of descendant routes inside a splat route.
 
-The return value of `useAbsoluteRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
+The return value of `unstable_useAbsoluteRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
 
 ```tsx
 import * as React from "react";
-import { useAbsoluteRoutes } from "react-router";
+import { unstable_useAbsoluteRoutes as useAbsoluteRoutes } from "react-router";
 
 const routes = {
   dashboard: {
@@ -60,7 +60,7 @@ function App() {
 ## Signature
 
 ```tsx
-useAbsoluteRoutes(routes, locationArg): undefined
+unstable_useAbsoluteRoutes(routes, locationArg): undefined
 ```
 
 ## Params
