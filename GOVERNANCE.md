@@ -38,11 +38,11 @@ The Steering Committee will be in charge of accepting RFC's for consideration, a
 
 The SC will initially consist of the Remix team developers:
 
-- Matt Brophy
-- Pedro Cattori
-- Mark Dalgleish
-- Jacob Ebey
-- Brooks Lybrand
+- Matt Brophy ([`@brophdawg11`](https://github.com/brophdawg11))
+- Pedro Cattori ([`@pcattori`](https://github.com/pcattori))
+- Mark Dalgleish ([`@markdalgleish`](https://github.com/markdalgleish))
+- Jacob Ebey ([`@jacob-ebey`](https://github.com/jacob-ebey))
+- Brooks Lybrand ([`@brookslybrand`](https://github.com/brookslybrand))
 
 In the future, we may add a limited number of heavily involved community members to the SC as well.
 
