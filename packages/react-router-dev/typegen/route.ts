@@ -15,7 +15,15 @@ export function lineage(
 }
 
 export function fullpath(lineage: RouteManifestEntry[]) {
-  if (lineage.length === 1 && lineage[0].id === "root") return "/";
+  const route = lineage.at(-1);
+
+  // root
+  if (lineage.length === 1 && route?.id === "root") return "/";
+
+  // layout
+  const isLayout = route && route.index !== true && route.path === undefined;
+  if (isLayout) return undefined;
+
   return (
     "/" +
     lineage

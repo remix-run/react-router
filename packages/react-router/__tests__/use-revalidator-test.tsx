@@ -323,6 +323,8 @@ describe("useRevalidator", () => {
     fireEvent.click(screen.getByText("Revalidate: 1"));
     await waitFor(() => screen.getByText("Revalidate: 2"));
 
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     // idle -> loading -> idle -> loading -> idle
     expect(unstableCount).toBe(5);
     expect(stableCount).toBe(1);

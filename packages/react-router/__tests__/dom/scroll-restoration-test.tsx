@@ -13,7 +13,7 @@ import {
 } from "../../index";
 import { createMemoryRouter, redirect } from "react-router";
 import { FrameworkContext, Scripts } from "../../lib/dom/ssr/components";
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
 import { mockFrameworkContext } from "../utils/framework";
 
 describe(`ScrollRestoration`, () => {

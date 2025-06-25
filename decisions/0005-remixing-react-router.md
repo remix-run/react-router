@@ -204,7 +204,7 @@ function NewErrorBoundary() {
   const error = useRouteError();
 
   if (error instanceof Response) {
-    return <MyOldCatchBoudnary error={error} />;
+    return <MyOldCatchBoundary error={error} />;
   } else {
     return <MyOldErrorBoundary error={error} />;
   }

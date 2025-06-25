@@ -5,7 +5,7 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["index.ts", "dom-export.ts", "lib/types/route-module.ts"];
+const entry = ["index.ts", "dom-export.ts", "lib/types/internal.ts"];
 
 const config = (enableDevWarnings: boolean) =>
   defineConfig([

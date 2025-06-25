@@ -55,8 +55,7 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/product"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test1 = Expect<Equal<typeof params.id, string>>
-          type Test2 = Expect<Equal<typeof params.asdf, string | undefined>>
+          type Test = Expect<Equal<typeof params, { id: string} >>
           return { planet: "world" }
         }
 
@@ -92,7 +91,7 @@ test.describe("typegen", () => {
           import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/only-required"
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params.id, string>>
+            type Test = Expect<Equal<typeof params, { id: string }>>
             return null
           }
         `,
@@ -108,7 +107,7 @@ test.describe("typegen", () => {
           import type { Expect, Equal } from "../expect-type"
           import type { Route } from "./+types/optional-then-required"
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params.id, string>>
+            type Test = Expect<Equal<typeof params.id,  string>>
             return null
           }
         `,
@@ -144,7 +143,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/splat"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params["*"], string>>
+            type Test = Expect<Equal<typeof params, { "*": string }>>
             return null
           }
         `,
@@ -172,7 +171,7 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params["lang"], string>>
+            type Test = Expect<Equal<typeof params, { lang: string }>>
             return null
           }
         `,
@@ -181,11 +180,111 @@ test.describe("typegen", () => {
           import type { Route } from "./+types/optional-param-with-ext"
 
           export function loader({ params }: Route.LoaderArgs) {
-            type Test = Expect<Equal<typeof params["user"], string | undefined>>
+            type Test = Expect<Equal<typeof params, { user?: string }>>
             return null
           }
         `,
       });
+      const proc = typecheck(cwd);
+      expect(proc.stdout.toString()).toBe("");
+      expect(proc.stderr.toString()).toBe("");
+      expect(proc.status).toBe(0);
+    });
+
+    test("normalized params", async () => {
+      const cwd = await createProject({
+        "vite.config.ts": viteConfig,
+        "app/expect-type.ts": expectType,
+        "app/routes.ts": tsx`
+          import { type RouteConfig, route, layout } from "@react-router/dev/routes";
+
+          export default [
+            route("parent/:p", "routes/parent.tsx", [
+              route("route/:r", "routes/route.tsx", [
+                route("child1/:c1a/:c1b", "routes/child1.tsx"),
+                route("child2/:c2a/:c2b", "routes/child2.tsx")
+              ]),
+            ]),
+            layout("routes/layout.tsx", [
+              route("in-layout1/:id", "routes/in-layout1.tsx"),
+              route("in-layout2/:id/:other", "routes/in-layout2.tsx")
+            ])
+          ] satisfies RouteConfig;
+        `,
+        "app/routes/parent.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/parent"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params,
+              | { p: string, r?: undefined, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
+            >>
+            return null
+          }
+        `,
+        "app/routes/route.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/route"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params,
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a: string,  c1b: string, c2a?: undefined, c2b?: undefined }
+              | { p: string, r: string, c1a?: undefined,  c1b?: undefined, c2a: string, c2b: string }
+            >>
+            return null
+          }
+        `,
+        "app/routes/child1.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/child1"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { p: string, r: string, c1a: string,  c1b: string }>>
+            return null
+          }
+        `,
+        "app/routes/child2.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/child2"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { p: string, r: string, c2a: string, c2b: string }>>
+            return null
+          }
+        `,
+        "app/routes/layout.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/layout"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string, other?: undefined } | { id: string, other: string } >>
+            return null
+          }
+        `,
+        "app/routes/in-layout1.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/in-layout1"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string }>>
+            return null
+          }
+        `,
+        "app/routes/in-layout2.tsx": tsx`
+          import type { Expect, Equal } from "../expect-type"
+          import type { Route } from "./+types/in-layout2"
+
+          export function loader({ params }: Route.LoaderArgs) {
+            type Test = Expect<Equal<typeof params, { id: string, other: string }>>
+            return null
+          }
+        `,
+      });
+
       const proc = typecheck(cwd);
       expect(proc.stdout.toString()).toBe("");
       expect(proc.stderr.toString()).toBe("");
@@ -240,7 +339,7 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/products.$id"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test = Expect<Equal<typeof params.id, string>>
+          type Test = Expect<Equal<typeof params, { id: string }>>
           return { planet: "world" }
         }
 
@@ -372,7 +471,7 @@ test.describe("typegen", () => {
         import type { Route } from "./+types/absolute"
 
         export function loader({ params }: Route.LoaderArgs) {
-          type Test = Expect<Equal<typeof params.id, string>>
+          type Test = Expect<Equal<typeof params, { id: string }>>
           return { planet: "world" }
         }
 
@@ -398,12 +497,16 @@ test.describe("typegen", () => {
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
         export default [
+          route("optional-static/opt?", "routes/optional-static.tsx"),
           route("no-params", "routes/no-params.tsx"),
           route("required-param/:req", "routes/required-param.tsx"),
           route("optional-param/:opt?", "routes/optional-param.tsx"),
           route("/leading-and-trailing-slash/", "routes/leading-and-trailing-slash.tsx"),
           route("some-other-route", "routes/some-other-route.tsx"),
         ] satisfies RouteConfig;
+      `,
+      "app/routes/optional-static.tsx": tsx`
+        export default function Component() {}
       `,
       "app/routes/no-params.tsx": tsx`
         export default function Component() {}
@@ -423,12 +526,21 @@ test.describe("typegen", () => {
         // @ts-expect-error
         href("/does-not-exist")
 
+        href("/optional-static")
+        href("/optional-static/opt")
+        // @ts-expect-error
+        href("/optional-static/opt?")
+
         href("/no-params")
 
         // @ts-expect-error
         href("/required-param/:req")
         href("/required-param/:req", { req: "hello" })
 
+        // @ts-expect-error
+        href("/optional-param")
+        // @ts-expect-error
+        href("/optional-param/:opt", { opt: "hello" })
         href("/optional-param/:opt?")
         href("/optional-param/:opt?", { opt: "hello" })
 
@@ -510,5 +622,87 @@ test.describe("typegen", () => {
       expect(proc.stderr.toString()).toBe("");
       expect(proc.status).toBe(0);
     });
+  });
+
+  test("reuse route file at multiple paths", async () => {
+    const cwd = await createProject({
+      "vite.config.ts": viteConfig,
+      "app/expect-type.ts": expectType,
+      "app/routes.ts": tsx`
+        import { type RouteConfig, route } from "@react-router/dev/routes";
+        export default [
+          route("base/:base", "routes/base.tsx", [
+            route("home/:home", "routes/route.tsx", { id: "home" }),
+            route("changelog/:changelog", "routes/route.tsx", { id: "changelog" }),
+            route("splat/*", "routes/route.tsx", { id: "splat" }),
+          ]),
+          route("other/:other", "routes/route.tsx", { id: "other" })
+        ] satisfies RouteConfig;
+      `,
+      "app/routes/base.tsx": tsx`
+        import { Outlet } from "react-router"
+        import type { Route } from "./+types/base"
+
+        export function loader() {
+          return { base: "hello" }
+        }
+
+        export default function Component() {
+          return (
+            <>
+              <h1>Layout</h1>
+              <Outlet/>
+            </>
+          )
+        }
+      `,
+      "app/routes/route.tsx": tsx`
+        import type { Expect, Equal } from "../expect-type"
+        import type { Route } from "./+types/route"
+
+        export function loader() {
+          return { route: "world" }
+        }
+
+        export default function Component({ params, matches }: Route.ComponentProps) {
+          type Test = Expect<Equal<typeof params,
+            | {
+                  base: string;
+                  home: string;
+                  changelog?: undefined;
+                  "*"?: undefined;
+                  other?: undefined;
+                }
+              | {
+                  base: string;
+                  home?: undefined;
+                  changelog: string;
+                  "*"?: undefined;
+                  other?: undefined;
+                }
+              | {
+                  base: string;
+                  home?: undefined;
+                  changelog?: undefined;
+                  "*": string;
+                  other?: undefined;
+                }
+              | {
+                  base?: undefined;
+                  home?: undefined;
+                  changelog?: undefined;
+                  "*"?: undefined;
+                  other: string;
+                }
+          >>
+          return <h1>Hello, world!</h1>
+        }
+      `,
+    });
+
+    const proc = typecheck(cwd);
+    expect(proc.stdout.toString()).toBe("");
+    expect(proc.stderr.toString()).toBe("");
+    expect(proc.status).toBe(0);
   });
 });

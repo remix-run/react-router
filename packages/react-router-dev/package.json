@@ -1,6 +1,6 @@
 {
   "name": "@react-router/dev",
-  "version": "7.6.0",
+  "version": "7.6.2",
   "description": "Dev tools and CLI for React Router",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -90,7 +90,7 @@
     "semver": "^7.3.7",
     "set-cookie-parser": "^2.6.0",
     "valibot": "^0.41.0",
-    "vite-node": "3.0.0-beta.2"
+    "vite-node": "^3.1.4"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",

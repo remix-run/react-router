@@ -16,6 +16,7 @@
     "release": "changeset publish",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
+    "typegen": "pnpm run --recursive --parallel typegen",
     "typecheck": "pnpm run --recursive --parallel typecheck",
     "test:integration:run": "pnpm playwright:integration",
     "test:integration": "pnpm build && pnpm test:integration:run",
@@ -60,8 +61,8 @@
     "@octokit/rest": "^18.12.0",
     "@playwright/test": "^1.49.1",
     "@remix-run/changelog-github": "^0.0.5",
-    "@testing-library/jest-dom": "5.17.0",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.5.2",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^8.1.2",
@@ -97,9 +98,9 @@
     "jsonfile": "^6.1.0",
     "prettier": "^2.8.8",
     "prompts": "^2.4.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-test-renderer": "^18.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-test-renderer": "^19.1.0",
     "remark-gfm": "3.0.1",
     "remark-parse": "^10.0.1",
     "remark-stringify": "^10.0.2",
@@ -124,6 +125,7 @@
       "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
     },
     "overrides": {
+      "react-is": "19.1.0",
       "workerd": "1.20241230.0"
     }
   }

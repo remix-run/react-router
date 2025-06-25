@@ -1,6 +1,6 @@
 {
   "name": "create-react-router",
-  "version": "7.6.0",
+  "version": "7.6.2",
   "description": "Create a new React Router app",
   "homepage": "https://reactrouter.com",
   "bugs": {
@@ -49,7 +49,7 @@
     "sisteransi": "^1.0.5",
     "sort-package-json": "^1.55.0",
     "strip-ansi": "^6.0.1",
-    "tar-fs": "^2.1.1"
+    "tar-fs": "^2.1.3"
   },
   "devDependencies": {
     "@types/gunzip-maybe": "^1.4.0",
