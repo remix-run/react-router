@@ -6,7 +6,7 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  close-without-reproduction:
+  close-no-repro-issues:
     name: 🚪 Close issues without a reproduction
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
@@ -31,4 +31,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🚪 Close Issues
-        run: node --experimental-strip-types ./scripts/close-without-repro.ts --dryRun
+        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts --dryRun

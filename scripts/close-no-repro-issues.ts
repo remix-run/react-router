@@ -17,7 +17,7 @@ const { values: args } = parseArgs({
 run();
 
 async function run() {
-  let issuesCmd = `gh issue list --search "is:issue state:open label:bug" --limit 250 --json number,body`;
+  let issuesCmd = `gh issue list --search "is:issue state:open label:bug" --limit 100 --json number,body`;
   console.log(`Executing command: ${issuesCmd}`);
   let result = execSync(issuesCmd).toString();
   let issues = JSON.parse(result) as { number: number; body: string }[];
@@ -37,7 +37,7 @@ async function run() {
 
   for (let issue of issues) {
     console.log(`--- Processing issue #${issue.number} ---`);
-    let commentCmd = `gh issue comment ${issue.number} -F ./scripts/close-without-repro-comment.md`;
+    let commentCmd = `gh issue comment ${issue.number} -F ./scripts/close-no-repro-issues.md`;
     let commentResult = runCmdIfTokenExists(commentCmd);
     console.log(`Commented on issue #${issue.number}: ${commentResult}`);
     await sleep(250);
