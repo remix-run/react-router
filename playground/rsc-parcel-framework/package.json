@@ -27,7 +27,7 @@
     "@types/react-dom": "^19.0.3",
     "@types/react": "^19.0.8",
     "parcel": "2.15.0",
-    "parcel-config-react-router-experimental": "1.0.22"
+    "parcel-config-react-router-experimental": "1.0.23"
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
