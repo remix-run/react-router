@@ -12,8 +12,7 @@ env:
 jobs:
   alpha:
     name: 🧪 Alpha Release
-    # if: github.repository == 'remix-run/react-router' && github.event.label.name == 'alpha-release'
-    if: github.repository == 'remix-run/react-router'
+    if: github.repository == 'remix-run/react-router' && github.event.label.name == 'alpha-release'
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo
@@ -21,45 +20,41 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
       - name: Test
+        run: git log -n 1
+
+      - name: ⤴️ Update version
+        id: version
         run: |
-          git log -n 1
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          NEXT_VERSION=0.0.0-alpha-${SHORT_SHA}
+          git checkout -b alpha/${NEXT_VERSION}
+          pnpm run version ${NEXT_VERSION}
+          echo "version=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: 🏗 Build
+        run: pnpm build
+
+      - name: Check
+        run: |
+          echo "Version: ${{ steps.version.outputs.version }}"
           git status
-          echo "Label: ${{ github.event.label.name }}"
-          echo "Branch: ${{ github.event.pull_request.head.ref }}"
-
-      # - name: 📦 Setup pnpm
-      #   uses: pnpm/action-setup@v4
-
-      # - name: ⎔ Setup node
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version-file: ".nvmrc"
-      #     cache: "pnpm"
-
-      # - name: 📥 Install deps
-      #   run: pnpm install --frozen-lockfile
-
-      # - name: ⤴️ Update version
-      #   id: version
-      #   run: |
-      #     SHORT_SHA=$(git rev-parse --short HEAD)
-      #     NEXT_VERSION=0.0.0-alpha-${SHORT_SHA}
-      #     git checkout -b alpha/${NEXT_VERSION}
-      #     pnpm run version ${NEXT_VERSION}
-      #     echo "version=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
-
-      # - name: 🏗 Build
-      #   run: pnpm build
-
-      # - name: Check
-      #   run: |
-      #     echo "Version: ${{ steps.version.outputs.version }}"
-      #     git status
-      #     cat packages/react-router/package.json
-      #     cat packages/react-router-dev/package.json
-      #     ls packages/react-router/dist
-      #     ls packages/react-router-dev/dist
+          cat packages/react-router/package.json
+          cat packages/react-router-dev/package.json
+          ls packages/react-router/dist
+          ls packages/react-router-dev/dist
 
       # - name: 🔐 Setup npm auth
       #   run: |
