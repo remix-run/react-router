@@ -71,7 +71,7 @@
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup",
+      "command": "premove dist && tsup",
       "files": [
         "lib/**",
         "*.ts",
@@ -89,9 +89,9 @@
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",
+    "premove": "^4.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "rimraf": "^6.0.1",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"
