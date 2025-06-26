@@ -20,7 +20,7 @@ app.use(
     return routeRSCServerRequest({
       request,
       fetchServer,
-      decode: createFromReadableStream,
+      createFromReadableStream,
       async renderHTML(getPayload) {
         return await renderHTMLToReadableStream(
           <RSCStaticRouter getPayload={getPayload} />,

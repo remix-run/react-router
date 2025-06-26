@@ -16,6 +16,7 @@ import type {
   ServerPayload,
   RenderedRoute,
   ServerRenderPayload,
+  CreateFromReadableStreamFunction,
 } from "./server.rsc";
 import type {
   DataStrategyFunction,
@@ -39,10 +40,6 @@ import {
   shouldHydrateRouteLoader,
 } from "../dom/ssr/routes";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
-
-export type CreateFromReadableStreamFunction = (
-  body: ReadableStream<Uint8Array>
-) => Promise<unknown>;
 
 export type EncodeReplyFunction = (args: unknown[]) => Promise<BodyInit>;
 

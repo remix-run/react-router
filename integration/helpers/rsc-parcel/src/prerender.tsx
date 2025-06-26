@@ -18,7 +18,7 @@ export async function prerender(
     // How to fetch from the React Server.
     fetchServer,
     // Provide the React Server touchpoints.
-    decode: createFromReadableStream,
+    createFromReadableStream,
     // Render the router to HTML.
     async renderHTML(getPayload) {
       const payload = await getPayload();

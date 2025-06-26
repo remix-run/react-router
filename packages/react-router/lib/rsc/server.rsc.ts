@@ -35,6 +35,10 @@ import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
+export type CreateFromReadableStreamFunction = (
+  body: ReadableStream<Uint8Array>
+) => Promise<unknown>;
+
 type ServerContext = {
   redirect?: Response;
 };

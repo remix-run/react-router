@@ -5,18 +5,21 @@ import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
-import type { ServerPayload } from "./server.rsc";
+import type {
+  ServerPayload,
+  CreateFromReadableStreamFunction,
+} from "./server.rsc";
 
 export async function routeRSCServerRequest({
   request,
   fetchServer,
-  decode,
+  createFromReadableStream,
   renderHTML,
   hydrate = true,
 }: {
   request: Request;
   fetchServer: (request: Request) => Promise<Response>;
-  decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>;
+  createFromReadableStream: CreateFromReadableStreamFunction;
   renderHTML: (
     getPayload: () => Promise<ServerPayload>
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
@@ -51,7 +54,7 @@ export async function routeRSCServerRequest({
   let payloadPromise: Promise<ServerPayload>;
   const getPayload = async () => {
     if (payloadPromise) return payloadPromise;
-    payloadPromise = decode(body);
+    payloadPromise = createFromReadableStream(body) as Promise<ServerPayload>;
     return payloadPromise;
   };
 

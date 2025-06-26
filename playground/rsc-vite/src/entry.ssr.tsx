@@ -14,7 +14,7 @@ export default async function handler(
   return routeRSCServerRequest({
     request,
     fetchServer,
-    decode: (body) => createFromReadableStream(body),
+    createFromReadableStream,
     renderHTML(getPayload) {
       return ReactDomServer.renderToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
