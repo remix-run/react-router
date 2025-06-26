@@ -32,8 +32,11 @@ npx react-router reveal
 The `default` export of this module is a function that lets you create the response, including HTTP status, headers, and HTML, giving you full control over the way the markup is generated and sent to the client.
 
 ```tsx filename=app/entry.server.tsx
-import { renderToString } from "react-dom/server";
+import { PassThrough } from "node:stream";
+import type { EntryContext } from "react-router";
+import { createReadableStreamFromReadable } from "@react-router/node";
 import { ServerRouter } from "react-router";
+import { renderToPipeableStream } from "react-dom/server";
 
 export default function handleRequest(
   request: Request,
@@ -41,16 +44,34 @@ export default function handleRequest(
   responseHeaders: Headers,
   routerContext: EntryContext
 ) {
-  const markup = renderToString(
-    <ServerRouter
-      context={routerContext}
-      url={request.url}
-    />
-  );
+  return new Promise((resolve, reject) => {
+    const { pipe, abort } = renderToPipeableStream(
+      <ServerRouter
+        context={routerContext}
+        url={request.url}
+      />,
+      {
+        onShellReady() {
+          responseHeaders.set("Content-Type", "text/html");
 
-  return new Response("<!DOCTYPE html>" + markup, {
-    status: responseStatusCode,
-    headers: responseHeaders,
+          const body = new PassThrough();
+          const stream =
+            createReadableStreamFromReadable(body);
+
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            })
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error);
+        },
+      }
+    );
   });
 }
 ```
@@ -83,7 +104,7 @@ export default function handleRequest(...) {
 
 ### `handleDataRequest`
 
-You can export an optional `handleDataRequest` function that will allow you to modify the response of a data request. These are the requests that do not render HTML, but rather return the loader and action data to the browser once client-side hydration has occurred.
+You can export an optional `handleDataRequest` function that will allow you to modify the response of a data request. These are the requests that do not render HTML, but rather return the `loader` and `action` data to the browser once client-side hydration has occurred.
 
 ```tsx
 export function handleDataRequest(

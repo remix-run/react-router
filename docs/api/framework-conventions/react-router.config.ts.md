@@ -1,6 +1,6 @@
 ---
 title: react-router.config.ts
-order: 2
+order: 3
 ---
 
 # react-router.config.ts
