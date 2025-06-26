@@ -8,7 +8,7 @@ title: RSCHydratedRouter
 
 ## Summary
 
-Hydrates a server rendered `ServerPayload` in the browser.
+Hydrates a server rendered `RSCPayload` in the browser.
 
 ## Props
 
@@ -18,7 +18,7 @@ Your `react-server-dom-xyz/client`'s `createFromReadableStream` function, used t
 
 ### payload
 
-The decoded ServerPayload to hydrate.
+The decoded `RSCPayload` to hydrate.
 
 ### routeDiscovery
 

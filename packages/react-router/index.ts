@@ -292,7 +292,7 @@ export {
   routeRSCServerRequest as unstable_routeRSCServerRequest,
   RSCStaticRouter as unstable_RSCStaticRouter,
 } from "./lib/rsc/server.ssr";
-export { getServerStream as unstable_getServerStream } from "./lib/rsc/html-stream/browser";
+export { getRSCStream as unstable_getRSCStream } from "./lib/rsc/html-stream/browser";
 export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
 
 // Re-export of RSC types
@@ -305,13 +305,14 @@ export type {
   DecodeFormStateFunction as unstable_DecodeFormStateFunction,
   DecodeReplyFunction as unstable_DecodeReplyFunction,
   LoadServerActionFunction as unstable_LoadServerActionFunction,
-  ServerManifestPayload as unstable_ServerManifestPayload,
-  ServerMatch as unstable_ServerMatch,
-  ServerPayload as unstable_ServerPayload,
-  ServerRenderPayload as unstable_ServerRenderPayload,
-  RenderedRoute as ServerRouteManifest,
-  ServerRouteMatch as unstable_ServerRouteMatch,
-  ServerRouteObject as unstable_ServerRouteObject,
+  RSCManifestPayload as unstable_RSCManifestPayload,
+  RSCMatch as unstable_RSCMatch,
+  RSCPayload as unstable_RSCPayload,
+  RSCRenderPayload as unstable_RSCRenderPayload,
+  RSCRouteManifest as unstable_RSCRouteManifest,
+  RSCRouteMatch as unstable_RSCRouteMatch,
+  RSCRouteConfigEntry as unstable_RSCRouteConfigEntry,
+  RSCRouteConfig as unstable_RSCRouteConfig,
 } from "./lib/rsc/server.rsc";
 
 ///////////////////////////////////////////////////////////////////////////////
