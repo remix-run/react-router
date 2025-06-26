@@ -152,7 +152,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let url = new URL(request.url);
 
     let normalizedBasename = _build.basename || "/";
-    let normalizedPath = decodeURIComponent(url.pathname);
+    let normalizedPath = url.pathname;
     if (stripBasename(normalizedPath, normalizedBasename) === "/_root.data") {
       normalizedPath = normalizedBasename;
     } else if (normalizedPath.endsWith(".data")) {
@@ -172,14 +172,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     // When runtime SSR is disabled, make our dev server behave like the deployed
     // pre-rendered site would
     if (!_build.ssr) {
+      // Decode the URL path before checking against the prerender config
+      let decodedPath = decodeURI(normalizedPath);
+
       // When SSR is disabled this, file can only ever run during dev because we
       // delete the server build at the end of the build
       if (_build.prerender.length === 0) {
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        !_build.prerender.includes(normalizedPath) &&
-        !_build.prerender.includes(normalizedPath + "/")
+        !_build.prerender.includes(decodedPath) &&
+        !_build.prerender.includes(decodedPath + "/")
       ) {
         if (url.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
@@ -187,7 +190,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
             new ErrorResponseImpl(
               404,
               "Not Found",
-              `Refusing to SSR the path \`${normalizedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`
+              `Refusing to SSR the path \`${decodedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`
             ),
             {
               context: loadContext,
