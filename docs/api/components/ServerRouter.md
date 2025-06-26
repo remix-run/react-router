@@ -10,7 +10,7 @@ title: ServerRouter
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.ServerRouter.html)
 
-Rendered at the top of the app in a custom entry.server.tsx.
+Rendered at the top of the app in a custom [entry.server.tsx][entry-server].
 
 ## Props
 
@@ -31,3 +31,5 @@ _No documentation_
 [modes: framework]
 
 _No documentation_
+
+[entry-server]: ../framework-conventions/entry.server.tsx
