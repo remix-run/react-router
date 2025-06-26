@@ -3,3 +3,4 @@ packages:
   - "integration/helpers/*"
   - "packages/*"
   - "playground/*"
+  - "scripts"
