@@ -1232,7 +1232,6 @@ export let createRoutesFromElements = createRoutesFromChildren;
 export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
-  // Is this legacy? No params relevant to how it's used???? Seems lacking.
   return _renderMatches(matches);
 }
 
