@@ -1,4 +1,4 @@
-import type { DataRouteMatch } from "../context";
+import type { DataRouteMatch, RouteObject } from "../context";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as NavigationType,
@@ -259,8 +259,15 @@ export interface Router {
    * @param routeId The parent route id or a callback function accepting `patch`
    *                to perform batch patching
    * @param children The additional children routes
+   * @param unstable_allowElementMutations Allow mutation or route elements on
+   *                                       existing routes. Intended for RSC-usage
+   *                                       only.
    */
-  patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
+  patchRoutes(
+    routeId: string | null,
+    children: AgnosticRouteObject[],
+    unstable_allowElementMutations?: boolean
+  ): void;
 
   /**
    * @private
@@ -270,6 +277,16 @@ export interface Router {
    * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
    */
   _internalSetRoutes(routes: AgnosticRouteObject[]): void;
+
+  /**
+   * @private
+   * PRIVATE - DO NOT USE
+   *
+   * Cause subscribers to re-render.  This is used to force a re-render.
+   */
+  _internalSetStateDoNotUseOrYouWillBreakYourApp(
+    state: Partial<RouterState>
+  ): void;
 
   /**
    * @private
@@ -419,6 +436,10 @@ export interface StaticHandler {
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_respond?: (
         staticContext: StaticHandlerContext
+      ) => MaybePromise<Response>;
+      unstable_stream?: (
+        context: unstable_RouterContextProvider,
+        query: (r: Request) => Promise<StaticHandlerContext | Response>
       ) => MaybePromise<Response>;
     }
   ): Promise<StaticHandlerContext | Response>;
@@ -1164,6 +1185,26 @@ export function createRouter(init: RouterInit): Router {
       viewTransitionOpts?: ViewTransitionOpts;
     } = {}
   ): void {
+    // We may have patched routes during the navigation and if so we need to
+    // get references to the latest elements here
+    if (newState.matches) {
+      newState.matches = newState.matches.map((m) => {
+        let route = manifest[m.route.id]! as RouteObject;
+        let matchRoute = m.route as RouteObject;
+        if (
+          matchRoute.element !== route.element ||
+          matchRoute.errorElement !== route.errorElement ||
+          matchRoute.hydrateFallbackElement !== route.hydrateFallbackElement
+        ) {
+          return {
+            ...m,
+            route: route as AgnosticDataRouteObject,
+          };
+        }
+        return m;
+      });
+    }
+
     state = {
       ...state,
       ...newState,
@@ -2217,7 +2258,6 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let match = getTargetMatch(matches, path);
     // Create a new context per fetch
     let scopedContext = new unstable_RouterContextProvider(
       init.unstable_getContext ? await init.unstable_getContext() : undefined
@@ -2229,7 +2269,6 @@ export function createRouter(init: RouterInit): Router {
         key,
         routeId,
         path,
-        match,
         matches,
         scopedContext,
         fogOfWar.active,
@@ -2247,7 +2286,6 @@ export function createRouter(init: RouterInit): Router {
       key,
       routeId,
       path,
-      match,
       matches,
       scopedContext,
       fogOfWar.active,
@@ -2263,7 +2301,6 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
@@ -2273,23 +2310,6 @@ export function createRouter(init: RouterInit): Router {
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
-
-    function detectAndHandle405Error(m: AgnosticDataRouteMatch) {
-      if (!m.route.action && !m.route.lazy) {
-        let error = getInternalRouterError(405, {
-          method: submission.formMethod,
-          pathname: path,
-          routeId: routeId,
-        });
-        setFetcherError(key, routeId, error, { flushSync });
-        return true;
-      }
-      return false;
-    }
-
-    if (!isFogOfWar && detectAndHandle405Error(match)) {
-      return;
-    }
 
     // Put this fetcher into it's submitting state
     let existingFetcher = state.fetchers.get(key);
@@ -2328,12 +2348,19 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         requestMatches = discoverResult.matches;
-        match = getTargetMatch(requestMatches, path);
-
-        if (detectAndHandle405Error(match)) {
-          return;
-        }
       }
+    }
+
+    let match = getTargetMatch(requestMatches, path);
+
+    if (!match.route.action && !match.route.lazy) {
+      let error = getInternalRouterError(405, {
+        method: submission.formMethod,
+        pathname: path,
+        routeId: routeId,
+      });
+      setFetcherError(key, routeId, error, { flushSync });
+      return;
     }
 
     // Call the action for the fetcher
@@ -2578,7 +2605,6 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
     scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
@@ -2626,9 +2652,10 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         matches = discoverResult.matches;
-        match = getTargetMatch(matches, path);
       }
     }
+
+    let match = getTargetMatch(matches, path);
 
     // Call the loader for this fetcher route match
     fetchControllers.set(key, abortController);
@@ -3297,7 +3324,8 @@ export function createRouter(init: RouterInit): Router {
               children,
               routesToUse,
               localManifest,
-              mapRouteProperties
+              mapRouteProperties,
+              false
             );
           },
         });
@@ -3358,7 +3386,8 @@ export function createRouter(init: RouterInit): Router {
 
   function patchRoutes(
     routeId: string | null,
-    children: AgnosticRouteObject[]
+    children: AgnosticRouteObject[],
+    unstable_allowElementMutations = false
   ): void {
     let isNonHMR = inFlightDataRoutes == null;
     let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3367,7 +3396,8 @@ export function createRouter(init: RouterInit): Router {
       children,
       routesToUse,
       manifest,
-      mapRouteProperties
+      mapRouteProperties,
+      unstable_allowElementMutations
     );
 
     // If we are not in the middle of an HMR revalidation and we changed the
@@ -3417,6 +3447,9 @@ export function createRouter(init: RouterInit): Router {
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
     _internalSetRoutes,
+    _internalSetStateDoNotUseOrYouWillBreakYourApp(newState) {
+      updateState(newState);
+    },
   };
 
   return router;
@@ -3488,6 +3521,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
+      unstable_stream: stream,
       unstable_respond: respond,
     }: Parameters<StaticHandler["query"]>[1] = {}
   ): Promise<StaticHandlerContext | Response> {
@@ -3499,6 +3533,18 @@ export function createStaticHandler(
       requestContext != null
         ? requestContext
         : new unstable_RouterContextProvider();
+
+    let respondOrStreamStaticContext = (
+      ctx: StaticHandlerContext
+    ): MaybePromise<Response> | StaticHandlerContext => {
+      return stream
+        ? stream(requestContext as unstable_RouterContextProvider, () =>
+            Promise.resolve(ctx)
+          )
+        : respond
+        ? respond(ctx)
+        : ctx;
+    };
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD") {
@@ -3518,7 +3564,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respond ? respond(staticContext) : staticContext;
+      return respondOrStreamStaticContext(staticContext);
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3536,16 +3582,18 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respond ? respond(staticContext) : staticContext;
+      return respondOrStreamStaticContext(staticContext);
     }
 
     if (
-      respond &&
-      matches.some(
-        (m) =>
-          m.route.unstable_middleware ||
-          (typeof m.route.lazy === "object" && m.route.lazy.unstable_middleware)
-      )
+      stream ||
+      (respond &&
+        matches.some(
+          (m) =>
+            m.route.unstable_middleware ||
+            (typeof m.route.lazy === "object" &&
+              m.route.lazy.unstable_middleware)
+        ))
     ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
@@ -3570,6 +3618,78 @@ export function createStaticHandler(
           },
           true,
           async () => {
+            /**
+             * TODO: stream() is a potential breaking change to the unstable_respond()
+             * API, implemented as a sibling option for now so as not to break
+             * any existing middleware logic.
+             *
+             * stream() gives us 3 things:
+             *  - It _always_ runs the middleware pipeline down to the stream()
+             *    function even if middleware doesn't exist
+             *  - we can now insert arbitrary logic at the end of the middleware
+             *    chain (inside the leaf next() call) such as running a server
+             *    action and let route middlewares apply to that action.
+             *  - We have control over the calling./awaiting of query() which
+             *    theoretically would allow us to send down the actionResult
+             *    immediately and then stream the entirety of the query/staticContext
+             *    info.  That has other implications though which we may not want,
+             *    such as not being able to leverage headers(), or respect
+             *    redirects from loaders after a server action, etc.
+             *    - If we decide this isn't warranted than the stream implementation
+             *      can simplify and potentially even collapse back into respond()
+             *
+             * Another totally different approach (larger LOE) would be to extract
+             * static handler middleware to be fully composable:
+             *
+             * // Current behavior
+             * let res = handler.middleware(request, (context) => {
+             *   let results = handler.query(request, context);
+             *   return generateResponse({
+             *     type: 'render',
+             *     payload: results
+             *   });
+             * })
+             *
+             * // RSC Server Action behavior
+             * let res = handler.middleware(request, (context) => {
+             *   let actionResult = serverAction(request);
+             *   let revalidationRequest = new Request(...)
+             *   let payloadPromise = handler.query(revalidationRequest, context)
+             *                               .then(context => getPayload(context));
+             *   return generateResponse({
+             *     type: 'action',
+             *     actionResult,,
+             *     rerender: payloadPromise
+             *   });
+             * })
+             **/
+            if (stream) {
+              let res = await stream(
+                requestContext as unstable_RouterContextProvider,
+                async (revalidationRequest: Request) => {
+                  let result = await queryImpl(
+                    revalidationRequest,
+                    location,
+                    matches!,
+                    requestContext,
+                    dataStrategy || null,
+                    skipLoaderErrorBubbling === true,
+                    null,
+                    filterMatchesToLoad || null,
+                    skipRevalidation === true
+                  );
+
+                  return isResponse(result)
+                    ? result
+                    : { location, basename, ...result };
+                }
+              );
+              return res;
+            }
+
+            // Should always be true given the if statement above
+            invariant(respond, "Expected respond to be defined");
+
             let result = await queryImpl(
               request,
               location,
@@ -3611,16 +3731,15 @@ export function createStaticHandler(
                 renderedStaticContext.loaderData[routeId] = undefined;
               }
 
-              return respond(
-                getStaticContextFromError(
-                  dataRoutes,
-                  renderedStaticContext,
-                  error,
-                  skipLoaderErrorBubbling
-                    ? routeId
-                    : findNearestBoundary(matches, routeId).route.id
-                )
+              let staticContext = getStaticContextFromError(
+                dataRoutes,
+                renderedStaticContext,
+                error,
+                skipLoaderErrorBubbling
+                  ? routeId
+                  : findNearestBoundary(matches, routeId).route.id
               );
+              return respondOrStreamStaticContext(staticContext);
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3637,7 +3756,7 @@ export function createStaticHandler(
                     )?.route.id || routeId
                   ).route.id;
 
-              return respond({
+              let staticContext: StaticHandlerContext = {
                 matches: matches!,
                 location,
                 basename,
@@ -3649,7 +3768,8 @@ export function createStaticHandler(
                 statusCode: isRouteErrorResponse(error) ? error.status : 500,
                 actionHeaders: {},
                 loaderHeaders: {},
-              });
+              };
+              return respondOrStreamStaticContext(staticContext);
             }
           }
         );
@@ -4920,7 +5040,8 @@ function patchRoutesImpl(
   children: AgnosticRouteObject[],
   routesToUse: AgnosticDataRouteObject[],
   manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction
+  mapRouteProperties: MapRoutePropertiesFunction,
+  allowElementMutations: boolean
 ) {
   let childrenToPatch: AgnosticDataRouteObject[];
   if (routeId) {
@@ -4940,21 +5061,60 @@ function patchRoutesImpl(
   // Don't patch in routes we already know about so that `patch` is idempotent
   // to simplify user-land code. This is useful because we re-call the
   // `patchRoutesOnNavigation` function for matched routes with params.
-  let uniqueChildren = children.filter(
-    (newRoute) =>
-      !childrenToPatch.some((existingRoute) =>
-        isSameRoute(newRoute, existingRoute)
-      )
-  );
+  let uniqueChildren: AgnosticRouteObject[] = [];
+  let existingChildren: {
+    existingRoute: AgnosticRouteObject;
+    newRoute: AgnosticRouteObject;
+  }[] = [];
+  children.forEach((newRoute) => {
+    let existingRoute = childrenToPatch.find((existingRoute) =>
+      isSameRoute(newRoute, existingRoute)
+    );
+    if (existingRoute) {
+      existingChildren.push({ existingRoute, newRoute });
+    } else {
+      uniqueChildren.push(newRoute);
+    }
+  });
 
-  let newRoutes = convertRoutesToDataRoutes(
-    uniqueChildren,
-    mapRouteProperties,
-    [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
-    manifest
-  );
+  if (uniqueChildren.length > 0) {
+    let newRoutes = convertRoutesToDataRoutes(
+      uniqueChildren,
+      mapRouteProperties,
+      [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
+      manifest
+    );
+    childrenToPatch.push(...newRoutes);
+  }
 
-  childrenToPatch.push(...newRoutes);
+  // When flag is enabled we allow mutations of elements on exiting routes
+  if (allowElementMutations && existingChildren.length > 0) {
+    for (let i = 0; i < existingChildren.length; i++) {
+      let { existingRoute, newRoute } = existingChildren[i];
+      let existingRouteTyped = existingRoute as RouteObject;
+      // All this will end up doing for these scenarios is adding `hasErrorBoundary`
+      // to the route.  There's no need for Component->element conversions since
+      // we're already dealing with elements here
+      let [newRouteTyped] = convertRoutesToDataRoutes(
+        [newRoute],
+        mapRouteProperties,
+        [], // Doesn't matter for mutated routes since they already have an id
+        {}, // Don't touch the manifest here since we're updating in place
+        true
+      ) as RouteObject[];
+      Object.assign(existingRouteTyped, {
+        element: newRouteTyped.element
+          ? newRouteTyped.element
+          : existingRouteTyped.element,
+        errorElement: newRouteTyped.errorElement
+          ? newRouteTyped.errorElement
+          : existingRouteTyped.errorElement,
+        hydrateFallbackElement: newRouteTyped.hydrateFallbackElement
+          ? newRouteTyped.hydrateFallbackElement
+          : existingRouteTyped.hydrateFallbackElement,
+      });
+    }
+  }
 }
 
 function isSameRoute(
@@ -5522,7 +5682,7 @@ function getDataStrategyMatch(
         isUsingNewApi ||
         shouldLoad ||
         (handlerOverride &&
-          request.method === "GET" &&
+          !isMutationMethod(request.method) &&
           (match.route.lazy || match.route.loader))
       ) {
         return callLoaderOrAction({
@@ -6405,7 +6565,10 @@ function isValidMethod(method: string): method is FormMethod {
   return validRequestMethods.has(method.toUpperCase() as FormMethod);
 }
 
-function isMutationMethod(method: string): method is MutationFormMethod {
+export function isMutationMethod(method: string): method is MutationFormMethod {
+  // TODO: This should probably check against GET and HEAD, and consider any other
+  // method, including non-standard methods as mutations. We should also consider
+  // allowing "non-standard" method through, right now we 405 on anything non-standard.
   return validMutationMethods.has(method.toUpperCase() as MutationFormMethod);
 }
 

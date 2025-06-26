@@ -658,7 +658,8 @@ export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
   parentPath: string[] = [],
-  manifest: RouteManifest = {}
+  manifest: RouteManifest = {},
+  allowInPlaceMutations = false
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, String(index)];
@@ -668,7 +669,7 @@ export function convertRoutesToDataRoutes(
       `Cannot specify children on an index route`
     );
     invariant(
-      !manifest[id],
+      allowInPlaceMutations || !manifest[id],
       `Found a route id collision on id "${id}".  Route ` +
         "id's must be globally unique within Data Router usages"
     );
@@ -695,7 +696,8 @@ export function convertRoutesToDataRoutes(
           route.children,
           mapRouteProperties,
           treePath,
-          manifest
+          manifest,
+          allowInPlaceMutations
         );
       }
 
