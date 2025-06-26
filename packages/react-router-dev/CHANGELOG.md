@@ -1,5 +1,183 @@
 # `@react-router/dev`
 
+## 7.6.2
+
+### Patch Changes
+
+- Avoid additional `with-props` chunk in Framework Mode by moving route module component prop logic from the Vite plugin to `react-router` ([#13650](https://github.com/remix-run/react-router/pull/13650))
+
+- When `future.unstable_viteEnvironmentApi` is enabled and an absolute Vite `base` has been configured, ensure critical CSS is handled correctly during development ([#13598](https://github.com/remix-run/react-router/pull/13598))
+
+- Update `vite-node` ([#13673](https://github.com/remix-run/react-router/pull/13673))
+
+- Fix typegen for non-{.js,.jsx,.ts,.tsx} routes like .mdx ([#12453](https://github.com/remix-run/react-router/pull/12453))
+
+- Fix href types for optional dynamic params ([#13725](https://github.com/remix-run/react-router/pull/13725))
+
+  7.6.1 introduced fixes for `href` when using optional static segments,
+  but those fixes caused regressions with how optional dynamic params worked in 7.6.0:
+
+  ```ts
+  // 7.6.0
+  href("/users/:id?"); // ✅
+  href("/users/:id?", { id: 1 }); // ✅
+
+  // 7.6.1
+  href("/users/:id?"); // ❌
+  href("/users/:id?", { id: 1 }); // ❌
+  ```
+
+  Now, optional static segments are expanded into different paths for `href`, but optional dynamic params are not.
+  This way `href` can unambiguously refer to an exact URL path, all while keeping the number of path options to a minimum.
+
+  ```ts
+  // 7.6.2
+
+  // path: /users/:id?/edit?
+  href("
+  //    ^ suggestions when cursor is here:
+  //
+  //    /users/:id?
+  //    /users/:id?/edit
+  ```
+
+  Additionally, you can pass `params` from component props without needing to narrow them manually:
+
+  ```ts
+  declare const params: { id?: number };
+
+  // 7.6.0
+  href("/users/:id?", params);
+
+  // 7.6.1
+  href("/users/:id?", params); // ❌
+  "id" in params ? href("/users/:id", params) : href("/users"); // works... but is annoying
+
+  // 7.6.2
+  href("/users/:id?", params); // restores behavior of 7.6.0
+  ```
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+  - `@react-router/node@7.6.2`
+  - `@react-router/serve@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Prevent typegen with route files are outside the app directory ([#12996](https://github.com/remix-run/react-router/pull/12996))
+
+- Fix typegen when same route is used at multiple paths ([#13574](https://github.com/remix-run/react-router/pull/13574))
+
+  For example, `routes/route.tsx` is used at 4 different paths here:
+
+  ```ts
+  import { type RouteConfig, route } from "@react-router/dev/routes";
+  export default [
+    route("base/:base", "routes/base.tsx", [
+      route("home/:home", "routes/route.tsx", { id: "home" }),
+      route("changelog/:changelog", "routes/route.tsx", { id: "changelog" }),
+      route("splat/*", "routes/route.tsx", { id: "splat" }),
+    ]),
+    route("other/:other", "routes/route.tsx", { id: "other" }),
+  ] satisfies RouteConfig;
+  ```
+
+  Previously, typegen would arbitrarily pick one of these paths to be the "winner" and generate types for the route module based on that path.
+  Now, typegen creates unions as necessary for alternate paths for the same route file.
+
+- Add additional logging to `build` command output when cleaning assets from server build ([#13547](https://github.com/remix-run/react-router/pull/13547))
+
+- Better types for `params` ([#13543](https://github.com/remix-run/react-router/pull/13543))
+
+  For example:
+
+  ```ts
+  // routes.ts
+  import { type RouteConfig, route } from "@react-router/dev/routes";
+
+  export default [
+    route("parent/:p", "routes/parent.tsx", [
+      route("layout/:l", "routes/layout.tsx", [
+        route("child1/:c1a/:c1b", "routes/child1.tsx"),
+        route("child2/:c2a/:c2b", "routes/child2.tsx"),
+      ]),
+    ]),
+  ] satisfies RouteConfig;
+  ```
+
+  Previously, `params` for the `routes/layout.tsx` route were calculated as `{ p: string, l: string }`.
+  This incorrectly ignores params that could come from child routes.
+  If visiting `/parent/1/layout/2/child1/3/4`, the actual params passed to `routes/layout.tsx` will have a type of `{ p: string, l: string, c1a: string, c1b: string }`.
+
+  Now, `params` are aware of child routes and autocompletion will include child params as optionals:
+
+  ```ts
+  params.|
+  //     ^ cursor is here and you ask for autocompletion
+  // p: string
+  // l: string
+  // c1a?: string
+  // c1b?: string
+  // c2a?: string
+  // c2b?: string
+  ```
+
+  You can also narrow the types for `params` as it is implemented as a normalized union of params for each page that includes `routes/layout.tsx`:
+
+  ```ts
+  if (typeof params.c1a === 'string') {
+    params.|
+    //     ^ cursor is here and you ask for autocompletion
+    // p: string
+    // l: string
+    // c1a: string
+    // c1b: string
+  }
+  ```
+
+  ***
+
+  UNSTABLE: renamed internal `react-router/route-module` export to `react-router/internal`
+  UNSTABLE: removed `Info` export from generated `+types/*` files
+
+- \[UNSTABLE] Normalize dirent entry path across node versions when generating SRI manifest ([#13591](https://github.com/remix-run/react-router/pull/13591))
+
+- Don't clean assets from server build when `build.ssrEmitAssets` has been enabled in Vite config ([#13547](https://github.com/remix-run/react-router/pull/13547))
+
+- Fix `href` for optional segments ([#13595](https://github.com/remix-run/react-router/pull/13595))
+
+  Type generation now expands paths with optionals into their corresponding non-optional paths.
+  For example, the path `/user/:id?` gets expanded into `/user` and `/user/:id` to more closely model visitable URLs.
+  `href` then uses these expanded (non-optional) paths to construct type-safe paths for your app:
+
+  ```ts
+  // original: /user/:id?
+  // expanded: /user & /user/:id
+  href("/user"); // ✅
+  href("/user/:id", { id: 1 }); // ✅
+  ```
+
+  This becomes even more important for static optional paths where there wasn't a good way to indicate whether the optional should be included in the resulting path:
+
+  ```ts
+  // original: /products/:id/detail?
+
+  // before
+  href("/products/:id/detail?"); // ❌ How can we tell `href` to include or omit `detail?` segment with a complex API?
+
+  // now
+  // expanded: /products/:id & /products/:id/detail
+  href("/product/:id"); // ✅
+  href("/product/:id/detail"); // ✅
+  ```
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+  - `@react-router/node@7.6.1`
+  - `@react-router/serve@7.6.1`
+
 ## 7.6.0
 
 ### Minor Changes

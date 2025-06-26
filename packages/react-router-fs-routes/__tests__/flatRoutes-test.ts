@@ -1,6 +1,6 @@
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import fse from "fs-extra";
 
 import type { RouteManifestEntry } from "../manifest";
 
@@ -144,7 +144,7 @@ describe("flatRoutes", () => {
   });
 
   describe("should return the correct route hierarchy", () => {
-    // we'll add file manually before running the tests
+    // we'll add some files manually before running the tests
     let testFiles: [string, Omit<RouteManifestEntry, "file">][] = [
       [
         "routes/_auth.tsx",
@@ -889,10 +889,10 @@ describe("flatRoutes", () => {
     );
 
     beforeEach(() => {
-      fse.mkdirSync(tempDir, { recursive: true });
+      mkdirSync(tempDir, { recursive: true });
     });
     afterEach(() => {
-      fse.rmSync(tempDir, { recursive: true, force: true });
+      rmSync(tempDir, { recursive: true, force: true });
     });
 
     test("root route is not found", () => {
@@ -903,7 +903,7 @@ describe("flatRoutes", () => {
 
     test("routes dir is not found", () => {
       const rootRoute = path.join(tempDir, "root.tsx");
-      fse.createFileSync(rootRoute);
+      writeFileSync(rootRoute, "");
       expect(() => flatRoutes(tempDir)).toThrow(
         `Could not find the routes directory: ${path.join(
           tempDir,

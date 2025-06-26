@@ -15,7 +15,7 @@ Data is provided to route components from route loaders:
 createBrowserRouter([
   {
     path: "/",
-    loader: () => {
+    loader: async () => {
       // return data from here
       return { records: await getSomeRecords() };
     },

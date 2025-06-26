@@ -166,20 +166,16 @@ test.describe("prefetch", () => {
           // These 2 are common and duped for both - but they've already loaded on
           // page load so they don't trigger network requests
           await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/with-props-']",
-            { state: "attached" }
-          );
-          await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
 
           // Ensure no other links in the #nav element
-          expect(await page.locator("link").count()).toBe(7);
+          expect(await page.locator("link").count()).toBe(5);
         });
       });
 
@@ -226,18 +222,14 @@ test.describe("prefetch", () => {
             { state: "attached" }
           );
           await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/with-props-']",
-            { state: "attached" }
-          );
-          await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("link").count()).toBe(4);
+          expect(await page.locator("link").count()).toBe(3);
 
           await page.hover("a[href='/prefetch-without-loader']");
           await page.waitForSelector(
@@ -245,18 +237,14 @@ test.describe("prefetch", () => {
             { state: "attached" }
           );
           await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/with-props-']",
-            { state: "attached" }
-          );
-          await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("link").count()).toBe(3);
+          expect(await page.locator("link").count()).toBe(2);
         });
 
         test("removes prefetch tags after navigating to/from the page", async ({
@@ -268,7 +256,7 @@ test.describe("prefetch", () => {
           // Links added on hover
           await page.hover("a[href='/prefetch-with-loader']");
           await page.waitForSelector("link", { state: "attached" });
-          expect(await page.locator("link").count()).toBe(4);
+          expect(await page.locator("link").count()).toBe(3);
 
           // Links removed upon navigating to the page
           await page.click("a[href='/prefetch-with-loader']");
@@ -335,18 +323,14 @@ test.describe("prefetch", () => {
             { state: "attached" }
           );
           await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/with-props-']",
-            { state: "attached" }
-          );
-          await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("link").count()).toBe(4);
+          expect(await page.locator("link").count()).toBe(3);
 
           await page.focus("a[href='/prefetch-without-loader']");
           await page.waitForSelector(
@@ -354,18 +338,14 @@ test.describe("prefetch", () => {
             { state: "attached" }
           );
           await page.waitForSelector(
-            "link[rel='modulepreload'][href^='/assets/with-props-']",
-            { state: "attached" }
-          );
-          await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
             [
-              "link[rel='modulepreload'][href^='/assets/index-']",
+              "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
             { state: "attached" }
           );
-          expect(await page.locator("link").count()).toBe(3);
+          expect(await page.locator("link").count()).toBe(2);
         });
       });
 

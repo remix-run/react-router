@@ -18,35 +18,24 @@ import type {
   FutureConfig,
   FrameworkContextObject,
 } from "./entry";
-import { Outlet, RouterProvider, createMemoryRouter } from "../../components";
+import {
+  type RouteComponentType,
+  type HydrateFallbackType,
+  type ErrorBoundaryType,
+  Outlet,
+  RouterProvider,
+  createMemoryRouter,
+  withComponentProps,
+  withErrorBoundaryProps,
+  withHydrateFallbackProps,
+} from "../../components";
 import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
-import {
-  useParams,
-  useLoaderData,
-  useActionData,
-  useMatches,
-  useRouteError,
-} from "../../hooks";
 
 interface StubRouteExtensions {
-  Component?: React.ComponentType<{
-    params: ReturnType<typeof useParams>;
-    loaderData: ReturnType<typeof useLoaderData>;
-    actionData: ReturnType<typeof useActionData>;
-    matches: ReturnType<typeof useMatches>;
-  }>;
-  HydrateFallback?: React.ComponentType<{
-    params: ReturnType<typeof useParams>;
-    loaderData: ReturnType<typeof useLoaderData>;
-    actionData: ReturnType<typeof useActionData>;
-  }>;
-  ErrorBoundary?: React.ComponentType<{
-    params: ReturnType<typeof useParams>;
-    loaderData: ReturnType<typeof useLoaderData>;
-    actionData: ReturnType<typeof useActionData>;
-    error: ReturnType<typeof useRouteError>;
-  }>;
+  Component?: RouteComponentType;
+  HydrateFallback?: HydrateFallbackType;
+  ErrorBoundary?: ErrorBoundaryType;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
@@ -174,41 +163,6 @@ export function createRoutesStub(
         <RouterProvider router={routerRef.current} />
       </FrameworkContext.Provider>
     );
-  };
-}
-
-// Implementations copied from packages/react-router-dev/vite/with-props.ts
-function withComponentProps(Component: React.ComponentType<any>) {
-  return function Wrapped() {
-    return React.createElement(Component, {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-      matches: useMatches(),
-    });
-  };
-}
-
-function withHydrateFallbackProps(HydrateFallback: React.ComponentType<any>) {
-  return function Wrapped() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-    };
-    return React.createElement(HydrateFallback, props);
-  };
-}
-
-function withErrorBoundaryProps(ErrorBoundary: React.ComponentType<any>) {
-  return function Wrapped() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-      error: useRouteError(),
-    };
-    return React.createElement(ErrorBoundary, props);
   };
 }
 

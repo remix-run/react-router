@@ -1,4 +1,4 @@
-// Expose old @remix-run/router API y2
+// Expose old @remix-run/router API
 export type { InitialEntry, Location, Path, To } from "./lib/router/history";
 export type {
   HydrationState,
@@ -277,7 +277,7 @@ export type {
   MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
 } from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
-export type { Register, Pages, RouteFiles } from "./lib/types/register";
+export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -320,6 +320,9 @@ export {
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  withComponentProps as UNSAFE_withComponentProps,
+  withHydrateFallbackProps as UNSAFE_withHydrateFallbackProps,
+  withErrorBoundaryProps as UNSAFE_withErrorBoundaryProps,
 } from "./lib/components";
 
 /** @internal */

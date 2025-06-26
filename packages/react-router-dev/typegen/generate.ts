@@ -77,7 +77,8 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
     // pages
     const fullpath = Route.fullpath(lineage);
     if (!fullpath) continue;
-    const pages = explodeOptionalSegments(fullpath);
+
+    const pages = expand(fullpath);
     pages.forEach((page) => allPages.add(page));
 
     // routePages
@@ -322,11 +323,20 @@ function getRouteAnnotations({
 
 function relativeImportSource(from: string, to: string) {
   let path = Path.relative(Path.dirname(from), to);
+
+  let extension = Path.extname(path);
+
   // no extension
   path = Path.join(Path.dirname(path), Pathe.filename(path));
   if (!path.startsWith("../")) path = "./" + path;
 
-  return path + ".js";
+  // In typescript, we want to support "moduleResolution": "nodenext" as well as not having "allowImportingTsExtensions": true,
+  // so we normalize all JS like files to `.js`, but allow other extensions such as `.mdx` and others that might be used as routes.
+  if (!extension || /\.(js|ts)x?$/.test(extension)) {
+    extension = ".js";
+  }
+
+  return path + extension;
 }
 
 function rootDirsPath(ctx: Context, typesPath: string): string {
@@ -348,48 +358,30 @@ function paramsType(path: string) {
   );
 }
 
-// https://github.com/remix-run/react-router/blob/7a7f4b11ca8b26889ad328ba0ee5a749b0c6939e/packages/react-router/lib/router/utils.ts#L894C1-L937C2
-function explodeOptionalSegments(path: string): string[] {
-  let segments = path.split("/");
-  if (segments.length === 0) return [];
+function expand(fullpath: string): Set<string> {
+  function recurse(segments: Array<string>, index: number): Array<string> {
+    if (index === segments.length) return [""];
+    const segment = segments[index];
 
-  let [first, ...rest] = segments;
+    const isOptional = segment.endsWith("?");
+    const isDynamic = segment.startsWith(":");
+    const required = segment.replace(/\?$/, "");
 
-  // Optional path segments are denoted by a trailing `?`
-  let isOptional = first.endsWith("?");
-  // Compute the corresponding required segment: `foo?` -> `foo`
-  let required = first.replace(/\?$/, "");
+    const keep = !isOptional || isDynamic;
+    const kept = isDynamic ? segment : required;
 
-  if (rest.length === 0) {
-    // Interpret empty string as omitting an optional segment
-    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
-    return isOptional ? [required, ""] : [required];
+    const withoutSegment = recurse(segments, index + 1);
+    const withSegment = withoutSegment.map((rest) => [kept, rest].join("/"));
+
+    if (keep) return withSegment;
+    return [...withoutSegment, ...withSegment];
   }
 
-  let restExploded = explodeOptionalSegments(rest.join("/"));
-
-  let result: string[] = [];
-
-  // All child paths with the prefix.  Do this for all children before the
-  // optional version for all children, so we get consistent ordering where the
-  // parent optional aspect is preferred as required.  Otherwise, we can get
-  // child sections interspersed where deeper optional segments are higher than
-  // parent optional segments, where for example, /:two would explode _earlier_
-  // then /:one.  By always including the parent as required _for all children_
-  // first, we avoid this issue
-  result.push(
-    ...restExploded.map((subpath) =>
-      subpath === "" ? required : [required, subpath].join("/")
-    )
-  );
-
-  // Then, if this is an optional value, add all child versions without
-  if (isOptional) {
-    result.push(...restExploded);
+  const segments = fullpath.split("/");
+  const expanded = new Set<string>();
+  for (let result of recurse(segments, 0)) {
+    if (result !== "/") result = result.replace(/\/$/, "");
+    expanded.add(result);
   }
-
-  // for absolute paths, ensure `/` instead of empty segment
-  return result.map((exploded) =>
-    path.startsWith("/") && exploded === "" ? "/" : exploded
-  );
+  return expanded;
 }
