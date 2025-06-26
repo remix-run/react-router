@@ -21,7 +21,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[24]"
+      node_version: "[22]"
       browser: '["firefox"]'
 
   integration-msedge:
@@ -29,8 +29,8 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     uses: ./.github/workflows/shared-integration.yml
     with:
-      os: "windows-2025"
-      node_version: "[24]"
+      os: "windows-latest"
+      node_version: "[22]"
       browser: '["msedge"]'
       timeout: 120
 
@@ -40,5 +40,5 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "macos-latest"
-      node_version: "[24]"
+      node_version: "[22]"
       browser: '["webkit"]'
