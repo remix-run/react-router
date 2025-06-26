@@ -74,34 +74,18 @@ import {
   renderToReadableStream,
   // @ts-expect-error - no types for this yet
 } from "react-server-dom-parcel/server.edge";
-import type {
-  unstable_DecodeCallServerFunction as DecodeCallServerFunction,
-  unstable_DecodeFormActionFunction as DecodeFormActionFunction,
-} from "react-router";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 // Import the prerender function from the client environment
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes/routes";
 
-// Decode and load actions by ID to support post-hydration server actions.
-const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
-  const args = await decodeReply(reply);
-  const action = await loadServerAction(actionId);
-  return action.bind(null, ...args);
-};
-
-// Decode and load actions by form data to pre-hydration server actions.
-const decodeFormAction: DecodeFormActionFunction = async (formData) => {
-  return await decodeAction(formData);
-};
-
-function callServer(request: Request) {
+function fetchServer(request: Request) {
   return matchRSCServerRequest({
     // Provide the React Server touchpoints.
-    decodeCallServer,
-    decodeFormAction,
-    decodeFormState,
+    decodeReply,
+    decodeAction,
+    loadServerAction,
     // The incoming request.
     request,
     // The app routes.
@@ -140,7 +124,7 @@ app.use(
   createRequestListener((request) =>
     prerender(
       request,
-      callServer,
+      fetchServer,
       (routes as unknown as { bootstrapScript?: string }).bootstrapScript
     )
   )
@@ -167,16 +151,16 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
 
 export async function prerender(
   request: Request,
-  callServer: (request: Request) => Promise<Response>,
+  fetchServer: (request: Request) => Promise<Response>,
   bootstrapScriptContent: string | undefined
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
     request,
-    // How to call the React Server.
-    callServer,
+    // How to fetch from the React Server.
+    fetchServer,
     // Provide the React Server touchpoints.
-    decode: createFromReadableStream,
+    createFromReadableStream,
     // Render the router to HTML.
     async renderHTML(getPayload) {
       return await renderHTMLToReadableStream(
@@ -199,8 +183,8 @@ Create a `src/browser.tsx` file that will act as the entrypoint for hydration.
 
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
-import type { unstable_DecodeServerResponseFunction as DecodeServerResponseFunction } from "react-router";
 import {
+  type unstable_ServerPayload as ServerPayload,
   unstable_createCallServer as createCallServer,
   unstable_getServerStream as getServerStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
@@ -212,31 +196,32 @@ import {
   // @ts-expect-error - no types for this yet
 } from "react-server-dom-parcel/client";
 
-const decode: DecodeServerResponseFunction = (body) =>
-  createFromReadableStream(body);
-
 // Create and set the callServer function to support post-hydration server actions.
 setServerCallback(
   createCallServer({
-    decode,
-    encodeAction: (args) => encodeReply(args),
+    createFromReadableStream,
+    encodeReply,
   })
 );
 
 // Get and decode the initial server payload
-decode(getServerStream()).then((payload) => {
-  startTransition(async () => {
-    hydrateRoot(
-      document,
-      <StrictMode>
-        <RSCHydratedRouter
-          decode={decode}
-          payload={payload}
-        />
-      </StrictMode>
-    );
-  });
-});
+createFromReadableStream(getServerStream()).then(
+  (payload: ServerPayload) => {
+    startTransition(async () => {
+      hydrateRoot(
+        document,
+        <StrictMode>
+          <RSCHydratedRouter
+            payload={payload}
+            createFromReadableStream={
+              createFromReadableStream
+            }
+          />
+        </StrictMode>
+      );
+    });
+  }
+);
 ```
 
 ## Define our Routes

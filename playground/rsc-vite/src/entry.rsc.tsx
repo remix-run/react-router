@@ -4,28 +4,15 @@ import {
   loadServerAction,
   renderToReadableStream,
 } from "@hiogawa/vite-rsc/rsc";
-import {
-  type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
-  type unstable_DecodeFormActionFunction as DecodeFormActionFunction,
-  unstable_matchRSCServerRequest as matchRSCServerRequest,
-} from "react-router";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 import { routes } from "./routes";
 
-const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
-  const args = await decodeReply(reply);
-  const action = await loadServerAction(actionId);
-  return action.bind(null, ...args);
-};
-
-const decodeFormAction: DecodeFormActionFunction = async (formData) => {
-  return await decodeAction(formData);
-};
-
-export async function callServer(request: Request) {
+export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
-    decodeCallServer,
-    decodeFormAction,
+    decodeReply,
+    decodeAction,
+    loadServerAction,
     request,
     // @ts-expect-error
     routes,
@@ -42,5 +29,5 @@ export default async function handler(request: Request) {
   const ssr = await import.meta.viteRsc.loadModule<
     typeof import("./entry.ssr")
   >("ssr", "index");
-  return ssr.default(request, callServer);
+  return ssr.default(request, fetchServer);
 }

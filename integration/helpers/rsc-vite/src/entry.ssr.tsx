@@ -9,12 +9,12 @@ import {
 
 export default async function handler(
   request: Request,
-  callServer: (request: Request) => Promise<Response>
+  fetchServer: (request: Request) => Promise<Response>
 ) {
   return routeRSCServerRequest({
     request,
-    callServer,
-    decode: (body) => createFromReadableStream(body),
+    fetchServer,
+    createFromReadableStream,
     renderHTML(getPayload) {
       return ReactDomServer.renderToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,

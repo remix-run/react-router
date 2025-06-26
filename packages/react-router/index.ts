@@ -283,10 +283,7 @@ export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
 
 // RSC
-export type {
-  DecodeServerResponseFunction as unstable_DecodeServerResponseFunction,
-  EncodeActionFunction as unstable_EncodeActionFunction,
-} from "./lib/rsc/browser";
+export type { EncodeReplyFunction as unstable_EncodeReplyFunction } from "./lib/rsc/browser";
 export {
   createCallServer as unstable_createCallServer,
   RSCHydratedRouter as unstable_RSCHydratedRouter,
@@ -303,8 +300,11 @@ import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
 export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
 
 export type {
-  DecodeCallServerFunction as unstable_DecodeCallServerFunction,
-  DecodeFormActionFunction as unstable_DecodeFormActionFunction,
+  CreateFromReadableStreamFunction as unstable_CreateFromReadableStreamFunction,
+  DecodeActionFunction as unstable_DecodeActionFunction,
+  DecodeFormStateFunction as unstable_DecodeFormStateFunction,
+  DecodeReplyFunction as unstable_DecodeReplyFunction,
+  LoadServerActionFunction as unstable_LoadServerActionFunction,
   ServerManifestPayload as unstable_ServerManifestPayload,
   ServerMatch as unstable_ServerMatch,
   ServerPayload as unstable_ServerPayload,

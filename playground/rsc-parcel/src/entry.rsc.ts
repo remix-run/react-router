@@ -7,30 +7,17 @@ import {
   renderToReadableStream,
   // @ts-expect-error
 } from "react-server-dom-parcel/server.edge";
-import {
-  type unstable_DecodeCallServerFunction as DecodeCallServerFunction,
-  type unstable_DecodeFormActionFunction as DecodeFormActionFunction,
-  unstable_matchRSCServerRequest as matchRSCServerRequest,
-} from "react-router";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 import { routes } from "./routes";
 
 import "./entry.browser.tsx";
 
-const decodeCallServer: DecodeCallServerFunction = async (actionId, reply) => {
-  const args = await decodeReply(reply);
-  const action = await loadServerAction(actionId);
-  return action.bind(null, ...args);
-};
-
-const decodeFormAction: DecodeFormActionFunction = async (formData) => {
-  return await decodeAction(formData);
-};
-
-export function callServer(request: Request) {
+export function fetchServer(request: Request) {
   return matchRSCServerRequest({
-    decodeCallServer,
-    decodeFormAction,
+    decodeReply,
+    decodeAction,
+    loadServerAction,
     request,
     routes,
     generateResponse(match) {

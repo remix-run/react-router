@@ -15,12 +15,12 @@ import {
   // @ts-expect-error
 } from "react-server-dom-parcel/client";
 
-const callServer = createCallServer({
-  decode: (body) => createFromReadableStream(body, { callServer }),
-  encodeAction: (args) => encodeReply(args),
-});
-
-setServerCallback(callServer);
+setServerCallback(
+  createCallServer({
+    createFromReadableStream,
+    encodeReply,
+  })
+);
 
 createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
   (payload: ServerPayload) => {
@@ -29,9 +29,9 @@ createFromReadableStream(getServerStream(), { assets: "manifest" }).then(
         document,
         <React.StrictMode>
           <RSCHydratedRouter
-            decode={createFromReadableStream}
             payload={payload}
             routeDiscovery="eager"
+            createFromReadableStream={createFromReadableStream}
           />
         </React.StrictMode>
       );

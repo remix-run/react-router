@@ -12,13 +12,13 @@ Routes the incoming request to the RSC server and appropriately proxies the serv
 
 ## Options
 
-### callServer
+### createFromReadableStream
+
+Your `react-server-dom-xyz/client`'s `createFromReadableStream` function, used to decode payloads from the server.
+
+### fetchServer
 
 A function that forwards a `Request` to the RSC handler and returns a `Promise<Response>` containing a serialized `ServerPayload`.
-
-### decode
-
-Wraps your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode payloads from the server.
 
 ### renderHTML
 
