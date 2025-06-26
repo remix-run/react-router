@@ -158,7 +158,7 @@ export async function prerender(
   return await routeRSCServerRequest({
     // The incoming request.
     request,
-    // How to call the React Server.
+    // How to fetch from the React Server.
     fetchServer,
     // Provide the React Server touchpoints.
     createFromReadableStream,
@@ -166,7 +166,9 @@ export async function prerender(
     async renderHTML(getPayload) {
       const payload = await getPayload();
       const formState =
-        payload.type === "render" ? await payload.formState : undefined;
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
 
       return await renderHTMLToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
@@ -191,6 +193,7 @@ Create a `src/browser.tsx` file that will act as the entrypoint for hydration.
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
+  type unstable_RSCPayload as RSCPayload,
   unstable_createCallServer as createCallServer,
   unstable_getRSCStream as getRSCStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
@@ -212,26 +215,32 @@ setServerCallback(
 );
 
 // Get and decode the initial server payload
-createFromReadableStream(getRSCStream()).then((payload: RSCServerPayload) => {
-  startTransition(async () => {
-    const formState =
-      payload.type === "render" ? await payload.formState : undefined;
+createFromReadableStream(getRSCStream()).then(
+  (payload: RSCServerPayload) => {
+    startTransition(async () => {
+      const formState =
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
 
-    hydrateRoot(
-      document,
-      <StrictMode>
-        <RSCHydratedRouter
-          createFromReadableStream={createFromReadableStream}
-          payload={payload}
-        />
-      </StrictMode>,
-      {
-        // @ts-expect-error - no types for this yet
-        formState,
-      }
-    );
-  });
-});
+      hydrateRoot(
+        document,
+        <StrictMode>
+          <RSCHydratedRouter
+            createFromReadableStream={
+              createFromReadableStream
+            }
+            payload={payload}
+          />
+        </StrictMode>,
+        {
+          // @ts-expect-error - no types for this yet
+          formState,
+        }
+      );
+    });
+  }
+);
 ```
 
 ## Define our Routes

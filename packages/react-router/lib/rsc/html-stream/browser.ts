@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-export function getServerStream() {
+export function getRSCStream() {
   let encoder = new TextEncoder();
   let streamController: ReadableStreamDefaultController<Uint8Array> | null =
     null;

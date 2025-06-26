@@ -8,17 +8,17 @@ title: matchRSCServerRequest
 
 ## Summary
 
-Matches the given routes to a Request and returns a RSC Response encoding a `ServerPayload` for consumption by a RSC enabled client router.
+Matches the given routes to a Request and returns a RSC Response encoding an `RSCPayload` for consumption by a RSC enabled client router.
 
 ## Options
 
-### decodeCallServer
+### decodeAction
 
-A function responsible for loading a server function, using your `react-server-dom-xyz/server`'s `decodeReply` to decode the server function's arguments, and bind them to the implementation for invocation by the router.
+Your `react-server-dom-xyz/server`'s `decodeAction` function, responsible for loading a server action.
 
-### decodeFormAction
+### decodeReply
 
-A function responsible for loading a server action using your `react-server-dom-xyz/server`'s `decodeAction`.
+Your `react-server-dom-xyz/server`'s `decodeReply` function, used to decode the server function's arguments and bind them to the implementation for invocation by the router.
 
 ### decodeFormState
 
@@ -26,7 +26,11 @@ A function responsible for decoding form state for progressively enhanceable for
 
 ### generateResponse
 
-A function responsible for using your `renderToReadableStream` to generate a Response encoding the `ServerPayload`.
+A function responsible for using your `renderToReadableStream` to generate a Response encoding the `RSCPayload`.
+
+### loadServerAction
+
+Your `react-server-dom-xyz/server`'s `loadServerAction` function, used to load a server action by ID.
 
 ### request
 

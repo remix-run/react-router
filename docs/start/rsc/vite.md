@@ -117,7 +117,7 @@ export async function prerender(
   return await routeRSCServerRequest({
     // The incoming request.
     request,
-    // How to call the React Server.
+    // How to fetch from the React Server.
     fetchServer,
     // Provide the React Server touchpoints.
     createFromReadableStream,

@@ -2,15 +2,19 @@
 export { matchRSCServerRequest as unstable_matchRSCServerRequest } from "./lib/rsc/server.rsc";
 
 export type {
-  DecodeCallServerFunction as unstable_DecodeCallServerFunction,
-  DecodeFormActionFunction as unstable_DecodeFormActionFunction,
-  ServerManifestPayload as unstable_ServerManifestPayload,
-  ServerMatch as unstable_ServerMatch,
-  ServerPayload as unstable_ServerPayload,
-  ServerRenderPayload as unstable_ServerRenderPayload,
-  RenderedRoute as ServerRouteManifest,
-  ServerRouteMatch as unstable_ServerRouteMatch,
-  ServerRouteObject as unstable_ServerRouteObject,
+  CreateFromReadableStreamFunction as unstable_CreateFromReadableStreamFunction,
+  DecodeActionFunction as unstable_DecodeActionFunction,
+  DecodeFormStateFunction as unstable_DecodeFormStateFunction,
+  DecodeReplyFunction as unstable_DecodeReplyFunction,
+  LoadServerActionFunction as unstable_LoadServerActionFunction,
+  RSCManifestPayload as unstable_RSCManifestPayload,
+  RSCMatch as unstable_RSCMatch,
+  RSCPayload as unstable_RSCPayload,
+  RSCRenderPayload as unstable_RSCRenderPayload,
+  RSCRouteManifest as unstable_RSCRouteManifest,
+  RSCRouteMatch as unstable_RSCRouteMatch,
+  RSCRouteConfigEntry as unstable_RSCRouteConfigEntry,
+  RSCRouteConfig as unstable_RSCRouteConfig,
 } from "./lib/rsc/server.rsc";
 
 // RSC implementation of agnostic APIs

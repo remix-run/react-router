@@ -5,20 +5,23 @@ import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
-import type { ServerPayload } from "./server.rsc";
+import type {
+  RSCPayload,
+  CreateFromReadableStreamFunction,
+} from "./server.rsc";
 
 export async function routeRSCServerRequest({
   request,
-  callServer,
-  decode,
+  fetchServer,
+  createFromReadableStream,
   renderHTML,
   hydrate = true,
 }: {
   request: Request;
-  callServer: (request: Request) => Promise<Response>;
-  decode: (body: ReadableStream<Uint8Array>) => Promise<ServerPayload>;
+  fetchServer: (request: Request) => Promise<Response>;
+  createFromReadableStream: CreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<ServerPayload>
+    getPayload: () => Promise<RSCPayload>
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }) {
@@ -29,7 +32,7 @@ export async function routeRSCServerRequest({
     isManifestRequest(url) ||
     request.headers.has("rsc-action-id");
 
-  const serverResponse = await callServer(request);
+  const serverResponse = await fetchServer(request);
 
   if (
     respondWithRSCPayload ||
@@ -48,10 +51,10 @@ export async function routeRSCServerRequest({
   }
 
   const body = serverResponse.body;
-  let payloadPromise: Promise<ServerPayload>;
+  let payloadPromise: Promise<RSCPayload>;
   const getPayload = async () => {
     if (payloadPromise) return payloadPromise;
-    payloadPromise = decode(body);
+    payloadPromise = createFromReadableStream(body) as Promise<RSCPayload>;
     return payloadPromise;
   };
 
@@ -92,10 +95,10 @@ export async function routeRSCServerRequest({
 export function RSCStaticRouter({
   getPayload,
 }: {
-  getPayload: () => Promise<ServerPayload>;
+  getPayload: () => Promise<RSCPayload>;
 }) {
   // @ts-expect-error - need to update the React types
-  const payload = React.use(getPayload()) as ServerPayload;
+  const payload = React.use(getPayload()) as RSCPayload;
 
   if (payload.type === "redirect") {
     throw new Response(null, {

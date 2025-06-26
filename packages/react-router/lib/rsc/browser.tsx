@@ -13,9 +13,10 @@ import { createBrowserHistory, invariant } from "../router/history";
 import type { Router as DataRouter } from "../router/router";
 import { createRouter, isMutationMethod } from "../router/router";
 import type {
-  ServerPayload,
-  RenderedRoute,
-  ServerRenderPayload,
+  RSCPayload,
+  RSCRouteManifest,
+  RSCRenderPayload,
+  CreateFromReadableStreamFunction,
 } from "./server.rsc";
 import type {
   DataStrategyFunction,
@@ -40,11 +41,7 @@ import {
 } from "../dom/ssr/routes";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 
-export type DecodeServerResponseFunction = (
-  body: ReadableStream<Uint8Array>
-) => Promise<ServerPayload>;
-
-export type EncodeActionFunction = (args: unknown[]) => Promise<BodyInit>;
+export type EncodeReplyFunction = (args: unknown[]) => Promise<BodyInit>;
 
 declare global {
   interface Window {
@@ -55,12 +52,12 @@ declare global {
 }
 
 export function createCallServer({
-  decode,
-  encodeAction,
+  createFromReadableStream,
+  encodeReply,
   fetch: fetchImplementation = fetch,
 }: {
-  decode: DecodeServerResponseFunction;
-  encodeAction: EncodeActionFunction;
+  createFromReadableStream: CreateFromReadableStreamFunction;
+  encodeReply: EncodeReplyFunction;
   fetch?: (request: Request) => Promise<Response>;
 }) {
   let landedActionId = 0;
@@ -70,7 +67,7 @@ export function createCallServer({
 
     const response = await fetchImplementation(
       new Request(location.href, {
-        body: await encodeAction(args),
+        body: await encodeReply(args),
         method: "POST",
         headers: {
           Accept: "text/x-component",
@@ -81,7 +78,9 @@ export function createCallServer({
     if (!response.body) {
       throw new Error("No response body");
     }
-    const payload = await decode(response.body);
+    const payload = (await createFromReadableStream(
+      response.body
+    )) as RSCPayload;
 
     if (payload.type === "redirect") {
       if (payload.reload) {
@@ -119,7 +118,7 @@ export function createCallServer({
             return;
           }
 
-          let lastMatch: RenderedRoute | undefined;
+          let lastMatch: RSCRouteManifest | undefined;
           for (const match of rerender.matches) {
             window.__router.patchRoutes(
               lastMatch?.id ?? null,
@@ -156,18 +155,18 @@ export function createCallServer({
 
 function createRouterFromPayload({
   fetchImplementation,
-  decode,
+  createFromReadableStream,
   payload,
 }: {
-  payload: ServerPayload;
-  decode: DecodeServerResponseFunction;
+  payload: RSCPayload;
+  createFromReadableStream: CreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
 }) {
   if (window.__router) return window.__router;
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let patches = new Map<string, RenderedRoute[]>();
+  let patches = new Map<string, RSCRouteManifest[]>();
   payload.patches?.forEach((patch) => {
     invariant(patch.parentId, "Invalid patch parentId");
     if (!patches.has(patch.parentId)) {
@@ -222,7 +221,7 @@ function createRouterFromPayload({
       }
       await fetchAndApplyManifestPatches(
         [path],
-        decode,
+        createFromReadableStream,
         fetchImplementation,
         signal
       );
@@ -232,7 +231,7 @@ function createRouterFromPayload({
       () => window.__router,
       true,
       undefined,
-      decode,
+      createFromReadableStream,
       fetchImplementation
     ),
   });
@@ -256,13 +255,13 @@ function createRouterFromPayload({
   return window.__router;
 }
 
-const renderedRoutesContext = unstable_createContext<RenderedRoute[]>();
+const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
 
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
   basename: string | undefined,
-  decode: DecodeServerResponseFunction,
+  createFromReadableStream: CreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>
 ): DataStrategyFunction {
   // TODO: Clean this up with a shared type
@@ -292,7 +291,7 @@ export function getRSCSingleFetchDataStrategy(
       };
     },
     // pass map into fetchAndDecode so it can add payloads
-    getFetchAndDecodeViaRSC(decode, fetchImplementation),
+    getFetchAndDecodeViaRSC(createFromReadableStream, fetchImplementation),
     ssr,
     basename,
     // If the route has a component but we don't have an element, we need to hit
@@ -322,7 +321,7 @@ export function getRSCSingleFetchDataStrategy(
       // with the same ID. This is currently happening in `clientLoader` cases
       // where we're calling `fetchAndDecode` multiple times. This may be a
       // sign of a logical error in how we're handling client loader routes.
-      const renderedRoutesById = new Map<string, RenderedRoute[]>();
+      const renderedRoutesById = new Map<string, RSCRouteManifest[]>();
       for (const route of context.get(renderedRoutesContext)) {
         if (!renderedRoutesById.has(route.id)) {
           renderedRoutesById.set(route.id, []);
@@ -346,7 +345,7 @@ export function getRSCSingleFetchDataStrategy(
 }
 
 function getFetchAndDecodeViaRSC(
-  decode: DecodeServerResponseFunction,
+  createFromReadableStream: CreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>
 ): FetchAndDecodeFunction {
   return async (
@@ -376,7 +375,7 @@ function getFetchAndDecodeViaRSC(
     invariant(res.body, "No response body to decode");
 
     try {
-      const payload = await decode(res.body);
+      const payload = (await createFromReadableStream(res.body)) as RSCPayload;
       if (payload.type === "redirect") {
         return {
           status: res.status,
@@ -430,14 +429,14 @@ function getFetchAndDecodeViaRSC(
 }
 
 export function RSCHydratedRouter({
-  decode,
+  createFromReadableStream,
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
 }: {
-  decode: DecodeServerResponseFunction;
+  createFromReadableStream: CreateFromReadableStreamFunction;
   fetch?: (request: Request) => Promise<Response>;
-  payload: ServerPayload;
+  payload: RSCPayload;
   routeDiscovery?: "eager" | "lazy";
 }) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
@@ -445,11 +444,11 @@ export function RSCHydratedRouter({
   let router = React.useMemo(
     () =>
       createRouterFromPayload({
-        decode,
         payload,
         fetchImplementation,
+        createFromReadableStream,
       }),
-    [decode, payload, fetchImplementation]
+    [createFromReadableStream, payload, fetchImplementation]
   );
 
   React.useLayoutEffect(() => {
@@ -521,7 +520,11 @@ export function RSCHydratedRouter({
       }
 
       try {
-        await fetchAndApplyManifestPatches(paths, decode, fetchImplementation);
+        await fetchAndApplyManifestPatches(
+          paths,
+          createFromReadableStream,
+          fetchImplementation
+        );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
       }
@@ -540,7 +543,7 @@ export function RSCHydratedRouter({
       attributes: true,
       attributeFilter: ["data-discover", "href", "action"],
     });
-  }, [routeDiscovery, decode, fetchImplementation]);
+  }, [routeDiscovery, createFromReadableStream, fetchImplementation]);
 
   const frameworkContext: FrameworkContextObject = {
     future: {
@@ -585,8 +588,8 @@ type DataRouteObjectWithManifestInfo = DataRouteObject & {
 };
 
 function createRouteFromServerManifest(
-  match: RenderedRoute,
-  payload?: ServerRenderPayload
+  match: RSCRouteManifest,
+  payload?: RSCRenderPayload
 ): DataRouteObjectWithManifestInfo {
   let hasInitialData = payload && match.id in payload.loaderData;
   let initialData = payload?.loaderData[match.id];
@@ -730,7 +733,7 @@ function getManifestUrl(paths: string[]): URL | null {
 
 async function fetchAndApplyManifestPatches(
   paths: string[],
-  decode: DecodeServerResponseFunction,
+  createFromReadableStream: CreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
   signal?: AbortSignal
 ) {
@@ -752,7 +755,7 @@ async function fetchAndApplyManifestPatches(
     throw new Error("Unable to fetch new route matches from the server");
   }
 
-  let payload = await decode(response.body);
+  let payload = (await createFromReadableStream(response.body)) as RSCPayload;
   if (payload.type !== "manifest") {
     throw new Error("Failed to patch routes");
   }

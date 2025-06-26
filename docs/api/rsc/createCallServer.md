@@ -12,10 +12,10 @@ Create a React `callServer` implementation for React Router.
 
 ## Options
 
-### decode
+### createFromReadableStream
 
-Wraps your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode payloads from the server.
+Your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode payloads from the server.
 
-### encodeAction
+### encodeReply
 
-Wraps your `react-server-dom-xyz/client`'s `encodeReply`. Used when sending payloads to the server.
+Your `react-server-dom-xyz/client`'s `encodeReply`. Used when sending payloads to the server.

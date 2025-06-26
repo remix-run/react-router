@@ -5,7 +5,7 @@ import { createBanner } from "../../build.utils.js";
 
 import pkg from "./package.json";
 
-const entry = ["index-react-server.ts", "rsc-export.ts"];
+const entry = ["index-react-server.ts"];
 const external = ["react-router", "react-router/internal/react-server-client"];
 
 const config = (enableDevWarnings: boolean) =>
