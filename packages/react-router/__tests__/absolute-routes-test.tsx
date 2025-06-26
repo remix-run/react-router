@@ -1,12 +1,12 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
-  AbsoluteRoutes,
+  unstable_AbsoluteRoutes as AbsoluteRoutes,
   MemoryRouter,
   Routes,
   Route,
   createRoutesFromElements,
-  useAbsoluteRoutes,
+  unstable_useAbsoluteRoutes as useAbsoluteRoutes,
   Outlet,
 } from "react-router";
 
