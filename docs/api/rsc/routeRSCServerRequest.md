@@ -18,11 +18,11 @@ Your `react-server-dom-xyz/client`'s `createFromReadableStream` function, used t
 
 ### fetchServer
 
-A function that forwards a `Request` to the RSC handler and returns a `Promise<Response>` containing a serialized `ServerPayload`.
+A function that forwards a `Request` to the RSC handler and returns a `Promise<Response>` containing a serialized `RSCPayload`.
 
 ### renderHTML
 
-A function that renders the `ServerPayload` to HTML, usually using a `<RSCStaticRouter>`.
+A function that renders the `RSCPayload` to HTML, usually using a `<RSCStaticRouter>`.
 
 ### request
 

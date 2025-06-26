@@ -13,9 +13,9 @@ import { createBrowserHistory, invariant } from "../router/history";
 import type { Router as DataRouter } from "../router/router";
 import { createRouter, isMutationMethod } from "../router/router";
 import type {
-  ServerPayload,
-  RenderedRoute,
-  ServerRenderPayload,
+  RSCPayload,
+  RSCRouteManifest,
+  RSCRenderPayload,
   CreateFromReadableStreamFunction,
 } from "./server.rsc";
 import type {
@@ -80,7 +80,7 @@ export function createCallServer({
     }
     const payload = (await createFromReadableStream(
       response.body
-    )) as ServerPayload;
+    )) as RSCPayload;
 
     if (payload.type === "redirect") {
       if (payload.reload) {
@@ -118,7 +118,7 @@ export function createCallServer({
             return;
           }
 
-          let lastMatch: RenderedRoute | undefined;
+          let lastMatch: RSCRouteManifest | undefined;
           for (const match of rerender.matches) {
             window.__router.patchRoutes(
               lastMatch?.id ?? null,
@@ -158,7 +158,7 @@ function createRouterFromPayload({
   createFromReadableStream,
   payload,
 }: {
-  payload: ServerPayload;
+  payload: RSCPayload;
   createFromReadableStream: CreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
 }) {
@@ -166,7 +166,7 @@ function createRouterFromPayload({
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let patches = new Map<string, RenderedRoute[]>();
+  let patches = new Map<string, RSCRouteManifest[]>();
   payload.patches?.forEach((patch) => {
     invariant(patch.parentId, "Invalid patch parentId");
     if (!patches.has(patch.parentId)) {
@@ -255,7 +255,7 @@ function createRouterFromPayload({
   return window.__router;
 }
 
-const renderedRoutesContext = unstable_createContext<RenderedRoute[]>();
+const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
 
 export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
@@ -321,7 +321,7 @@ export function getRSCSingleFetchDataStrategy(
       // with the same ID. This is currently happening in `clientLoader` cases
       // where we're calling `fetchAndDecode` multiple times. This may be a
       // sign of a logical error in how we're handling client loader routes.
-      const renderedRoutesById = new Map<string, RenderedRoute[]>();
+      const renderedRoutesById = new Map<string, RSCRouteManifest[]>();
       for (const route of context.get(renderedRoutesContext)) {
         if (!renderedRoutesById.has(route.id)) {
           renderedRoutesById.set(route.id, []);
@@ -375,9 +375,7 @@ function getFetchAndDecodeViaRSC(
     invariant(res.body, "No response body to decode");
 
     try {
-      const payload = (await createFromReadableStream(
-        res.body
-      )) as ServerPayload;
+      const payload = (await createFromReadableStream(res.body)) as RSCPayload;
       if (payload.type === "redirect") {
         return {
           status: res.status,
@@ -438,7 +436,7 @@ export function RSCHydratedRouter({
 }: {
   createFromReadableStream: CreateFromReadableStreamFunction;
   fetch?: (request: Request) => Promise<Response>;
-  payload: ServerPayload;
+  payload: RSCPayload;
   routeDiscovery?: "eager" | "lazy";
 }) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
@@ -590,8 +588,8 @@ type DataRouteObjectWithManifestInfo = DataRouteObject & {
 };
 
 function createRouteFromServerManifest(
-  match: RenderedRoute,
-  payload?: ServerRenderPayload
+  match: RSCRouteManifest,
+  payload?: RSCRenderPayload
 ): DataRouteObjectWithManifestInfo {
   let hasInitialData = payload && match.id in payload.loaderData;
   let initialData = payload?.loaderData[match.id];
@@ -757,9 +755,7 @@ async function fetchAndApplyManifestPatches(
     throw new Error("Unable to fetch new route matches from the server");
   }
 
-  let payload = (await createFromReadableStream(
-    response.body
-  )) as ServerPayload;
+  let payload = (await createFromReadableStream(response.body)) as RSCPayload;
   if (payload.type !== "manifest") {
     throw new Error("Failed to patch routes");
   }

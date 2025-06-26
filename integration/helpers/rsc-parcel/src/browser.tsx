@@ -2,10 +2,10 @@
 
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
-import type { unstable_ServerPayload as ServerPayload } from "react-router";
+import type { unstable_RSCPayload as RSCPayload } from "react-router";
 import {
   unstable_createCallServer as createCallServer,
-  unstable_getServerStream as getServerStream,
+  unstable_getRSCStream as getRSCStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
 import {
@@ -24,7 +24,7 @@ setServerCallback(
 );
 
 // Get and decode the initial server payload
-createFromReadableStream(getServerStream()).then((payload: ServerPayload) => {
+createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
   // @ts-expect-error - on 18 types, requires 19.
   startTransition(async () => {
     const formState =

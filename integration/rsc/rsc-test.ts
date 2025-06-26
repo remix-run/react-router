@@ -209,7 +209,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
               export const routes = [
                 {
@@ -229,7 +229,7 @@ implementations.forEach((implementation) => {
                     },
                   ],
                 },
-              ] satisfies ServerRouteObject[];
+              ] satisfies RSCRouteConfig;
             `,
             "src/routes/home.tsx": js`
               import { Link } from "react-router";
@@ -340,7 +340,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
               export const routes = [
                 {
@@ -360,7 +360,7 @@ implementations.forEach((implementation) => {
                     },
                   ],
                 },
-              ] satisfies ServerRouteObject[];
+              ] satisfies RSCRouteConfig;
             `,
             "src/routes/home.tsx": js`
               import { Link } from "react-router";
@@ -473,7 +473,7 @@ implementations.forEach((implementation) => {
           port,
           files: {
             "src/routes.ts": js`
-              import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
               export const routes = [
                 {
@@ -493,7 +493,7 @@ implementations.forEach((implementation) => {
                   path: "resource",
                   lazy: () => import("./routes/resource"),
                 },
-              ] satisfies ServerRouteObject[];
+              ] satisfies RSCRouteConfig;
             `,
             "src/routes/resource.tsx": js`
               export function loader() {

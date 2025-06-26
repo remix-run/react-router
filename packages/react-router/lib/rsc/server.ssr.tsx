@@ -6,7 +6,7 @@ import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import type {
-  ServerPayload,
+  RSCPayload,
   CreateFromReadableStreamFunction,
 } from "./server.rsc";
 
@@ -21,7 +21,7 @@ export async function routeRSCServerRequest({
   fetchServer: (request: Request) => Promise<Response>;
   createFromReadableStream: CreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<ServerPayload>
+    getPayload: () => Promise<RSCPayload>
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }) {
@@ -51,10 +51,10 @@ export async function routeRSCServerRequest({
   }
 
   const body = serverResponse.body;
-  let payloadPromise: Promise<ServerPayload>;
+  let payloadPromise: Promise<RSCPayload>;
   const getPayload = async () => {
     if (payloadPromise) return payloadPromise;
-    payloadPromise = createFromReadableStream(body) as Promise<ServerPayload>;
+    payloadPromise = createFromReadableStream(body) as Promise<RSCPayload>;
     return payloadPromise;
   };
 
@@ -95,10 +95,10 @@ export async function routeRSCServerRequest({
 export function RSCStaticRouter({
   getPayload,
 }: {
-  getPayload: () => Promise<ServerPayload>;
+  getPayload: () => Promise<RSCPayload>;
 }) {
   // @ts-expect-error - need to update the React types
-  const payload = React.use(getPayload()) as ServerPayload;
+  const payload = React.use(getPayload()) as RSCPayload;
 
   if (payload.type === "redirect") {
     throw new Response(null, {

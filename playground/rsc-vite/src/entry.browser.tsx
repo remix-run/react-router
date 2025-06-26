@@ -7,10 +7,10 @@ import {
 } from "@hiogawa/vite-rsc/browser";
 import {
   unstable_createCallServer as createCallServer,
-  unstable_getServerStream as getServerStream,
+  unstable_getRSCStream as getRSCStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
-import type { unstable_ServerPayload as ServerPayload } from "react-router";
+import type { unstable_RSCPayload as RSCPayload } from "react-router";
 
 setServerCallback(
   createCallServer({
@@ -19,7 +19,7 @@ setServerCallback(
   })
 );
 
-createFromReadableStream<ServerPayload>(getServerStream()).then((payload) => {
+createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
   startTransition(() => {
     hydrateRoot(
       document,

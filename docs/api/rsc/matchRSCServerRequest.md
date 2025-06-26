@@ -8,7 +8,7 @@ title: matchRSCServerRequest
 
 ## Summary
 
-Matches the given routes to a Request and returns a RSC Response encoding a `ServerPayload` for consumption by a RSC enabled client router.
+Matches the given routes to a Request and returns a RSC Response encoding an `RSCPayload` for consumption by a RSC enabled client router.
 
 ## Options
 
@@ -26,7 +26,7 @@ A function responsible for decoding form state for progressively enhanceable for
 
 ### generateResponse
 
-A function responsible for using your `renderToReadableStream` to generate a Response encoding the `ServerPayload`.
+A function responsible for using your `renderToReadableStream` to generate a Response encoding the `RSCPayload`.
 
 ### loadServerAction
 

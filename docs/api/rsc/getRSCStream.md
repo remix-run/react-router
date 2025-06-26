@@ -1,8 +1,8 @@
 ---
-title: getServerStream
+title: getRSCStream
 ---
 
-# getServerStream
+# getRSCStream
 
 [MODES: data]
 

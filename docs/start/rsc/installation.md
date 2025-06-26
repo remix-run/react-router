@@ -184,9 +184,9 @@ Create a `src/browser.tsx` file that will act as the entrypoint for hydration.
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
-  type unstable_ServerPayload as ServerPayload,
+  type unstable_RSCPayload as RSCPayload,
   unstable_createCallServer as createCallServer,
-  unstable_getServerStream as getServerStream,
+  unstable_getRSCStream as getRSCStream,
   unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router";
 import {
@@ -205,8 +205,8 @@ setServerCallback(
 );
 
 // Get and decode the initial server payload
-createFromReadableStream(getServerStream()).then(
-  (payload: ServerPayload) => {
+createFromReadableStream(getRSCStream()).then(
+  (payload: RSCPayload) => {
     startTransition(async () => {
       hydrateRoot(
         document,
@@ -231,7 +231,7 @@ Create a `src/routes/routes.ts` file that will define our routes with dynamic im
 ```ts nonumber
 "use server-entry";
 
-import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
+import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
 import "../browser";
 
@@ -254,7 +254,7 @@ export function routes() {
         },
       ],
     },
-  ] satisfies ServerRouteObject[];
+  ] satisfies RSCRouteConfig;
 }
 ```
 

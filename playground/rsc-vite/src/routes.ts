@@ -1,4 +1,4 @@
-import type { unstable_ServerRouteObject as ServerRouteObject } from "react-router";
+import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
 export const routes = [
   {
@@ -41,4 +41,4 @@ export const routes = [
       },
     ],
   },
-] satisfies ServerRouteObject[];
+] satisfies RSCRouteConfig;
