@@ -120,6 +120,54 @@ export default {
 } satisfies Config;
 ```
 
+### `routeDiscovery`
+
+Configure how routes are discovered and loaded by the client. Defaults to `mode: "lazy"` with `manifestPath: "/__manifest"`.
+
+See [Lazy Route Discovery][lazy-route-discovery] for more information.
+
+```tsx filename=react-router.config.ts
+export default {
+  // Enable lazy route discovery (default)
+  routeDiscovery: {
+    mode: "lazy",
+    manifestPath: "/__manifest",
+  },
+
+  // Or use a custom manifest path
+  routeDiscovery: {
+    mode: "lazy",
+    manifestPath: "/custom-manifest",
+  },
+
+  // Or disable lazy discovery and include all routes initially
+  routeDiscovery: { mode: "initial" },
+} satisfies Config;
+```
+
+**Options:**
+
+- `mode: "lazy"` - Routes are discovered as the user navigates (default)
+- `mode: "initial"` - All routes are included in the initial manifest
+- `manifestPath` - Custom path for manifest requests when using lazy mode
+
+```ts
+// react-router.config.ts
+
+export default {
+  // You can modify the manifest path used:
+  routeDiscovery: { mode: "lazy", manifestPath: "/custom-manifest" }
+
+  // Or you can disable this feature entirely and include all routes in the
+  // manifest on initial document load:
+  routeDiscovery: { mode: "initial" }
+
+  // If you don't specify anything, the default config is as follows, which enables
+  // Lazy Route Discovery and makes manifest requests to the `/__manifest` path:
+  // routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" }
+} satisfies Config;
+```
+
 ### `serverBuildFile`
 
 The file name of the server build output. This file should end in a `.js` extension and should be deployed to your server. Defaults to `"index.js"`.
@@ -176,3 +224,4 @@ export default {
 [server-bundles]: ../../how-to/server-bundles
 [pre-rendering]: ../../how-to/pre-rendering
 [spa-mode]: ../../how-to/spa
+[lazy-route-discovery]: ../../explanation/lazy-route-discovery
