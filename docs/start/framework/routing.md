@@ -301,6 +301,18 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 const { "*": splat } = params;
 ```
 
+You can also use a splat to catch requests that don't match any route:
+
+```ts filename=app/routes.ts
+route("*", "./catchall.tsx"); // catcall route,
+```
+
+```tsx filename=app/catchall.tsx
+export function loader() {
+  throw new Response("Page not found", { status: 404 });
+}
+```
+
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
