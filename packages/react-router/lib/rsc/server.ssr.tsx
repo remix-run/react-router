@@ -5,6 +5,7 @@ import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
+import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type {
   RSCPayload,
   CreateFromReadableStreamFunction,
@@ -111,12 +112,26 @@ export function RSCStaticRouter({
 
   if (payload.type !== "render") return null;
 
+  let patchedLoaderData = { ...payload.loaderData };
+  for (const match of payload.matches) {
+    if (
+      shouldHydrateRouteLoader(
+        match.id,
+        match.clientLoader,
+        match.hasLoader,
+        false
+      )
+    ) {
+      delete patchedLoaderData[match.id];
+    }
+  }
+
   const context = {
     actionData: payload.actionData,
     actionHeaders: {},
     basename: payload.basename,
     errors: payload.errors,
-    loaderData: payload.loaderData,
+    loaderData: patchedLoaderData,
     loaderHeaders: {},
     location: payload.location,
     statusCode: 200,
