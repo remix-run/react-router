@@ -43,7 +43,6 @@ Lazy Route Discovery provides several performance improvements:
 
 - **Faster Initial Load** - Smaller initial bundle size by excluding unused route metadata
 - **Reduced Memory Usage** - Route information is loaded only when needed
-- **Better Caching** - Route manifests can be cached more effectively with smaller, focused payloads
 - **Scalability** - Applications with hundreds of routes see more significant benefits
 
 ## Configuration
