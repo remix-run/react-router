@@ -70,8 +70,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           LATEST=$(gh release list --limit 1 --json tagName --jq ".[0].tagName")
-          echo "Latest release: $LATEST"
-          echo "Base: ${{ github.event.pull_request.base.sha }}""
+          echo "Latest release: ${LATEST}"
+          echo "Base: ${{ github.event.pull_request.base.sha }}"
           COMMAND="git log --pretty=oneline ${LATEST}..${{ github.event.pull_request.base.sha }}"
           gh pr comment ${{ github.event.pull_request.number }} --body \
             "Alpha release created: \`${{ steps.version.outputs.version }}\` \
