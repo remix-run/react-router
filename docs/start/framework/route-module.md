@@ -372,6 +372,7 @@ The meta of the last matching route is used, allowing you to override parent rou
 **See also**
 
 - [`meta` params][meta-params]
+- [`meta` function return types][meta-function]
 
 ## `shouldRevalidate`
 
@@ -409,4 +410,5 @@ Next: [Rendering Strategies](./rendering)
 [link-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 [meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
+[meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
 [use-revalidator]: https://api.reactrouter.com/v7/functions/react_router.useRevalidator.html
