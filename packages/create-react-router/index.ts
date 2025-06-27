@@ -1,8 +1,8 @@
 import process from "node:process";
-import fs from "node:fs";
+import { existsSync } from "node:fs";
+import { cp, readFile, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import fse from "fs-extra";
 import stripAnsi from "strip-ansi";
 import execa from "execa";
 import arg from "arg";
@@ -137,7 +137,7 @@ async function getContext(argv: string[]): Promise<Context> {
 
   let context: Context = {
     tempDir: path.join(
-      await fs.promises.realpath(os.tmpdir()),
+      await realpath(os.tmpdir()),
       `create-react-router--${Math.random().toString(36).substr(2, 8)}`
     ),
     cwd,
@@ -358,8 +358,8 @@ async function copyTempDirToAppDirStep(ctx: Context) {
     }
   }
 
-  await fse.copy(ctx.tempDir, ctx.cwd, {
-    filter(src, dest) {
+  await cp(ctx.tempDir, ctx.cwd, {
+    filter(src) {
       // We never copy .git/ or node_modules/ directories since it's highly
       // unlikely we want them copied - and because templates are primarily
       // being pulled from git tarballs which won't have .git/ and shouldn't
@@ -374,6 +374,7 @@ async function copyTempDirToAppDirStep(ctx: Context) {
       }
       return true;
     },
+    recursive: true,
   });
 
   await updatePackageJSON(ctx);
@@ -433,7 +434,7 @@ async function installDependenciesStep(ctx: Context) {
 }
 
 async function gitInitQuestionStep(ctx: Context) {
-  if (fs.existsSync(path.join(ctx.cwd, ".git"))) {
+  if (existsSync(path.join(ctx.cwd, ".git"))) {
     info("Nice!", `Git has already been initialized`);
     return;
   }
@@ -458,7 +459,7 @@ async function gitInitStep(ctx: Context) {
     return;
   }
 
-  if (fs.existsSync(path.join(ctx.cwd, ".git"))) {
+  if (existsSync(path.join(ctx.cwd, ".git"))) {
     log("");
     info("Nice!", `Git has already been initialized`);
     return;
@@ -550,7 +551,7 @@ async function installDependencies({
 
 async function updatePackageJSON(ctx: Context) {
   let packageJSONPath = path.join(ctx.cwd, "package.json");
-  if (!fs.existsSync(packageJSONPath)) {
+  if (!existsSync(packageJSONPath)) {
     let relativePath = path.relative(process.cwd(), ctx.cwd);
     error(
       "Oh no!",
@@ -560,7 +561,7 @@ async function updatePackageJSON(ctx: Context) {
     throw new Error(`package.json does not exist in ${ctx.cwd}`);
   }
 
-  let contents = await fs.promises.readFile(packageJSONPath, "utf-8");
+  let contents = await readFile(packageJSONPath, "utf-8");
   let packageJSON: any;
   try {
     packageJSON = JSON.parse(contents);
@@ -607,7 +608,7 @@ async function updatePackageJSON(ctx: Context) {
 
   packageJSON.name = ctx.projectName;
 
-  fs.promises.writeFile(
+  writeFile(
     packageJSONPath,
     JSON.stringify(sortPackageJSON(packageJSON), null, 2),
     "utf-8"

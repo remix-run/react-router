@@ -844,25 +844,25 @@ export async function resolveEntryFiles({
   let entryServerFile: string;
   let entryClientFile = userEntryClientFile || "entry.client.tsx";
 
-  let packageJsonPath = findEntry(rootDirectory, "package", {
-    extensions: [".json"],
-    absolute: true,
-    walkParents: true,
-  });
-
-  if (!packageJsonPath) {
-    throw new Error(
-      `Could not find package.json in ${rootDirectory} or any of its parent directories`
-    );
-  }
-
-  let packageJsonDirectory = Path.dirname(packageJsonPath);
-  let pkgJson = await PackageJson.load(packageJsonDirectory);
-  let deps = pkgJson.content.dependencies ?? {};
-
   if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
+    let packageJsonPath = findEntry(rootDirectory, "package", {
+      extensions: [".json"],
+      absolute: true,
+      walkParents: true,
+    });
+
+    if (!packageJsonPath) {
+      throw new Error(
+        `Could not find package.json in ${rootDirectory} or any of its parent directories. Please add a package.json, or provide a custom entry.server.tsx/jsx file in your app directory.`
+      );
+    }
+
+    let packageJsonDirectory = Path.dirname(packageJsonPath);
+    let pkgJson = await PackageJson.load(packageJsonDirectory);
+    let deps = pkgJson.content.dependencies ?? {};
+
     if (!deps["@react-router/node"]) {
       throw new Error(
         `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`

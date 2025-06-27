@@ -1,5 +1,17 @@
 # `@react-router/dev`
 
+## 7.6.3
+
+### Patch Changes
+
+- Add Vite 7 support ([#13748](https://github.com/remix-run/react-router/pull/13748))
+- Skip `package.json` resolution checks when a custom `entry.server.(j|t)sx` file is provided. ([#13744](https://github.com/remix-run/react-router/pull/13744))
+- Add validation for a route's id not being 'root' ([#13792](https://github.com/remix-run/react-router/pull/13792))
+- Updated dependencies:
+  - `@react-router/node@7.6.3`
+  - `react-router@7.6.3`
+  - `@react-router/serve@7.6.3`
+
 ## 7.6.2
 
 ### Patch Changes
