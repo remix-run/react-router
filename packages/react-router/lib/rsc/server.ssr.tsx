@@ -5,10 +5,11 @@ import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
-import type {
-  RSCPayload,
-  CreateFromReadableStreamFunction,
-} from "./server.rsc";
+import type { RSCPayload } from "./server.rsc";
+
+export type SSRCreateFromReadableStreamFunction = (
+  body: ReadableStream<Uint8Array>
+) => Promise<unknown>;
 
 export async function routeRSCServerRequest({
   request,
@@ -19,7 +20,7 @@ export async function routeRSCServerRequest({
 }: {
   request: Request;
   fetchServer: (request: Request) => Promise<Response>;
-  createFromReadableStream: CreateFromReadableStreamFunction;
+  createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
     getPayload: () => Promise<RSCPayload>
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;

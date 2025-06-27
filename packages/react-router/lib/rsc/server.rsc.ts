@@ -35,10 +35,6 @@ import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
-export type CreateFromReadableStreamFunction = (
-  body: ReadableStream<Uint8Array>
-) => Promise<unknown>;
-
 type ServerContext = {
   redirect?: Response;
 };
@@ -216,12 +212,14 @@ export type DecodeFormStateFunction = (
 ) => unknown;
 
 export type DecodeReplyFunction = (
-  reply: FormData | string
+  reply: FormData | string,
+  { temporaryReferences }: { temporaryReferences: unknown }
 ) => Promise<unknown[]>;
 
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
 
 export async function matchRSCServerRequest({
+  createTemporaryReferenceSet,
   decodeReply,
   loadServerAction,
   decodeAction,
@@ -231,6 +229,7 @@ export async function matchRSCServerRequest({
   routes,
   generateResponse,
 }: {
+  createTemporaryReferenceSet: () => unknown;
   decodeReply?: DecodeReplyFunction;
   decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
@@ -238,15 +237,25 @@ export async function matchRSCServerRequest({
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
-  generateResponse: (match: RSCMatch) => Response;
+  generateResponse: (
+    match: RSCMatch,
+    {
+      temporaryReferences,
+    }: {
+      temporaryReferences: unknown;
+    }
+  ) => Response;
 }): Promise<Response> {
   let requestUrl = new URL(request.url);
+
+  const temporaryReferences = createTemporaryReferenceSet();
 
   if (isManifestRequest(requestUrl)) {
     let response = await generateManifestResponse(
       routes,
       request,
-      generateResponse
+      generateResponse,
+      temporaryReferences
     );
     return response;
   }
@@ -299,7 +308,8 @@ export async function matchRSCServerRequest({
     decodeAction,
     decodeFormState,
     onError,
-    generateResponse
+    generateResponse,
+    temporaryReferences
   );
   // The front end uses this to know whether a 404 status came from app code
   // or 404'd and never reached the origin server
@@ -310,7 +320,11 @@ export async function matchRSCServerRequest({
 async function generateManifestResponse(
   routes: RSCRouteConfigEntry[],
   request: Request,
-  generateResponse: (match: RSCMatch) => Response
+  generateResponse: (
+    match: RSCMatch,
+    { temporaryReferences }: { temporaryReferences: unknown }
+  ) => Response,
+  temporaryReferences: unknown
 ) {
   let url = new URL(request.url);
   let pathnameParams = url.searchParams.getAll("p");
@@ -345,14 +359,17 @@ async function generateManifestResponse(
     ).flat(1),
   };
 
-  return generateResponse({
-    statusCode: 200,
-    headers: new Headers({
-      "Content-Type": "text/x-component",
-      Vary: "Content-Type",
-    }),
-    payload,
-  });
+  return generateResponse(
+    {
+      statusCode: 200,
+      headers: new Headers({
+        "Content-Type": "text/x-component",
+        Vary: "Content-Type",
+      }),
+      payload,
+    },
+    { temporaryReferences }
+  );
 }
 
 async function processServerAction(
@@ -361,7 +378,8 @@ async function processServerAction(
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
-  onError: ((error: unknown) => void) | undefined
+  onError: ((error: unknown) => void) | undefined,
+  temporaryReferences: unknown
 ): Promise<
   | {
       revalidationRequest: Request;
@@ -393,7 +411,7 @@ async function processServerAction(
       ? await request.formData()
       : await request.text();
 
-    const actionArgs = await decodeReply(reply);
+    const actionArgs = await decodeReply(reply, { temporaryReferences });
     const action = await loadServerAction(actionId);
     const serverAction = action.bind(null, ...actionArgs);
 
@@ -499,7 +517,11 @@ async function generateRenderResponse(
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
   onError: ((error: unknown) => void) | undefined,
-  generateResponse: (match: RSCMatch) => Response
+  generateResponse: (
+    match: RSCMatch,
+    { temporaryReferences }: { temporaryReferences: unknown }
+  ) => Response,
+  temporaryReferences: unknown
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -545,13 +567,15 @@ async function generateRenderResponse(
             loadServerAction,
             decodeAction,
             decodeFormState,
-            onError
+            onError,
+            temporaryReferences
           );
           if (isResponse(result)) {
             return generateRedirectResponse(
               result,
               actionResult,
-              generateResponse
+              generateResponse,
+              temporaryReferences
             );
           }
           actionResult = result?.actionResult;
@@ -563,7 +587,8 @@ async function generateRenderResponse(
           return generateRedirectResponse(
             ctx.redirect,
             actionResult,
-            generateResponse
+            generateResponse,
+            temporaryReferences
           );
         }
 
@@ -573,7 +598,8 @@ async function generateRenderResponse(
           return generateRedirectResponse(
             staticContext,
             actionResult,
-            generateResponse
+            generateResponse,
+            temporaryReferences
           );
         }
 
@@ -586,14 +612,20 @@ async function generateRenderResponse(
           isSubmission,
           actionResult,
           formState,
-          staticContext
+          staticContext,
+          temporaryReferences
         );
       },
     })
   );
 
   if (isRedirectResponse(result)) {
-    return generateRedirectResponse(result, actionResult, generateResponse);
+    return generateRedirectResponse(
+      result,
+      actionResult,
+      generateResponse,
+      temporaryReferences
+    );
   }
 
   invariant(isResponse(result), "Expected a response from query");
@@ -603,7 +635,11 @@ async function generateRenderResponse(
 function generateRedirectResponse(
   response: Response,
   actionResult: Promise<unknown> | undefined,
-  generateResponse: (match: RSCMatch) => Response
+  generateResponse: (
+    match: RSCMatch,
+    { temporaryReferences }: { temporaryReferences: unknown }
+  ) => Response,
+  temporaryReferences: unknown
 ) {
   let payload: RSCRedirectPayload = {
     type: "redirect",
@@ -613,26 +649,33 @@ function generateRedirectResponse(
     status: response.status,
     actionResult,
   };
-  return generateResponse({
-    statusCode: SINGLE_FETCH_REDIRECT_STATUS,
-    headers: new Headers({
-      "Content-Type": "text/x-component",
-      Vary: "Content-Type",
-    }),
-    payload,
-  });
+  return generateResponse(
+    {
+      statusCode: SINGLE_FETCH_REDIRECT_STATUS,
+      headers: new Headers({
+        "Content-Type": "text/x-component",
+        Vary: "Content-Type",
+      }),
+      payload,
+    },
+    { temporaryReferences }
+  );
 }
 
 async function generateStaticContextResponse(
   routes: RSCRouteConfigEntry[],
-  generateResponse: (match: RSCMatch) => Response,
+  generateResponse: (
+    match: RSCMatch,
+    { temporaryReferences }: { temporaryReferences: unknown }
+  ) => Response,
   statusCode: number,
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
   isSubmission: boolean,
   actionResult: Promise<unknown> | undefined,
   formState: unknown | undefined,
-  staticContext: StaticHandlerContext
+  staticContext: StaticHandlerContext,
+  temporaryReferences: unknown
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -705,11 +748,14 @@ async function generateStaticContextResponse(
     payload = await renderPayloadPromise();
   }
 
-  return generateResponse({
-    statusCode,
-    headers,
-    payload,
-  });
+  return generateResponse(
+    {
+      statusCode,
+      headers,
+      payload,
+    },
+    { temporaryReferences }
+  );
 }
 
 async function getRenderPayload(

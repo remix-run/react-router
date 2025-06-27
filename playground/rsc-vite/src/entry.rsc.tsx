@@ -1,4 +1,5 @@
 import {
+  createTemporaryReferenceSet,
   decodeAction,
   decodeReply,
   loadServerAction,
@@ -10,6 +11,7 @@ import { routes } from "./routes";
 
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
+    createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
     loadServerAction,
