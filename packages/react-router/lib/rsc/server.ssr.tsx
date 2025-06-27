@@ -120,7 +120,8 @@ export function RSCStaticRouter({
         match.clientLoader,
         match.hasLoader,
         false
-      )
+      ) &&
+      (match.hydrateFallbackElement || !match.hasLoader)
     ) {
       delete patchedLoaderData[match.id];
     }
