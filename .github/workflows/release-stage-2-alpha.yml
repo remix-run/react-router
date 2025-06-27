@@ -46,6 +46,8 @@ jobs:
       - name: ⤴️ Update version
         id: version
         run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
           SHORT_SHA=$(git rev-parse --short HEAD)
           NEXT_VERSION=0.0.0-alpha-${SHORT_SHA}
           git checkout -b alpha/${NEXT_VERSION}
