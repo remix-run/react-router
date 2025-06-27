@@ -10,7 +10,7 @@ env:
   CI: true
 
 jobs:
-  alpha:
+  alpha-release:
     name: 🧪 Alpha Release
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'alpha-release'
     runs-on: ubuntu-latest
@@ -49,8 +49,8 @@ jobs:
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
           SHORT_SHA=$(git rev-parse --short HEAD)
-          NEXT_VERSION=0.0.0-alpha-${SHORT_SHA}
-          git checkout -b alpha/${NEXT_VERSION}
+          NEXT_VERSION=0.0.0-experimental-${SHORT_SHA}
+          git checkout -b experimental/${NEXT_VERSION}
           pnpm run version ${NEXT_VERSION}
           echo "version=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
 
