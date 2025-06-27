@@ -69,5 +69,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "Alpha release created: `${{ steps.version.outputs.version }}`"
+          gh pr comment ${{ github.event.pull_request.number }} --body "Alpha release created: \`${{ steps.version.outputs.version }}\`"
           gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
