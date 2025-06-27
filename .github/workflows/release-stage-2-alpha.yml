@@ -69,10 +69,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          LATEST=$(gh release list --limit 1 --json tagName --jq ".[0].tagName")
-          echo "Latest release: ${LATEST}"
-          echo "Base: ${{ github.event.pull_request.base.sha }}"
-          COMMAND="git log --pretty=oneline ${LATEST}..${{ github.event.pull_request.base.sha }}"
+          LATEST_RELEASE_SHA=$(gh release list --limit 1 --json tagName --jq ".[0].tagName")
+          BASE_SHA=$(echo ${{ github.event.pull_request.base.sha }} | cut -c1-7)
+          COMMAND="git log --pretty=oneline ${LATEST_RELEASE_SHA}..${BASE_SHA}"
           echo -e \
             "Alpha release created: \`${{ steps.version.outputs.version }}\`\n\n\
             ⚠️ **Note:** This release was created from the \`HEAD\` of this branch so it \
