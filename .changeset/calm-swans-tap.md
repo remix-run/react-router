@@ -2,4 +2,4 @@
 "@react-router/dev": patch
 ---
 
-Detect HTTPS protocol
+Properly handle `https` protocol in dev mode
