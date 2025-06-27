@@ -79,8 +79,8 @@ jobs:
             may contain commits that have landed in \`dev\` but have not been released yet \
             depending on when this branch was created. You can run the following command \
             to see the commits that may not have been released yet:\n\n\
-            \`\`\`bash\
-            ${COMMAND}\
+            \`\`\`bash\n\
+            ${COMMAND}\n\
             \`\`\`" \
             | gh pr comment ${{ github.event.pull_request.number }} --body-file -
           gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
