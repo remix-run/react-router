@@ -69,5 +69,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "Alpha release created: \`${{ steps.version.outputs.version }}\`"
+          LATEST=$(gh release list --limit 1 --json tagName --jq ".[0].tagName")
+          echo "Latest release: $LATEST"
+          echo "Base: ${{ github.event.pull_request.base.sha }}""
+          COMMAND="git log --pretty=oneline ${LATEST}..${{ github.event.pull_request.base.sha }}"
+          gh pr comment ${{ github.event.pull_request.number }} --body \
+            "Alpha release created: \`${{ steps.version.outputs.version }}\` \
+            \n\n \
+            ⚠️ **Note:** This release was created from the \`HEAD\` of this branch so it may \
+            contain commits that have landed in \`dev\` but have not been released yet \
+            depending on when this branch was created. You can run the following command \
+            to see the commits that may not have been released yet: \
+            \n\n \
+            \`\`\`bash \
+            ${COMMAND} \
+            \`\`\`"
           gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
