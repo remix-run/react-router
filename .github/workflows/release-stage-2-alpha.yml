@@ -15,7 +15,7 @@ jobs:
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'alpha-release'
     runs-on: ubuntu-latest
     steps:
-      - name: Log Event Info
+      - name: 📄 Log Info
         run: |
           echo "Label: ${{ github.event.label.name }}"
           echo "Branch: ${{ github.event.pull_request.head.ref }}"
@@ -57,19 +57,17 @@ jobs:
       - name: 🏗 Build
         run: pnpm build
 
-      - name: Check
+      - name: 🔐 Setup npm auth
         run: |
-          echo "Version: ${{ steps.version.outputs.version }}"
-          git status
-          cat packages/react-router/package.json
-          cat packages/react-router-dev/package.json
-          ls packages/react-router/dist
-          ls packages/react-router-dev/dist
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
-      # - name: 🔐 Setup npm auth
-      #   run: |
-      #     echo "registry=https://registry.npmjs.org" >> ~/.npmrc
-      #     echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+      - name: 🚀 Publish
+        run: pnpm run publish
 
-      # - name: 🚀 Publish
-      #   run: pnpm run publish
+      - name: 💬 Comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "Alpha release created: `${{ steps.version.outputs.version }}`"
+          gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
