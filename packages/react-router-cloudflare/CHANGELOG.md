@@ -1,12 +1,12 @@
 # `@react-router/cloudflare`
 
-## 7.6.3-pre.0
+## 7.6.3
 
 ### Patch Changes
 
 - Remove `tsup` from `peerDependencies` ([#13757](https://github.com/remix-run/react-router/pull/13757))
 - Updated dependencies:
-  - `react-router@7.6.3-pre.0`
+  - `react-router@7.6.3`
 
 ## 7.6.2
 

@@ -1,12 +1,12 @@
 # `@react-router/fs-routes`
 
-## 7.6.3-pre.0
+## 7.6.3
 
 ### Patch Changes
 
 - Use `replaceAll` for normalising windows file system slashes. ([#13738](https://github.com/remix-run/react-router/pull/13738))
 - Updated dependencies:
-  - `@react-router/dev@7.6.3-pre.0`
+  - `@react-router/dev@7.6.3`
 
 ## 7.6.2
 
