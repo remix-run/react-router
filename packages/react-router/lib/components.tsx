@@ -874,7 +874,7 @@ export interface AbsoluteRoutesProps extends RoutesProps {}
  * data loading, actions, code splitting, or any other route module features.
  *
  * ```tsx
- * import { AbsoluteRoutes, Route } from "react-router"
+ * import { unstable_AbsoluteRoutes as AbsoluteRoutes, Route } from "react-router"
  *
  * <AbsoluteRoutes>
  *   <Route path="/dashboard/*" element={<Dashboard />} />
