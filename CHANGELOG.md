@@ -343,7 +343,7 @@ Date: YYYY-MM-DD
 
 ## v7.6.3
 
-Date: 2025-06-26
+Date: 2025-06-27
 
 ### Patch Changes
 
