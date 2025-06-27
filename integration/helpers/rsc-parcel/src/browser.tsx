@@ -10,6 +10,7 @@ import {
 } from "react-router";
 import {
   createFromReadableStream,
+  createTemporaryReferenceSet,
   encodeReply,
   setServerCallback,
   // @ts-expect-error - no types for this yet
@@ -19,6 +20,7 @@ import {
 setServerCallback(
   createCallServer({
     createFromReadableStream,
+    createTemporaryReferenceSet,
     encodeReply,
   })
 );

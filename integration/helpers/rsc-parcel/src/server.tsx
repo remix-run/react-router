@@ -2,6 +2,7 @@ import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 import {
+  createTemporaryReferenceSet,
   decodeAction,
   decodeFormState,
   decodeReply,
@@ -18,6 +19,7 @@ import { assets } from "./parcel-entry-wrapper"
 function fetchServer(request: Request) {
   return matchRSCServerRequest({
     // Provide the React Server touchpoints.
+    createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
     decodeFormState,
@@ -27,8 +29,8 @@ function fetchServer(request: Request) {
     // The app routes.
     routes,
     // Encode the match with the React Server implementation.
-    generateResponse(match) {
-      return new Response(renderToReadableStream(match.payload), {
+    generateResponse(match, options) {
+      return new Response(renderToReadableStream(match.payload, options), {
         status: match.statusCode,
         headers: match.headers,
       });

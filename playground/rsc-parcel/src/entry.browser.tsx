@@ -10,6 +10,7 @@ import {
 import type { unstable_RSCPayload as RSCPayload } from "react-router";
 import {
   createFromReadableStream,
+  createTemporaryReferenceSet,
   encodeReply,
   setServerCallback,
   // @ts-expect-error
@@ -18,6 +19,7 @@ import {
 setServerCallback(
   createCallServer({
     createFromReadableStream,
+    createTemporaryReferenceSet,
     encodeReply,
   })
 );
