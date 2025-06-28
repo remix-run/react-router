@@ -65,6 +65,24 @@ test.describe("redirects", () => {
               }
             `,
 
+            "app/routes/absolute.content-length.tsx": js`
+              import { redirect, Form } from "react-router";
+
+              export async function action({ request }) {
+                return redirect(new URL(request.url).origin + "/absolute/landing", {
+                  headers: { 'Content-Length': '0' }
+                });
+              };
+
+              export default function Component() {
+                return (
+                  <Form method="post">
+                    <button type="submit">Submit</button>
+                  </Form>
+                );
+              }
+            `,
+
             "app/routes/loader.external.ts": js`
               import { redirect } from "react-router";
               export const loader = () => {
@@ -160,6 +178,21 @@ test.describe("redirects", () => {
         expect(await app.getHtml("#increment")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
           app.clickSubmitButton("/absolute?index")
+        );
+        await page.waitForSelector(`h1:has-text("Landing")`);
+        // No hard reload
+        expect(await app.getHtml("#increment")).toMatch("Count:1");
+      });
+
+      test("redirects to absolute URLs in the app with a SPA navigation and Content-Length header", async ({
+        page,
+      }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto(`/absolute/content-length`, true);
+        await app.clickElement("#increment");
+        expect(await app.getHtml("#increment")).toMatch("Count:1");
+        await app.waitForNetworkAfter(() =>
+          app.clickSubmitButton("/absolute/content-length")
         );
         await page.waitForSelector(`h1:has-text("Landing")`);
         // No hard reload
