@@ -2,6 +2,7 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
   createFromReadableStream,
+  createTemporaryReferenceSet,
   encodeReply,
   setServerCallback,
 } from "@hiogawa/vite-rsc/browser";
@@ -15,6 +16,7 @@ import type { unstable_RSCPayload as RSCPayload } from "react-router";
 setServerCallback(
   createCallServer({
     createFromReadableStream,
+    createTemporaryReferenceSet,
     encodeReply,
   })
 );

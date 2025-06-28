@@ -28,7 +28,7 @@ export default function HomeRoute({
     console.log(
       `  data to prove that scoped vars work: ${message} and it is now ${new Date().toISOString()}`
     );
-    return new Date().toISOString();
+    return <div>{new Date().toISOString()}</div>;
   };
 
   const redirectOnServer = async () => {

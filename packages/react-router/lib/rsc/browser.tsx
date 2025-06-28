@@ -16,7 +16,6 @@ import type {
   RSCPayload,
   RSCRouteManifest,
   RSCRenderPayload,
-  CreateFromReadableStreamFunction,
 } from "./server.rsc";
 import type {
   DataStrategyFunction,
@@ -41,7 +40,19 @@ import {
 } from "../dom/ssr/routes";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 
-export type EncodeReplyFunction = (args: unknown[]) => Promise<BodyInit>;
+export type BrowserCreateFromReadableStreamFunction = (
+  body: ReadableStream<Uint8Array>,
+  {
+    temporaryReferences,
+  }: {
+    temporaryReferences: unknown;
+  }
+) => Promise<unknown>;
+
+export type EncodeReplyFunction = (
+  args: unknown[],
+  options: { temporaryReferences: unknown }
+) => Promise<BodyInit>;
 
 declare global {
   interface Window {
@@ -53,10 +64,12 @@ declare global {
 
 export function createCallServer({
   createFromReadableStream,
+  createTemporaryReferenceSet,
   encodeReply,
   fetch: fetchImplementation = fetch,
 }: {
-  createFromReadableStream: CreateFromReadableStreamFunction;
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction;
+  createTemporaryReferenceSet: () => unknown;
   encodeReply: EncodeReplyFunction;
   fetch?: (request: Request) => Promise<Response>;
 }) {
@@ -65,9 +78,10 @@ export function createCallServer({
     let actionId = (window.__routerActionID =
       (window.__routerActionID ??= 0) + 1);
 
+    const temporaryReferences = createTemporaryReferenceSet();
     const response = await fetchImplementation(
       new Request(location.href, {
-        body: await encodeReply(args),
+        body: await encodeReply(args, { temporaryReferences }),
         method: "POST",
         headers: {
           Accept: "text/x-component",
@@ -78,9 +92,9 @@ export function createCallServer({
     if (!response.body) {
       throw new Error("No response body");
     }
-    const payload = (await createFromReadableStream(
-      response.body
-    )) as RSCPayload;
+    const payload = (await createFromReadableStream(response.body, {
+      temporaryReferences,
+    })) as RSCPayload;
 
     if (payload.type === "redirect") {
       if (payload.reload) {
@@ -159,7 +173,7 @@ function createRouterFromPayload({
   payload,
 }: {
   payload: RSCPayload;
-  createFromReadableStream: CreateFromReadableStreamFunction;
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
 }) {
   if (window.__router) return window.__router;
@@ -261,7 +275,7 @@ export function getRSCSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   ssr: boolean,
   basename: string | undefined,
-  createFromReadableStream: CreateFromReadableStreamFunction,
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>
 ): DataStrategyFunction {
   // TODO: Clean this up with a shared type
@@ -345,7 +359,7 @@ export function getRSCSingleFetchDataStrategy(
 }
 
 function getFetchAndDecodeViaRSC(
-  createFromReadableStream: CreateFromReadableStreamFunction,
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>
 ): FetchAndDecodeFunction {
   return async (
@@ -375,7 +389,9 @@ function getFetchAndDecodeViaRSC(
     invariant(res.body, "No response body to decode");
 
     try {
-      const payload = (await createFromReadableStream(res.body)) as RSCPayload;
+      const payload = (await createFromReadableStream(res.body, {
+        temporaryReferences: undefined,
+      })) as RSCPayload;
       if (payload.type === "redirect") {
         return {
           status: res.status,
@@ -434,7 +450,7 @@ export function RSCHydratedRouter({
   payload,
   routeDiscovery = "eager",
 }: {
-  createFromReadableStream: CreateFromReadableStreamFunction;
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetch?: (request: Request) => Promise<Response>;
   payload: RSCPayload;
   routeDiscovery?: "eager" | "lazy";
@@ -733,7 +749,7 @@ function getManifestUrl(paths: string[]): URL | null {
 
 async function fetchAndApplyManifestPatches(
   paths: string[],
-  createFromReadableStream: CreateFromReadableStreamFunction,
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
   signal?: AbortSignal
 ) {
@@ -755,7 +771,9 @@ async function fetchAndApplyManifestPatches(
     throw new Error("Unable to fetch new route matches from the server");
   }
 
-  let payload = (await createFromReadableStream(response.body)) as RSCPayload;
+  let payload = (await createFromReadableStream(response.body, {
+    temporaryReferences: undefined,
+  })) as RSCPayload;
   if (payload.type !== "manifest") {
     throw new Error("Failed to patch routes");
   }

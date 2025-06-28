@@ -1,6 +1,7 @@
 "use server-entry";
 
 import {
+  createTemporaryReferenceSet,
   decodeAction,
   decodeReply,
   loadServerAction,
@@ -15,13 +16,14 @@ import "./entry.browser.tsx";
 
 export function fetchServer(request: Request) {
   return matchRSCServerRequest({
+    createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
     loadServerAction,
     request,
     routes,
-    generateResponse(match) {
-      return new Response(renderToReadableStream(match.payload), {
+    generateResponse(match, options) {
+      return new Response(renderToReadableStream(match.payload, options), {
         status: match.statusCode,
         headers: match.headers,
       });

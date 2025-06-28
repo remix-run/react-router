@@ -1,4 +1,5 @@
 import {
+  createTemporaryReferenceSet,
   decodeAction,
   decodeReply,
   loadServerAction,
@@ -10,14 +11,15 @@ import { routes } from "./routes";
 
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
+    createTemporaryReferenceSet,
     decodeReply,
     decodeAction,
     loadServerAction,
     request,
     // @ts-expect-error
     routes,
-    generateResponse(match) {
-      return new Response(renderToReadableStream(match.payload), {
+    generateResponse(match, options) {
+      return new Response(renderToReadableStream(match.payload, options), {
         status: match.statusCode,
         headers: match.headers,
       });
