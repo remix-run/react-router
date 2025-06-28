@@ -94,7 +94,7 @@ touch app/routes.js
 export default [];
 ```
 
-The existence of `routes.js` is required to build a React Router app; if you're using React Router we assume you'll want to do some routing eventually. You can read more about defining routes in our [Routing][routing] guide.
+The existence of `routes.js` is required to build a React Router app; if you're using React Router, we assume you'll want to do some routing eventually. You can read more about defining routes in our [Routing][routing] guide.
 
 ## Build and Run
 
@@ -292,7 +292,6 @@ What's next?
 [inspect]: https://nodejs.org/en/docs/guides/debugging-getting-started/
 [vite-config]: https://vite.dev/config
 [routing]: ../start/framework/routing
-[templates]: /resources?category=templates
 [http-localhost-3000]: http://localhost:3000
 [vite]: https://vitejs.dev
 [react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html
