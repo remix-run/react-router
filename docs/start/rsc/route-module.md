@@ -47,7 +47,7 @@ export default function MyRouteComponent() {
 }
 ```
 
-You can also export it as `Component` if that's your think.
+You can also export it as `Component` if that's your thing.
 
 ### Props passed to the Component
 

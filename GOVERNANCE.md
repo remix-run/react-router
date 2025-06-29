@@ -6,12 +6,12 @@
 - [Bug/Issue Process](#bugissue-process)
 - [New Feature Process](#new-feature-process)
 - [New Feature Stages](#new-feature-stages)
-  - [Stage 0 - Proposal](#stage-0---proposal)
-  - [Stage 1 - Consideration](#stage-1---consideration)
-  - [Stage 2 - Alpha](#stage-2---alpha)
-  - [Stage 3 - Beta](#stage-3---beta)
-  - [Stage 4 - Stabilization](#stage-4---stabilization)
-  - [Stage 5 - Stable](#stage-5---stable)
+  - [Stage 0 — Proposal](#stage-0--proposal)
+  - [Stage 1 — Consideration](#stage-1--consideration)
+  - [Stage 2 — Alpha](#stage-2--alpha)
+  - [Stage 3 — Beta](#stage-3--beta)
+  - [Stage 4 — Stabilization](#stage-4--stabilization)
+  - [Stage 5 — Stable](#stage-5--stable)
 
 ## Overview
 
@@ -20,15 +20,15 @@ React Router has been around since 2014 largely under the development and oversi
 [^1]: https://remix.run/blog/merging-remix-and-react-router
 [^2]: https://remix.run/blog/incremental-path-to-react-19
 
-This document will outline the process in which React Router will continue to evolve, and how new features will make their way into the codebase. This is an evergreen document and will be updated as-needed to reflect future changes in the process.
+This document will outline the process in which React Router will continue to evolve and how new features will make their way into the codebase. This is an evergreen document and will be updated as needed to reflect future changes in the process.
 
 ## Design Goals
 
 The following design goals should be considered when considering RFCs for acceptance:
 
-- **Less is More**. React Router has gained a _lot_ of functionality in the past years, but with that comes a bunch of new API surface. It's time to hone in on the core functionality and aim to reduce API surface _without sacrificing capabilities_. This may come in multiple forms, such as condensing a few existing APIs into a singular API, or deprecating a current APIs in favor of a new React API.
-- **Routing and Data Focused.** Focus on core router-integrated/router-centric APIs and avoid adding first class APIs that can be implemented in user-land
-- **Simple Migration Paths.** Major version upgrade's don't have to stink. Breaking changes should be implemented behind future flags. Deprecations should be properly marked ahead of time in code and in documentation. Console warnings should be added prior to major releases to nudge developers towards the changes they can begin make to prep for the upgrade.
+- **Less is More**. React Router has gained a _lot_ of functionality in the past years, but with that comes a bunch of new API surface. It's time to hone in on the core functionality and aim to reduce API surface _without sacrificing capabilities_. This may come in multiple forms, such as condensing a few existing APIs into a singular API, or deprecating current APIs in favor of a new React API.
+- **Routing and Data Focused.** Focus on core router-integrated/router-centric APIs and avoid adding first-class APIs that can be implemented in user-land
+- **Simple Migration Paths.** Major version upgrade's don't have to stink. Breaking changes should be implemented behind future flags. Deprecations should be properly marked ahead of time in code and in documentation. Console warnings should be added prior to major releases to nudge developers towards the changes they can begin to make to prep for the upgrade.
 - **Lowest Common Mode.** Features are added at the lowest mode possible (`declarative -> data -> framework`) and then leveraged by the higher-level modes. This ensures that the largest number of React Router applications can leverage them.
 - **Regular Release Cadence**. Aim for major SemVer releases on a ~yearly basis so application developers can prepare in advance.
 
@@ -44,18 +44,18 @@ The SC will initially consist of the Remix team developers:
 - Jacob Ebey
 - Brooks Lybrand
 
-In the future, we may also add a limited number of heavily-involved community members to the SC as well.
+In the future, we may add a limited number of heavily involved community members to the SC as well.
 
-In order to reduce friction the SC will primarily operate asynchronously via Github but private and/or public meetings may be scheduled as needed.
+To reduce friction, the SC will primarily operate asynchronously via GitHub, but private and/or public meetings may be scheduled as needed.
 
 ## Bug/Issue Process
 
-Due to the # of React Router applications out there, we have to be a bit strict on the process for filing issues to avoid an overload in Github.
+Due to the # of React Router applications out there, we have to be a bit strict on the process for filing issues to avoid an overload in GitHub.
 
 - **All** bugs must have a **minimal** reproduction [^3]
   - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
   - The preferred method is StackBlitz via [https://reactrouter.com/new](https://reactrouter.com/new)
-  - If Stackblitz is not an option, a Github repo based on a fresh `create-react-router` app is acceptable
+  - If Stackblitz is not an option, a GitHub repo based on a fresh `create-react-router` app is acceptable
   - Only in extraordinary circumstances will code snippets or maximal reproductions be accepted
 - Issue Review
   - Issues not meeting the above criteria will be closed and pointed to this document
@@ -64,17 +64,17 @@ Due to the # of React Router applications out there, we have to be a bit strict 
 - Fixing Issues
   - The SC will mark good community issues with an `Accepting PRs` label
   - These issues will generally be ones that are likely to have a small surface area fix
-  - However, anyone can work on any issue but there's no guarantee the PR will be accepted if the surface area is too large for expedient review by a core team member
+  - However, anyone can work on any issue, but there's no guarantee the PR will be accepted if the surface area is too large for expedient review by a core team member
 
 [^3]: https://antfu.me/posts/why-reproductions-are-required
 
 ## New Feature Process
 
-The process for new features being added to React Router will follow a series of stages loosely based on the [TC39 Process](https://tc39.es/process-document/). It is important to note that entrance into any given stage does not imply that an RFC will proceed any further. The stages will act as a funnel with fewer RFCs making it into subsequent stages such that only the strongest RFCs make it into a React Router release in a stable fashion. This table gives a high-level overview of the Stages but please see the individual stage sections below for more detailed information on the stages and the process for moving an FC through them.
+The process for new features being added to React Router will follow a series of stages loosely based on the [TC39 Process](https://tc39.es/process-document/). It is important to note that entrance into any given stage does not imply that an RFC will proceed any further. The stages will act as a funnel with fewer RFCs making it into later stages such that only the strongest RFCs make it into a React Router release in a stable fashion. This table gives a high-level overview of the Stages, but please see the individual stage sections below for more detailed information on the stages and the process for moving an FC through them.
 
 | Stage | Name          | Entrance Criteria                                                                                                                                                                                                                                                                                             | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0     | Proposal      | Proposal discussion opened on Github                                                                                                                                                                                                                                                                          | We start with a Github Proposal to provide the lowest barrier to RFC submission. Anyone can submit an RFC and community members can review, comment, up-vote without any initial involvement of the SC.                                                                                                                                                                                                                                                                           |
+| 0     | Proposal      | Proposal discussion opened on GitHub                                                                                                                                                                                                                                                                          | We start with a GitHub Proposal to provide the lowest barrier to RFC submission. Anyone can submit an RFC and community members can review, comment, up-vote without any initial involvement of the SC.                                                                                                                                                                                                                                                                           |
 | 1     | Consideration | Proposal acceptance from 2 or more SC members                                                                                                                                                                                                                                                                 | The consideration phase is the first "funnel" for incoming RFCs where the SC can officially express interest in the more popular RFCs. We only require 2 SC members to express interest to move an RFC into the **Consideration** phase to allow for low-friction experimentation of features in the **Alpha** stage.                                                                                                                                                             |
 | 2     | Alpha         | Pull-Request (PR) opened to implement the feature in an "unstable" state. This should be accompanied by a mechanism for community members to test the feature via [pkg.pr.new](https://pkg.pr.new/), [patch-package](https://www.npmjs.com/package/patch-package), or [pnpm patch](https://pnpm.io/cli/patch) | The **Alpha** stage is the next funnel for RFCs. Once interest has been expressed by the SC in the **Consideration** phase we open the RFC up for a sample PR implementation and a mechanism for community members to alpha test the feature without requiring that anything be shipped in a React Router SemVer release. This stage allows evaluation of the RFC in running applications and consideration of what a practical implementation of the RFC looks like in the code. |
 | 3     | Beta          | PR approval from at least 50% of the SC members indicating their acceptance of the PR for an unstable API                                                                                                                                                                                                     | A RFC enters the **Beta** stage once enough members of the SC feel comfortable not only with the code for the beta feature, but have also seen positive feedback from alpha testers that the feature is working as expected. Once an **Alpha** stage PR has enough SC approvals, it will be merged and be included in the next React Router release.                                                                                                                              |
@@ -85,28 +85,28 @@ To get a feature accepted and implemented in React Router, it will go through th
 
 ## New Feature Stages
 
-### Stage 0 - Proposal
+### Stage 0 — Proposal
 
-- All new features begin at **Stage 0 - Proposal** when a Request For Comments (RFC) is written up in a GitHub Proposal Discussion
+- All new features begin at **Stage 0 — Proposal** when a Request For Comments (RFC) is written up in a GitHub Proposal Discussion
 - Anyone can write an RFC, including core team members and community members
 - The RFC should outline the use-case for the new feature, why current APIs are insufficient for the use-case, and provide potential API surfaces for the feature
 - The proposal should be clear, concise, and provide enough context for the Steering Committee (SC) and community to evaluate its merit
-- Community upvotes on the proposal are used as a signal of interest and demand for the SC - higher upvoted issues are more likely to be considered by the SC members
+- Community upvotes on the proposal are used as a signal of interest and demand for the SC — higher upvoted issues are more likely to be considered by the SC members
 - At this stage, community members may feel free to work on sample implementations in a fork of the repo and provide links in the RFC, but a pull request **should not** be opened until it reaches Stage 1
 
-### Stage 1 - Consideration
+### Stage 1 — Consideration
 
-- A proposal enters **Stage 1 - Consideration** when two or more SC members indicate interest/support for the idea as a valuable addition to React Router
-- Upon entering this stage, a Github Issue will be created for the feature and added to the roadmap
+- A proposal enters **Stage 1 — Consideration** when two or more SC members indicate interest/support for the idea as a valuable addition to React Router
+- Upon entering this stage, a GitHub Issue will be created for the feature and added to the roadmap
 - These initial supporting SC members will be the champions for the feature and will be loosely responsible for shepherding the feature through the stages of the RFC process
 - At this stage, the proposal is eligible for a sample PR implementation from a core team or community member
 - The SC will indicate at this stage if this is a feature open to a community PR or something the core team would prefer to tackle
 - All PRs at this stage should implement the feature in an "unstable" fashion (usually using an `unstable_` prefix on the future flag or API)
 
-### Stage 2 - Alpha
+### Stage 2 — Alpha
 
-- A proposal enters **Stage 2 - Alpha** once a PR has been opened implementing the feature in an `unstable_` state
-- At this stage, we are looking for early community testing _before_ merging any work to the React Router repo - so these PRs should provide a mechanism for community members to opt-into to alpha testing
+- A proposal enters **Stage 2 — Alpha** once a PR has been opened implementing the feature in an `unstable_` state
+- At this stage, we are looking for early community testing _before_ merging any work to the React Router repo — so these PRs should provide a mechanism for community members to opt-into to alpha testing
   - Ideally, we'll be able to wire up [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new) on the repo
   - Otherwise, a `.patch` file (or instructions to create one) can be included in the PR for use with [patch-package](https://www.npmjs.com/package/patch-package) or [pnpm patch](https://pnpm.io/cli/patch)
 - Feedback from alpha testers is considered essential for further progress
@@ -118,14 +118,14 @@ To get a feature accepted and implemented in React Router, it will go through th
   - Code is not required to be in a final state yet, but it must be coded in such a way so as not to introduce regressions to other areas of the API
   - We have seen enough positive feedback from Alpha testers to move the feature along
 
-### Stage 3 - Beta
+### Stage 3 — Beta
 
-- A proposal enters **Stage 3 - Beta** once it receives **Stage 2 - Alpha** PR approvals from at least 50% of the SC members and is merged to `dev`
+- A proposal enters **Stage 3 — Beta** once it receives **Stage 2 — Alpha** PR approvals from at least 50% of the SC members and is merged to `dev`
 - This will include the feature in `nightly` releases and the next normal SemVer release for broader beta testing under the `unstable_` flag
 
-### Stage 4 - Stabilization
+### Stage 4 — Stabilization
 
-- A proposal enters **Stage 4 - Stabilization** after a minimum of 1 month in **Stage 3 - Beta** and a PR has been opened to remove the `unstable_` prefixes and stabilize the feature
+- A proposal enters **Stage 4 — Stabilization** after a minimum of 1 month in **Stage 3 — Beta** and a PR has been opened to remove the `unstable_` prefixes and stabilize the feature
 - Stabilization PRs should add proper documentation for the feature
 - SC members will review and approve the PR via GitHub reviews
 - Approval at this stage communicates:
@@ -133,9 +133,9 @@ To get a feature accepted and implemented in React Router, it will go through th
   - The code is production-quality and well-tested, with no related regressions
   - The PR includes documentation for the stable feature
 
-### Stage 5 - Stable
+### Stage 5 — Stable
 
-- A proposal is enters **Stage 5 - Stable** once it receives **Stage 4** PR approvals from at least 50% of the SC members and is merged to `dev`
+- A proposal enters **Stage 5 — Stable** once it receives **Stage 4 — Stabilization** PR approvals from at least 50% of the SC members and is merged to `dev`
 - This will include the stable feature in `nightly` releases and the next normal SemVer release
 
 [mermaid]: https://mermaid.live/edit#pako:eNqVkm9r2zAQxr_KcTDYwAn-E8eOGYXGScdeFEYzGLQuQ4nPjsCWjCx3beN89yn2rJKX06tDd8_vnpPuhAeZEyZYVPLP4ciUhp-bTIA5t0_fc2LPMJvd9L8U1wQ_lGxky6oe1k8Z7jQrCdyve3Xzecp8yfB5VK8H3XQPrGmUfDFBoWQNPuxSuKd6T6rtIbUwD2aQStHynBTTXAqLS0fcA_C6qagmobkogbXQiVazfUW_e9hYjm84t1VzZFa_mfTXRpiGilirIXQ_gSyubG0tLjC4NekP2naiKarly8WJtQGNooK_9nBn5QsjN9GeV_z9eqq7_3f1zWLDf9iKDA8drEnVjOfmL08Xeob6aB4qw8SEORWsq3SGmTib0q7JmaZtzrVUmBSsaslB1mm5exMHTLTqaCracFYqVtuqhglMTviKySqYh4toFUfxIo6DyPUdfMPEW0ZzNwjNvb9wYz8Ko7OD71IagjuPo1UQL1dLb7F0PS8IB9zjkBx70mDpflzJYTMdVLIrj7Z_qS4jjtWKhFmUVHZCYxKe_wLxVeMU

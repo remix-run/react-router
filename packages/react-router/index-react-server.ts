@@ -2,7 +2,6 @@
 export { matchRSCServerRequest as unstable_matchRSCServerRequest } from "./lib/rsc/server.rsc";
 
 export type {
-  CreateFromReadableStreamFunction as unstable_CreateFromReadableStreamFunction,
   DecodeActionFunction as unstable_DecodeActionFunction,
   DecodeFormStateFunction as unstable_DecodeFormStateFunction,
   DecodeReplyFunction as unstable_DecodeReplyFunction,

@@ -869,6 +869,74 @@ implementations.forEach((implementation) => {
         // Ensure this is using RSC
         validateRSCHtml(await page.content());
       });
+
+      test("Supports React Server Function References", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.actions.ts": js`
+              "use server";
+
+              export async function incrementCounter({count, ref}: {count: number; ref: unknown}, formData: FormData) {
+                return {count: count + parseInt(formData.get("by") as string || "1", 10), ref};
+              }
+            `,
+            "src/routes/home.tsx": js`
+              export { default } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              import { useActionState } from "react";
+
+              import { incrementCounter } from "./home.actions";
+
+              const ogRef = {};
+              export default function HomeRoute() {
+                const [{count,ref}, incrementCounterAction, incrementing] = useActionState(incrementCounter, {count: 0, ref: ogRef});
+
+                return (
+                  <div>
+                    <h2 data-home>Home: ({count})</h2>
+                    <h2 data-home-ref>{ref === ogRef ? "good" : "bad"}</h2>
+                    <form action={incrementCounterAction}>
+                      <button type="submit" data-submit>
+                        {incrementing ? "Updating via Server Function" : "Update via Server Function"}
+                      </button>
+                    </form>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify initial server render
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home: (0)"
+        );
+        await expect(page.locator("[data-home-ref]")).toHaveText("good");
+
+        // Submit the form to trigger server function
+        await page.click("[data-submit]");
+
+        // Verify server function updated the UI
+        await expect(page.locator("[data-home]")).toHaveText("Home: (1)");
+        await expect(page.locator("[data-home-ref]")).toHaveText("good");
+
+        // Submit again to ensure server functions work repeatedly
+        await page.click("[data-submit]");
+        await expect(page.locator("[data-home]")).toHaveText("Home: (2)");
+        await expect(page.locator("[data-home-ref]")).toHaveText("good");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
     });
 
     test.describe("Errors", () => {
