@@ -1,5 +1,6 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { once } from "node:events";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { TLSSocket } from "node:tls";
 import { Readable } from "node:stream";
 import { splitCookiesString } from "set-cookie-parser";
 import { createReadableStreamFromReadable } from "@react-router/node";
@@ -48,10 +49,14 @@ export function fromNodeRequest(
   nodeReq: Vite.Connect.IncomingMessage,
   nodeRes: ServerResponse<Vite.Connect.IncomingMessage>
 ): Request {
+  let protocol =
+    nodeReq.socket instanceof TLSSocket && nodeReq.socket.encrypted
+      ? "https"
+      : "http";
   let origin =
     nodeReq.headers.origin && "null" !== nodeReq.headers.origin
       ? nodeReq.headers.origin
-      : `http://${nodeReq.headers.host}`;
+      : `${protocol}://${nodeReq.headers.host}`;
   // Use `req.originalUrl` so React Router is aware of the full path
   invariant(
     nodeReq.originalUrl,
