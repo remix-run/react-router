@@ -1,7 +1,8 @@
 import * as React from "react";
-import { decode } from "turbo-stream";
+
+import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
 import type { Router as DataRouter } from "../../router/router";
-import { isResponse } from "../../router/router";
+import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -23,6 +24,8 @@ import type { DataRouteMatch } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
+class SingleFetchNoResultError extends Error {}
+
 export type SingleFetchRedirectResult = {
   redirect: string;
   status: number;
@@ -32,7 +35,7 @@ export type SingleFetchRedirectResult = {
 };
 
 // Shared/serializable type used by both turbo-stream and RSC implementations
-type DecodedSingleFetchResults =
+export type DecodedSingleFetchResults =
   | { routes: { [key: string]: SingleFetchResult } }
   | { redirect: SingleFetchRedirectResult };
 
@@ -162,10 +165,13 @@ type GetRouteInfoFunction = (match: DataRouteMatch) => {
   hasShouldRevalidate: boolean;
 };
 
-type FetchAndDecodeFunction = (
+type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
+
+export type FetchAndDecodeFunction = (
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
-  targetRoutes?: string[]
+  targetRoutes?: string[],
+  shouldAllowOptOut?: ShouldAllowOptOutFunction
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
 export function getTurboStreamSingleFetchDataStrategy(
@@ -199,7 +205,8 @@ export function getSingleFetchDataStrategyImpl(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined
+  basename: string | undefined,
+  shouldAllowOptOut: ShouldAllowOptOutFunction = () => true
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -262,7 +269,8 @@ export function getSingleFetchDataStrategyImpl(
       getRouteInfo,
       fetchAndDecode,
       ssr,
-      basename
+      basename,
+      shouldAllowOptOut
     );
   };
 }
@@ -288,7 +296,11 @@ async function singleFetchActionStrategy(
     return result;
   });
 
-  if (isResponse(result.result) || isRouteErrorResponse(result.result)) {
+  if (
+    isResponse(result.result) ||
+    isRouteErrorResponse(result.result) ||
+    isDataWithResponseInit(result.result)
+  ) {
     return { [actionMatch.route.id]: result };
   }
 
@@ -346,7 +358,8 @@ async function singleFetchLoaderNavigationStrategy(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined
+  basename: string | undefined,
+  shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -388,7 +401,7 @@ async function singleFetchLoaderNavigationStrategy(
 
         // When a route has a client loader, it opts out of the singular call and
         // calls it's server loader via `serverLoader()` using a `?_routes` param
-        if (hasClientLoader) {
+        if (shouldAllowOptOut(m) && hasClientLoader) {
           if (hasLoader) {
             foundOptOutRoute = true;
           }
@@ -428,14 +441,19 @@ async function singleFetchLoaderNavigationStrategy(
   await Promise.all(routeDfds.map((d) => d.promise));
 
   // We can skip the server call:
-  // - On initial hydration - only clientLoaders can pass through via `clientLoader.hydrate`
+  // - On initial hydration - only clientLoaders can pass through via
+  //   `clientLoader.hydrate`. We check the navigation state below as well
+  //   because if a clientLoader redirected we'll still be `initialized=false`
+  //   but we want to call loaders for the new location
   // - If there are no routes to fetch from the server
   //
   // One exception - if we are performing an HDR revalidation we have to call
   // the server in case a new loader has shown up that the manifest doesn't yet
   // know about
+  let isInitialLoad =
+    !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    (!router.state.initialized || routesParams.size === 0) &&
+    (isInitialLoad || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
@@ -456,7 +474,54 @@ async function singleFetchLoaderNavigationStrategy(
 
   await resolvePromise;
 
+  await bubbleMiddlewareErrors(
+    singleFetchDfd.promise,
+    args.matches,
+    routesParams,
+    results
+  );
+
   return results;
+}
+
+// If a middleware threw on the way down, we won't have data for our requested
+// loaders and they'll resolve to `SingleFetchNoResultError` results.  If this
+// happens, take the highest error we find in our results (which is a middleware
+// error if no loaders ever ran), and assign to these missing routes and let
+// the router bubble accordingly
+async function bubbleMiddlewareErrors(
+  singleFetchPromise: Promise<DecodedSingleFetchResults>,
+  matches: DataStrategyFunctionArgs["matches"],
+  routesParams: Set<string>,
+  results: Record<string, DataStrategyResult>
+) {
+  try {
+    let middlewareError: unknown;
+    let fetchedData = await singleFetchPromise;
+
+    if ("routes" in fetchedData) {
+      for (let match of matches) {
+        if (match.route.id in fetchedData.routes) {
+          let routeResult = fetchedData.routes[match.route.id];
+          if ("error" in routeResult) {
+            middlewareError = routeResult.error;
+            break;
+          }
+        }
+      }
+    }
+
+    if (middlewareError !== undefined) {
+      Array.from(routesParams.values()).forEach((routeId) => {
+        if (results[routeId].result instanceof SingleFetchNoResultError) {
+          results[routeId].result = middlewareError;
+        }
+      });
+    }
+  } catch (e) {
+    // No-op - this logic is only intended to process successful responses
+    // If the `.data` failed, the routes will handle those errors themselves
+  }
 }
 
 // Fetcher loader calls are much simpler than navigational loader calls
@@ -477,7 +542,7 @@ async function singleFetchLoaderFetcherStrategy(
   return { [fetcherMatch.route.id]: result };
 }
 
-function stripIndexParam(url: URL) {
+export function stripIndexParam(url: URL) {
   let indexValues = url.searchParams.getAll("index");
   url.searchParams.delete("index");
   let indexValuesToKeep = [];
@@ -495,7 +560,8 @@ function stripIndexParam(url: URL) {
 
 export function singleFetchUrl(
   reqUrl: URL | string,
-  basename: string | undefined
+  basename: string | undefined,
+  extension: "data" | "rsc"
 ) {
   let url =
     typeof reqUrl === "string"
@@ -510,11 +576,11 @@ export function singleFetchUrl(
       : reqUrl;
 
   if (url.pathname === "/") {
-    url.pathname = "_root.data";
+    url.pathname = `_root.${extension}`;
   } else if (basename && stripBasename(url.pathname, basename) === "/") {
-    url.pathname = `${basename.replace(/\/$/, "")}/_root.data`;
+    url.pathname = `${basename.replace(/\/$/, "")}/_root.${extension}`;
   } else {
-    url.pathname = `${url.pathname.replace(/\/$/, "")}.data`;
+    url.pathname = `${url.pathname.replace(/\/$/, "")}.${extension}`;
   }
 
   return url;
@@ -526,7 +592,7 @@ async function fetchAndDecodeViaTurboStream(
   targetRoutes?: string[]
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
-  let url = singleFetchUrl(request.url, basename);
+  let url = singleFetchUrl(request.url, basename, "data");
   if (request.method === "GET") {
     url = stripIndexParam(url);
     if (targetRoutes) {
@@ -684,12 +750,16 @@ function unwrapSingleFetchResult(
   }
 
   let routeResult = result.routes[routeId];
-  if ("error" in routeResult) {
+  if (routeResult == null) {
+    throw new SingleFetchNoResultError(
+      `No result found for routeId "${routeId}"`
+    );
+  } else if ("error" in routeResult) {
     throw routeResult.error;
   } else if ("data" in routeResult) {
     return routeResult.data;
   } else {
-    throw new Error(`No response found for routeId "${routeId}"`);
+    throw new Error(`Invalid response found for routeId "${routeId}"`);
   }
 }
 

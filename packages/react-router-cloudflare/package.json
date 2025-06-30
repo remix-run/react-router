@@ -1,6 +1,6 @@
 {
   "name": "@react-router/cloudflare",
-  "version": "7.5.2",
+  "version": "7.6.3",
   "description": "Cloudflare platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -54,7 +54,6 @@
   "peerDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
     "react-router": "workspace:^",
-    "tsup": "^8.3.0",
     "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {

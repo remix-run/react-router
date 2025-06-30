@@ -167,7 +167,9 @@ export class PlaywrightFixture {
    * loaders were called (or not).
    */
   collectSingleFetchResponses() {
-    return this.collectResponses((url) => url.pathname.endsWith(".data"));
+    return this.collectResponses(
+      (url) => url.pathname.endsWith(".data") || url.pathname.endsWith(".rsc")
+    );
   }
 
   /**

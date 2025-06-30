@@ -4,10 +4,9 @@ title: Single Page App (SPA)
 
 # Single Page App (SPA)
 
-There are two ways to ship a single page app with React Router
+[MODES: framework]
 
-- **as a library** - Instead of using React Router's framework features, you can use it as a library in your own SPA architecture. Refer to [React Router as a Library](../start/library/installation) guides.
-- **as a framework** - This guide will focus here
+This guides focuses on how to build Single Page Apps with React Router Framework mode. If you're using React Router as a library, you can use it to build your own SPA architecture.
 
 ## Overview
 

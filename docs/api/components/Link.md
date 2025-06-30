@@ -93,6 +93,8 @@ Consider a route hierarchy where a parent route pattern is "blog" and a child ro
 - **route** - default, resolves the link relative to the route pattern. In the example above a relative link of `".."` will remove both `:slug/edit` segments back to "/blog".
 - **path** - relative to the path so `..` will only remove one URL segment up to "/blog/:slug"
 
+Note that index routes and layout routes have no paths so they are not included in the relative path calculation.
+
 ### reloadDocument
 
 [modes: framework, data, declarative]
@@ -149,7 +151,7 @@ This state is inaccessible on the server as it is implemented on top of [`histor
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [Path](../Other/Path):
+Can be a string or a partial [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
 
 ```tsx
 <Link to="/some/path" />

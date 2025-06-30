@@ -35,7 +35,11 @@ function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
 }
 
 function assertNodePath(
-  path: NodePath | NodePath[] | null | undefined
+  path:
+    | NodePath<Babel.Node | null>
+    | NodePath<Babel.Node | null>[]
+    | null
+    | undefined
 ): asserts path is NodePath {
   invariant(
     path && !Array.isArray(path),

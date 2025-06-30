@@ -10,6 +10,7 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
+  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -31,7 +32,6 @@ import type {
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
-  AgnosticRouteMatch,
   ParamParseKey,
   Params,
   PathMatch,
@@ -50,10 +50,6 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
   Resolves a URL against the current location.
@@ -448,7 +444,7 @@ export function useRoutesImpl(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let { navigator, static: isStatic } = React.useContext(NavigationContext);
+  let { navigator } = React.useContext(NavigationContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -535,17 +531,7 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  // Use data router matches when available to avoid another match routes call.
-  // Skip this during SSR because the matches coming in from StaticHandlerContext
-  // might be UI agnostic and we want the matches from the createStaticRouter's
-  // routes
-  let matches =
-    !isStatic &&
-    dataRouterState &&
-    dataRouterState.matches &&
-    dataRouterState.matches.length > 0
-      ? (dataRouterState.matches as AgnosticRouteMatch<string, RouteObject>[])
-      : matchRoutes(routes, { pathname: remainingPathname });
+  let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (ENABLE_DEV_WARNINGS) {
     warning(
@@ -908,6 +894,7 @@ export function _renderMatches(
       } else {
         children = outlet;
       }
+
       return (
         <RenderedRoute
           match={match}
@@ -1046,17 +1033,19 @@ export function useNavigation() {
 
   @category Hooks
  */
-export function useRevalidator() {
+export function useRevalidator(): {
+  revalidate: () => Promise<void>;
+  state: DataRouter["state"]["revalidation"];
+} {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
+  let revalidate = React.useCallback(async () => {
+    await dataRouterContext.router.revalidate();
+  }, [dataRouterContext.router]);
+
   return React.useMemo(
-    () => ({
-      async revalidate() {
-        await dataRouterContext.router.revalidate();
-      },
-      state: state.revalidation,
-    }),
-    [dataRouterContext.router, state.revalidation]
+    () => ({ revalidate, state: state.revalidation }),
+    [revalidate, state.revalidation]
   );
 }
 

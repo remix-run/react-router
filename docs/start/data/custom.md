@@ -9,7 +9,7 @@ order: 8
 
 ## Introduction
 
-Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions with Data Mode..
+Instead of using `@react-router/dev`, you can integrate React Router's framework features (like loaders, actions, fetchers, etc.) into your own bundler and server abstractions with Data Mode.
 
 ## Client Rendering
 
@@ -31,7 +31,7 @@ let router = createBrowserRouter([
         path: "shows/:showId",
         Component: Show,
         loader: ({ request, params }) =>
-          fetch(`/api/show/${params.id}.json`, {
+          fetch(`/api/show/${params.showId}.json`, {
             signal: request.signal,
           }),
       },

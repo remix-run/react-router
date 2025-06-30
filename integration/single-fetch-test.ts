@@ -170,6 +170,24 @@ const files = {
       )
     }
   `,
+
+  "app/routes/invalid-date.tsx": js`
+    import { useLoaderData, data } from "react-router";
+
+    export function loader({ request }) {
+      return data({ invalidDate: new Date("invalid") });
+    }
+
+    export default function InvalidDate() {
+      let data = useLoaderData();
+      return (
+        <>
+          <h1 id="heading">Invalid Date</h1>
+          <p id="date">{data.invalidDate.toISOString()}</p>
+        </>
+      )
+    }
+  `,
 };
 
 test.describe("single-fetch", () => {
@@ -216,6 +234,25 @@ test.describe("single-fetch", () => {
         },
       },
     });
+
+    res = await fixture.requestSingleFetchData("/invalid-date.data");
+    expect(res.data).toEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/invalid-date": {
+        data: {
+          invalidDate: expect.any(Date),
+        },
+      },
+    });
+
+    let date = (
+      res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } }
+    )["routes/invalid-date"].data.invalidDate;
+    expect(isNaN(date.getTime())).toBe(true);
   });
 
   test("loads proper errors on single fetch loader requests", async () => {
@@ -314,6 +351,24 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#heading")).toContain("Data");
     expect(await app.getHtml("#message")).toContain("DATA");
     expect(await app.getHtml("#date")).toContain(ISO_DATE);
+  });
+
+  test("allows SSR loaders to return undefined", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          export function loader() {}
+          export default function Index() {
+            return <h1>Index</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    expect(await app.getHtml("h1")).toContain("Index");
   });
 
   test("loads proper data on client side navigation", async ({ page }) => {
@@ -1567,22 +1622,38 @@ test.describe("single-fetch", () => {
         `,
       }),
       "app/routes/_index.tsx": js`
-        import { Link } from "react-router";
+        import { Link, Form } from "react-router";
         export default function Component() {
-          return <Link to="/page">Go to /page</Link>
+          return (
+            <div id="index">
+              <Link to="/page">Go to /page</Link>
+              <Form method="post" action="/page">
+                <button type="submit" name="key" value="value">Submit</button>
+              </Form>
+            </div>
+          );
         }
       `,
       "app/routes/page.tsx": js`
-        export function loader() {
+        export function action() {
           return null
+        }
+        export function loader() {
+            return null
         }
         export default function Component() {
           return <p>Should not see me</p>
         }
       `,
       "app/routes/target.tsx": js`
+        import { Link } from "react-router";
         export default function Component() {
-          return <h1 id="target">Target</h1>
+          return (
+            <>
+              <h1 id="target">Target</h1>
+              <Link to="/">Go home</Link>
+            </>
+          );
         }
       `,
     });
@@ -1592,9 +1663,15 @@ test.describe("single-fetch", () => {
       await page.goto(`http://localhost:${port}/`, {
         waitUntil: "networkidle",
       });
-      let link = page.locator('a[href="/page"]');
-      await expect(link).toHaveText("Go to /page");
-      await link.click();
+
+      await page.locator('a[href="/page"]').click();
+      await page.waitForSelector("#target");
+      await expect(page.locator("#target")).toHaveText("Target");
+
+      await page.locator('a[href="/"]').click();
+      await page.waitForSelector("#index");
+
+      await page.locator('button[type="submit"]').click();
       await page.waitForSelector("#target");
       await expect(page.locator("#target")).toHaveText("Target");
     } finally {
@@ -1817,6 +1894,79 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#a-client")).toMatch(
       />A client loader URL: http:\/\/localhost:\d+\/parent\/a</
     );
+  });
+
+  test("Strips Content-Length header from loader/action responses", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data-with-response.tsx": js`
+          import { useActionData, useLoaderData, data } from "react-router";
+
+          export function headers ({ actionHeaders, loaderHeaders, errorHeaders }) {
+            if ([...actionHeaders].length > 0) {
+              return actionHeaders;
+            } else {
+              return loaderHeaders;
+            }
+          }
+
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return data({
+              key: formData.get('key'),
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export function loader({ request }) {
+            return data({
+              message: "DATA",
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export default function DataWithResponse() {
+            let data = useLoaderData();
+            let actionData = useActionData();
+            return (
+              <>
+                <h1 id="heading">Data</h1>
+                <p id="message">{data.message}</p>
+                <p id="date">{data.date.toISOString()}</p>
+                {actionData ? <p id="action-data">{actionData.key}</p> : null}
+              </>
+            )
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestSingleFetchData("/data-with-response.data");
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toStrictEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/data-with-response": {
+        data: {
+          message: "DATA",
+        },
+      },
+    });
+
+    let postBody = new URLSearchParams();
+    postBody.set("key", "value");
+    res = await fixture.requestSingleFetchData("/data-with-response.data", {
+      method: "post",
+      body: postBody,
+    });
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toEqual({
+      data: {
+        key: "value",
+      },
+    });
   });
 
   test("Action requests do not use _routes and do not call loaders on the server", async ({
@@ -3223,6 +3373,63 @@ test.describe("single-fetch", () => {
       expect(urls[0].endsWith("/fetch.data?_routes=routes%2Ffetch")).toBe(true);
       expect(urls[1].endsWith("/parent/b.data")).toBe(true);
     });
+
+    test("Aborted fetcher loads don't cause console errors", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Form, redirect, useFetcher } from "react-router";
+
+            export function action() {
+              return redirect("/other");
+            }
+
+            export default function Page() {
+              const fetcher = useFetcher();
+              const isPending = fetcher.state !== "idle";
+
+              return (
+                <>
+                  <button id="fetch" onClick={() => fetcher.load("/fetch")}>
+                    {isPending ? "Loading..." : "First load data"}
+                  </button>
+                  <Form method="POST">
+                    <button type="submit">Then submit before load ends</button>
+                  </Form>
+                </>
+              );
+            }
+          `,
+          "app/routes/other.tsx": js`
+            export default function Component() {
+              return <p id="other">Other</p>;
+            }
+          `,
+          "app/routes/fetch.tsx": js`
+            export async function loader() {
+              await new Promise((r) => setTimeout(r, 10000));
+              return 'nope';
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      // Capture console logs and uncaught errors
+      let msgs: string[] = [];
+      page.on("console", (msg) => msgs.push(msg.text()));
+      page.on("pageerror", (error) => msgs.push(error.message));
+
+      await app.goto("/", true);
+      app.clickElement("#fetch");
+      await app.clickSubmitButton("/?index");
+      await page.waitForSelector("#other");
+      expect(msgs).toEqual([]);
+    });
   });
 
   test.describe("prefetching", () => {
@@ -3302,10 +3509,10 @@ test.describe("single-fetch", () => {
       await app.goto("/", true);
       // No clientLoaders so we can make a single parameter-less fetch
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when one route has a client loader", async ({ page }) => {
@@ -3390,10 +3597,10 @@ test.describe("single-fetch", () => {
 
       // root/A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when multiple routes have client loaders", async ({ page }) => {
@@ -3483,10 +3690,10 @@ test.describe("single-fetch", () => {
 
       // root/A can get prefetched, B/C can't due to `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when all routes have client loaders", async ({ page }) => {
@@ -3606,7 +3813,7 @@ test.describe("single-fetch", () => {
       await app.goto("/", true);
 
       // No prefetching due to clientLoaders
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(0);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(0);
     });
 
     test("when a reused route opts out of revalidation", async ({ page }) => {
@@ -3678,7 +3885,7 @@ test.describe("single-fetch", () => {
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b%2Croutes%2Fa.b.c']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
 
     test("when a reused route opts out of revalidation and another route has a clientLoader", async ({
@@ -3753,10 +3960,10 @@ test.describe("single-fetch", () => {
 
       // A opted out of revalidation
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
         { state: "attached" }
       );
-      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+      expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
   });
 

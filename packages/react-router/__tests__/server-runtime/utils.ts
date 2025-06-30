@@ -1,17 +1,16 @@
-import prettier from "prettier";
-
+import type { FutureConfig } from "../../lib/dom/ssr/entry";
 import type {
-  ActionFunction,
-  HandleErrorFunction,
-  HeadersFunction,
-  LoaderFunction,
-} from "../../lib/server-runtime";
-import type { FutureConfig } from "../../lib/server-runtime/entry";
-import type {
-  EntryRoute,
   ServerRoute,
   ServerRouteManifest,
 } from "../../lib/server-runtime/routes";
+import type {
+  HandleDocumentRequestFunction,
+  HandleErrorFunction,
+  ServerBuild,
+} from "../../lib/server-runtime/build";
+import type { HeadersFunction } from "../../lib/dom/ssr/routeModules";
+import type { EntryRoute } from "../../lib/dom/ssr/routes";
+import type { ActionFunction, LoaderFunction } from "../../lib/router/utils";
 
 export function mockServerBuild(
   routes: Record<
@@ -30,14 +29,24 @@ export function mockServerBuild(
   opts: {
     future?: Partial<FutureConfig>;
     handleError?: HandleErrorFunction;
+    handleDocumentRequest?: HandleDocumentRequestFunction;
   } = {}
-) {
+): ServerBuild {
   return {
     ssr: true,
     future: {
+      unstable_middleware: false,
+      unstable_subResourceIntegrity: false,
       ...opts.future,
     },
     prerender: [],
+    isSpaMode: false,
+    routeDiscovery: {
+      mode: "lazy",
+      manifestPath: "/__manifest",
+    },
+    assetsBuildDirectory: "",
+    publicPath: "",
     assets: {
       entry: {
         imports: [""],
@@ -48,6 +57,13 @@ export function mockServerBuild(
           hasAction: !!config.action,
           hasErrorBoundary: !!config.ErrorBoundary,
           hasLoader: !!config.loader,
+          hasClientAction: false,
+          hasClientLoader: false,
+          hasClientMiddleware: false,
+          clientActionModule: undefined,
+          clientLoaderModule: undefined,
+          clientMiddlewareModule: undefined,
+          hydrateFallbackModule: undefined,
           id,
           module: "",
           index: config.index,
@@ -64,19 +80,15 @@ export function mockServerBuild(
     },
     entry: {
       module: {
-        default: jest.fn(
-          async (
-            request,
-            responseStatusCode,
-            responseHeaders,
-            entryContext,
-            loadContext
-          ) =>
-            new Response(null, {
-              status: responseStatusCode,
-              headers: responseHeaders,
-            })
-        ),
+        default:
+          opts.handleDocumentRequest ||
+          jest.fn(
+            async (request, responseStatusCode, responseHeaders) =>
+              new Response(null, {
+                status: responseStatusCode,
+                headers: responseHeaders,
+              })
+          ),
         handleDataRequest: jest.fn(async (response) => response),
         handleError: opts.handleError,
       },
@@ -105,11 +117,3 @@ export function mockServerBuild(
     ),
   };
 }
-
-export function prettyHtml(source: string): string {
-  return prettier.format(source, { parser: "html" });
-}
-
-export function isEqual<A, B>(
-  arg: A extends B ? (B extends A ? true : false) : false
-): void {}

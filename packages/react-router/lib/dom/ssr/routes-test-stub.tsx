@@ -18,15 +18,24 @@ import type {
   FutureConfig,
   FrameworkContextObject,
 } from "./entry";
-import { Outlet, RouterProvider, createMemoryRouter } from "../../components";
+import {
+  type RouteComponentType,
+  type HydrateFallbackType,
+  type ErrorBoundaryType,
+  Outlet,
+  RouterProvider,
+  createMemoryRouter,
+  withComponentProps,
+  withErrorBoundaryProps,
+  withHydrateFallbackProps,
+} from "../../components";
 import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
 
-interface StubIndexRouteObject
-  extends Omit<
-    IndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
+interface StubRouteExtensions {
+  Component?: RouteComponentType;
+  HydrateFallback?: HydrateFallbackType;
+  ErrorBoundary?: ErrorBoundaryType;
   loader?: LoaderFunction;
   action?: ActionFunction;
   children?: StubRouteObject[];
@@ -34,17 +43,33 @@ interface StubIndexRouteObject
   links?: LinksFunction;
 }
 
+interface StubIndexRouteObject
+  extends Omit<
+      IndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
+
 interface StubNonIndexRouteObject
   extends Omit<
-    NonIndexRouteObject,
-    "loader" | "action" | "element" | "errorElement" | "children"
-  > {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-  meta?: MetaFunction;
-  links?: LinksFunction;
-}
+      NonIndexRouteObject,
+      | "Component"
+      | "HydrateFallback"
+      | "ErrorBoundary"
+      | "loader"
+      | "action"
+      | "element"
+      | "errorElement"
+      | "children"
+    >,
+    StubRouteExtensions {}
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
 
@@ -113,6 +138,7 @@ export function createRoutesStub(
         routeModules: {},
         ssr: false,
         isSpaMode: false,
+        routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
       };
 
       // Update the routes to include context in the loader/action and populate
@@ -157,9 +183,15 @@ function processRoutes(
       id: route.id,
       path: route.path,
       index: route.index,
-      Component: route.Component,
-      HydrateFallback: route.HydrateFallback,
-      ErrorBoundary: route.ErrorBoundary,
+      Component: route.Component
+        ? withComponentProps(route.Component)
+        : undefined,
+      HydrateFallback: route.HydrateFallback
+        ? withHydrateFallbackProps(route.HydrateFallback)
+        : undefined,
+      ErrorBoundary: route.ErrorBoundary
+        ? withErrorBoundaryProps(route.ErrorBoundary)
+        : undefined,
       action: route.action,
       loader: route.loader,
       handle: route.handle,
@@ -192,8 +224,8 @@ function processRoutes(
 
     // Add the route to routeModules
     routeModules[route.id] = {
-      default: route.Component || Outlet,
-      ErrorBoundary: route.ErrorBoundary || undefined,
+      default: newRoute.Component || Outlet,
+      ErrorBoundary: newRoute.ErrorBoundary || undefined,
       handle: route.handle,
       links: route.links,
       meta: route.meta,

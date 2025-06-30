@@ -2,8 +2,15 @@ import type {
   ClientLoaderFunctionArgs,
   ClientActionFunctionArgs,
 } from "../dom/ssr/routeModules";
-import type { DataWithResponseInit } from "../router/utils";
+import type {
+  DataWithResponseInit,
+  unstable_RouterContextProvider,
+} from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
+import type { AppLoadContext } from "../server-runtime/data";
+
+import type { MiddlewareEnabled } from "./future";
+import type { RouteModule } from "./route-module";
 import type { unstable_SerializesTo } from "./serializes-to";
 import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
 
@@ -61,13 +68,128 @@ type ServerData<T> =
 export type ServerDataFrom<T> = ServerData<DataFrom<T>>;
 export type ClientDataFrom<T> = ClientData<DataFrom<T>>;
 
+export type ClientDataFunctionArgs<Params> = {
+  /**
+   * A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the URL, the method, the "content-type" header, and the request body from the request.
+   *
+   * @note Because client data functions are called before a network request is made, the Request object does not include the headers which the browser automatically adds. React Router infers the "content-type" header from the enc-type of the form that performed the submission.
+   **/
+  request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function clientLoader({
+   *   params,
+   * }: Route.ClientLoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
+  params: Params;
+  /**
+   * When `future.unstable_middleware` is not enabled, this is undefined.
+   *
+   * When `future.unstable_middleware` is enabled, this is an instance of
+   * `unstable_RouterContextProvider` and can be used to access context values
+   * from your route middlewares.  You may pass in initial context values in your
+   * `<HydratedRouter unstable_getContext>` prop
+   */
+  context: unstable_RouterContextProvider;
+};
+
+export type ServerDataFunctionArgs<Params> = {
+  /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read the url, method, headers (such as cookies), and request body from the request. */
+  request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function loader({
+   *   params,
+   * }: Route.LoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   **/
+  params: Params;
+  /**
+   * Without `future.unstable_middleware` enabled, this is the context passed in
+   * to your server adapter's `getLoadContext` function. It's a way to bridge the
+   * gap between the adapter's request/response API with your React Router app.
+   * It is only applicable if you are using a custom server adapter.
+   *
+   * With `future.unstable_middleware` enabled, this is an instance of
+   * `unstable_RouterContextProvider` and can be used for type-safe access to
+   * context value set in your route middlewares.  If you are using a custom
+   * server adapter, you may provide an initial set of context values from your
+   * `getLoadContext` function.
+   */
+  context: MiddlewareEnabled extends true
+    ? unstable_RouterContextProvider
+    : AppLoadContext;
+};
+
 export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
-  ? Args extends [ClientLoaderFunctionArgs | ClientActionFunctionArgs]
+  ? Args extends [
+      | ClientLoaderFunctionArgs
+      | ClientActionFunctionArgs
+      | ClientDataFunctionArgs<unknown>
+    ]
     ? ClientDataFrom<T>
     : ServerDataFrom<T>
   : T;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
+
+// prettier-ignore
+type IsHydrate<ClientLoader> =
+  ClientLoader extends { hydrate: true } ? true :
+  ClientLoader extends { hydrate: false } ? false :
+  false
+
+export type GetLoaderData<T extends RouteModule> = _DataLoaderData<
+  ServerDataFrom<T["loader"]>,
+  ClientDataFrom<T["clientLoader"]>,
+  IsHydrate<T["clientLoader"]>,
+  T extends { HydrateFallback: Func } ? true : false
+>;
+
+// prettier-ignore
+type _DataLoaderData<
+  ServerLoaderData,
+  ClientLoaderData,
+  ClientLoaderHydrate extends boolean,
+  HasHydrateFallback
+> =
+  [HasHydrateFallback, ClientLoaderHydrate] extends [true, true] ?
+    IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
+    undefined
+  :
+  [IsDefined<ClientLoaderData>, IsDefined<ServerLoaderData>] extends [true, true] ? ServerLoaderData | ClientLoaderData :
+  IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
+  IsDefined<ServerLoaderData> extends true ? ServerLoaderData :
+  undefined
+
+export type GetActionData<T extends RouteModule> = _DataActionData<
+  ServerDataFrom<T["action"]>,
+  ClientDataFrom<T["clientAction"]>
+>;
+
+// prettier-ignore
+type _DataActionData<ServerActionData, ClientActionData> = Awaited<
+  [IsDefined<ServerActionData>, IsDefined<ClientActionData>] extends [true, true] ? ServerActionData | ClientActionData :
+  IsDefined<ClientActionData> extends true ? ClientActionData :
+  IsDefined<ServerActionData> extends true ? ServerActionData :
+  undefined
+>
+
 type __tests = [
   // ServerDataFrom
   Expect<Equal<ServerDataFrom<any>, undefined>>,
@@ -130,5 +252,98 @@ type __tests = [
       | { data: string; b: Date; c: () => boolean }
     >
   >,
-  Expect<Equal<ClientDataFrom<() => { a: string } | Response>, { a: string }>>
+  Expect<Equal<ClientDataFrom<() => { a: string } | Response>, { a: string }>>,
+
+  // GetLoaderData
+  Expect<Equal<GetLoaderData<{}>, undefined>>,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        clientLoader: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: () => { d: string; e: Date; f: () => boolean };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: () => { d: string; e: Date; f: () => boolean };
+        HydrateFallback: () => unknown;
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: (() => { d: string; e: Date; f: () => boolean }) & {
+          hydrate: true;
+        };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: (() => { d: string; e: Date; f: () => boolean }) & {
+          hydrate: true;
+        };
+        HydrateFallback: () => unknown;
+      }>,
+      { d: string; e: Date; f: () => boolean }
+    >
+  >,
+
+  // ActionData
+  Expect<Equal<GetActionData<{}>, undefined>>,
+  Expect<
+    Equal<
+      GetActionData<{
+        action: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+  Expect<
+    Equal<
+      GetActionData<{
+        clientAction: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      GetActionData<{
+        action: () => { a: string; b: Date; c: () => boolean };
+        clientAction: () => { d: string; e: Date; f: () => boolean };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >
 ];

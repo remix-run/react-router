@@ -43,6 +43,35 @@ if [[ -n $(git show-ref refs/heads/changeset-release/release-next) ]]; then
   git branch -d changeset-release/release-next
 fi
 
+# If this is set when no tags exist the program exits on the TAGS assignment
+set +e
+
+PATTERN="@7\.\d\+\.\d\+-pre"
+
+# Don't keep around prerelease tags for all packages - only the primary react-router package
+TAGS=$(git tag | grep -e "${PATTERN}" | grep -ve "^react-router@")
+
+
+if [[ $TAGS == "" ]]; then
+  echo "No tags to delete, exiting"
+  exit 0
+fi
+
+set -e
+
+NUM_TAGS=$(git tag | grep -e "${PATTERN}" | grep -ve "^react-router@" | wc -l | sed 's/ //g')
+TAGS_LINE=$(git tag | grep -e "${PATTERN}" | grep -ve "^react-router@" | tr '\n' ' ')
+
+echo "Found ${NUM_TAGS} tags to delete: ${TAGS_LINE}"
+
+echo "To delete, run the following commands:"
+echo ""
+echo "git push origin --delete ${TAGS_LINE}"
+echo "git fetch --prune --prune-tags"
+
+set +e
+set +x
+
 
 set +e
 set +x

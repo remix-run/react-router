@@ -1,5 +1,297 @@
 # `@react-router/dev`
 
+## 7.6.3
+
+### Patch Changes
+
+- Add Vite 7 support ([#13748](https://github.com/remix-run/react-router/pull/13748))
+- Skip `package.json` resolution checks when a custom `entry.server.(j|t)sx` file is provided. ([#13744](https://github.com/remix-run/react-router/pull/13744))
+- Add validation for a route's id not being 'root' ([#13792](https://github.com/remix-run/react-router/pull/13792))
+- Updated dependencies:
+  - `@react-router/node@7.6.3`
+  - `react-router@7.6.3`
+  - `@react-router/serve@7.6.3`
+
+## 7.6.2
+
+### Patch Changes
+
+- Avoid additional `with-props` chunk in Framework Mode by moving route module component prop logic from the Vite plugin to `react-router` ([#13650](https://github.com/remix-run/react-router/pull/13650))
+
+- When `future.unstable_viteEnvironmentApi` is enabled and an absolute Vite `base` has been configured, ensure critical CSS is handled correctly during development ([#13598](https://github.com/remix-run/react-router/pull/13598))
+
+- Update `vite-node` ([#13673](https://github.com/remix-run/react-router/pull/13673))
+
+- Fix typegen for non-{.js,.jsx,.ts,.tsx} routes like .mdx ([#12453](https://github.com/remix-run/react-router/pull/12453))
+
+- Fix href types for optional dynamic params ([#13725](https://github.com/remix-run/react-router/pull/13725))
+
+  7.6.1 introduced fixes for `href` when using optional static segments,
+  but those fixes caused regressions with how optional dynamic params worked in 7.6.0:
+
+  ```ts
+  // 7.6.0
+  href("/users/:id?"); // ✅
+  href("/users/:id?", { id: 1 }); // ✅
+
+  // 7.6.1
+  href("/users/:id?"); // ❌
+  href("/users/:id?", { id: 1 }); // ❌
+  ```
+
+  Now, optional static segments are expanded into different paths for `href`, but optional dynamic params are not.
+  This way `href` can unambiguously refer to an exact URL path, all while keeping the number of path options to a minimum.
+
+  ```ts
+  // 7.6.2
+
+  // path: /users/:id?/edit?
+  href("
+  //    ^ suggestions when cursor is here:
+  //
+  //    /users/:id?
+  //    /users/:id?/edit
+  ```
+
+  Additionally, you can pass `params` from component props without needing to narrow them manually:
+
+  ```ts
+  declare const params: { id?: number };
+
+  // 7.6.0
+  href("/users/:id?", params);
+
+  // 7.6.1
+  href("/users/:id?", params); // ❌
+  "id" in params ? href("/users/:id", params) : href("/users"); // works... but is annoying
+
+  // 7.6.2
+  href("/users/:id?", params); // restores behavior of 7.6.0
+  ```
+
+- Updated dependencies:
+  - `react-router@7.6.2`
+  - `@react-router/node@7.6.2`
+  - `@react-router/serve@7.6.2`
+
+## 7.6.1
+
+### Patch Changes
+
+- Prevent typegen with route files are outside the app directory ([#12996](https://github.com/remix-run/react-router/pull/12996))
+
+- Fix typegen when same route is used at multiple paths ([#13574](https://github.com/remix-run/react-router/pull/13574))
+
+  For example, `routes/route.tsx` is used at 4 different paths here:
+
+  ```ts
+  import { type RouteConfig, route } from "@react-router/dev/routes";
+  export default [
+    route("base/:base", "routes/base.tsx", [
+      route("home/:home", "routes/route.tsx", { id: "home" }),
+      route("changelog/:changelog", "routes/route.tsx", { id: "changelog" }),
+      route("splat/*", "routes/route.tsx", { id: "splat" }),
+    ]),
+    route("other/:other", "routes/route.tsx", { id: "other" }),
+  ] satisfies RouteConfig;
+  ```
+
+  Previously, typegen would arbitrarily pick one of these paths to be the "winner" and generate types for the route module based on that path.
+  Now, typegen creates unions as necessary for alternate paths for the same route file.
+
+- Add additional logging to `build` command output when cleaning assets from server build ([#13547](https://github.com/remix-run/react-router/pull/13547))
+
+- Better types for `params` ([#13543](https://github.com/remix-run/react-router/pull/13543))
+
+  For example:
+
+  ```ts
+  // routes.ts
+  import { type RouteConfig, route } from "@react-router/dev/routes";
+
+  export default [
+    route("parent/:p", "routes/parent.tsx", [
+      route("layout/:l", "routes/layout.tsx", [
+        route("child1/:c1a/:c1b", "routes/child1.tsx"),
+        route("child2/:c2a/:c2b", "routes/child2.tsx"),
+      ]),
+    ]),
+  ] satisfies RouteConfig;
+  ```
+
+  Previously, `params` for the `routes/layout.tsx` route were calculated as `{ p: string, l: string }`.
+  This incorrectly ignores params that could come from child routes.
+  If visiting `/parent/1/layout/2/child1/3/4`, the actual params passed to `routes/layout.tsx` will have a type of `{ p: string, l: string, c1a: string, c1b: string }`.
+
+  Now, `params` are aware of child routes and autocompletion will include child params as optionals:
+
+  ```ts
+  params.|
+  //     ^ cursor is here and you ask for autocompletion
+  // p: string
+  // l: string
+  // c1a?: string
+  // c1b?: string
+  // c2a?: string
+  // c2b?: string
+  ```
+
+  You can also narrow the types for `params` as it is implemented as a normalized union of params for each page that includes `routes/layout.tsx`:
+
+  ```ts
+  if (typeof params.c1a === 'string') {
+    params.|
+    //     ^ cursor is here and you ask for autocompletion
+    // p: string
+    // l: string
+    // c1a: string
+    // c1b: string
+  }
+  ```
+
+  ***
+
+  UNSTABLE: renamed internal `react-router/route-module` export to `react-router/internal`
+  UNSTABLE: removed `Info` export from generated `+types/*` files
+
+- \[UNSTABLE] Normalize dirent entry path across node versions when generating SRI manifest ([#13591](https://github.com/remix-run/react-router/pull/13591))
+
+- Don't clean assets from server build when `build.ssrEmitAssets` has been enabled in Vite config ([#13547](https://github.com/remix-run/react-router/pull/13547))
+
+- Fix `href` for optional segments ([#13595](https://github.com/remix-run/react-router/pull/13595))
+
+  Type generation now expands paths with optionals into their corresponding non-optional paths.
+  For example, the path `/user/:id?` gets expanded into `/user` and `/user/:id` to more closely model visitable URLs.
+  `href` then uses these expanded (non-optional) paths to construct type-safe paths for your app:
+
+  ```ts
+  // original: /user/:id?
+  // expanded: /user & /user/:id
+  href("/user"); // ✅
+  href("/user/:id", { id: 1 }); // ✅
+  ```
+
+  This becomes even more important for static optional paths where there wasn't a good way to indicate whether the optional should be included in the resulting path:
+
+  ```ts
+  // original: /products/:id/detail?
+
+  // before
+  href("/products/:id/detail?"); // ❌ How can we tell `href` to include or omit `detail?` segment with a complex API?
+
+  // now
+  // expanded: /products/:id & /products/:id/detail
+  href("/product/:id"); // ✅
+  href("/product/:id/detail"); // ✅
+  ```
+
+- Updated dependencies:
+  - `react-router@7.6.1`
+  - `@react-router/node@7.6.1`
+  - `@react-router/serve@7.6.1`
+
+## 7.6.0
+
+### Minor Changes
+
+- Added a new `react-router.config.ts` `routeDiscovery` option to configure Lazy Route Discovery behavior. ([#13451](https://github.com/remix-run/react-router/pull/13451))
+
+  - By default, Lazy Route Discovery is enabled and makes manifest requests to the `/__manifest` path:
+    - `routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" }`
+  - You can modify the manifest path used:
+    - `routeDiscovery: { mode: "lazy", manifestPath: "/custom-manifest" }`
+  - Or you can disable this feature entirely and include all routes in the manifest on initial document load:
+    - `routeDiscovery: { mode: "initial" }`
+
+- Automatic types for future flags ([#13506](https://github.com/remix-run/react-router/pull/13506))
+
+  Some future flags alter the way types should work in React Router.
+  Previously, you had to remember to manually opt-in to the new types.
+
+  For example, for `unstable_middleware`:
+
+  ```ts
+  // react-router.config.ts
+
+  // Step 1: Enable middleware
+  export default {
+    future: {
+      unstable_middleware: true,
+    },
+  };
+
+  // Step 2: Enable middleware types
+  declare module "react-router" {
+    interface Future {
+      unstable_middleware: true; // 👈 Enable middleware types
+    }
+  }
+  ```
+
+  It was up to you to keep the runtime future flags synced with the types for those future flags.
+  This was confusing and error-prone.
+
+  Now, React Router will automatically enable types for future flags.
+  That means you only need to specify the runtime future flag:
+
+  ```ts
+  // react-router.config.ts
+
+  // Step 1: Enable middleware
+  export default {
+    future: {
+      unstable_middleware: true,
+    },
+  };
+
+  // No step 2! That's it!
+  ```
+
+  Behind the scenes, React Router will generate the corresponding `declare module` into `.react-router/types`.
+  Currently this is done in `.react-router/types/+register.ts` but this is an implementation detail that may change in the future.
+
+### Patch Changes
+
+- Support project root directories without a `package.json` if it exists in a parent directory ([#13472](https://github.com/remix-run/react-router/pull/13472))
+
+- When providing a custom Vite config path via the CLI `--config`/`-c` flag, default the project root directory to the directory containing the Vite config when not explicitly provided ([#13472](https://github.com/remix-run/react-router/pull/13472))
+
+- In a `routes.ts` context, ensure the `--mode` flag is respected for `import.meta.env.MODE` ([#13485](https://github.com/remix-run/react-router/pull/13485))
+
+  Previously, `import.meta.env.MODE` within a `routes.ts` context was always `"development"` for the `dev` and `typegen --watch` commands, but otherwise resolved to `"production"`. These defaults are still in place, but if a `--mode` flag is provided, this will now take precedence.
+
+- Ensure consistent project root directory resolution logic in CLI commands ([#13472](https://github.com/remix-run/react-router/pull/13472))
+
+- When executing `react-router.config.ts` and `routes.ts` with `vite-node`, ensure that PostCSS config files are ignored ([#13489](https://github.com/remix-run/react-router/pull/13489))
+
+- When extracting critical CSS during development, ensure it's loaded from the client environment to avoid issues with plugins that handle the SSR environment differently ([#13503](https://github.com/remix-run/react-router/pull/13503))
+
+- When `future.unstable_viteEnvironmentApi` is enabled, ensure that `build.assetsDir` in Vite config is respected when `environments.client.build.assetsDir` is not configured ([#13491](https://github.com/remix-run/react-router/pull/13491))
+
+- Fix "Status message is not supported by HTTP/2" error during dev when using HTTPS ([#13460](https://github.com/remix-run/react-router/pull/13460))
+
+- Update config when `react-router.config.ts` is created or deleted during development. ([#12319](https://github.com/remix-run/react-router/pull/12319))
+
+- Skip unnecessary `routes.ts` evaluation before Vite build is started ([#13513](https://github.com/remix-run/react-router/pull/13513))
+
+- Fix `TS2300: Duplicate identifier` errors caused by generated types ([#13499](https://github.com/remix-run/react-router/pull/13499))
+
+  Previously, routes that had the same full path would cause duplicate entries in the generated types for `href` (`.react-router/types/+register.ts`), causing type checking errors.
+
+- Updated dependencies:
+  - `react-router@7.6.0`
+  - `@react-router/node@7.6.0`
+  - `@react-router/serve@7.6.0`
+
+## 7.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.5.3`
+  - `@react-router/node@7.5.3`
+  - `@react-router/serve@7.5.3`
+
 ## 7.5.2
 
 ### Patch Changes

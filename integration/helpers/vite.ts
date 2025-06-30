@@ -1,11 +1,11 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import path from "pathe";
-import fs from "node:fs/promises";
-import type { Readable } from "node:stream";
-import url from "node:url";
+import type { ChildProcess } from "node:child_process";
+import { sync as spawnSync, spawn } from "cross-spawn";
+import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { platform } from "node:os";
-import fse from "fs-extra";
+import type { Readable } from "node:stream";
+import url from "node:url";
+import path from "pathe";
 import stripIndent from "strip-indent";
 import waitOn from "wait-on";
 import getPort from "get-port";
@@ -31,6 +31,7 @@ export const reactRouterConfig = ({
   splitRouteModules,
   viteEnvironmentApi,
   middleware,
+  routeDiscovery,
 }: {
   ssr?: boolean;
   basename?: string;
@@ -41,12 +42,14 @@ export const reactRouterConfig = ({
   >["unstable_splitRouteModules"];
   viteEnvironmentApi?: boolean;
   middleware?: boolean;
+  routeDiscovery?: Config["routeDiscovery"];
 }) => {
   let config: Config = {
     ssr,
     basename,
     prerender,
     appDirectory,
+    routeDiscovery,
     future: {
       unstable_splitRouteModules: splitRouteModules,
       unstable_viteEnvironmentApi: viteEnvironmentApi,
@@ -183,22 +186,45 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-export type TemplateName =
-  | "cloudflare-dev-proxy-template"
+type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
   | "vite-6-template"
+  | "vite-7-beta-template"
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
+
+type FrameworkModeRscTemplateName = "rsc-parcel-framework";
+
+type FrameworkModeCloudflareTemplateName =
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
+
+export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+
+export type TemplateName =
+  | FrameworkModeViteMajorTemplateName
+  | FrameworkModeRscTemplateName
+  | FrameworkModeCloudflareTemplateName
+  | RscBundlerTemplateName;
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
   { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
+  { templateName: "vite-7-beta-template", templateDisplayName: "Vite 7 Beta" },
   {
     templateName: "vite-rolldown-template",
     templateDisplayName: "Vite Rolldown",
   },
 ] as const satisfies Array<{
-  templateName: TemplateName;
+  templateName: FrameworkModeViteMajorTemplateName;
+  templateDisplayName: string;
+}>;
+
+export const rscBundlerTemplates = [
+  { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
+  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
+] as const satisfies Array<{
+  templateName: RscBundlerTemplateName;
   templateDisplayName: string;
 }>;
 
@@ -208,18 +234,18 @@ export async function createProject(
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
-  await fse.ensureDir(projectDir);
+  await mkdir(projectDir, { recursive: true });
 
   // base template
   let templateDir = path.resolve(__dirname, templateName);
-  await fse.copy(templateDir, projectDir, { errorOnExist: true });
+  await cp(templateDir, projectDir, { errorOnExist: true, recursive: true });
 
   // user-defined files
   await Promise.all(
     Object.entries(files).map(async ([filename, contents]) => {
       let filepath = path.join(projectDir, filename);
-      await fse.ensureDir(path.dirname(filepath));
-      await fse.writeFile(filepath, stripIndent(contents));
+      await mkdir(path.dirname(filepath), { recursive: true });
+      await writeFile(filepath, stripIndent(contents));
     })
   );
 
@@ -228,7 +254,7 @@ export async function createProject(
 
 // Avoid "Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env
 // being set" in vite-ecosystem-ci which breaks empty stderr assertions. To fix
-// this we always ensure that only NO_COLOR is set after spreading process.env.
+// this, we always ensure that only NO_COLOR is set after spreading process.env.
 const colorEnv = {
   FORCE_COLOR: undefined,
   NO_COLOR: "1",
@@ -316,7 +342,7 @@ type ServerArgs = {
   basename?: string;
 };
 
-const createDev =
+export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
     let proc = node(nodeArgs, { cwd, env });
@@ -456,7 +482,9 @@ async function waitForServer(
 
   await waitOn({
     resources: [
-      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/"}`,
+      `http://${args.host ?? "localhost"}:${args.port}${
+        args.basename ?? "/favicon.ico"
+      }`,
     ],
     timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {
@@ -487,11 +515,11 @@ export function createEditor(projectDir: string) {
     transform: (contents: string) => string
   ) {
     let filepath = path.join(projectDir, file);
-    let contents = await fs.readFile(filepath, "utf8");
-    await fs.writeFile(filepath, transform(contents), "utf8");
+    let contents = await readFile(filepath, "utf8");
+    await writeFile(filepath, transform(contents), "utf8");
 
     return async function revert() {
-      await fs.writeFile(filepath, contents, "utf8");
+      await writeFile(filepath, contents, "utf8");
     };
   };
 }

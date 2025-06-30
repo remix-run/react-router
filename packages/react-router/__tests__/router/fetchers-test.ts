@@ -116,6 +116,50 @@ describe("fetchers", () => {
       expect(router._internalFetchControllers.size).toBe(0);
     });
 
+    it("unabstracted loader fetch with fog of war", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            // Note: No path is provided on the root route in this test to
+            // ensure nothing matches before routes are patched
+          },
+        ],
+        hydrationData: {
+          loaderData: { root: "ROOT DATA" },
+        },
+        async patchRoutesOnNavigation({ path, patch }) {
+          if (path === "/lazy") {
+            patch("root", [
+              {
+                id: "lazy",
+                path: "/lazy",
+                loader: () => dfd.promise,
+              },
+            ]);
+          }
+        },
+      });
+      let fetcherData = getFetcherData(router);
+
+      let key = "key";
+      router.fetch(key, "lazy", "/lazy");
+      expect(router.getFetcher(key)).toEqual({
+        state: "loading",
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+      });
+
+      await dfd.resolve("DATA");
+      expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
+      expect(fetcherData.get(key)).toBe("DATA");
+
+      expect(router._internalFetchControllers.size).toBe(0);
+    });
+
     it("loader fetch", async () => {
       let t = initializeTest({
         url: "/foo",
@@ -840,6 +884,43 @@ describe("fetchers", () => {
       await C.loaders.index.resolve("INDEX");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.location.key).toBe(key);
+    });
+
+    test("handles loader redirects after a fetcher submission", async () => {
+      let t = initializeTest();
+
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/foo" },
+        navigation: { state: "idle" },
+        loaderData: { root: "ROOT", foo: "FOO" },
+      });
+
+      let key = "key";
+      let B = await t.fetch("/bar", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await B.actions.bar.resolve("ACTION");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "loading",
+        data: "ACTION",
+      });
+      await B.loaders.root.resolve("ROOT*");
+
+      let C = await B.loaders.foo.redirect("/");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.index.resolve("INDEX*");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/" },
+        navigation: { state: "idle" },
+        loaderData: { root: "ROOT**", index: "INDEX*" },
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
     });
   });
 

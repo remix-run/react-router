@@ -101,6 +101,12 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
 
+export const RSCRouterContext = React.createContext<boolean>(false);
+
+export function useIsRSCRouterContext(): boolean {
+  return React.useContext(RSCRouterContext);
+}
+
 export type ViewTransitionContextObject =
   | {
       isTransitioning: false;
@@ -201,3 +207,7 @@ RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
 RouteErrorContext.displayName = "RouteError";
+
+// Provided by the build system
+declare const __DEV__: boolean;
+export const ENABLE_DEV_WARNINGS = __DEV__;

@@ -1065,10 +1065,8 @@ test.describe("SPA Mode", () => {
           // Ensure we SSR a proper useId value
           let res = await fixture.requestDocument("/");
           let html = await res.text();
-          expect(html).toMatch(/<pre data-use-id="true">(:[a-zA-Z]\d:)<\/pre>/);
-          let matches = /<pre data-use-id="true">(:[a-zA-Z]\d:)<\/pre>/.exec(
-            html
-          );
+          expect(html).toMatch(/<pre data-use-id="true">([^<>]+)<\/pre>/);
+          let matches = /<pre data-use-id="true">([^<>]+)<\/pre>/.exec(html);
           expect(matches?.length).toBe(2);
           let useIdValue = matches?.[1];
 
