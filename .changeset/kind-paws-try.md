@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-fix page twitching when scrolling with revalidation
+Skip scroll restoration on useRevalidator() calls because they're not new locations
