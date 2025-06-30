@@ -26,25 +26,24 @@ function isRouteModuleFile(filename: string): boolean {
  * For example, a file named `app/routes/gists/$username.tsx` creates a route
  * with a path of `gists/:username`.
  */
-export function foldersRoutes(): RouteConfigEntry[] {
-  const routesDirectory = "routes";
-  const appRoutesDirectory = "app/routes";
+export function nestedRoutes(
+  appRoutesDirectory: string,
+  routesDirectory: string
+): RouteConfigEntry[] {
   const files: { [routeId: string]: string } = {};
 
   // First, find all route modules in app/routes
   visitFiles(appRoutesDirectory, (file) => {
     if (isRouteModuleFile(file)) {
       const relativePath = path.join(routesDirectory, file);
-      const routeId = relativePath
-        .replace(
-          new RegExp(
-            `(${routeModuleExts
-              .map((ext) => ext.replace(".", "\\."))
-              .join("|")})$`
-          ),
-          ""
-        )
-        .replace("/_layout", ""); // Allows _layout.tsx to colocate layout route file in same folder
+      const routeId = relativePath.replace(
+        new RegExp(
+          `(${routeModuleExts
+            .map((ext) => ext.replace(".", "\\."))
+            .join("|")})$`
+        ),
+        ""
+      );
       files[routeId] = relativePath;
       return;
     }

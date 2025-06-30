@@ -7,8 +7,22 @@ import {
 
 import { routeManifestToRouteConfig } from "./manifest";
 import { flatRoutes as flatRoutesImpl } from "./flatRoutes";
-import { foldersRoutes as foldesRoutesImpl } from "./foldersRoutes";
+import { nestedRoutes as nestedRoutesImpl } from "./nestedRoutes";
 import { normalizeSlashes } from "./normalizeSlashes";
+
+interface FileSystemRoutesOptions {
+  /**
+   * An array of [minimatch](https://www.npmjs.com/package/minimatch) globs that match files to ignore.
+   * Defaults to `[]`.
+   */
+  ignoredRouteFiles?: string[];
+
+  /**
+   * The directory containing file system routes, relative to the app directory.
+   * Defaults to `"./routes"`.
+   */
+  rootDirectory?: string;
+}
 
 /**
  * Creates route config from the file system using a convention that matches
@@ -17,19 +31,7 @@ import { normalizeSlashes } from "./normalizeSlashes";
  * within `routes.ts`.
  */
 export async function flatRoutes(
-  options: {
-    /**
-     * An array of [minimatch](https://www.npmjs.com/package/minimatch) globs that match files to ignore.
-     * Defaults to `[]`.
-     */
-    ignoredRouteFiles?: string[];
-
-    /**
-     * The directory containing file system routes, relative to the app directory.
-     * Defaults to `"./routes"`.
-     */
-    rootDirectory?: string;
-  } = {}
+  options: FileSystemRoutesOptions = {}
 ): Promise<RouteConfigEntry[]> {
   let { ignoredRouteFiles = [], rootDirectory: userRootDirectory = "routes" } =
     options;
@@ -51,6 +53,12 @@ export async function flatRoutes(
  * naming](https://remix.run/docs/en/v1/file-conventions/routes-files), for use
  * within `routes.ts`.
  */
-export async function foldersRoutes(): Promise<RouteConfigEntry[]> {
-  return foldesRoutesImpl();
+export async function nestedRoutes(
+  options: FileSystemRoutesOptions = {}
+): Promise<RouteConfigEntry[]> {
+  let { ignoredRouteFiles = [], rootDirectory: userRootDirectory = "routes" } =
+    options;
+  let appDirectory = getAppDirectory();
+  let rootDirectory = path.resolve(appDirectory, userRootDirectory);
+  return nestedRoutesImpl(appDirectory, rootDirectory, i);
 }
