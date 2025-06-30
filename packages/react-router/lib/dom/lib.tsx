@@ -2076,7 +2076,7 @@ export function useScrollRestoration({
     // Restore scrolling when state.restoreScrollPosition changes
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      // Explicit false means don't do anything (used for submissions)
+      // Explicit false means don't do anything (used for submissions or revalidations)
       if (restoreScrollPosition === false) {
         return;
       }
