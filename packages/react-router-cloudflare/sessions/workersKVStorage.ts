@@ -16,6 +16,11 @@ interface WorkersKVSessionStorageOptions {
    * The KVNamespace used to store the sessions.
    */
   kv: KVNamespace;
+
+  /**
+	 * Optional prefix for the session keys in the KV store.
+	 */
+  prefix?: string;
 }
 
 /**
@@ -30,6 +35,7 @@ export function createWorkersKVSessionStorage<
 >({
   cookie,
   kv,
+  prefix,
 }: WorkersKVSessionStorageOptions): SessionStorage<Data, FlashData> {
   return createSessionStorage({
     cookie,
@@ -44,11 +50,11 @@ export function createWorkersKVSessionStorage<
           .map((x) => x.toString(16).padStart(2, "0"))
           .join("");
 
-        if (await kv.get(id, "json")) {
+        if (await kv.get(`${prefix}${id}`, "json")) {
           continue;
         }
 
-        await kv.put(id, JSON.stringify(data), {
+        await kv.put(`${prefix}${id}`, JSON.stringify(data), {
           expiration: expires
             ? Math.round(expires.getTime() / 1000)
             : undefined,
@@ -58,7 +64,7 @@ export function createWorkersKVSessionStorage<
       }
     },
     async readData(id) {
-      let session = await kv.get(id);
+      let session = await kv.get(`${prefix}${id}`);
 
       if (!session) {
         return null;
@@ -67,12 +73,12 @@ export function createWorkersKVSessionStorage<
       return JSON.parse(session);
     },
     async updateData(id, data, expires) {
-      await kv.put(id, JSON.stringify(data), {
+      await kv.put(`${prefix}${id}`, JSON.stringify(data), {
         expiration: expires ? Math.round(expires.getTime() / 1000) : undefined,
       });
     },
     async deleteData(id) {
-      await kv.delete(id);
+      await kv.delete(`${prefix}${id}`);
     },
   });
 }
