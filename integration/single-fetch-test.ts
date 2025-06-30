@@ -1896,6 +1896,79 @@ test.describe("single-fetch", () => {
     );
   });
 
+  test("Strips Content-Length header from loader/action responses", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data-with-response.tsx": js`
+          import { useActionData, useLoaderData, data } from "react-router";
+
+          export function headers ({ actionHeaders, loaderHeaders, errorHeaders }) {
+            if ([...actionHeaders].length > 0) {
+              return actionHeaders;
+            } else {
+              return loaderHeaders;
+            }
+          }
+
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return data({
+              key: formData.get('key'),
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export function loader({ request }) {
+            return data({
+              message: "DATA",
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export default function DataWithResponse() {
+            let data = useLoaderData();
+            let actionData = useActionData();
+            return (
+              <>
+                <h1 id="heading">Data</h1>
+                <p id="message">{data.message}</p>
+                <p id="date">{data.date.toISOString()}</p>
+                {actionData ? <p id="action-data">{actionData.key}</p> : null}
+              </>
+            )
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestSingleFetchData("/data-with-response.data");
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toStrictEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/data-with-response": {
+        data: {
+          message: "DATA",
+        },
+      },
+    });
+
+    let postBody = new URLSearchParams();
+    postBody.set("key", "value");
+    res = await fixture.requestSingleFetchData("/data-with-response.data", {
+      method: "post",
+      body: postBody,
+    });
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toEqual({
+      data: {
+        key: "value",
+      },
+    });
+  });
+
   test("Action requests do not use _routes and do not call loaders on the server", async ({
     page,
   }) => {
