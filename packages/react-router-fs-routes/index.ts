@@ -60,5 +60,5 @@ export async function nestedRoutes(
     options;
   let appDirectory = getAppDirectory();
   let rootDirectory = path.resolve(appDirectory, userRootDirectory);
-  return nestedRoutesImpl(appDirectory, rootDirectory);
+  return nestedRoutesImpl(appDirectory, ignoredRouteFiles, rootDirectory);
 }

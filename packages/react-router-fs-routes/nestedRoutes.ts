@@ -1,4 +1,5 @@
 import type { RouteConfigEntry } from "@react-router/dev/routes";
+import { minimatch } from "minimatch";
 
 import fs from "node:fs";
 import path from "node:path";
@@ -28,12 +29,20 @@ function isRouteModuleFile(filename: string): boolean {
  */
 export function nestedRoutes(
   appRoutesDirectory: string,
+  ignoredFilePatterns: string[] = [],
   routesDirectory: string
 ): RouteConfigEntry[] {
   const files: { [routeId: string]: string } = {};
 
   // First, find all route modules in app/routes
   visitFiles(appRoutesDirectory, (file) => {
+    if (
+      ignoredFilePatterns.length > 0 &&
+      ignoredFilePatterns.some((pattern) => minimatch(file, pattern))
+    ) {
+      return;
+    }
+
     if (isRouteModuleFile(file)) {
       const relativePath = path.join(routesDirectory, file);
       const routeId = relativePath.replace(
