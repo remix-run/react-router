@@ -64,27 +64,22 @@ test.beforeAll(async () => {
     // `createFixture` will make an app and run your tests against it.
     ////////////////////////////////////////////////////////////////////////////
     files: {
-      "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "react-router";
+      "app/routes/use-params.$id.tsx": js`
+        import { useParams } from "react-router";
 
-        export function loader() {
-          return "pizza";
-        }
-
-        export default function Index() {
-          let data = useLoaderData();
-          return (
-            <div>
-              {data}
-              <Link to="/burgers">Other Route</Link>
-            </div>
-          )
+        export default function ItemPage() {
+          let params = useParams();
+          return <div data-testid="item-id">Item ID: {params.id}</div>;
         }
       `,
 
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div>cheeseburger</div>;
+      "app/routes/match-path.$id.tsx": js`
+        import { matchPath, useLocation } from "react-router";
+
+        export default function ItemPage() {
+          const location = useLocation()
+          const match = matchPath({ path: '/match-path/:id' }, location.pathname)
+          return <div data-testid="item-id">Item ID: {match.params.id}</div>;
         }
       `,
     },
@@ -103,22 +98,24 @@ test.afterAll(() => {
 // add a good description for what you expect React Router to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("[description of what you expect it to do]", async ({ page }) => {
+test("useParams should not decode param containing double-encoded forward slash", async ({
+  page,
+}) => {
   let app = new PlaywrightFixture(appFixture, page);
-  // You can test any request your app might get using `fixture`.
-  let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("pizza");
+  const encodedId = encodeURIComponent(encodeURIComponent("beforeslash/afterslash@"));
+  await app.goto(`/use-params/${encodedId}`);
+  let el = page.locator("[data-testid='item-id']");
+  await expect(el).toHaveText(`Item ID: ${encodedId}`);
+});
 
-  // If you need to test interactivity use the `app`
-  await app.goto("/");
-  await app.clickLink("/burgers");
-  await page.waitForSelector("text=cheeseburger");
-
-  // If you're not sure what's going on, you can "poke" the app, it'll
-  // automatically open up in your browser for 20 seconds, so be quick!
-  // await app.poke(20);
-
-  // Go check out the other tests to see what else you can do.
+test("matchPath should not decode param containing double-encoded forward slash", async ({
+  page,
+}) => {
+  let app = new PlaywrightFixture(appFixture, page);
+  const encodedId = encodeURIComponent(encodeURIComponent("beforeslash/afterslash@"));
+  await app.goto(`/match-path/${encodedId}`);
+  let el = page.locator("[data-testid='item-id']");
+  await expect(el).toHaveText(`Item ID: ${encodedId}`);
 });
 
 ////////////////////////////////////////////////////////////////////////////////
