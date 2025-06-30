@@ -3462,8 +3462,16 @@ export async function getEnvironmentOptionsResolvers(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
   );
   let vite = getVite();
+  let defaultServerConditions = vite.defaultServerConditions ?? [];
+  if (process.env.VITEST) {
+    // Vitest will fail to import packages that distribute invalid ESM if the condition "module" is added: https://github.com/remix-run/react-router/issues/13869
+    defaultServerConditions = defaultServerConditions.filter(
+      (condition) => condition !== "module"
+    );
+  }
+
   let viteServerConditions: string[] = [
-    ...(vite.defaultServerConditions ?? []),
+    ...defaultServerConditions,
     ...(moduleSyncEnabled ? ["module-sync"] : []),
   ];
 
