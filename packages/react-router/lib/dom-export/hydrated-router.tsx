@@ -243,6 +243,10 @@ export function HydratedRouter(props: HydratedRouterProps) {
     }
   }
 
+  React.useEffect(() => {
+    window.__reactRouterClearCriticalCss?.();
+  }, []);
+
   let [location, setLocation] = React.useState(router.state.location);
 
   React.useLayoutEffect(() => {
