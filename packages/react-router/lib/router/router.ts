@@ -310,7 +310,7 @@ export interface RouterState {
   /**
    * Current scroll position we should start at for a new view
    *  - number -> scroll position to restore to
-   *  - false -> do not restore scroll at all (used during submissions)
+   *  - false -> do not restore scroll at all (used during submissions/revalidations)
    *  - null -> don't have a saved position, scroll to hash or top of page
    */
   restoreScrollPosition: number | false | null;
@@ -1269,9 +1269,9 @@ export function createRouter(init: RouterInit): Router {
       blockers.forEach((_, k) => blockers.set(k, IDLE_BLOCKER));
     }
 
-    // Don't restore on revalidation
-    let restoreScrollPosition =
-      state.revalidation === "idle" &&
+    // Don't restore on router.revalidate()
+    let restoreScrollPosition = isUninterruptedRevalidation ? 
+      false : 
       getSavedScrollPosition(location, newState.matches || state.matches);
 
     // Always respect the user flag.  Otherwise don't reset on mutation
