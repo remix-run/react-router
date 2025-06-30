@@ -15,6 +15,8 @@ export default function handleRequest(
   responseHeaders: Headers,
   routerContext: EntryContext,
   loadContext: AppLoadContext
+  // If you have middleware enabled:
+  // loadContext: unstable_RouterContextProvider
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
@@ -61,7 +63,7 @@ export default function handleRequest(
       }
     );
 
-    // Abort the rendering stream after the `streamTimeout` so it has tine to
+    // Abort the rendering stream after the `streamTimeout` so it has time to
     // flush down the rejected boundaries
     setTimeout(abort, streamTimeout + 1000);
   });

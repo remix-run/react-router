@@ -19,3 +19,4 @@ jobs:
         with:
           DIRECTORY_TO_CHECK: "./packages"
           PACKAGE_NAME: "react-router"
+          ISSUE_LABELS_TO_REMOVE: "awaiting release"

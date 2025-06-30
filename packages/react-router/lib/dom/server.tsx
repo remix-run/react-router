@@ -46,7 +46,7 @@ export interface StaticRouterProps {
  * A `<Router>` that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function StaticRouter({
   basename,
@@ -90,7 +90,7 @@ export interface StaticRouterProviderProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function StaticRouterProvider({
   context,
@@ -268,7 +268,7 @@ export function createStaticHandler(
 }
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export function createStaticRouter(
   routes: RouteObject[],
@@ -305,6 +305,7 @@ export function createStaticRouter(
     },
     get future() {
       return {
+        unstable_middleware: false,
         ...opts?.future,
       };
     },
@@ -372,6 +373,9 @@ export function createStaticRouter(
     _internalFetchControllers: new Map(),
     _internalSetRoutes() {
       throw msg("_internalSetRoutes");
+    },
+    _internalSetStateDoNotUseOrYouWillBreakYourApp() {
+      throw msg("_internalSetStateDoNotUseOrYouWillBreakYourApp");
     },
   };
 }

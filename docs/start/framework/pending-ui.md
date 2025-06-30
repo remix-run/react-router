@@ -5,6 +5,10 @@ order: 7
 
 # Pending UI
 
+[MODES: framework]
+
+## Introduction
+
 When the user navigates to a new route, or submits data to an action, the UI should immediately respond to the user's actions with a pending or optimistic state. Application code is responsible for this.
 
 ## Global Pending Navigation
@@ -59,7 +63,7 @@ function Navbar() {
 
 ## Pending Form Submission
 
-When a form is submitted, the UI should immediately respond to the user's actions with a pending state. This is easiest to do with a [fetcher][use_fetcher] form because it has it's own independent state (whereas normal forms cause a global navigation).
+When a form is submitted, the UI should immediately respond to the user's actions with a pending state. This is easiest to do with a [fetcher][use_fetcher] form because it has its own independent state (whereas normal forms cause a global navigation).
 
 ```tsx filename=app/project.tsx lines=[10-12]
 import { useFetcher } from "react-router";
@@ -111,7 +115,8 @@ function Task({ task }) {
 
   let isComplete = task.status === "complete";
   if (fetcher.formData) {
-    isComplete = fetcher.formData.get("status");
+    isComplete =
+      fetcher.formData.get("status") === "complete";
   }
 
   return (

@@ -23,6 +23,18 @@ import { flatRoutes } from "@react-router/fs-routes";
 export default flatRoutes() satisfies RouteConfig;
 ```
 
+Any modules in the `app/routes` directory will become routes in your application by default.
+The `ignoredRouteFiles` option allows you to specify files that should not be included as routes:
+
+```tsx filename=app/routes.ts
+import { type RouteConfig } from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default flatRoutes({
+  ignoredRouteFiles: ["home.tsx"],
+}) satisfies RouteConfig;
+```
+
 This will look for routes in the `app/routes` directory by default, but this can be configured via the `rootDirectory` option which is relative to your app directory:
 
 ```tsx filename=app/routes.ts
@@ -38,7 +50,7 @@ The rest of this guide will assume you're using the default `app/routes` directo
 
 ## Basic Routes
 
-Any modules in the `app/routes` directory will become routes in your application. The filename maps to the route's URL pathname, except for `_index.tsx` which is the [index route][index_route] for the [root route][root_route]. You can use `.js`, `.jsx`, `.ts` or `.tsx` file extensions.
+The filename maps to the route's URL pathname, except for `_index.tsx` which is the [index route][index_route] for the [root route][root_route]. You can use `.js`, `.jsx`, `.ts` or `.tsx` file extensions.
 
 ```text lines=[3-4]
 app/
@@ -105,7 +117,7 @@ Usually your URLs aren't static but data-driven. Dynamic segments allow you to m
 The value will be parsed from the URL and passed to various APIs. We call these values "URL Parameters". The most useful places to access the URL params are in [loaders] and [actions].
 
 ```tsx
-export async function serverLoader({ params }) {
+export async function loader({ params }) {
   return fakeDb.getAllConcertsForCity(params.city);
 }
 ```
@@ -115,7 +127,7 @@ You'll note the property name on the `params` object maps directly to the name o
 Routes can have multiple dynamic segments, like `concerts.$city.$date`, both are accessed on the params object by name:
 
 ```tsx
-export async function serverLoader({ params }) {
+export async function loader({ params }) {
   return fake.db.getConcerts({
     date: params.date,
     city: params.city,
@@ -273,9 +285,27 @@ While [dynamic segments][dynamic_segments] match a single path segment (the stuf
 Similar to dynamic route parameters, you can access the value of the matched path on the splat route's `params` with the `"*"` key.
 
 ```tsx filename=app/routes/files.$.tsx
-export async function serverLoader({ params }) {
+export async function loader({ params }) {
   const filePath = params["*"];
   return fake.getFileInfo(filePath);
+}
+```
+
+## Catch-all Route
+
+To create a route that will match any requests that don't match other defined routes (such as a 404 page), create a file named `$.tsx` within your routes directory:
+
+| URL                            | Matched Route           |
+| ------------------------------ | ----------------------- |
+| `/`                            | `app/routes/_index.tsx` |
+| `/about`                       | `app/routes/about.tsx`  |
+| `/any-invalid-path-will-match` | `app/routes/$.tsx`      |
+
+By default the matched route will return a 200 response, so be sure to modify your catchall route to return a 404 instead:
+
+```tsx filename=app/routes/$.tsx
+export async function loader() {
+  return data({}, 404);
 }
 ```
 

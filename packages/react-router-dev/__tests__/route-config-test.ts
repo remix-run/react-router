@@ -1,5 +1,5 @@
 import path from "node:path";
-import { normalizePath } from "vite";
+import { normalize as normalizePath } from "pathe";
 
 import {
   validateRouteConfig,
@@ -73,6 +73,21 @@ describe("route config", () => {
 
         Path: routes.0.children.0.file
         Invalid type: Expected string but received undefined"
+      `);
+    });
+
+    it("is invalid it uses the 'root' id", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        routeConfig: [route("/", "root.tsx", { id: "root" })],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(`
+        "Route config in "routes.ts" is invalid.
+
+        Path: routes.0.id
+        A route cannot use the reserved id 'root'."
       `);
     });
 

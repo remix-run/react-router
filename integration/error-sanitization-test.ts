@@ -212,7 +212,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Defer Route");
       expect(html).toMatch("RESOLVED");
       expect(html).not.toMatch("MESSAGE:");
-      // Defer errors are not not part of the JSON blob but rather rejected
+      // Defer errors are not part of the JSON blob but rather rejected
       // against a pending promise and therefore are inlined JS.
       expect(html).not.toMatch("x.stack=e.stack;");
     });
@@ -232,9 +232,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -244,9 +241,6 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Unexpected Server Error"),
         },
@@ -392,9 +386,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -404,9 +395,6 @@ test.describe("Error Sanitization", () => {
     test("does not sanitize loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           error: new Error("Loader Error"),
         },
@@ -620,7 +608,7 @@ test.describe("Error Sanitization", () => {
       expect(html).toMatch("Defer Route");
       expect(html).toMatch("RESOLVED");
       expect(html).not.toMatch("MESSAGE:");
-      // Defer errors are not not part of the JSON blob but rather rejected
+      // Defer errors are not part of the JSON blob but rather rejected
       // against a pending promise and therefore are inlined JS.
       expect(html).not.toMatch("x.stack=e.stack;");
     });
@@ -640,9 +628,6 @@ test.describe("Error Sanitization", () => {
     test("returns data without errors", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data");
       expect(data).toEqual({
-        root: {
-          data: null,
-        },
         "routes/_index": {
           data: "LOADER",
         },
@@ -652,8 +637,9 @@ test.describe("Error Sanitization", () => {
     test("sanitizes loader errors in data requests", async () => {
       let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
-        root: { data: null },
-        "routes/_index": { error: new Error("Unexpected Server Error") },
+        "routes/_index": {
+          error: new Error("Unexpected Server Error"),
+        },
       });
       expect(errorLogs[0][0]).toEqual("App Specific Error Logging:");
       expect(errorLogs[1][0]).toEqual(

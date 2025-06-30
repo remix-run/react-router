@@ -57,7 +57,12 @@ export function ServerRouter({
     if (
       route &&
       manifestRoute &&
-      shouldHydrateRouteLoader(manifestRoute, route, context.isSpaMode) &&
+      shouldHydrateRouteLoader(
+        routeId,
+        route.clientLoader,
+        manifestRoute.hasLoader,
+        context.isSpaMode
+      ) &&
       (route.HydrateFallback || !manifestRoute.hasLoader)
     ) {
       delete context.staticHandlerContext.loaderData[routeId];
@@ -75,7 +80,9 @@ export function ServerRouter({
           criticalCss,
           serverHandoffString,
           future: context.future,
+          ssr: context.ssr,
           isSpaMode: context.isSpaMode,
+          routeDiscovery: context.routeDiscovery,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,
         }}

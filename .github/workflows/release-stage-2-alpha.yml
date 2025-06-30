@@ -1,0 +1,86 @@
+name: 🧪 Stage 2 (Alpha) Release
+
+on:
+  pull_request:
+    types: [labeled]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  CI: true
+
+jobs:
+  alpha-release:
+    name: 🧪 Alpha Release
+    if: github.repository == 'remix-run/react-router' && github.event.label.name == 'alpha-release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📄 Log Info
+        run: |
+          echo "Label: ${{ github.event.label.name }}"
+          echo "Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "SHA: ${{ github.event.pull_request.head.sha }}"
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Log Git Info
+        run: |
+          git log -n 1
+          git status
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: ⤴️ Update version
+        id: version
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          NEXT_VERSION=0.0.0-experimental-${SHORT_SHA}
+          git checkout -b experimental/${NEXT_VERSION}
+          pnpm run version ${NEXT_VERSION}
+          echo "version=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: 🏗 Build
+        run: pnpm build
+
+      - name: 🔐 Setup npm auth
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: 🚀 Publish
+        run: pnpm run publish
+
+      - name: 💬 Comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LATEST_RELEASE_SHA=$(gh release list --limit 1 --json tagName --jq ".[0].tagName")
+          BASE_SHA=$(echo ${{ github.event.pull_request.base.sha }} | cut -c1-7)
+          COMMAND="git log --pretty=oneline ${LATEST_RELEASE_SHA}..${BASE_SHA}"
+          echo -e \
+            "[Alpha release](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#stage-2--alpha) \
+            created: \`${{ steps.version.outputs.version }}\`\n\n \
+            ⚠️ **Note:** This release was created from the \`HEAD\` of this branch so it \
+            may contain commits that have landed in \`dev\` but have not been released yet \
+            depending on when this branch was created. You can run the following command \
+            to see the commits that may not have been released yet:\n\n \
+            \`\`\`bash\n \
+            ${COMMAND}\n \
+            \`\`\`" \
+            | gh pr comment ${{ github.event.pull_request.number }} --body-file -
+          gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
