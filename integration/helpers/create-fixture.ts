@@ -9,7 +9,6 @@ import getPort from "get-port";
 import stripIndent from "strip-indent";
 import { sync as spawnSync, spawn } from "cross-spawn";
 import type { JsonObject } from "type-fest";
-import { createRequestListener } from "@mjackson/node-fetch-server";
 
 import {
   type ServerBuild,
@@ -25,6 +24,65 @@ import { type TemplateName, viteConfig, reactRouterConfig } from "./vite.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp", "integration");
+
+export async function spawnTestServer({
+  command,
+  regex,
+  validate,
+  env = {},
+  cwd,
+  timeout = 20000,
+}: {
+  command: string[];
+  regex: RegExp;
+  validate?: (matches: RegExpMatchArray) => void | Promise<void>;
+  env?: Record<string, string>;
+  cwd?: string;
+  timeout?: number;
+}): Promise<{ stop: VoidFunction }> {
+  return new Promise((accept, reject) => {
+    let serverProcess = spawn(command[0], command.slice(1), {
+      env: { ...process.env, ...env },
+      cwd,
+      stdio: "pipe",
+    });
+
+    let started = false;
+    let stdout = "";
+    let rejectTimeout = setTimeout(() => {
+      reject(new Error(`Timed out waiting for server to start (${timeout}ms)`));
+    }, timeout);
+
+    serverProcess.stderr.pipe(process.stderr);
+    serverProcess.stdout.on("data", (chunk: Buffer) => {
+      if (started) return;
+      let newChunk = chunk.toString();
+      stdout += newChunk;
+      let match = stdout.match(regex);
+      if (match) {
+        clearTimeout(rejectTimeout);
+        started = true;
+
+        Promise.resolve(validate?.(match))
+          .then(() => {
+            accept({
+              stop: () => {
+                serverProcess.kill();
+              },
+            });
+          })
+          .catch((error: unknown) => {
+            reject(error);
+          });
+      }
+    });
+
+    serverProcess.on("error", (error: unknown) => {
+      clearTimeout(rejectTimeout);
+      reject(error);
+    });
+  });
+}
 
 export interface FixtureInit {
   buildStdio?: Writable;
@@ -230,66 +288,29 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     stop: VoidFunction;
   }> => {
     if (fixture.useReactRouterServe) {
-      return new Promise(async (accept, reject) => {
-        let port = await getPort();
-
-        let nodebin = process.argv[0];
-        let serveProcess = spawn(
-          nodebin,
-          [
-            "node_modules/@react-router/serve/dist/cli.js",
-            "build/server/index.js",
-          ],
-          {
-            env: {
-              ...process.env,
-              NODE_ENV: mode || "production",
-              PORT: port.toFixed(0),
-            },
-            cwd: fixture.projectDir,
-            stdio: "pipe",
+      let port = await getPort();
+      let { stop } = await spawnTestServer({
+        cwd: fixture.projectDir,
+        command: [
+          process.argv[0],
+          "node_modules/@react-router/serve/dist/cli.js",
+          "build/server/index.js",
+        ],
+        env: {
+          NODE_ENV: mode || "production",
+          PORT: port.toFixed(0),
+        },
+        regex: /\[react-router-serve\] http:\/\/localhost:(\d+)\s/,
+        validate: (matches) => {
+          let parsedPort = parseInt(matches[1], 10);
+          if (port !== parsedPort) {
+            throw new Error(
+              `Expected react-router-serve to start on port ${port}, but it started on port ${parsedPort}`
+            );
           }
-        );
-        // Wait for `started at http://localhost:${port}` to be printed
-        // and extract the port from it.
-        let started = false;
-        let stdout = "";
-        let rejectTimeout = setTimeout(() => {
-          reject(
-            new Error("Timed out waiting for react-router-serve to start")
-          );
-        }, 20000);
-        serveProcess.stderr.pipe(process.stderr);
-        serveProcess.stdout.on("data", (chunk) => {
-          if (started) return;
-          let newChunk = chunk.toString();
-          stdout += newChunk;
-          let match: RegExpMatchArray | null = stdout.match(
-            /\[react-router-serve\] http:\/\/localhost:(\d+)\s/
-          );
-          if (match) {
-            clearTimeout(rejectTimeout);
-            started = true;
-            let parsedPort = parseInt(match[1], 10);
-
-            if (port !== parsedPort) {
-              reject(
-                new Error(
-                  `Expected react-router-serve to start on port ${port}, but it started on port ${parsedPort}`
-                )
-              );
-              return;
-            }
-
-            accept({
-              stop: () => {
-                serveProcess.kill();
-              },
-              port,
-            });
-          }
-        });
+        },
       });
+      return { stop, port };
     }
 
     if (fixture.isSpaMode) {
@@ -334,21 +355,25 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     }
 
     if (fixture.templateName.includes("parcel")) {
-      return new Promise(async (accept) => {
-        let port = await getPort();
-        let app = express();
-        app.use(express.static(path.join(fixture.projectDir, "public")));
-        app.use(
-          "/client",
-          express.static(path.join(fixture.projectDir, "build/client"))
-        );
-
-        app.all("*", createRequestListener(fixture.handler));
-
-        let server = app.listen(port);
-
-        accept({ stop: server.close.bind(server), port });
+      let port = await getPort();
+      let { stop } = await spawnTestServer({
+        cwd: fixture.projectDir,
+        command: [process.argv[0], "start.js"],
+        env: {
+          NODE_ENV: mode || "production",
+          PORT: port.toFixed(0),
+        },
+        regex: /Server listening on port (\d+)\s/,
+        validate: (matches) => {
+          let parsedPort = parseInt(matches[1], 10);
+          if (port !== parsedPort) {
+            throw new Error(
+              `Expected Parcel build server to start on port ${port}, but it started on port ${parsedPort}`
+            );
+          }
+        },
       });
+      return { stop, port };
     }
 
     const build = fixture.build;

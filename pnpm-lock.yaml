@@ -168,9 +168,6 @@ importers:
       '@mdx-js/rollup':
         specifier: ^3.1.0
         version: 3.1.0(rollup@4.43.0)
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@playwright/test':
         specifier: ^1.49.1
         version: 1.49.1

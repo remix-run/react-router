@@ -852,7 +852,7 @@ async function getRSCRouteMatch(
             ),
           })
         )
-      : // TODO: Render outet instead?
+      : // TODO: Render outlet instead?
         undefined;
   let error: unknown = undefined;
 
@@ -889,11 +889,6 @@ async function getRSCRouteMatch(
           params,
         })
       )
-    : match.route.id === "root"
-    ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-      // currently uses a hook internally so it fails during RSC.  Restructure
-      // so it can be used safely in an RSC render pass.
-      React.createElement("p", null, "Loading!")
     : undefined;
 
   return {

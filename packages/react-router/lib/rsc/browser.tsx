@@ -664,7 +664,7 @@ function createRouteFromServerManifest(
             ...args,
             serverAction: async () => {
               preventInvalidServerHandlerCall(
-                "loader",
+                "action",
                 match.id,
                 match.hasLoader
               );
