@@ -150,7 +150,6 @@ test.describe("Client Data", () => {
     let appFixture: AppFixture;
 
     test.afterEach(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10000));
       appFixture?.close();
     });
 
