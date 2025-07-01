@@ -1311,9 +1311,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Don't restore on router.revalidate()
-    let restoreScrollPosition = isUninterruptedRevalidation ? 
-      false : 
-      getSavedScrollPosition(location, newState.matches || state.matches);
+    let restoreScrollPosition = isUninterruptedRevalidation
+      ? false
+      : getSavedScrollPosition(location, newState.matches || state.matches);
 
     // Always respect the user flag.  Otherwise don't reset on mutation
     // submission navigations unless they redirect

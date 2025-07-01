@@ -2448,7 +2448,7 @@ test.describe("Prerendering", () => {
         "ページ データ"
       );
       expect(requests).toEqual([`/${encodedMultibytePath}.data`]);
-    })
+    });
 
     test("Returns a 404 if navigating to a non-prerendered param value", async ({
       page,
