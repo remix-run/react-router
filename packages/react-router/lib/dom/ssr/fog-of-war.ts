@@ -191,7 +191,7 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
+  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery, loadRouteModule]);
 }
 
 export function getManifestPath(

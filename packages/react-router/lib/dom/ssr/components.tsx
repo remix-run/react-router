@@ -311,15 +311,15 @@ function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
       routeModules,
       loadRouteModule
     ).then((links) => {
-        if (!interrupted) {
-          setKeyedPrefetchLinks(links);
-        }
+      if (!interrupted) {
+        setKeyedPrefetchLinks(links);
+      }
     });
 
     return () => {
       interrupted = true;
     };
-  }, [matches, manifest, routeModules]);
+  }, [matches, manifest, routeModules, loadRouteModule]);
 
   return keyedPrefetchLinks;
 }
