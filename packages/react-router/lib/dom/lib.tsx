@@ -23,6 +23,7 @@ import type {
   HydrationState,
   RelativeRoutingType,
   Router as DataRouter,
+  RouterInit,
 } from "../router/router";
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
@@ -65,7 +66,11 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import { Router, mapRouteProperties } from "../components";
+import {
+  Router,
+  mapRouteProperties,
+  hydrationRouteProperties,
+} from "../components";
 import type {
   RouteObject,
   NavigateOptions,
@@ -109,12 +114,11 @@ const isBrowser =
 // Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
 // to detect and properly classify live websites as being built with React Router:
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
-declare global {
-  const REACT_ROUTER_VERSION: string;
-}
 try {
   if (isBrowser) {
-    window.__reactRouterVersion = REACT_ROUTER_VERSION;
+    window.__reactRouterVersion =
+      // @ts-expect-error
+      REACT_ROUTER_VERSION;
   }
 } catch (e) {
   // no-op
@@ -125,29 +129,67 @@ try {
 //#region Routers
 ////////////////////////////////////////////////////////////////////////////////
 
-interface DOMRouterOpts {
+/**
+ * @category Routers
+ */
+export interface DOMRouterOpts {
+  /**
+   * Basename path for the application.
+   */
   basename?: string;
+  /**
+   * Function to provide the initial context values for all client side navigations/fetches
+   */
+  unstable_getContext?: RouterInit["unstable_getContext"];
+  /**
+   * Future flags to enable for the router.
+   */
   future?: Partial<FutureConfig>;
+  /**
+   * Hydration data to initialize the router with if you have already performed
+   * data loading on the server.
+   */
   hydrationData?: HydrationState;
+  /**
+   * Override the default data strategy of loading in parallel.
+   * Only intended for advanced usage.
+   */
   dataStrategy?: DataStrategyFunction;
+  /**
+   * Lazily define portions of the route tree on navigations.
+   */
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+  /**
+   * Window object override - defaults to the global `window` instance.
+   */
   window?: Window;
 }
 
 /**
- * @category Routers
+ * Create a new data router that manages the application path via `history.pushState`
+ * and `history.replaceState`.
+ *
+ * @category Data Routers
  */
 export function createBrowserRouter(
+  /**
+   * Application routes
+   */
   routes: RouteObject[],
+  /**
+   * Router options
+   */
   opts?: DOMRouterOpts
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
@@ -155,7 +197,9 @@ export function createBrowserRouter(
 }
 
 /**
- * @category Routers
+ * Create a new data router that manages the application path via the URL hash
+ *
+ * @category Data Routers
  */
 export function createHashRouter(
   routes: RouteObject[],
@@ -163,11 +207,13 @@ export function createHashRouter(
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
@@ -251,7 +297,7 @@ export interface BrowserRouterProps {
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function BrowserRouter({
   basename,
@@ -301,7 +347,7 @@ export interface HashRouterProps {
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
@@ -350,7 +396,7 @@ export interface HistoryRouterProps {
  * version of the history library that React Router uses internally.
  *
  * @name unstable_HistoryRouter
- * @category Router Components
+ * @category Component Routers
  */
 export function HistoryRouter({
   basename,
@@ -1378,7 +1424,9 @@ export function useSearchParams(
   let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOptions) => {
       const newSearchParams = createSearchParams(
-        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+        typeof nextInit === "function"
+          ? nextInit(new URLSearchParams(searchParams))
+          : nextInit
       );
       hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOptions);
@@ -2030,7 +2078,7 @@ export function useScrollRestoration({
     // Restore scrolling when state.restoreScrollPosition changes
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      // Explicit false means don't do anything (used for submissions)
+      // Explicit false means don't do anything (used for submissions or revalidations)
       if (restoreScrollPosition === false) {
         return;
       }

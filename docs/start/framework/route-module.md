@@ -5,6 +5,10 @@ order: 3
 
 # Route Module
 
+[MODES: framework]
+
+## Introduction
+
 The files referenced in `routes.ts` are called Route Modules.
 
 ```tsx filename=app/routes.ts
@@ -25,7 +29,7 @@ This guide is a quick overview of every route module feature. The rest of the ge
 
 ## Component (`default`)
 
-Defines the component that will render when the route matches.
+The `default` export in a route module defines the component that will render when the route matches.
 
 ```tsx filename=app/routes/my-route.tsx
 export default function MyRouteComponent() {
@@ -35,6 +39,40 @@ export default function MyRouteComponent() {
       <p>
         I'm still using React Router after like 10 years.
       </p>
+    </div>
+  );
+}
+```
+
+### Props passed to the Component
+
+When the component is rendered, it is provided the props defined in `Route.ComponentProps` that React Router will automatically generate for you. These props include:
+
+1. `loaderData`: The data returned from the `loader` function in this route module
+2. `actionData`: The data returned from the `action` function in this route module
+3. `params`: An object containing the route parameters (if any).
+4. `matches`: An array of all the matches in the current route tree.
+
+You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferable because they will be automatically typed correctly for the route.
+
+### Using props
+
+```tsx filename=app/routes/my-route-with-default-params.tsx
+import type { Route } from "./+types/route-name";
+
+export default function MyRouteComponent({
+  loaderData,
+  actionData,
+  params,
+  matches,
+}: Route.ComponentProps) {
+  return (
+    <div>
+      <h1>Welcome to My Route with Props!</h1>
+      <p>Loader Data: {JSON.stringify(loaderData)}</p>
+      <p>Action Data: {JSON.stringify(actionData)}</p>
+      <p>Route Parameters: {JSON.stringify(params)}</p>
+      <p>Matched Routes: {JSON.stringify(matches)}</p>
     </div>
   );
 }
@@ -271,9 +309,33 @@ export default function Root() {
 
 ## `meta`
 
-Route meta defines meta tags to be rendered in the `<head>` of the document.
+Route meta defines meta tags to be rendered in the `<Meta />` component, usually placed in the `<head>`.
+
+<docs-warning>
+
+Since React 19, [using the built-in `<meta>` element](https://react.dev/reference/react-dom/components/meta) is recommended over the use of the route module's `meta` export.
+
+Here is an example of how to use it and the `<title>` element:
 
 ```tsx
+export default function MyRoute() {
+  return (
+    <div>
+      <title>Very cool app</title>
+      <meta property="og:title" content="Very cool app" />
+      <meta
+        name="description"
+        content="This app is the best"
+      />
+      {/* The rest of your route content... */}
+    </div>
+  );
+}
+```
+
+</docs-warning>
+
+```tsx filename=app/product.tsx
 export function meta() {
   return [
     { title: "Very cool app" },
@@ -289,9 +351,7 @@ export function meta() {
 }
 ```
 
-All routes' meta will be aggregated and rendered through the `<Meta />` component, usually rendered in your app root:
-
-```tsx
+```tsx filename=app/root.tsx
 import { Meta } from "react-router";
 
 export default function Root() {
@@ -307,13 +367,17 @@ export default function Root() {
 }
 ```
 
+The meta of the last matching route is used, allowing you to override parent routes' meta. It's important to note that the entire meta descriptor array is replaced, not merged. This gives you the flexibility to build your own meta composition logic across pages at different levels.
+
 **See also**
 
 - [`meta` params][meta-params]
 
 ## `shouldRevalidate`
 
-By default, all routes are revalidated after actions. This function allows a route to opt-out of revalidation for actions that don't affect its data.
+In framework mode, route loaders are automatically revalidated after all navigations and form submissions (this is different from [Data Mode](../data/route-object#shouldrevalidate)). This enables middleware and loaders to share a request context and optimize in different ways than then they would be in Data Mode.
+
+Defining this function allows you to opt out of revalidation for a route loader for navigations and form submissions.
 
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
@@ -324,6 +388,8 @@ export function shouldRevalidate(
   return true;
 }
 ```
+
+[`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v7/interfaces/react_router.ShouldRevalidateFunctionArgs.html)
 
 ---
 

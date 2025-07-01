@@ -5,6 +5,10 @@ order: 4
 
 # Rendering Strategies
 
+[MODES: framework]
+
+## Introduction
+
 There are three rendering strategies in React Router:
 
 - Client Side Rendering

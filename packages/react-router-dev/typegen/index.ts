@@ -1,18 +1,42 @@
-import fs from "node:fs";
+import fs from "node:fs/promises";
 
 import * as Path from "pathe";
-import pc from "picocolors";
+import { green, red } from "picocolors";
 import type vite from "vite";
 
-import { createConfigLoader } from "../config/config";
+import { type Context, createContext } from "./context";
+import {
+  type VirtualFile,
+  typesDirectory,
+  generateFuture,
+  generateRoutes,
+  generateServerBuild,
+} from "./generate";
 
-import { generate } from "./generate";
-import type { Context } from "./context";
-import { getTypesDir, getTypesPath } from "./paths";
+async function clearRouteModuleAnnotations(ctx: Context) {
+  await fs.rm(
+    Path.join(typesDirectory(ctx), Path.basename(ctx.config.appDirectory)),
+    { recursive: true, force: true }
+  );
+}
 
-export async function run(rootDirectory: string) {
-  const ctx = await createContext({ rootDirectory, watch: false });
-  await writeAll(ctx);
+async function write(...files: Array<VirtualFile>) {
+  return Promise.all(
+    files.map(async ({ filename, content }) => {
+      await fs.mkdir(Path.dirname(filename), { recursive: true });
+      await fs.writeFile(filename, content);
+    })
+  );
+}
+
+export async function run(rootDirectory: string, { mode }: { mode: string }) {
+  const ctx = await createContext({ rootDirectory, mode, watch: false });
+  await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
+  await write(
+    generateFuture(ctx),
+    generateServerBuild(ctx),
+    ...generateRoutes(ctx)
+  );
 }
 
 export type Watcher = {
@@ -21,64 +45,45 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { logger }: { logger?: vite.Logger } = {}
+  { mode, logger }: { mode: string; logger?: vite.Logger }
 ): Promise<Watcher> {
-  const ctx = await createContext({ rootDirectory, watch: true });
-  await writeAll(ctx);
-  logger?.info(pc.green("generated types"), { timestamp: true, clear: true });
+  const ctx = await createContext({ rootDirectory, mode, watch: true });
+  await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
+  await write(
+    generateFuture(ctx),
+    generateServerBuild(ctx),
+    ...generateRoutes(ctx)
+  );
+  logger?.info(green("generated types"), { timestamp: true, clear: true });
 
-  ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
-    if (!result.ok) {
-      logger?.error(pc.red(result.error), { timestamp: true, clear: true });
-      return;
-    }
+  ctx.configLoader.onChange(
+    async ({ result, configChanged, routeConfigChanged }) => {
+      if (!result.ok) {
+        logger?.error(red(result.error), { timestamp: true, clear: true });
+        return;
+      }
+      ctx.config = result.value;
 
-    ctx.config = result.value;
-    if (routeConfigChanged) {
-      await writeAll(ctx);
-      logger?.info(pc.green("regenerated types"), {
-        timestamp: true,
-        clear: true,
-      });
+      if (configChanged) {
+        await write(generateFuture(ctx));
+        logger?.info(green("regenerated types"), {
+          timestamp: true,
+          clear: true,
+        });
+      }
+
+      if (routeConfigChanged) {
+        await clearRouteModuleAnnotations(ctx);
+        await write(...generateRoutes(ctx));
+        logger?.info(green("regenerated types"), {
+          timestamp: true,
+          clear: true,
+        });
+      }
     }
-  });
+  );
 
   return {
     close: async () => await ctx.configLoader.close(),
   };
-}
-
-async function createContext({
-  rootDirectory,
-  watch,
-}: {
-  rootDirectory: string;
-  watch: boolean;
-}): Promise<Context> {
-  const configLoader = await createConfigLoader({ rootDirectory, watch });
-  const configResult = await configLoader.getConfig();
-
-  if (!configResult.ok) {
-    throw new Error(configResult.error);
-  }
-
-  const config = configResult.value;
-
-  return {
-    configLoader,
-    rootDirectory,
-    config,
-  };
-}
-
-async function writeAll(ctx: Context): Promise<void> {
-  const typegenDir = getTypesDir(ctx);
-
-  fs.rmSync(typegenDir, { recursive: true, force: true });
-  Object.values(ctx.config.routes).forEach((route) => {
-    const typesPath = getTypesPath(ctx, route);
-    const content = generate(ctx, route);
-    fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
-    fs.writeFileSync(typesPath, content);
-  });
 }

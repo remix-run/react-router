@@ -1,9 +1,14 @@
 ---
 title: Address Book
-order: 1
+order: 2
 ---
 
 # Address Book
+
+[MODES: framework]
+
+<br />
+<br />
 
 We'll be building a small, but feature-rich address book app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take 30-45m if you're following along, otherwise it's a quick read.
 
@@ -42,7 +47,7 @@ npm install
 npm run dev
 ```
 
-You should be able to open up [http://localhost:5173][http-localhost-5173] and see an unstyled screen that looks like this:
+You should now be able to open up [http://localhost:5173][http-localhost-5173] and see your app running, though there's not much going on just yet.
 
 ## The Root Route
 
@@ -344,7 +349,7 @@ Now the child route should be rendering through the outlet.
 
 ## Client Side Routing
 
-You may or may not have noticed, but when we click the links in the sidebar, the browser is doing a full document request for the next URL instead of client side routing, which completely remounts our app
+You may or may not have noticed, but when we click the links in the sidebar, the browser is doing a full document request for the next URL instead of client side routing, which completely remounts our app.
 
 Client side routing allows our app to update the URL without reloading the entire page. Instead, the app can immediately render new UI. Let's make it happen with [`<Link>`][link-component].
 
@@ -688,7 +693,7 @@ export default function SidebarLayout() {
 
 👉 **Move route definitions under the sidebar layout**
 
-We can define a `layout` route to automatically render the sidebar for all matched routes within in. This is basically what our `root` was, but now we can scope it to specific routes.
+We can define a `layout` route to automatically render the sidebar for all matched routes within it. This is basically what our `root` was, but now we can scope it to specific routes.
 
 ```ts filename=app/routes.ts lines=[4,9,12]
 import type { RouteConfig } from "@react-router/dev/routes";

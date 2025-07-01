@@ -278,7 +278,7 @@ This was an additional indication that maybe a TypeScript plugin was not the rig
 
 ## Summary
 
-By leaning into automated typegen within a TypeScript plugin, we radically simplify React Router's runtime APIs while providing strong type inference across the entire framework.
+By leaning into automated typegen, we radically simplify React Router's runtime APIs while providing strong type inference across the entire framework.
 We can continue to support programmatic routing _and_ file-based routing in `routes.ts` while providing typesafety with the same approach and same code path.
 We can design our runtime APIs without introducing bespoke ways to inform TypeScript of the route hierarchy.
 

@@ -27,7 +27,12 @@ import type {
   MetaMatches,
 } from "./routeModules";
 import { singleFetchUrl } from "./single-fetch";
-import { DataRouterContext, DataRouterStateContext } from "../../context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  useIsRSCRouterContext,
+} from "../../context";
+import { warnOnce } from "../../server-runtime/warnings";
 import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
@@ -241,8 +246,11 @@ export function Links() {
 
   return (
     <>
-      {criticalCss ? (
+      {typeof criticalCss === "string" ? (
         <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
+      ) : null}
+      {typeof criticalCss === "object" ? (
+        <link rel="stylesheet" href={criticalCss.href} />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
@@ -325,6 +333,7 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
+  let { basename } = useDataRouterContext();
   let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -387,7 +396,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page);
+    let url = singleFetchUrl(page, basename, "data");
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -403,6 +412,7 @@ function PrefetchPageLinksImpl({
 
     return [url.pathname + url.search];
   }, [
+    basename,
     loaderData,
     location,
     manifest,
@@ -641,11 +651,18 @@ export type ScriptsProps = Omit<
   @category Components
  */
 export function Scripts(props: ScriptsProps) {
-  let { manifest, serverHandoffString, isSpaMode, renderMeta } =
-    useFrameworkContext();
+  let {
+    manifest,
+    serverHandoffString,
+    isSpaMode,
+    renderMeta,
+    routeDiscovery,
+    ssr,
+  } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = isFogOfWarEnabled(isSpaMode);
+  let isRSCRouterContext = useIsRSCRouterContext();
+  let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
@@ -660,6 +677,10 @@ export function Scripts(props: ScriptsProps) {
   }, []);
 
   let initialScripts = React.useMemo(() => {
+    if (isRSCRouterContext) {
+      return null;
+    }
+
     let streamScript =
       "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
@@ -679,12 +700,68 @@ export function Scripts(props: ScriptsProps) {
             : ""
         }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
-  .map(
-    (match, index) =>
-      `import * as route${index} from ${JSON.stringify(
-        manifest.routes[match.route.id]!.module
-      )};`
-  )
+  .map((match, routeIndex) => {
+    let routeVarName = `route${routeIndex}`;
+    let manifestEntry = manifest.routes[match.route.id];
+    invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
+    let {
+      clientActionModule,
+      clientLoaderModule,
+      clientMiddlewareModule,
+      hydrateFallbackModule,
+      module,
+    } = manifestEntry;
+
+    let chunks: Array<{ module: string; varName: string }> = [
+      ...(clientActionModule
+        ? [
+            {
+              module: clientActionModule,
+              varName: `${routeVarName}_clientAction`,
+            },
+          ]
+        : []),
+      ...(clientLoaderModule
+        ? [
+            {
+              module: clientLoaderModule,
+              varName: `${routeVarName}_clientLoader`,
+            },
+          ]
+        : []),
+      ...(clientMiddlewareModule
+        ? [
+            {
+              module: clientMiddlewareModule,
+              varName: `${routeVarName}_clientMiddleware`,
+            },
+          ]
+        : []),
+      ...(hydrateFallbackModule
+        ? [
+            {
+              module: hydrateFallbackModule,
+              varName: `${routeVarName}_HydrateFallback`,
+            },
+          ]
+        : []),
+      { module, varName: `${routeVarName}_main` },
+    ];
+
+    if (chunks.length === 1) {
+      return `import * as ${routeVarName} from ${JSON.stringify(module)};`;
+    }
+
+    let chunkImportsSnippet = chunks
+      .map((chunk) => `import * as ${chunk.varName} from "${chunk.module}";`)
+      .join("\n");
+
+    let mergedChunksSnippet = `const ${routeVarName} = {${chunks
+      .map((chunk) => `...${chunk.varName}`)
+      .join(",")}};`;
+
+    return [chunkImportsSnippet, mergedChunksSnippet].join("\n");
+  })
   .join("\n")}
   ${
     enableFogOfWar
@@ -725,35 +802,62 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  let routePreloads = matches
-    .map((match) => {
-      let route = manifest.routes[match.route.id];
-      return route ? (route.imports || []).concat([route.module]) : [];
-    })
-    .flat(1);
+  let preloads =
+    isHydrated || isRSCRouterContext
+      ? []
+      : dedupe(
+          manifest.entry.imports.concat(
+            getModuleLinkHrefs(matches, manifest, {
+              includeHydrateFallback: true,
+            })
+          )
+        );
 
-  let preloads = isHydrated ? [] : manifest.entry.imports.concat(routePreloads);
+  let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
-  return isHydrated ? null : (
+  warnOnce(
+    !isRSCRouterContext,
+    "The <Scripts /> element is a no-op when using RSC and can be safely removed."
+  );
+
+  return isHydrated || isRSCRouterContext ? null : (
     <>
+      {typeof manifest.sri === "object" ? (
+        <script
+          rr-importmap=""
+          type="importmap"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              integrity: sri,
+            }),
+          }}
+        />
+      ) : null}
       {!enableFogOfWar ? (
         <link
           rel="modulepreload"
           href={manifest.url}
           crossOrigin={props.crossOrigin}
+          integrity={sri[manifest.url]}
+          suppressHydrationWarning
         />
       ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}
         crossOrigin={props.crossOrigin}
+        integrity={sri[manifest.entry.module]}
+        suppressHydrationWarning
       />
-      {dedupe(preloads).map((path) => (
+      {preloads.map((path) => (
         <link
           key={path}
           rel="modulepreload"
           href={path}
           crossOrigin={props.crossOrigin}
+          integrity={sri[path]}
+          suppressHydrationWarning
         />
       ))}
       {initialScripts}

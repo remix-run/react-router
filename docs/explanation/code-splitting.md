@@ -30,7 +30,7 @@ If the user visits `"/about"` then the bundles for `about.tsx` will be loaded bu
 
 ## Removal of Server Code
 
-Any server-only Route Module APIs will be removed from the bundles. Consider this route module:
+Any server-only [Route Module APIs][route-module] will be removed from the bundles. Consider this route module:
 
 ```tsx
 export async function loader() {
@@ -52,3 +52,5 @@ export default function Component({ loaderData }) {
 ```
 
 After building for the browser, only the `Component` will still be in the bundle, so you can use server-only code in the other module exports.
+
+[route-module]: ../../start/framework/route-module

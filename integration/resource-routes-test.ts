@@ -60,9 +60,6 @@ test.describe("loader in an app", async () => {
         "app/routes/redirect-destination.tsx": js`
           export default () => <div data-testid="redirect-destination">You made it!</div>
         `,
-        "app/routes/defer.tsx": js`
-          export let loader = () => ({ data: 'whatever' });
-        `,
         "app/routes/data[.]json.tsx": js`
           export let loader = () => Response.json({ hello: "world" });
         `,
@@ -101,6 +98,11 @@ test.describe("loader in an app", async () => {
             return { hello: 'world' };
           }
         `,
+        "app/routes/return-string.tsx": js`
+          export let loader = () => {
+            return 'hello world';
+          }
+        `,
         "app/routes/throw-object.tsx": js`
           export let loader = () => {
             throw { but: 'why' };
@@ -112,7 +114,6 @@ test.describe("loader in an app", async () => {
           }
         `,
         "app/routes/$.tsx": js`
-          import { json } from "react-router";
           import { useRouteError } from "react-router";
           export function loader({ request }) {
             throw Response.json({
@@ -207,9 +208,25 @@ test.describe("loader in an app", async () => {
     expect(await res.text()).toEqual("Partial");
   });
 
-  // TODO: This test should work once we bring over the changes from
-  // https://github.com/remix-run/remix/pull/9349 to the v7 branch
-  test.skip("should handle objects returned from resource routes", async ({
+  test("should convert strings returned from resource routes to text responses", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/return-string");
+    expect(res.status()).toBe(200);
+    expect(await res.text()).toEqual("hello world");
+  });
+
+  test("should convert non-strings returned from resource routes to JSON responses", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/return-object");
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toEqual({ hello: "world" });
+  });
+
+  test("should handle objects returned from resource routes", async ({
     page,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
@@ -248,17 +265,6 @@ test.describe("loader in an app", async () => {
     expect(html).toMatch("405 Method Not Allowed");
     expect(logs[0]).toContain(
       'Route "routes/no-action" does not have an action'
-    );
-  });
-
-  test("should error if a defer is returned from a resource route", async ({
-    page,
-  }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    let res = await app.goto("/defer");
-    expect(res.status()).toBe(500);
-    expect(await res.text()).toMatch(
-      "Error: Expected a Response to be returned from resource route handler"
     );
   });
 });

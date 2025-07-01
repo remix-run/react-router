@@ -1,6 +1,6 @@
 ---
 title: Upgrading from Remix
-order: 2
+order: 3
 ---
 
 # Upgrading from Remix
@@ -198,7 +198,7 @@ export default defineConfig({
 -     ssr: true,
 -     future: {/* all the v3 flags */}
 -   }),
-+   remix(),
++   reactRouter(),
     tsconfigPaths(),
   ],
 });

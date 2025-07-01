@@ -248,7 +248,7 @@ export default function handleRequest(...) {
       { /* ... */ }
     );
 
-    // Abort the streaming render pass after 11 seconds soto allow the rejected
+    // Abort the streaming render pass after 11 seconds to allow the rejected
     // boundaries to be flushed
     setTimeout(abort, streamTimeout + 1000);
   });

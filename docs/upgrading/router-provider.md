@@ -1,5 +1,6 @@
 ---
 title: Framework Adoption from RouterProvider
+order: 5
 ---
 
 # Framework Adoption from RouterProvider
@@ -422,7 +423,7 @@ You can checkout [Type Safety][type-safety] to learn how to fully setup and use 
 
 ## Enable SSR and/or Pre-rendering
 
-If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server. See [Deploying][deploying] for more information.
+If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin. For SSR you'll need to also deploy the server build to a server.
 
 ```ts filename=react-router.config.ts
 import type { Config } from "@react-router/dev/config";
@@ -436,7 +437,6 @@ export default {
 ```
 
 [upgrade-component-routes]: ./component-routes
-[deploying]: ../start/deploying
 [configuring-routes]: ../start/framework/routing
 [route-modules]: ../start/framework/route-module
 [type-safety]: ../how-to/route-module-type-safety

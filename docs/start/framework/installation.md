@@ -5,15 +5,9 @@ order: 1
 
 # Installation
 
-<docs-info>
+[MODES: framework]
 
-React Router v7 requires the following minimum versions:
-
-- `node@20`
-- `react@18`
-- `react-dom@18`
-
-</docs-info>
+## Introduction
 
 Most projects start with a template. Let's use a basic template maintained by React Router:
 

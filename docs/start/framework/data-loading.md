@@ -5,9 +5,15 @@ order: 5
 
 # Data Loading
 
+[MODES: framework]
+
+## Introduction
+
 Data is provided to the route component from `loader` and `clientLoader`.
 
 Loader data is automatically serialized from loaders and deserialized in components. In addition to primitive values like strings and numbers, loaders can return promises, maps, sets, dates and more.
+
+The type for the `loaderData` prop is [automatically generated][type-safety].
 
 ## Client Data Loading
 
@@ -23,6 +29,11 @@ export async function clientLoader({
   const res = await fetch(`/api/products/${params.pid}`);
   const product = await res.json();
   return product;
+}
+
+// HydrateFallback is rendered while the client loader is running
+export function HydrateFallback() {
+  return <div>Loading...</div>;
 }
 
 export default function Product({
@@ -124,10 +135,12 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function clientLoader({
+  serverLoader,
   params,
-}: Route.ClientLoader) {
+}: Route.ClientLoaderArgs) {
   const res = await fetch(`/api/products/${params.pid}`);
-  return res.json();
+  const serverData = await serverLoader();
+  return { ...serverData, ...res.json() };
 }
 
 export default function Product({
@@ -144,6 +157,29 @@ export default function Product({
 }
 ```
 
+You can also force the client loader to run during hydration and before the page renders by setting the `hydrate` property on the function. In this situation you will want to render a `HydrateFallback` component to show a fallback UI while the client loader runs.
+
+```tsx filename=app/product.tsx
+export async function loader() {
+  /* ... */
+}
+
+export async function clientLoader() {
+  /* ... */
+}
+
+// force the client loader to run during hydration
+clientLoader.hydrate = true as const; // `as const` for type inference
+
+export function HydrateFallback() {
+  return <div>Loading...</div>;
+}
+
+export default function Product() {
+  /* ... */
+}
+```
+
 ---
 
 Next: [Actions](./actions)
@@ -151,6 +187,9 @@ Next: [Actions](./actions)
 See also:
 
 - [Streaming with Suspense](../../how-to/suspense)
+- [Client Data](../../how-to/client-data)
+- [Using Fetchers](../../how-to/fetchers#loading-data)
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching
 [data]: ../../api/react-router/data
+[type-safety]: ../../explanation/type-safety
