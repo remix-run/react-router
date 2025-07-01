@@ -104,7 +104,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-65c4decb-20250630(eslint@8.57.0)
+        version: 6.1.0-canary-7216c0f0-20250630(eslint@8.57.0)
       isbot:
         specifier: ^5.1.11
         version: 5.1.11
@@ -1091,7 +1091,7 @@ importers:
         version: 0.41.0(typescript@5.4.5)
       vite-node:
         specifier: ^3.1.4
-        version: 3.1.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
+        version: 3.2.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -6229,8 +6229,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-65c4decb-20250630:
-    resolution: {integrity: sha512-kk1vedAeMZ/A7tXSsJhiy+G3Jr0Q1OANl0f0tItG0pVZQCYzzOvx/e3PDV7TWel1QBmuQhidgCNbw/dJgpcp6Q==}
+  eslint-plugin-react-hooks@6.1.0-canary-7216c0f0-20250630:
+    resolution: {integrity: sha512-oSdYZwoPBYGOedJR0MuRiGgFrUhRwqNElE+Nl2rjy1yhw6XDCrSdNxU60Ch5gbX6giByDMnS8VhOXeFwP2//Gw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -7444,10 +7444,6 @@ packages:
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
-
-  lru-cache@10.2.0:
-    resolution: {integrity: sha512-2bIM8x+VAf6JT4bKAljS1qUWgMsqZRPGJS6FSahIMPVvctcNhyVp7AJu7quxOW9jwkryBReKZY5tY5JYv2n/7Q==}
-    engines: {node: 14 || >=16.14}
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -9644,11 +9640,6 @@ packages:
     resolution: {integrity: sha512-sOfgbVoVJdcZacuQC1+vsXyp3uBB/j9NgO22357KHsbFiBZuUeG/zqyk8Anl1aqfaSQcqp5qAqnLoyBBHTVsJg==}
     peerDependencies:
       vite: '*'
-
-  vite-node@3.1.4:
-    resolution: {integrity: sha512-6enNwYnpyDo4hEgytbmc6mYWHXDHYEn0D1/rw4Q+tnHUGtKTJsn8T1YkX6Q18wI5LCrS8CTYlBaiCqxOy2kvUA==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
-    hasBin: true
 
   vite-node@3.2.4:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
@@ -15111,7 +15102,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-65c4decb-20250630(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-7216c0f0-20250630(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
@@ -16704,8 +16695,6 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  lru-cache@10.2.0: {}
-
   lru-cache@10.4.3: {}
 
   lru-cache@11.0.1: {}
@@ -17944,7 +17933,7 @@ snapshots:
 
   path-scurry@1.10.2:
     dependencies:
-      lru-cache: 10.2.0
+      lru-cache: 10.4.3
       minipass: 7.1.2
 
   path-scurry@2.0.0:
@@ -19581,7 +19570,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-node@3.1.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0):
+  vite-node@3.2.4(@types/node@20.11.30)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
