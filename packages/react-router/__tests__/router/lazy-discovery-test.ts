@@ -2361,10 +2361,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       });
 
       let key = "key";
+
+      let data;
+      router.subscribe((state) => {
+        if (state.fetchers.has("key")) {
+          data = state.fetchers.get("key")!.data;
+        }
+      });
+
       router.fetch(key, "0", "/parent/child?a=b");
       await tick();
       expect(router.getFetcher(key).state).toBe("idle");
-      expect(router.getFetcher(key).data).toBe("CHILD");
+      expect(data).toBe("CHILD");
       expect(capturedPath).toBe("/parent/child");
     });
 
@@ -2395,13 +2403,21 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       });
 
       let key = "key";
+
+      let data;
+      router.subscribe((state) => {
+        if (state.fetchers.has("key")) {
+          data = state.fetchers.get("key")!.data;
+        }
+      });
+
       router.fetch(key, "0", "/parent/child?a=b", {
         formMethod: "post",
         formData: createFormData({}),
       });
       await tick();
       expect(router.getFetcher(key).state).toBe("idle");
-      expect(router.getFetcher(key).data).toBe("CHILD");
+      expect(data).toBe("CHILD");
       expect(capturedPath).toBe("/parent/child");
     });
   });
