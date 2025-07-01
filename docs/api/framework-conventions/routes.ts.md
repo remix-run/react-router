@@ -59,9 +59,9 @@ export default flatRoutes() satisfies RouteConfig;
 ### Route Helpers
 
 [routing]: ../../start/framework/routing
-[route]: https://api.reactrouter.com/dev/functions/_react_router_dev.routes.route.html
-[index]: https://api.reactrouter.com/dev/functions/_react_router_dev.routes.index.html
-[layout]: https://api.reactrouter.com/dev/functions/_react_router_dev.routes.layout.html
-[prefix]: https://api.reactrouter.com/dev/functions/_react_router_dev.routes.prefix.html
-[relative]: https://api.reactrouter.com/dev/functions/_react_router_dev.routes.relative.html
+[route]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.route.html
+[index]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.index.html
+[layout]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.layout.html
+[prefix]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.prefix.html
+[relative]: https://api.reactrouter.com/v7/functions/_react_router_dev.routes.relative.html
 [file-route-conventions]: ../../how-to/file-route-conventions

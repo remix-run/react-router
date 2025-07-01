@@ -13,7 +13,7 @@ order: 3
 This file is optional
 </docs-info>
 
-[Reference Documentation ↗](https://api.reactrouter.com/dev/types/_react_router_dev.config.Config.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html)
 
 React Router framework configuration file that lets you customize aspects of your React Router application like server-side rendering, directory locations, and build settings.
 
