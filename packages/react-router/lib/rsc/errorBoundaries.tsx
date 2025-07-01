@@ -139,8 +139,8 @@ function RSCDefaultRootErrorBoundaryImpl({
       error == null
         ? "Unknown Error"
         : typeof error === "object" && "toString" in error
-        ? error.toString()
-        : JSON.stringify(error);
+          ? error.toString()
+          : JSON.stringify(error);
     errorInstance = new Error(errorString);
   }
 

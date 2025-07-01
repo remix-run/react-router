@@ -597,7 +597,7 @@ test.describe("Default ErrorBoundary", () => {
     let errorBoundaryCode = !includeRootErrorBoundary
       ? ""
       : rootErrorBoundaryThrows
-      ? js`
+        ? js`
           export function ErrorBoundary() {
             let error = useRouteError();
             return (
@@ -615,7 +615,7 @@ test.describe("Default ErrorBoundary", () => {
             )
           }
         `
-      : js`
+        : js`
         export function ErrorBoundary() {
           let error = useRouteError();
           return (

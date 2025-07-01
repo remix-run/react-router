@@ -140,7 +140,7 @@ export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
   ? Args extends [
       | ClientLoaderFunctionArgs
       | ClientActionFunctionArgs
-      | ClientDataFunctionArgs<unknown>
+      | ClientDataFunctionArgs<unknown>,
     ]
     ? ClientDataFrom<T>
     : ServerDataFrom<T>
@@ -345,5 +345,5 @@ type __tests = [
       | { a: string; b: Date; c: undefined }
       | { d: string; e: Date; f: () => boolean }
     >
-  >
+  >,
 ];

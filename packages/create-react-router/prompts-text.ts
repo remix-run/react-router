@@ -252,9 +252,9 @@ export class TextPrompt extends Prompt {
       this.done
         ? ""
         : this.hint
-        ? (this.out.columns < 80 ? "\n" + " ".repeat(8) : "") +
-          color.dim(` (${this.hint})`)
-        : "",
+          ? (this.out.columns < 80 ? "\n" + " ".repeat(8) : "") +
+            color.dim(` (${this.hint})`)
+          : "",
       "\n" + prefix,
       " ",
       this.done ? color.dim(this.rendered) : this.rendered,

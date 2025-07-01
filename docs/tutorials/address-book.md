@@ -1238,8 +1238,8 @@ export default function SidebarLayout({
                   isActive
                     ? "active"
                     : isPending
-                    ? "pending"
-                    : ""
+                      ? "pending"
+                      : ""
                 }
                 to={`contacts/${contact.id}`}
               >

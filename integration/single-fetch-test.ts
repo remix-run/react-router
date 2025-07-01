@@ -1578,9 +1578,8 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/base/target");
     expect(await res.text()).toBe("");
 
-    let { status, data } = await fixture.requestSingleFetchData(
-      "/base/data.data"
-    );
+    let { status, data } =
+      await fixture.requestSingleFetchData("/base/data.data");
     expect(data).toEqual({
       [SingleFetchRedirectSymbol]: {
         status: 302,

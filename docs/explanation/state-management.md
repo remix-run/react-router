@@ -25,14 +25,12 @@ React Router seamlessly bridges the gap between the backend and frontend via mec
 Here's why using typical React state patterns might be an anti-pattern in React Router:
 
 1. **Network-related State:** If your React state is managing anything related to the network—such as data from loaders, pending form submissions, or navigational states—it's likely that you're managing state that React Router already manages:
-
    - **[`useNavigation`][use_navigation]**: This hook gives you access to `navigation.state`, `navigation.formData`, `navigation.location`, etc.
    - **[`useFetcher`][use_fetcher]**: This facilitates interaction with `fetcher.state`, `fetcher.formData`, `fetcher.data` etc.
    - **[`loaderData`][loader_data]**: Access the data for a route.
    - **[`actionData`][action_data]**: Access the data from the latest action.
 
 2. **Storing Data in React Router:** A lot of data that developers might be tempted to store in React state has a more natural home in React Router, such as:
-
    - **URL Search Params:** Parameters within the URL that hold state.
    - **[Cookies][cookies]:** Small pieces of data stored on the user's device.
    - **[Server Sessions][sessions]:** Server-managed user sessions.

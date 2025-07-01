@@ -73,7 +73,7 @@ export type DataRouteObject = RouteObject & {
 
 export interface RouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends RouteObject = RouteObject,
 > extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}

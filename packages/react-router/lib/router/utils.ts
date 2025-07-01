@@ -376,14 +376,14 @@ export interface DataStrategyResult {
 }
 
 export interface DataStrategyFunction<Context = DefaultContext> {
-  (args: DataStrategyFunctionArgs<Context>): Promise<
-    Record<string, DataStrategyResult>
-  >;
+  (
+    args: DataStrategyFunctionArgs<Context>
+  ): Promise<Record<string, DataStrategyResult>>;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch
+  M extends AgnosticRouteMatch = AgnosticRouteMatch,
 > = {
   signal: AbortSignal;
   path: string;
@@ -394,7 +394,7 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
 
 export type AgnosticPatchRoutesOnNavigationFunction<
   O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch
+  M extends AgnosticRouteMatch = AgnosticRouteMatch,
 > = (
   opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
 ) => MaybePromise<void>;
@@ -560,7 +560,7 @@ type ParamChar = Regex_w | "-";
 // Emulates regex `+`
 type RegexMatchPlus<
   CharPattern extends string,
-  T extends string
+  T extends string,
 > = T extends `${infer First}${infer Rest}`
   ? First extends CharPattern
     ? RegexMatchPlus<CharPattern, Rest> extends never
@@ -575,22 +575,22 @@ type _PathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `:${infer Param}`
-    ? Param extends `${infer Optional}?${string}`
-      ? RegexMatchPlus<ParamChar, Optional>
-      : RegexMatchPlus<ParamChar, Param>
-    : // otherwise, there aren't any params present
-      never;
+      Path extends `:${infer Param}`
+      ? Param extends `${infer Optional}?${string}`
+        ? RegexMatchPlus<ParamChar, Optional>
+        : RegexMatchPlus<ParamChar, Param>
+      : // otherwise, there aren't any params present
+        never;
 
 export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
     ? "*"
     : // look for wildcard at the end of the path
-    Path extends `${infer Rest}/*`
-    ? "*" | _PathParam<Rest>
-    : // look for params in the absence of wildcards
-      _PathParam<Path>;
+      Path extends `${infer Rest}/*`
+      ? "*" | _PathParam<Rest>
+      : // look for params in the absence of wildcards
+        _PathParam<Path>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
@@ -601,7 +601,7 @@ type _tests = [
   Expect<Equal<PathParam<"/:a/:b">, "a" | "b">>,
   Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
   Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
-  Expect<Equal<PathParam<"/:lang?.xml">, "lang">>
+  Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
 ];
 
 // Attempt to parse the given string segment. If it fails, then just return the
@@ -623,7 +623,7 @@ export type Params<Key extends string = string> = {
  */
 export interface AgnosticRouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -712,7 +712,7 @@ export function convertRoutesToDataRoutes(
  * @category Utils
  */
 export function matchRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
@@ -722,7 +722,7 @@ export function matchRoutes<
 }
 
 export function matchRoutesImpl<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
@@ -788,7 +788,7 @@ export function convertRouteMatchToUiMatch(
 }
 
 interface RouteMeta<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   relativePath: string;
   caseSensitive: boolean;
@@ -797,7 +797,7 @@ interface RouteMeta<
 }
 
 interface RouteBranch<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   path: string;
   score: number;
@@ -805,7 +805,7 @@ interface RouteBranch<
 }
 
 function flattenRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
@@ -976,8 +976,8 @@ function computeScore(path: string, index: boolean | undefined): number {
         (paramRe.test(segment)
           ? dynamicSegmentValue
           : segment === ""
-          ? emptySegmentValue
-          : staticSegmentValue),
+            ? emptySegmentValue
+            : staticSegmentValue),
       initialScore
     );
 }
@@ -999,7 +999,7 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string,
@@ -1177,7 +1177,7 @@ type Mutable<T> = {
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
-  Path extends string
+  Path extends string,
 >(
   pattern: PathPattern<Path> | Path,
   pathname: string
@@ -1411,7 +1411,7 @@ function getInvalidPathError(
  *   </Route>
  */
 export function getPathContributingMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
+  T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
   return matches.filter(
     (match, index) =>
@@ -1422,7 +1422,7 @@ export function getPathContributingMatches<
 // Return the array of pathnames for the current route matches - used to
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
+  T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
   let pathMatches = getPathContributingMatches(matches);
 
@@ -1536,8 +1536,8 @@ export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
     : search.startsWith("?")
-    ? search
-    : "?" + search;
+      ? search
+      : "?" + search;
 
 /**
  * @private

@@ -56,9 +56,10 @@ export interface HandleDocumentRequestFunction {
 }
 
 export interface HandleDataRequestFunction {
-  (response: Response, args: LoaderFunctionArgs | ActionFunctionArgs):
-    | Promise<Response>
-    | Response;
+  (
+    response: Response,
+    args: LoaderFunctionArgs | ActionFunctionArgs
+  ): Promise<Response> | Response;
 }
 
 export interface HandleErrorFunction {

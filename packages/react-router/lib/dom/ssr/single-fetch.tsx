@@ -686,7 +686,7 @@ export function decodeViaTurboStream(
           let [name, message, stack] = rest as [
             string,
             string,
-            string | undefined
+            string | undefined,
           ];
           let Constructor = Error;
           // @ts-expect-error
@@ -703,7 +703,7 @@ export function decodeViaTurboStream(
           let [data, status, statusText] = rest as [
             unknown,
             number,
-            string | undefined
+            string | undefined,
           ];
           return {
             value: new ErrorResponseImpl(status, statusText, data),

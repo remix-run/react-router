@@ -18,7 +18,7 @@ export interface ConfirmPromptOptions extends PromptOptions {
 
 export type ConfirmPromptChoices = [
   { value: true; label: string },
-  { value: false; label: string }
+  { value: false; label: string },
 ];
 
 export class ConfirmPrompt extends Prompt {

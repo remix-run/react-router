@@ -92,7 +92,7 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  */
 export const createSession: CreateSessionFunction = <
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >(
   initialData: Partial<Data> = {},
   id = ""
@@ -207,7 +207,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
  */
 export interface SessionIdStorageStrategy<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 > {
   /**
    * The Cookie used to store the session id, or options used to automatically
@@ -274,8 +274,8 @@ export function createSessionStorage<Data = SessionData, FlashData = Data>({
         options?.maxAge != null
           ? new Date(Date.now() + options.maxAge * 1000)
           : options?.expires != null
-          ? options.expires
-          : cookie.expires;
+            ? options.expires
+            : cookie.expires;
 
       if (id) {
         await updateData(id, data, expires);

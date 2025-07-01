@@ -659,8 +659,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let buildManifest =
       viteCommand === "build"
-        ? injectedPluginContext?.buildManifest ??
-          (await getBuildManifest({ reactRouterConfig, rootDirectory }))
+        ? (injectedPluginContext?.buildManifest ??
+          (await getBuildManifest({ reactRouterConfig, rootDirectory })))
         : null;
 
     let environmentBuildContext: ResolvedEnvironmentBuildContext | null =
@@ -1675,8 +1675,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           let serverBuildDirectory = future.unstable_viteEnvironmentApi
             ? this.environment.config?.build?.outDir
-            : ctx.environmentBuildContext?.options.build?.outDir ??
-              getServerBuildDirectory(ctx.reactRouterConfig);
+            : (ctx.environmentBuildContext?.options.build?.outDir ??
+              getServerBuildDirectory(ctx.reactRouterConfig));
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
@@ -1686,8 +1686,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // SSR to the client build.
           let userSsrEmitAssets =
             (ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
-              ? viteUserConfig.environments?.ssr?.build?.ssrEmitAssets ??
-                viteUserConfig.environments?.ssr?.build?.emitAssets
+              ? (viteUserConfig.environments?.ssr?.build?.ssrEmitAssets ??
+                viteUserConfig.environments?.ssr?.build?.emitAssets)
               : null) ??
             viteUserConfig.build?.ssrEmitAssets ??
             false;

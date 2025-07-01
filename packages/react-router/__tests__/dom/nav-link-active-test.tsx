@@ -725,8 +725,8 @@ describe("NavLink using a data router", () => {
               isPending
                 ? "some-pending-classname"
                 : isActive
-                ? "some-active-classname"
-                : undefined
+                  ? "some-active-classname"
+                  : undefined
             }
           >
             Link to Bar
@@ -780,8 +780,8 @@ describe("NavLink using a data router", () => {
               isPending
                 ? { textTransform: "lowercase" }
                 : isActive
-                ? { textTransform: "uppercase" }
-                : undefined
+                  ? { textTransform: "uppercase" }
+                  : undefined
             }
           >
             Link to Bar
@@ -834,8 +834,8 @@ describe("NavLink using a data router", () => {
               isPending
                 ? "Link to Bar (loading...)"
                 : isActive
-                ? "Link to Bar (current)"
-                : "Link to Bar (idle)"
+                  ? "Link to Bar (current)"
+                  : "Link to Bar (idle)"
             }
           </NavLink>
 

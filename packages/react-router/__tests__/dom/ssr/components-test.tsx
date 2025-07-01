@@ -22,7 +22,7 @@ type PrefetchEventHandlerProps = {
 };
 
 function itPrefetchesPageLinks<
-  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps
+  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps,
 >(Component: React.ComponentType<Props>) {
   describe('prefetch="intent"', () => {
     let context = mockFrameworkContext({

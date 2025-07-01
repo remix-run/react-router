@@ -93,10 +93,13 @@ function fetchServer(request: Request) {
     routes: routes(),
     // Encode the match with the React Server implementation.
     generateResponse(match) {
-      return new Response(renderToReadableStream(match.payload), {
-        status: match.statusCode,
-        headers: match.headers,
-      });
+      return new Response(
+        renderToReadableStream(match.payload),
+        {
+          status: match.statusCode,
+          headers: match.headers,
+        }
+      );
     },
   });
 }
@@ -115,10 +118,13 @@ app.use(
 app.use(compression(), express.static("public"));
 
 // Ignore Chrome extension requests.
-app.get("/.well-known/appspecific/com.chrome.devtools.json", (_, res) => {
-  res.status(404);
-  res.end();
-});
+app.get(
+  "/.well-known/appspecific/com.chrome.devtools.json",
+  (_, res) => {
+    res.status(404);
+    res.end();
+  }
+);
 
 // Hookup our application.
 app.use(
@@ -126,14 +132,17 @@ app.use(
     prerender(
       request,
       fetchServer,
-      (routes as unknown as { bootstrapScript?: string }).bootstrapScript
+      (routes as unknown as { bootstrapScript?: string })
+        .bootstrapScript
     )
   )
 );
 
 const PORT = Number.parseInt(process.env.PORT || "3000");
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT} (http://localhost:${PORT})`);
+  console.log(
+    `Server listening on port ${PORT} (http://localhost:${PORT})`
+  );
 });
 ```
 

@@ -205,8 +205,8 @@ First, as a convenience, add `dev` and `start` commands in `package.json` that w
 {
   "scripts": {
     "dev": "node ./server.js",
-    "start": "cross-env NODE_ENV=production node ./server.js"
-  }
+    "start": "cross-env NODE_ENV=production node ./server.js",
+  },
   // ...
 }
 ```

@@ -107,9 +107,8 @@ test.describe("ErrorBoundary", () => {
   }
 
   test("returns a 200 empty response on a data fetch to a path with no loaders", async () => {
-    let { status, headers, data } = await fixture.requestSingleFetchData(
-      "/_root.data"
-    );
+    let { status, headers, data } =
+      await fixture.requestSingleFetchData("/_root.data");
     expect(status).toBe(200);
     expect(headers.has("X-Remix-Error")).toBe(false);
     expect(data).toEqual({});

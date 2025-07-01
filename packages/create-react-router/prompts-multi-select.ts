@@ -9,7 +9,7 @@ import { type SelectChoice } from "./prompts-select";
 import { color, strip, clear, type ActionKey } from "./utils";
 
 export interface MultiSelectPromptOptions<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends PromptOptions {
   hint?: string;
   message: string;
@@ -21,7 +21,7 @@ export interface MultiSelectPromptOptions<
 }
 
 export class MultiSelectPrompt<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends Prompt {
   choices: Readonly<Array<Choices[number] & { selected: boolean }>>;
   label: string;

@@ -19,7 +19,7 @@ type MaybePromise<T> = T | Promise<T>;
 export type GetLoadContextFunction<
   Env = unknown,
   Params extends string = any,
-  Data extends Record<string, unknown> = Record<string, unknown>
+  Data extends Record<string, unknown> = Record<string, unknown>,
 > = (args: {
   request: Request;
   context: {

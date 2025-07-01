@@ -348,7 +348,6 @@ Date: 2025-06-27
 ### Patch Changes
 
 - `react-router` - Do not serialize types for `useRouteLoaderData<typeof clientLoader>` ([#13752](https://github.com/remix-run/react-router/pull/13752))
-
   - For types to distinguish a `clientLoader` from a `serverLoader`, you MUST annotate `clientLoader` args:
 
     ```ts
@@ -449,7 +448,6 @@ Date: 2025-05-25
 - `@react-router/dev` - Add additional logging to `build` command output when cleaning assets from server build ([#13547](https://github.com/remix-run/react-router/pull/13547))
 - `@react-router/dev` - Don't clean assets from server build when `build.ssrEmitAssets` has been enabled in Vite config ([#13547](https://github.com/remix-run/react-router/pull/13547))
 - `@react-router/dev` - Fix typegen when same route is used at multiple paths ([#13574](https://github.com/remix-run/react-router/pull/13574))
-
   - For example, `routes/route.tsx` is used at 4 different paths here:
 
     ```ts
@@ -468,7 +466,6 @@ Date: 2025-05-25
   - Now, typegen creates unions as necessary for alternate paths for the same route file
 
 - `@react-router/dev` - Better types for `params` ([#13543](https://github.com/remix-run/react-router/pull/13543))
-
   - For example:
 
     ```ts
@@ -515,7 +512,6 @@ Date: 2025-05-25
     ```
 
 - `@react-router/dev` - Fix `href` for optional segments ([#13595](https://github.com/remix-run/react-router/pull/13595))
-
   - Type generation now expands paths with optionals into their corresponding non-optional paths
   - For example, the path `/user/:id?` gets expanded into `/user` and `/user/:id` to more closely model visitable URLs
   - `href` then uses these expanded (non-optional) paths to construct type-safe paths for your app:
@@ -623,7 +619,6 @@ Behind the scenes, React Router will generate the corresponding `declare module`
 
 - `react-router` - Added a new `routeDiscovery` option in `react-router.config.ts` to configure Lazy Route Discovery behavior ([#13451](https://github.com/remix-run/react-router/pull/13451))
 - `react-router` - Add support for route component props in `createRoutesStub` ([#13528](https://github.com/remix-run/react-router/pull/13528))
-
   - This allows you to unit test your route components using the props instead of the hooks:
 
     ```tsx
@@ -742,7 +737,6 @@ Date: 2025-04-17
 ### Patch Changes
 
 - `react-router` - When using the object-based `route.lazy` API, the `HydrateFallback` and `hydrateFallbackElement` properties are now skipped when lazy loading routes after hydration ([#13376](https://github.com/remix-run/react-router/pull/13376))
-
   - If you move the code for these properties into a separate file, since the hydrate properties were unused already (if the route wasn't present during hydration), you can avoid downloading them at all. For example:
 
     ```ts

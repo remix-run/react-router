@@ -3918,9 +3918,10 @@ function testDomRouter(
         let actionSpy = jest.fn();
         actionSpy.mockReturnValue({});
         async function getPayload() {
-          let formData = await actionSpy.mock.calls[
-            actionSpy.mock.calls.length - 1
-          ][0].request.formData();
+          let formData =
+            await actionSpy.mock.calls[
+              actionSpy.mock.calls.length - 1
+            ][0].request.formData();
           return new URLSearchParams(formData.entries()).toString();
         }
 

@@ -25,7 +25,7 @@ interface CookieSessionStorageOptions {
  */
 export function createCookieSessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({ cookie: cookieArg }: CookieSessionStorageOptions = {}): SessionStorage<
   Data,
   FlashData
