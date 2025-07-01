@@ -45,7 +45,7 @@ interface ArcTableSessionStorageOptions {
  */
 export function createArcTableSessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({
   cookie,
   ...props

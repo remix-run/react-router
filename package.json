@@ -77,7 +77,7 @@
     "jest": "^29.6.4",
     "jest-environment-jsdom": "^29.6.2",
     "jsonfile": "^6.1.0",
-    "prettier": "^2.8.8",
+    "prettier": "^3.6.2",
     "prompts": "^2.4.2",
     "react-server-dom-parcel": "^19.0.0",
     "remark-gfm": "^3.0.1",

@@ -34,8 +34,8 @@ export class PlaywrightFixture {
         waitForHydration === true
           ? "networkidle"
           : waitForHydration === false
-          ? "commit"
-          : "load",
+            ? "commit"
+            : "load",
     });
     if (response == null)
       throw new Error(

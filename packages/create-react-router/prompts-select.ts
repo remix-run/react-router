@@ -14,7 +14,7 @@ export interface SelectChoice {
 }
 
 export interface SelectPromptOptions<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends PromptOptions {
   hint?: string;
   message: string;
@@ -26,7 +26,7 @@ export interface SelectPromptOptions<
 }
 
 export class SelectPrompt<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends Prompt {
   choices: Choices;
   label: string;
@@ -184,9 +184,9 @@ export class SelectPrompt<
       this.done
         ? ""
         : this.hint
-        ? (this.out.columns < 80 ? "\n" + " ".repeat(8) : "") +
-          color.dim(` (${this.hint})`)
-        : "",
+          ? (this.out.columns < 80 ? "\n" + " ".repeat(8) : "") +
+            color.dim(` (${this.hint})`)
+          : "",
       "\n",
     ];
 

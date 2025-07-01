@@ -77,13 +77,13 @@ function getRouteComponents(
     routeModule.HydrateFallback && (!isSpaMode || route.id === "root")
       ? routeModule.HydrateFallback
       : route.id === "root"
-      ? RemixRootDefaultHydrateFallback
-      : undefined;
+        ? RemixRootDefaultHydrateFallback
+        : undefined;
   let ErrorBoundary = routeModule.ErrorBoundary
     ? routeModule.ErrorBoundary
     : route.id === "root"
-    ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
-    : undefined;
+      ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
+      : undefined;
 
   if (route.id === "root" && routeModule.Layout) {
     return {

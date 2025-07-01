@@ -33,7 +33,7 @@ export async function prompt<
     any[]
   >
     ? T[number]
-    : T
+    : T,
 >(questions: T, opts: PromptTypeOptions<P> = {}): Promise<Answers<T>> {
   let {
     onSubmit = identity,
@@ -76,7 +76,7 @@ function toPrompt<
     | typeof TextPrompt
     | typeof ConfirmPrompt
     | typeof SelectPrompt<any>
-    | typeof MultiSelectPrompt<any>
+    | typeof MultiSelectPrompt<any>,
 >(el: T, args: any, opts: any = {}) {
   if (
     el !== TextPrompt &&
@@ -122,14 +122,14 @@ interface ConfirmPromptType extends BasePromptType {
 }
 
 interface SelectPromptType<
-  Choices extends Readonly<Readonly<SelectChoiceType>[]>
+  Choices extends Readonly<Readonly<SelectChoiceType>[]>,
 > extends BasePromptType {
   type: "select";
   choices: Choices;
 }
 
 interface MultiSelectPromptType<
-  Choices extends Readonly<Readonly<SelectChoiceType>[]>
+  Choices extends Readonly<Readonly<SelectChoiceType>[]>,
 > extends BasePromptType {
   type: "multiselect";
   choices: Choices;
@@ -142,45 +142,45 @@ interface SelectChoiceType {
 }
 
 type PromptType<
-  Choices extends Readonly<SelectChoiceType[]> = Readonly<SelectChoiceType[]>
+  Choices extends Readonly<SelectChoiceType[]> = Readonly<SelectChoiceType[]>,
 > =
   | TextPromptType
   | ConfirmPromptType
   | SelectPromptType<Choices>
   | MultiSelectPromptType<Choices>;
 
-type PromptChoices<T extends PromptType<any>> = T extends SelectPromptType<
-  infer Choices
->
-  ? Choices
-  : T extends MultiSelectPromptType<infer Choices>
-  ? Choices
-  : never;
+type PromptChoices<T extends PromptType<any>> =
+  T extends SelectPromptType<infer Choices>
+    ? Choices
+    : T extends MultiSelectPromptType<infer Choices>
+      ? Choices
+      : never;
 
 type Answer<
   T extends PromptType<any>,
-  Choices extends Readonly<SelectChoiceType[]> = PromptChoices<T>
+  Choices extends Readonly<SelectChoiceType[]> = PromptChoices<T>,
 > = T extends TextPromptType
   ? string
   : T extends ConfirmPromptType
-  ? boolean
-  : T extends SelectPromptType<Choices>
-  ? Choices[number]["value"]
-  : T extends MultiSelectPromptType<Choices>
-  ? (Choices[number]["value"] | undefined)[]
-  : never;
+    ? boolean
+    : T extends SelectPromptType<Choices>
+      ? Choices[number]["value"]
+      : T extends MultiSelectPromptType<Choices>
+        ? (Choices[number]["value"] | undefined)[]
+        : never;
 
 type Answers<
-  T extends Readonly<PromptType<any>> | Readonly<PromptType<any>[]>
-> = T extends Readonly<PromptType<any>>
-  ? Partial<{ [key in T["name"]]: Answer<T> }>
-  : T extends Readonly<PromptType<any>[]>
-  ? UnionToIntersection<Answers<T[number]>>
-  : never;
+  T extends Readonly<PromptType<any>> | Readonly<PromptType<any>[]>,
+> =
+  T extends Readonly<PromptType<any>>
+    ? Partial<{ [key in T["name"]]: Answer<T> }>
+    : T extends Readonly<PromptType<any>[]>
+      ? UnionToIntersection<Answers<T[number]>>
+      : never;
 
 interface PromptTypeOptions<
   T extends PromptType<any>,
-  Choices extends Readonly<SelectChoiceType[]> = PromptChoices<T>
+  Choices extends Readonly<SelectChoiceType[]> = PromptChoices<T>,
 > {
   onSubmit?(
     question: T | Readonly<T>,

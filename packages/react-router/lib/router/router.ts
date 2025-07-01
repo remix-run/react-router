@@ -838,8 +838,8 @@ export function createRouter(init: RouterInit): Router {
   const routerWindow = init.window
     ? init.window
     : typeof window !== "undefined"
-    ? window
-    : undefined;
+      ? window
+      : undefined;
   const isBrowser =
     typeof routerWindow !== "undefined" &&
     typeof routerWindow.document !== "undefined" &&
@@ -2913,9 +2913,8 @@ export function createRouter(init: RouterInit): Router {
           ),
         };
       } else {
-        dataResults[routeId] = await convertDataStrategyResultToDataResult(
-          result
-        );
+        dataResults[routeId] =
+          await convertDataStrategyResultToDataResult(result);
       }
     }
 
@@ -3544,8 +3543,8 @@ export function createStaticHandler(
             Promise.resolve(ctx)
           )
         : respond
-        ? respond(ctx)
-        : ctx;
+          ? respond(ctx)
+          : ctx;
     };
 
     // SSR supports HEAD requests while SPA doesn't
@@ -4146,8 +4145,8 @@ export function createStaticHandler(
           statusCode: isRouteErrorResponse(result.error)
             ? result.error.status
             : result.statusCode != null
-            ? result.statusCode
-            : 500,
+              ? result.statusCode
+              : 500,
           actionData: null,
           actionHeaders: {
             ...(result.headers
@@ -4209,8 +4208,8 @@ export function createStaticHandler(
         statusCode: isRouteErrorResponse(result.error)
           ? result.error.status
           : result.statusCode != null
-          ? result.statusCode
-          : 500,
+            ? result.statusCode
+            : 500,
         actionData: null,
         actionHeaders: {
           ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
@@ -4586,13 +4585,13 @@ function normalizeNavigateOptions(
         typeof opts.body === "string"
           ? opts.body
           : opts.body instanceof FormData ||
-            opts.body instanceof URLSearchParams
-          ? // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#plain-text-form-data
-            Array.from(opts.body.entries()).reduce(
-              (acc, [name, value]) => `${acc}${name}=${value}\n`,
-              ""
-            )
-          : String(opts.body);
+              opts.body instanceof URLSearchParams
+            ? // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#plain-text-form-data
+              Array.from(opts.body.entries()).reduce(
+                (acc, [name, value]) => `${acc}${name}=${value}\n`,
+                ""
+              )
+            : String(opts.body);
 
       return {
         path,

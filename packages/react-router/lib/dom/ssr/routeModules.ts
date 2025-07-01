@@ -126,7 +126,7 @@ export interface LinksFunction {
 
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
@@ -143,7 +143,7 @@ export type MetaMatches<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -158,7 +158,7 @@ export interface MetaArgs<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
   data:
     | (Loader extends LoaderFunction | ClientLoaderFunction
@@ -226,7 +226,7 @@ export interface MetaFunction<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }

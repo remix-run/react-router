@@ -1,4 +1,6 @@
 /**
  * @type {import('prettier').Options}
  */
-module.exports = {};
+module.exports = {
+  trailingComma: "es5",
+};

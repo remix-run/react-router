@@ -177,7 +177,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
 }
 
 export function composeEventHandlers<
-  EventType extends React.SyntheticEvent | Event
+  EventType extends React.SyntheticEvent | Event,
 >(
   theirHandler: ((event: EventType) => any) | undefined,
   ourHandler: (event: EventType) => any
@@ -513,8 +513,8 @@ export function Meta() {
               error,
             })
           : Array.isArray(routeModule.meta)
-          ? [...routeModule.meta]
-          : routeModule.meta;
+            ? [...routeModule.meta]
+            : routeModule.meta;
     } else if (leafMeta) {
       // We only assign the route's meta to the nearest leaf if there is no meta
       // export in the route. The meta function may return a falsy value which

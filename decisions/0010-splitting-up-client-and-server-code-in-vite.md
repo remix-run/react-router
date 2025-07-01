@@ -96,6 +96,7 @@ Checking for `.server` modules only requires checking the module's path and does
 `vite-env-only` does require AST parsing and transformations so it will always be slower than `.server` modules.
 
 [^1]: Vite provides a lower-level module graph API, but the module graph is not guaranteed to be complete as it is only populated as modules are requested.
+
 [^2]: When a file changes on disk, Vite invalidates the corresponding module in its cache to power features like HMR.
 
 [decision-0009]: ./0009-do-not-rely-on-treeshaking-for-correctness.md

@@ -156,7 +156,7 @@ export function useNavigationType(): NavigationType {
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
-  Path extends string
+  Path extends string,
 >(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
@@ -341,7 +341,7 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
   @category Hooks
  */
 export function useParams<
-  ParamsOrKey extends string | Record<string, string | undefined> = string
+  ParamsOrKey extends string | Record<string, string | undefined> = string,
 >(): Readonly<
   [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
 > {
@@ -610,8 +610,8 @@ function DefaultErrorComponent() {
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
-    ? error.message
-    : JSON.stringify(error);
+      ? error.message
+      : JSON.stringify(error);
   let stack = error instanceof Error ? error.stack : null;
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
@@ -848,82 +848,87 @@ export function _renderMatches(
     }
   }
 
-  return renderedMatches.reduceRight((outlet, match, index) => {
-    // Only data routers handle errors/fallbacks
-    let error: any;
-    let shouldRenderHydrateFallback = false;
-    let errorElement: React.ReactNode | null = null;
-    let hydrateFallbackElement: React.ReactNode | null = null;
-    if (dataRouterState) {
-      error = errors && match.route.id ? errors[match.route.id] : undefined;
-      errorElement = match.route.errorElement || defaultErrorElement;
+  return renderedMatches.reduceRight(
+    (outlet, match, index) => {
+      // Only data routers handle errors/fallbacks
+      let error: any;
+      let shouldRenderHydrateFallback = false;
+      let errorElement: React.ReactNode | null = null;
+      let hydrateFallbackElement: React.ReactNode | null = null;
+      if (dataRouterState) {
+        error = errors && match.route.id ? errors[match.route.id] : undefined;
+        errorElement = match.route.errorElement || defaultErrorElement;
 
-      if (renderFallback) {
-        if (fallbackIndex < 0 && index === 0) {
-          warningOnce(
-            "route-fallback",
-            false,
-            "No `HydrateFallback` element provided to render during initial hydration"
-          );
-          shouldRenderHydrateFallback = true;
-          hydrateFallbackElement = null;
-        } else if (fallbackIndex === index) {
-          shouldRenderHydrateFallback = true;
-          hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+        if (renderFallback) {
+          if (fallbackIndex < 0 && index === 0) {
+            warningOnce(
+              "route-fallback",
+              false,
+              "No `HydrateFallback` element provided to render during initial hydration"
+            );
+            shouldRenderHydrateFallback = true;
+            hydrateFallbackElement = null;
+          } else if (fallbackIndex === index) {
+            shouldRenderHydrateFallback = true;
+            hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+          }
         }
       }
-    }
 
-    let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
-    let getChildren = () => {
-      let children: React.ReactNode;
-      if (error) {
-        children = errorElement;
-      } else if (shouldRenderHydrateFallback) {
-        children = hydrateFallbackElement;
-      } else if (match.route.Component) {
-        // Note: This is a de-optimized path since React won't re-use the
-        // ReactElement since it's identity changes with each new
-        // React.createElement call.  We keep this so folks can use
-        // `<Route Component={...}>` in `<Routes>` but generally `Component`
-        // usage is only advised in `RouterProvider` when we can convert it to
-        // `element` ahead of time.
-        children = <match.route.Component />;
-      } else if (match.route.element) {
-        children = match.route.element;
-      } else {
-        children = outlet;
-      }
+      let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
+      let getChildren = () => {
+        let children: React.ReactNode;
+        if (error) {
+          children = errorElement;
+        } else if (shouldRenderHydrateFallback) {
+          children = hydrateFallbackElement;
+        } else if (match.route.Component) {
+          // Note: This is a de-optimized path since React won't re-use the
+          // ReactElement since it's identity changes with each new
+          // React.createElement call.  We keep this so folks can use
+          // `<Route Component={...}>` in `<Routes>` but generally `Component`
+          // usage is only advised in `RouterProvider` when we can convert it to
+          // `element` ahead of time.
+          children = <match.route.Component />;
+        } else if (match.route.element) {
+          children = match.route.element;
+        } else {
+          children = outlet;
+        }
 
-      return (
-        <RenderedRoute
-          match={match}
-          routeContext={{
-            outlet,
-            matches,
-            isDataRoute: dataRouterState != null,
-          }}
-          children={children}
+        return (
+          <RenderedRoute
+            match={match}
+            routeContext={{
+              outlet,
+              matches,
+              isDataRoute: dataRouterState != null,
+            }}
+            children={children}
+          />
+        );
+      };
+      // Only wrap in an error boundary within data router usages when we have an
+      // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
+      // an ancestor ErrorBoundary/errorElement
+      return dataRouterState &&
+        (match.route.ErrorBoundary ||
+          match.route.errorElement ||
+          index === 0) ? (
+        <RenderErrorBoundary
+          location={dataRouterState.location}
+          revalidation={dataRouterState.revalidation}
+          component={errorElement}
+          error={error}
+          children={getChildren()}
+          routeContext={{ outlet: null, matches, isDataRoute: true }}
         />
+      ) : (
+        getChildren()
       );
-    };
-    // Only wrap in an error boundary within data router usages when we have an
-    // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
-    // an ancestor ErrorBoundary/errorElement
-    return dataRouterState &&
-      (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
-      <RenderErrorBoundary
-        location={dataRouterState.location}
-        revalidation={dataRouterState.revalidation}
-        component={errorElement}
-        error={error}
-        children={getChildren()}
-        routeContext={{ outlet: null, matches, isDataRoute: true }}
-      />
-    ) : (
-      getChildren()
-    );
-  }, null as React.ReactElement | null);
+    },
+    null as React.ReactElement | null
+  );
 }
 
 enum DataRouterHook {

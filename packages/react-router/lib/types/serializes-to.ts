@@ -17,5 +17,5 @@ type __tests = [
       Record<string, any> extends unstable_SerializesTo<any> ? true : false,
       false
     >
-  >
+  >,
 ];

@@ -936,7 +936,7 @@ function findEntry(
     for (let ext of options?.extensions ?? entryExts) {
       let file = Path.resolve(currentDir, basename + ext);
       if (fs.existsSync(file)) {
-        return options?.absolute ?? false ? file : Path.relative(dir, file);
+        return (options?.absolute ?? false) ? file : Path.relative(dir, file);
       }
     }
 

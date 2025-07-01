@@ -142,8 +142,8 @@ async function gradient(
           `${(noMotion
             ? getMotionlessFrame(frameIndex)
             : color.supportsColor
-            ? frame
-            : getColorlessFrame(frameIndex)
+              ? frame
+              : getColorlessFrame(frameIndex)
           ).padEnd(MAX_FRAMES - 1, " ")}  ${text}`
         );
         if (!done) await sleep(20);

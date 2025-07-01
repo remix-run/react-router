@@ -171,7 +171,7 @@ export function createDeferred<T = any>() {
 
 export function createAsyncStub(): [
   asyncStub: jest.Mock,
-  deferred: ReturnType<typeof createDeferred>
+  deferred: ReturnType<typeof createDeferred>,
 ] {
   let deferred = createDeferred();
   let asyncStub = jest.fn(() => deferred.promise);
@@ -644,8 +644,8 @@ export function setup({
       typeof keyOrOpts === "object"
         ? keyOrOpts
         : typeof routeIdOrOpts === "object"
-        ? routeIdOrOpts
-        : opts;
+          ? routeIdOrOpts
+          : opts;
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error

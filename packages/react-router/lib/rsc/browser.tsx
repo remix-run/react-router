@@ -672,10 +672,10 @@ function createRouteFromServerManifest(
             },
           })
       : match.hasAction
-      ? (_, singleFetch) => callSingleFetch(singleFetch)
-      : () => {
-          throw noActionDefinedError("action", match.id);
-        },
+        ? (_, singleFetch) => callSingleFetch(singleFetch)
+        : () => {
+            throw noActionDefinedError("action", match.id);
+          },
     path: match.path,
     shouldRevalidate: match.shouldRevalidate,
     // We always have a "loader" in this RSC world since even if we don't

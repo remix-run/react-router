@@ -890,11 +890,11 @@ async function getRSCRouteMatch(
         })
       )
     : match.route.id === "root"
-    ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-      // currently uses a hook internally so it fails during RSC.  Restructure
-      // so it can be used safely in an RSC render pass.
-      React.createElement("p", null, "Loading!")
-    : undefined;
+      ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
+        // currently uses a hook internally so it fails during RSC.  Restructure
+        // so it can be used safely in an RSC render pass.
+        React.createElement("p", null, "Loading!")
+      : undefined;
 
   return {
     clientAction: (match.route as any).clientAction,
