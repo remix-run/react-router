@@ -217,6 +217,7 @@ export type {
   MetaDescriptor,
   MetaFunction,
   LinksFunction,
+  LoadRouteModuleFunction,
 } from "./lib/dom/ssr/routeModules";
 export type { ServerRouterProps } from "./lib/dom/ssr/server";
 export { ServerRouter } from "./lib/dom/ssr/server";

@@ -2,6 +2,7 @@ import type {
   EntryContext,
   FrameworkContextObject,
 } from "../../lib/dom/ssr/entry";
+import { defaultLoadRouteModule } from "../../lib/dom/ssr/routeModules";
 
 export function mockFrameworkContext(
   overrides?: Partial<FrameworkContextObject>
@@ -39,6 +40,7 @@ export function mockFrameworkContext(
       mode: "lazy",
       manifestPath: "/__manifest",
     },
+    loadRouteModule: defaultLoadRouteModule,
     ...overrides,
   };
 }
