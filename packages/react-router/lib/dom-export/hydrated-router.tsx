@@ -228,7 +228,7 @@ interface HydratedRouterProps {
    * Optional function to take control over how route modules are loaded into
    * the browser.  Primarily for use by bundler plugins.
    */
-  loadRouteModule?: LoadRouteModuleFunction;
+  unstable_loadRouteModule?: LoadRouteModuleFunction;
 }
 
 /**
@@ -238,7 +238,7 @@ interface HydratedRouterProps {
  * @category Component Routers
  */
 export function HydratedRouter(props: HydratedRouterProps) {
-  let loadRouteModule = props.loadRouteModule ?? defaultLoadRouteModule;
+  let loadRouteModule = props.unstable_loadRouteModule ?? defaultLoadRouteModule;
 
   if (!router) {
     router = createHydratedRouter({
