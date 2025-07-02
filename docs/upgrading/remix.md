@@ -143,7 +143,7 @@ For backwards-compatibility, there are a few ways to adopt `routes.ts` to align 
    export default flatRoutes() satisfies RouteConfig;
    ```
 
-2. If you were using the "nested" convention from Remix v1 via the `@remix-run/v1-route-convention` package, you can continue using that as well:
+2. If you were using the "nested" convention from Remix v1 via the `@remix-run/v1-route-convention` package, you can continue using that as well in conjunction with `@react-router/remix-routes-option-adapter`:
 
    ```ts filename=app/routes.ts
    import { type RouteConfig } from "@react-router/dev/routes";
