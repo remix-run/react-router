@@ -111,9 +111,6 @@ importers:
       jest:
         specifier: ^29.6.4
         version: 29.7.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)
-      jest-environment-jsdom:
-        specifier: ^29.6.2
-        version: 29.6.2
       jsonfile:
         specifier: ^6.1.0
         version: 6.1.0
@@ -926,6 +923,9 @@ importers:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
         version: 2.4.7
+      jest-environment-jsdom:
+        specifier: ^29.6.2
+        version: 29.6.2
       react:
         specifier: ^19.1.0
         version: 19.1.0
