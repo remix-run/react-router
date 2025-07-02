@@ -151,7 +151,7 @@ This state is inaccessible on the server as it is implemented on top of [`histor
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [Path](../Other/Path):
+Can be a string or a partial [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
 
 ```tsx
 <Link to="/some/path" />

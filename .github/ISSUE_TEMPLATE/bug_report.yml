@@ -11,7 +11,7 @@ body:
         - **All** bugs must have a **minimal** reproduction
           - Minimal means that it is not just pointing to a deployed site or a branch in your existing application
           - The preferred method is StackBlitz via [https://reactrouter.com/new](https://reactrouter.com/new)
-          - If Stackblitz is not an option, a Github repo based on a fresh `create-react-router` app is acceptable
+          - If Stackblitz is not an option, a GitHub repo based on a fresh `create-react-router` app is acceptable
           - Only in extraordinary circumstances will code snippets or maximal reproductions be accepted
         - Issue Review
           - Issues not meeting the above criteria will be closed and pointed to this document

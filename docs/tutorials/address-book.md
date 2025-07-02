@@ -1,9 +1,14 @@
 ---
 title: Address Book
-order: 1
+order: 2
 ---
 
 # Address Book
+
+[MODES: framework]
+
+<br />
+<br />
 
 We'll be building a small, but feature-rich address book app that lets you keep track of your contacts. There's no database or other "production ready" things, so we can stay focused on the features React Router gives you. We expect it to take 30-45m if you're following along, otherwise it's a quick read.
 
@@ -42,7 +47,7 @@ npm install
 npm run dev
 ```
 
-You should be able to open up [http://localhost:5173][http-localhost-5173] and see an unstyled screen that looks like this:
+You should now be able to open up [http://localhost:5173][http-localhost-5173] and see your app running, though there's not much going on just yet.
 
 ## The Root Route
 

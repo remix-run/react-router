@@ -10,7 +10,7 @@ title: useResolvedPath
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useResolvedPath.html)
 
-Resolves the pathname of the given `to` value against the current location. Similar to [useHref](../hooks/useHref), but returns a [Path](../Other/Path) instead of a string.
+Resolves the pathname of the given `to` value against the current location. Similar to [useHref](../hooks/useHref), but returns a [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path) instead of a string.
 
 ```tsx
 import { useResolvedPath } from "react-router";

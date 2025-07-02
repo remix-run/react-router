@@ -1,10 +1,10 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, rmSync } from "node:fs";
 import * as path from "node:path";
 
 import { expect, test } from "@playwright/test";
 import dedent from "dedent";
 import semver from "semver";
-import fse from "fs-extra";
 
 import { createProject } from "./helpers/vite";
 
@@ -129,13 +129,13 @@ test.describe("cli", () => {
       let entryClientFile = path.join(cwd, "app", "entry.client.tsx");
       let entryServerFile = path.join(cwd, "app", "entry.server.tsx");
 
-      expect(fse.existsSync(entryServerFile)).toBeFalsy();
-      expect(fse.existsSync(entryClientFile)).toBeFalsy();
+      expect(existsSync(entryServerFile)).toBeFalsy();
+      expect(existsSync(entryClientFile)).toBeFalsy();
 
       run(["reveal"], { cwd });
 
-      expect(fse.existsSync(entryServerFile)).toBeTruthy();
-      expect(fse.existsSync(entryClientFile)).toBeTruthy();
+      expect(existsSync(entryServerFile)).toBeTruthy();
+      expect(existsSync(entryClientFile)).toBeTruthy();
     });
 
     test("generates specified entries in the app directory", async () => {
@@ -144,17 +144,17 @@ test.describe("cli", () => {
       let entryClientFile = path.join(cwd, "app", "entry.client.tsx");
       let entryServerFile = path.join(cwd, "app", "entry.server.tsx");
 
-      expect(fse.existsSync(entryServerFile)).toBeFalsy();
-      expect(fse.existsSync(entryClientFile)).toBeFalsy();
+      expect(existsSync(entryServerFile)).toBeFalsy();
+      expect(existsSync(entryClientFile)).toBeFalsy();
 
       run(["reveal", "entry.server"], { cwd });
-      expect(fse.existsSync(entryServerFile)).toBeTruthy();
-      expect(fse.existsSync(entryClientFile)).toBeFalsy();
-      fse.removeSync(entryServerFile);
+      expect(existsSync(entryServerFile)).toBeTruthy();
+      expect(existsSync(entryClientFile)).toBeFalsy();
+      rmSync(entryServerFile);
 
       run(["reveal", "entry.client"], { cwd });
-      expect(fse.existsSync(entryClientFile)).toBeTruthy();
-      expect(fse.existsSync(entryServerFile)).toBeFalsy();
+      expect(existsSync(entryClientFile)).toBeTruthy();
+      expect(existsSync(entryServerFile)).toBeFalsy();
     });
 
     test("generates entry.{server,client}.jsx in the app directory with --no-typescript", async () => {
@@ -162,13 +162,13 @@ test.describe("cli", () => {
       let entryClientFile = path.join(cwd, "app", "entry.client.jsx");
       let entryServerFile = path.join(cwd, "app", "entry.server.jsx");
 
-      expect(fse.existsSync(entryServerFile)).toBeFalsy();
-      expect(fse.existsSync(entryClientFile)).toBeFalsy();
+      expect(existsSync(entryServerFile)).toBeFalsy();
+      expect(existsSync(entryClientFile)).toBeFalsy();
 
       run(["reveal", "--no-typescript"], { cwd });
 
-      expect(fse.existsSync(entryServerFile)).toBeTruthy();
-      expect(fse.existsSync(entryClientFile)).toBeTruthy();
+      expect(existsSync(entryServerFile)).toBeTruthy();
+      expect(existsSync(entryClientFile)).toBeTruthy();
     });
   });
 });
