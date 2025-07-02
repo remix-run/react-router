@@ -655,6 +655,11 @@ function generateRedirectResponse(
   headers.delete("Location");
   headers.delete("X-Remix-Reload-Document");
   headers.delete("X-Remix-Replace");
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  headers.delete("Content-Length");
   headers.set("Content-Type", "text/x-component");
   headers.set("Vary", "Content-Type");
 
@@ -713,6 +718,12 @@ async function generateStaticContextResponse(
     staticContext,
     (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers
   );
+
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  headers.delete("Content-Length");
 
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
