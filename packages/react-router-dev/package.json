@@ -89,7 +89,7 @@
     "set-cookie-parser": "^2.6.0",
     "tinyglobby": "^0.2.14",
     "valibot": "^0.41.0",
-    "vite-node": "^3.1.4"
+    "vite-node": "^3.2.2"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",
