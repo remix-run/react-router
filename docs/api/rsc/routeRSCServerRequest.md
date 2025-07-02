@@ -1,5 +1,6 @@
 ---
 title: routeRSCServerRequest
+unstable: true
 ---
 
 # routeRSCServerRequest
