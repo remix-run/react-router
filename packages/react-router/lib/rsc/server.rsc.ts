@@ -649,13 +649,19 @@ function generateRedirectResponse(
     status: response.status,
     actionResult,
   };
+
+  // Preserve non-internal headers on the user-created redirect
+  let headers = new Headers(response.headers);
+  headers.delete("Location");
+  headers.delete("X-Remix-Reload-Document");
+  headers.delete("X-Remix-Replace");
+  headers.set("Content-Type", "text/x-component");
+  headers.set("Vary", "Content-Type");
+
   return generateResponse(
     {
       statusCode: SINGLE_FETCH_REDIRECT_STATUS,
-      headers: new Headers({
-        "Content-Type": "text/x-component",
-        Vary: "Content-Type",
-      }),
+      headers,
       payload,
     },
     { temporaryReferences }
