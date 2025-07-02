@@ -155,10 +155,18 @@ test.describe("Client Data", () => {
 
     test.describe(`template: ${templateName}`, () => {
       [true, false].forEach((splitRouteModules) => {
-        // RSC Data Mode doesn't support splitRouteModules
-        if (templateName === "rsc-parcel-framework" && splitRouteModules) {
-          return;
-        }
+        test.skip(
+          templateName === "rsc-parcel-framework" && splitRouteModules,
+          "RSC Data Mode doesn't support splitRouteModules"
+        );
+
+        test.skip(
+          ({ browserName }) =>
+            Boolean(process.env.CI) &&
+            splitRouteModules &&
+            (browserName === "webkit" || process.platform === "win32"),
+          "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific"
+        );
 
         test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
           test.describe("clientLoader - critical route module", () => {
