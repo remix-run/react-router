@@ -141,6 +141,22 @@ import { flatRoutes } from "@react-router/fs-routes";
 export default flatRoutes() satisfies RouteConfig;
 ```
 
+<docs-info>
+
+If you were using the folder based route convention from Remix v1 you can combine `@remix-run/v1-route-convention` package with the `@react-router/remix-routes-option-adapter` package:
+
+```ts filename=app/routes.ts
+import { type RouteConfig } from "@react-router/dev/routes";
+import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
+import { createRoutesFromFolders } from "@remix-run/v1-route-convention";
+
+export default remixRoutesOptionAdapter(
+  createRoutesFromFolders
+) satisfies RouteConfig;
+```
+
+</docs-info>
+
 Or, if you were using the `routes` option to define config-based routes:
 
 ```ts filename=app/routes.ts
