@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "7.6.2",
+  "version": "7.6.3",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -23,10 +23,19 @@
   "module": "./dist/development/index.mjs",
   "exports": {
     ".": {
+      "react-server": {
+        "module": "./dist/development/index-react-server.mjs",
+        "default": "./dist/development/index-react-server.js"
+      },
       "node": {
         "types": "./dist/development/index.d.ts",
+        "module": "./dist/development/index.mjs",
         "module-sync": "./dist/development/index.mjs",
         "default": "./dist/development/index.js"
+      },
+      "module": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "import": {
         "types": "./dist/development/index.d.mts",
@@ -35,6 +44,26 @@
       "default": {
         "types": "./dist/development/index.d.ts",
         "default": "./dist/development/index.js"
+      }
+    },
+    "./dom": {
+      "node": {
+        "types": "./dist/development/dom-export.d.ts",
+        "module": "./dist/development/dom-export.mjs",
+        "module-sync": "./dist/development/dom-export.mjs",
+        "default": "./dist/development/dom-export.js"
+      },
+      "module": {
+        "types": "./dist/development/dom-export.d.mts",
+        "default": "./dist/development/dom-export.mjs"
+      },
+      "import": {
+        "types": "./dist/development/dom-export.d.mts",
+        "default": "./dist/development/dom-export.mjs"
+      },
+      "default": {
+        "types": "./dist/development/dom-export.d.ts",
+        "default": "./dist/development/dom-export.js"
       }
     },
     "./internal": {
@@ -48,30 +77,40 @@
         "types": "./dist/development/lib/types/index.d.ts"
       }
     },
-    "./dom": {
+    "./internal/react-server-client": {
+      "react-server": {
+        "module": "./dist/development/index-react-server-client.mjs",
+        "default": "./dist/development/index-react-server-client.js"
+      },
       "node": {
-        "types": "./dist/development/dom-export.d.ts",
-        "module-sync": "./dist/development/dom-export.mjs",
-        "default": "./dist/development/dom-export.js"
+        "types": "./dist/development/index.d.ts",
+        "module": "./dist/development/index.mjs",
+        "module-sync": "./dist/development/index.mjs",
+        "default": "./dist/development/index.js"
+      },
+      "module": {
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "import": {
-        "types": "./dist/development/dom-export.d.mts",
-        "default": "./dist/development/dom-export.mjs"
+        "types": "./dist/development/index.d.mts",
+        "default": "./dist/development/index.mjs"
       },
       "default": {
-        "types": "./dist/development/dom-export.d.ts",
-        "default": "./dist/development/dom-export.js"
+        "types": "./dist/development/index.d.ts",
+        "default": "./dist/development/index.js"
       }
     },
     "./package.json": "./package.json"
   },
   "scripts": {
     "build": "wireit",
+    "watch": "tsup --watch & tsup --config tsup.config.rsc.ts --watch",
     "typecheck": "tsc"
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup",
+      "command": "rimraf dist && tsup && tsup --config tsup.config.rsc.ts",
       "files": [
         "lib/**",
         "*.ts",
@@ -88,12 +127,17 @@
     "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/set-cookie-parser": "^2.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-test-renderer": "^19.1.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
+    "undici": "^6.19.2",
     "wireit": "0.14.9"
   },
   "peerDependencies": {

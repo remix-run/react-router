@@ -234,7 +234,7 @@ test.describe("Vite CSS", () => {
             },
             templateName
           );
-          stop = await dev({ cwd, port });
+          stop = await dev({ cwd, port, basename: base });
         });
         test.afterAll(() => stop());
 
