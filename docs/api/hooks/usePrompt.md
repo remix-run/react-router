@@ -1,5 +1,5 @@
 ---
-title: unstable_usePrompt
+title: usePrompt
 unstable: true
 ---
 
