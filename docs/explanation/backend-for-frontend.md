@@ -4,6 +4,11 @@ title: Backend For Frontend
 
 # Backend For Frontend
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 While React Router can serve as your fullstack application, it also fits perfectly into the "Backend for Frontend" architecture.
 
 The BFF strategy employs a web server with a job scoped to serving the frontend web app and connecting it to the services it needs: your database, mailer, job queues, existing backend APIs (REST, GraphQL), etc. Instead of your UI integrating directly from the browser to these services, it connects to the BFF, and the BFF connects to your services.

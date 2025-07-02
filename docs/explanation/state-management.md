@@ -6,7 +6,8 @@ title: State Management
 
 [MODES: framework, data]
 
-## Overview
+<br/>
+<br/>
 
 State management in React typically involves maintaining a synchronized cache of server data on the client side. However, when using React Router as your framework, most of the traditional caching solutions become redundant because of how it inherently handles data synchronization.
 
