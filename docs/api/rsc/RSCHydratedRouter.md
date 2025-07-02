@@ -1,5 +1,6 @@
 ---
 title: RSCHydratedRouter
+unstable: true
 ---
 
 # RSCHydratedRouter

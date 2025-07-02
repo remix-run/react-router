@@ -1,5 +1,6 @@
 ---
 title: unstable_usePrompt
+unstable: true
 ---
 
 # unstable_usePrompt
