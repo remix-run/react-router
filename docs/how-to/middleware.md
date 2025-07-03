@@ -39,6 +39,8 @@ export default {
 } satisfies Config;
 ```
 
+<docs-warning>By enabling the middleware feature, you change the type of the `context` parameter to your loaders and actions. Please pay attention to the section on [getLoadContext](#custom-server-with-getloadcontext) below if you are actively using `context` today.</docs-warning>
+
 ### 2. Add type support
 
 Update your `app/types/global.d.ts` to enable middleware types:
@@ -400,7 +402,7 @@ function getLoadContext(req, res): unstable_InitialContext {
 }
 ```
 
-## Migration from AppLoadContext
+### Migration from AppLoadContext
 
 If you're currently using `AppLoadContext`, you can migrate most easily by creating a context for your existing object:
 
