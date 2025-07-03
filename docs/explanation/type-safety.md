@@ -6,7 +6,8 @@ title: Type Safety
 
 [MODES: framework]
 
-## Overview
+<br/>
+<br/>
 
 If you haven't done so already, check out our guide for [setting up type safety][route-module-type-safety] in a new project.
 

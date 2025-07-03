@@ -4,6 +4,11 @@ title: Streaming with Suspense
 
 # Streaming with Suspense
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 Streaming with React Suspense allows apps to speed up initial renders by deferring non-critical data and unblocking UI rendering.
 
 React Router supports React Suspense by returning promises from loaders and actions.

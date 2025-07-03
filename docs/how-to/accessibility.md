@@ -10,11 +10,21 @@ React Router makes certain accessibility practices the default where possible an
 
 ## Links
 
+[MODES: framework, data, declarative]
+
+<br/>
+<br/>
+
 The [`<Link>` component][link] renders a standard anchor tag, meaning that you get its accessibility behaviors from the browser for free!
 
 React Router also provides the [`<NavLink/>`][navlink] which behaves the same as `<Link>`, but it also provides context for assistive technology when the link points to the current page. This is useful for building navigation menus or breadcrumbs.
 
 ## Routing
+
+[MODES: framework]
+
+<br/>
+<br/>
 
 If you are rendering [`<Scripts>`][scripts] in your app, there are some important things to consider to make client-side routing more accessible for your users.
 

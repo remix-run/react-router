@@ -6,7 +6,8 @@ title: Lazy Route Discovery
 
 [MODES: framework]
 
-## Overview
+<br/>
+<br/>
 
 Lazy Route Discovery is a performance optimization that loads route information progressively as users navigate through your application, rather than loading the complete route manifest upfront.
 
