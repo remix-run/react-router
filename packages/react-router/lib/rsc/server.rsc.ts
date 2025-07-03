@@ -12,9 +12,11 @@ import type {
 import { type Location } from "../router/history";
 import {
   createStaticHandler,
+  isAbsoluteUrl,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
+  prependBasename,
   type StaticHandlerContext,
 } from "../router/router";
 import {
@@ -205,7 +207,7 @@ export type RSCMatch = {
 
 export type DecodeActionFunction = (
   formData: FormData
-) => Promise<() => Promise<void>>;
+) => Promise<() => Promise<unknown>>;
 
 export type DecodeFormStateFunction = (
   result: unknown,
@@ -384,8 +386,29 @@ async function generateManifestResponse(
   );
 }
 
+function prependBasenameToRedirectResponse(
+  response: Response,
+  basename: string | undefined = "/"
+): Response {
+  if (basename === "/") {
+    return response;
+  }
+
+  let redirect = response.headers.get("Location");
+  if (!redirect || isAbsoluteUrl(redirect)) {
+    return response;
+  }
+
+  response.headers.set(
+    "Location",
+    prependBasename({ basename, pathname: redirect })
+  );
+  return response;
+}
+
 async function processServerAction(
   request: Request,
+  basename: string | undefined,
   decodeReply: DecodeReplyFunction | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
@@ -453,9 +476,15 @@ async function processServerAction(
       const action = await decodeAction(formData);
       let formState = undefined;
       try {
-        const result = await action();
+        let result = await action();
+        if (isRedirectResponse(result)) {
+          result = prependBasenameToRedirectResponse(result, basename);
+        }
         formState = decodeFormState?.(result, formData);
       } catch (error) {
+        if (isRedirectResponse(error)) {
+          return prependBasenameToRedirectResponse(error, basename);
+        }
         if (isResponse(error)) {
           return error;
         }
@@ -577,6 +606,7 @@ async function generateRenderResponse(
         if (request.method === "POST") {
           let result = await processServerAction(
             request,
+            basename,
             decodeReply,
             loadServerAction,
             decodeAction,
