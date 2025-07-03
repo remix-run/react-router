@@ -4,7 +4,7 @@
 name: 🚪 Close issue without a reproduction
 
 on:
-  issue:
+  issues:
     types: [labeled]
 
 jobs:
