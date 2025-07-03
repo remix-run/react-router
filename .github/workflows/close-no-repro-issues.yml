@@ -41,4 +41,4 @@ jobs:
 
       - name: 🚪 Close Issues
         if: ${{ ! inputs.dryRun }}
-        run: echo "Running script for real" # node --experimental-strip-types ./scripts/close-no-repro-issues.ts
+        run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts
