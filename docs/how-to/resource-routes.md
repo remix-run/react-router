@@ -4,7 +4,7 @@ title: Resource Routes
 
 # Resource Routes
 
-[MODES: framework,data]
+[MODES: framework, data]
 
 <br/>
 <br/>

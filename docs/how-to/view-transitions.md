@@ -4,7 +4,7 @@ title: View Transitions
 
 # View Transitions
 
-[MODES: framework,data]
+[MODES: framework, data]
 
 <br/>
 <br/>

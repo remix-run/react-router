@@ -10,7 +10,7 @@ React Router makes certain accessibility practices the default where possible an
 
 ## Links
 
-[MODES: framework,data,declarative]
+[MODES: framework, data, declarative]
 
 <br/>
 <br/>

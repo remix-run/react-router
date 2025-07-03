@@ -4,7 +4,7 @@ title: Using Fetchers
 
 # Using Fetchers
 
-[MODES: framework,data]
+[MODES: framework, data]
 
 <br/>
 <br/>

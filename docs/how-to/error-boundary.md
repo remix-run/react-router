@@ -4,7 +4,7 @@ title: Error Boundaries
 
 # Error Boundaries
 
-[MODES: framework,data]
+[MODES: framework, data]
 
 <br/>
 <br/>

@@ -4,7 +4,7 @@ title: Status Codes
 
 # Status Codes
 
-[MODES: framework,data]
+[MODES: framework ,data]
 
 <br/>
 <br/>

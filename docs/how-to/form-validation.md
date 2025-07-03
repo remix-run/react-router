@@ -4,7 +4,7 @@ title: Form Validation
 
 # Form Validation
 
-[MODES: framework,data]
+[MODES: framework, data]
 
 <br/>
 <br/>

@@ -4,7 +4,7 @@ title: Streaming with Suspense
 
 # Streaming with Suspense
 
-[MODES: framework,data]
+[MODES: framework, data]
 
 <br/>
 <br/>
