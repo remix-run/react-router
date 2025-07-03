@@ -14,7 +14,8 @@ import {
 // Import the prerender function from the client environment
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
-import { assets } from "./parcel-entry-wrapper"
+import { assets } from "./parcel-entry-wrapper";
+import { basename } from "./config/basename";
 
 function fetchServer(request: Request) {
   return matchRSCServerRequest({
@@ -28,6 +29,7 @@ function fetchServer(request: Request) {
     request,
     // The app routes.
     routes,
+    basename,
     // Encode the match with the React Server implementation.
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {

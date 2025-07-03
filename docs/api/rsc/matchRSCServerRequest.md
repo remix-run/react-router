@@ -12,6 +12,10 @@ Matches the given routes to a Request and returns a RSC Response encoding an `RS
 
 ## Options
 
+### basename
+
+The basename to use when matching the request.
+
 ### decodeAction
 
 Your `react-server-dom-xyz/server`'s `decodeAction` function, responsible for loading a server action.
