@@ -111,8 +111,7 @@ In React Router v7 you define your routes using the `app/routes.ts` file. View t
 
 **👉 Update dependencies (if using Remix v2 `v3_routeConfig` flag)**
 
-```diff
-// app/routes.ts
+```diff filename=app/routes.ts
 -import { type RouteConfig } from "@remix-run/route-config";
 -import { flatRoutes } from "@remix-run/fs-routes";
 -import { remixRoutesOptionAdapter } from "@remix-run/routes-option-adapter";
@@ -123,7 +122,6 @@ In React Router v7 you define your routes using the `app/routes.ts` file. View t
 export default [
   // however your routes are defined
 ] satisfies RouteConfig;
-
 ```
 
 **👉 Add a `routes.ts` file (if _not_ using Remix v2 `v3_routeConfig` flag)**
@@ -206,8 +204,7 @@ Note: At this point you should remove the v3 future flags you added in step 1.
 touch react-router.config.ts
 ```
 
-```diff
-// vite.config.ts
+```diff filename=vite.config.ts
 export default defineConfig({
   plugins: [
 -   remix({
@@ -218,8 +215,9 @@ export default defineConfig({
     tsconfigPaths(),
   ],
 });
+```
 
-// react-router.config.ts
+```diff filename=react-router.config.ts
 +import type { Config } from "@react-router/dev/config";
 +export default {
 +  ssr: true,
@@ -238,7 +236,7 @@ If you used the codemod you can skip this step as it was automatically completed
 
 Change `vite.config.ts` to import and use the new `reactRouter` plugin from `@react-router/dev/vite`:
 
-```diff
+```diff filename=vite.config.ts
 -import { vitePlugin as remix } from "@remix-run/dev";
 +import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
@@ -277,7 +275,7 @@ Update the `types` field in your `tsconfig.json` to include:
 - The appropriate `@react-router/*` package in the `types` field
 - `rootDirs` for simplified relative imports
 
-```diff
+```diff filename=tsconfig.json
 {
   "include": [
     /* ... */
