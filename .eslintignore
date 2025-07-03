@@ -6,6 +6,17 @@ examples/**/dist/
 worker-configuration.d.ts
 /playground/
 /playground-local/
+integration/helpers/**/dist/
+integration/helpers/**/build/
+# Temporary until we can get prettier upgraded to support `import ... with` syntax
+integration/helpers/rsc-parcel/src/server.tsx
+playwright-report/
+test-results/
+build.utils.d.ts
+.wrangler/
+.tmp/
+.react-router/
+.react-router-parcel/
 packages/**/dist/
 packages/react-router-dom/server.d.ts
 packages/react-router-dom/server.js

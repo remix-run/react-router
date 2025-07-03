@@ -12,13 +12,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
+  dedupe:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.FORMAT_PAT }}
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
@@ -44,4 +46,4 @@ jobs:
           fi
           git commit -m "chore: deduplicate \`pnpm-lock.yaml\`"
           git push
-          echo "💿 https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
+          echo "💿 pushed dedupe changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

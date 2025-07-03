@@ -1,5 +1,13 @@
 # `@react-router/express`
 
+## 7.6.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/node@7.6.3`
+  - `react-router@7.6.3`
+
 ## 7.6.2
 
 ### Patch Changes
