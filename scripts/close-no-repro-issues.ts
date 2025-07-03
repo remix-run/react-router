@@ -4,6 +4,8 @@ import { parseArgs } from "node:util";
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const ignoredIssues = new Set([9991, 12570, 13607, 13659]);
+
 const { values: args } = parseArgs({
   options: {
     dryRun: {
@@ -21,12 +23,18 @@ async function run() {
   console.log(`Executing command: ${issuesCmd}`);
   let result = execSync(issuesCmd).toString();
   let allIssues = JSON.parse(result) as { number: number; body: string }[];
-  let noReproIssues = allIssues.filter(({ body }) => {
+  let noReproIssues = allIssues.filter(({ number, body }) => {
     return (
+      !ignoredIssues.has(number) &&
       !/https?:\/\/stackblitz\.com\//.test(body) &&
       !/https?:\/\/codesandbox\.io\//.test(body) &&
-      // Look for github links excluding user-uploaded screenshots
-      !/https?:\/\/github\.com\/(?!user-attachments)/.test(body)
+      !/https?:\/\/github\.com\//.test(
+        body
+          // Remove uploaded image URLs and links to react router source code
+          // and new issue links before looking for git repo reproductions
+          .replace("https://github.com/user-attachments/", "")
+          .replace("https://github.com/remix-run/react-router/", "")
+      )
     );
   });
 
