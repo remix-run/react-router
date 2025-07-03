@@ -22,3 +22,4 @@ jobs:
         run: |
           gh issue comment ${{ github.event.issue.number }} -F ./scripts/close-no-repro-issue.md
           gh issue edit ${{ github.event.issue.number }} --remove-label ${{ github.event.label.name }}
+          gh issue close ${{ github.event.issue.number }} -r "not planned";
