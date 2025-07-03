@@ -1,3 +1,8 @@
+# This is a bulk-close script that was used initially to find and close issues
+# without a repro, but moving forward we'll likely use the singular version
+# (close-no-repro-issue.yml) on new issues which is driven by a label added to
+# the issue
+
 name: 🚪 Close issues without a reproduction
 
 on:
@@ -12,7 +17,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   close-no-repro-issues:
-    name: 🚪 Close issues without a reproduction
+    name: 🚪 Close issues
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     env:
