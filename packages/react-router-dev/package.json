@@ -78,6 +78,7 @@
     "@babel/types": "^7.27.7",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
+    "@remix-run/node-fetch-server": "^0.8.1",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
     "chokidar": "^4.0.0",
@@ -91,7 +92,6 @@
     "prettier": "^3.6.2",
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
-    "set-cookie-parser": "^2.6.0",
     "tinyglobby": "^0.2.14",
     "valibot": "^0.41.0",
     "vite-node": "^3.2.2"
@@ -107,7 +107,6 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "^20.0.0",
     "@types/npmcli__package-json": "^4.0.0",
-    "@types/set-cookie-parser": "^2.4.1",
     "@types/semver": "^7.7.0",
     "@vitejs/plugin-rsc": "0.4.26",
     "esbuild-register": "^3.6.0",
