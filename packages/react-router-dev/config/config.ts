@@ -914,7 +914,7 @@ function omitRoutes(
   };
 }
 
-const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs"];
+const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
 
 function isEntryFile(entryBasename: string, filename: string) {
   return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
