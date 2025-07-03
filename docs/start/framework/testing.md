@@ -5,6 +5,10 @@ order: 9
 
 # Testing
 
+[MODES: framework, data]
+
+## Introduction
+
 When components use things like `useLoaderData`, `<Link>`, etc, they are required to be rendered in context of a React Router app. The `createRoutesStub` function creates that context to test components in isolation.
 
 Consider a login form component that relies on `useActionData`
@@ -13,7 +17,7 @@ Consider a login form component that relies on `useActionData`
 import { useActionData } from "react-router";
 
 export function LoginForm() {
-  const errors = useActionData();
+  const { errors } = useActionData();
   return (
     <Form method="post">
       <label>
@@ -36,7 +40,12 @@ We can test this component with `createRoutesStub`. It takes an array of objects
 
 ```tsx
 import { createRoutesStub } from "react-router";
-import * as Test from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { LoginForm } from "./LoginForm";
 
 test("LoginForm renders error messages", async () => {
@@ -59,13 +68,11 @@ test("LoginForm renders error messages", async () => {
   ]);
 
   // render the app stub at "/login"
-  Test.render(<Stub initialEntries={["/login"]} />);
+  render(<Stub initialEntries={["/login"]} />);
 
   // simulate interactions
-  Test.user.click(screen.getByText("Login"));
-  await Test.waitFor(() => screen.findByText(USER_MESSAGE));
-  await Test.waitFor(() =>
-    screen.findByText(PASSWORD_MESSAGE)
-  );
+  userEvent.click(screen.getByText("Login"));
+  await waitFor(() => screen.findByText(USER_MESSAGE));
+  await waitFor(() => screen.findByText(PASSWORD_MESSAGE));
 });
 ```

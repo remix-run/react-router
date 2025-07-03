@@ -1,4 +1,3 @@
-import "@testing-library/jest-dom";
 import {
   act,
   fireEvent,
@@ -5763,10 +5762,78 @@ function testDomRouter(
           expect(container.innerHTML).not.toMatch(/my-key/);
           fireEvent.click(screen.getByText("Load fetchers"));
           await waitFor(() =>
-            // React `useId()` results in something such as `:r2a:`, `:r2i:`,
-            // `:rt:`, or `:rp:` depending on `DataBrowserRouter`/`DataHashRouter`
-            expect(container.innerHTML).toMatch(/(:r[0-9]?[a-z]:),my-key/)
+            // React `useId()` results in something such as `«r2a»`, `«r2i»`,
+            // `«rt»`, or `«rp»` depending on `DataBrowserRouter`/`DataHashRouter`
+            expect(container.innerHTML).toMatch(/«r[0-9]?[a-z]»,my-key/)
           );
+        });
+
+        it("cleans up keyed fetcher data on unmount", async () => {
+          let count = 0;
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                loader() {
+                  return ++count;
+                },
+                Component() {
+                  let [shown, setShown] = React.useState(false);
+                  return (
+                    <div>
+                      <button onClick={() => setShown(!shown)}>
+                        {shown ? "Unmount" : "Mount"}
+                      </button>
+                      {shown ? <FetcherComponent /> : null}
+                    </div>
+                  );
+                },
+                ErrorBoundary() {
+                  let error = useRouteError();
+                  return <pre>{JSON.stringify(error)}</pre>;
+                },
+              },
+            ],
+            {
+              window: getWindow("/"),
+            }
+          );
+
+          render(<RouterProvider router={router} />);
+
+          function FetcherComponent() {
+            let fetcher = useFetcher({ key: "shared" });
+            return (
+              <div>
+                <p>{`Fetcher state:${fetcher.state}`}</p>
+                {fetcher.data != null ? (
+                  <p data-testid="value">{fetcher.data}</p>
+                ) : null}
+                <button onClick={() => fetcher.load(".")}>Fetch</button>
+              </div>
+            );
+          }
+
+          await waitFor(() => screen.getByText("Mount"));
+
+          fireEvent.click(screen.getByText("Mount"));
+          await waitFor(() => screen.getByText("Fetcher state:idle"));
+
+          fireEvent.click(screen.getByText("Fetch"));
+          await waitFor(() => screen.getByTestId("value"));
+          let value = screen.getByTestId("value").innerHTML;
+
+          fireEvent.click(screen.getByText("Unmount"));
+          await waitFor(() => screen.getByText("Mount"));
+
+          fireEvent.click(screen.getByText("Mount"));
+          await waitFor(() => screen.getByText("Fetcher state:idle"));
+          expect(screen.queryByTestId("value")).toBe(null);
+
+          fireEvent.click(screen.getByText("Fetch"));
+          await waitFor(() => screen.getByTestId("value"));
+          let value2 = screen.getByTestId("value").innerHTML;
+          expect(value2).not.toBe(value);
         });
       });
 
@@ -7794,6 +7861,129 @@ function testDomRouter(
         ]);
       });
     });
+
+    if (name === "<DataBrowserRouter>") {
+      describe("DataBrowserRouter-only tests", () => {
+        it("is defensive against double slash URLs in window.location", async () => {
+          let testWindow = getWindow("http://localhost//");
+          let router = createTestRouter(
+            [
+              {
+                path: "*",
+                Component() {
+                  return <Link to="/page">Go to Page</Link>;
+                },
+              },
+              {
+                path: "/page",
+                Component() {
+                  return <h1>Worked!</h1>;
+                },
+              },
+            ],
+            {
+              window: testWindow,
+            }
+          );
+          render(<RouterProvider router={router} />);
+          expect(testWindow.location.pathname).toBe("//");
+          expect(router.state.location.pathname).toBe("//");
+
+          fireEvent.click(screen.getByText("Go to Page"));
+          await waitFor(() => screen.getByText("Worked!"));
+          expect(testWindow.location.pathname).toBe("/page");
+          expect(router.state.location.pathname).toBe("/page");
+        });
+      });
+
+      it("handles different-origin absolute redirect URLs", async () => {
+        let testWindow = getWindow("http://localhost/");
+
+        // jsdom is making more and more properties non-configurable, so we inject
+        // our own jest-friendly window
+        testWindow = {
+          ...testWindow,
+          addEventListener: testWindow.addEventListener.bind(testWindow),
+          location: {
+            ...testWindow.location,
+            assign: jest.fn(),
+            replace: jest.fn(),
+          },
+        };
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return <Link to="/page">Go to Page</Link>;
+              },
+            },
+            {
+              path: "/page",
+              loader() {
+                return redirect("http://otherhost/parent");
+              },
+              Component() {
+                return null;
+              },
+            },
+          ],
+          {
+            window: testWindow,
+          }
+        );
+
+        await router.navigate("/page");
+        expect(testWindow.location.assign).toHaveBeenCalledWith(
+          "http://otherhost/parent"
+        );
+      });
+
+      it("handles different-origin protocol-less absolute redirect URLs", async () => {
+        let testWindow = getWindow("http://localhost/");
+
+        // jsdom is making more and more properties non-configurable, so we inject
+        // our own jest-friendly window
+        testWindow = {
+          ...testWindow,
+          addEventListener: testWindow.addEventListener.bind(testWindow),
+          location: {
+            ...testWindow.location,
+            assign: jest.fn(),
+            replace: jest.fn(),
+          },
+        };
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return <Link to="/page">Go to Page</Link>;
+              },
+            },
+            {
+              path: "/page",
+              loader() {
+                return redirect("//otherhost/parent");
+              },
+              Component() {
+                return null;
+              },
+            },
+          ],
+          {
+            window: testWindow,
+          }
+        );
+
+        await router.navigate("/page");
+        expect(testWindow.location.assign).toHaveBeenCalledWith(
+          "//otherhost/parent"
+        );
+      });
+    }
   });
 }
 

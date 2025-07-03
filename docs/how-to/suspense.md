@@ -18,16 +18,18 @@ import type { Route } from "./+types/my-route";
 export async function loader({}: Route.LoaderArgs) {
   // note this is NOT awaited
   let nonCriticalData = new Promise((res) =>
-    setTimeout(() => "non-critical", 5000)
+    setTimeout(() => res("non-critical"), 5000)
   );
 
   let criticalData = await new Promise((res) =>
-    setTimeout(() => "critical", 300)
+    setTimeout(() => res("critical"), 300)
   );
 
   return { nonCriticalData, criticalData };
 }
 ```
+
+Note you can't return a single promise, it must be an object with keys.
 
 ## 2. Render the fallback and resolved UI
 
@@ -53,7 +55,6 @@ export default function MyComponent({
         <Await resolve={nonCriticalData}>
           {(value) => <h3>Non critical value: {value}</h3>}
         </Await>
-        <NonCriticalUI p={nonCriticalData} />
       </React.Suspense>
     </div>
   );
@@ -75,4 +76,13 @@ function NonCriticalUI({ p }: { p: Promise<string> }) {
   let value = React.use(p);
   return <h3>Non critical value {value}</h3>;
 }
+```
+
+## Timeouts
+
+By default, loaders and actions reject any outstanding promises after 4950ms. You can control this by exporting a `streamTimeout` numerical value from your `entry.server.tsx`.
+
+```ts filename=entry.server.tsx
+// Reject all pending promises from handler functions after 10 seconds
+export const streamTimeout = 10_000;
 ```

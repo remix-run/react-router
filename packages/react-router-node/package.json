@@ -1,6 +1,6 @@
 {
   "name": "@react-router/node",
-  "version": "7.0.2",
+  "version": "7.6.3",
   "description": "Node.js platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -29,29 +29,11 @@
         "default": "./dist/index.js"
       }
     },
-    "./install": {
-      "node": {
-        "types": "./dist/install.d.ts",
-        "module-sync": "./dist/install.mjs",
-        "default": "./dist/install.js"
-      },
-      "import": {
-        "types": "./dist/install.d.mts",
-        "default": "./dist/install.mjs"
-      },
-      "default": {
-        "types": "./dist/install.d.ts",
-        "default": "./dist/install.js"
-      }
-    },
     "./package.json": "./package.json"
   },
-  "sideEffects": [
-    "./dist/install.js",
-    "./dist/install.mjs"
-  ],
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {
@@ -68,13 +50,9 @@
     }
   },
   "dependencies": {
-    "@mjackson/node-fetch-server": "^0.2.0",
-    "source-map-support": "^0.5.21",
-    "stream-slice": "^0.1.2",
-    "undici": "^6.19.2"
+    "@mjackson/node-fetch-server": "^0.2.0"
   },
   "devDependencies": {
-    "@types/source-map-support": "^0.5.4",
     "react-router": "workspace:*",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
@@ -94,9 +72,6 @@
   },
   "files": [
     "dist/",
-    "globals.d.ts",
-    "install.d.ts",
-    "install.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

@@ -1,6 +1,6 @@
 name: Branch
 
-# main/dev/release-* branches will get the full run across
+# main/dev branches will get the full run across
 # all OS/browsers for multiple node versions
 
 on:
@@ -8,9 +8,6 @@ on:
     branches:
       - main
       - dev
-      - release-*
-    tags:
-      - "v0.0.0-nightly-*"
     paths-ignore:
       - ".changeset/**"
       - "decisions/**"
@@ -43,7 +40,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "windows-latest"
-      node_version: "[20, 22]"
+      node_version: "[22]"
       browser: '["msedge"]'
 
   integration-macos:

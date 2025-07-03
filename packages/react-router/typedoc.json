@@ -1,10 +1,10 @@
 {
   "entryPoints": ["./index.ts"],
   "categoryOrder": [
-    "Routers",
-    "Router Components",
     "Components",
     "Hooks",
+    "Data Routers",
+    "Component Routers",
     "Utils",
     "Types",
     "*"

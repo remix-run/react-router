@@ -5,6 +5,8 @@ order: 2
 
 # Routing
 
+[MODES: framework]
+
 ## Configuring Routes
 
 Routes are configured in `app/routes.ts`. Each route has two required parts: a URL pattern to match the URL, and a file path to the route module that defines its behavior.
@@ -49,7 +51,21 @@ export default [
 ] satisfies RouteConfig;
 ```
 
-If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
+If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention][file-route-conventions]. You can even combine different routing conventions if you like:
+
+```ts filename=app/routes.ts
+import {
+  type RouteConfig,
+  route,
+} from "@react-router/dev/routes";
+import { flatRoutes } from "@react-router/fs-routes";
+
+export default [
+  route("/", "./home.tsx"),
+
+  ...(await flatRoutes()),
+] satisfies RouteConfig;
+```
 
 ## Route Modules
 
@@ -152,6 +168,11 @@ export default [
   ]),
 ] satisfies RouteConfig;
 ```
+
+Note that:
+
+- `home.tsx` and `contact.tsx` will be rendered into the `marketing/layout.tsx` outlet without creating any new URL paths
+- `project.tsx` and `edit-project.tsx` will be rendered into the `projects/project-layout.tsx` outlet at `/projects/:pid` and `/projects/:pid/edit` while `projects/home.tsx` will not.
 
 ## Index Routes
 
@@ -280,6 +301,18 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 const { "*": splat } = params;
 ```
 
+You can also use a splat to catch requests that don't match any route:
+
+```ts filename=app/routes.ts
+route("*", "./catchall.tsx"); // catcall route,
+```
+
+```tsx filename=app/catchall.tsx
+export function loader() {
+  throw new Response("Page not found", { status: 404 });
+}
+```
+
 ## Component Routes
 
 You can also use components that match the URL to elements anywhere in the component tree:
@@ -294,7 +327,7 @@ function Wizard() {
       <Routes>
         <Route index element={<StepOne />} />
         <Route path="step-2" element={<StepTwo />} />
-        <Route path="step-3" element={<StepThree />}>
+        <Route path="step-3" element={<StepThree />} />
       </Routes>
     </div>
   );
@@ -308,4 +341,4 @@ Note that these routes do not participate in data loading, actions, code splitti
 Next: [Route Module](./route-module)
 
 [file-route-conventions]: ../../how-to/file-route-conventions
-[outlet]: ../../api/react-router/Outlet
+[outlet]: https://api.reactrouter.com/v7/functions/react_router.Outlet.html

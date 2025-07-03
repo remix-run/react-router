@@ -20,6 +20,7 @@ import type {
   Router as DataRouter,
   RouterState,
   RouterSubscriber,
+  RouterInit,
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
@@ -43,6 +44,7 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
+  ENABLE_DEV_WARNINGS,
   FetchersContext,
   LocationContext,
   NavigationContext,
@@ -51,20 +53,21 @@ import {
 } from "./context";
 import {
   _renderMatches,
+  useActionData,
   useAsyncValue,
   useInRouterContext,
+  useLoaderData,
   useLocation,
+  useMatches,
   useNavigate,
   useOutlet,
+  useParams,
+  useRouteError,
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
  * @private
@@ -130,23 +133,67 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
+export const hydrationRouteProperties: (keyof RouteObject)[] = [
+  "HydrateFallback",
+  "hydrateFallbackElement",
+];
+
+export interface MemoryRouterOpts {
+  /**
+   * Basename path for the application.
+   */
+  basename?: string;
+  /**
+   * Function to provide the initial context values for all client side navigations/fetches
+   */
+  unstable_getContext?: RouterInit["unstable_getContext"];
+  /**
+   * Future flags to enable for the router.
+   */
+  future?: Partial<FutureConfig>;
+  /**
+   * Hydration data to initialize the router with if you have already performed
+   * data loading on the server.
+   */
+  hydrationData?: HydrationState;
+  /**
+   * Initial entires in the in-memory history stack
+   */
+  initialEntries?: InitialEntry[];
+  /**
+   * Index of `initialEntries` the application should initialize to
+   */
+  initialIndex?: number;
+  /**
+   * Override the default data strategy of loading in parallel.
+   * Only intended for advanced usage.
+   */
+  dataStrategy?: DataStrategyFunction;
+  /**
+   * Lazily define portions of the route tree on navigations.
+   */
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+}
+
 /**
- * @category Routers
+ * Create a new data router that manages the application path using an in-memory
+ * history stack.  Useful for non-browser environments without a DOM API.
+ *
+ * @category Data Routers
  */
 export function createMemoryRouter(
+  /**
+   * Application routes
+   */
   routes: RouteObject[],
-  opts?: {
-    basename?: string;
-    future?: Partial<FutureConfig>;
-    hydrationData?: HydrationState;
-    initialEntries?: InitialEntry[];
-    initialIndex?: number;
-    dataStrategy?: DataStrategyFunction;
-    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
-  }
+  /**
+   * Router options
+   */
+  opts?: MemoryRouterOpts
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
+    unstable_getContext: opts?.unstable_getContext,
     future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
@@ -154,6 +201,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
+    hydrationRouteProperties,
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -217,12 +265,12 @@ export function RouterProvider({
       newState: RouterState,
       { deletedFetchers, flushSync, viewTransitionOpts }
     ) => {
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
           fetcherData.current.set(key, fetcher.data);
         }
       });
+      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
@@ -470,7 +518,7 @@ export interface MemoryRouterProps {
 /**
  * A `<Router>` that stores all entries in memory.
  *
- * @category Router Components
+ * @category Component Routers
  */
 export function MemoryRouter({
   basename,
@@ -1185,4 +1233,59 @@ export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
   return _renderMatches(matches);
+}
+
+export type RouteComponentType = React.ComponentType<{
+  params: ReturnType<typeof useParams>;
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  matches: ReturnType<typeof useMatches>;
+}>;
+
+export function withComponentProps(Component: RouteComponentType) {
+  return function WithComponentProps() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+      matches: useMatches(),
+    };
+    return React.createElement(Component, props);
+  };
+}
+
+export type HydrateFallbackType = React.ComponentType<{
+  params: ReturnType<typeof useParams>;
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+}>;
+
+export function withHydrateFallbackProps(HydrateFallback: HydrateFallbackType) {
+  return function WithHydrateFallbackProps() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+    };
+    return React.createElement(HydrateFallback, props);
+  };
+}
+
+export type ErrorBoundaryType = React.ComponentType<{
+  params: ReturnType<typeof useParams>;
+  loaderData: ReturnType<typeof useLoaderData>;
+  actionData: ReturnType<typeof useActionData>;
+  error: ReturnType<typeof useRouteError>;
+}>;
+
+export function withErrorBoundaryProps(ErrorBoundary: ErrorBoundaryType) {
+  return function WithErrorBoundaryProps() {
+    const props = {
+      params: useParams(),
+      loaderData: useLoaderData(),
+      actionData: useActionData(),
+      error: useRouteError(),
+    };
+    return React.createElement(ErrorBoundary, props);
+  };
 }

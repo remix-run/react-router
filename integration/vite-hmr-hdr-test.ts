@@ -9,6 +9,7 @@ import {
   createEditor,
   EXPRESS_SERVER,
   viteConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const indexRoute = `
@@ -38,78 +39,84 @@ const indexRoute = `
   }
 `;
 
-test("Vite / HMR & HDR / vite dev", async ({ page, browserName, dev }) => {
-  let files: Files = async ({ port }) => ({
-    "vite.config.js": await viteConfig.basic({ port }),
-    "app/routes/_index.tsx": indexRoute,
-  });
-  let { cwd, port } = await dev(files);
-  await workflow({ page, browserName, cwd, port });
-});
-
-test("Vite / HMR & HDR / express", async ({ page, browserName, customDev }) => {
-  let files: Files = async ({ port }) => ({
-    "vite.config.js": await viteConfig.basic({ port }),
-    "server.mjs": EXPRESS_SERVER({ port }),
-    "app/routes/_index.tsx": indexRoute,
-  });
-  let { cwd, port } = await customDev(files);
-  await workflow({ page, browserName, cwd, port });
-});
-
-test("Vite / HMR & HDR / mdx", async ({ page, dev }) => {
-  let files: Files = async ({ port }) => ({
-    "vite.config.ts": `
-      import { defineConfig } from "vite";
-      import { reactRouter } from "@react-router/dev/vite";
-      import mdx from "@mdx-js/rollup";
-
-      export default defineConfig({
-        ${await viteConfig.server({ port })}
-        plugins: [
-          mdx(),
-          reactRouter(),
-        ],
+test.describe("Vite HMR & HDR", () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test.describe(templateDisplayName, () => {
+      test("vite dev", async ({ page, browserName, dev }) => {
+        let files: Files = async ({ port }) => ({
+          "vite.config.js": await viteConfig.basic({ port }),
+          "app/routes/_index.tsx": indexRoute,
+        });
+        let { cwd, port } = await dev(files, templateName);
+        await workflow({ page, browserName, cwd, port });
       });
-    `,
-    "app/component.tsx": `
-      import {useState} from "react";
 
-      export const Counter = () => {
-        const [count, setCount] = useState(0);
-        return <button onClick={() => setCount(count => count + 1)}>Count: {count}</button>
-      }
-    `,
-    "app/routes/mdx.mdx": `
-      import { Counter } from "../component";
+      test("express", async ({ page, browserName, customDev }) => {
+        let files: Files = async ({ port }) => ({
+          "vite.config.js": await viteConfig.basic({ port }),
+          "server.mjs": EXPRESS_SERVER({ port }),
+          "app/routes/_index.tsx": indexRoute,
+        });
+        let { cwd, port } = await customDev(files, templateName);
+        await workflow({ page, browserName, cwd, port });
+      });
 
-      # MDX Title (HMR: 0)
+      test("mdx", async ({ page, dev }) => {
+        let files: Files = async ({ port }) => ({
+          "vite.config.ts": `
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+            import mdx from "@mdx-js/rollup";
 
-      <Counter />
-    `,
+            export default defineConfig({
+              ${await viteConfig.server({ port })}
+              plugins: [
+                mdx(),
+                reactRouter(),
+              ],
+            });
+          `,
+          "app/component.tsx": `
+            import {useState} from "react";
+
+            export const Counter = () => {
+              const [count, setCount] = useState(0);
+              return <button onClick={() => setCount(count => count + 1)}>Count: {count}</button>
+            }
+          `,
+          "app/routes/mdx.mdx": `
+            import { Counter } from "../component";
+
+            # MDX Title (HMR: 0)
+
+            <Counter />
+          `,
+        });
+
+        let { port, cwd } = await dev(files, templateName);
+        let edit = createEditor(cwd);
+        await page.goto(`http://localhost:${port}/mdx`, {
+          waitUntil: "networkidle",
+        });
+
+        await expect(page.locator("h1")).toHaveText("MDX Title (HMR: 0)");
+        let button = page.locator("button");
+        await expect(button).toHaveText("Count: 0");
+        await button.click();
+        await expect(button).toHaveText("Count: 1");
+
+        await edit("app/routes/mdx.mdx", (contents) =>
+          contents.replace("(HMR: 0)", "(HMR: 1)")
+        );
+        await page.waitForLoadState("networkidle");
+
+        await expect(page.locator("h1")).toHaveText("MDX Title (HMR: 1)");
+        await expect(page.locator("button")).toHaveText("Count: 1");
+
+        expect(page.errors).toEqual([]);
+      });
+    });
   });
-
-  let { port, cwd } = await dev(files);
-  let edit = createEditor(cwd);
-  await page.goto(`http://localhost:${port}/mdx`, {
-    waitUntil: "networkidle",
-  });
-
-  await expect(page.locator("h1")).toHaveText("MDX Title (HMR: 0)");
-  let button = page.locator("button");
-  await expect(button).toHaveText("Count: 0");
-  await button.click();
-  await expect(button).toHaveText("Count: 1");
-
-  await edit("app/routes/mdx.mdx", (contents) =>
-    contents.replace("(HMR: 0)", "(HMR: 1)")
-  );
-  await page.waitForLoadState("networkidle");
-
-  await expect(page.locator("h1")).toHaveText("MDX Title (HMR: 1)");
-  await expect(page.locator("button")).toHaveText("Count: 1");
-
-  expect(page.errors).toEqual([]);
 });
 
 async function workflow({
@@ -187,20 +194,12 @@ async function workflow({
   expect(
     // When adding a loader, a harmless error is logged to the browser console.
     // HMR works as intended, so this seems like a React Fast Refresh bug caused by off-screen rendering with old server data or something like that 🤷
-    page.errors.filter((error) => {
-      let chromium =
-        browserName === "chromium" &&
-        error.message ===
-          "Cannot destructure property 'message' of 'useLoaderData(...)' as it is null.";
-      let firefox =
-        browserName === "firefox" &&
-        error.message === "(intermediate value)() is null";
-      let webkit =
-        browserName === "webkit" &&
-        error.message === "Right side of assignment cannot be destructured";
-      let expected = chromium || firefox || webkit;
-      return !expected;
-    })
+    page.errors.filter(
+      (error) =>
+        !error.message.includes(
+          "There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root."
+        )
+    )
   ).toEqual([]);
   page.errors = [];
 

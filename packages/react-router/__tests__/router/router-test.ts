@@ -961,6 +961,35 @@ describe("a router", () => {
       router.dispose();
     });
 
+    it("allows routes to be initialized with undefined loaderData", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: undefined,
+          },
+        },
+      });
+
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: undefined,
+        },
+      });
+    });
+
     it("handles interruptions of initial data load", async () => {
       let parentDfd = createDeferred();
       let parentSpy = jest.fn(() => parentDfd.promise);
@@ -1066,6 +1095,37 @@ describe("a router", () => {
         },
         errors: {
           "0": "Kaboom!",
+        },
+      });
+
+      router.dispose();
+    });
+
+    it("handles initial load 404s when the error boundary router has a loader", async () => {
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/404"] }),
+        routes: [
+          {
+            path: "/",
+            hasErrorBoundary: true,
+            loader: () => {},
+          },
+        ],
+      });
+
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/404" }),
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
+        errors: {
+          "0": new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/404"'),
+            true
+          ),
         },
       });
 
@@ -1320,6 +1380,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       let nav2 = await t.navigate("/tasks/1");
@@ -1328,6 +1389,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
@@ -1336,6 +1398,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       let nav4 = await t.navigate("/tasks#hash", {
@@ -1346,6 +1409,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       expect(t.router.state.navigation.formAction).toBe("/tasks");
@@ -1743,6 +1807,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -1786,6 +1851,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
       // internals aren't the same on separate creations
@@ -1818,6 +1884,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       // Assert request internals, cannot do a deep comparison above since some

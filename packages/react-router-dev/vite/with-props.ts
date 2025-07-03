@@ -1,65 +1,22 @@
-import type { Plugin } from "vite";
-import dedent from "dedent";
-
 import type { Babel, NodePath, ParseResult } from "./babel";
 import { traverse, t } from "./babel";
-import * as VirtualModule from "./vmod";
 
-const vmodId = VirtualModule.id("with-props");
+const namedComponentExports = ["HydrateFallback", "ErrorBoundary"] as const;
+type NamedComponentExport = (typeof namedComponentExports)[number];
+function isNamedComponentExport(name: string): name is NamedComponentExport {
+  return namedComponentExports.includes(name as NamedComponentExport);
+}
 
-const NAMED_COMPONENT_EXPORTS = ["HydrateFallback", "ErrorBoundary"];
+type HocName =
+  | "UNSAFE_withComponentProps"
+  | "UNSAFE_withHydrateFallbackProps"
+  | "UNSAFE_withErrorBoundaryProps";
 
-export const plugin: Plugin = {
-  name: "react-router-with-props",
-  enforce: "pre",
-  resolveId(id) {
-    if (id === vmodId) return VirtualModule.resolve(vmodId);
-  },
-  async load(id) {
-    if (id !== VirtualModule.resolve(vmodId)) return;
-    return dedent`
-      import { createElement as h } from "react";
-      import { useActionData, useLoaderData, useMatches, useParams, useRouteError } from "react-router";
-
-      export function withComponentProps(Component) {
-        return function Wrapped() {
-          const props = {
-            params: useParams(),
-            loaderData: useLoaderData(),
-            actionData: useActionData(),
-            matches: useMatches(),
-          };
-          return h(Component, props);
-        };
-      }
-
-      export function withHydrateFallbackProps(HydrateFallback) {
-        return function Wrapped() {
-          const props = {
-            params: useParams(),
-          };
-          return h(HydrateFallback, props);
-        };
-      }
-
-      export function withErrorBoundaryProps(ErrorBoundary) {
-        return function Wrapped() {
-          const props = {
-            params: useParams(),
-            loaderData: useLoaderData(),
-            actionData: useActionData(),
-            error: useRouteError(),
-          };
-          return h(ErrorBoundary, props);
-        };
-      }
-    `;
-  },
-};
-
-export const transform = (ast: ParseResult<Babel.File>) => {
+export const decorateComponentExportsWithProps = (
+  ast: ParseResult<Babel.File>
+) => {
   const hocs: Array<[string, Babel.Identifier]> = [];
-  function getHocUid(path: NodePath, hocName: string) {
+  function getHocUid(path: NodePath, hocName: HocName) {
     const uid = path.scope.generateUidIdentifier(hocName);
     hocs.push([hocName, uid]);
     return uid;
@@ -75,7 +32,7 @@ export const transform = (ast: ParseResult<Babel.File>) => {
           declaration.isFunctionDeclaration() ? toFunctionExpression(declaration.node) :
           undefined
         if (expr) {
-          const uid = getHocUid(path, "withComponentProps");
+          const uid = getHocUid(path, "UNSAFE_withComponentProps");
           declaration.replaceWith(t.callExpression(uid, [expr]));
         }
         return;
@@ -92,9 +49,8 @@ export const transform = (ast: ParseResult<Babel.File>) => {
             if (!expr) return;
             if (!id.isIdentifier()) return;
             const { name } = id.node;
-            if (!NAMED_COMPONENT_EXPORTS.includes(name)) return;
-
-            const uid = getHocUid(path, `with${name}Props`);
+            if (!isNamedComponentExport(name)) return;
+            const uid = getHocUid(path, `UNSAFE_with${name}Props`);
             init.replaceWith(t.callExpression(uid, [expr]));
           });
           return;
@@ -104,9 +60,9 @@ export const transform = (ast: ParseResult<Babel.File>) => {
           const { id } = decl.node;
           if (!id) return;
           const { name } = id;
-          if (!NAMED_COMPONENT_EXPORTS.includes(name)) return;
+          if (!isNamedComponentExport(name)) return;
 
-          const uid = getHocUid(path, `with${name}Props`);
+          const uid = getHocUid(path, `UNSAFE_with${name}Props`);
           decl.replaceWith(
             t.variableDeclaration("const", [
               t.variableDeclarator(
@@ -126,7 +82,7 @@ export const transform = (ast: ParseResult<Babel.File>) => {
         hocs.map(([name, identifier]) =>
           t.importSpecifier(identifier, t.identifier(name))
         ),
-        t.stringLiteral(vmodId)
+        t.stringLiteral("react-router")
       )
     );
   }

@@ -10,6 +10,7 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
+  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -49,10 +50,6 @@ import {
   stripBasename,
 } from "./router/utils";
 import type { SerializeFrom } from "./types/route-data";
-
-// Provided by the build system
-declare const __DEV__: boolean;
-const ENABLE_DEV_WARNINGS = __DEV__;
 
 /**
   Resolves a URL against the current location.
@@ -897,6 +894,7 @@ export function _renderMatches(
       } else {
         children = outlet;
       }
+
       return (
         <RenderedRoute
           match={match}
@@ -1035,17 +1033,19 @@ export function useNavigation() {
 
   @category Hooks
  */
-export function useRevalidator() {
+export function useRevalidator(): {
+  revalidate: () => Promise<void>;
+  state: DataRouter["state"]["revalidation"];
+} {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
+  let revalidate = React.useCallback(async () => {
+    await dataRouterContext.router.revalidate();
+  }, [dataRouterContext.router]);
+
   return React.useMemo(
-    () => ({
-      async revalidate() {
-        await dataRouterContext.router.revalidate();
-      },
-      state: state.revalidation,
-    }),
-    [dataRouterContext.router, state.revalidation]
+    () => ({ revalidate, state: state.revalidation }),
+    [revalidate, state.revalidation]
   );
 }
 
