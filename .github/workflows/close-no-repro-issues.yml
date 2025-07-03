@@ -6,7 +6,7 @@ on:
       dryRun:
         type: boolean
         description: "Dry Run? (no issues will be closed)"
-        default: false
+        default: "false"
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -36,9 +36,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🚪 Close Issues (Dry Run)
-        if: github.event.inputs.dryRun == true
+        if: github.event.inputs.dryRun == "true"
         run: node --experimental-strip-types ./scripts/close-no-repro-issues.ts --dryRun
 
       - name: 🚪 Close Issues
-        if: github.event.inputs.dryRun != true
+        if: github.event.inputs.dryRun != "true"
         run: echo "Running script for real" # node --experimental-strip-types ./scripts/close-no-repro-issues.ts
