@@ -282,18 +282,4 @@ describe("<HydratedRouter>", () => {
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
   });
-
-  it("clears critical CSS after initial render", async () => {
-    let clearSpy = jest.fn();
-    Object.defineProperty(window, "__reactRouterClearCriticalCss", {
-      set: () => {},
-      get: () => clearSpy,
-    });
-
-    await act(() => {
-      render(<HydratedRouter />);
-    });
-
-    expect(clearSpy).toHaveBeenCalled();
-  });
 });

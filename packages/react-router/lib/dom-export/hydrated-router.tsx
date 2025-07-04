@@ -229,22 +229,18 @@ export function HydratedRouter(props: HydratedRouterProps) {
     });
   }
 
-  // Critical CSS can become stale after code changes, e.g. styles might be
-  // removed from a component, but the styles will still be present in the
-  // server HTML. This allows our HMR logic to clear the critical CSS state.
+  // We only want to show critical CSS in dev for the initial server render to
+  // avoid a flash of unstyled content. Once the client-side JS kicks in, we can
+  // clear it to avoid duplicate styles.
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? ssrInfo?.context.criticalCss
       : undefined
   );
-  if (process.env.NODE_ENV === "development") {
-    if (ssrInfo) {
-      window.__reactRouterClearCriticalCss = () => setCriticalCss(undefined);
-    }
-  }
-
   React.useEffect(() => {
-    window.__reactRouterClearCriticalCss?.();
+    if (process.env.NODE_ENV === "development") {
+      setCriticalCss(undefined);
+    }
   }, []);
 
   let [location, setLocation] = React.useState(router.state.location);
