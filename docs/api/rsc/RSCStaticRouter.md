@@ -1,5 +1,6 @@
 ---
 title: RSCStaticRouter
+unstable: true
 ---
 
 # RSCStaticRouter
