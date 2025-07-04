@@ -1041,6 +1041,9 @@ importers:
       '@babel/types':
         specifier: ^7.27.7
         version: 7.27.7
+      '@mjackson/node-fetch-server':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@npmcli/package-json':
         specifier: ^4.0.1
         version: 4.0.1
@@ -1086,9 +1089,6 @@ importers:
       semver:
         specifier: ^7.3.7
         version: 7.7.2
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
@@ -1135,9 +1135,6 @@ importers:
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
-      '@types/set-cookie-parser':
-        specifier: ^2.4.1
-        version: 2.4.7
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.0)
@@ -3702,6 +3699,9 @@ packages:
 
   '@mjackson/node-fetch-server@0.6.1':
     resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
+
+  '@mjackson/node-fetch-server@0.7.0':
+    resolution: {integrity: sha512-un8diyEBKU3BTVj3GzlTPA1kIjCkGdD+AMYQy31Gf9JCkfoZzwgJ79GUtHrF2BN3XPNMLpubbzPcxys+a3uZEw==}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
@@ -11882,6 +11882,8 @@ snapshots:
   '@mjackson/node-fetch-server@0.2.0': {}
 
   '@mjackson/node-fetch-server@0.6.1': {}
+
+  '@mjackson/node-fetch-server@0.7.0': {}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
