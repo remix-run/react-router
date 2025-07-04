@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-Clear critical CSS after initial render in HydratedRouter
+In Framework Mode, clear critical CSS in development after initial render
