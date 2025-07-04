@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "parcel --no-cache",
     "build": "parcel build --no-cache",
-    "start": "node dist/server.js",
+    "start": "cross-env NODE_ENV=production node dist/server/server.js",
     "typecheck": "tsc"
   },
   "devDependencies": {
@@ -38,6 +38,7 @@
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
     "@parcel/runtime-rsc": "2.15.0",
+    "cross-env": "^7.0.3",
     "express": "^4.21.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
