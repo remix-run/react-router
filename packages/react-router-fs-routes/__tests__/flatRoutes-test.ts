@@ -912,4 +912,14 @@ describe("flatRoutes", () => {
       );
     });
   });
+
+  test("should include a valid file for a route outside of the app directory", () => {
+    const routesDir = path.join("test", "root", "routes");
+    const routeFile = path.join(routesDir, "route.tsx");
+
+    const manifest = flatRoutesUniversal(APP_DIR, [routeFile]);
+    const routeInfo = manifest[path.relative(APP_DIR, routesDir)];
+    expect(routeInfo).toBeDefined();
+    expect(routeInfo.file).toBe(path.relative(APP_DIR, routeFile));
+  });
 });

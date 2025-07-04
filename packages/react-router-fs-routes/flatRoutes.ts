@@ -174,7 +174,7 @@ export function flatRoutesUniversal(
     let pathname = createRoutePath(segments, raw, index);
 
     routeManifest[routeId] = {
-      file: file.slice(appDirectory.length + 1),
+      file: path.relative(appDirectory, file),
       id: routeId,
       path: pathname,
     };
