@@ -1256,7 +1256,8 @@ export function compilePath(
           params.push({ paramName, isOptional: isOptional != null });
           return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
         }
-      );
+      ) // Dynamic segment
+      .replace(/\/([\w-]+)\?/g, "(/$1)?"); // Optional static segment
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
