@@ -4,6 +4,11 @@ title: Automatic Code Splitting
 
 # Automatic Code Splitting
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 When using React Router's framework features, your application is automatically code split to improve the performance of initial load times when users visit your application.
 
 ## Code Splitting by Route

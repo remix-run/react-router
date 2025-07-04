@@ -1,4 +1,4 @@
-// Expose old @remix-run/router API y2
+// Expose old @remix-run/router API
 export type { InitialEntry, Location, Path, To } from "./lib/router/history";
 export type {
   HydrationState,
@@ -320,6 +320,9 @@ export {
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  withComponentProps as UNSAFE_withComponentProps,
+  withHydrateFallbackProps as UNSAFE_withHydrateFallbackProps,
+  withErrorBoundaryProps as UNSAFE_withErrorBoundaryProps,
 } from "./lib/components";
 
 /** @internal */

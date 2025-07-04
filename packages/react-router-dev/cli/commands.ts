@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
 import colors from "picocolors";
@@ -155,9 +156,9 @@ export async function generateEntry(
       cwd: rootDirectory,
       filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
     });
-    await fse.writeFile(outputFile, javascript, "utf-8");
+    await writeFile(outputFile, javascript, "utf-8");
   } else {
-    await fse.writeFile(outputFile, contents, "utf-8");
+    await writeFile(outputFile, contents, "utf-8");
   }
 
   console.log(
@@ -188,7 +189,7 @@ async function checkForEntry(
 ) {
   for (let entry of entries) {
     let entryPath = path.resolve(appDirectory, entry);
-    let exists = await fse.pathExists(entryPath);
+    let exists = existsSync(entryPath);
     if (exists) {
       let relative = path.relative(rootDirectory, entryPath);
       console.error(colors.red(`Entry file ${relative} already exists.`));
@@ -203,7 +204,7 @@ async function createServerEntry(
   inputFile: string
 ) {
   await checkForEntry(rootDirectory, appDirectory, serverEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
+  let contents = await readFile(inputFile, "utf-8");
   return contents;
 }
 
@@ -213,7 +214,7 @@ async function createClientEntry(
   inputFile: string
 ) {
   await checkForEntry(rootDirectory, appDirectory, clientEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
+  let contents = await readFile(inputFile, "utf-8");
   return contents;
 }
 

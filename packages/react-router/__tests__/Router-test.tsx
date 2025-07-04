@@ -14,11 +14,13 @@ describe("<Router>", () => {
 
   it("throws if another <Router> is already in context", () => {
     expect(() => {
-      TestRenderer.create(
-        <MemoryRouter>
-          <MemoryRouter />
-        </MemoryRouter>
-      );
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter>
+            <MemoryRouter />
+          </MemoryRouter>
+        );
+      });
     }).toThrow(/cannot render a <Router> inside another <Router>/);
 
     expect(consoleError).toHaveBeenCalledTimes(1);

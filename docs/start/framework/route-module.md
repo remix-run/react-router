@@ -53,7 +53,7 @@ When the component is rendered, it is provided the props defined in `Route.Compo
 3. `params`: An object containing the route parameters (if any).
 4. `matches`: An array of all the matches in the current route tree.
 
-You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferrable because they will be automatically typed correctly for the route.
+You can use these props in place of hooks like `useLoaderData` or `useParams`. This may be preferable because they will be automatically typed correctly for the route.
 
 ### Using props
 
@@ -309,9 +309,33 @@ export default function Root() {
 
 ## `meta`
 
-Route meta defines meta tags to be rendered in the `<head>` of the document.
+Route meta defines meta tags to be rendered in the `<Meta />` component, usually placed in the `<head>`.
+
+<docs-warning>
+
+Since React 19, [using the built-in `<meta>` element](https://react.dev/reference/react-dom/components/meta) is recommended over the use of the route module's `meta` export.
+
+Here is an example of how to use it and the `<title>` element:
 
 ```tsx
+export default function MyRoute() {
+  return (
+    <div>
+      <title>Very cool app</title>
+      <meta property="og:title" content="Very cool app" />
+      <meta
+        name="description"
+        content="This app is the best"
+      />
+      {/* The rest of your route content... */}
+    </div>
+  );
+}
+```
+
+</docs-warning>
+
+```tsx filename=app/product.tsx
 export function meta() {
   return [
     { title: "Very cool app" },
@@ -327,9 +351,7 @@ export function meta() {
 }
 ```
 
-All routes' meta will be aggregated and rendered through the `<Meta />` component, usually rendered in your app root:
-
-```tsx
+```tsx filename=app/root.tsx
 import { Meta } from "react-router";
 
 export default function Root() {
@@ -345,9 +367,12 @@ export default function Root() {
 }
 ```
 
+The meta of the last matching route is used, allowing you to override parent routes' meta. It's important to note that the entire meta descriptor array is replaced, not merged. This gives you the flexibility to build your own meta composition logic across pages at different levels.
+
 **See also**
 
 - [`meta` params][meta-params]
+- [`meta` function return types][meta-function]
 
 ## `shouldRevalidate`
 
@@ -385,4 +410,5 @@ Next: [Rendering Strategies](./rendering)
 [link-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 [meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
+[meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
 [use-revalidator]: https://api.reactrouter.com/v7/functions/react_router.useRevalidator.html

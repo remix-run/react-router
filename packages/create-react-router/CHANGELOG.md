@@ -1,5 +1,19 @@
 # `create-react-router`
 
+## 7.6.3
+
+_No changes_
+
+## 7.6.2
+
+### Patch Changes
+
+- Update `tar-fs` ([#13675](https://github.com/remix-run/react-router/pull/13675))
+
+## 7.6.1
+
+_No changes_
+
 ## 7.6.0
 
 _No changes_

@@ -4,6 +4,11 @@ title: Using Fetchers
 
 # Using Fetchers
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 Fetchers are useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
 
 Fetchers track their own, independent state and can be used to load data, mutate data, submit forms, and generally interact with loaders and actions.
@@ -219,10 +224,10 @@ export function UserSearchCombobox() {
 
 ```tsx lines=[2,5]
 import { useFetcher } from "react-router";
-import type { Search } from "./search-users";
+import type { loader } from "./search-users";
 
 export function UserSearchCombobox() {
-  let fetcher = useFetcher<typeof Search.action>();
+  let fetcher = useFetcher<typeof loader>();
   // ...
 }
 ```
@@ -235,7 +240,7 @@ Ensure you use `import type` so you only import the types.
 import { useFetcher } from "react-router";
 
 export function UserSearchCombobox() {
-  let fetcher = useFetcher<typeof Search.action>();
+  let fetcher = useFetcher<typeof loader>();
   return (
     <div>
       <fetcher.Form method="get" action="/search-users">
@@ -261,7 +266,7 @@ Note you will need to hit "enter" to submit the form and see the results.
 import { useFetcher } from "react-router";
 
 export function UserSearchCombobox() {
-  let fetcher = useFetcher<typeof Search.action>();
+  let fetcher = useFetcher<typeof loader>();
   return (
     <div>
       <fetcher.Form method="get" action="/search-users">

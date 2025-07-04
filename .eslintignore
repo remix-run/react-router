@@ -3,7 +3,7 @@ node_modules/
 pnpm-lock.yaml
 /docs/api
 examples/**/dist/
-/integration/helpers/vite-plugin-cloudflare-template/worker-configuration.d.ts
+worker-configuration.d.ts
 /playground/
 /playground-local/
 packages/**/dist/
