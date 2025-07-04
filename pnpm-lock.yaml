@@ -478,9 +478,6 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router
     devDependencies:
-      '@hiogawa/vite-rsc':
-        specifier: 0.4.4
-        version: 0.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.1
@@ -496,6 +493,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
+      '@vitejs/plugin-rsc':
+        specifier: 0.4.10-alpha.1
+        version: 0.4.10-alpha.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1804,9 +1804,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router
     devDependencies:
-      '@hiogawa/vite-rsc':
-        specifier: 0.4.4
-        version: 0.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.1
@@ -1822,6 +1819,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
+      '@vitejs/plugin-rsc':
+        specifier: 0.4.10-alpha.1
+        version: 0.4.10-alpha.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -3369,16 +3369,6 @@ packages:
   '@hattip/walk@0.0.49':
     resolution: {integrity: sha512-AgJgKLooZyQnzMfoFg5Mo/aHM+HGBC9ExpXIjNqGimYTRgNbL/K7X5EM1kR2JY90BNKk9lo6Usq1T/nWFdT7TQ==}
     hasBin: true
-
-  '@hiogawa/transforms@0.1.3':
-    resolution: {integrity: sha512-vzDCWgXIk4D6Ea2aBSuNqTssN6sTAqm8xzeqXea68o9TvBm5IZhQ3u/8vmWEiJpAtrlTohcTc1Hfgi025iFpGA==}
-
-  '@hiogawa/vite-rsc@0.4.4':
-    resolution: {integrity: sha512-Yucbgb6g1bC3S6wofT+ZdtEhnwBZIt4YMZWxXzH9yHugcen0bUtasSATb1qGGraCxu03y8xtHOstXgS8sjdUOQ==}
-    peerDependencies:
-      react: '*'
-      react-dom: '*'
-      vite: '*'
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -5092,6 +5082,13 @@ packages:
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
+
+  '@vitejs/plugin-rsc@0.4.10-alpha.1':
+    resolution: {integrity: sha512-CsYFXD/8t07FqPDiYyqRcLb9Jm4WsMnrpnnEPzQUnHThr7zaBjSz76N3spsDsBEPDM1hDFFNneuQV1VtOWmTUg==}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+      vite: '*'
 
   '@web3-storage/multipart-parser@1.0.0':
     resolution: {integrity: sha512-BEO6al7BYqcnfX15W2cnGR+Q566ACXAT9UQykORCWW80lmkpWsnEob6zJS1ZVBKsSJC8+7vJkHwlp+lXG1UCdw==}
@@ -11444,24 +11441,6 @@ snapshots:
       cac: 6.7.14
       mime-types: 2.1.35
 
-  '@hiogawa/transforms@0.1.3':
-    dependencies:
-      estree-walker: 3.0.3
-      magic-string: 0.30.17
-      periscopic: 4.0.2
-
-  '@hiogawa/vite-rsc@0.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))':
-    dependencies:
-      '@hiogawa/transforms': 0.1.3
-      '@mjackson/node-fetch-server': 0.6.1
-      es-module-lexer: 1.7.0
-      magic-string: 0.30.17
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      turbo-stream: 3.1.0
-      vite: 6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
-      vitefu: 1.0.6(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
-
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
@@ -13667,6 +13646,19 @@ snapshots:
       vite: 6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
     transitivePeerDependencies:
       - supports-color
+
+  '@vitejs/plugin-rsc@0.4.10-alpha.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))':
+    dependencies:
+      '@mjackson/node-fetch-server': 0.6.1
+      es-module-lexer: 1.7.0
+      estree-walker: 3.0.3
+      magic-string: 0.30.17
+      periscopic: 4.0.2
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      turbo-stream: 3.1.0
+      vite: 6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
+      vitefu: 1.0.6(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
 
   '@web3-storage/multipart-parser@1.0.0': {}
 
