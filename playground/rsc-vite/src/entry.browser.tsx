@@ -5,7 +5,7 @@ import {
   createTemporaryReferenceSet,
   encodeReply,
   setServerCallback,
-} from "@hiogawa/vite-rsc/browser";
+} from "@vitejs/plugin-rsc/browser";
 import {
   unstable_createCallServer as createCallServer,
   unstable_getRSCStream as getRSCStream,
