@@ -334,6 +334,9 @@ importers:
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -407,6 +410,9 @@ importers:
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -465,6 +471,9 @@ importers:
       compression:
         specifier: ^1.8.0
         version: 1.8.0
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       express:
         specifier: ^4.21.2
         version: 4.21.2
