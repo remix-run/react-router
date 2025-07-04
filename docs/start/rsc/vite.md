@@ -113,7 +113,10 @@ export async function prerender(
   request: Request,
   fetchServer: (request: Request) => Promise<Response>
 ): Promise<Response> {
-  const bootstrapScriptContent = await import.meta.viteRsc.loadBootstrapScriptContent("index")
+  const bootstrapScriptContent =
+    await import.meta.viteRsc.loadBootstrapScriptContent(
+      "index"
+    );
   return await routeRSCServerRequest({
     // The incoming request.
     request,

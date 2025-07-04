@@ -10,7 +10,8 @@ export default async function handler(
   request: Request,
   fetchServer: (request: Request) => Promise<Response>
 ) {
-  const bootstrapScriptContent = await import.meta.viteRsc.loadBootstrapScriptContent("index");
+  const bootstrapScriptContent =
+    await import.meta.viteRsc.loadBootstrapScriptContent("index");
   return routeRSCServerRequest({
     request,
     fetchServer,
