@@ -913,13 +913,26 @@ describe("flatRoutes", () => {
     });
   });
 
-  test("should include a valid file for a route outside of the app directory", () => {
-    const routesDir = path.join("test", "root", "routes");
-    const routeFile = path.join(routesDir, "route.tsx");
+  describe("generates route manifest entry files relative to the app directory", () => {
+    let testCases: [string, string][] = [
+      [path.posix.join(APP_DIR, "routes"), "routes"],
+      [
+        path.posix.join(APP_DIR, "..", "routes"),
+        path.posix.join("..", "routes"),
+      ],
+    ];
 
-    const manifest = flatRoutesUniversal(APP_DIR, [routeFile]);
-    const routeInfo = manifest[path.relative(APP_DIR, routesDir)];
-    expect(routeInfo).toBeDefined();
-    expect(routeInfo.file).toBe(path.relative(APP_DIR, routeFile));
+    let fileName = "route.tsx";
+
+    testCases.forEach(([routesDir, expected]) => {
+      test(`for routes directory "${routesDir}"`, () => {
+        const routeFile = path.join(routesDir, fileName);
+        const routeInfo = flatRoutesUniversal(APP_DIR, [routeFile]);
+        const routes = Object.values(routeInfo);
+
+        expect(routes).toHaveLength(1);
+        expect(routes[0].file).toBe(path.posix.join(expected, fileName));
+      });
+    });
   });
 });
