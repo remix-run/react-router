@@ -926,9 +926,9 @@ describe("flatRoutes", () => {
 
     testCases.forEach(([routesDir, expected]) => {
       test(`for routes directory "${routesDir}"`, () => {
-        const routeFile = path.join(routesDir, fileName);
-        const routeInfo = flatRoutesUniversal(APP_DIR, [routeFile]);
-        const routes = Object.values(routeInfo);
+        let routeFile = path.posix.join(routesDir, fileName);
+        let routeInfo = flatRoutesUniversal(APP_DIR, [routeFile]);
+        let routes = Object.values(routeInfo);
 
         expect(routes).toHaveLength(1);
         expect(routes[0].file).toBe(path.posix.join(expected, fileName));
