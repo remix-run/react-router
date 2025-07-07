@@ -331,12 +331,12 @@ const getReactRouterManifestBuildAssets = (
   prependedAssetFilePaths: string[] = []
 ): ReactRouterManifest["entry"] & { css: string[] } => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
-  invariant(entryChunk, "Chunk not found");
+  invariant(entryChunk, `Chunk not found: ${entryFilePath}`);
 
   // This is here to support prepending client entry assets to the root route
   let prependedAssetChunks = prependedAssetFilePaths.map((filePath) => {
     let chunk = resolveChunk(ctx, viteManifest, filePath);
-    invariant(chunk, "Chunk not found");
+    invariant(chunk, `Chunk not found: ${filePath}`);
     return chunk;
   });
 
