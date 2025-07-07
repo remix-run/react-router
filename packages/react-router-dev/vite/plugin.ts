@@ -3451,9 +3451,6 @@ export async function getEnvironmentOptionsResolvers(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
   );
   let vite = getVite();
-  let baseServerLikeConditions: string[] = [
-    ...(moduleSyncEnabled ? ["module-sync"] : []),
-  ];
 
   function getBaseOptions({
     viteUserConfig,
@@ -3509,10 +3506,35 @@ export async function getEnvironmentOptionsResolvers(
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
-    let conditions =
-      viteCommand === "build"
-        ? baseServerLikeConditions
-        : ["development", ...baseServerLikeConditions];
+    // We're using the module-sync condition, but Vite
+    // doesn't support it by default.
+    // See https://github.com/vitest-dev/vitest/issues/7692
+    let maybeModuleSyncConditions: string[] = [
+      ...(moduleSyncEnabled ? ["module-sync"] : []),
+    ];
+
+    let maybeDevelopmentConditions =
+      viteCommand === "build" ? [] : ["development"];
+
+    // This is a compatibility layer for Vite 5. Default conditions were
+    // automatically added to any custom conditions in Vite 5, but Vite 6
+    // removed this behavior. Instead, the default conditions are overridden
+    // by any custom conditions. If we wish to retain the default
+    // conditions, we need to manually merge them using the provided default
+    // conditions arrays exported from Vite. In Vite 5, these default
+    // conditions arrays do not exist.
+    // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+    let maybeDefaultServerConditions = vite.defaultServerConditions || [];
+
+    // There is no helpful export with the default external conditions (see
+    // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
+    // we are hardcording the default here.
+    let defaultExternalConditions = ["node"];
+
+    let baseConditions = [
+      ...maybeDevelopmentConditions,
+      ...maybeModuleSyncConditions,
+    ];
 
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
       resolve: {
@@ -3521,8 +3543,8 @@ export async function getEnvironmentOptionsResolvers(
           ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? undefined
             : ssrExternals,
-        conditions: [...conditions, ...(vite.defaultServerConditions || [])],
-        externalConditions: [...conditions, "node"],
+        conditions: [...baseConditions, ...maybeDefaultServerConditions],
+        externalConditions: [...baseConditions, ...defaultExternalConditions],
       },
       build: {
         // We move SSR-only assets to client assets. Note that the
