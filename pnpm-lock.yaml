@@ -494,8 +494,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       '@vitejs/plugin-rsc':
-        specifier: 0.4.10-alpha.1
-        version: 0.4.10-alpha.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
+        specifier: 0.4.11
+        version: 0.4.11(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -1820,8 +1820,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       '@vitejs/plugin-rsc':
-        specifier: 0.4.10-alpha.1
-        version: 0.4.10-alpha.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
+        specifier: 0.4.11
+        version: 0.4.11(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -3684,6 +3684,9 @@ packages:
   '@mjackson/node-fetch-server@0.6.1':
     resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
 
+  '@mjackson/node-fetch-server@0.7.0':
+    resolution: {integrity: sha512-un8diyEBKU3BTVj3GzlTPA1kIjCkGdD+AMYQy31Gf9JCkfoZzwgJ79GUtHrF2BN3XPNMLpubbzPcxys+a3uZEw==}
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
     cpu: [arm64]
@@ -5083,8 +5086,8 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
 
-  '@vitejs/plugin-rsc@0.4.10-alpha.1':
-    resolution: {integrity: sha512-CsYFXD/8t07FqPDiYyqRcLb9Jm4WsMnrpnnEPzQUnHThr7zaBjSz76N3spsDsBEPDM1hDFFNneuQV1VtOWmTUg==}
+  '@vitejs/plugin-rsc@0.4.11':
+    resolution: {integrity: sha512-+4H4wLi+Y9yF58znBfKgGfX8zcqUGt8ngnmNgzrdGdF1SVz7EO0sg7WnhK5fFVHt6fUxsVEjmEabsCWHKPL1Tw==}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -9732,10 +9735,10 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.0.6:
-    resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
+  vitefu@1.1.1:
+    resolution: {integrity: sha512-B/Fegf3i8zh0yFbpzZ21amWzHmuNlLlmJT6n7bu5e+pCHUKQIfXSYokrqOBGEMMe9UG2sostKQF9mml/vYaWJQ==}
     peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
     peerDependenciesMeta:
       vite:
         optional: true
@@ -11853,6 +11856,8 @@ snapshots:
 
   '@mjackson/node-fetch-server@0.6.1': {}
 
+  '@mjackson/node-fetch-server@0.7.0': {}
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
 
@@ -13647,9 +13652,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-rsc@0.4.10-alpha.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))':
+  '@vitejs/plugin-rsc@0.4.11(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))':
     dependencies:
-      '@mjackson/node-fetch-server': 0.6.1
+      '@mjackson/node-fetch-server': 0.7.0
       es-module-lexer: 1.7.0
       estree-walker: 3.0.3
       magic-string: 0.30.17
@@ -13658,7 +13663,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       turbo-stream: 3.1.0
       vite: 6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
-      vitefu: 1.0.6(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
+      vitefu: 1.1.1(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0))
 
   '@web3-storage/multipart-parser@1.0.0': {}
 
@@ -19667,7 +19672,7 @@ snapshots:
       tsx: 4.19.3
       yaml: 2.6.0
 
-  vitefu@1.0.6(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)):
+  vitefu@1.1.1(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)):
     optionalDependencies:
       vite: 6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.6.0)
 
