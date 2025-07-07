@@ -104,7 +104,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-5d87cd22-20250704(eslint@8.57.0)
+        version: 6.1.0-canary-223f81d8-20250707(eslint@8.57.0)
       isbot:
         specifier: ^5.1.11
         version: 5.1.11
@@ -6238,8 +6238,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-5d87cd22-20250704:
-    resolution: {integrity: sha512-Y/Rwps2NRgwVk2TDI70ac2gE2JqvNmr3WWaTOCUQ36lXX7S3DSUGKG+q7vUHSBKjvm9gLcXA2nCYfx9VpoRsHA==}
+  eslint-plugin-react-hooks@6.1.0-canary-223f81d8-20250707:
+    resolution: {integrity: sha512-yZJFGVR2gYBF+mw8xuJAAuC8VC9lkXuLqnHm1w14edGGMbO5Jl75gawEHgW2kf9ayC9wvGX5J3yQesvAylAs2g==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9163,11 +9163,12 @@ packages:
   superagent@8.1.2:
     resolution: {integrity: sha512-6WTxW1EB6yCxV5VFOIPQruWGHqc3yI7hEmZK6h+pyk69Lk/Ut7rLUY6W/ONF2MjBuGjvmMiIpsrVJ2vjrHlslA==}
     engines: {node: '>=6.4.0 <13 || >=14'}
-    deprecated: Please upgrade to v9.0.0+ as we have fixed a public vulnerability with formidable dependency. Note that v9.0.0+ requires Node.js v14.18.0+. See https://github.com/ladjs/superagent/pull/1800 for insight. This project is supported and maintained by the team at Forward Email @ https://forwardemail.net
+    deprecated: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
 
   supertest@6.3.4:
     resolution: {integrity: sha512-erY3HFDG0dPnhw4U+udPfrzXa4xhSG+n4rxfRuZWCUvjFWwKl+OxWf/7zk50s84/fAAs7vf5QAb9uRa0cCykxw==}
     engines: {node: '>=6.4.0'}
+    deprecated: Please upgrade to supertest v7.1.2+, see release notes at https://github.com/forwardemail/supertest/releases/tag/v7.1.2 - maintenance is supported by Forward Email @ https://forwardemail.net
 
   supports-color@5.5.0:
     resolution: {integrity: sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==}
@@ -15084,7 +15085,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-5d87cd22-20250704(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-223f81d8-20250707(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
