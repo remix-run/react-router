@@ -2090,14 +2090,23 @@ export function useScrollRestoration({
       }
 
       // try to scroll to the hash
-      if (location.hash) {
-        let el = document.getElementById(
-          decodeURIComponent(location.hash.slice(1))
-        );
-        if (el) {
-          el.scrollIntoView();
-          return;
+      try {
+        if (location.hash) {
+          let el = document.getElementById(
+            decodeURIComponent(location.hash.slice(1))
+          );
+          if (el) {
+            el.scrollIntoView();
+            return;
+          }
         }
+      } catch {
+        warning(
+          false,
+          `"${location.hash.slice(
+            1
+          )}" is not a decodable element ID. The view will not scroll to it.`
+        );
       }
 
       // Don't reset if this navigation opted out

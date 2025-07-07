@@ -64,6 +64,7 @@
     }
   },
   "dependencies": {
+    "isbot": "^5.1.11",
     "@babel/core": "^7.27.7",
     "@babel/generator": "^7.27.5",
     "@babel/parser": "^7.27.7",
