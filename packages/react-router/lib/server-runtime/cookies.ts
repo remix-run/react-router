@@ -1,5 +1,8 @@
 import type { ParseOptions, SerializeOptions } from "cookie";
-import { parse, serialize } from "cookie";
+import * as cookie from "cookie";
+
+const parse = cookie.parse;
+const serialize = cookie.serialize;
 
 import { sign, unsign } from "./crypto";
 import { warnOnce } from "./warnings";
