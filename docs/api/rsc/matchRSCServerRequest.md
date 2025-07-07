@@ -11,6 +11,45 @@ unstable: true
 
 Matches the given routes to a Request and returns a RSC Response encoding an `RSCPayload` for consumption by a RSC enabled client router.
 
+The usage of this may differ slightly based on your bundler choice. Here's how it's used with Parcel via `react-server-dom-parcel/server.edge`:
+
+```tsx filename=entry.rsc.ts lines=[10,17-33]
+"use server-entry";
+
+import {
+  createTemporaryReferenceSet,
+  decodeAction,
+  decodeReply,
+  loadServerAction,
+  renderToReadableStream,
+} from "react-server-dom-parcel/server.edge";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
+
+import { routes } from "./routes";
+
+import "./entry.browser.tsx";
+
+export function fetchServer(request: Request) {
+  return matchRSCServerRequest({
+    createTemporaryReferenceSet,
+    decodeReply,
+    decodeAction,
+    loadServerAction,
+    request,
+    routes,
+    generateResponse(match, options) {
+      return new Response(
+        renderToReadableStream(match.payload, options),
+        {
+          status: match.statusCode,
+          headers: match.headers,
+        }
+      );
+    },
+  });
+}
+```
+
 ## Options
 
 ### decodeAction
