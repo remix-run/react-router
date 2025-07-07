@@ -68,7 +68,3 @@ Your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode 
 ### encodeReply
 
 Your `react-server-dom-xyz/client`'s `encodeReply`. Used when sending payloads to the server.
-
-```
-
-```
