@@ -2661,7 +2661,7 @@ async function handleSpaMode(
 
   // Write out the HTML file for the SPA
   await writeFile(path.join(clientBuildDirectory, filename), html);
-  let prettyDir = path.relative(process.cwd(), clientBuildDirectory);
+  let prettyDir = path.relative(viteConfig.root, clientBuildDirectory);
   let prettyPath = path.join(prettyDir, filename);
   if (build.prerender.length > 0) {
     viteConfig.logger.info(
@@ -2835,12 +2835,13 @@ async function prerenderData(
   }
 
   // Write out the .data file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, data);
   viteConfig.logger.info(
-    `Prerender (data): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (data): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
   return data;
 }
@@ -2894,12 +2895,17 @@ async function prerenderRoute(
   }
 
   // Write out the HTML file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
+  let outfile = path.join(
+    clientBuildDirectory,
+    ...normalizedPath.split("/"),
+    "index.html"
+  );
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, html);
   viteConfig.logger.info(
-    `Prerender (html): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (html): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
 }
 
@@ -2927,12 +2933,13 @@ async function prerenderResourceRoute(
   }
 
   // Write out the resource route file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, content);
   viteConfig.logger.info(
-    `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (resource): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
 }
 
