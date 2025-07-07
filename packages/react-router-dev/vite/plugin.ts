@@ -326,19 +326,39 @@ const getPublicModulePathForEntry = (
 
 const getReactRouterManifestBuildAssets = (
   ctx: ReactRouterPluginContext,
+  viteConfig: Vite.ResolvedConfig,
   viteManifest: Vite.Manifest,
   entryFilePath: string,
-  prependedAssetFilePaths: string[] = []
+  route: RouteManifestEntry | null
 ): ReactRouterManifest["entry"] & { css: string[] } => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
   invariant(entryChunk, "Chunk not found");
 
-  // This is here to support prepending client entry assets to the root route
-  let prependedAssetChunks = prependedAssetFilePaths.map((filePath) => {
-    let chunk = resolveChunk(ctx, viteManifest, filePath);
-    invariant(chunk, "Chunk not found");
-    return chunk;
-  });
+  let isRootRoute = Boolean(route && route.parentId === undefined);
+
+  // If this is the root route, we also need to include assets from the
+  // client entry file as this is a common way for consumers to import
+  // global reset styles, etc.
+  let prependedAssetChunks = isRootRoute
+    ? [ctx.entryClientFilePath].map((filePath) => {
+        let chunk = resolveChunk(ctx, viteManifest, filePath);
+        invariant(chunk, "Chunk not found");
+        return chunk;
+      })
+    : [];
+
+  let cssCodeSplitDisabledFiles: string[] = [];
+  // If CSS code splitting is disabled, Vite includes a singular 'style.css' asset
+  // in the manifest that isn't tied to any route file. If we want to render these
+  // styles correctly, we need to include them in the root route.
+  if (!viteConfig.build.cssCodeSplit && isRootRoute) {
+    let cssFile = viteManifest["style.css"]?.file;
+    invariant(
+      cssFile,
+      "Expected `style.css` to be present in Vite manifest when `build.cssCodeSplit` is disabled"
+    );
+    cssCodeSplitDisabledFiles = [`${ctx.publicPath}${cssFile}`];
+  }
 
   let routeModuleChunks = routeChunkNames
     .map((routeChunkName) =>
@@ -362,10 +382,14 @@ const getReactRouterManifestBuildAssets = (
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
         return `${ctx.publicPath}${viteManifest[imported].file}`;
       }) ?? [],
-    css:
-      dedupe(chunks.flatMap((e) => e.css ?? [])).map((href) => {
-        return `${ctx.publicPath}${href}`;
-      }) ?? [],
+    css: dedupe([
+      ...cssCodeSplitDisabledFiles,
+      ...(chunks
+        .flatMap((e) => e.css ?? [])
+        .map((href) => {
+          return `${ctx.publicPath}${href}`;
+        }) ?? []),
+    ]),
   };
 };
 
@@ -851,8 +875,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   let generateReactRouterManifestsForBuild = async ({
+    viteConfig,
     routeIds,
   }: {
+    viteConfig: Vite.ResolvedConfig;
     routeIds?: Array<string>;
   }): Promise<{
     reactRouterBrowserManifest: ReactRouterManifest;
@@ -866,8 +892,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let entry = getReactRouterManifestBuildAssets(
       ctx,
+      viteConfig,
       viteManifest,
-      ctx.entryClientFilePath
+      ctx.entryClientFilePath,
+      null
     );
 
     let browserRoutes: ReactRouterManifest["routes"] = {};
@@ -883,7 +911,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
-      let isRootRoute = route.parentId === undefined;
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
       let hasClientMiddleware = sourceExports.includes(
@@ -930,12 +957,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         ...getReactRouterManifestBuildAssets(
           ctx,
+          viteConfig,
           viteManifest,
           `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-          // If this is the root route, we also need to include assets from the
-          // client entry file as this is a common way for consumers to import
-          // global reset styles, etc.
-          isRootRoute ? [ctx.entryClientFilePath] : []
+          route
         ),
         clientActionModule: hasRouteChunkByExportName.clientAction
           ? getPublicModulePathForEntry(
@@ -2035,10 +2060,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
           case virtual.serverManifest.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
+            invariant(viteConfig);
             let reactRouterManifest =
               viteCommand === "build"
                 ? (
                     await generateReactRouterManifestsForBuild({
+                      viteConfig,
                       routeIds,
                     })
                   ).reactRouterServerManifest
