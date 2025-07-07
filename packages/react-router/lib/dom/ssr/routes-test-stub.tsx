@@ -117,9 +117,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  _context: MiddlewareEnabled extends true
-    ? unstable_RouterContextProvider
-    : AppLoadContext
+  _context?: AppLoadContext | unstable_RouterContextProvider
 ) {
   return function RoutesTestStub({
     initialEntries,
