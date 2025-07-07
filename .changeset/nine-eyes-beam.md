@@ -1,5 +1,5 @@
 ---
-"@react-router/dev": minor
+"@react-router/dev": patch
 ---
 
 Improve chunk error logging.
