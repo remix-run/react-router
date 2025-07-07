@@ -4,7 +4,7 @@ title: useAsyncValue
 
 # useAsyncValue
 
-[MODES: framework]
+[MODES: framework, data]
 
 ## Summary
 

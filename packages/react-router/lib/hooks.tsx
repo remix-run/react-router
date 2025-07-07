@@ -52,18 +52,26 @@ import {
 import type { SerializeFrom } from "./types/route-data";
 
 /**
-  Resolves a URL against the current location.
-
-  ```tsx
-  import { useHref } from "react-router"
-
-  function SomeComponent() {
-    let href = useHref("some/where");
-    // "/resolved/some/where"
-  }
-  ```
-
-  @category Hooks
+ * Resolves a URL against the current location.
+ *
+ * ```tsx
+ * import { useHref } from "react-router"
+ *
+ * function SomeComponent() {
+ *   let href = useHref("some/where");
+ *   // "/resolved/some/where"
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @param to The path to resolve
+ * @param options.relative Defaults to "route" so routing is relative to the route tree.
+ *                         Set to "path" to make relative routing operate against path segments.
+ * @returns The resolved href string
  */
 export function useHref(
   to: To,
@@ -97,34 +105,43 @@ export function useHref(
  * Returns true if this component is a descendant of a Router, useful to ensure
  * a component is used within a Router.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns Whether the component is within a Router context
  */
 export function useInRouterContext(): boolean {
   return React.useContext(LocationContext) != null;
 }
 
 /**
-  Returns the current {@link Location}. This can be useful if you'd like to perform some side effect whenever it changes.
-
-  ```tsx
-  import * as React from 'react'
-  import { useLocation } from 'react-router'
-
-  function SomeComponent() {
-    let location = useLocation()
-
-    React.useEffect(() => {
-      // Google Analytics
-      ga('send', 'pageview')
-    }, [location]);
-
-    return (
-      // ...
-    );
-  }
-  ```
-
-  @category Hooks
+ * Returns the current {@link Location}. This can be useful if you'd like to perform some side effect whenever it changes.
+ *
+ * ```tsx
+ * import * as React from 'react'
+ * import { useLocation } from 'react-router'
+ *
+ * function SomeComponent() {
+ *   let location = useLocation()
+ *
+ *   React.useEffect(() => {
+ *     // Google Analytics
+ *     ga('send', 'pageview')
+ *   }, [location]);
+ *
+ *   return (
+ *     // ...
+ *   );
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @returns The current location object
  */
 export function useLocation(): Location {
   invariant(
@@ -141,7 +158,12 @@ export function useLocation(): Location {
  * Returns the current navigation action which describes how the router came to
  * the current location, either by a pop, push, or replace on the history stack.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @returns The current navigation type (Action.Pop, Action.Push, or Action.Replace)
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
@@ -152,7 +174,13 @@ export function useNavigationType(): NavigationType {
  * This is useful for components that need to know "active" state, e.g.
  * `<NavLink>`.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @param pattern The pattern to match against the current location
+ * @returns The path match object if the pattern matches, null otherwise
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
@@ -198,26 +226,31 @@ function useIsomorphicLayoutEffect(
 }
 
 /**
-  Returns a function that lets you navigate programmatically in the browser in response to user interactions or effects.
-
-  ```tsx
-  import { useNavigate } from "react-router";
-
-  function SomeComponent() {
-    let navigate = useNavigate();
-    return (
-      <button
-        onClick={() => {
-          navigate(-1);
-        }}
-      />
-    );
-  }
-  ```
-
-  It's often better to use {@link redirect} in {@link ActionFunction | actions} and {@link LoaderFunction | loaders} than this hook.
-
-  @category Hooks
+ * Returns a function that lets you navigate programmatically in the browser in response to user interactions or effects.
+ *
+ * ```tsx
+ * import { useNavigate } from "react-router";
+ *
+ * function SomeComponent() {
+ *   let navigate = useNavigate();
+ *   return (
+ *     <button
+ *       onClick={() => {
+ *         navigate(-1);
+ *       }}
+ *     />
+ *   );
+ * }
+ * ```
+ *
+ * It's often better to use {@link redirect} in {@link ActionFunction | actions} and {@link LoaderFunction | loaders} than this hook.
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @returns A navigate function for programmatic navigation
  */
 export function useNavigate(): NavigateFunction {
   let { isDataRoute } = React.useContext(RouteContext);
@@ -302,7 +335,12 @@ const OutletContext = React.createContext<unknown>(null);
 /**
  * Returns the parent route {@link OutletProps.context | `<Outlet context>`}.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @returns The context value passed to the Outlet
  */
 export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
@@ -312,7 +350,13 @@ export function useOutletContext<Context = unknown>(): Context {
  * Returns the element for the child route at this level of the route
  * hierarchy. Used internally by `<Outlet>` to render child routes.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @param context The context to pass to the outlet
+ * @returns The child route element or null if no child routes match
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
@@ -325,20 +369,25 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
 }
 
 /**
-  Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
-
-  ```tsx
-  import { useParams } from "react-router"
-
-  function SomeComponent() {
-    let params = useParams()
-    params.postId
-  }
-  ```
-
-  Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
-
-  @category Hooks
+ * Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
+ *
+ * ```tsx
+ * import { useParams } from "react-router"
+ *
+ * function SomeComponent() {
+ *   let params = useParams()
+ *   params.postId
+ * }
+ * ```
+ *
+ * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @returns An object containing the dynamic route parameters
  */
 export function useParams<
   ParamsOrKey extends string | Record<string, string | undefined> = string
@@ -351,21 +400,29 @@ export function useParams<
 }
 
 /**
-  Resolves the pathname of the given `to` value against the current location. Similar to {@link useHref}, but returns a {@link Path} instead of a string.
-
-  ```tsx
-  import { useResolvedPath } from "react-router"
-
-  function SomeComponent() {
-    // if the user is at /dashboard/profile
-    let path = useResolvedPath("../accounts")
-    path.pathname // "/dashboard/accounts"
-    path.search // ""
-    path.hash // ""
-  }
-  ```
-
-  @category Hooks
+ * Resolves the pathname of the given `to` value against the current location. Similar to {@link useHref}, but returns a {@link Path} instead of a string.
+ *
+ * ```tsx
+ * import { useResolvedPath } from "react-router"
+ *
+ * function SomeComponent() {
+ *   // if the user is at /dashboard/profile
+ *   let path = useResolvedPath("../accounts")
+ *   path.pathname // "/dashboard/accounts"
+ *   path.search // ""
+ *   path.hash // ""
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @mode declarative
+ * @param to The path to resolve
+ * @param options.relative Defaults to "route" so routing is relative to the route tree.
+ *                         Set to "path" to make relative routing operate against path segments.
+ * @returns The resolved `Path` object with pathname, search, and hash
  */
 export function useResolvedPath(
   to: To,
@@ -388,35 +445,43 @@ export function useResolvedPath(
 }
 
 /**
-  Hook version of {@link Routes | `<Routes>`} that uses objects instead of components. These objects have the same properties as the component props.
-
-  The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
-
-  ```tsx
-  import * as React from "react";
-  import { useRoutes } from "react-router";
-
-  function App() {
-    let element = useRoutes([
-      {
-        path: "/",
-        element: <Dashboard />,
-        children: [
-          {
-            path: "messages",
-            element: <DashboardMessages />,
-          },
-          { path: "tasks", element: <DashboardTasks /> },
-        ],
-      },
-      { path: "team", element: <AboutPage /> },
-    ]);
-
-    return element;
-  }
-  ```
-
- @category Hooks
+ * Hook version of {@link Routes | `<Routes>`} that uses objects instead of components. These objects have the same properties as the component props.
+ *
+ * The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
+ *
+ * @example
+ * ```tsx
+ * import * as React from "react";
+ * import { useRoutes } from "react-router";
+ *
+ * function App() {
+ *   let element = useRoutes([
+ *     {
+ *       path: "/",
+ *       element: <Dashboard />,
+ *       children: [
+ *         {
+ *           path: "messages",
+ *           element: <DashboardMessages />,
+ *         },
+ *         { path: "tasks", element: <DashboardTasks /> },
+ *       ],
+ *     },
+ *     { path: "team", element: <AboutPage /> },
+ *   ]);
+ *
+ *   return element;
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode declarative
+ * @mode data
+ * @param routes An array of route objects that define the route hierarchy
+ * @param locationArg An optional location object or pathname string to use instead of the current location
+ * @returns A React element to render the matched route, or `null` if no routes matched
  */
 export function useRoutes(
   routes: RouteObject[],
@@ -982,26 +1047,33 @@ function useCurrentRouteId(hookName: DataRouterStateHook) {
 
 /**
  * Returns the ID for the nearest contextual route
+ *
+ * @category Hooks
+ * @returns The ID of the nearest contextual route
  */
 export function useRouteId() {
   return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
 /**
-  Returns the current navigation, defaulting to an "idle" navigation when no navigation is in progress. You can use this to render pending UI (like a global spinner) or read FormData from a form navigation.
-
-  ```tsx
-  import { useNavigation } from "react-router"
-
-  function SomeComponent() {
-    let navigation = useNavigation();
-    navigation.state
-    navigation.formData
-    // etc.
-  }
-  ```
-
-  @category Hooks
+ * Returns the current navigation, defaulting to an "idle" navigation when no navigation is in progress. You can use this to render pending UI (like a global spinner) or read FormData from a form navigation.
+ *
+ * ```tsx
+ * import { useNavigation } from "react-router"
+ *
+ * function SomeComponent() {
+ *   let navigation = useNavigation();
+ *   navigation.state
+ *   navigation.formData
+ *   // etc.
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The current navigation object
  */
 export function useNavigation() {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
@@ -1009,29 +1081,33 @@ export function useNavigation() {
 }
 
 /**
-  Revalidate the data on the page for reasons outside of normal data mutations like window focus or polling on an interval.
-
-  ```tsx
-  import { useRevalidator } from "react-router";
-
-  function WindowFocusRevalidator() {
-    const revalidator = useRevalidator();
-
-    useFakeWindowFocus(() => {
-      revalidator.revalidate();
-    });
-
-    return (
-      <div hidden={revalidator.state === "idle"}>
-        Revalidating...
-      </div>
-    );
-  }
-  ```
-
-  Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do this automatically.
-
-  @category Hooks
+ * Revalidate the data on the page for reasons outside of normal data mutations like window focus or polling on an interval.
+ *
+ * ```tsx
+ * import { useRevalidator } from "react-router";
+ *
+ * function WindowFocusRevalidator() {
+ *   const revalidator = useRevalidator();
+ *
+ *   useFakeWindowFocus(() => {
+ *     revalidator.revalidate();
+ *   });
+ *
+ *   return (
+ *     <div hidden={revalidator.state === "idle"}>
+ *       Revalidating...
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do this automatically.
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns An object with a `revalidate` function and the current revalidation `state`
  */
 export function useRevalidator(): {
   revalidate: () => Promise<void>;
@@ -1053,7 +1129,11 @@ export function useRevalidator(): {
  * Returns the active route matches, useful for accessing loaderData for
  * parent/child routes or the route "handle" property
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns An array of UI matches for the current route hierarchy
  */
 export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
@@ -1066,22 +1146,26 @@ export function useMatches(): UIMatch[] {
 }
 
 /**
-  Returns the data from the closest route {@link LoaderFunction | loader} or {@link ClientLoaderFunction | client loader}.
-
-  ```tsx
-  import { useLoaderData } from "react-router"
-
-  export async function loader() {
-    return await fakeDb.invoices.findAll();
-  }
-
-  export default function Invoices() {
-    let invoices = useLoaderData<typeof loader>();
-    // ...
-  }
-  ```
-
-  @category Hooks
+ * Returns the data from the closest route {@link LoaderFunction | loader} or {@link ClientLoaderFunction | client loader}.
+ *
+ * ```tsx
+ * import { useLoaderData } from "react-router"
+ *
+ * export async function loader() {
+ *   return await fakeDb.invoices.findAll();
+ * }
+ *
+ * export default function Invoices() {
+ *   let invoices = useLoaderData<typeof loader>();
+ *   // ...
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The data returned from the route's loader function
  */
 export function useLoaderData<T = any>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
@@ -1090,31 +1174,36 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
 }
 
 /**
-  Returns the loader data for a given route by route ID.
-
-  ```tsx
-  import { useRouteLoaderData } from "react-router";
-
-  function SomeComponent() {
-    const { user } = useRouteLoaderData("root");
-  }
-  ```
-
-  Route IDs are created automatically. They are simply the path of the route file relative to the app folder without the extension.
-
-  | Route Filename             | Route ID             |
-  | -------------------------- | -------------------- |
-  | `app/root.tsx`             | `"root"`             |
-  | `app/routes/teams.tsx`     | `"routes/teams"`     |
-  | `app/whatever/teams.$id.tsx` | `"whatever/teams.$id"` |
-
-  If you created an ID manually, you can use that instead:
-
-  ```tsx
-  route("/", "containers/app.tsx", { id: "app" }})
-  ```
-
-  @category Hooks
+ * Returns the loader data for a given route by route ID.
+ *
+ * ```tsx
+ * import { useRouteLoaderData } from "react-router";
+ *
+ * function SomeComponent() {
+ *   const { user } = useRouteLoaderData("root");
+ * }
+ * ```
+ *
+ * Route IDs are created automatically. They are simply the path of the route file relative to the app folder without the extension.
+ *
+ * | Route Filename             | Route ID             |
+ * | -------------------------- | -------------------- |
+ * | `app/root.tsx`             | `"root"`             |
+ * | `app/routes/teams.tsx`     | `"routes/teams"`     |
+ * | `app/whatever/teams.$id.tsx` | `"whatever/teams.$id"` |
+ *
+ * If you created an ID manually, you can use that instead:
+ *
+ * ```tsx
+ * route("/", "containers/app.tsx", { id: "app" }})
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param routeId The ID of the route to return loader data from
+ * @returns The data returned from the specified route's loader function, or undefined if not found
  */
 export function useRouteLoaderData<T = any>(
   routeId: string
@@ -1124,29 +1213,33 @@ export function useRouteLoaderData<T = any>(
 }
 
 /**
-  Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
-
-  ```tsx
-  import { Form, useActionData } from "react-router"
-
-  export async function action({ request }) {
-    const body = await request.formData()
-    const name = body.get("visitorsName")
-    return { message: `Hello, ${name}` }
-  }
-
-  export default function Invoices() {
-    const data = useActionData()
-    return (
-      <Form method="post">
-        <input type="text" name="visitorsName" />
-        {data ? data.message : "Waiting..."}
-      </Form>
-    )
-  }
-  ```
-
-  @category Hooks
+ * Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
+ *
+ * ```tsx
+ * import { Form, useActionData } from "react-router"
+ *
+ * export async function action({ request }) {
+ *   const body = await request.formData()
+ *   const name = body.get("visitorsName")
+ *   return { message: `Hello, ${name}` }
+ * }
+ *
+ * export default function Invoices() {
+ *   const data = useActionData()
+ *   return (
+ *     <Form method="post">
+ *       <input type="text" name="visitorsName" />
+ *       {data ? data.message : "Waiting..."}
+ *     </Form>
+ *   )
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The data returned from the route's action function, or undefined if no action has been called
  */
 export function useActionData<T = any>(): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
@@ -1157,16 +1250,20 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
 }
 
 /**
-  Accesses the error thrown during an {@link ActionFunction | action}, {@link LoaderFunction | loader}, or component render to be used in a route module Error Boundary.
-
-  ```tsx
-  export function ErrorBoundary() {
-    const error = useRouteError();
-    return <div>{error.message}</div>;
-  }
-  ```
-
-  @category Hooks
+ * Accesses the error thrown during an {@link ActionFunction | action}, {@link LoaderFunction | loader}, or component render to be used in a route module Error Boundary.
+ *
+ * ```tsx
+ * export function ErrorBoundary() {
+ *   const error = useRouteError();
+ *   return <div>{error.message}</div>;
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The error that was thrown during route loading, action execution, or rendering
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
@@ -1184,21 +1281,25 @@ export function useRouteError(): unknown {
 }
 
 /**
-  Returns the resolved promise value from the closest {@link Await | `<Await>`}.
-
-  ```tsx
-  function SomeDescendant() {
-    const value = useAsyncValue();
-    // ...
-  }
-
-  // somewhere in your app
-  <Await resolve={somePromise}>
-    <SomeDescendant />
-  </Await>
-  ```
-
-  @category Hooks
+ * Returns the resolved promise value from the closest {@link Await | `<Await>`}.
+ *
+ * ```tsx
+ * function SomeDescendant() {
+ *   const value = useAsyncValue();
+ *   // ...
+ * }
+ *
+ * // somewhere in your app
+ * <Await resolve={somePromise}>
+ *   <SomeDescendant />
+ * </Await>
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The resolved value from the nearest Await component
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1206,26 +1307,30 @@ export function useAsyncValue(): unknown {
 }
 
 /**
-  Returns the rejection value from the closest {@link Await | `<Await>`}.
-
-  ```tsx
-  import { Await, useAsyncError } from "react-router"
-
-  function ErrorElement() {
-    const error = useAsyncError();
-    return (
-      <p>Uh Oh, something went wrong! {error.message}</p>
-    );
-  }
-
-  // somewhere in your app
-  <Await
-    resolve={promiseThatRejects}
-    errorElement={<ErrorElement />}
-  />
-  ```
-
-  @category Hooks
+ * Returns the rejection value from the closest {@link Await | `<Await>`}.
+ *
+ * ```tsx
+ * import { Await, useAsyncError } from "react-router"
+ *
+ * function ErrorElement() {
+ *   const error = useAsyncError();
+ *   return (
+ *     <p>Uh Oh, something went wrong! {error.message}</p>
+ *   );
+ * }
+ *
+ * // somewhere in your app
+ * <Await
+ *   resolve={promiseThatRejects}
+ *   errorElement={<ErrorElement />}
+ * />
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The error that was thrown in the nearest Await component
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1240,7 +1345,12 @@ let blockerId = 0;
  * using half-filled form data.  This does not handle hard-reloads or
  * cross-origin navigations.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param shouldBlock Either a boolean or a function that returns a boolean to determine if navigation should be blocked
+ * @returns A blocker object with state and reset functionality
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
