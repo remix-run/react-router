@@ -1065,6 +1065,9 @@ importers:
       exit-hook:
         specifier: 2.2.1
         version: 2.2.1
+      isbot:
+        specifier: ^5.1.11
+        version: 5.1.11
       jsesc:
         specifier: 3.0.2
         version: 3.0.2
