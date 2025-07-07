@@ -1,7 +1,11 @@
 import { type RouteConfigEntry } from "@react-router/dev/routes";
 
 import { routeManifestToRouteConfig } from "./manifest";
-import { defineRoutes, type DefineRoutesFunction, type DefineRouteFunction } from "./defineRoutes";
+import {
+  defineRoutes,
+  type DefineRoutesFunction,
+  type DefineRouteFunction,
+} from "./defineRoutes";
 
 export type { DefineRoutesFunction, DefineRouteFunction };
 
