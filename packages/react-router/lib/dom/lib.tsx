@@ -2102,9 +2102,11 @@ export function useScrollRestoration({
         }
       } catch {
         warning(
-            false,
-            `"${location.hash.slice(1)}" is not a decodable element ID. The view will not scroll to it.`
-          );
+          false,
+          `"${location.hash.slice(
+            1
+          )}" is not a decodable element ID. The view will not scroll to it.`
+        );
       }
 
       // Don't reset if this navigation opted out
