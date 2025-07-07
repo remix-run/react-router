@@ -170,6 +170,24 @@ const files = {
       )
     }
   `,
+
+  "app/routes/invalid-date.tsx": js`
+    import { useLoaderData, data } from "react-router";
+
+    export function loader({ request }) {
+      return data({ invalidDate: new Date("invalid") });
+    }
+
+    export default function InvalidDate() {
+      let data = useLoaderData();
+      return (
+        <>
+          <h1 id="heading">Invalid Date</h1>
+          <p id="date">{data.invalidDate.toISOString()}</p>
+        </>
+      )
+    }
+  `,
 };
 
 test.describe("single-fetch", () => {
@@ -216,6 +234,25 @@ test.describe("single-fetch", () => {
         },
       },
     });
+
+    res = await fixture.requestSingleFetchData("/invalid-date.data");
+    expect(res.data).toEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/invalid-date": {
+        data: {
+          invalidDate: expect.any(Date),
+        },
+      },
+    });
+
+    let date = (
+      res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } }
+    )["routes/invalid-date"].data.invalidDate;
+    expect(isNaN(date.getTime())).toBe(true);
   });
 
   test("loads proper errors on single fetch loader requests", async () => {
@@ -1857,6 +1894,79 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#a-client")).toMatch(
       />A client loader URL: http:\/\/localhost:\d+\/parent\/a</
     );
+  });
+
+  test("Strips Content-Length header from loader/action responses", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data-with-response.tsx": js`
+          import { useActionData, useLoaderData, data } from "react-router";
+
+          export function headers ({ actionHeaders, loaderHeaders, errorHeaders }) {
+            if ([...actionHeaders].length > 0) {
+              return actionHeaders;
+            } else {
+              return loaderHeaders;
+            }
+          }
+
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return data({
+              key: formData.get('key'),
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export function loader({ request }) {
+            return data({
+              message: "DATA",
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export default function DataWithResponse() {
+            let data = useLoaderData();
+            let actionData = useActionData();
+            return (
+              <>
+                <h1 id="heading">Data</h1>
+                <p id="message">{data.message}</p>
+                <p id="date">{data.date.toISOString()}</p>
+                {actionData ? <p id="action-data">{actionData.key}</p> : null}
+              </>
+            )
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestSingleFetchData("/data-with-response.data");
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toStrictEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/data-with-response": {
+        data: {
+          message: "DATA",
+        },
+      },
+    });
+
+    let postBody = new URLSearchParams();
+    postBody.set("key", "value");
+    res = await fixture.requestSingleFetchData("/data-with-response.data", {
+      method: "post",
+      body: postBody,
+    });
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toEqual({
+      data: {
+        key: "value",
+      },
+    });
   });
 
   test("Action requests do not use _routes and do not call loaders on the server", async ({

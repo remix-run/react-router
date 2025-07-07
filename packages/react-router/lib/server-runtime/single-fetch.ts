@@ -55,7 +55,7 @@ export async function singleFetchAction(
     });
 
     function respond(context: StaticHandlerContext) {
-      let headers = getDocumentHeaders(build, context);
+      let headers = getDocumentHeaders(context, build);
 
       if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
         return generateSingleFetchResponse(request, build, serverMode, {
@@ -154,7 +154,7 @@ export async function singleFetchLoaders(
     let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
 
     function respond(context: StaticHandlerContext) {
-      let headers = getDocumentHeaders(build, context);
+      let headers = getDocumentHeaders(context, build);
 
       if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
         return generateSingleFetchResponse(request, build, serverMode, {
@@ -279,6 +279,12 @@ function generateSingleFetchResponse(
   //  - https://github.com/remix-run/remix/issues/9884
   //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
   resultHeaders.set("Content-Type", "text/x-script");
+
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  resultHeaders.delete("Content-Length");
 
   return new Response(
     encodeViaTurboStream(

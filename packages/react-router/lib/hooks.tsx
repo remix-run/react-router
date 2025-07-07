@@ -894,6 +894,7 @@ export function _renderMatches(
       } else {
         children = outlet;
       }
+
       return (
         <RenderedRoute
           match={match}

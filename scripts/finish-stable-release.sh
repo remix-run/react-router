@@ -63,9 +63,11 @@ NUM_TAGS=$(git tag | grep -e "${PATTERN}" | grep -ve "^react-router@" | wc -l | 
 TAGS_LINE=$(git tag | grep -e "${PATTERN}" | grep -ve "^react-router@" | tr '\n' ' ')
 
 echo "Found ${NUM_TAGS} tags to delete: ${TAGS_LINE}"
-git push origin --delete ${TAGS_LINE}
-echo "Pruning local tags"
-git fetch --prune --prune-tags
+
+echo "To delete, run the following commands:"
+echo ""
+echo "git push origin --delete ${TAGS_LINE}"
+echo "git fetch --prune --prune-tags"
 
 set +e
 set +x
