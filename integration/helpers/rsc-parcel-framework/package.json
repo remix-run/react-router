@@ -16,7 +16,7 @@
     "clean": "rm -rf dist .parcel-cache .react-router .react-router-parcel",
     "dev": "parcel --no-cache --no-autoinstall",
     "build": "parcel build --no-cache --no-autoinstall",
-    "start": "node start.js",
+    "start": "cross-env NODE_ENV=production node start.js",
     "typecheck": "react-router typegen && pnpm build && tsc"
   },
   "devDependencies": {
@@ -34,6 +34,7 @@
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
     "@parcel/runtime-rsc": "2.15.0",
+    "cross-env": "^7.0.3",
     "express": "^4.21.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

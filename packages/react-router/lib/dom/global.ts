@@ -29,7 +29,6 @@ declare global {
   var __reactRouterRouteModules: RouteModules | undefined;
   var __reactRouterDataRouter: DataRouter | undefined;
   var __reactRouterHdrActive: boolean;
-  var __reactRouterClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
     | {
         performReactRefresh: () => void;

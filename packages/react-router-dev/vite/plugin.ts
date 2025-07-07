@@ -2661,7 +2661,7 @@ async function handleSpaMode(
 
   // Write out the HTML file for the SPA
   await writeFile(path.join(clientBuildDirectory, filename), html);
-  let prettyDir = path.relative(process.cwd(), clientBuildDirectory);
+  let prettyDir = path.relative(viteConfig.root, clientBuildDirectory);
   let prettyPath = path.join(prettyDir, filename);
   if (build.prerender.length > 0) {
     viteConfig.logger.info(
@@ -2835,12 +2835,13 @@ async function prerenderData(
   }
 
   // Write out the .data file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, data);
   viteConfig.logger.info(
-    `Prerender (data): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (data): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
   return data;
 }
@@ -2894,12 +2895,17 @@ async function prerenderRoute(
   }
 
   // Write out the HTML file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
+  let outfile = path.join(
+    clientBuildDirectory,
+    ...normalizedPath.split("/"),
+    "index.html"
+  );
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, html);
   viteConfig.logger.info(
-    `Prerender (html): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (html): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
 }
 
@@ -2927,12 +2933,13 @@ async function prerenderResourceRoute(
   }
 
   // Write out the resource route file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, content);
   viteConfig.logger.info(
-    `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (resource): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
 }
 
@@ -3462,10 +3469,6 @@ export async function getEnvironmentOptionsResolvers(
     `file:///${path.join(packageRoot, "module-sync-enabled/index.mjs")}`
   );
   let vite = getVite();
-  let viteServerConditions: string[] = [
-    ...(vite.defaultServerConditions ?? []),
-    ...(moduleSyncEnabled ? ["module-sync"] : []),
-  ];
 
   function getBaseOptions({
     viteUserConfig,
@@ -3521,10 +3524,35 @@ export async function getEnvironmentOptionsResolvers(
   }: {
     viteUserConfig: Vite.UserConfig;
   }): EnvironmentOptions {
-    let conditions =
-      viteCommand === "build"
-        ? viteServerConditions
-        : ["development", ...viteServerConditions];
+    // We're using the module-sync condition, but Vite
+    // doesn't support it by default.
+    // See https://github.com/vitest-dev/vitest/issues/7692
+    let maybeModuleSyncConditions: string[] = [
+      ...(moduleSyncEnabled ? ["module-sync"] : []),
+    ];
+
+    let maybeDevelopmentConditions =
+      viteCommand === "build" ? [] : ["development"];
+
+    // This is a compatibility layer for Vite 5. Default conditions were
+    // automatically added to any custom conditions in Vite 5, but Vite 6
+    // removed this behavior. Instead, the default conditions are overridden
+    // by any custom conditions. If we wish to retain the default
+    // conditions, we need to manually merge them using the provided default
+    // conditions arrays exported from Vite. In Vite 5, these default
+    // conditions arrays do not exist.
+    // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
+    let maybeDefaultServerConditions = vite.defaultServerConditions || [];
+
+    // There is no helpful export with the default external conditions (see
+    // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
+    // we are hardcording the default here.
+    let defaultExternalConditions = ["node"];
+
+    let baseConditions = [
+      ...maybeDevelopmentConditions,
+      ...maybeModuleSyncConditions,
+    ];
 
     return mergeEnvironmentOptions(getBaseOptions({ viteUserConfig }), {
       resolve: {
@@ -3533,8 +3561,8 @@ export async function getEnvironmentOptionsResolvers(
           ctx.reactRouterConfig.future.unstable_viteEnvironmentApi
             ? undefined
             : ssrExternals,
-        conditions,
-        externalConditions: conditions,
+        conditions: [...baseConditions, ...maybeDefaultServerConditions],
+        externalConditions: [...baseConditions, ...defaultExternalConditions],
       },
       build: {
         // We move SSR-only assets to client assets. Note that the
