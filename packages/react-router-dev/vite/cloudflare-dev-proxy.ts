@@ -68,9 +68,10 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       // conditions arrays do not exist.
       // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
       //
-      // In addition to that, those are external conditions (do not confuse them with server conditions)
-      // and there is no helpful export with the default external conditions (see https://github.com/vitejs/vite/pull/20279 for more details).
-      // So, for now, we are hardcording the default here.
+      // In addition to that, these are external conditions (do not confuse them
+      // with server conditions) and there is no helpful export with the default
+      // external conditions (see https://github.com/vitejs/vite/pull/20279 for
+      // more details). So, for now, we are hardcording the default here.
       const externalConditions: string[] = ["node"];
 
       let configResult = await loadConfig({
