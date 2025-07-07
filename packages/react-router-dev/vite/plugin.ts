@@ -324,6 +324,34 @@ const getPublicModulePathForEntry = (
   return entryChunk ? `${ctx.publicPath}${entryChunk.file}` : undefined;
 };
 
+const getCssCodeSplitDisabledFile = (
+  ctx: ReactRouterPluginContext,
+  viteConfig: Vite.ResolvedConfig,
+  viteManifest: Vite.Manifest
+) => {
+  if (viteConfig.build.cssCodeSplit) {
+    return null;
+  }
+
+  let cssFile = viteManifest["style.css"]?.file;
+  invariant(
+    cssFile,
+    "Expected `style.css` to be present in Vite manifest when `build.cssCodeSplit` is disabled"
+  );
+
+  return `${ctx.publicPath}${cssFile}`;
+};
+
+const getClientEntryChunk = (
+  ctx: ReactRouterPluginContext,
+  viteManifest: Vite.Manifest
+) => {
+  let filePath = ctx.entryClientFilePath;
+  let chunk = resolveChunk(ctx, viteManifest, filePath);
+  invariant(chunk, `Chunk not found: ${filePath}`);
+  return chunk;
+};
+
 const getReactRouterManifestBuildAssets = (
   ctx: ReactRouterPluginContext,
   viteConfig: Vite.ResolvedConfig,
@@ -336,30 +364,6 @@ const getReactRouterManifestBuildAssets = (
 
   let isRootRoute = Boolean(route && route.parentId === undefined);
 
-  // If this is the root route, we also need to include assets from the
-  // client entry file as this is a common way for consumers to import
-  // global reset styles, etc.
-  let prependedAssetChunks = isRootRoute
-    ? [ctx.entryClientFilePath].map((filePath) => {
-        let chunk = resolveChunk(ctx, viteManifest, filePath);
-        invariant(chunk, `Chunk not found: ${filePath}`);
-        return chunk;
-      })
-    : [];
-
-  let cssCodeSplitDisabledFiles: string[] = [];
-  // If CSS code splitting is disabled, Vite includes a singular 'style.css' asset
-  // in the manifest that isn't tied to any route file. If we want to render these
-  // styles correctly, we need to include them in the root route.
-  if (!viteConfig.build.cssCodeSplit && isRootRoute) {
-    let cssFile = viteManifest["style.css"]?.file;
-    invariant(
-      cssFile,
-      "Expected `style.css` to be present in Vite manifest when `build.cssCodeSplit` is disabled"
-    );
-    cssCodeSplitDisabledFiles = [`${ctx.publicPath}${cssFile}`];
-  }
-
   let routeModuleChunks = routeChunkNames
     .map((routeChunkName) =>
       resolveChunk(
@@ -370,11 +374,19 @@ const getReactRouterManifestBuildAssets = (
     )
     .filter(isNonNullable);
 
-  let chunks = resolveDependantChunks(viteManifest, [
-    ...prependedAssetChunks,
-    entryChunk,
-    ...routeModuleChunks,
-  ]);
+  let chunks = resolveDependantChunks(
+    viteManifest,
+    [
+      // If this is the root route, we also need to include assets from the
+      // client entry file as this is a common way for consumers to import
+      // global reset styles, etc.
+      isRootRoute ? getClientEntryChunk(ctx, viteManifest) : null,
+      entryChunk,
+      routeModuleChunks,
+    ]
+      .flat(1)
+      .filter(isNonNullable)
+  );
 
   return {
     module: `${ctx.publicPath}${entryChunk.file}`,
@@ -382,14 +394,21 @@ const getReactRouterManifestBuildAssets = (
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
         return `${ctx.publicPath}${viteManifest[imported].file}`;
       }) ?? [],
-    css: dedupe([
-      ...cssCodeSplitDisabledFiles,
-      ...(chunks
-        .flatMap((e) => e.css ?? [])
-        .map((href) => {
-          return `${ctx.publicPath}${href}`;
-        }) ?? []),
-    ]),
+    css: dedupe(
+      [
+        // If CSS code splitting is disabled, Vite includes a singular 'style.css' asset
+        // in the manifest that isn't tied to any route file. If we want to render these
+        // styles correctly, we need to include them in the root route.
+        isRootRoute
+          ? getCssCodeSplitDisabledFile(ctx, viteConfig, viteManifest)
+          : null,
+        chunks
+          .flatMap((e) => e.css ?? [])
+          .map((href) => `${ctx.publicPath}${href}`),
+      ]
+        .flat(1)
+        .filter(isNonNullable)
+    ),
   };
 };
 
