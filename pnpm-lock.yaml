@@ -104,7 +104,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-223f81d8-20250707(eslint@8.57.0)
+        version: 6.1.0-canary-a7a11657-20250708(eslint@8.57.0)
       isbot:
         specifier: ^5.1.11
         version: 5.1.11
@@ -6207,8 +6207,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-223f81d8-20250707:
-    resolution: {integrity: sha512-yZJFGVR2gYBF+mw8xuJAAuC8VC9lkXuLqnHm1w14edGGMbO5Jl75gawEHgW2kf9ayC9wvGX5J3yQesvAylAs2g==}
+  eslint-plugin-react-hooks@6.1.0-canary-a7a11657-20250708:
+    resolution: {integrity: sha512-iAY0n014i7bIKWiex/vOB3CH/slI4tT8obRR5OysIuRpuTEVcfIVh1ZNtDIlHq39rbQeN139nyGqtE27erTUXA==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9125,7 +9125,7 @@ packages:
   supertest@6.3.4:
     resolution: {integrity: sha512-erY3HFDG0dPnhw4U+udPfrzXa4xhSG+n4rxfRuZWCUvjFWwKl+OxWf/7zk50s84/fAAs7vf5QAb9uRa0cCykxw==}
     engines: {node: '>=6.4.0'}
-    deprecated: Please upgrade to supertest v7.1.2+, see release notes at https://github.com/forwardemail/supertest/releases/tag/v7.1.2 - maintenance is supported by Forward Email @ https://forwardemail.net
+    deprecated: Please upgrade to supertest v7.1.3+, see release notes at https://github.com/forwardemail/supertest/releases/tag/v7.1.3 - maintenance is supported by Forward Email @ https://forwardemail.net
 
   supports-color@5.5.0:
     resolution: {integrity: sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==}
@@ -9381,9 +9381,6 @@ packages:
 
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
-
-  ufo@1.5.4:
-    resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
 
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
@@ -15004,7 +15001,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-223f81d8-20250707(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-a7a11657-20250708(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
@@ -17342,7 +17339,7 @@ snapshots:
       acorn: 8.14.1
       pathe: 2.0.3
       pkg-types: 1.3.1
-      ufo: 1.5.4
+      ufo: 1.6.1
 
   modern-ahocorasick@1.0.1: {}
 
@@ -19146,8 +19143,6 @@ snapshots:
   typescript@5.4.5: {}
 
   uc.micro@2.1.0: {}
-
-  ufo@1.5.4: {}
 
   ufo@1.6.1: {}
 
