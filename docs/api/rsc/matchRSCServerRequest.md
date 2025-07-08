@@ -36,7 +36,7 @@ export function fetchServer(request: Request) {
     decodeAction,
     loadServerAction,
     request,
-    routes,
+    routes: routes(),
     generateResponse(match, options) {
       return new Response(
         renderToReadableStream(match.payload, options),
