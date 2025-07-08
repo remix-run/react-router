@@ -6,6 +6,7 @@ import {
   renderToReadableStream,
 } from "@vitejs/plugin-rsc/rsc";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
+import { basename } from "./config/basename";
 
 import { routes } from "./routes";
 
@@ -17,6 +18,7 @@ export async function fetchServer(request: Request) {
     loadServerAction,
     request,
     routes,
+    basename,
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {
         status: match.statusCode,
