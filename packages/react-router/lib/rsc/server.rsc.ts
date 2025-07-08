@@ -16,7 +16,6 @@ import {
   isMutationMethod,
   isResponse,
   isRedirectResponse,
-  prependBasename,
   type StaticHandlerContext,
 } from "../router/router";
 import {
@@ -27,6 +26,7 @@ import {
   type ShouldRevalidateFunction,
   isRouteErrorResponse,
   matchRoutes,
+  prependBasename,
   convertRouteMatchToUiMatch,
   redirect as baseRedirect,
   redirectDocument as baseRedirectDocument,
