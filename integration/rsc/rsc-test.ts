@@ -65,24 +65,13 @@ async function setupRscTest({
   implementation,
   port,
   dev,
-  basename,
   files,
 }: {
   implementation: Implementation;
   port: number;
   dev?: boolean;
-  basename?: string;
   files: Record<string, string>;
 }) {
-  // Make a shallow copy of the files object so we don't mutate the original
-  files = { ...files };
-
-  if (basename) {
-    files["src/config/basename.ts"] = js`
-      export const basename = ${JSON.stringify(basename)};
-    `;
-  }
-
   let cwd = await createProject(files, implementation.template);
 
   let { error, status, stderr, stdout } = implementation.build({ cwd });
@@ -957,8 +946,11 @@ implementations.forEach((implementation) => {
         stop = await setupRscTest({
           implementation,
           port,
-          basename,
           files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
             "src/routes/home.tsx": js`
               export function loader() {
                 return { message: "Loader Data" };
@@ -986,8 +978,11 @@ implementations.forEach((implementation) => {
         stop = await setupRscTest({
           implementation,
           port,
-          basename,
           files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
@@ -1071,8 +1066,11 @@ implementations.forEach((implementation) => {
         stop = await setupRscTest({
           implementation,
           port,
-          basename,
           files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
@@ -1186,8 +1184,11 @@ implementations.forEach((implementation) => {
         stop = await setupRscTest({
           implementation,
           port,
-          basename,
           files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
@@ -1278,8 +1279,11 @@ implementations.forEach((implementation) => {
         stop = await setupRscTest({
           implementation,
           port,
-          basename,
           files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
@@ -1393,8 +1397,11 @@ implementations.forEach((implementation) => {
         stop = await setupRscTest({
           implementation,
           port,
-          basename,
           files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
             "src/routes.ts": js`
               import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
@@ -1517,8 +1524,11 @@ implementations.forEach((implementation) => {
           stop = await setupRscTest({
             implementation,
             port,
-            basename,
             files: {
+              "src/config/basename.ts": js`
+                // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+                export const basename = ${JSON.stringify(basename)};
+              `,
               "src/routes.ts": js`
                 import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
