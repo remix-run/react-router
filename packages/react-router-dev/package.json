@@ -115,7 +115,7 @@
     "typescript": "^5.1.6",
     "vite": "^6.1.0",
     "wireit": "0.14.9",
-    "wrangler": "^4.2.0"
+    "wrangler": "^4.23.0"
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",
