@@ -463,6 +463,177 @@ implementations.forEach((implementation) => {
         validateRSCHtml(await page.content());
       });
 
+      test("Supports request context using the unstable_RouterContextProvider API", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/request-context.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
+
+              export const testContext = unstable_createContext<string>("default-value");
+
+              export const requestContext = new unstable_RouterContextProvider(
+                new Map([[testContext, "test-context-value"]])
+              );
+            `,
+            "src/routes/home.tsx": js`
+              import { testContext } from "../config/request-context";
+
+              export function loader({ context }) {
+                return { contextValue: context.get(testContext) };
+              }
+
+              export default function HomeRoute({ loaderData }) {
+                return (
+                  <div>
+                    <h2 data-home>Home: {loaderData.contextValue}</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home: test-context-value"
+        );
+
+        // Ensure this is actually using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Supports request context in resource routes using the unstable_RouterContextProvider API", async ({
+        page,
+        request,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/request-context.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
+
+              export const testContext = unstable_createContext<string>("default-value");
+
+              export const requestContext = new unstable_RouterContextProvider(
+                new Map([[testContext, "test-context-value"]])
+              );
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                  ],
+                },
+                {
+                  id: "resource",
+                  path: "resource",
+                  lazy: () => import("./routes/resource"),
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              import { useFetcher } from "react-router";
+
+              export function ResourceFetcher() {
+                const fetcher = useFetcher();
+
+                const loadResource = () => {
+                  fetcher.submit({ hello: "world" }, { method: "post", action: "/resource" });
+                };
+
+                return (
+                  <div>
+                    <button type="button" onClick={loadResource}>
+                      Load Resource
+                    </button>
+                    {!!fetcher.data && (
+                      <pre data-testid="resource-data">
+                        {JSON.stringify(fetcher.data)}
+                      </pre>
+                    )}
+                  </div>
+                );
+              }
+            `,
+            "src/routes/home.tsx": js`
+              import { ResourceFetcher } from "./home.client";
+              
+              export default function HomeRoute() {
+                return <ResourceFetcher />;
+              }
+            `,
+            "src/routes/resource.tsx": js`
+              import { testContext } from "../config/request-context";
+
+              export function loader({ context }) {
+                return Response.json({ 
+                  message: "Hello from resource route!",
+                  contextValue: context.get(testContext)
+                });
+              }
+
+              export async function action({ context }) {
+                return Response.json({
+                  message: "Hello from resource route!",
+                  contextValue: context.get(testContext),
+                });
+              }
+            `,
+          },
+        });
+
+        const getResponse = await request.get(
+          `http://localhost:${port}/resource`
+        );
+        expect(getResponse?.status()).toBe(200);
+        expect((await getResponse?.json()).contextValue).toBe(
+          "test-context-value"
+        );
+
+        const postResponse = await request.post(
+          `http://localhost:${port}/resource`
+        );
+        expect(postResponse?.status()).toBe(200);
+        expect((await postResponse?.json()).contextValue).toBe(
+          "test-context-value"
+        );
+
+        await page.goto(`http://localhost:${port}/`);
+        await page.click("button");
+
+        await page.waitForSelector("[data-testid=resource-data]");
+        const fetcherData = JSON.parse(
+          (await page.locator("[data-testid=resource-data]").textContent()) ||
+            "{}"
+        );
+        expect(fetcherData.contextValue).toBe("test-context-value");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
       test("Supports resource routes as URL and fetchers", async ({
         page,
         request,

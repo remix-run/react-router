@@ -15,6 +15,7 @@ import {
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
 import { assets } from "./parcel-entry-wrapper"
+import { requestContext } from "./config/request-context";
 
 function fetchServer(request: Request) {
   return matchRSCServerRequest({
@@ -26,6 +27,7 @@ function fetchServer(request: Request) {
     loadServerAction,
     // The incoming request.
     request,
+    requestContext,
     // The app routes.
     routes,
     // Encode the match with the React Server implementation.

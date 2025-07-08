@@ -37,6 +37,10 @@ Your `react-server-dom-xyz/server`'s `loadServerAction` function, used to load a
 
 The request to match against.
 
+### requestContext
+
+A context value for the request to be passed to loaders and actions.
+
 ### routes
 
 Your route definitions.
