@@ -240,11 +240,11 @@ function createRouterFromPayload({
         signal
       );
     },
-    // FIXME: Pass `build.ssr` and `build.basename` into this function
+    // FIXME: Pass `build.ssr` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
       () => window.__router,
       true,
-      undefined,
+      payload.basename,
       createFromReadableStream,
       fetchImplementation
     ),

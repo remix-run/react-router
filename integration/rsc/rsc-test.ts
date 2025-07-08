@@ -1110,6 +1110,708 @@ implementations.forEach((implementation) => {
       });
     });
 
+    test.describe("Basename", () => {
+      test("Renders a page with a custom basename", async ({ page }) => {
+        let port = await getPort();
+        let basename = "/custom/basename/";
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
+            "src/routes/home.tsx": js`
+              export function loader() {
+                return { message: "Loader Data" };
+              }
+              export default function HomeRoute({ loaderData }) {
+                return <h2 data-home>Home: {loaderData.message}</h2>;
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}${basename}`);
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home: Loader Data"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Handles server-side redirects with basename", async ({ page }) => {
+        let port = await getPort();
+        let basename = "/custom/basename/";
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                    {
+                      id: "redirect",
+                      path: "redirect",
+                      lazy: () => import("./routes/redirect"),
+                    },
+                    {
+                      id: "target",
+                      path: "target",
+                      lazy: () => import("./routes/target"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/home.tsx": js`
+              import { Link } from "react-router";
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    <Link to="/redirect" data-link-to-redirect>
+                      Go to redirect route
+                    </Link>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/redirect.tsx": js`
+              import { redirect } from "react-router";
+
+              export function loader() {
+                throw redirect("/target");
+              }
+
+              export default function RedirectRoute() {
+                return <h2>This should not be rendered</h2>;
+              }
+            `,
+            "src/routes/target.tsx": js`
+              export default function TargetRoute() {
+                return <h2 data-target>Target Route</h2>;
+              }
+            `,
+          },
+        });
+
+        // Navigate directly to redirect route with basename
+        await page.goto(`http://localhost:${port}${basename}redirect`);
+
+        // Should be redirected to target route
+        await page.waitForURL(`http://localhost:${port}${basename}target`);
+        await page.waitForSelector("[data-target]");
+        expect(await page.locator("[data-target]").textContent()).toBe(
+          "Target Route"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Handles server-side redirects in route actions with basename", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        let basename = "/custom/basename/";
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                    {
+                      id: "action-redirect",
+                      path: "action-redirect",
+                      lazy: () => import("./routes/action-redirect"),
+                    },
+                    {
+                      id: "target",
+                      path: "target",
+                      lazy: () => import("./routes/target"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/home.tsx": js`
+              import { Link } from "react-router";
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    <Link to="/action-redirect" data-link-to-action-redirect>Go to action redirect route</Link>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/action-redirect.tsx": js`
+              import { redirect } from "react-router";
+
+              export async function action({ request }) {
+                // Redirect to target when form is submitted
+                throw redirect("/target");
+              }
+
+              export default function ActionRedirectRoute() {
+                return (
+                  <div>
+                    <h2 data-action-redirect>Action Redirect Route</h2>
+                    <form method="post">
+                      <button type="submit" data-submit-action>
+                        Submit to trigger redirect
+                      </button>
+                    </form>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/target.tsx": js`
+              export default function TargetRoute() {
+                return <h2 data-target>Target Route</h2>;
+              }
+            `,
+          },
+        });
+
+        // Navigate to action redirect route with basename
+        await page.goto(`http://localhost:${port}${basename}action-redirect`);
+        await page.waitForSelector("[data-action-redirect]");
+        expect(await page.locator("[data-action-redirect]").textContent()).toBe(
+          "Action Redirect Route"
+        );
+
+        // Mutate the window object so we can check if the navigation occurred
+        // within the same browser context
+        await page.evaluate(() => {
+          // @ts-expect-error
+          window.__isWithinSameBrowserContext = true;
+        });
+
+        // Submit the form to trigger the action redirect
+        await page.click("[data-submit-action]");
+
+        // Should be redirected to target route
+        await page.waitForURL(`http://localhost:${port}${basename}target`);
+        await page.waitForSelector("[data-target]");
+        expect(await page.locator("[data-target]").textContent()).toBe(
+          "Target Route"
+        );
+
+        // Ensure a document navigation occurred
+        expect(
+          await page.evaluate(() => {
+            // @ts-expect-error
+            return window.__isWithinSameBrowserContext;
+          })
+        ).not.toBe(true);
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Supports redirects on client navigations with basename", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        let basename = "/custom/basename/";
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                    {
+                      id: "redirect",
+                      path: "redirect",
+                      lazy: () => import("./routes/redirect"),
+                    },
+                    {
+                      id: "target",
+                      path: "target",
+                      lazy: () => import("./routes/target"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/home.tsx": js`
+              import { Link } from "react-router";
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    <Link to="/redirect" data-link-to-redirect>
+                      Go to redirect route
+                    </Link>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/redirect.tsx": js`
+              import { redirect } from "react-router";
+
+              export function loader() {
+                throw redirect("/target");
+              }
+
+              export default function RedirectRoute() {
+                return <h2>This should not be rendered</h2>;
+              }
+            `,
+            "src/routes/target.tsx": js`
+              export default function TargetRoute() {
+                return <h2 data-target>Target Route</h2>;
+              }
+            `,
+          },
+        });
+
+        // Navigate to home route with basename
+        await page.goto(`http://localhost:${port}${basename}`);
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home Route"
+        );
+
+        // Click link to redirect route
+        await page.click("[data-link-to-redirect]");
+
+        // Should be redirected to target route
+        await page.waitForURL(`http://localhost:${port}${basename}target`);
+        await page.waitForSelector("[data-target]");
+        expect(await page.locator("[data-target]").textContent()).toBe(
+          "Target Route"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Supports redirects in route actions on client navigations with basename", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        let basename = "/custom/basename/";
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                    {
+                      id: "action-redirect",
+                      path: "action-redirect",
+                      lazy: () => import("./routes/action-redirect"),
+                    },
+                    {
+                      id: "target",
+                      path: "target",
+                      lazy: () => import("./routes/target"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/home.tsx": js`
+              import { Link } from "react-router";
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    <Link to="/action-redirect" data-link-to-action-redirect>Go to action redirect route</Link>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/action-redirect.tsx": js`
+              import { Form, redirect } from "react-router";
+
+              export async function action({ request }) {
+                // Redirect to target when form is submitted
+                throw redirect("/target");
+              }
+
+              export default function ActionRedirectRoute() {
+                return (
+                  <div>
+                    <h2 data-action-redirect>Action Redirect Route</h2>
+                    <Form method="post">
+                      <button type="submit" data-submit-action>
+                        Submit to trigger redirect
+                      </button>
+                    </Form>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/target.tsx": js`
+              export default function TargetRoute() {
+                return <h2 data-target>Target Route</h2>;
+              }
+            `,
+          },
+        });
+
+        // Navigate to action redirect route with basename
+        await page.goto(`http://localhost:${port}${basename}action-redirect`);
+        await page.waitForSelector("[data-action-redirect]");
+        expect(await page.locator("[data-action-redirect]").textContent()).toBe(
+          "Action Redirect Route"
+        );
+
+        // Mutate the window object so we can check if the navigation occurred
+        // within the same browser context
+        await page.evaluate(() => {
+          // @ts-expect-error
+          window.__isWithinSameBrowserContext = true;
+        });
+
+        // Submit the form to trigger the action redirect
+        await page.click("[data-submit-action]");
+
+        // Should be redirected to target route
+        await page.waitForURL(`http://localhost:${port}${basename}target`);
+        await page.waitForSelector("[data-target]");
+        expect(await page.locator("[data-target]").textContent()).toBe(
+          "Target Route"
+        );
+
+        // Ensure a client-side navigation occurred
+        expect(
+          await page.evaluate(() => {
+            // @ts-expect-error
+            return window.__isWithinSameBrowserContext;
+          })
+        ).toBe(true);
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Supports redirects in server actions with basename", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        let basename = "/custom/basename/";
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/basename.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              export const basename = ${JSON.stringify(basename)};
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                    {
+                      id: "redirect",
+                      path: "redirect",
+                      lazy: () => import("./routes/redirect"),
+                    },
+                    {
+                      id: "target",
+                      path: "target",
+                      lazy: () => import("./routes/target"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/home.tsx": js`
+              import { Link } from "react-router";
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    <Link to="/redirect" data-link-to-redirect>
+                      Go to server action redirect route
+                    </Link>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/redirect.actions.ts": js`
+              "use server";
+              import { redirect } from "react-router";
+
+              export async function redirectAction(formData: FormData) {
+                throw redirect("/target");
+              }
+            `,
+            "src/routes/redirect.tsx": js`
+              export { default } from "./redirect.client";
+            `,
+            "src/routes/redirect.client.tsx": js`
+              "use client";
+
+              import { useActionState } from "react";
+              import { redirectAction } from "./redirect.actions";
+
+              export default function RedirectRoute() {
+                const [state, formAction, isPending] = useActionState(redirectAction, null);
+
+                return (
+                  <div>
+                    <h2 data-redirect>Server Action Redirect Route</h2>
+                    <form action={formAction}>
+                      <button type="submit" data-submit-action disabled={isPending}>
+                        {isPending ? "Redirecting..." : "Redirect to Target"}
+                      </button>
+                    </form>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/target.tsx": js`
+              export default function TargetRoute() {
+                return <h2 data-target>Target Route</h2>;
+              }
+            `,
+          },
+        });
+
+        // Start on home route
+        await page.goto(`http://localhost:${port}${basename}`);
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home Route"
+        );
+
+        // Navigate to redirect route via client navigation
+        await page.click("[data-link-to-redirect]");
+        await page.waitForSelector("[data-redirect]");
+        expect(await page.locator("[data-redirect]").textContent()).toBe(
+          "Server Action Redirect Route"
+        );
+
+        // Submit the form to trigger server action redirect
+        await page.click("[data-submit-action]");
+
+        // Should be redirected to target route
+        await page.waitForURL(`http://localhost:${port}${basename}target`);
+        await page.waitForSelector("[data-target]");
+        expect(await page.locator("[data-target]").textContent()).toBe(
+          "Target Route"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test.describe("Without JavaScript", () => {
+        test.use({ javaScriptEnabled: false });
+        test("Supports redirects in server actions without JavaScript with basename", async ({
+          page,
+        }) => {
+          test.skip(implementation.name === "parcel", "Not working in parcel?");
+
+          let port = await getPort();
+          let basename = "/custom/basename/";
+          stop = await setupRscTest({
+            implementation,
+            port,
+            files: {
+              "src/config/basename.ts": js`
+                // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+                export const basename = ${JSON.stringify(basename)};
+              `,
+              "src/routes.ts": js`
+                import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+                export const routes = [
+                  {
+                    id: "root",
+                    path: "",
+                    lazy: () => import("./routes/root"),
+                    children: [
+                      {
+                        id: "home",
+                        index: true,
+                        lazy: () => import("./routes/home"),
+                      },
+                      {
+                        id: "redirect",
+                        path: "redirect",
+                        lazy: () => import("./routes/redirect"),
+                      },
+                      {
+                        id: "target",
+                        path: "target",
+                        lazy: () => import("./routes/target"),
+                      },
+                    ],
+                  },
+                ] satisfies RSCRouteConfig;
+              `,
+              "src/routes/home.tsx": js`
+                import { Link } from "react-router";
+
+                export default function HomeRoute() {
+                  return (
+                    <div>
+                      <h2 data-home>Home Route</h2>
+                      <Link to="/redirect" data-link-to-redirect>
+                        Go to server action redirect route
+                      </Link>
+                    </div>
+                  );
+                }
+              `,
+              "src/routes/redirect.actions.ts": js`
+                "use server";
+                import { redirect } from "react-router";
+
+                export async function redirectAction(formData: FormData) {
+                  throw redirect("/target");
+                }
+              `,
+              "src/routes/redirect.tsx": js`
+                export { default } from "./redirect.client";
+              `,
+              "src/routes/redirect.client.tsx": js`
+                "use client";
+
+                import { useActionState } from "react";
+                import { redirectAction } from "./redirect.actions";
+
+                export default function RedirectRoute() {
+                  const [state, formAction, isPending] = useActionState(redirectAction, null);
+
+                  return (
+                    <div>
+                      <h2 data-redirect>Server Action Redirect Route</h2>
+                      <form action={formAction}>
+                        <button type="submit" data-submit-action disabled={isPending}>
+                          {isPending ? "Redirecting..." : "Redirect to Target"}
+                        </button>
+                      </form>
+                    </div>
+                  );
+                }
+              `,
+              "src/routes/target.tsx": js`
+                export default function TargetRoute() {
+                  return <h2 data-target>Target Route</h2>;
+                }
+              `,
+            },
+          });
+
+          // Start on home route
+          await page.goto(`http://localhost:${port}${basename}`);
+          await page.waitForSelector("[data-home]");
+          expect(await page.locator("[data-home]").textContent()).toBe(
+            "Home Route"
+          );
+
+          // Navigate to redirect route
+          await page.click("[data-link-to-redirect]");
+          await page.waitForSelector("[data-redirect]");
+          expect(await page.locator("[data-redirect]").textContent()).toBe(
+            "Server Action Redirect Route"
+          );
+
+          // Submit the form to trigger server action redirect
+          await page.click("[data-submit-action]");
+
+          // Should be redirected to target route
+          await page.waitForURL(`http://localhost:${port}${basename}target`);
+          await page.waitForSelector("[data-target]");
+          expect(await page.locator("[data-target]").textContent()).toBe(
+            "Target Route"
+          );
+
+          // Ensure this is using RSC
+          validateRSCHtml(await page.content());
+        });
+      });
+    });
+
     test.describe("Errors", () => {
       test("Handles errors in server components correctly", async ({
         page,
@@ -1126,7 +1828,7 @@ implementations.forEach((implementation) => {
               }
 
               export default function HomeRoute() {
-                return <h2>This shouldn't render</h2>;
+                return <h2>This should not be rendered</h2>;
               }
 
               export { ErrorBoundary } from "./home.client";

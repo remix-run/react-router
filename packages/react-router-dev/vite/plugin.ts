@@ -324,21 +324,45 @@ const getPublicModulePathForEntry = (
   return entryChunk ? `${ctx.publicPath}${entryChunk.file}` : undefined;
 };
 
+const getCssCodeSplitDisabledFile = (
+  ctx: ReactRouterPluginContext,
+  viteConfig: Vite.ResolvedConfig,
+  viteManifest: Vite.Manifest
+) => {
+  if (viteConfig.build.cssCodeSplit) {
+    return null;
+  }
+
+  let cssFile = viteManifest["style.css"]?.file;
+  invariant(
+    cssFile,
+    "Expected `style.css` to be present in Vite manifest when `build.cssCodeSplit` is disabled"
+  );
+
+  return `${ctx.publicPath}${cssFile}`;
+};
+
+const getClientEntryChunk = (
+  ctx: ReactRouterPluginContext,
+  viteManifest: Vite.Manifest
+) => {
+  let filePath = ctx.entryClientFilePath;
+  let chunk = resolveChunk(ctx, viteManifest, filePath);
+  invariant(chunk, `Chunk not found: ${filePath}`);
+  return chunk;
+};
+
 const getReactRouterManifestBuildAssets = (
   ctx: ReactRouterPluginContext,
+  viteConfig: Vite.ResolvedConfig,
   viteManifest: Vite.Manifest,
   entryFilePath: string,
-  prependedAssetFilePaths: string[] = []
+  route: RouteManifestEntry | null
 ): ReactRouterManifest["entry"] & { css: string[] } => {
   let entryChunk = resolveChunk(ctx, viteManifest, entryFilePath);
-  invariant(entryChunk, "Chunk not found");
+  invariant(entryChunk, `Chunk not found: ${entryFilePath}`);
 
-  // This is here to support prepending client entry assets to the root route
-  let prependedAssetChunks = prependedAssetFilePaths.map((filePath) => {
-    let chunk = resolveChunk(ctx, viteManifest, filePath);
-    invariant(chunk, "Chunk not found");
-    return chunk;
-  });
+  let isRootRoute = Boolean(route && route.parentId === undefined);
 
   let routeModuleChunks = routeChunkNames
     .map((routeChunkName) =>
@@ -350,11 +374,19 @@ const getReactRouterManifestBuildAssets = (
     )
     .filter(isNonNullable);
 
-  let chunks = resolveDependantChunks(viteManifest, [
-    ...prependedAssetChunks,
-    entryChunk,
-    ...routeModuleChunks,
-  ]);
+  let chunks = resolveDependantChunks(
+    viteManifest,
+    [
+      // If this is the root route, we also need to include assets from the
+      // client entry file as this is a common way for consumers to import
+      // global reset styles, etc.
+      isRootRoute ? getClientEntryChunk(ctx, viteManifest) : null,
+      entryChunk,
+      routeModuleChunks,
+    ]
+      .flat(1)
+      .filter(isNonNullable)
+  );
 
   return {
     module: `${ctx.publicPath}${entryChunk.file}`,
@@ -362,10 +394,21 @@ const getReactRouterManifestBuildAssets = (
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
         return `${ctx.publicPath}${viteManifest[imported].file}`;
       }) ?? [],
-    css:
-      dedupe(chunks.flatMap((e) => e.css ?? [])).map((href) => {
-        return `${ctx.publicPath}${href}`;
-      }) ?? [],
+    css: dedupe(
+      [
+        // If CSS code splitting is disabled, Vite includes a singular 'style.css' asset
+        // in the manifest that isn't tied to any route file. If we want to render these
+        // styles correctly, we need to include them in the root route.
+        isRootRoute
+          ? getCssCodeSplitDisabledFile(ctx, viteConfig, viteManifest)
+          : null,
+        chunks
+          .flatMap((e) => e.css ?? [])
+          .map((href) => `${ctx.publicPath}${href}`),
+      ]
+        .flat(1)
+        .filter(isNonNullable)
+    ),
   };
 };
 
@@ -851,8 +894,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   let generateReactRouterManifestsForBuild = async ({
+    viteConfig,
     routeIds,
   }: {
+    viteConfig: Vite.ResolvedConfig;
     routeIds?: Array<string>;
   }): Promise<{
     reactRouterBrowserManifest: ReactRouterManifest;
@@ -866,8 +911,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
     let entry = getReactRouterManifestBuildAssets(
       ctx,
+      viteConfig,
       viteManifest,
-      ctx.entryClientFilePath
+      ctx.entryClientFilePath,
+      null
     );
 
     let browserRoutes: ReactRouterManifest["routes"] = {};
@@ -883,7 +930,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     for (let route of Object.values(ctx.reactRouterConfig.routes)) {
       let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[route.id];
-      let isRootRoute = route.parentId === undefined;
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
       let hasClientMiddleware = sourceExports.includes(
@@ -930,12 +976,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         ...getReactRouterManifestBuildAssets(
           ctx,
+          viteConfig,
           viteManifest,
           `${routeFile}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
-          // If this is the root route, we also need to include assets from the
-          // client entry file as this is a common way for consumers to import
-          // global reset styles, etc.
-          isRootRoute ? [ctx.entryClientFilePath] : []
+          route
         ),
         clientActionModule: hasRouteChunkByExportName.clientAction
           ? getPublicModulePathForEntry(
@@ -2035,10 +2079,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
           case virtual.serverManifest.resolvedId: {
             let routeIds = getServerBundleRouteIds(this, ctx);
+            invariant(viteConfig);
             let reactRouterManifest =
               viteCommand === "build"
                 ? (
                     await generateReactRouterManifestsForBuild({
+                      viteConfig,
                       routeIds,
                     })
                   ).reactRouterServerManifest
@@ -2661,7 +2707,7 @@ async function handleSpaMode(
 
   // Write out the HTML file for the SPA
   await writeFile(path.join(clientBuildDirectory, filename), html);
-  let prettyDir = path.relative(process.cwd(), clientBuildDirectory);
+  let prettyDir = path.relative(viteConfig.root, clientBuildDirectory);
   let prettyPath = path.join(prettyDir, filename);
   if (build.prerender.length > 0) {
     viteConfig.logger.info(
@@ -2835,12 +2881,13 @@ async function prerenderData(
   }
 
   // Write out the .data file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, data);
   viteConfig.logger.info(
-    `Prerender (data): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (data): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
   return data;
 }
@@ -2894,12 +2941,17 @@ async function prerenderRoute(
   }
 
   // Write out the HTML file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
+  let outfile = path.join(
+    clientBuildDirectory,
+    ...normalizedPath.split("/"),
+    "index.html"
+  );
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, html);
   viteConfig.logger.info(
-    `Prerender (html): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (html): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
 }
 
@@ -2927,12 +2979,13 @@ async function prerenderResourceRoute(
   }
 
   // Write out the resource route file
-  let outdir = path.relative(process.cwd(), clientBuildDirectory);
-  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  let outfile = path.join(clientBuildDirectory, ...normalizedPath.split("/"));
   await mkdir(path.dirname(outfile), { recursive: true });
   await writeFile(outfile, content);
   viteConfig.logger.info(
-    `Prerender (resource): ${prerenderPath} -> ${colors.bold(outfile)}`
+    `Prerender (resource): ${prerenderPath} -> ${colors.bold(
+      path.relative(viteConfig.root, outfile)
+    )}`
   );
 }
 

@@ -72,6 +72,7 @@ type ViteConfigServerArgs = {
 type ViteConfigBuildArgs = {
   assetsInlineLimit?: number;
   assetsDir?: string;
+  cssCodeSplit?: boolean;
 };
 
 type ViteConfigBaseArgs = {
@@ -99,7 +100,11 @@ export const viteConfig = {
     `;
     return text;
   },
-  build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
+  build: ({
+    assetsInlineLimit,
+    assetsDir,
+    cssCodeSplit,
+  }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
         // Detect rolldown-vite. This should ideally use "rolldownVersion"
@@ -116,6 +121,9 @@ export const viteConfig = {
           : undefined,
         assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
         assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
+        cssCodeSplit: ${
+          cssCodeSplit !== undefined ? cssCodeSplit : "undefined"
+        },
       },
     `;
   },

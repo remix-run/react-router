@@ -28,7 +28,7 @@ npm i react-router react react-dom react-server-dom-parcel @mjackson/node-fetch-
 Along with development dependencies
 
 ```shellscript nonumber
-npm i -D vite vite-plugin-devtools-json @hiogawa/vite-rsc typescript @types/react @types/react-dom @types/express @types/compression @types/node
+npm i -D vite vite-plugin-devtools-json @vitejs/plugin-rsc typescript @types/react @types/react-dom @types/express @types/compression @types/node
 ```
 
 ## Configure Parcel
@@ -58,7 +58,7 @@ import {
   decodeReply,
   loadServerAction,
   renderToReadableStream,
-} from "@hiogawa/vite-rsc/rsc";
+} from "@vitejs/plugin-rsc/rsc";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 import { routes } from "./routes/routes";
@@ -102,18 +102,21 @@ export default async function handler(request: Request) {
 Create a `src/prerender.tsx` file that will be responsible for rendering our application to HTML.
 
 ```tsx nonnumber
-import { createFromReadableStream } from "@hiogawa/vite-rsc/ssr";
+import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
 import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge";
 import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
   unstable_RSCStaticRouter as RSCStaticRouter,
 } from "react-router";
-import bootstrapScriptContent from "virtual:vite-rsc/bootstrap-script-content";
 
 export async function prerender(
   request: Request,
   fetchServer: (request: Request) => Promise<Response>
 ): Promise<Response> {
+  const bootstrapScriptContent =
+    await import.meta.viteRsc.loadBootstrapScriptContent(
+      "index"
+    );
   return await routeRSCServerRequest({
     // The incoming request.
     request,
@@ -151,7 +154,7 @@ import {
   createFromReadableStream,
   encodeReply,
   setServerCallback,
-} from "@hiogawa/vite-rsc/browser";
+} from "@vitejs/plugin-rsc/browser";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {

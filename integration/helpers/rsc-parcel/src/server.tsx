@@ -15,6 +15,7 @@ import {
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
 import { assets } from "./parcel-entry-wrapper"
+import { basename } from "./config/basename";
 import { requestContext } from "./config/request-context";
 
 function fetchServer(request: Request) {
@@ -30,6 +31,7 @@ function fetchServer(request: Request) {
     requestContext,
     // The app routes.
     routes,
+    basename,
     // Encode the match with the React Server implementation.
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {
