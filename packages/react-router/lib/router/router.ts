@@ -52,9 +52,9 @@ import {
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
-  joinPaths,
   matchRoutes,
   matchRoutesImpl,
+  prependBasename,
   resolveTo,
   stripBasename,
   unstable_RouterContextProvider,
@@ -4468,19 +4468,6 @@ function isSubmissionNavigation(
     (("formData" in opts && opts.formData != null) ||
       ("body" in opts && opts.body !== undefined))
   );
-}
-
-export function prependBasename({
-  basename,
-  pathname,
-}: {
-  basename: string;
-  pathname: string;
-}): string {
-  // If this is a root navigation, then just use the raw basename which allows
-  // the basename to have full control over the presence of a trailing slash on
-  // root actions
-  return pathname === "/" ? basename : joinPaths([basename, pathname]);
 }
 
 function normalizeTo(
