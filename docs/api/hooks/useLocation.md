@@ -10,7 +10,7 @@ title: useLocation
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLocation.html)
 
-Returns the current [Location]([../Other/Location](https://api.reactrouter.com/v7/interfaces/react_router.Location.html)). This can be useful if you'd like to perform some side effect whenever it changes.
+Returns the current Location. This can be useful if you'd like to perform some side effect whenever it changes.
 
 ```tsx
 import * as React from 'react'
@@ -33,5 +33,6 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useLocation(): Location
+useLocation(): Location 
 ```
+

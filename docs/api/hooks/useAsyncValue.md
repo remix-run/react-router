@@ -10,7 +10,7 @@ title: useAsyncValue
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useAsyncValue.html)
 
-Returns the resolved promise value from the closest [Await](../components/Await).
+Returns the resolved promise value from the closest [`<Await>`](../components/Await).
 
 ```tsx
 function SomeDescendant() {
@@ -27,5 +27,6 @@ function SomeDescendant() {
 ## Signature
 
 ```tsx
-useAsyncValue(): unknown
+useAsyncValue(): unknown 
 ```
+

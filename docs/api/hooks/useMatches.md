@@ -16,5 +16,6 @@ parent/child routes or the route "handle" property
 ## Signature
 
 ```tsx
-useMatches(): undefined
+useMatches(): UIMatch[] 
 ```
+

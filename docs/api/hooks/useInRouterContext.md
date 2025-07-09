@@ -16,5 +16,6 @@ a component is used within a Router.
 ## Signature
 
 ```tsx
-useInRouterContext(): boolean
+useInRouterContext(): boolean 
 ```
+

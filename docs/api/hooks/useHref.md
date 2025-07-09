@@ -24,19 +24,17 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useHref(to, __namedParameters): string
+useHref(  to: To,
+  
 ```
 
 ## Params
 
 ### to
 
-[modes: framework, data, declarative]
+The path to resolve
 
-_No documentation_
+### options.relative
 
-### \_\_namedParameters
+Defaults to "route" so routing is relative to the route tree. Set to "path" to make relative routing operate against path segments.
 
-[modes: framework, data, declarative]
-
-_No documentation_
