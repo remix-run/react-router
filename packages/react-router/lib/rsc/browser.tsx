@@ -114,53 +114,59 @@ export function createCallServer({
     }
 
     if (payload.rerender) {
-      (async () => {
-        const rerender = await payload.rerender;
-        if (!rerender) return;
+      React.startTransition(
+        // @ts-expect-error - We have old react types that don't know this can be async
+        async () => {
+          const rerender = await payload.rerender;
+          if (!rerender) return;
 
-        if (landedActionId < actionId && window.__routerActionID <= actionId) {
-          landedActionId = actionId;
+          if (
+            landedActionId < actionId &&
+            window.__routerActionID <= actionId
+          ) {
+            landedActionId = actionId;
 
-          if (rerender.type === "redirect") {
-            if (rerender.reload) {
-              window.location.href = rerender.location;
+            if (rerender.type === "redirect") {
+              if (rerender.reload) {
+                window.location.href = rerender.location;
+                return;
+              }
+              window.__router.navigate(rerender.location, {
+                replace: rerender.replace,
+              });
               return;
             }
-            window.__router.navigate(rerender.location, {
-              replace: rerender.replace,
-            });
-            return;
-          }
 
-          let lastMatch: RSCRouteManifest | undefined;
-          for (const match of rerender.matches) {
-            window.__router.patchRoutes(
-              lastMatch?.id ?? null,
-              [createRouteFromServerManifest(match)],
-              true
-            );
-            lastMatch = match;
-          }
-          window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
+            let lastMatch: RSCRouteManifest | undefined;
+            for (const match of rerender.matches) {
+              window.__router.patchRoutes(
+                lastMatch?.id ?? null,
+                [createRouteFromServerManifest(match)],
+                true
+              );
+              lastMatch = match;
+            }
+            window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
 
-          React.startTransition(() => {
-            window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
-              loaderData: Object.assign(
-                {},
-                window.__router.state.loaderData,
-                rerender.loaderData
-              ),
-              errors: rerender.errors
-                ? Object.assign(
-                    {},
-                    window.__router.state.errors,
-                    rerender.errors
-                  )
-                : null,
+            React.startTransition(() => {
+              window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
+                loaderData: Object.assign(
+                  {},
+                  window.__router.state.loaderData,
+                  rerender.loaderData
+                ),
+                errors: rerender.errors
+                  ? Object.assign(
+                      {},
+                      window.__router.state.errors,
+                      rerender.errors
+                    )
+                  : null,
+              });
             });
-          });
+          }
         }
-      })();
+      );
     }
 
     return payload.actionResult;
