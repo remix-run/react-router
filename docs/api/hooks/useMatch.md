@@ -14,8 +14,6 @@ Returns a PathMatch object if the given pattern matches the current URL.
 This is useful for components that need to know "active" state, e.g.
 `<NavLink>`.
 
-
-
 ## Signature
 
 ```tsx
@@ -26,7 +24,5 @@ useMatch(pattern): undefined
 
 ### pattern
 
-[modes: framework, data, declarative]
-
-_No documentation_
+The pattern to match against the current location
 

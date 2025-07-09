@@ -28,9 +28,9 @@ function WindowFocusRevalidator() {
     </div>
   );
 }
-```
 
-Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like [useFetcher](../hooks/useFetcher), [Form](../components/Form), [useSubmit](../hooks/useSubmit) that do this automatically.
+Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like [`useFetcher`](../hooks/useFetcher), [`Form`](../components/Form), [`useSubmit`](../hooks/useSubmit) that do this automatically.
+```
 
 ## Signature
 
