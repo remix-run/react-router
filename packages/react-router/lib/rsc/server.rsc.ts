@@ -24,6 +24,7 @@ import {
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
+  type unstable_RouterContextProvider,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -239,7 +240,7 @@ export async function matchRSCServerRequest({
   decodeReply?: DecodeReplyFunction;
   decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
-  requestContext?: unknown;
+  requestContext?: unstable_RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
@@ -507,7 +508,7 @@ async function generateResourceResponse(
   routes: RSCRouteConfigEntry[],
   basename: string | undefined,
   routeId: string,
-  requestContext: unknown,
+  requestContext: unstable_RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined
 ) {
   let result: Response;
@@ -559,7 +560,7 @@ async function generateRenderResponse(
   basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
-  requestContext: unknown,
+  requestContext: unstable_RouterContextProvider | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,

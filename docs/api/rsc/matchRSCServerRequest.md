@@ -43,7 +43,7 @@ The request to match against.
 
 ### requestContext
 
-A context value for the request to be passed to loaders and actions.
+An instance of `unstable_RouterContextProvider` that should be created per request, to be passed to loaders, actions and middleware.
 
 ### routes
 
