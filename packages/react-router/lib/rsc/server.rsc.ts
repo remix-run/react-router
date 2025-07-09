@@ -24,6 +24,7 @@ import {
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
+  type unstable_RouterContextProvider,
   isRouteErrorResponse,
   matchRoutes,
   prependBasename,
@@ -225,6 +226,7 @@ export async function matchRSCServerRequest({
   createTemporaryReferenceSet,
   basename,
   decodeReply,
+  requestContext,
   loadServerAction,
   decodeAction,
   decodeFormState,
@@ -238,6 +240,7 @@ export async function matchRSCServerRequest({
   decodeReply?: DecodeReplyFunction;
   decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
+  requestContext?: unstable_RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
@@ -302,6 +305,7 @@ export async function matchRSCServerRequest({
       routes,
       basename,
       leafMatch.route.id,
+      requestContext,
       onError
     );
   }
@@ -312,6 +316,7 @@ export async function matchRSCServerRequest({
     basename,
     isDataRequest,
     decodeReply,
+    requestContext,
     loadServerAction,
     decodeAction,
     decodeFormState,
@@ -503,6 +508,7 @@ async function generateResourceResponse(
   routes: RSCRouteConfigEntry[],
   basename: string | undefined,
   routeId: string,
+  requestContext: unstable_RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined
 ) {
   let result: Response;
@@ -513,8 +519,7 @@ async function generateResourceResponse(
 
     let response = await staticHandler.queryRoute(request, {
       routeId,
-      // TODO: Support loadContext
-      // requestContext: loadContext,
+      requestContext,
       unstable_respond: (ctx) => ctx,
     });
 
@@ -555,6 +560,7 @@ async function generateRenderResponse(
   basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
+  requestContext: unstable_RouterContextProvider | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
@@ -581,7 +587,7 @@ async function generateRenderResponse(
       : null;
 
   // Create the handler here with exploded routes
-  const handler = createStaticHandler(routes, {
+  const staticHandler = createStaticHandler(routes, {
     basename,
     mapRouteProperties: (r) => ({
       hasErrorBoundary: (r as RouteObject).ErrorBoundary != null,
@@ -591,7 +597,8 @@ async function generateRenderResponse(
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {};
   const result = await ServerStorage.run(ctx, () =>
-    handler.query(request, {
+    staticHandler.query(request, {
+      requestContext,
       skipLoaderErrorBubbling: isDataRequest,
       skipRevalidation: isSubmission,
       ...(routeIdsToLoad

@@ -41,6 +41,10 @@ Your `react-server-dom-xyz/server`'s `loadServerAction` function, used to load a
 
 The request to match against.
 
+### requestContext
+
+An instance of `unstable_RouterContextProvider` that should be created per request, to be passed to loaders, actions and middleware.
+
 ### routes
 
 Your route definitions.

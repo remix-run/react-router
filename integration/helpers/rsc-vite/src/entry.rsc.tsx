@@ -9,6 +9,7 @@ import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-r
 import { basename } from "./config/basename";
 
 import { routes } from "./routes";
+import { requestContext } from "./config/request-context";
 
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
@@ -17,6 +18,7 @@ export async function fetchServer(request: Request) {
     decodeAction,
     loadServerAction,
     request,
+    requestContext,
     routes,
     basename,
     generateResponse(match, options) {
