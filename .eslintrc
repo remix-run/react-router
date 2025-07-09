@@ -1,50 +1,8 @@
 {
-  "plugins": ["jsdoc"],
-  "extends": ["react-app", "plugin:jsdoc/recommended"],
+  "extends": ["react-app"],
   "rules": {
     "import/first": "off",
-    "@typescript-eslint/consistent-type-imports": "error",
-    "jsdoc/check-tag-names": [
-      "error",
-      { "definedTags": ["additionalExamples", "category", "mode", "reference"] }
-    ],
-    "jsdoc/no-undefined-types": "off",
-    "jsdoc/require-description": "error",
-    "jsdoc/require-param": ["error", { "enableRootFixer": false }],
-    "jsdoc/require-param-name": "error",
-    "jsdoc/require-param-description": "error",
-    "jsdoc/require-param-type": "off",
-    "jsdoc/require-returns": "error",
-    "jsdoc/require-returns-type": "off",
-    "jsdoc/require-jsdoc": "off",
-    "jsdoc/tag-lines": "off",
-    "jsdoc/sort-tags": [
-      "error",
-      {
-        "tagSequence": [
-          {
-            "tags": ["description"]
-          },
-          {
-            "tags": ["example"]
-          },
-          {
-            "tags": ["additionalExamples"]
-          },
-          {
-            "tags": [
-              "public",
-              "private",
-              "category",
-              "mode",
-              "reference",
-              "param",
-              "returns"
-            ]
-          }
-        ]
-      }
-    ]
+    "@typescript-eslint/consistent-type-imports": "error"
   },
   "overrides": [
     {
@@ -59,6 +17,64 @@
       },
       "env": {
         "jest/globals": false
+      }
+    },
+    {
+      // Only apply JSDoc lint rules to files we auto-generate docs for
+      "files": ["packages/react-router/lib/hooks.tsx"],
+      "plugins": ["jsdoc"],
+      "rules": {
+        "jsdoc/check-access": "error",
+        "jsdoc/check-alignment": "error",
+        "jsdoc/check-param-names": "error",
+        "jsdoc/check-property-names": "error",
+        "jsdoc/check-tag-names": [
+          "error",
+          {
+            "definedTags": [
+              "additionalExamples",
+              "category",
+              "mode",
+              "reference"
+            ]
+          }
+        ],
+        "jsdoc/no-defaults": "error",
+        "jsdoc/no-multi-asterisks": ["error", { "allowWhitespace": true }],
+        "jsdoc/require-description": "error",
+        "jsdoc/require-param": ["error", { "enableRootFixer": false }],
+        "jsdoc/require-param-description": "error",
+        "jsdoc/require-param-name": "error",
+        "jsdoc/require-returns": "error",
+        "jsdoc/require-returns-check": "error",
+        "jsdoc/require-returns-description": "error",
+        "jsdoc/sort-tags": [
+          "error",
+          {
+            "tagSequence": [
+              {
+                "tags": ["description"]
+              },
+              {
+                "tags": ["example"]
+              },
+              {
+                "tags": ["additionalExamples"]
+              },
+              {
+                "tags": [
+                  "public",
+                  "private",
+                  "category",
+                  "mode",
+                  "reference",
+                  "param",
+                  "returns"
+                ]
+              }
+            ]
+          }
+        ]
       }
     }
   ],
