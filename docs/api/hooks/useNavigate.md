@@ -16,17 +16,26 @@ response to user interactions or effects.
 It's often better to use [`redirect`](../utils/redirect) in actions
 and loaders than this hook.
 
+The returned function signature is `navigate(to, options?)/navigate(delta)` where:
+
+* `to` can be a string path, a `To` object, or a number (delta)
+* `options` contains options for modifying the navigation
+  * `flushSync`: Wrap the DOM updates in `ReactDom.flushSync`
+  * `preventScrollReset`: Do not scroll back to the top of the page after navigation
+  * `relative`: "route" or "path" to control relative routing logic
+  * `replace`: Replace the current entry in the history stack
+  * `state`: Optional history state to include with the new `Location`
+  * `viewTransition`: Enable `document.startViewTransition` for this navigation
+
 ```tsx
 import { useNavigate } from "react-router";
 
 function SomeComponent() {
   let navigate = useNavigate();
   return (
-    <button
-      onClick={() => {
-        navigate(-1);
-      }}
-    />
+    <button onClick={() => navigate(-1)}>
+      Go Back
+    </button>
   );
 }
 ```
