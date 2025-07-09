@@ -24,8 +24,9 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useHref(  to: To,
-  
+useHref(to: To, { relative }: {
+    relative?: RelativeRoutingType;
+} = {}): string
 ```
 
 ## Params

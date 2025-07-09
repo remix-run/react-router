@@ -12,6 +12,8 @@ title: useParams
 
 Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
 
+Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+
 ```tsx
 import { useParams } from "react-router";
 
@@ -21,7 +23,15 @@ function SomeComponent() {
 }
 ```
 
-Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+## Signature
+
+```tsx
+useParams<ParamsOrKey extends string | Record<string, string | undefined> = string>(): Readonly<[
+    ParamsOrKey
+] extends [
+    string
+] ? Params<ParamsOrKey> : Partial<ParamsOrKey>>
+```
 
 ## Examples
 
@@ -107,3 +117,4 @@ export default function File() {
   console.log(catchall);
 }
 ```
+

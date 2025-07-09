@@ -4,6 +4,7 @@ import util from "node:util";
 import fg from "fast-glob";
 
 import dox from "dox";
+import ts from "typescript";
 
 type UnknownTag = {
   type: string;
@@ -63,6 +64,7 @@ type SimplifiedComment = {
   modes: Mode[];
   summary: string;
   example?: string;
+  additionalExamples?: string;
   reference?: string;
   signature: string;
   params: {
@@ -106,62 +108,6 @@ const { values: args } = util.parseArgs({
   allowPositionals: true,
 });
 
-function buildApiLookupTable(
-  outputDir: string,
-  filePaths?: string[],
-  apiFilter?: string[] | null
-): Map<string, string> {
-  const lookup = new Map<string, string>();
-
-  // Add existing files if output directory exists
-  if (fs.existsSync(outputDir)) {
-    const markdownFiles = fg.sync(`${outputDir}/**/*.md`, {
-      onlyFiles: true,
-    });
-
-    markdownFiles.forEach((filePath) => {
-      const relativePath = path
-        .relative(outputDir, filePath)
-        .replace(/\.md$/, "");
-      const apiName = path.basename(relativePath);
-
-      if (apiName !== "index") {
-        lookup.set(apiName, relativePath);
-      }
-    });
-  }
-
-  // Add APIs that will be generated from the source files
-  if (filePaths) {
-    filePaths.forEach((filePath) => {
-      try {
-        const comments = parseDocComments(filePath);
-
-        comments.forEach((comment) => {
-          // Skip if API filter is provided and this API is not in the filter
-          if (apiFilter && !apiFilter.includes(comment.name)) {
-            return;
-          }
-
-          // Build the relative path based on category
-          const categoryFolder = comment.category
-            .toLowerCase()
-            .replace(/\s+/g, "-");
-          const relativePath = `${categoryFolder}/${comment.name}`;
-
-          lookup.set(comment.name, relativePath);
-        });
-      } catch (error) {
-        console.warn(
-          `Warning: Could not parse ${filePath} for API lookup: ${error}`
-        );
-      }
-    });
-  }
-
-  return lookup;
-}
-
 if (!args.path) {
   console.error(
     "Usage: docs.ts --path <filepath-or-glob> [--api <api1,api2,...>] [--write] [--output <output-dir>]"
@@ -184,6 +130,9 @@ if (args.api) {
 // Configure output directory
 const outputDir = args.output || "docs/api";
 
+// Build lookup table for @link resolution
+const apiLookup = buildApiLookupTable(outputDir);
+
 // Resolve file paths using glob patterns
 const filePaths = fg.sync(args.path, {
   onlyFiles: true,
@@ -195,21 +144,41 @@ if (filePaths.length === 0) {
   process.exit(1);
 }
 
-// Build lookup table for @link resolution (includes existing files + APIs that will be generated)
-const apiLookup = buildApiLookupTable(outputDir, filePaths, apiFilter);
-
 // Generate markdown documentation for all matching files
 filePaths.forEach((filePath) => {
   console.log(`\nProcessing file: ${filePath}`);
-  generateMarkdownDocs(filePath, apiFilter, outputDir, args.write, apiLookup);
+  generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
 });
+
+function buildApiLookupTable(outputDir: string): Map<string, string> {
+  const lookup = new Map<string, string>();
+
+  // Add existing files if output directory exists
+  if (fs.existsSync(outputDir)) {
+    const markdownFiles = fg.sync(`${outputDir}/**/*.md`, {
+      onlyFiles: true,
+    });
+
+    markdownFiles.forEach((filePath) => {
+      const relativePath = path
+        .relative(outputDir, filePath)
+        .replace(/\.md$/, "");
+      const apiName = path.basename(relativePath);
+
+      if (apiName !== "index") {
+        lookup.set(apiName, relativePath);
+      }
+    });
+  }
+
+  return lookup;
+}
 
 function generateMarkdownDocs(
   filepath: string,
   apiFilter?: string[] | null,
   outputDir?: string,
-  writeFiles?: boolean,
-  apiLookup?: Map<string, string>
+  writeFiles?: boolean
 ) {
   let data = parseDocComments(filepath);
 
@@ -220,7 +189,7 @@ function generateMarkdownDocs(
     }
 
     // Generate markdown content for each public function
-    let markdownContent = generateMarkdownForComment(comment, apiLookup);
+    let markdownContent = generateMarkdownForComment(comment);
     if (markdownContent) {
       if (writeFiles && outputDir) {
         // Write to file based on category
@@ -260,10 +229,7 @@ function writeMarkdownFile(
   console.log(`✓ Written: ${filePath}`);
 }
 
-function generateMarkdownForComment(
-  comment: SimplifiedComment,
-  apiLookup?: Map<string, string>
-): string {
+function generateMarkdownForComment(comment: SimplifiedComment): string {
   let markdown = "";
 
   // Skip functions without proper names
@@ -292,25 +258,13 @@ function generateMarkdownForComment(
   }
 
   // Clean up HTML tags from summary and convert to plain text
-  let summary = comment.summary;
-
-  // Resolve {@link ...} tags in the summary
-  if (apiLookup) {
-    summary = resolveLinkTags(summary, apiLookup);
-  }
-
+  let summary = resolveLinkTags(comment.summary);
   markdown += `${summary}\n\n`;
 
   // Example section (if available)
   if (comment.example) {
-    let cleanExample = comment.example;
-
-    // Resolve {@link ...} tags in the example
-    if (apiLookup) {
-      cleanExample = resolveLinkTags(cleanExample, apiLookup);
-    }
-
-    markdown += `\`\`\`tsx\n${cleanExample}\n\`\`\`\n\n`;
+    let example = resolveLinkTags(comment.example);
+    markdown += `\`\`\`tsx\n${example}\n\`\`\`\n\n`;
   }
 
   // Signature section
@@ -328,12 +282,7 @@ function generateMarkdownForComment(
       // This could be enhanced in the future if we need per-parameter mode support
 
       // Clean up HTML tags from description
-      let description = param.description;
-
-      // Resolve {@link ...} tags in parameter descriptions
-      if (apiLookup) {
-        description = resolveLinkTags(description, apiLookup);
-      }
+      let description = resolveLinkTags(param.description);
 
       // Skip options object param that is there for JSDoc since we will document each option on it own
       if (param.name === "options" && description === "Options") {
@@ -348,6 +297,13 @@ function generateMarkdownForComment(
       markdown += `### ${param.name}\n\n`;
       markdown += `${description || "_No documentation_"}\n\n`;
     });
+  }
+
+  // Additional Examples section (if available)
+  if (comment.additionalExamples) {
+    let additionalExamples = resolveLinkTags(comment.additionalExamples);
+    markdown += `## Examples\n\n`;
+    markdown += `${additionalExamples}\n\n`;
   }
 
   return markdown;
@@ -391,20 +347,16 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
   }
 
   let example = comment.tags.find((t) => t.type === "example")?.string;
+  let additionalExamples = comment.tags.find(
+    (t) => t.type === "additionalExamples"
+  )?.string;
 
   let reference = comment.tags.find((t) => t.type === "reference")?.string;
   if (!reference) {
     throw new Error(`Expected a @reference tag: ${name}`);
   }
 
-  let code = comment.code.replace("\n", "").trim();
-  let signature: string;
-  let matches = code.match(/^export (async )?function ([^{]+)/);
-  if (matches) {
-    signature = matches[2];
-  } else {
-    throw new Error(`Expected an export function: ${code}`);
-  }
+  let signature = getSignature(comment.code);
 
   let params: SimplifiedComment["params"] = [];
   comment.tags.forEach((tag) => {
@@ -427,6 +379,7 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
     modes,
     summary,
     example,
+    additionalExamples,
     reference,
     signature,
     params,
@@ -438,13 +391,43 @@ function isParamTag(tag: Tag): tag is ParamTag {
   return tag.type === "param";
 }
 
+// Parse the TypeScript code into an AST so we can remove the function body
+// and just grab the signature
+function getSignature(code: string): string {
+  const ast = ts.createSourceFile("example.ts", code, ts.ScriptTarget.Latest);
+  if (ast.statements.length === 0) {
+    throw new Error(`Expected one or more statements: ${code}`);
+  }
+
+  let functionDeclaration = ast.statements[0];
+  if (!ts.isFunctionDeclaration(functionDeclaration)) {
+    throw new Error(`Expected a function declaration: ${code}`);
+  }
+
+  let modifiedFunction = {
+    ...functionDeclaration,
+    modifiers: functionDeclaration.modifiers?.filter(
+      (m) => m.kind !== ts.SyntaxKind.ExportKeyword
+    ),
+    body: ts.factory.createBlock([], false),
+  } as ts.FunctionDeclaration;
+
+  let newCode = ts
+    .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+    .printNode(ts.EmitHint.Unspecified, modifiedFunction, ast);
+
+  return newCode
+    .replace(/^function /, "")
+    .replace("{ }", "")
+    .trim();
+}
+
 /**
  * Resolves {@link ...} tags in JSDoc text and converts them to markdown links
  * @param text - The text containing {@link ...} tags
- * @param apiLookup - Map of API names to their relative paths
  * @returns Text with {@link ...} tags replaced by markdown links
  */
-function resolveLinkTags(text: string, apiLookup: Map<string, string>): string {
+function resolveLinkTags(text: string): string {
   // Match {@link ApiName} or {@link ApiName description}
   const linkPattern = /\{@link\s+([^}]+)\}/g;
 

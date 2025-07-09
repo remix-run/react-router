@@ -33,6 +33,32 @@ The Blocker object returned by the hook has the following properties:
     back to an `unblocked` state and leave the user at the current location.
 
 ```tsx
+// Boolean version
+const blocker = useBlocker(value !== "");
+
+// Function version
+const blocker = useBlocker(
+  ({ currentLocation, nextLocation, historyAction }) =>
+    value !== "" &&
+    currentLocation.pathname !== nextLocation.pathname
+);
+```
+
+## Signature
+
+```tsx
+useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
+```
+
+## Params
+
+### shouldBlock
+
+Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked. The function format receives a single object parameter containing the `currentLocation`, `nextLocation`, and `historyAction` of the potential navigation.
+
+## Examples
+
+```tsx
 import { useCallback, useState } from "react";
 import { BlockerFunction, useBlocker } from "react-router";
 
@@ -94,16 +120,4 @@ export function ImportantForm() {
   );
 }
 ```
-
-## Signature
-
-```tsx
-useBlocker(shouldBlock: boolean | BlockerFunction): Blocker 
-```
-
-## Params
-
-### shouldBlock
-
-Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked. The function format receives a single object parameter containing the `currentLocation`, `nextLocation`, and `historyAction` of the potential navigation.
 

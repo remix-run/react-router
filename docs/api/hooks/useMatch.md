@@ -17,7 +17,7 @@ This is useful for components that need to know "active" state, e.g.
 ## Signature
 
 ```tsx
-useMatch(pattern): undefined
+useMatch<ParamKey extends ParamParseKey<Path>, Path extends string>(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null
 ```
 
 ## Params

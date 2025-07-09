@@ -32,6 +32,6 @@ function ErrorElement() {
 ## Signature
 
 ```tsx
-useAsyncError(): unknown 
+useAsyncError(): unknown
 ```
 

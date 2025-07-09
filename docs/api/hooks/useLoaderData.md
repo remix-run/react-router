@@ -28,6 +28,6 @@ export default function Invoices() {
 ## Signature
 
 ```tsx
-useLoaderData<T = any>(): SerializeFrom<T> 
+useLoaderData<T = any>(): SerializeFrom<T>
 ```
 

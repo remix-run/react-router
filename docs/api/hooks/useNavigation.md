@@ -26,6 +26,6 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useNavigation(): Navigation 
+useNavigation(): Navigation
 ```
 

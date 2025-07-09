@@ -35,5 +35,9 @@ Note that page data is already revalidated automatically after actions. If you f
 ## Signature
 
 ```tsx
-useRevalidator(): undefined
+useRevalidator(): {
+    revalidate: () => Promise<void>;
+    state: DataRouter["state"]["revalidation"];
+}
 ```
+

@@ -40,7 +40,7 @@ function App() {
 ## Signature
 
 ```tsx
-useRoutes(routes, locationArg): undefined
+useRoutes(routes: RouteObject[], locationArg?: Partial<Location> | string): React.ReactElement | null
 ```
 
 ## Params

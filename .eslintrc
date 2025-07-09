@@ -6,7 +6,7 @@
     "@typescript-eslint/consistent-type-imports": "error",
     "jsdoc/check-tag-names": [
       "error",
-      { "definedTags": ["category", "mode", "reference"] }
+      { "definedTags": ["additionalExamples", "category", "mode", "reference"] }
     ],
     "jsdoc/no-undefined-types": "off",
     "jsdoc/require-param": ["error", { "enableRootFixer": false }],
@@ -23,6 +23,9 @@
           },
           {
             "tags": ["example"]
+          },
+          {
+            "tags": ["additionalExamples"]
           },
           {
             "tags": [

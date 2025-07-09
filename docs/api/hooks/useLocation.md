@@ -33,6 +33,6 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useLocation(): Location 
+useLocation(): Location
 ```
 

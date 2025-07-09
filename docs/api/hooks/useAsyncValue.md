@@ -27,6 +27,6 @@ function SomeDescendant() {
 ## Signature
 
 ```tsx
-useAsyncValue(): unknown 
+useAsyncValue(): unknown
 ```
 

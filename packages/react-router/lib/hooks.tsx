@@ -231,7 +231,11 @@ function useIsomorphicLayoutEffect(
 }
 
 /**
- * Returns a function that lets you navigate programmatically in the browser in response to user interactions or effects.
+ * Returns a function that lets you navigate programmatically in the browser in
+ * response to user interactions or effects.
+ *
+ * It's often better to use {@link redirect} in {@link ActionFunction | actions}
+ * and {@link LoaderFunction | loaders} than this hook.
  *
  * @example
  * import { useNavigate } from "react-router";
@@ -247,7 +251,67 @@ function useIsomorphicLayoutEffect(
  *   );
  * }
  *
- * It's often better to use {@link redirect} in {@link ActionFunction | actions} and {@link LoaderFunction | loaders} than this hook.
+ * @additionalExamples
+ * ### Navigate to another path
+ *
+ * ```tsx
+ * navigate("/some/route");
+ * navigate("/some/route?search=param");
+ * ```
+ *
+ * ### Navigate with a `To` object
+ *
+ * All properties are optional.
+ *
+ * ```tsx
+ * navigate({
+ *   pathname: "/some/route",
+ *   search: "?search=param",
+ *   hash: "#hash",
+ *   state: { some: "state" },
+ * });
+ * ```
+ *
+ * If you use `state`, that will be available on the `location` object on the next page. Access it with `useLocation().state` (see [useLocation](./useLocation)).
+ *
+ * ### Navigate back or forward in the history stack
+ *
+ * ```tsx
+ * // back
+ * // often used to close modals
+ * navigate(-1);
+ *
+ * // forward
+ * // often used in a multi-step wizard workflows
+ * navigate(1);
+ * ```
+ *
+ * Be cautions with `navigate(number)`. If your application can load up to a route that has a button that tries to navigate forward/back, there may not be a history entry to go back or forward to, or it can go somewhere you don't expect (like a different domain).
+ *
+ * Only use this if you're sure they will have an entry in the history stack to navigate to.
+ *
+ * ### Replace the current entry in the history stack
+ *
+ * This will remove the current entry in the history stack, replacing it with a new one, similar to a server side redirect.
+ *
+ * ```tsx
+ * navigate("/some/route", { replace: true });
+ * ```
+ *
+ * ### Prevent Scroll Reset
+ *
+ * [MODES: framework, data]
+ *
+ * <br/>
+ * <br/>
+ *
+ * To prevent `<ScrollRestoration>` from resetting the scroll position, use the `preventScrollReset` option.
+ *
+ * ```tsx
+ * navigate("?some-tab=1", { preventScrollReset: true });
+ * ```
+ *
+ * For example, if you have a tab interface connected to search params in the middle of a page and you don't want it to scroll to the top when a tab is clicked.
  *
  * @public
  * @category Hooks
@@ -378,6 +442,8 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
 /**
  * Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
  *
+ * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+ *
  * @example
  * import { useParams } from "react-router";
  *
@@ -386,7 +452,89 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  *   params.postId;
  * }
  *
- * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+ * @additionalExamples
+ * ### Basic Usage
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * // given a route like:
+ * <Route path="/posts/:postId" element={<Post />} />;
+ *
+ * // or a data route like:
+ * createBrowserRouter([
+ *   {
+ *     path: "/posts/:postId",
+ *     component: Post,
+ *   },
+ * ]);
+ *
+ * // or in routes.ts
+ * route("/posts/:postId", "routes/post.tsx");
+ * ```
+ *
+ * Access the params in a component:
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * export default function Post() {
+ *   let params = useParams();
+ *   return <h1>Post: {params.postId}</h1>;
+ * }
+ * ```
+ *
+ * ### Multiple Params
+ *
+ * Patterns can have multiple params:
+ *
+ * ```tsx
+ * "/posts/:postId/comments/:commentId";
+ * ```
+ *
+ * All will be available in the params object:
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * export default function Post() {
+ *   let params = useParams();
+ *   return (
+ *     <h1>
+ *       Post: {params.postId}, Comment: {params.commentId}
+ *     </h1>
+ *   );
+ * }
+ * ```
+ *
+ * ### Catchall Params
+ *
+ * Catchall params are defined with `*`:
+ *
+ * ```tsx
+ * "/files/*";
+ * ```
+ *
+ * The matched value will be available in the params object as follows:
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * export default function File() {
+ *   let params = useParams();
+ *   let catchall = params["*"];
+ *   // ...
+ * }
+ * ```
+ *
+ * You can destructure the catchall param:
+ *
+ * ```tsx
+ * export default function File() {
+ *   let { "*": catchall } = useParams();
+ *   console.log(catchall);
+ * }
+ * ```
  *
  * @public
  * @category Hooks
@@ -1364,6 +1512,18 @@ let blockerId = 0;
  *     back to an `unblocked` state and leave the user at the current location.
  *
  * @example
+ * // Boolean version
+ * const blocker = useBlocker(value !== "");
+ *
+ * // Function version
+ * const blocker = useBlocker(
+ *   ({ currentLocation, nextLocation, historyAction }) =>
+ *     value !== "" &&
+ *     currentLocation.pathname !== nextLocation.pathname
+ * );
+ *
+ * @additionalExamples
+ * ```tsx
  * import { useCallback, useState } from "react";
  * import { BlockerFunction, useBlocker } from "react-router";
  *
@@ -1424,6 +1584,7 @@ let blockerId = 0;
  *     </form>
  *   );
  * }
+ * ```
  *
  * @public
  * @category Hooks

@@ -27,7 +27,9 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useResolvedPath(to, __namedParameters): Path
+useResolvedPath(to: To, { relative }: {
+    relative?: RelativeRoutingType;
+} = {}): Path
 ```
 
 ## Params

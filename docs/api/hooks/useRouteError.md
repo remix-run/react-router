@@ -22,6 +22,6 @@ export function ErrorBoundary() {
 ## Signature
 
 ```tsx
-useRouteError(): unknown 
+useRouteError(): unknown
 ```
 

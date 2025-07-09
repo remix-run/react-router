@@ -16,6 +16,6 @@ the current location, either by a pop, push, or replace on the history stack.
 ## Signature
 
 ```tsx
-useNavigationType(): NavigationType 
+useNavigationType(): NavigationType
 ```
 
