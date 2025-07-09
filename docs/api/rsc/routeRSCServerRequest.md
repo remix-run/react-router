@@ -11,6 +11,25 @@ unstable: true
 
 Routes the incoming request to the RSC server and appropriately proxies the server response for data / resource requests, or renders to HTML for a document request.
 
+```tsx filename=entry.ssr.tsx
+routeRSCServerRequest({
+  request,
+  fetchServer,
+  createFromReadableStream,
+  async renderHTML(getPayload) {
+    const payload = await getPayload();
+
+    return await renderHTMLToReadableStream(
+      <RSCStaticRouter getPayload={getPayload} />,
+      {
+        bootstrapScriptContent,
+        formState: await getFormState(payload),
+      }
+    );
+  },
+});
+```
+
 ## Options
 
 ### createFromReadableStream

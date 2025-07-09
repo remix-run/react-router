@@ -11,6 +11,27 @@ unstable: true
 
 Matches the given routes to a Request and returns a RSC Response encoding an `RSCPayload` for consumption by a RSC enabled client router.
 
+```tsx filename=entry.rsc.ts
+matchRSCServerRequest({
+  createTemporaryReferenceSet,
+  decodeAction,
+  decodeFormState,
+  decodeReply,
+  loadServerAction,
+  request,
+  routes: routes(),
+  generateResponse(match) {
+    return new Response(
+      renderToReadableStream(match.payload),
+      {
+        status: match.statusCode,
+        headers: match.headers,
+      }
+    );
+  },
+});
+```
+
 ## Options
 
 ### basename

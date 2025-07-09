@@ -11,6 +11,29 @@ unstable: true
 
 Hydrates a server rendered `RSCPayload` in the browser.
 
+```tsx filename=entry.browser.tsx lines=[7-12]
+createFromReadableStream(getRSCStream()).then(
+  (payload: RSCServerPayload) => {
+    startTransition(async () => {
+      hydrateRoot(
+        document,
+        <StrictMode>
+          <RSCHydratedRouter
+            createFromReadableStream={
+              createFromReadableStream
+            }
+            payload={payload}
+          />
+        </StrictMode>,
+        {
+          formState: await getFormState(payload),
+        }
+      );
+    });
+  }
+);
+```
+
 ## Props
 
 ### createFromReadableStream

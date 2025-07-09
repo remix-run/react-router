@@ -11,6 +11,25 @@ unstable: true
 
 Pre-renders an `RSCPayload` to HTML. Usually used in `routeRSCServerRequest`'s `renderHTML` callback.
 
+```tsx filename=entry.ssr.tsx lines=[9]
+routeRSCServerRequest({
+  request,
+  fetchServer,
+  createFromReadableStream,
+  async renderHTML(getPayload) {
+    const payload = await getPayload();
+
+    return await renderHTMLToReadableStream(
+      <RSCStaticRouter getPayload={getPayload} />,
+      {
+        bootstrapScriptContent,
+        formState: await getFormState(payload),
+      }
+    );
+  },
+});
+```
+
 ## Props
 
 ### getPayload
