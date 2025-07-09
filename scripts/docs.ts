@@ -325,7 +325,7 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
       name = matches[1];
     }
     if (!name) {
-      throw new Error(`Expected a @name tag: ${comment.code}`);
+      throw new Error(`Could not determine API name:\n${comment.code}\n`);
     }
   }
 

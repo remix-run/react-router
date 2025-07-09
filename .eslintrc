@@ -9,8 +9,12 @@
       { "definedTags": ["additionalExamples", "category", "mode", "reference"] }
     ],
     "jsdoc/no-undefined-types": "off",
+    "jsdoc/require-description": "error",
     "jsdoc/require-param": ["error", { "enableRootFixer": false }],
+    "jsdoc/require-param-name": "error",
+    "jsdoc/require-param-description": "error",
     "jsdoc/require-param-type": "off",
+    "jsdoc/require-returns": "error",
     "jsdoc/require-returns-type": "off",
     "jsdoc/require-jsdoc": "off",
     "jsdoc/tag-lines": "off",
@@ -34,7 +38,6 @@
               "category",
               "mode",
               "reference",
-              "signature",
               "param",
               "returns"
             ]
