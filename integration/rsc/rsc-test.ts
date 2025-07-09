@@ -719,6 +719,104 @@ implementations.forEach((implementation) => {
         validateRSCHtml(await page.content());
       });
 
+      test("Supports client context using unstable_getContext", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/unstable-get-context.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              import { unstable_createContext } from "react-router";
+
+              export const testContext = unstable_createContext<string>("default-value");
+
+              export function unstable_getContext() {
+                return new Map([[testContext, "client-context-value"]]);
+              }
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/root.tsx": js`
+              "use client";
+
+              import { Outlet } from "react-router";
+              import type { unstable_ClientMiddlewareFunction } from "react-router";
+              import { testContext } from "../config/unstable-get-context";
+
+              export const unstable_clientMiddleware = [
+                async ({ context }, next) => {
+                  context.set(testContext, "client-context-value");                  
+                  return await next();
+                },
+              ];
+
+              export function HydrateFallback() {
+                return <div>Loading...</div>;
+              }
+
+              export default function RootRoute() {
+                return (
+                  <div>
+                    <h1>Root Route</h1>
+                    <Outlet />
+                  </div>
+                );
+              }
+            `,
+            "src/routes/home.tsx": js`
+              "use client";
+
+              import { useLoaderData } from "react-router";
+              import { testContext } from "../config/unstable-get-context";
+
+              export function clientLoader({ context }) {
+                const contextValue = context.get(testContext);
+                return { contextValue };
+              }
+
+              clientLoader.hydrate = true;
+
+              export default function HomeRoute() {
+                const loaderData = useLoaderData();
+                return (
+                  <div>
+                    <h2 data-client-context>Client context value: {loaderData.contextValue}</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+        await page.waitForSelector("[data-client-context]");
+        expect(await page.locator("[data-client-context]").textContent()).toBe(
+          "Client context value: client-context-value"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
       test("Supports resource routes as URL and fetchers", async ({
         page,
         request,

@@ -47,3 +47,7 @@ The decoded `RSCPayload` to hydrate.
 ### routeDiscovery
 
 `eager` or `lazy` - Determines if links are eagerly discovered, or delayed until clicked.
+
+### unstable_getContext
+
+A function that returns an `unstable_InitialContext` object (`Map<RouterContext, unknown>`), for use in client loaders, actions and middleware.

@@ -10,7 +10,7 @@ import {
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
-import type { Router as DataRouter } from "../router/router";
+import type { Router as DataRouter, RouterInit } from "../router/router";
 import { createRouter, isMutationMethod } from "../router/router";
 import type {
   RSCPayload,
@@ -176,11 +176,13 @@ export function createCallServer({
 function createRouterFromPayload({
   fetchImplementation,
   createFromReadableStream,
+  unstable_getContext,
   payload,
 }: {
   payload: RSCPayload;
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
+  unstable_getContext: RouterInit["unstable_getContext"] | undefined;
 }) {
   if (window.__router) return window.__router;
 
@@ -213,6 +215,7 @@ function createRouterFromPayload({
 
   window.__router = createRouter({
     routes,
+    unstable_getContext,
     basename: payload.basename,
     history: createBrowserHistory(),
     hydrationData: getHydrationData(
@@ -455,11 +458,13 @@ export function RSCHydratedRouter({
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
+  unstable_getContext,
 }: {
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetch?: (request: Request) => Promise<Response>;
   payload: RSCPayload;
   routeDiscovery?: "eager" | "lazy";
+  unstable_getContext?: RouterInit["unstable_getContext"];
 }) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
@@ -468,9 +473,15 @@ export function RSCHydratedRouter({
       createRouterFromPayload({
         payload,
         fetchImplementation,
+        unstable_getContext,
         createFromReadableStream,
       }),
-    [createFromReadableStream, payload, fetchImplementation]
+    [
+      createFromReadableStream,
+      payload,
+      fetchImplementation,
+      unstable_getContext,
+    ]
   );
 
   React.useLayoutEffect(() => {
