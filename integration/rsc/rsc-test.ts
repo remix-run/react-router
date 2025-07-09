@@ -634,6 +634,93 @@ implementations.forEach((implementation) => {
         validateRSCHtml(await page.content());
       });
 
+      test("Supports request context in middleware using the unstable_RouterContextProvider API", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/config/request-context.ts": js`
+              // THIS FILE OVERRIDES THE DEFAULT IMPLEMENTATION
+              import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
+
+              export const testContext = unstable_createContext<string>("default-value");
+
+              export const requestContext = new unstable_RouterContextProvider(
+                new Map([[testContext, "test-context-value"]])
+              );
+            `,
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "home",
+                      index: true,
+                      lazy: () => import("./routes/home"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/root.tsx": js`
+              import { Outlet } from "react-router";
+              import { type unstable_MiddlewareFunction } from "react-router";
+              import { testContext } from "../config/request-context";
+
+              export const unstable_middleware: unstable_MiddlewareFunction<Response>[] = [
+                async ({ request, context }, next) => {
+                  const contextValue = context.get(testContext);
+                  request.headers.set("x-middleware-context", contextValue);
+                  
+                  const response = await next();
+                  return response;
+                },
+              ];
+
+              export default function RootRoute() {
+                return (
+                  <div>
+                    <h1 data-root>Root Route</h1>
+                    <Outlet />
+                  </div>
+                );
+              }
+            `,
+            "src/routes/home.tsx": js`
+              export function loader({ request }) {
+                const contextValue = request.headers.get("x-middleware-context");
+                return { contextValue };
+              }
+
+              export default function HomeRoute({ loaderData }) {
+                return (
+                  <div>
+                    <h2 data-home>Home: {loaderData.contextValue}</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+        await page.waitForSelector("[data-home]");
+        expect(await page.locator("[data-home]").textContent()).toBe(
+          "Home: test-context-value"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
       test("Supports resource routes as URL and fetchers", async ({
         page,
         request,
