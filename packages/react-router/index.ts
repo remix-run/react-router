@@ -91,6 +91,7 @@ export type {
   RouteObject,
 } from "./lib/context";
 export type {
+  AbsoluteRoutesProps as unstable_AbsoluteRoutesProps,
   AwaitProps,
   IndexRouteProps,
   LayoutRouteProps,
@@ -105,6 +106,7 @@ export type {
   RoutesProps,
 } from "./lib/components";
 export {
+  AbsoluteRoutes as unstable_AbsoluteRoutes,
   Await,
   MemoryRouter,
   Navigate,
@@ -120,6 +122,7 @@ export {
 } from "./lib/components";
 export type { NavigateFunction } from "./lib/hooks";
 export {
+  useAbsoluteRoutes as unstable_useAbsoluteRoutes,
   useBlocker,
   useActionData,
   useAsyncError,
