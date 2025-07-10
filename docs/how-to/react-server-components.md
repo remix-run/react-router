@@ -61,11 +61,11 @@ matchRSCServerRequest({
 });
 ```
 
-While you can define components inline, we recommend for both startup performance, as well as code organization, using the `lazy()` option and defining [Route Modules][route-module]
+While you can define components inline, we recommend using the `lazy()` option and defining [Route Modules][route-module] for both startup performance and code organization
 
 <docs-info>
 
-The [Route Modules][route-module] up until now were a [Framework Mode][framework-mode] only feature. However, the `lazy` field of the RSC route config expects the same exports as the Route Module exports, unifying the APIs even further.
+The [Route Modules][route-module] up until now have been a [Framework Mode][framework-mode] only feature. However, the `lazy` field of the RSC route config expects the same exports as the Route Module exports, unifying the APIs even further.
 
 </docs-info>
 
@@ -115,7 +115,7 @@ export default function Home() {
 }
 ```
 
-A nice feature of Server Components is you can fetch data directly from your component by making it asynchronous.
+A nice feature of Server Components is that you can fetch data directly from your component by making it asynchronous.
 
 ```tsx
 export default async function Home() {
@@ -140,9 +140,9 @@ export default async function Home() {
 
 <docs-info>
 
-Server Components can also be returned from your `loader`s and `action`s. In general if you are using RSC to build your application, `loader`s are primarily useful for things like setting `status` codes or return `redirect`s.
+Server Components can also be returned from your loaders and actions. In general, if you are using RSC to build your application, loaders are primarily useful for things like setting `status` codes or return `redirect`s.
 
-Using Server Components in `loader`s can be helpful for incremental adoption of RSC.
+Using Server Components in loaders can be helpful for incremental adoption of RSC.
 
 </docs-info>
 
@@ -178,7 +178,7 @@ export async function AddToFavoritesForm({
       <input
         type="hidden"
         name="intent"
-        value={liked ? "remove" : "add"}
+        value={isFav ? "remove" : "add"}
       />
       <AddToFavoritesButton isFav={isFav} />
     </form>
@@ -259,7 +259,7 @@ You don't have to use SSR at all. You can choose to use RSC to "prerender" HTML 
 
 </docs-info>
 
-`entry.ssr.tsx` is the entry point for the sever. It is responsible for handling the request, calling the RSC server, and converting the RSC payload into HTML on document requests (server-side rendering).
+`entry.ssr.tsx` is the entry point for the server. It is responsible for handling the request, calling the RSC server, and converting the RSC payload into HTML on document requests (server-side rendering).
 
 Relevant APIs:
 
@@ -270,7 +270,7 @@ Relevant APIs:
 
 <docs-info>
 
-Even though you have a "React Server" and a serve responsible for request handling/SSR, you don't actually have to have 2 separate servers. You can simply have 2 separate module graphs within the same server. This is important because React is different when generating RSC payloads vs. when generating HTML to be hydrated on the client.
+Even though you have a "React Server" and a server responsible for request handling/SSR, you don't actually need to have 2 separate servers. You can simply have 2 separate module graphs within the same server. This is important because React behaves differently when generating RSC payloads vs. when generating HTML to be hydrated on the client.
 
 </docs-info>
 
@@ -332,7 +332,7 @@ To configure Parcel, add the following to your `package.json`:
 
 #### `routes/config.ts`
 
-You must add `"use server-entry"` to the top of the file to the file where you define your routes. Additionally, you need to import the client entry point, since it will use the `"use client-entry"` directive (see below).
+You must add `"use server-entry"` to the top of the file where you define your routes. Additionally, you need to import the client entry point, since it will use the `"use client-entry"` directive (see below).
 
 ```tsx filename=src/routes/config.ts
 "use server-entry";
@@ -462,7 +462,7 @@ app.use(
     maxAge: "1y",
   })
 );
-// Hookup our application.
+// Hook up our application.
 app.use(
   createRequestListener((request) =>
     generateHTML(
@@ -507,7 +507,7 @@ setServerCallback(
   })
 );
 
-// Get and decode the initial server payload
+// Get and decode the initial server payload.
 createFromReadableStream(getRSCStream()).then(
   (payload: RSCServerPayload) => {
     startTransition(async () => {
@@ -691,7 +691,7 @@ setServerCallback(
   })
 );
 
-// Get and decode the initial server payload
+// Get and decode the initial server payload.
 createFromReadableStream<RSCServerPayload>(
   getRSCStream()
 ).then((payload) => {
