@@ -27,7 +27,6 @@ The quickest way to get started is with one of our templates.
 
 These templates come with React Router RSC APIs already configured with the respective bundler, offering you out of the box features such as:
 
-- Server Components from `loader`s/`action`s
 - Server Components Routes
 - Server Side Rendering (SSR)
 - Client Components (via [`"use client"`][use-client-docs] directive)
@@ -139,56 +138,13 @@ export default async function Home() {
 }
 ```
 
-### RSC From Loaders/Actions
+<docs-info>
 
-In React Router, you can also return a Server Component from a `loader` or `action`.
+Server Components can also be returned from your `loader`s and `action`s. In general if you are using RSC to build your application, `loader`s are primarily useful for things like setting `status` codes or return `redirect`s.
 
-This is useful if:
+Using Server Components in `loader`s can be helpful for incremental adoption of RSC.
 
-1. You want to incrementally adopt RSC
-2. You want to pick and choose where you use Server Components
-3. Your data determines your components
-
-```tsx
-export async function loader({ params }) {
-  let { contentBlocks, ...product } = await getProduct(
-    params.productId
-  );
-  return {
-    product,
-    content: (
-      <div>
-        {contentBlocks.map((block) => {
-          switch (block.type) {
-            case "image":
-              return <ImageBlock {...block} />;
-            case "gallery":
-              return <GalleryBlock {...block} />;
-            case "video":
-              return <VideoBlock {...block} />;
-            case "text":
-              return <TextBlock {...block} />;
-            case "markdown":
-              return <MarkdownBlock {...block} />;
-            default:
-              throw new Error(
-                `Unknown block type: ${block.type}`
-              );
-          }
-        })}
-      </div>
-    ),
-  };
-}
-
-export default function Article({ loaderData }) {
-  return (
-    <ProductLayout product={loaderData.product}>
-      {loaderData.content}
-    </ProductLayout>
-  );
-}
-```
+</docs-info>
 
 ### Server Functions
 
@@ -275,30 +231,56 @@ export default function Root() {
 }
 ```
 
-## Setting up RSC
+## Configuring RSC with React Router
+
+React Router provides several APIs that allow you to easily integrate with RSC-native bundlers, useful if you are using React Router data mode to make your own [custom framework][custom-framework].
 
 ### Entry points
 
-**RSC Server**
+React Server Components require 3 things:
 
-We'll name it `entry.rsc.tsx`, but you can name it whatever you want.
+1. A server to handle the request and convert the RSC payload into HTML
+2. A React server to generate RSC payloads
+3. A client handler to hydrate the generated HTML and set the `callServer` function to support post-hydration server actions
 
-Relevant APIs:
+The following naming conventions have been chosen for familiarity and simplicity. Feel free to name and configure your entry points as you see fit.
 
-- [`matchRSCServerRequest`][match-rsc-server-request]
+See the relevant bundler documentation below for specific code examples for each of the following entry points.
+
+These examples all use [express][express] and [@mjackson/node-fetch-server][node-fetch-server] for the server and request handling.
 
 **Server**
 
-We'll name it `entry.ssr.tsx`, but you can name it whatever you want.
+<docs-info>
+
+You don't have to use SSR at all. You can choose to use RSC to "prerender" HTML for Static Site Generation (SSG) or something like Incremental Static Regeneration (ISR).
+
+</docs-info>
+
+`entry.ssr.tsx` is the entry point for the sever. It is responsible for handling the request, calling the RSC server, and converting the RSC payload into HTML on document requests (server-side rendering).
 
 Relevant APIs:
 
 - [`routeRSCServerRequest`][route-rsc-server-request]
 - [`RSCStaticRouter`][rsc-static-router]
 
+**RSC Server**
+
+<docs-info>
+
+Even though you have a "React Server" and a serve responsible for request handling/SSR, you don't actually have to have 2 separate servers. You can simply have 2 separate module graphs within the same server. This is important because React is different when generating RSC payloads vs. when generating HTML to be hydrated on the client.
+
+</docs-info>
+
+`entry.rsc.tsx` is the entry point for the React Server. It is responsible for matching the request to a route and generating RSC payloads.
+
+Relevant APIs:
+
+- [`matchRSCServerRequest`][match-rsc-server-request]
+
 **Client**
 
-We'll name it `entry.client.tsx`, but you can name it whatever you want.
+`entry.client.tsx` is the entry point for the client. It is responsible for hydrating the generated HTML and setting the `callServer` function to support post-hydration server actions.
 
 Relevant APIs:
 
@@ -308,11 +290,432 @@ Relevant APIs:
 
 ### Parcel
 
-[Parcel's docs][parcel-rsc-doc]
+See the [Parcel RSC docs][parcel-rsc-doc] for more information.
+
+In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
+
+```shellscript
+# install runtime dependencies
+npm i @parcel/runtime-rsc react-server-dom-parcel
+
+# install dev dependencies
+npm i -D parcel
+```
+
+#### `package.json`
+
+To configure Parcel, add the following to your `package.json`:
+
+```json filename=package.json
+{
+  "scripts": {
+    "build": "parcel build --no-autoinstall",
+    "dev": "cross-env NODE_ENV=development parcel --no-autoinstall --no-cache",
+    "start": "cross-env NODE_ENV=production node dist/server/entry.rsc.js"
+  },
+  "targets": {
+    "react-server": {
+      "context": "react-server",
+      "source": "src/entry.rsc.tsx",
+      "scopeHoist": false,
+      "includeNodeModules": {
+        "@mjackson/node-fetch-server": false,
+        "compression": false,
+        "express": false
+      }
+    }
+  }
+}
+```
+
+#### `routes/config.ts`
+
+You must add `"use server-entry"` to the top of the file to the file where you define your routes. Additionally, you need to import the client entry point, since it will use the `"use client-entry"` directive (see below).
+
+```tsx filename=src/routes/config.ts
+"use server-entry";
+
+import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+import "../entry.client";
+
+export function routes() {
+  return [
+    {
+      id: "root",
+      path: "",
+      lazy: () => import("./root/route"),
+      children: [
+        {
+          id: "home",
+          index: true,
+          lazy: () => import("./home/route"),
+        },
+        {
+          id: "about",
+          path: "about",
+          lazy: () => import("./about/route"),
+        },
+      ],
+    },
+  ] satisfies RSCRouteConfig;
+}
+```
+
+#### `entry.ssr.tsx`
+
+The following is a simplified example of a Parcel SSR Server.
+
+```tsx filename=src/entry.ssr.tsx
+import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge";
+import {
+  unstable_routeRSCServerRequest as routeRSCServerRequest,
+  unstable_RSCStaticRouter as RSCStaticRouter,
+} from "react-router";
+import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
+
+export async function generateHTML(
+  request: Request,
+  fetchServer: (request: Request) => Promise<Response>,
+  bootstrapScriptContent: string | undefined
+): Promise<Response> {
+  return await routeRSCServerRequest({
+    // The incoming request.
+    request,
+    // How to call the React Server.
+    fetchServer,
+    // Provide the React Server touchpoints.
+    createFromReadableStream,
+    // Render the router to HTML.
+    async renderHTML(getPayload) {
+      const payload = await getPayload();
+      const formState =
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
+
+      return await renderHTMLToReadableStream(
+        <RSCStaticRouter getPayload={getPayload} />,
+        {
+          bootstrapScriptContent,
+          formState,
+        }
+      );
+    },
+  });
+}
+```
+
+#### `entry.rsc.tsx`
+
+The following is a simplified example of a Parcel RSC Server.
+
+```tsx filename=src/entry.rsc.tsx
+import { createRequestListener } from "@mjackson/node-fetch-server";
+import express from "express";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
+import {
+  createTemporaryReferenceSet,
+  decodeAction,
+  decodeFormState,
+  decodeReply,
+  loadServerAction,
+  renderToReadableStream,
+} from "react-server-dom-parcel/server.edge";
+
+// Import the generateHTML function from the client environment
+import { generateHTML } from "./entry.ssr" with { env: "react-client" };
+import { routes } from "./routes/config";
+
+function fetchServer(request: Request) {
+  return matchRSCServerRequest({
+    // Provide the React Server touchpoints.
+    createTemporaryReferenceSet,
+    decodeAction,
+    decodeFormState,
+    decodeReply,
+    loadServerAction,
+    // The incoming request.
+    request,
+    // The app routes.
+    routes: routes(),
+    // Encode the match with the React Server implementation.
+    generateResponse(match) {
+      return new Response(renderToReadableStream(match.payload), {
+        status: match.statusCode,
+        headers: match.headers,
+      });
+    },
+  });
+}
+
+const app = express();
+
+// Serve static assets with compression and long cache lifetime.
+app.use(
+  "/client",
+  compression(),
+  express.static("dist/client", {
+    immutable: true,
+    maxAge: "1y",
+  })
+);
+// Hookup our application.
+app.use(
+  createRequestListener((request) =>
+    generateHTML(
+      request,
+      fetchServer,
+      (routes as unknown as { bootstrapScript?: string }).bootstrapScript
+    )
+  )
+);
+
+app.listen(3000, () => {
+  console.log("Server listening on port 3000");
+});
+```
+
+#### `entry.client.tsx`
+
+```tsx filename=src/entry.client.tsx
+"use client-entry";
+
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import {
+  unstable_createCallServer as createCallServer,
+  unstable_getRSCStream as getRSCStream,
+  unstable_RSCHydratedRouter as RSCHydratedRouter,
+  type unstable_RSCPayload as RSCServerPayload,
+} from "react-router";
+import {
+  createFromReadableStream,
+  createTemporaryReferenceSet,
+  encodeReply,
+  setServerCallback,
+} from "react-server-dom-parcel/client";
+
+// Create and set the callServer function to support post-hydration server actions.
+setServerCallback(
+  createCallServer({
+    createFromReadableStream,
+    createTemporaryReferenceSet,
+    encodeReply,
+  })
+);
+
+// Get and decode the initial server payload
+createFromReadableStream(getRSCStream()).then(
+  (payload: RSCServerPayload) => {
+    startTransition(async () => {
+      const formState =
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
+
+      hydrateRoot(
+        document,
+        <StrictMode>
+          <RSCHydratedRouter
+            createFromReadableStream={
+              createFromReadableStream
+            }
+            payload={payload}
+          />
+        </StrictMode>,
+        {
+          formState,
+        }
+      );
+    });
+  }
+);
+```
 
 ### Vite
 
-[Vite's docs][vite-rsc-doc]
+See the [Vite RSC docs][vite-rsc-doc] for more information.
+
+In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
+
+```shellscript
+npm i -D vite @vitejs/plugin-react @vitejs/plugin-rsc
+```
+
+#### `vite.config.ts`
+
+To configure Vite, add the following to your `vite.config.ts`:
+
+```ts filename=vite.config.ts
+import rsc from "@vitejs/plugin-rsc/plugin";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    rsc({
+      entries: {
+        client: "src/entry.client.tsx",
+        rsc: "src/entry.rsc.tsx",
+        ssr: "src/entry.ssr.tsx",
+      },
+    }),
+  ],
+});
+```
+
+#### `entry.ssr.tsx`
+
+The following is a simplified example of a Vite SSR Server.
+
+```tsx filename=src/entry.ssr.tsx
+import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
+import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge";
+import {
+  unstable_routeRSCServerRequest as routeRSCServerRequest,
+  unstable_RSCStaticRouter as RSCStaticRouter,
+} from "react-router";
+import bootstrapScriptContent from "virtual:vite-rsc/bootstrap-script-content";
+
+export async function generateHTML(
+  request: Request,
+  fetchServer: (request: Request) => Promise<Response>
+): Promise<Response> {
+  return await routeRSCServerRequest({
+    // The incoming request.
+    request,
+    // How to call the React Server.
+    fetchServer,
+    // Provide the React Server touchpoints.
+    createFromReadableStream,
+    // Render the router to HTML.
+    async renderHTML(getPayload) {
+      const payload = await getPayload();
+      const formState =
+        payload.type === "render"
+          ? await payload.formState
+          : undefined;
+
+      return await renderHTMLToReadableStream(
+        <RSCStaticRouter getPayload={getPayload} />,
+        {
+          bootstrapScriptContent,
+          formState,
+        }
+      );
+    },
+  });
+}
+```
+
+#### `entry.rsc.tsx`
+
+The following is a simplified example of a Vite RSC Server.
+
+```tsx filename=src/entry.rsc.tsx
+import {
+  createTemporaryReferenceSet,
+  decodeAction,
+  decodeFormState,
+  decodeReply,
+  loadServerAction,
+  renderToReadableStream,
+} from "@vitejs/plugin-rsc/rsc";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
+
+import { routes } from "./routes/config";
+
+function fetchServer(request: Request) {
+  return matchRSCServerRequest({
+    // Provide the React Server touchpoints.
+    createTemporaryReferenceSet,
+    decodeAction,
+    decodeFormState,
+    decodeReply,
+    loadServerAction,
+    // The incoming request.
+    request,
+    // The app routes.
+    routes: routes(),
+    // Encode the match with the React Server implementation.
+    generateResponse(match) {
+      return new Response(
+        renderToReadableStream(match.payload),
+        {
+          status: match.statusCode,
+          headers: match.headers,
+        }
+      );
+    },
+  });
+}
+
+export default async function handler(request: Request) {
+  // Import the generateHTML function from the client environment
+  const ssr = await import.meta.viteRsc.loadModule<
+    typeof import("./entry.ssr")
+  >("ssr", "index");
+
+  return ssr.generateHTML(request, fetchServer);
+}
+```
+
+#### `entry.client.tsx`
+
+```tsx filename=src/entry.client.tsx
+import {
+  createFromReadableStream,
+  createTemporaryReferenceSet,
+  encodeReply,
+  setServerCallback,
+} from "@vitejs/plugin-rsc/browser";
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import {
+  unstable_createCallServer as createCallServer,
+  unstable_getRSCStream as getRSCStream,
+  unstable_RSCHydratedRouter as RSCHydratedRouter,
+  type unstable_RSCPayload as RSCServerPayload,
+} from "react-router";
+
+// Create and set the callServer function to support post-hydration server actions.
+setServerCallback(
+  createCallServer({
+    createFromReadableStream,
+    createTemporaryReferenceSet,
+    encodeReply,
+  })
+);
+
+// Get and decode the initial server payload
+createFromReadableStream<RSCServerPayload>(
+  getRSCStream()
+).then((payload) => {
+  startTransition(async () => {
+    const formState =
+      payload.type === "render"
+        ? await payload.formState
+        : undefined;
+
+    hydrateRoot(
+      document,
+      <StrictMode>
+        <RSCHydratedRouter
+          createFromReadableStream={
+            createFromReadableStream
+          }
+          payload={payload}
+        />
+      </StrictMode>,
+      {
+        formState,
+      }
+    );
+  });
+});
+```
 
 [react-server-components-doc]: https://react.dev/reference/rsc/server-components
 [react-server-functions-doc]: https://react.dev/reference/rsc/server-functions
@@ -320,6 +723,7 @@ Relevant APIs:
 [use-server-docs]: https://react.dev/reference/rsc/use-server
 [route-module]: ../start/framework/route-module
 [framework-mode]: ../start/framework/route-module
+[custom-framework]: ../start/data/custom
 [parcel-rsc-doc]: https://parceljs.org/recipes/rsc/
 [vite-rsc-doc]: https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc
 [match-rsc-server-request]: ../api/rsc/matchRSCServerRequest
@@ -328,3 +732,5 @@ Relevant APIs:
 [create-call-server]: ../api/rsc/createCallServer
 [get-rsc-stream]: ../api/rsc/getRSCStream
 [rsc-hydrated-router]: ../api/rsc/RSCHydratedRouter
+[express]: https://expressjs.com/
+[node-fetch-server]: https://github.com/mjackson/remix-the-web/tree/main/packages/node-fetch-server
