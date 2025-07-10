@@ -218,7 +218,7 @@ export default function Root() {
 
 This is also the way we would make an entire route a Client Component.
 
-```tsx filename=src/routes/root/route.tsx lines=[6,9]
+```tsx filename=src/routes/root/route.tsx lines=[6,11]
 export {
   clientAction,
   clientLoader,
@@ -227,6 +227,8 @@ export {
 } from "./route.client";
 
 export default function Root() {
+  // Adding a Server Component at the root is required by bundlers
+  // if you're using css side-effects imports.
   return <ClientRoot />;
 }
 ```
