@@ -61,11 +61,11 @@ matchRSCServerRequest({
 });
 ```
 
-While you can define components inline, we recommend for both startup performance, as well as code organization, using the `lazy()` option and defining [Route Modules][route-module]:
+While you can define components inline, we recommend for both startup performance, as well as code organization, using the `lazy()` option and defining [Route Modules][route-module]
 
 <docs-info>
 
-While [Route Modules][route-module] are a [Framework Mode][framework-mode] feature, the route module exports are the same options expected by the `lazy` field of your RSC route config.
+The [Route Modules][route-module] up until now were a [Framework Mode][framework-mode] only feature. However, the `lazy` field of the RSC route config expects the same exports as the Route Module exports, unifying the APIs even further.
 
 </docs-info>
 
