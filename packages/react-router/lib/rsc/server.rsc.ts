@@ -535,10 +535,18 @@ async function generateResourceResponse(
   } catch (error) {
     if (isResponse(error)) {
       result = error;
+    } else if (isRouteErrorResponse(error)) {
+      const errorMessage =
+        typeof error.data === "string"
+          ? error.data
+          : error.data?.toString?.() ?? error.statusText;
+      onError?.(new Error(errorMessage.replace(/^Error: /, "")));
+      result = new Response(errorMessage, {
+        status: error.status,
+        statusText: error.statusText,
+      });
     } else {
-      // TODO: Do we need to handle ErrorResponse?
       onError?.(error);
-
       result = new Response("Internal Server Error", {
         status: 500,
       });
