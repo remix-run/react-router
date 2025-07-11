@@ -318,6 +318,15 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
 
   markdown += `# ${comment.name}\n\n`;
 
+  markdown += `<!--\n`;
+  markdown += `⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ \n\n`;
+  markdown += `Hey! Thank you for helping improve our documentation!\n\n`;
+  markdown += `This file is auto-generated from the JSDoc comments in the source\n`;
+  markdown += `code, so please find the definition of this API and edit the JSDoc\n`;
+  markdown += `comments accordingly and this file will be re-generated once those\n`;
+  markdown += `changes are merged.\n`;
+  markdown += `-->\n\n`;
+
   // Modes section
   if (comment.modes && comment.modes.length > 0) {
     markdown += `[MODES: ${comment.modes.join(", ")}]\n\n`;
