@@ -1,5 +1,6 @@
 {
   "name": "@playground/rsc-parcel",
+  "version": "0.0.0",
   "private": true,
   "targets": {
     "server": {

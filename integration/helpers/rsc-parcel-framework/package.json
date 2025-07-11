@@ -1,5 +1,6 @@
 {
-  "name": "@playground/rsc-parcel-framework",
+  "name": "integration-rsc-parcel-framework",
+  "version": "0.0.0",
   "private": true,
   "targets": {
     "server": {
