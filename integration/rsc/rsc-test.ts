@@ -2049,6 +2049,55 @@ implementations.forEach((implementation) => {
         // Ensure this is using RSC
         validateRSCHtml(await page.content());
       });
+
+      test("Handles sanitized production errors in server components correctly", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export function loader() {
+                throw new Error("This error should be sanitized");
+              }
+  
+              export default function HomeRoute() {
+                return <h2>This should not be rendered</h2>;
+              }
+  
+              export { ErrorBoundary } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client"
+              import { useRouteError } from "react-router";
+  
+              export function ErrorBoundary() {
+                let error = useRouteError();
+                return (
+                  <>
+                    <h2 data-error-title>Error Caught!</h2>
+                    <p data-error-message>{error.message}</p>
+                  </>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify error boundary is shown
+        await page.waitForSelector("[data-error-title]");
+        await page.waitForSelector("[data-error-message]");
+        expect(await page.locator("[data-error-message]").textContent()).toBe(
+          "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error."
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
     });
   });
 });
