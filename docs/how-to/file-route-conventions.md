@@ -4,6 +4,11 @@ title: File Route Conventions
 
 # File Route Conventions
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 The `@react-router/fs-routes` package enables file-convention based route config.
 
 ## Setting up

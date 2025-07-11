@@ -4,6 +4,11 @@ title: Route Module Type Safety
 
 # Route Module Type Safety
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 React Router generates route-specific types to power type inference for URL params, loader data, and more.
 This guide will help you set it up if you didn't start with a template.
 

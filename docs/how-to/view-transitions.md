@@ -4,6 +4,11 @@ title: View Transitions
 
 # View Transitions
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 Enable smooth animations between page transitions in your React Router applications using the [View Transitions API][view-transitions-api]. This feature allows you to create seamless visual transitions during client-side navigation.
 
 ## Basic View Transition

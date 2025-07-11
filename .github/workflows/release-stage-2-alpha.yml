@@ -1,4 +1,4 @@
-name: 🧪 Stage 2 (Alpha) Release
+name: 🧪 Check Alpha Release
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   alpha-release:
-    name: 🧪 Alpha Release
+    name: 🧪 Check Alpha Release
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'alpha-release'
     runs-on: ubuntu-latest
     steps:

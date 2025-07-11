@@ -4,6 +4,11 @@ title: Status Codes
 
 # Status Codes
 
+[MODES: framework ,data]
+
+<br/>
+<br/>
+
 Set status codes from loaders and actions with `data`.
 
 ```tsx filename=app/project.tsx lines=[3,12-15,20,23]
