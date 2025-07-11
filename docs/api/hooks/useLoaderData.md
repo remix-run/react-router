@@ -8,11 +8,9 @@ title: useLoaderData
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/https://api.reactrouter.com/v7/functions/react_router.useLoaderData.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLoaderData.html)
 
-Returns the data from the closest route
-[`loader`](../../start/framework/route-module#loader) or
-[`clientLoader`](../../start/framework/route-module#clientloader).
+Returns the data from the closest route [LoaderFunction](https://api.reactrouter.com/v7/types/react_router.LoaderFunction.html) or [ClientLoaderFunction](https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunction.html).
 
 ```tsx
 import { useLoaderData } from "react-router";
@@ -30,6 +28,5 @@ export default function Invoices() {
 ## Signature
 
 ```tsx
-useLoaderData<T = any>(): SerializeFrom<T>
+useLoaderData(): SerializeFrom
 ```
-

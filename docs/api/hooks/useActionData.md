@@ -8,7 +8,7 @@ title: useActionData
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/https://api.reactrouter.com/v7/functions/react_router.useActionData.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useActionData.html)
 
 Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
 
@@ -35,6 +35,5 @@ export default function Invoices() {
 ## Signature
 
 ```tsx
-useActionData<T = any>(): SerializeFrom<T> | undefined
+useActionData(): undefined
 ```
-
