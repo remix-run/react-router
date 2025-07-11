@@ -68,7 +68,6 @@ import type { SerializeFrom } from "./types/route-data";
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useHref.html
  * @param to The path to resolve
  * @param options Options
  * @param options.relative Defaults to "route" so routing is relative to the route tree.
@@ -111,7 +110,6 @@ export function useHref(
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useInRouterContext.html
  * @returns Whether the component is within a Router context
  */
 export function useInRouterContext(): boolean {
@@ -143,7 +141,6 @@ export function useInRouterContext(): boolean {
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useLocation.html
  * @returns The current location object
  */
 export function useLocation(): Location {
@@ -166,7 +163,6 @@ export function useLocation(): Location {
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useNavigationType.html
  * @returns The current navigation type (Action.Pop, Action.Push, or Action.Replace)
  */
 export function useNavigationType(): NavigationType {
@@ -183,7 +179,6 @@ export function useNavigationType(): NavigationType {
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useMatch.html
  * @param pattern The pattern to match against the current location
  * @returns The path match object if the pattern matches, null otherwise
  */
@@ -234,8 +229,7 @@ function useIsomorphicLayoutEffect(
  * Returns a function that lets you navigate programmatically in the browser in
  * response to user interactions or effects.
  *
- * It's often better to use {@link redirect} in {@link ActionFunction | actions}
- * and {@link LoaderFunction | loaders} than this hook.
+ * It's often better to use {@link redirect} in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader) functions than this hook.
  *
  * The returned function signature is `navigate(to, options?)/navigate(delta)` where:
  *
@@ -327,7 +321,6 @@ function useIsomorphicLayoutEffect(
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useNavigate.html
  * @returns A navigate function for programmatic navigation
  */
 export function useNavigate(): NavigateFunction {
@@ -411,14 +404,13 @@ function useNavigateUnstable(): NavigateFunction {
 const OutletContext = React.createContext<unknown>(null);
 
 /**
- * Returns the parent route {@link OutletProps.context | `<Outlet context>`}.
+ * Returns the parent route {@link Outlet | `<Outlet context>`}.
  *
  * @public
  * @category Hooks
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useOutletContext.html
  * @returns The context value passed to the Outlet
  */
 export function useOutletContext<Context = unknown>(): Context {
@@ -434,7 +426,6 @@ export function useOutletContext<Context = unknown>(): Context {
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useOutlet.html
  * @param context The context to pass to the outlet
  * @returns The child route element or null if no child routes match
  */
@@ -550,7 +541,6 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useParams.html
  * @returns An object containing the dynamic route parameters
  */
 export function useParams<
@@ -582,7 +572,6 @@ export function useParams<
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useResolvedPath.html
  * @param to The path to resolve
  * @param options Options
  * @param options.relative Defaults to "route" so routing is relative to the route tree.
@@ -641,7 +630,6 @@ export function useResolvedPath(
  * @mode framework
  * @mode data
  * @mode declarative
- * @reference functions/react_router.useRoutes.html
  * @param routes An array of route objects that define the route hierarchy
  * @param locationArg An optional location object or pathname string to use instead of the current location
  * @returns A React element to render the matched route, or `null` if no routes matched
@@ -1230,7 +1218,6 @@ export function useRouteId() {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useNavigation.html
  * @returns The current navigation object
  */
 export function useNavigation(): Navigation {
@@ -1264,7 +1251,6 @@ export function useNavigation(): Navigation {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useRevalidator.html
  * @returns An object with a `revalidate` function and the current revalidation `state`
  */
 export function useRevalidator(): {
@@ -1291,7 +1277,6 @@ export function useRevalidator(): {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useMatches.html
  * @returns An array of UI matches for the current route hierarchy
  */
 export function useMatches(): UIMatch[] {
@@ -1305,7 +1290,9 @@ export function useMatches(): UIMatch[] {
 }
 
 /**
- * Returns the data from the closest route {@link LoaderFunction | `loader`} or {@link ClientLoaderFunction | `clientLoader`}.
+ * Returns the data from the closest route
+ * [`loader`](../../start/framework/route-module#loader) or
+ * [`clientLoader`](../../start/framework/route-module#clientloader).
  *
  * @example
  * import { useLoaderData } from "react-router";
@@ -1323,7 +1310,6 @@ export function useMatches(): UIMatch[] {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useLoaderData.html
  * @returns The data returned from the route's loader function
  */
 export function useLoaderData<T = any>(): SerializeFrom<T> {
@@ -1359,7 +1345,6 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useRouteLoaderData.html
  * @param routeId The ID of the route to return loader data from
  * @returns The data returned from the specified route's loader function, or undefined if not found
  */
@@ -1396,7 +1381,6 @@ export function useRouteLoaderData<T = any>(
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useActionData.html
  * @returns The data returned from the route's action function, or undefined if no action has been called
  */
 export function useActionData<T = any>(): SerializeFrom<T> | undefined {
@@ -1408,7 +1392,11 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
 }
 
 /**
- * Accesses the error thrown during an {@link ActionFunction | `action`}, {@link LoaderFunction | `loader`}, or component render to be used in a route module {@link ErrorBoundary}.
+ * Accesses the error thrown during an
+ * [`action`](../../start/framework/route-module#action),
+ * [`loader`](../../start/framework/route-module#loader),
+ * or component render to be used in a route module
+ * [`ErrorBoundary`](../../start/framework/route-module#errorboundary).
  *
  * @example
  * export function ErrorBoundary() {
@@ -1420,7 +1408,6 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useRouteError.html
  * @returns The error that was thrown during route loading, action execution, or rendering
  */
 export function useRouteError(): unknown {
@@ -1456,7 +1443,6 @@ export function useRouteError(): unknown {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useAsyncValue.html
  * @returns The resolved value from the nearest Await component
  */
 export function useAsyncValue(): unknown {
@@ -1487,7 +1473,6 @@ export function useAsyncValue(): unknown {
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useAsyncError.html
  * @returns The error that was thrown in the nearest Await component
  */
 export function useAsyncError(): unknown {
@@ -1599,7 +1584,6 @@ let blockerId = 0;
  * @category Hooks
  * @mode framework
  * @mode data
- * @reference functions/react_router.useBlocker.html
  * @param shouldBlock Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked.  The function format receives a single object parameter containing the `currentLocation`, `nextLocation`, and `historyAction` of the potential navigation.
  * @returns A blocker object with state and reset functionality
  */

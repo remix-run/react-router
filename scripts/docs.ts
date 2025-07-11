@@ -4,6 +4,7 @@ import util from "node:util";
 import fg from "fast-glob";
 
 import dox from "dox";
+import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
 
 type UnknownTag = {
@@ -131,7 +132,8 @@ if (args.api) {
 const outputDir = args.output || "docs/api";
 
 // Build lookup table for @link resolution
-const apiLookup = buildApiLookupTable(outputDir);
+const repoApiLookup = buildRepoDocsLookupTable(outputDir);
+const typedocLookup = buildTypedocLookupTable(outputDir);
 
 // Resolve file paths using glob patterns
 const filePaths = fg.sync(args.path, {
@@ -150,28 +152,100 @@ filePaths.forEach((filePath) => {
   generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
 });
 
-function buildApiLookupTable(outputDir: string): Map<string, string> {
+function buildRepoDocsLookupTable(outputDir: string): Map<string, string> {
   const lookup = new Map<string, string>();
 
   // Add existing files if output directory exists
-  if (fs.existsSync(outputDir)) {
-    const markdownFiles = fg.sync(`${outputDir}/**/*.md`, {
-      onlyFiles: true,
-    });
+  if (!fs.existsSync(outputDir)) {
+    throw new Error(
+      `Docs directory does not exist for cross-linking: ${outputDir}`
+    );
+  }
 
-    markdownFiles.forEach((filePath) => {
-      const relativePath = path
-        .relative(outputDir, filePath)
-        .replace(/\.md$/, "");
-      const apiName = path.basename(relativePath);
+  const markdownFiles = fg.sync(`${outputDir}/**/*.md`, {
+    onlyFiles: true,
+  });
 
-      if (apiName !== "index") {
-        lookup.set(apiName, relativePath);
-      }
-    });
+  markdownFiles.forEach((filePath) => {
+    const relativePath = path
+      .relative(outputDir, filePath)
+      .replace(/\.md$/, "");
+    const apiName = path.basename(relativePath);
+
+    if (apiName !== "index") {
+      lookup.set(apiName, relativePath);
+    }
+  });
+
+  return lookup;
+}
+function buildTypedocLookupTable(outputDir: string): Map<string, string> {
+  const lookup = new Map<string, string>();
+
+  // Prerequisite: `typedoc` has been run first via `npm run docs`
+  if (fs.existsSync("public/dev/api.json")) {
+    let apiData = JSON.parse(
+      fs.readFileSync("public/dev/api.json", "utf8")
+    ) as JSONOutput.ProjectReflection;
+
+    apiData.children
+      ?.filter((c) => c.kind === ReflectionKind.Module)
+      .forEach((child) => processTypedocModule(child, lookup));
+  } else {
+    console.warn(
+      '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs'
+    );
   }
 
   return lookup;
+}
+
+function processTypedocModule(
+  child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
+  lookup: Map<string, string>,
+  prefix: string[] = []
+) {
+  let newPrefix = [...prefix, child.name];
+  let moduleName = newPrefix.join(".");
+  child.children?.forEach((subChild) => {
+    // Recurse into submodules
+    if (subChild.kind === ReflectionKind.Module) {
+      processTypedocModule(subChild, lookup, newPrefix);
+      return;
+    }
+
+    // Prefer linking to repo docs over typedoc docs
+    if (lookup.has(subChild.name)) {
+      return;
+    }
+
+    let apiName = `${moduleName}.${subChild.name}`;
+    let type =
+      subChild.kind === ReflectionKind.Enum
+        ? "enums"
+        : subChild.kind === ReflectionKind.Class
+        ? "classes"
+        : subChild.kind === ReflectionKind.Interface
+        ? "interfaces"
+        : subChild.kind === ReflectionKind.TypeAlias
+        ? "types"
+        : subChild.kind === ReflectionKind.Function
+        ? "functions"
+        : subChild.kind === ReflectionKind.Variable
+        ? "variables"
+        : undefined;
+
+    if (!type) {
+      console.warn(
+        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
+      );
+      return;
+    }
+    let modulePath = moduleName.replace(/[@\-/]/g, "_");
+    let path = `${type}/${modulePath}.${subChild.name}.html`;
+    let url = `https://api.reactrouter.com/v7/${path}`;
+    lookup.set(subChild.name, url);
+  });
 }
 
 function generateMarkdownDocs(
@@ -351,9 +425,9 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
     (t) => t.type === "additionalExamples"
   )?.string;
 
-  let reference = comment.tags.find((t) => t.type === "reference")?.string;
+  let reference = typedocLookup.get(name);
   if (!reference) {
-    throw new Error(`Expected a @reference tag: ${name}`);
+    throw new Error(`Could not find API in typedoc reference docs: ${name}`);
   }
 
   let signature = getSignature(comment.code);
@@ -441,11 +515,22 @@ function resolveLinkTags(text: string): string {
     const description = parts[1] || `\`${apiName}\``;
 
     // Look up the API in the lookup table
-    const relativePath = apiLookup.get(apiName);
+    let relativePath;
+    if (repoApiLookup.has(apiName)) {
+      relativePath = repoApiLookup.get(apiName);
+    } else if (typedocLookup.has(apiName)) {
+      console.log(
+        `Could not find markdown doc, resolved from typedoc docs: {@link ${apiName}}`
+      );
+      relativePath = typedocLookup.get(apiName);
+    }
 
     if (relativePath) {
-      // Convert to markdown link with relative path (no .md extension)
-      return `[${description}](../${relativePath})`;
+      // Convert to markdown link
+      let href = relativePath.startsWith("http")
+        ? relativePath
+        : `../${relativePath}`;
+      return `[${description}](${href})`;
     } else {
       // If not found, return as plain text with a warning
       console.warn(
