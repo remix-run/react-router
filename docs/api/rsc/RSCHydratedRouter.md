@@ -11,6 +11,29 @@ unstable: true
 
 Hydrates a server rendered `RSCPayload` in the browser.
 
+```tsx filename=entry.browser.tsx lines=[7-12]
+createFromReadableStream(getRSCStream()).then(
+  (payload: RSCServerPayload) => {
+    startTransition(async () => {
+      hydrateRoot(
+        document,
+        <StrictMode>
+          <RSCHydratedRouter
+            createFromReadableStream={
+              createFromReadableStream
+            }
+            payload={payload}
+          />
+        </StrictMode>,
+        {
+          formState: await getFormState(payload),
+        }
+      );
+    });
+  }
+);
+```
+
 ## Props
 
 ### createFromReadableStream
@@ -24,3 +47,7 @@ The decoded `RSCPayload` to hydrate.
 ### routeDiscovery
 
 `eager` or `lazy` - Determines if links are eagerly discovered, or delayed until clicked.
+
+### unstable_getContext
+
+A function that returns an `unstable_InitialContext` object (`Map<RouterContext, unknown>`), for use in client loaders, actions and middleware.

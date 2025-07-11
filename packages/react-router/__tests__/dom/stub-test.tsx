@@ -12,7 +12,10 @@ import {
   type LoaderFunctionArgs,
   useRouteError,
 } from "../../index";
-import { unstable_createContext } from "../../lib/router/utils";
+import {
+  unstable_RouterContextProvider,
+  unstable_createContext,
+} from "../../lib/router/utils";
 
 test("renders a route", () => {
   let RoutesStub = createRoutesStub([
@@ -236,7 +239,50 @@ test("can pass a predefined loader", () => {
   ]);
 });
 
-test("can pass context values", async () => {
+test("can pass context values (w/o middleware)", async () => {
+  let RoutesStub = createRoutesStub(
+    [
+      {
+        path: "/",
+        HydrateFallback: () => null,
+        Component() {
+          let data = useLoaderData() as string;
+          return (
+            <div>
+              <pre data-testid="root">Context: {data}</pre>
+              <Outlet />
+            </div>
+          );
+        },
+        loader({ context }) {
+          return context.message;
+        },
+        children: [
+          {
+            path: "hello",
+            Component() {
+              let data = useLoaderData() as string;
+              return <pre data-testid="hello">Context: {data}</pre>;
+            },
+            loader({ context }) {
+              return context.message;
+            },
+          },
+        ],
+      },
+    ],
+    { message: "hello" }
+  );
+
+  render(<RoutesStub initialEntries={["/hello"]} />);
+
+  expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
+  expect(await screen.findByTestId("hello")).toHaveTextContent(
+    /Context: hello/
+  );
+});
+
+test("can pass context values (w/middleware)", async () => {
   let helloContext = unstable_createContext();
   let RoutesStub = createRoutesStub(
     [
@@ -269,10 +315,15 @@ test("can pass context values", async () => {
         ],
       },
     ],
-    () => new Map([[helloContext, "hello"]])
+    new unstable_RouterContextProvider(new Map([[helloContext, "hello"]]))
   );
 
-  render(<RoutesStub initialEntries={["/hello"]} />);
+  render(
+    <RoutesStub
+      future={{ unstable_middleware: true }}
+      initialEntries={["/hello"]}
+    />
+  );
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
   expect(await screen.findByTestId("hello")).toHaveTextContent(

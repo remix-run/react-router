@@ -1,3 +1,4 @@
+import { parseArgs } from "node:util";
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
@@ -15,6 +16,8 @@ import {
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
 import { assets } from "./parcel-entry-wrapper"
+import { basename } from "./config/basename";
+import { requestContext } from "./config/request-context";
 
 function fetchServer(request: Request) {
   return matchRSCServerRequest({
@@ -26,8 +29,10 @@ function fetchServer(request: Request) {
     loadServerAction,
     // The incoming request.
     request,
+    requestContext,
     // The app routes.
     routes,
+    basename,
     // Encode the match with the React Server implementation.
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {
@@ -67,7 +72,12 @@ app.use(
   )
 );
 
-const port = parseInt(process.env.RR_PORT || "3000", 10);
+const { values } = parseArgs({
+  options: { p: { type: "string", default: process.env.RR_PORT || "3000" } },
+  allowPositionals: true,
+});
+
+const port = parseInt(values.p, 10);
 app.listen(port, () => {
   console.log(`Server started on http://localhost:${port}`);
 });
