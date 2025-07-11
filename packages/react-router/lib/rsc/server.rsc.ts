@@ -536,11 +536,9 @@ async function generateResourceResponse(
     if (isResponse(error)) {
       result = error;
     } else if (isRouteErrorResponse(error)) {
+      onError?.(error);
       const errorMessage =
-        typeof error.data === "string"
-          ? error.data
-          : error.data?.toString?.() ?? error.statusText;
-      onError?.(new Error(errorMessage.replace(/^Error: /, "")));
+        typeof error.data === "string" ? error.data : error.statusText;
       result = new Response(errorMessage, {
         status: error.status,
         statusText: error.statusText,
