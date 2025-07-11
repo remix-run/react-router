@@ -244,7 +244,7 @@ React Server Components require 3 things:
 
 1. A server to handle the incoming request, fetch the RSC payload, and convert it into HTML
 2. A React server to generate RSC payloads
-3. A client handler to hydrate the generated HTML and set the `callServer` function to support post-hydration server actions
+3. A browser handler to hydrate the generated HTML and set the `callServer` function to support post-hydration server actions
 
 The following naming conventions have been chosen for familiarity and simplicity. Feel free to name and configure your entry points as you see fit.
 
@@ -281,9 +281,9 @@ Relevant APIs:
 
 - [`matchRSCServerRequest`][match-rsc-server-request]
 
-**Client**
+**Browser**
 
-`entry.client.tsx` is the entry point for the client. It is responsible for hydrating the generated HTML and setting the `callServer` function to support post-hydration server actions.
+`entry.browser.tsx` is the entry point for the client. It is responsible for hydrating the generated HTML and setting the `callServer` function to support post-hydration server actions.
 
 Relevant APIs:
 
@@ -340,7 +340,7 @@ You must add `"use server-entry"` to the top of the file where you define your r
 
 import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
-import "../entry.client";
+import "../entry.browser";
 
 // This needs to be a function so Parcel can add a `bootstrapScript` property.
 export function routes() {
@@ -480,9 +480,9 @@ app.listen(3000, () => {
 });
 ```
 
-#### `entry.client.tsx`
+#### `entry.browser.tsx`
 
-```tsx filename=src/entry.client.tsx
+```tsx filename=src/entry.browser.tsx
 "use client-entry";
 
 import { startTransition, StrictMode } from "react";
@@ -561,7 +561,7 @@ export default defineConfig({
     react(),
     rsc({
       entries: {
-        client: "src/entry.client.tsx",
+        client: "src/entry.browser.tsx",
         rsc: "src/entry.rsc.tsx",
         ssr: "src/entry.ssr.tsx",
       },
@@ -696,9 +696,9 @@ export default async function handler(request: Request) {
 }
 ```
 
-#### `entry.client.tsx`
+#### `entry.browser.tsx`
 
-```tsx filename=src/entry.client.tsx
+```tsx filename=src/entry.browser.tsx
 import {
   createFromReadableStream,
   createTemporaryReferenceSet,
