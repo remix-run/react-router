@@ -46,9 +46,13 @@ const implementations: Implementation[] = [
     template: "rsc-parcel",
     build: ({ cwd }: { cwd: string }) => spawnSync("pnpm", ["build"], { cwd }),
     run: ({ cwd, port }) =>
-      // FIXME: Parcel prod builds seems to have dup copies of react in them :/
-      // Not reproducible in the playground though - only in integration/helpers...
-      implementations.find((i) => i.name === "parcel")!.dev({ cwd, port }),
+      createDev(["dist/server/server.js", "-p", String(port)])({
+        cwd,
+        port,
+        env: {
+          NODE_ENV: "production",
+        },
+      }),
     dev: ({ cwd, port }) =>
       createDev(["node_modules/parcel/lib/bin.js"])({
         // Since we run through parcels dev server we can't use `-p` because that
