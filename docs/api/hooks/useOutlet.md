@@ -4,6 +4,17 @@ title: useOutlet
 
 # useOutlet
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Hey! Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please find the definition of this API and edit the JSDoc
+comments accordingly and this file will be re-generated once those
+changes are merged.
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
@@ -16,13 +27,12 @@ hierarchy. Used internally by `<Outlet>` to render child routes.
 ## Signature
 
 ```tsx
-useOutlet(context): undefined
+useOutlet(context?: unknown): React.ReactElement | null
 ```
 
 ## Params
 
 ### context
 
-[modes: framework, data, declarative]
+The context to pass to the outlet
 
-_No documentation_

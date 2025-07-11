@@ -4,6 +4,17 @@ title: useInRouterContext
 
 # useInRouterContext
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Hey! Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please find the definition of this API and edit the JSDoc
+comments accordingly and this file will be re-generated once those
+changes are merged.
+-->
+
 [MODES: framework, data]
 
 ## Summary
@@ -18,3 +29,4 @@ a component is used within a Router.
 ```tsx
 useInRouterContext(): boolean
 ```
+

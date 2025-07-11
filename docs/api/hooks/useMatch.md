@@ -4,6 +4,17 @@ title: useMatch
 
 # useMatch
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Hey! Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please find the definition of this API and edit the JSDoc
+comments accordingly and this file will be re-generated once those
+changes are merged.
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
@@ -14,19 +25,15 @@ Returns a PathMatch object if the given pattern matches the current URL.
 This is useful for components that need to know "active" state, e.g.
 `<NavLink>`.
 
-
-
 ## Signature
 
 ```tsx
-useMatch(pattern): undefined
+useMatch<ParamKey extends ParamParseKey<Path>, Path extends string>(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null
 ```
 
 ## Params
 
 ### pattern
 
-[modes: framework, data, declarative]
-
-_No documentation_
+The pattern to match against the current location
 

@@ -4,6 +4,17 @@ title: useRevalidator
 
 # useRevalidator
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Hey! Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please find the definition of this API and edit the JSDoc
+comments accordingly and this file will be re-generated once those
+changes are merged.
+-->
+
 [MODES: framework, data]
 
 ## Summary
@@ -28,12 +39,16 @@ function WindowFocusRevalidator() {
     </div>
   );
 }
-```
 
-Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like [useFetcher](../hooks/useFetcher), [Form](../components/Form), [useSubmit](../hooks/useSubmit) that do this automatically.
+Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like [`useFetcher`](../hooks/useFetcher), [`Form`](../components/Form), [`useSubmit`](../hooks/useSubmit) that do this automatically.
+```
 
 ## Signature
 
 ```tsx
-useRevalidator(): undefined
+useRevalidator(): {
+    revalidate: () => Promise<void>;
+    state: DataRouter["state"]["revalidation"];
+}
 ```
+
