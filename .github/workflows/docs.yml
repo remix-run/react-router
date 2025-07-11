@@ -6,7 +6,7 @@ on:
       branch:
         description: "Branch to generate docs for"
         required: true
-      apiName:
+      api:
         description: "API Names to generate docs for"
         required: false
         default: ""
@@ -46,12 +46,12 @@ jobs:
         run: pnpm run docs
 
       - name: 📚 Generate Markdown Docs (for all APIs)
-        if: github.event.inputs.apiName == ''
+        if: github.event.inputs.api == ''
         run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx
 
       - name: 📚 Generate Markdown Docs (for specific APIs)
-        if: github.event.inputs.apiName != ''
-        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --apiName ${{ github.event.inputs.apiName }}
+        if: github.event.inputs.api != ''
+        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --api ${{ github.event.inputs.api }}
 
       # - name: 💪 Commit
       #   run: |
