@@ -3,7 +3,7 @@ title: Middleware
 unstable: true
 ---
 
-# Middleware (unstable)
+# Middleware
 
 <docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.unstable_middleware` flag to enable it.</docs-warning>
 
