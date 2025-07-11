@@ -28,4 +28,3 @@ function SomeComponent() {
 ```tsx
 useNavigation(): Navigation
 ```
-

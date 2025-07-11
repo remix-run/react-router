@@ -12,9 +12,11 @@ title: useOutletContext
 
 Returns the parent route `<Outlet context>`.
 
+
+
 ## Signature
 
 ```tsx
-useOutletContext<Context = unknown>(): Context
+useOutletContext(): Context
 ```
 

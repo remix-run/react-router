@@ -14,15 +14,19 @@ Returns a PathMatch object if the given pattern matches the current URL.
 This is useful for components that need to know "active" state, e.g.
 `<NavLink>`.
 
+
+
 ## Signature
 
 ```tsx
-useMatch<ParamKey extends ParamParseKey<Path>, Path extends string>(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null
+useMatch(pattern): undefined
 ```
 
 ## Params
 
 ### pattern
 
-The pattern to match against the current location
+[modes: framework, data, declarative]
+
+_No documentation_
 

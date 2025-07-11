@@ -10,7 +10,7 @@ title: useResolvedPath
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useResolvedPath.html)
 
-Resolves the pathname of the given `to` value against the current location. Similar to [`useHref`](../hooks/useHref), but returns a `Path` instead of a string.
+Resolves the pathname of the given `to` value against the current location. Similar to [useHref](../hooks/useHref), but returns a [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path) instead of a string.
 
 ```tsx
 import { useResolvedPath } from "react-router";
@@ -27,18 +27,19 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useResolvedPath(to: To, { relative }: {
-    relative?: RelativeRoutingType;
-} = {}): Path
+useResolvedPath(to, __namedParameters): Path
 ```
 
 ## Params
 
 ### to
 
-The path to resolve
+[modes: framework, data, declarative]
 
-### options.relative
+_No documentation_
 
-Defaults to "route" so routing is relative to the route tree.                         Set to "path" to make relative routing operate against path segments.
+### \_\_namedParameters
 
+[modes: framework, data, declarative]
+
+_No documentation_

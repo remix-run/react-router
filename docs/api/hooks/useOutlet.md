@@ -16,12 +16,13 @@ hierarchy. Used internally by `<Outlet>` to render child routes.
 ## Signature
 
 ```tsx
-useOutlet(context?: unknown): React.ReactElement | null
+useOutlet(context): undefined
 ```
 
 ## Params
 
 ### context
 
-The context to pass to the outlet
+[modes: framework, data, declarative]
 
+_No documentation_

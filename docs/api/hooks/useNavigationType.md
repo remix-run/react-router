@@ -13,6 +13,8 @@ title: useNavigationType
 Returns the current navigation action which describes how the router came to
 the current location, either by a pop, push, or replace on the history stack.
 
+
+
 ## Signature
 
 ```tsx

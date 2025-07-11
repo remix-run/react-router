@@ -35,6 +35,5 @@ export default function Invoices() {
 ## Signature
 
 ```tsx
-useActionData<T = any>(): SerializeFrom<T> | undefined
+useActionData(): undefined
 ```
-

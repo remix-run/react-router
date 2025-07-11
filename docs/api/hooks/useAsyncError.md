@@ -10,7 +10,7 @@ title: useAsyncError
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useAsyncError.html)
 
-Returns the rejection value from the closest [`<Await>`](../components/Await).
+Returns the rejection value from the closest [Await](../components/Await).
 
 ```tsx
 import { Await, useAsyncError } from "react-router";
@@ -34,4 +34,3 @@ function ErrorElement() {
 ```tsx
 useAsyncError(): unknown
 ```
-

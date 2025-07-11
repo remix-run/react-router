@@ -12,8 +12,15 @@ title: useRouteLoaderData
 
 Returns the loader data for a given route by route ID.
 
-Route IDs are created automatically. They are simply the path of the route file
-relative to the app folder without the extension.
+```tsx
+import { useRouteLoaderData } from "react-router";
+
+function SomeComponent() {
+  const { user } = useRouteLoaderData("root");
+}
+```
+
+Route IDs are created automatically. They are simply the path of the route file relative to the app folder without the extension.
 
 | Route Filename               | Route ID               |
 | ---------------------------- | ---------------------- |
@@ -21,27 +28,22 @@ relative to the app folder without the extension.
 | `app/routes/teams.tsx`       | `"routes/teams"`       |
 | `app/whatever/teams.$id.tsx` | `"whatever/teams.$id"` |
 
+If you created an ID manually, you can use that instead:
+
 ```tsx
-import { useRouteLoaderData } from "react-router";
-
-function SomeComponent() {
-  const { user } = useRouteLoaderData("root");
-}
-
-// You can also specify your own route ID's manually in your routes.ts file:
 route("/", "containers/app.tsx", { id: "app" }})
-useRouteLoaderData("app");
 ```
 
 ## Signature
 
 ```tsx
-useRouteLoaderData<T = any>(routeId: string): SerializeFrom<T> | undefined
+useRouteLoaderData(routeId): undefined
 ```
 
 ## Params
 
 ### routeId
 
-The ID of the route to return loader data from
+[modes: framework, data]
 
+_No documentation_

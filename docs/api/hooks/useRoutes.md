@@ -10,7 +10,8 @@ title: useRoutes
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRoutes.html)
 
-Hook version of [`<Routes>`](../components/Routes) that uses objects instead of components. These objects have the same properties as the component props.
+Hook version of [Routes](../components/Routes) that uses objects instead of components. These objects have the same properties as the component props.
+
 The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
 
 ```tsx
@@ -40,16 +41,19 @@ function App() {
 ## Signature
 
 ```tsx
-useRoutes(routes: RouteObject[], locationArg?: Partial<Location> | string): React.ReactElement | null
+useRoutes(routes, locationArg): undefined
 ```
 
 ## Params
 
 ### routes
 
-An array of route objects that define the route hierarchy
+[modes: framework, data, declarative]
+
+_No documentation_
 
 ### locationArg
 
-An optional location object or pathname string to use instead of the current location
+[modes: framework, data, declarative]
 
+_No documentation_

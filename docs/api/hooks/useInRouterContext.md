@@ -18,4 +18,3 @@ a component is used within a Router.
 ```tsx
 useInRouterContext(): boolean
 ```
-
