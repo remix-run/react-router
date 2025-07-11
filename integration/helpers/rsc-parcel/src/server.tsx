@@ -1,3 +1,4 @@
+import { parseArgs } from "node:util";
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
@@ -71,7 +72,12 @@ app.use(
   )
 );
 
-const port = parseInt(process.env.RR_PORT || "3000", 10);
+const { values } = parseArgs({
+  options: { p: { type: "string", default: process.env.RR_PORT || "3000" } },
+  allowPositionals: true,
+});
+
+const port = parseInt(values.p, 10);
 app.listen(port, () => {
   console.log(`Server started on http://localhost:${port}`);
 });
