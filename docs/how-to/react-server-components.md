@@ -20,7 +20,7 @@ From the docs:
 >
 > <cite>- [React "Server Components" docs][react-server-components-doc]</cite>
 
-React Router provides a set of APIs for integrating with RSC-native bundlers, allowing you to leverage [Server Components][react-server-components-doc] and [Server Functions][react-server-functions-doc] in your React Router applications.
+React Router provides a set of APIs for integrating with RSC-compatible bundlers, allowing you to leverage [Server Components][react-server-components-doc] and [Server Functions][react-server-functions-doc] in your React Router applications.
 
 ## Quick Start
 
@@ -66,7 +66,7 @@ While you can define components inline, we recommend using the `lazy()` option a
 
 <docs-info>
 
-The [Route Modules][route-module] up until now have been a [Framework Mode][framework-mode] only feature. However, the `lazy` field of the RSC route config expects the same exports as the Route Module exports, unifying the APIs even further.
+The [Route Module API][route-module] up until now has been a [Framework Mode][framework-mode] only feature. However, the `lazy` field of the RSC route config expects the same exports as the Route Module exports, unifying the APIs even further.
 
 </docs-info>
 
@@ -141,7 +141,7 @@ export default async function Home() {
 
 <docs-info>
 
-Server Components can also be returned from your loaders and actions. In general, if you are using RSC to build your application, loaders are primarily useful for things like setting `status` codes or return `redirect`s.
+Server Components can also be returned from your loaders and actions. In general, if you are using RSC to build your application, loaders are primarily useful for things like setting `status` codes or returning a `redirect`.
 
 Using Server Components in loaders can be helpful for incremental adoption of RSC.
 
@@ -163,10 +163,10 @@ export async function updateFavorite(formData: FormData) {
     await removeFavorite(Number(movieId));
   }
 }
-import { updateFavorite } from "./action.ts";
 ```
 
 ```tsx
+import { updateFavorite } from "./action.ts";
 export async function AddToFavoritesForm({
   movieId,
 }: {
@@ -236,7 +236,7 @@ export default function Root() {
 
 ## Configuring RSC with React Router
 
-React Router provides several APIs that allow you to easily integrate with RSC-native bundlers, useful if you are using React Router data mode to make your own [custom framework][custom-framework].
+React Router provides several APIs that allow you to easily integrate with RSC-compatible bundlers, useful if you are using React Router Data Mode to make your own [custom framework][custom-framework].
 
 ### Entry points
 
@@ -342,6 +342,7 @@ import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
 import "../entry.client";
 
+// This needs to be a function so Parcel can add a `bootstrapScript` property.
 export function routes() {
   return [
     {
@@ -426,7 +427,7 @@ import {
   renderToReadableStream,
 } from "react-server-dom-parcel/server.edge";
 
-// Import the generateHTML function from the client environment
+// Import the generateHTML function from the react-client environment
 import { generateHTML } from "./entry.ssr" with { env: "react-client" };
 import { routes } from "./routes/config";
 
@@ -569,6 +570,32 @@ export default defineConfig({
 });
 ```
 
+```tsx filename=src/routes/config.ts
+import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+export function routes() {
+  return [
+    {
+      id: "root",
+      path: "",
+      lazy: () => import("./root/route"),
+      children: [
+        {
+          id: "home",
+          index: true,
+          lazy: () => import("./home/route"),
+        },
+        {
+          id: "about",
+          path: "about",
+          lazy: () => import("./about/route"),
+        },
+      ],
+    },
+  ] satisfies RSCRouteConfig;
+}
+```
+
 #### `entry.ssr.tsx`
 
 The following is a simplified example of a Vite SSR Server.
@@ -580,7 +607,6 @@ import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
   unstable_RSCStaticRouter as RSCStaticRouter,
 } from "react-router";
-import bootstrapScriptContent from "virtual:vite-rsc/bootstrap-script-content";
 
 export async function generateHTML(
   request: Request,
@@ -600,6 +626,11 @@ export async function generateHTML(
         payload.type === "render"
           ? await payload.formState
           : undefined;
+
+      const bootstrapScriptContent =
+        await import.meta.viteRsc.loadBootstrapScriptContent(
+          "index"
+        );
 
       return await renderHTMLToReadableStream(
         <RSCStaticRouter getPayload={getPayload} />,
