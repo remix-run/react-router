@@ -1,5 +1,5 @@
 ---
-title: React Server Components (unstable)
+title: React Server Components
 unstable: true
 ---
 
@@ -17,6 +17,7 @@ React Server Components (RSC) refers generally to an architecture and set of API
 From the docs:
 
 > Server Components are a new type of Component that renders ahead of time, before bundling, in an environment separate from your client app or SSR server.
+>
 > <cite>- [React "Server Components" docs][react-server-components-doc]</cite>
 
 React Router provides a set of APIs for integrating with RSC-native bundlers, allowing you to leverage [Server Components][react-server-components-doc] and [Server Functions][react-server-functions-doc] in your React Router applications.
@@ -27,7 +28,7 @@ The quickest way to get started is with one of our templates.
 
 These templates come with React Router RSC APIs already configured with the respective bundler, offering you out of the box features such as:
 
-- Server Components Routes
+- Server Component Routes
 - Server Side Rendering (SSR)
 - Client Components (via [`"use client"`][use-client-docs] directive)
 - Server Functions (via [`"use server"`][use-server-docs] directive)
@@ -218,12 +219,12 @@ export default function Root() {
 
 This is also the way we would make an entire route a Client Component.
 
-```tsx filename=src/routes/root/route.tsx lines=[6,11]
+```tsx filename=src/routes/root/route.tsx lines=[1,11]
+import { default as ClientRoot } from "./route.client";
 export {
   clientAction,
   clientLoader,
   shouldRevalidate,
-  default as ClientRoot,
 } from "./route.client";
 
 export default function Root() {
@@ -241,7 +242,7 @@ React Router provides several APIs that allow you to easily integrate with RSC-n
 
 React Server Components require 3 things:
 
-1. A server to handle the request and convert the RSC payload into HTML
+1. A server to handle the incoming request, fetch the RSC payload, and convert it into HTML
 2. A React server to generate RSC payloads
 3. A client handler to hydrate the generated HTML and set the `callServer` function to support post-hydration server actions
 
@@ -292,7 +293,7 @@ Relevant APIs:
 
 ### Parcel
 
-See the [Parcel RSC docs][parcel-rsc-doc] for more information.
+See the [Parcel RSC docs][parcel-rsc-doc] for more information. You can also refer to our [Parcel RSC Parcel template][parcel-rsc-template] to see a working version.
 
 In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
 
@@ -537,7 +538,7 @@ createFromReadableStream(getRSCStream()).then(
 
 ### Vite
 
-See the [Vite RSC docs][vite-rsc-doc] for more information.
+See the [Vite RSC docs][vite-rsc-doc] for more information. You can also refer to our [Vite RSC template][vite-rsc-template] to see a working version.
 
 In addition to `react`, `react-dom`, and `react-router`, you'll need the following dependencies:
 
@@ -736,3 +737,5 @@ createFromReadableStream<RSCServerPayload>(
 [rsc-hydrated-router]: ../api/rsc/RSCHydratedRouter
 [express]: https://expressjs.com/
 [node-fetch-server]: https://github.com/mjackson/remix-the-web/tree/main/packages/node-fetch-server
+[parcel-rsc-template]: (https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-parcel)
+[vite-rsc-template]: (https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-vite)
