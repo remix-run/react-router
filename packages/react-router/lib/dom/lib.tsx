@@ -169,16 +169,26 @@ export interface DOMRouterOpts {
  * Create a new data router that manages the application path via `history.pushState`
  * and `history.replaceState`.
  *
+ * @public
  * @category Data Routers
+ * @mode data
+ * @param routes Application routes
+ * @param opts Options
+ * @param opts.basename Application basename
+ * @param opts.unstable_getContext Function to provide the initial `context`
+ * values for all client side navigations/fetches
+ * @param opts.future Future flags to enable for the router
+ * @param opts.hydrationData Hydration data to initialize the router if you
+ * have already performed data loading on the server
+ * @param opts.dataStrategy Override the default data strategy of loading in
+ * parallel. Only intended for advanced usage.
+ * @param opts.patchRoutesOnNavigation Lazily define portions of the route tree
+ * on navigations
+ * @param opts.window Window object override - defaults to the global `window` instance
+ * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createBrowserRouter(
-  /**
-   * Application routes
-   */
   routes: RouteObject[],
-  /**
-   * Router options
-   */
   opts?: DOMRouterOpts
 ): DataRouter {
   return createRouter({
@@ -197,9 +207,25 @@ export function createBrowserRouter(
 }
 
 /**
- * Create a new data router that manages the application path via the URL hash
+ * Create a new data router that manages the application path via the URL hash.
  *
+ * @public
  * @category Data Routers
+ * @mode data
+ * @param routes Application routes
+ * @param opts Options
+ * @param opts.basename Application basename
+ * @param opts.unstable_getContext Function to provide the initial `context`
+ * values for all client side navigations/fetches
+ * @param opts.future Future flags to enable for the router
+ * @param opts.hydrationData Hydration data to initialize the router if you
+ * have already performed data loading on the server
+ * @param opts.dataStrategy Override the default data strategy of loading in
+ * parallel. Only intended for advanced usage.
+ * @param opts.patchRoutesOnNavigation Lazily define portions of the route tree
+ * on navigations
+ * @param opts.window Window object override - defaults to the global `window` instance
+ * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createHashRouter(
   routes: RouteObject[],
@@ -295,9 +321,16 @@ export interface BrowserRouterProps {
 }
 
 /**
- * A `<Router>` for use in web browsers. Provides the cleanest URLs.
+ * A declarative `<Router>` using the browser history API for client side routing.
  *
- * @category Component Routers
+ * @public
+ * @category Declarative Routers
+ * @mode declarative
+ * @param props Props
+ * @param props.basename Application basename
+ * @param props.children {@link Route | `<Route>`} components describing your route configuration
+ * @param props.window Window object override - defaults to the global `window` instance
+ * @returns A declarative router using the browser history API for client side routing.
  */
 export function BrowserRouter({
   basename,
@@ -344,10 +377,17 @@ export interface HashRouterProps {
 }
 
 /**
- * A `<Router>` for use in web browsers. Stores the location in the hash
- * portion of the URL so it is not sent to the server.
+ * A declarative `<Router>` that stores the location in the hash portion of the
+ * URL so it is not sent to the server.
  *
- * @category Component Routers
+ * @public
+ * @category Declarative Routers
+ * @mode declarative
+ * @param props Props
+ * @param props.basename Application basename
+ * @param props.children {@link Route | `<Route>`} components describing your route configuration
+ * @param props.window Window object override - defaults to the global `window` instance
+ * @returns A declarative router using the URL hash for client side routing.
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();

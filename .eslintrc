@@ -21,7 +21,10 @@
     },
     {
       // Only apply JSDoc lint rules to files we auto-generate docs for
-      "files": ["packages/react-router/lib/hooks.tsx"],
+      "files": [
+        "packages/react-router/lib/hooks.tsx",
+        "packages/react-router/lib/dom/lib.tsx"
+      ],
       "plugins": ["jsdoc"],
       "rules": {
         "jsdoc/check-access": "error",

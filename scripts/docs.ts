@@ -77,11 +77,11 @@ type SimplifiedComment = {
 
 const MODES = ["framework", "data", "declarative"] as const;
 const CATEGORIES = [
-  "components",
-  "hooks",
-  "data routers",
-  "declarative routers",
-  "utils",
+  "Components",
+  "Hooks",
+  "Data Routers",
+  "Declarative Routers",
+  "Utils",
 ] as const;
 
 // Read a filename from standard input using the node parseArgs utility
@@ -358,7 +358,10 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
 
   // Parameters section
   if (comment.params && comment.params.length > 0) {
-    markdown += `## Params\n\n`;
+    let heading = comment.params.some((p) => p.name === "props")
+      ? "Props"
+      : "Params";
+    markdown += `## ${heading}\n\n`;
     comment.params.forEach((param, i) => {
       // Only show modes for parameters if they differ from hook-level modes
       // For now, we assume all parameters have the same modes as the hook
@@ -372,6 +375,22 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
         if (!comment.params[i + 1].name.startsWith("options.")) {
           throw new Error(
             "Expected docs for individual options: " + comment.name
+          );
+        }
+        return;
+      }
+      if (param.name === "opts" && description === "Options") {
+        if (!comment.params[i + 1].name.startsWith("opts.")) {
+          throw new Error(
+            "Expected docs for individual options: " + comment.name
+          );
+        }
+        return;
+      }
+      if (param.name === "props" && description === "Props") {
+        if (!comment.params[i + 1].name.startsWith("props.")) {
+          throw new Error(
+            "Expected docs for individual props: " + comment.name
           );
         }
         return;
@@ -417,6 +436,9 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
     throw new Error(`Expected a single category tag: ${name}`);
   }
   let category = categoryTags[0].string as Category;
+  if (!CATEGORIES.includes(category)) {
+    throw new Error(`Invalid @category tag for ${name}: "${category}"`);
+  }
 
   let modes: Mode[] = [...MODES];
   let modeTags = comment.tags.filter((t) => t.type === "mode");
