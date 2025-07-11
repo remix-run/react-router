@@ -935,6 +935,115 @@ implementations.forEach((implementation) => {
       });
     });
 
+    test("Handles error responses from resource routes missing loaders/actions", async ({
+      page,
+      request,
+    }) => {
+      let port = await getPort();
+      stop = await setupRscTest({
+        implementation,
+        port,
+        files: {
+          "src/routes.ts": js`
+            import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+            export const routes = [
+              {
+                id: "root",
+                path: "",
+                lazy: () => import("./routes/root"),
+                children: [
+                  {
+                    id: "home",
+                    index: true,
+                    lazy: () => import("./routes/home"),
+                  },
+                ],
+              },
+              {
+                id: "no-loader-resource",
+                path: "no-loader-resource",
+                lazy: () => import("./routes/no-loader-resource"),
+              },
+              {
+                id: "no-action-resource",
+                path: "no-action-resource",
+                lazy: () => import("./routes/no-action-resource"),
+              },
+            ] satisfies RSCRouteConfig;
+          `,
+          "src/routes/root.tsx": js`
+            import { Outlet } from "react-router";
+            export default function RootRoute() {
+              return (
+                <div>
+                  <h1>Root Route</h1>
+                  <Outlet />
+                </div>
+              );
+            }
+          `,
+          "src/routes/home.tsx": js`
+            export default function HomeRoute() {
+              return (
+                <div>
+                  <h2 data-home>Home Route</h2>
+                </div>
+              );
+            }
+          `,
+          "src/routes/no-loader-resource.tsx": js`
+            // This resource route has no loader, so GET requests should fail
+            export async function action() {
+              return { message: "no-loader-resource action works" };
+            }
+          `,
+          "src/routes/no-action-resource.tsx": js`
+            // This resource route has no action, so POST requests should fail
+            export function loader() {
+              return { message: "no-action-resource loader works" };
+            }
+          `,
+        },
+      });
+
+      const getResponse = await request.get(
+        `http://localhost:${port}/no-loader-resource`
+      );
+      expect(getResponse?.status()).toBe(400);
+      expect(await getResponse?.text()).toBe(
+        'Error: You made a GET request to "/no-loader-resource" but did not provide a `loader` for route "no-loader-resource", so there is no way to handle the request.'
+      );
+
+      const postResponse = await request.post(
+        `http://localhost:${port}/no-action-resource`
+      );
+      expect(postResponse?.status()).toBe(405);
+      expect(await postResponse?.text()).toBe(
+        'Error: You made a POST request to "/no-action-resource" but did not provide an `action` for route "no-action-resource", so there is no way to handle the request.'
+      );
+
+      const postWithActionResponse = await request.post(
+        `http://localhost:${port}/no-loader-resource`
+      );
+      expect(postWithActionResponse?.status()).toBe(200);
+      expect(await postWithActionResponse?.json()).toEqual({
+        message: "no-loader-resource action works",
+      });
+
+      const getWithLoaderResponse = await request.get(
+        `http://localhost:${port}/no-action-resource`
+      );
+      expect(getWithLoaderResponse?.status()).toBe(200);
+      expect(await getWithLoaderResponse?.json()).toEqual({
+        message: "no-action-resource loader works",
+      });
+
+      // Ensure this is using RSC
+      await page.goto(`http://localhost:${port}/`);
+      validateRSCHtml(await page.content());
+    });
+
     test.describe("Server Actions", () => {
       test("Supports React Server Functions", async ({ page }) => {
         let port = await getPort();
