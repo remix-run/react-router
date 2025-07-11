@@ -35,14 +35,26 @@ These templates come with React Router RSC APIs already configured with the resp
 
 **Parcel Template**
 
+The parcel template uses the official React `react-server-dom-parcel` plugin.
+
 ```shellscript
 npx create-react-router-app@latest --template=unstable_rsc-parcel
 ```
 
 **Vite Template**
 
+The vite template uses the experimental Vite `@vitejs/plugin-rsc` plugin.
+
 ```shellscript
 npx create-react-router-app@latest --template=unstable_rsc-vite
+```
+
+**RSC + SPA (no SSR) Template**
+
+For those who like alphabet soup.
+
+```shellscript
+npx create-react-router-app@latest --template=unstable_rsc-vite-spa
 ```
 
 ## Using RSC with React Router
@@ -238,9 +250,11 @@ export default function Root() {
 
 React Router provides several APIs that allow you to easily integrate with RSC-compatible bundlers, useful if you are using React Router Data Mode to make your own [custom framework][custom-framework].
 
+The following steps show how to setup a React Router application to use Server Components (RSC) to server-render (SSR) pages and hydrate them for single-page app (SPA) navigations. You don't have to use SSR (or even client-side hydration) if you don't want to. You can also leverage the HTML generation for Static Site Generation (SSG) or Incremental Static Regeneration (ISR) if you prefer. This guide is meant merely to explain how to wire up all the different APIs for a typically RSC-based application.
+
 ### Entry points
 
-React Server Components require 3 things:
+Besides our [route definitions](#configuring-routes), we will need to configure the following:
 
 1. A server to handle the incoming request, fetch the RSC payload, and convert it into HTML
 2. A React server to generate RSC payloads
@@ -251,6 +265,10 @@ The following naming conventions have been chosen for familiarity and simplicity
 See the relevant bundler documentation below for specific code examples for each of the following entry points.
 
 These examples all use [express][express] and [@mjackson/node-fetch-server][node-fetch-server] for the server and request handling.
+
+**Routes**
+
+See [Configuring Routes](#configuring-routes).
 
 **Server**
 
