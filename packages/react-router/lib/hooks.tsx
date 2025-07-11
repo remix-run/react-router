@@ -65,9 +65,6 @@ import type { SerializeFrom } from "./types/route-data";
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @param to The path to resolve
  * @param options Options
  * @param options.relative Defaults to "route" so routing is relative to the route tree.
@@ -138,9 +135,6 @@ export function useInRouterContext(): boolean {
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @returns The current location object
  */
 export function useLocation(): Location {
@@ -160,9 +154,6 @@ export function useLocation(): Location {
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @returns The current navigation type (Action.Pop, Action.Push, or Action.Replace)
  */
 export function useNavigationType(): NavigationType {
@@ -176,9 +167,6 @@ export function useNavigationType(): NavigationType {
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @param pattern The pattern to match against the current location
  * @returns The path match object if the pattern matches, null otherwise
  */
@@ -318,9 +306,6 @@ function useIsomorphicLayoutEffect(
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @returns A navigate function for programmatic navigation
  */
 export function useNavigate(): NavigateFunction {
@@ -408,9 +393,6 @@ const OutletContext = React.createContext<unknown>(null);
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @returns The context value passed to the Outlet
  */
 export function useOutletContext<Context = unknown>(): Context {
@@ -423,9 +405,6 @@ export function useOutletContext<Context = unknown>(): Context {
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @param context The context to pass to the outlet
  * @returns The child route element or null if no child routes match
  */
@@ -538,9 +517,6 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @returns An object containing the dynamic route parameters
  */
 export function useParams<
@@ -569,9 +545,6 @@ export function useParams<
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @param to The path to resolve
  * @param options Options
  * @param options.relative Defaults to "route" so routing is relative to the route tree.
@@ -627,9 +600,6 @@ export function useResolvedPath(
  *
  * @public
  * @category Hooks
- * @mode framework
- * @mode data
- * @mode declarative
  * @param routes An array of route objects that define the route hierarchy
  * @param locationArg An optional location object or pathname string to use instead of the current location
  * @returns A React element to render the matched route, or `null` if no routes matched
