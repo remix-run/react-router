@@ -389,7 +389,8 @@ This release contains the (currently `unstable_`) RSC APIs for use with RSC in D
   };
   let Stub = createRoutesStub(routes, context);
 
-  // If you have opted into middleware, you should now pass an instantiated `unstable_routerContextProvider` instead of a `getContext` factory function.
+  // If you have opted into middleware, you should now pass an instantiated
+  // `unstable_routerContextProvider` instead of a `getContext` factory function.
   let context = new unstable_RouterContextProvider();
   context.set(SomeContext, someValue);
   let Stub = createRoutesStub(routes, context);
