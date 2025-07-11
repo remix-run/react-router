@@ -328,7 +328,7 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
 
   // Generate reference documentation link from @reference tag or fallback to default
   if (comment.reference) {
-    markdown += `[Reference Documentation ↗](https://api.reactrouter.com/v7/${comment.reference})\n\n`;
+    markdown += `[Reference Documentation ↗](${comment.reference})\n\n`;
   }
 
   // Clean up HTML tags from summary and convert to plain text
