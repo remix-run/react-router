@@ -1,10 +1,15 @@
 name: 📚 Docs
 
 on:
+  push:
+    branches:
+      # Enable main after the next release beyond `7.7.0`
+      # - main
+      - dev
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch to generate docs for"
+        description: "Branch to generate docs for (usually dev)"
         required: true
       api:
         description: "API Names to generate docs for"
