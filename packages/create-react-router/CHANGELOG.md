@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## 7.7.0-pre.0
+
+### Minor Changes
+
+- Add Deno as a supported and detectable package manager. Note that this detection will only work with Deno versions 2.0.5 and above. If you are using an older version version of Deno then you must specify the --package-manager CLI flag set to `deno`. ([#12327](https://github.com/remix-run/react-router/pull/12327))
+
 ## 7.6.3
 
 _No changes_
