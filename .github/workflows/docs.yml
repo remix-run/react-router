@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
+  docs:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
@@ -38,6 +38,9 @@ jobs:
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
+
+      - name: 🏗 Build
+        run: pnpm build
 
       - name: 📚 Generate Typedoc Docs
         run: pnpm run docs
