@@ -47,22 +47,22 @@ jobs:
 
       - name: 📚 Generate Markdown Docs (for all APIs)
         if: github.event.inputs.api == ''
-        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx
+        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write
 
       - name: 📚 Generate Markdown Docs (for specific APIs)
         if: github.event.inputs.api != ''
-        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --api ${{ github.event.inputs.api }}
+        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write --api ${{ github.event.inputs.api }}
 
-      # - name: 💪 Commit
-      #   run: |
-      #     git config --local user.email "hello@remix.run"
-      #     git config --local user.name "Remix Run Bot"
+      - name: 💪 Commit
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
 
-      #     git add .
-      #     if [ -z "$(git status --porcelain)" ]; then
-      #       echo "💿 no docs changed"
-      #       exit 0
-      #     fi
-      #     git commit -m "chore: generate markdown docs from jsdocs"
-      #     git push
-      #     echo "💿 pushed docs changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "💿 no docs changed"
+            exit 0
+          fi
+          git commit -m "chore: generate markdown docs from jsdocs"
+          git push
+          echo "💿 pushed docs changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
