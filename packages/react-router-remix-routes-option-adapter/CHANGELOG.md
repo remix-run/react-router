@@ -1,5 +1,16 @@
 # `@react-router/remix-config-routes-adapter`
 
+## 7.7.0-pre.0
+
+### Minor Changes
+
+- Export `DefineRouteFunction` type alongside `DefineRoutesFunction` ([#13945](https://github.com/remix-run/react-router/pull/13945))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/dev@7.7.0-pre.0`
+
 ## 7.6.3
 
 ### Patch Changes
