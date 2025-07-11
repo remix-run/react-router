@@ -946,16 +946,8 @@ async function getRSCRouteMatch(
         undefined;
   let error: unknown = undefined;
 
-  // FIXME: Is this logic right?  We don't want to take any error - only the
-  // error pegged to our route because the staticHandler should have done the
-  // bubbling for us (on document requests at least)?
   if (ErrorBoundary && staticContext.errors) {
-    for (const match of [...staticContext.matches].reverse()) {
-      if (match.route.id in staticContext.errors) {
-        error = staticContext.errors[match.route.id];
-        break;
-      }
-    }
+    error = staticContext.errors[match.route.id];
   }
   const errorElement = ErrorBoundary
     ? React.createElement(
