@@ -894,14 +894,12 @@ async function getRenderPayload(
     })
   );
 
-  let patchesPromise = !isDataRequest
-    ? getAdditionalRoutePatches(
-        [staticContext.location.pathname],
-        routes,
-        basename,
-        staticContext.matches.map((m) => m.route.id)
-      )
-    : undefined;
+  let patchesPromise = getAdditionalRoutePatches(
+    [staticContext.location.pathname],
+    routes,
+    basename,
+    staticContext.matches.map((m) => m.route.id)
+  );
 
   let [matches, patches] = await Promise.all([matchesPromise, patchesPromise]);
 
