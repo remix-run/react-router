@@ -615,24 +615,26 @@ let isHydrated = false;
  */
 export type ScriptsProps = Omit<
   React.HTMLProps<HTMLScriptElement>,
-  | "children"
   | "async"
+  | "children"
+  | "dangerouslySetInnerHTML"
   | "defer"
   | "src"
   | "type"
   | "noModule"
-  | "dangerouslySetInnerHTML"
   | "suppressHydrationWarning"
 > & {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
-   * attribute to render on the `<script>` element
+   * attribute to render on [the `<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
    */
   nonce?: string | undefined;
 };
 
 /**
-  Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.
+  Renders the client runtime of your app. It should be rendered inside the
+  [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/body)
+  of the document.
 
   ```tsx
   import { Scripts } from "react-router";

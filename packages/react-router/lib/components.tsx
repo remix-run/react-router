@@ -144,7 +144,8 @@ export interface MemoryRouterOpts {
    */
   basename?: string;
   /**
-   * Function to provide the initial context values for all client side navigations/fetches
+   * Function to provide the initial context values for all client side
+   * navigations/fetches
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
   /**
@@ -157,11 +158,11 @@ export interface MemoryRouterOpts {
    */
   hydrationData?: HydrationState;
   /**
-   * Initial entires in the in-memory history stack
+   * Initial entries in the in-memory history stack
    */
   initialEntries?: InitialEntry[];
   /**
-   * Index of `initialEntries` the application should initialize to
+   * Index of {@link initialEntries} the application should initialize to
    */
   initialIndex?: number;
   /**
@@ -176,8 +177,9 @@ export interface MemoryRouterOpts {
 }
 
 /**
- * Create a new data router that manages the application path using an in-memory
- * history stack.  Useful for non-browser environments without a DOM API.
+ * Create a new {@link DataRouter} that manages the application path using an
+ * in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * stack. Useful for non-browser environments without a DOM API.
  *
  * @public
  * @category Data Routers
@@ -185,14 +187,14 @@ export interface MemoryRouterOpts {
  * @param routes Application routes
  * @param opts Options
  * @param {MemoryRouterOpts.basename} opts.basename n/a
- * @param {MemoryRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {MemoryRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {MemoryRouterOpts.future} opts.future n/a
+ * @param {MemoryRouterOpts.unstable_getContext} opts.unstable_getContext n/a
  * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
  * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
- * @param {MemoryRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {MemoryRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
- * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
+ * @returns An initialized {@link DataRouter} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createMemoryRouter(
   routes: RouteObject[],
@@ -245,7 +247,7 @@ class Deferred<T> {
  */
 export interface RouterProviderProps {
   /**
-   * The data router instance to use for navigation and data fetching.
+   * The {@link DataRouter} instance to use for navigation and data fetching.
    */
   router: DataRouter;
   /**
@@ -261,8 +263,8 @@ export interface RouterProviderProps {
 }
 
 /**
- * Render the UI for the given data router. Should typically be at the
- * top of an app's element tree.
+ * Render the UI for the given {@link DataRouter}. This component should
+ * typically be at the top of an app's element tree.
  *
  * @example
  * import { createBrowserRouter } from "react-router";
@@ -278,8 +280,8 @@ export interface RouterProviderProps {
  * @category Data Routers
  * @mode data
  * @param props Props
- * @param {RouterProviderProps.router} props.router n/a
  * @param {RouterProviderProps.flushSync} props.flushSync n/a
+ * @param {RouterProviderProps.router} props.router n/a
  * @returns React element for the rendered router
  */
 export function RouterProvider({
@@ -562,13 +564,13 @@ export interface MemoryRouterProps {
    */
   initialEntries?: InitialEntry[];
   /**
-   * Index of `initialEntries` the application should initialize to
+   * Index of {@link initialEntries} the application should initialize to
    */
   initialIndex?: number;
 }
 
 /**
- * A declarative `<Router>` that stores all entries in memory.
+ * A declarative {@link Router | `<Router>`} that stores all entries in memory.
  *
  * @public
  * @category Declarative Routers
@@ -578,7 +580,7 @@ export interface MemoryRouterProps {
  * @param {MemoryRouterProps.children} props.children n/a
  * @param {MemoryRouterProps.initialEntries} props.initialEntries n/a
  * @param {MemoryRouterProps.initialIndex} props.initialIndex n/a
- * @returns A declarative router using the browser history API for client side routing.
+ * @returns A declarative in memory router for client side routing.
  */
 export function MemoryRouter({
   basename,
@@ -625,29 +627,31 @@ export function MemoryRouter({
  */
 export interface NavigateProps {
   /**
-   * The path to navigate to. This can be a string or an object
+   * The path to navigate to. This can be a string or a {@link Path} object
    */
   to: To;
   /**
-   * Whether to replace the current entry in the history stack
+   * Whether to replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+   * stack
    */
   replace?: boolean;
   /**
-   * State to pass to the new location to store in [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state).
+   * State to pass to the new {@link Location} to store in [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state).
    */
   state?: any;
   /**
-   * How to interpret relative routing in the `to` prop. See {@link RelativeRoutingType}.
+   * How to interpret relative routing in the {@link to} prop.
+   * See {@link RelativeRoutingType}.
    */
   relative?: RelativeRoutingType;
 }
 
 /**
- * A component-based version of {@link useNavigate} to use in a [`React.Component
- * Class`](https://reactjs.org/docs/react-component.html) where hooks are not
- * able to be used.
+ * A component-based version of {@link useNavigate} to use in a
+ * [`React.Component` class](https://react.dev/reference/react/Component) where
+ * hooks cannot be used.
  *
- * It's recommended to avoid using this component in favor of {@link useNavigate}
+ * It's recommended to avoid using this component in favor of {@link useNavigate}.
  *
  * @example
  * <Navigate to="/tasks" />
@@ -655,10 +659,10 @@ export interface NavigateProps {
  * @public
  * @category Components
  * @param props Props
- * @param {NavigateProps.to} props.to n/a
+ * @param {NavigateProps.relative} props.relative n/a
  * @param {NavigateProps.replace} props.replace n/a
  * @param {NavigateProps.state} props.state n/a
- * @param {NavigateProps.relative} props.relative n/a
+ * @param {NavigateProps.to} props.to n/a
  * @returns {void}
  *
  */
@@ -710,7 +714,8 @@ export function Navigate({
  */
 export interface OutletProps {
   /**
-   * Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
+   * Provides a context value to the element tree below the outlet. Use when
+   * the parent route needs to provide values to child routes.
    *
    * ```tsx
    * <Outlet context={myContextValue} />
@@ -722,7 +727,8 @@ export interface OutletProps {
 }
 
 /**
- * Renders the matching child route of a parent route or nothing if no child route matches.
+ * Renders the matching child route of a parent route or nothing if no child
+ * route matches.
  *
  * @example
  * import { Outlet } from "react-router";
@@ -740,7 +746,7 @@ export interface OutletProps {
  * @category Components
  * @param props Props
  * @param {OutletProps.context} props.context n/a
- * @returns React element for the rendered outlet or null if no child route matches.
+ * @returns React element for the rendered outlet or `null` if no child route matches.
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
@@ -751,37 +757,38 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
  */
 export interface PathRouteProps {
   /**
-   * Whether the path should be case sensitive. Defaults to `false`.
+   * Whether the path should be case-sensitive. Defaults to `false`.
    */
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   /**
-   * The path pattern to match. If unspecified or empty then this becomes a layout route.
+   * The path pattern to match. If unspecified or empty, then this becomes a
+   * layout route.
    */
   path?: NonIndexRouteObject["path"];
   /**
-   * The unique identifier for this route (for use with Data routers)
+   * The unique identifier for this route (for use with {@link DataRouter}s)
    */
   id?: NonIndexRouteObject["id"];
   /**
    * A function that returns a promise that resolves to the route object.
    * Used for code-splitting routes.
-   * See [`lazy`](../../../start/data/route-object#lazy).
+   * See [`lazy`](../../start/data/route-object#lazy).
    */
   lazy?: LazyRouteFunction<NonIndexRouteObject>;
   /**
    * The route loader.
-   * See [`loader`](../../../start/data/route-object#loader).
+   * See [`loader`](../../start/data/route-object#loader).
    */
   loader?: NonIndexRouteObject["loader"];
   /**
    * The route action.
-   * See [`action`](../../../start/data/route-object#action).
+   * See [`action`](../../start/data/route-object#action).
    */
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
    */
   shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
   /**
@@ -789,7 +796,7 @@ export interface PathRouteProps {
    */
   handle?: NonIndexRouteObject["handle"];
   /**
-   * Whether or not this is an index route.
+   * Whether this is an index route.
    */
   index?: false;
   /**
@@ -798,32 +805,32 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   /**
    * The React element to render when this Route matches.
-   * Mutually exclusive with `Component`.
+   * Mutually exclusive with {@link Component}.
    */
   element?: React.ReactNode | null;
   /**
    * The React element to render while this router is loading data.
-   * Mutually exclusive with `HydrateFallback`.
+   * Mutually exclusive with {@link HydrateFallback}.
    */
   hydrateFallbackElement?: React.ReactNode | null;
   /**
    * The React element to render at this route if an error occurs.
-   * Mutually exclusive with `ErrorBoundary`.
+   * Mutually exclusive with {@link ErrorBoundary}.
    */
   errorElement?: React.ReactNode | null;
   /**
    * The React Component to render when this route matches.
-   * Mutually exclusive with `element`.
+   * Mutually exclusive with {@link element}.
    */
   Component?: React.ComponentType | null;
   /**
    * The React Component to render while this router is loading data.
-   * Mutually exclusive with `hydrateFallbackElement`.
+   * Mutually exclusive with {@link hydrateFallbackElement}.
    */
   HydrateFallback?: React.ComponentType | null;
   /**
    * The React Component to render at this route if an error occurs.
-   * Mutually exclusive with `errorElement`.
+   * Mutually exclusive with {@link errorElement}.
    */
   ErrorBoundary?: React.ComponentType | null;
 }
@@ -838,37 +845,38 @@ export interface LayoutRouteProps extends PathRouteProps {}
  */
 export interface IndexRouteProps {
   /**
-   * Whether the path should be case sensitive. Defaults to `false`.
+   * Whether the path should be case-sensitive. Defaults to `false`.
    */
   caseSensitive?: IndexRouteObject["caseSensitive"];
   /**
-   * The path pattern to match. If unspecified or empty then this becomes a layout route.
+   * The path pattern to match. If unspecified or empty, then this becomes a
+   * layout route.
    */
   path?: IndexRouteObject["path"];
   /**
-   * The unique identifier for this route (for use with Data routers)
+   * The unique identifier for this route (for use with {@link DataRouter}s)
    */
   id?: IndexRouteObject["id"];
   /**
    * A function that returns a promise that resolves to the route object.
    * Used for code-splitting routes.
-   * See [`lazy`](../../../start/data/route-object#lazy).
+   * See [`lazy`](../../start/data/route-object#lazy).
    */
   lazy?: LazyRouteFunction<IndexRouteObject>;
   /**
    * The route loader.
-   * See [`loader`](../../../start/data/route-object#loader).
+   * See [`loader`](../../start/data/route-object#loader).
    */
   loader?: IndexRouteObject["loader"];
   /**
    * The route action.
-   * See [`action`](../../../start/data/route-object#action).
+   * See [`action`](../../start/data/route-object#action).
    */
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
    */
   shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
   /**
@@ -876,7 +884,7 @@ export interface IndexRouteProps {
    */
   handle?: IndexRouteObject["handle"];
   /**
-   * Whether or not this is an index route.
+   * Whether this is an index route.
    */
   index: true;
   /**
@@ -885,32 +893,32 @@ export interface IndexRouteProps {
   children?: undefined;
   /**
    * The React element to render when this Route matches.
-   * Mutually exclusive with `Component`.
+   * Mutually exclusive with {@link Component}.
    */
   element?: React.ReactNode | null;
   /**
    * The React element to render while this router is loading data.
-   * Mutually exclusive with `HydrateFallback`.
+   * Mutually exclusive with {@link HydrateFallback}.
    */
   hydrateFallbackElement?: React.ReactNode | null;
   /**
    * The React element to render at this route if an error occurs.
-   * Mutually exclusive with `ErrorBoundary`.
+   * Mutually exclusive with {@link ErrorBoundary}.
    */
   errorElement?: React.ReactNode | null;
   /**
    * The React Component to render when this route matches.
-   * Mutually exclusive with `element`.
+   * Mutually exclusive with {@link element}.
    */
   Component?: React.ComponentType | null;
   /**
    * The React Component to render while this router is loading data.
-   * Mutually exclusive with `hydrateFallbackElement`.
+   * Mutually exclusive with {@link hydrateFallbackElement}.
    */
   HydrateFallback?: React.ComponentType | null;
   /**
    * The React Component to render at this route if an error occurs.
-   * Mutually exclusive with `errorElement`.
+   * Mutually exclusive with {@link errorElement}.
    */
   ErrorBoundary?: React.ComponentType | null;
 }
@@ -955,22 +963,22 @@ export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
  * @public
  * @category Components
  * @param props Props
- * @param {PathRouteProps.caseSensitive} props.caseSensitive n/a
- * @param {PathRouteProps.path} props.path n/a
- * @param {PathRouteProps.id} props.id n/a
- * @param {PathRouteProps.lazy} props.lazy n/a
- * @param {PathRouteProps.loader} props.loader n/a
  * @param {PathRouteProps.action} props.action n/a
- * @param {PathRouteProps.shouldRevalidate} props.shouldRevalidate n/a
- * @param {PathRouteProps.handle} props.handle n/a
- * @param {PathRouteProps.index} props.index n/a
+ * @param {PathRouteProps.caseSensitive} props.caseSensitive n/a
+ * @param {PathRouteProps.Component} props.Component n/a
  * @param {PathRouteProps.children} props.children n/a
  * @param {PathRouteProps.element} props.element n/a
- * @param {PathRouteProps.hydrateFallbackElement} props.hydrateFallbackElement n/a
- * @param {PathRouteProps.errorElement} props.errorElement n/a
- * @param {PathRouteProps.Component} props.Component n/a
- * @param {PathRouteProps.HydrateFallback} props.HydrateFallback n/a
  * @param {PathRouteProps.ErrorBoundary} props.ErrorBoundary n/a
+ * @param {PathRouteProps.errorElement} props.errorElement n/a
+ * @param {PathRouteProps.handle} props.handle n/a
+ * @param {PathRouteProps.HydrateFallback} props.HydrateFallback n/a
+ * @param {PathRouteProps.hydrateFallbackElement} props.hydrateFallbackElement n/a
+ * @param {PathRouteProps.id} props.id n/a
+ * @param {PathRouteProps.index} props.index n/a
+ * @param {PathRouteProps.lazy} props.lazy n/a
+ * @param {PathRouteProps.loader} props.loader n/a
+ * @param {PathRouteProps.path} props.path n/a
+ * @param {PathRouteProps.shouldRevalidate} props.shouldRevalidate n/a
  * @returns {void}
  */
 export function Route(props: RouteProps): React.ReactElement | null {
@@ -995,12 +1003,12 @@ export interface RouterProps {
   children?: React.ReactNode;
   /**
    * The location to match against. Defaults to the current location.
-   * This can be a string or an object with `pathname`, `search`, `hash`, `state`, and `key`.
+   * This can be a string or a {@link Location} object.
    */
   location: Partial<Location> | string;
   /**
    * The type of navigation that triggered this location change.
-   * Defaults to `NavigationType.Pop`.
+   * Defaults to {@link NavigationType.Pop}.
    */
   navigationType?: NavigationType;
   /**
@@ -1019,8 +1027,8 @@ export interface RouterProps {
  * Provides location context for the rest of the app.
  *
  * Note: You usually won't render a `<Router>` directly. Instead, you'll render a
- * router that is more specific to your environment such as a `<BrowserRouter>`
- * in web browsers or a `<StaticRouter>` for server rendering.
+ * router that is more specific to your environment such as a {@link BrowserRouter}
+ * in web browsers or a {@link ServerRouter} for server rendering.
  *
  * @public
  * @category Declarative Routers
@@ -1032,7 +1040,8 @@ export interface RouterProps {
  * @param {RouterProps.navigationType} props.navigationType n/a
  * @param {RouterProps.navigator} props.navigator n/a
  * @param {RouterProps.static} props.static n/a
- * @returns React element for the rendered router or null if the location does not match the basename
+ * @returns React element for the rendered router or `null` if the location does
+ * not match the {@link props.basename}
  */
 export function Router({
   basename: basenameProp = "/",
@@ -1119,18 +1128,19 @@ export interface RoutesProps {
    */
   children?: React.ReactNode;
   /**
-   * The location to match against. Defaults to the current location.
+   * The {@link Location} to match against. Defaults to the current location.
    */
   location?: Partial<Location> | string;
 }
 
 /**
- * Renders a branch of {@link Route | `<Routes>`} that best matches the current
- * location. Note that these routes do not participate in data loading, actions,
- * code splitting, or any other route module features.
+ * Renders a branch of {@link Route | `<Route>`s} that best matches the current
+ * location. Note that these routes do not participate in [data loading](../../start/framework/route-module#loader),
+ * [`action`](../../start/framework/route-module#action), code splitting, or
+ * any other [route module](../../start/framework/route-module) features.
  *
  * @example
- * import { Routes, Route } from "react-router";
+ * import { Route, Routes } from "react-router";
  *
  * <Routes>
  *   <Route index element={<StepOne />} />
@@ -1143,7 +1153,7 @@ export interface RoutesProps {
  * @param props Props
  * @param {RoutesProps.children} props.children n/a
  * @param {RoutesProps.location} props.location n/a
- * @returns React element for the rendered routes or null if no route matches
+ * @returns React element for the rendered routes or `null` if no route matches
  */
 export function Routes({
   children,
@@ -1186,7 +1196,8 @@ export interface AwaitProps<Resolve> {
   children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
-   * The error element renders instead of the children when the promise rejects.
+   * The error element renders instead of the `children` when the [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+   * rejects.
    *
    * ```tsx
    * <Await
@@ -1214,17 +1225,19 @@ export interface AwaitProps<Resolve> {
    * }
    * ```
    *
-   * If you do not provide an errorElement, the rejected value will bubble up to
-   * the nearest route-level `ErrorBoundary` and be accessible via the
-   * {@link useRouteError} hook.
+   * If you do not provide an `errorElement`, the rejected value will bubble up
+   * to the nearest route-level [`ErrorBoundary`](../../start/framework/route-module#errorboundary)
+   * and be accessible via the {@link useRouteError} hook.
    */
   errorElement?: React.ReactNode;
 
   /**
-   * Takes a promise returned from a `loader` to be resolved and rendered.
+   * Takes a [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+   * returned from a [`loader`](../../start/framework/route-module#loader) to be
+   * resolved and rendered.
    *
-   * ```jsx
-   * import { useLoaderData, Await } from "react-router";
+   * ```tsx
+   * import { Await, useLoaderData } from "react-router";
    *
    * export async function loader() {
    *   let reviews = getReviews(); // not awaited
@@ -1264,12 +1277,12 @@ export interface AwaitProps<Resolve> {
 /**
  * Used to render promise values with automatic error handling.
  *
- * **Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
+ * **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
  *
  * @example
  * import { Await, useLoaderData } from "react-router";
  *
- * export function loader() {
+ * export async function loader() {
  *   // not awaited
  *   const reviews = getReviews();
  *   // awaited (blocks the transition)
@@ -1439,8 +1452,8 @@ function ResolveAwait({
  * @category Utils
  * @mode data
  * @param children The React children to convert into a route config
- * @param parentPath The path of the parent route, used to generate unique IDs
- * @returns An array of route objects that can be used with a data router
+ * @param parentPath The path of the parent route, used to generate unique IDs.
+ * @returns An array of {@link RouteObject}s that can be used with a {@link DataRouter}
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,
@@ -1539,17 +1552,17 @@ export function createRoutesFromChildren(
  * @param parentPath The path of the parent route, used to generate unique IDs.
  * This is used for internal recursion and is not intended to be used by the
  * application developer.
- * @returns An array of route objects that can be used with a data router
+ * @returns An array of {@link RouteObject}s that can be used with a {@link DataRouter}
  */
 export let createRoutesFromElements = createRoutesFromChildren;
 
 /**
- * Renders the result of `matchRoutes()` into a React element.
+ * Renders the result of {@link matchRoutes} into a React element.
  *
  * @public
  * @category Utils
- * @param matches The array of route matches to render
- * @returns A React element that renders the matched routes, or null if no matches
+ * @param matches The array of {@link RouteMatch | route matches} to render
+ * @returns A React element that renders the matched routes or `null` if no matches
  */
 export function renderMatches(
   matches: RouteMatch[] | null

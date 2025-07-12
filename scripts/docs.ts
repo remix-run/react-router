@@ -41,11 +41,7 @@ type ParsedComment = {
   line: number;
   codeStart: number;
   code: string;
-  ctx:
-    | {
-        name: string;
-      }
-    | false;
+  ctx: { name: string } | false;
 };
 
 export type GetArrayElementType<T extends readonly any[]> =
