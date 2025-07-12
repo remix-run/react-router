@@ -22,7 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useResolvedPath.html)
 
-Resolves the pathname of the given `to` value against the current location. Similar to [`useHref`](../hooks/useHref), but returns a [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) instead of a string.
+Resolves the pathname of the given `to` value against the current
+[`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html). Similar to [`useHref`](../hooks/useHref), but returns a
+[`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) instead of a string.
 
 ```tsx
 import { useResolvedPath } from "react-router";
@@ -52,9 +54,9 @@ The path to resolve
 
 ### options.relative
 
-Defaults to "route" so routing is relative to the route tree.                         Set to "path" to make relative routing operate against path segments.
+Defaults to `"route"` so routing is relative to the route tree.                         Set to `"path"` to make relative routing operate against path segments.
 
 ## Returns
 
-The resolved `Path` object with pathname, search, and hash
+The resolved [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object with `pathname`, `search`, and `hash`
 

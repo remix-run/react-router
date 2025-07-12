@@ -22,8 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useNavigationType.html)
 
-Returns the current navigation action which describes how the router came to
-the current location, either by a pop, push, or replace on the history stack.
+Returns the current [`Navigation`](https://api.reactrouter.com/v7/types/react_router.Navigation.html) action which describes how the router
+came to the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html), either by a pop, push, or replace on
+the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack.
 
 ## Signature
 
@@ -33,5 +34,6 @@ function useNavigationType(): NavigationType
 
 ## Returns
 
-The current navigation type (Action.Pop, Action.Push, or Action.Replace)
+The current [`Navigation`](https://api.reactrouter.com/v7/types/react_router.Navigation.html) type (`Action.Pop`,
+`Action.Push`, or `Action.Replace`)
 

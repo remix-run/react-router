@@ -34,9 +34,11 @@ export function SomeComponent() {
 }
 ```
 
-### SetSearchParams Function
+### `setSearchParams` function
 
-The second element of the tuple is a function that can be used to update the search params. It accepts the same types as `defaultInit` and will cause a navigation to the new URL.
+The second element of the tuple is a function that can be used to update the
+search params. It accepts the same types as `defaultInit` and will
+cause a navigation to the new URL.
 
 ```tsx
 let [searchParams, setSearchParams] = useSearchParams();
@@ -44,7 +46,7 @@ let [searchParams, setSearchParams] = useSearchParams();
 // a search param string
 setSearchParams("?tab=1");
 
-// a short-hand object
+// a shorthand object
 setSearchParams({ tab: "1" });
 
 // object keys can be arrays for multiple values on the key
@@ -53,11 +55,11 @@ setSearchParams({ brand: ["nike", "reebok"] });
 // an array of tuples
 setSearchParams([["tab", "1"]]);
 
-// a URLSearchParams object
+// a `URLSearchParams` object
 setSearchParams(new URLSearchParams("?tab=1"));
 ```
 
-It also supports a function callback like `setState`:
+It also supports a function callback like React's [`setState`](https://react.dev/reference/react/useState#setstate):
 
 ```tsx
 setSearchParams((searchParams) => {
@@ -68,7 +70,9 @@ setSearchParams((searchParams) => {
 
 ### Notes
 
-Note that `searchParams` is a stable reference, so you can reliably use it as a dependency in `useEffect` hooks.
+Note that `searchParams` is a stable reference, so you can reliably use it
+as a dependency in React's [`useEffect`](https://react.dev/reference/react/useEffect)
+hooks.
 
 ```tsx
 useEffect(() => {
@@ -76,7 +80,10 @@ useEffect(() => {
 }, [searchParams]);
 ```
 
-However, this also means it's mutable. If you change the object without calling `setSearchParams`, its values will change between renders if some other state causes the component to re-render and URL will not reflect the values.
+However, this also means it's mutable. If you change the object without
+calling `setSearchParams`, its values will change between renders if some
+other state causes the component to re-render and URL will not reflect the
+values.
 
 ## Signature
 
@@ -91,13 +98,14 @@ function useSearchParams(defaultInit?: URLSearchParamsInit): [
 
 ### defaultInit
 
-You can initialize the search params with a default value, though it **will not** change the URL on the first render.
+You can initialize the search params with a default value, though it **will
+not** change the URL on the first render.
 
 ```tsx
 // a search param string
 useSearchParams("?tab=1");
 
-// a short-hand object
+// a shorthand object
 useSearchParams({ tab: "1" });
 
 // object keys can be arrays for multiple values on the key
@@ -106,7 +114,7 @@ useSearchParams({ brand: ["nike", "reebok"] });
 // an array of tuples
 useSearchParams([["tab", "1"]]);
 
-// a URLSearchParams object
+// a `URLSearchParams` object
 useSearchParams(new URLSearchParams("?tab=1"));
 ```
 

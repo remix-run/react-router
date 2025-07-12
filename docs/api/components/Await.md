@@ -24,12 +24,12 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 Used to render promise values with automatic error handling.
 
-**Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
+**Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
 
 ```tsx
 import { Await, useLoaderData } from "react-router";
 
-export function loader() {
+export async function loader() {
   // not awaited
   const reviews = getReviews();
   // awaited (blocks the transition)
@@ -93,7 +93,8 @@ function Reviews() {
 
 ### errorElement
 
-The error element renders instead of the children when the promise rejects.
+The error element renders instead of the `children` when the [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+rejects.
 
 ```tsx
 <Await
@@ -121,16 +122,18 @@ function ReviewsError() {
 }
 ```
 
-If you do not provide an errorElement, the rejected value will bubble up to
-the nearest route-level `ErrorBoundary` and be accessible via the
-[`useRouteError`](../hooks/useRouteError) hook.
+If you do not provide an `errorElement`, the rejected value will bubble up
+to the nearest route-level [`ErrorBoundary`](../../start/framework/route-module#errorboundary)
+and be accessible via the [`useRouteError`](../hooks/useRouteError) hook.
 
 ### resolve
 
-Takes a promise returned from a `loader` to be resolved and rendered.
+Takes a [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+returned from a [`loader`](../../start/framework/route-module#loader) to be
+resolved and rendered.
 
-```jsx
-import { useLoaderData, Await } from "react-router";
+```tsx
+import { Await, useLoaderData } from "react-router";
 
 export async function loader() {
   let reviews = getReviews(); // not awaited

@@ -22,9 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLinkClickHandler.html)
 
-Handles the click behavior for router [`<Link>`](../components/Link) components. This is useful if
-you need to create custom `<Link>` components with the same click behavior we
-use in our exported `<Link>`.
+Handles the click behavior for router [`<Link>`](../components/Link) components.This
+is useful if you need to create custom [`<Link>`](../components/Link) components with
+the same click behavior we use in our exported [`<Link>`](../components/Link).
 
 ## Signature
 
@@ -48,8 +48,7 @@ The URL to navigate to, can be a string or a partial [`Path`](https://api.reactr
 ### options.preventScrollReset
 
 Whether to prevent the scroll position from being reset to the top of the viewport on completion of the navigation when
-using the [`<ScrollRestoration>`](../components/ScrollRestoration) component.
-Defaults to `false`.
+using the [`ScrollRestoration`](../components/ScrollRestoration) component. Defaults to `false`.
 
 ### options.relative
 
@@ -57,11 +56,11 @@ The [relative routing type](https://api.reactrouter.com/v7/types/react_router.Re
 
 ### options.replace
 
-Whether to replace the current history entry instead of pushing a new one. Defaults to `false`.
+Whether to replace the current [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) entry instead of pushing a new one. Defaults to `false`.
 
 ### options.state
 
-The state to add to the history entry for this navigation. Defaults to `undefined`.
+The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) entry for this navigation. Defaults to `undefined`.
 
 ### options.target
 
@@ -69,10 +68,10 @@ The target attribute for the link. Defaults to `undefined`.
 
 ### options.viewTransition
 
-Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation. To apply specific styles during the transition see [`useViewTransitionState`](../hooks/useViewTransitionState).
-Defaults to `false`.
+Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation. To apply specific styles during the transition, see
+[`useViewTransitionState`](../hooks/useViewTransitionState). Defaults to `false`.
 
 ## Returns
 
-A click handler function that can be used in a custom Link component.
+A click handler function that can be used in a custom [`Link`](../components/Link) component.
 

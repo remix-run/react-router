@@ -22,7 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRouteLoaderData.html)
 
-Returns the loader data for a given route by route ID.
+Returns the [`loader`](../../start/framework/route-module#loader) data for a
+given route by route ID.
 
 Route IDs are created automatically. They are simply the path of the route file
 relative to the app folder without the extension.
@@ -41,7 +42,7 @@ function SomeComponent() {
 }
 
 // You can also specify your own route ID's manually in your routes.ts file:
-route("/", "containers/app.tsx", { id: "app" }})
+route("/", "containers/app.tsx", { id: "app" })
 useRouteLoaderData("app");
 ```
 
@@ -59,5 +60,6 @@ The ID of the route to return loader data from
 
 ## Returns
 
-The data returned from the specified route's loader function, or undefined if not found
+The data returned from the specified route's [`loader`](../../start/framework/route-module#loader)
+function, or `undefined` if not found
 

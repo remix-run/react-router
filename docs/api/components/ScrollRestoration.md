@@ -57,13 +57,13 @@ function ScrollRestoration({ getKey, storageKey, ...props }: ScrollRestorationPr
 
 A function that returns a key to use for scroll restoration. This is useful
 for custom scroll restoration logic, such as using only the pathname so
-that subsequent navigations to prior paths will restore the scroll.  Defaults
-to `location.key`.  See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.GetScrollRestorationKeyFunction.html).
+that subsequent navigations to prior paths will restore the scroll. Defaults
+to `location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.GetScrollRestorationKeyFunction.html).
 
 ```tsx
 <ScrollRestoration
   getKey={(location, matches) => {
-    // Restore based on unique location key (default behavior)
+    // Restore based on a unique location key (default behavior)
     return location.key
 
     // Restore based on pathname
@@ -72,13 +72,14 @@ to `location.key`.  See [`GetScrollRestorationKeyFunction`](https://api.reactrou
 />
 ```
 
-### storageKey
-
-The key to use for storing scroll positions in `sessionStorage`. Defaults
-to `"react-router-scroll-positions"`.
-
 ### nonce
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
-attribute to render on the `<script>` element
+attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
+element
+
+### storageKey
+
+The key to use for storing scroll positions in [`sessionStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+Defaults to `"react-router-scroll-positions"`.
 

@@ -23,11 +23,11 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useBlocker.html)
 
 Allow the application to block navigations within the SPA and present the
-user a confirmation dialog to confirm the navigation.  Mostly used to avoid
-using half-filled form data.  This does not handle hard-reloads or
+user a confirmation dialog to confirm the navigation. Mostly used to avoid
+using half-filled form data. This does not handle hard-reloads or
 cross-origin navigations.
 
-The Blocker object returned by the hook has the following properties:
+The [`Blocker`](https://api.reactrouter.com/v7/types/react_router.Blocker.html) object returned by the hook has the following properties:
 
 - **`state`**
   - `unblocked` - the blocker is idle and has not prevented any navigation
@@ -66,11 +66,13 @@ function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
 
 ### shouldBlock
 
-Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked. The function format receives a single object parameter containing the `currentLocation`, `nextLocation`, and `historyAction` of the potential navigation.
+Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked. The function format
+receives a single object parameter containing the `currentLocation`,
+`nextLocation`, and `historyAction` of the potential navigation.
 
 ## Returns
 
-A blocker object with state and reset functionality
+A [`Blocker`](https://api.reactrouter.com/v7/types/react_router.Blocker.html) object with state and reset functionality
 
 ## Examples
 

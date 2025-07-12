@@ -22,8 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.HashRouter.html)
 
-A declarative `<Router>` that stores the location in the hash portion of the
-URL so it is not sent to the server.
+A declarative [`<Router>`](../declarative-routers/Router) that stores the location in the
+[`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash) portion
+of the URL so it is not sent to the server.
 
 ## Signature
 
@@ -43,5 +44,5 @@ Application basename
 
 ### window
 
-Window object override - defaults to the global `window` instance
+[`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object override - defaults to the global `window` instance
 
