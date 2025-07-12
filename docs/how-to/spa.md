@@ -20,8 +20,6 @@ Typical Single Page apps send a mostly blank `index.html` template with little m
 - Use React components to generate the initial page users see (root `HydrateFallback`)
 - Re-enable server rendering later without changing anything about your UI
 
-It's important to note that setting `ssr:false` only disables _runtime server rendering_. React Router will still server render your root route at _build time_ to generate the `index.html` file. This is why your project still needs a dependency on `@react-router/node` and your routes need to be SSR-safe. That means you can't call `window` or other browser-only APIs during the initial render, even when server rendering is disabled.
-
 <docs-info>SPA Mode is a special form of "Pre-Rendering" that allows you to serve all paths in your application from the same HTML file. Please refer to the [Pre-Rendering](./pre-rendering) guide if you want to do more extensive pre-rendering.</docs-info>
 
 ## 1. Disable Runtime Server Rendering
