@@ -4,6 +4,17 @@ title: useFormAction
 
 # useFormAction
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Hey! Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please find the definition of this API and edit the JSDoc
+comments accordingly and this file will be re-generated once those
+changes are merged.
+-->
+
 [MODES: framework, data]
 
 ## Summary
@@ -12,7 +23,7 @@ title: useFormAction
 
 Resolves the URL to the closest route in the component hierarchy instead of the current URL of the app.
 
-This is used internally by [Form](../components/Form) resolve the action to the closest route, but can be used generically as well.
+This is used internally by [`Form`](../components/Form) resolve the `action` to the closest route, but can be used generically as well.
 
 ```tsx
 import { useFormAction } from "react-router";
@@ -29,19 +40,16 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useFormAction(action, __namedParameters): string
+useFormAction()
 ```
 
 ## Params
 
 ### action
 
-[modes: framework, data]
+The action to append to the closest route URL. If not provided, defaults to the closest route URL.
 
-The action to append to the closest route URL.
+### options.relative
 
-### \_\_namedParameters
+The relative routing type to use when resolving the action. Defaults to `"route"`.
 
-[modes: framework, data]
-
-_No documentation_

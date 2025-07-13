@@ -5,13 +5,24 @@ unstable: true
 
 # unstable_usePrompt
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Hey! Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please find the definition of this API and edit the JSDoc
+comments accordingly and this file will be re-generated once those
+changes are merged.
+-->
+
 [MODES: framework, data]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_usePrompt.html)
 
-Wrapper around useBlocker to show a window.confirm prompt to users instead of building a custom UI with [useBlocker](../hooks/useBlocker).
+Wrapper around [`useBlocker`](../hooks/useBlocker) to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) prompt to users instead of building a custom UI with [`useBlocker`](../hooks/useBlocker).
 
 The `unstable_` flag will not be removed because this technique has a lot of rough edges and behaves very differently (and incorrectly sometimes) across browsers if users click addition back/forward navigations while the confirmation is open. Use at your own risk.
 
@@ -46,11 +57,19 @@ function ImportantForm() {
 ## Signature
 
 ```tsx
-unstable_usePrompt(options): void
+unstable_usePrompt({ when, message, }: {
+    when: boolean | BlockerFunction;
+    message: string;
+}): void
 ```
 
 ## Params
 
-### options
+### options.message
 
-_No documentation_
+The message to show in the confirmation dialog.
+
+### options.when
+
+A boolean or a function that returns a boolean indicating whether to block the navigation. If a function is provided, it will receive an object with `currentLocation` and `nextLocation` properties.
+
