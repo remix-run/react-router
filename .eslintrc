@@ -31,7 +31,7 @@
         "jsdoc/check-tag-names": [
           "error",
           {
-            "definedTags": ["additionalExamples", "category", "mode"]
+            "definedTags": ["additionalExamples", "category", "mode", "unstable"]
           }
         ],
         "jsdoc/no-defaults": "error",
@@ -63,7 +63,8 @@
                   "category",
                   "mode",
                   "param",
-                  "returns"
+                  "returns",
+                  "unstable"
                 ]
               }
             ]

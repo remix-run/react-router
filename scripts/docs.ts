@@ -68,6 +68,7 @@ type SimplifiedComment = {
   additionalExamples?: string;
   reference?: string;
   signature: string;
+  unstable?: boolean;
   params: {
     name: string;
     description: string;
@@ -295,7 +296,9 @@ function writeMarkdownFile(
   }
 
   // Create the filename (e.g., useHref.md)
-  const filename = `${comment.name}.md`;
+  const filename = `${
+    comment.unstable ? comment.name.replace("unstable_", "") : comment.name
+  }.md`;
   const filePath = path.join(targetDir, filename);
 
   // Write the file
@@ -313,7 +316,10 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
 
   // Title with frontmatter
   markdown += `---\n`;
-  markdown += `title: ${comment.name}\n`;
+  markdown += `title: ${
+    comment.unstable ? comment.name.replace("unstable_", "") : comment.name
+  }\n`;
+  markdown += comment.unstable ? "unstable: true\n" : "";
   markdown += `---\n\n`;
 
   markdown += `# ${comment.name}\n\n`;
@@ -401,7 +407,13 @@ function parseDocComments(filepath: string): SimplifiedComment[] {
 }
 
 function simplifyComment(comment: ParsedComment): SimplifiedComment {
-  let name = comment.ctx.name;
+  let unstable = Boolean(
+    comment.tags.find((t) => t.type === "unstable")?.string
+  );
+
+  let name = unstable
+    ? comment.tags.find((t) => t.type === "name")?.string
+    : comment.ctx.name;
   if (!name) {
     let matches = comment.code.match(/function ([^<(]+)/);
     if (matches) {
@@ -439,7 +451,10 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
     throw new Error(`Could not find API in typedoc reference docs: ${name}`);
   }
 
-  let signature = getSignature(comment.code);
+  let signature = getSignature(comment.code).replace(
+    unstable ? comment.ctx.name : "",
+    unstable ? name : ""
+  );
 
   let params: SimplifiedComment["params"] = [];
   comment.tags.forEach((tag) => {
@@ -465,6 +480,7 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
     additionalExamples,
     reference,
     signature,
+    unstable,
     params,
     returns,
   };
