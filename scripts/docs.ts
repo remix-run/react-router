@@ -457,12 +457,6 @@ function parseDocComments(filepath: string, apiFilter: string[] | null) {
   let code = fs.readFileSync(filepath).toString();
   let comments = dox.parseComments(code, { raw: true }) as ParsedComment[];
 
-  fs.writeFileSync(
-    "./scripts/jsdoc.json",
-    JSON.stringify(comments, null, 2),
-    "utf8"
-  );
-
   return comments
     .filter(
       (c) =>
