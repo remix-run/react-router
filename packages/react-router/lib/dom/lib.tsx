@@ -130,7 +130,7 @@ try {
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @category Routers
+ * @category Data Routers
  */
 export interface DOMRouterOpts {
   /**

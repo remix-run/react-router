@@ -82,7 +82,11 @@ const CATEGORIES = [
   "Utils",
 ] as const;
 const isComponentApi = (c: SimplifiedComment) =>
-  c.category === "Components" || c.category === "Declarative Routers";
+  c.category === "Components" ||
+  c.category === "Declarative Routers" ||
+  c.name === "HydratedRouter" ||
+  c.name === "RouterProvider" ||
+  c.name === "StaticRouterProvider";
 
 // Read a filename from standard input using the node parseArgs utility
 
@@ -288,6 +292,10 @@ function processTypedocModule(
                 });
               }
             });
+          } else if (t.type === "union") {
+            // For now we don't try to flatten down unions and we can
+            // just point to the base type in our JSDoc comment
+            return;
           } else if (t.type === "reference") {
             // For now we don't try to flatten down intersections and we can
             // just point to the base type in our JSDoc comment
@@ -306,12 +314,7 @@ function getDeclarationDescription(child: JSONOutput.DeclarationReflection) {
     throw new Error("Cannot generate description without a comment.");
   }
   return child.comment.summary
-    .flatMap((s) => {
-      if (s.kind === "text") return s.text;
-      if (s.kind === "inline-tag") return `{${s.tag} ${s.text}}`;
-      if (s.kind === "code") return s.text;
-      throw new Error(`Unknown kind ${s.kind}`);
-    })
+    .flatMap((s) => (s.kind === "inline-tag" ? `{${s.tag} ${s.text}}` : s.text))
     .join("");
 }
 
@@ -663,10 +666,7 @@ function getSignature(code: string) {
       .createPrinter({ newLine: ts.NewLineKind.LineFeed })
       .printNode(ts.EmitHint.Unspecified, modifiedFunction, ast);
 
-    return newCode
-      .replace(/^function /, "")
-      .replace("{ }", "")
-      .trim();
+    return newCode.replace("{ }", "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
