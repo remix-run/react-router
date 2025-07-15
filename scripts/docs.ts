@@ -574,6 +574,9 @@ function simplifyComment(
     }
   });
 
+  // Sort params by name
+  params.sort((a, b) => a.name.localeCompare(b.name));
+
   let returns = comment.tags.find((t) => t.type === "returns")?.string;
 
   let simplifiedComment: SimplifiedComment = {

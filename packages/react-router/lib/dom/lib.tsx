@@ -1319,49 +1319,67 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
 );
 Form.displayName = "Form";
 
-export type ScrollRestorationProps = ScriptsProps & {
+export interface ScrollRestorationProps extends ScriptsProps {
   /**
-    Defines the key used to restore scroll positions.
-
-    ```tsx
-    <ScrollRestoration
-      getKey={(location, matches) => {
-        // default behavior
-        return location.key
-      }}
-    />
-    ```
+   * A function that returns a key to use for scroll restoration. This is useful
+   * for custom scroll restoration logic, such as using only the pathname so
+   * that subsequent navigations to prior paths will restore the scroll.  Defaults
+   * to `location.key`.  See {@link GetScrollRestorationKeyFunction}.
+   *
+   * ```tsx
+   * <ScrollRestoration
+   *   getKey={(location, matches) => {
+   *     // Restore based on unique location key (default behavior)
+   *     return location.key
+   *
+   *     // Restore based on pathname
+   *     return location.pathname
+   *   }}
+   * />
+   * ```
    */
   getKey?: GetScrollRestorationKeyFunction;
 
+  /**
+   * The key to use for storing scroll positions in `sessionStorage`. Defaults
+   * to `"react-router-scroll-positions"`.
+   */
   storageKey?: string;
-};
+}
 
 /**
-  Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the {@link Scripts} component.
-
-  ```tsx
-  import { ScrollRestoration } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <body>
-          <ScrollRestoration />
-          <Scripts />
-        </body>
-      </html>
-    );
-  }
-  ```
-
-  This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
-
-  ```tsx
-  <ScrollRestoration nonce={cspNonce} />
-  ```
-
-  @category Components
+ * Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the {@link Scripts} component.
+ *
+ * ```tsx
+ * import { ScrollRestoration } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <body>
+ *         <ScrollRestoration />
+ *         <Scripts />
+ *       </body>
+ *     </html>
+ *   );
+ * }
+ * ```
+ *
+ * This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ *
+ * ```tsx
+ * <ScrollRestoration nonce={cspNonce} />
+ * ```
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @mode data
+ * @param props Props
+ * @param {ScrollRestorationProps.getKey} props.getKey n/a
+ * @param {ScrollRestorationProps.storageKey} props.storageKey n/a
+ * @param {ScrollRestorationProps.nonce} props.nonce n/a
+ * @returns A script tag that restores scroll positions on navigation.
  */
 export function ScrollRestoration({
   getKey,
@@ -1683,32 +1701,32 @@ export function useSearchParams(
 }
 
 /**
-  Sets new search params and causes a navigation when called.
-
-  ```tsx
-  <button
-    onClick={() => {
-      const params = new URLSearchParams();
-      params.set("someKey", "someValue");
-      setSearchParams(params, {
-        preventScrollReset: true,
-      });
-    }}
-  />
-  ```
-
-  It also supports a function for setting new search params.
-
-  ```tsx
-  <button
-    onClick={() => {
-      setSearchParams((prev) => {
-        prev.set("someKey", "someValue");
-        return prev;
-      });
-    }}
-  />
-  ```
+ *  Sets new search params and causes a navigation when called.
+ *
+ *  ```tsx
+ *  <button
+ *    onClick={() => {
+ *      const params = new URLSearchParams();
+ *      params.set("someKey", "someValue");
+ *      setSearchParams(params, {
+ *        preventScrollReset: true,
+ *      });
+ *    }}
+ *  />
+ *  ```
+ *
+ *  It also supports a function for setting new search params.
+ *
+ *  ```tsx
+ *  <button
+ *    onClick={() => {
+ *      setSearchParams((prev) => {
+ *        prev.set("someKey", "someValue");
+ *        return prev;
+ *      });
+ *    }}
+ *  />
+ *  ```
  */
 export type SetURLSearchParams = (
   nextInit?:
@@ -1723,40 +1741,40 @@ export type SetURLSearchParams = (
 export interface SubmitFunction {
   (
     /**
-      Can be multiple types of elements and objects
-
-      **`HTMLFormElement`**
-
-      ```tsx
-      <Form
-        onSubmit={(event) => {
-          submit(event.currentTarget);
-        }}
-      />
-      ```
-
-      **`FormData`**
-
-      ```tsx
-      const formData = new FormData();
-      formData.append("myKey", "myValue");
-      submit(formData, { method: "post" });
-      ```
-
-      **Plain object that will be serialized as `FormData`**
-
-      ```tsx
-      submit({ myKey: "myValue" }, { method: "post" });
-      ```
-
-      **Plain object that will be serialized as JSON**
-
-      ```tsx
-      submit(
-        { myKey: "myValue" },
-        { method: "post", encType: "application/json" }
-      );
-      ```
+     * Can be multiple types of elements and objects
+     *
+     * **`HTMLFormElement`**
+     *
+     * ```tsx
+     * <Form
+     *   onSubmit={(event) => {
+     *     submit(event.currentTarget);
+     *   }}
+     * />
+     * ```
+     *
+     * **`FormData`**
+     *
+     * ```tsx
+     * const formData = new FormData();
+     * formData.append("myKey", "myValue");
+     * submit(formData, { method: "post" });
+     * ```
+     *
+     * **Plain object that will be serialized as `FormData`**
+     *
+     * ```tsx
+     * submit({ myKey: "myValue" }, { method: "post" });
+     * ```
+     *
+     * **Plain object that will be serialized as JSON**
+     *
+     * ```tsx
+     * submit(
+     *   { myKey: "myValue" },
+     *   { method: "post", encType: "application/json" }
+     * );
+     * ```
      */
     target: SubmitTarget,
 
@@ -1774,41 +1792,40 @@ export interface SubmitFunction {
 export interface FetcherSubmitFunction {
   (
     /**
-      Can be multiple types of elements and objects
-
-      **`HTMLFormElement`**
-
-      ```tsx
-      <fetcher.Form
-        onSubmit={(event) => {
-          fetcher.submit(event.currentTarget);
-        }}
-      />
-      ```
-
-      **`FormData`**
-
-      ```tsx
-      const formData = new FormData();
-      formData.append("myKey", "myValue");
-      fetcher.submit(formData, { method: "post" });
-      ```
-
-      **Plain object that will be serialized as `FormData`**
-
-      ```tsx
-      fetcher.submit({ myKey: "myValue" }, { method: "post" });
-      ```
-
-      **Plain object that will be serialized as JSON**
-
-      ```tsx
-      fetcher.submit(
-        { myKey: "myValue" },
-        { method: "post", encType: "application/json" }
-      );
-      ```
-
+     * Can be multiple types of elements and objects
+     *
+     * **`HTMLFormElement`**
+     *
+     * ```tsx
+     * <fetcher.Form
+     *   onSubmit={(event) => {
+     *     fetcher.submit(event.currentTarget);
+     *   }}
+     * />
+     * ```
+     *
+     * **`FormData`**
+     *
+     * ```tsx
+     * const formData = new FormData();
+     * formData.append("myKey", "myValue");
+     * fetcher.submit(formData, { method: "post" });
+     * ```
+     *
+     * **Plain object that will be serialized as `FormData`**
+     *
+     * ```tsx
+     * fetcher.submit({ myKey: "myValue" }, { method: "post" });
+     * ```
+     *
+     * **Plain object that will be serialized as JSON**
+     *
+     * ```tsx
+     * fetcher.submit(
+     *   { myKey: "myValue" },
+     *   { method: "post", encType: "application/json" }
+     * );
+     * ```
      */
     target: SubmitTarget,
 

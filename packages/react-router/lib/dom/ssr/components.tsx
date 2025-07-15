@@ -613,17 +613,24 @@ let isHydrated = false;
 
   @category Types
  */
-export type ScriptsProps = Omit<
-  React.HTMLProps<HTMLScriptElement>,
-  | "children"
-  | "async"
-  | "defer"
-  | "src"
-  | "type"
-  | "noModule"
-  | "dangerouslySetInnerHTML"
-  | "suppressHydrationWarning"
->;
+export interface ScriptsProps
+  extends Omit<
+    React.HTMLProps<HTMLScriptElement>,
+    | "children"
+    | "async"
+    | "defer"
+    | "src"
+    | "type"
+    | "noModule"
+    | "dangerouslySetInnerHTML"
+    | "suppressHydrationWarning"
+  > {
+  /**
+   * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+   * attribute to render on the `<script>` element
+   */
+  nonce?: string;
+}
 
 /**
   Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.
