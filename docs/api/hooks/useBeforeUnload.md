@@ -13,7 +13,7 @@ This file is auto-generated from the JSDoc comments in the source
 code, so please edit the JSDoc comments in the file below and this
 file will be re-generated once those changes are merged.
 
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L2375
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L2426
 -->
 
 [MODES: framework, data, declarative]
@@ -36,7 +36,7 @@ useBeforeUnload(callback: (event: BeforeUnloadEvent) => any, options?: {
 
 ### callback
 
-The callback to be called when the `beforeunload` event is fired. This callback receives the `BeforeUnloadEvent` as its argument.
+The callback to be called when the `beforeunload` event is fired.
 
 ### options.capture
 

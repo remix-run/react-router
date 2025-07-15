@@ -664,26 +664,18 @@ function resolveLinkTags(text: string): string {
     const apiName = parts[0];
     const description = parts[1] || `\`${apiName}\``;
 
-    // Look up the API in the lookup table
-    let href: string | undefined;
-    if (repoApiLookup.has(apiName)) {
-      href = repoApiLookup.get(apiName);
-    } else if (typedocLookup.has(apiName)) {
-      console.log(
-        `Could not find markdown doc, resolved from typedoc docs: {@link ${apiName}}`
-      );
-      href = typedocLookup.get(apiName)?.href;
-    }
+    // Look up the API in the lookup tables
+    let href = repoApiLookup.get(apiName) || typedocLookup.get(apiName)?.href;
 
-    if (href) {
-      // Convert to markdown link
-      return `[${description}](${/^http/.test(href) ? href : `../${href}`})`;
-    } else {
+    if (!href) {
       // If not found, return as plain text with a warning
       console.warn(
         `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`
       );
       return description;
     }
+
+    href = /^http/.test(href) ? href : `../${href}`;
+    return `[${description}](${href})`;
   });
 }

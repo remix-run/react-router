@@ -33,17 +33,13 @@ createBrowserRouter(routes: RouteObject[], opts?: DOMRouterOpts): DataRouter
 
 ## Params
 
-### routes
-
-Application routes
-
 ### opts.basename
 
 Application basename
 
-### opts.unstable_getContext
+### opts.dataStrategy
 
-Function to provide the initial `context` values for all client side navigations/fetches
+Override the default data strategy of loading in parallel. Only intended for advanced usage.
 
 ### opts.future
 
@@ -53,17 +49,21 @@ Future flags to enable for the router
 
 Hydration data to initialize the router if you have already performed data loading on the server
 
-### opts.dataStrategy
-
-Override the default data strategy of loading in parallel. Only intended for advanced usage.
-
 ### opts.patchRoutesOnNavigation
 
 Lazily define portions of the route tree on navigations
 
+### opts.unstable_getContext
+
+Function to provide the initial `context` values for all client side navigations/fetches
+
 ### opts.window
 
 Window object override - defaults to the global `window` instance
+
+### routes
+
+Application routes
 
 ## Returns
 

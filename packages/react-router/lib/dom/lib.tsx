@@ -2428,9 +2428,10 @@ export function useScrollRestoration({
  *
  * @public
  * @category Hooks
- * @param callback The callback to be called when the `beforeunload` event is fired. This callback receives the {@link BeforeUnloadEvent} as its argument.
+ * @param callback The callback to be called when the `beforeunload` event is fired.
  * @param options Options
- * @param options.capture If `true`, the event will be captured during the capture phase. Defaults to `false`.
+ * @param options.capture If `true`, the event will be captured during the capture
+ * phase. Defaults to `false`.
  * @returns {void}
  */
 export function useBeforeUnload(

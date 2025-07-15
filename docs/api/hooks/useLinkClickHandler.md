@@ -13,7 +13,7 @@ This file is auto-generated from the JSDoc comments in the source
 code, so please edit the JSDoc comments in the file below and this
 file will be re-generated once those changes are merged.
 
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L1443
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L1495
 -->
 
 [MODES: framework, data, declarative]
@@ -41,10 +41,6 @@ useLinkClickHandler<E extends Element = HTMLAnchorElement>(to: To, { target, rep
 
 ## Params
 
-### to
-
-The URL to navigate to, can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html).
-
 ### options.preventScrollReset
 
 Whether to prevent the scroll position from being reset to the top of the viewport on completion of the navigation when
@@ -71,6 +67,10 @@ The target attribute for the link. Defaults to `undefined`.
 
 Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation. To apply specific styles during the transition see [`useViewTransitionState`](../hooks/useViewTransitionState).
 Defaults to `false`.
+
+### to
+
+The URL to navigate to, can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html).
 
 ## Returns
 
