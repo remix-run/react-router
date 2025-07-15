@@ -174,17 +174,13 @@ export interface DOMRouterOpts {
  * @mode data
  * @param routes Application routes
  * @param opts Options
- * @param opts.basename Application basename
- * @param opts.unstable_getContext Function to provide the initial `context`
- * values for all client side navigations/fetches
- * @param opts.future Future flags to enable for the router
- * @param opts.hydrationData Hydration data to initialize the router if you
- * have already performed data loading on the server
- * @param opts.dataStrategy Override the default data strategy of loading in
- * parallel. Only intended for advanced usage.
- * @param opts.patchRoutesOnNavigation Lazily define portions of the route tree
- * on navigations
- * @param opts.window Window object override - defaults to the global `window` instance
+ * @param {DOMRouterOpts.basename} opts.basename n/a
+ * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
+ * @param {DOMRouterOpts.future} opts.future n/a
+ * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
+ * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {DOMRouterOpts.window} opts.window n/a
  * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createBrowserRouter(
@@ -214,17 +210,13 @@ export function createBrowserRouter(
  * @mode data
  * @param routes Application routes
  * @param opts Options
- * @param opts.basename Application basename
- * @param opts.unstable_getContext Function to provide the initial `context`
- * values for all client side navigations/fetches
- * @param opts.future Future flags to enable for the router
- * @param opts.hydrationData Hydration data to initialize the router if you
- * have already performed data loading on the server
- * @param opts.dataStrategy Override the default data strategy of loading in
- * parallel. Only intended for advanced usage.
- * @param opts.patchRoutesOnNavigation Lazily define portions of the route tree
- * on navigations
- * @param opts.window Window object override - defaults to the global `window` instance
+ * @param {DOMRouterOpts.basename} opts.basename n/a
+ * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {DOMRouterOpts.future} opts.future n/a
+ * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
+ * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
+ * @param {DOMRouterOpts.window} opts.window n/a
  * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createHashRouter(
@@ -1319,7 +1311,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
 );
 Form.displayName = "Form";
 
-export interface ScrollRestorationProps extends ScriptsProps {
+export type ScrollRestorationProps = ScriptsProps & {
   /**
    * A function that returns a key to use for scroll restoration. This is useful
    * for custom scroll restoration logic, such as using only the pathname so
@@ -1345,7 +1337,7 @@ export interface ScrollRestorationProps extends ScriptsProps {
    * to `"react-router-scroll-positions"`.
    */
   storageKey?: string;
-}
+};
 
 /**
  * Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the {@link Scripts} component.
@@ -1378,7 +1370,7 @@ export interface ScrollRestorationProps extends ScriptsProps {
  * @param props Props
  * @param {ScrollRestorationProps.getKey} props.getKey n/a
  * @param {ScrollRestorationProps.storageKey} props.storageKey n/a
- * @param {ScrollRestorationProps.nonce} props.nonce n/a
+ * @param {ScriptsProps.nonce} props.nonce n/a
  * @returns A script tag that restores scroll positions on navigation.
  */
 export function ScrollRestoration({

@@ -258,29 +258,61 @@ function processTypedocModule(
     //  * @param {LinkProps.to} props.to
     //  */
     if (subChild.kind === ReflectionKind.Interface) {
-      subChild.children
-        ?.filter(
-          (grandChild) =>
-            grandChild.kind === ReflectionKind.Property &&
-            grandChild.comment &&
-            !grandChild.flags.isExternal
-        )
-        .forEach((grandChild) => {
-          let description = grandChild
-            .comment!.summary.flatMap((s) => {
-              if (s.kind === "text") return s.text;
-              if (s.kind === "inline-tag") return `{${s.tag} ${s.text}}`;
-              if (s.kind === "code") return s.text;
-              throw new Error(`Unknown kind ${s.kind}`);
-            })
-            .join("");
+      subChild.children?.forEach((grandChild) => {
+        if (
+          grandChild.kind === ReflectionKind.Property &&
+          grandChild.comment &&
+          !grandChild.flags.isExternal
+        ) {
           lookup.set(`${subChild.name}.${grandChild.name}`, {
             href: `${url}#${grandChild.name}`,
-            description,
+            description: getDeclarationDescription(grandChild),
           });
+        }
+      });
+    }
+
+    if (subChild.kind === ReflectionKind.TypeAlias) {
+      if (subChild.type?.type === "intersection") {
+        subChild.type.types.forEach((t) => {
+          if (t.type === "reflection") {
+            t.declaration.children?.forEach((c) => {
+              if (
+                c.kind === ReflectionKind.Property &&
+                c.comment &&
+                !c.flags.isExternal
+              ) {
+                lookup.set(`${subChild.name}.${c.name}`, {
+                  href: `${url}#${c.name}`,
+                  description: getDeclarationDescription(c),
+                });
+              }
+            });
+          } else if (t.type === "reference") {
+            // For now we don't try to flatten down intersections and we can
+            // just point to the base type in our JSDoc comment
+            return;
+          } else {
+            console.log(`Warning: Unhandled TypeAlias type: ${t.type}`);
+          }
         });
+      }
     }
   });
+}
+
+function getDeclarationDescription(child: JSONOutput.DeclarationReflection) {
+  if (!child.comment) {
+    throw new Error("Cannot generate description without a comment.");
+  }
+  return child.comment.summary
+    .flatMap((s) => {
+      if (s.kind === "text") return s.text;
+      if (s.kind === "inline-tag") return `{${s.tag} ${s.text}}`;
+      if (s.kind === "code") return s.text;
+      throw new Error(`Unknown kind ${s.kind}`);
+    })
+    .join("");
 }
 
 function generateMarkdownDocs(
@@ -558,8 +590,14 @@ function simplifyComment(
 
       // If we have a type, we prefer to look up the referenced type description
       matches = tag.string.match(/^\{(.+)\}\s.*/);
-      if (matches && typedocLookup.get(matches[1])?.description) {
-        description = typedocLookup.get(matches[1])!.description;
+      if (matches) {
+        if (typedocLookup.get(matches[1])?.description) {
+          description = typedocLookup.get(matches[1])!.description;
+        } else {
+          throw new Error(
+            `Unable to find cross-referenced documentation for param type: ${matches[1]}`
+          );
+        }
       }
 
       if (!description) {
@@ -573,9 +611,6 @@ function simplifyComment(
       });
     }
   });
-
-  // Sort params by name
-  params.sort((a, b) => a.name.localeCompare(b.name));
 
   let returns = comment.tags.find((t) => t.type === "returns")?.string;
 
