@@ -2468,7 +2468,7 @@ export function usePrompt({
 }: {
   when: boolean | BlockerFunction;
   message: string;
-}) {
+}): void {
   let blocker = useBlocker(when);
 
   React.useEffect(() => {
