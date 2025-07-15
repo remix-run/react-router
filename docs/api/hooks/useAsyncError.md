@@ -7,12 +7,13 @@ title: useAsyncError
 <!--
 ⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
-Hey! Thank you for helping improve our documentation!
+Thank you for helping improve our documentation!
 
 This file is auto-generated from the JSDoc comments in the source
-code, so please find the definition of this API and edit the JSDoc
-comments accordingly and this file will be re-generated once those
-changes are merged.
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx#L1423
 -->
 
 [MODES: framework, data]
@@ -43,6 +44,10 @@ function ErrorElement() {
 ## Signature
 
 ```tsx
-useAsyncError(): unknown
+function useAsyncError(): unknown
 ```
+
+## Returns
+
+The error that was thrown in the nearest Await component
 

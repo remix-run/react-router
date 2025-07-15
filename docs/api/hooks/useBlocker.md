@@ -7,12 +7,13 @@ title: useBlocker
 <!--
 ⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
-Hey! Thank you for helping improve our documentation!
+Thank you for helping improve our documentation!
 
 This file is auto-generated from the JSDoc comments in the source
-code, so please find the definition of this API and edit the JSDoc
-comments accordingly and this file will be re-generated once those
-changes are merged.
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx#L1455
 -->
 
 [MODES: framework, data]
@@ -58,7 +59,7 @@ const blocker = useBlocker(
 ## Signature
 
 ```tsx
-useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
+function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
 ```
 
 ## Params
@@ -66,6 +67,10 @@ useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
 ### shouldBlock
 
 Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked. The function format receives a single object parameter containing the `currentLocation`, `nextLocation`, and `historyAction` of the potential navigation.
+
+## Returns
+
+A blocker object with state and reset functionality
 
 ## Examples
 

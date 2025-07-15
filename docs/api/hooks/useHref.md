@@ -7,12 +7,13 @@ title: useHref
 <!--
 ⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
-Hey! Thank you for helping improve our documentation!
+Thank you for helping improve our documentation!
 
 This file is auto-generated from the JSDoc comments in the source
-code, so please find the definition of this API and edit the JSDoc
-comments accordingly and this file will be re-generated once those
-changes are merged.
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx#L55
 -->
 
 [MODES: framework, data, declarative]
@@ -35,7 +36,7 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useHref(to: To, { relative }: {
+function useHref(to: To, { relative }: {
     relative?: RelativeRoutingType;
 } = {}): string
 ```
@@ -49,4 +50,8 @@ The path to resolve
 ### options.relative
 
 Defaults to "route" so routing is relative to the route tree. Set to "path" to make relative routing operate against path segments.
+
+## Returns
+
+The resolved href string
 
