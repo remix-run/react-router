@@ -628,7 +628,7 @@ export type ScriptsProps = Omit<
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the `<script>` element
    */
-  nonce?: string;
+  nonce?: string | undefined;
 };
 
 /**
