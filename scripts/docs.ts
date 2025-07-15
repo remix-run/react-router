@@ -342,7 +342,7 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
 
   // Title with frontmatter
   markdown += `---\n`;
-  markdown += `title: ${comment.name}\n`;
+  markdown += `title: ${comment.name.replace(/^unstable_/, "")}\n`;
   markdown += comment.unstable ? "unstable: true\n" : "";
   markdown += `---\n\n`;
 
@@ -363,6 +363,9 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   }
 
   if (comment.unstable) {
+    if (comment.modes && comment.modes.length > 0) {
+      markdown += "<br />\n<br />\n\n";
+    }
     markdown +=
       "<docs-warning>This API is experimental and subject to breaking changes in \n" +
       "minor/patch releases. Please use with caution and pay **very** close attention \n" +
@@ -440,7 +443,11 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   // Returns section (if applicable/available)
   if (comment.returns && !isComponentApi(comment)) {
     markdown += `## Returns\n\n`;
-    markdown += `${resolveLinkTags(comment.returns)}\n\n`;
+    if (comment.returns === "{void}") {
+      markdown += "No return value.\n\n";
+    } else {
+      markdown += `${resolveLinkTags(comment.returns)}\n\n`;
+    }
   }
 
   // Additional Examples section (if available)
