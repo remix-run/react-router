@@ -191,96 +191,96 @@ function buildTypedocLinks(outputDir: string) {
 
     apiData.children
       ?.filter((c) => c.kind === ReflectionKind.Module)
-      .forEach((child) => processModule(child, lookup));
+      .forEach((child) => processTypedocModule(child, lookup));
   } else {
     console.warn(
       '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs'
     );
   }
 
-  function processModule(
-    child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
-    lookup: Map<string, { href: string; description?: string }>,
-    prefix: string[] = []
-  ) {
-    let newPrefix = [...prefix, child.name];
-    let moduleName = newPrefix.join(".");
-    child.children?.forEach((subChild) => {
-      // Recurse into submodules
-      if (subChild.kind === ReflectionKind.Module) {
-        processModule(subChild, lookup, newPrefix);
-        return;
-      }
-
-      // Prefer linking to repo docs over typedoc docs
-      if (lookup.has(subChild.name)) {
-        return;
-      }
-
-      let apiName = `${moduleName}.${subChild.name}`;
-      let type =
-        subChild.kind === ReflectionKind.Enum
-          ? "enums"
-          : subChild.kind === ReflectionKind.Class
-          ? "classes"
-          : subChild.kind === ReflectionKind.Interface
-          ? "interfaces"
-          : subChild.kind === ReflectionKind.TypeAlias
-          ? "types"
-          : subChild.kind === ReflectionKind.Function
-          ? "functions"
-          : subChild.kind === ReflectionKind.Variable
-          ? "variables"
-          : undefined;
-
-      if (!type) {
-        console.warn(
-          `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
-        );
-        return;
-      }
-
-      let modulePath = moduleName.replace(/[@\-/]/g, "_");
-      let path = `${type}/${modulePath}.${subChild.name}.html`;
-      let url = `https://api.reactrouter.com/v7/${path}`;
-      lookup.set(subChild.name, { href: url });
-
-      // When this is an interface, also include it's child properties in the lookup
-      // table for use in cross-referencing param types.  We often document a property
-      // on the `interface` so that it shows up in the IDE hover states, but we want
-      // to leverage the same description for the `@param` JSDoc tag. Mostly needed
-      // for components who separate props out in an interface such as `LinkProps`
-      //
-      // /**
-      //  * @param {LinkProps.to} props.to
-      //  */
-      if (subChild.kind === ReflectionKind.Interface) {
-        subChild.children
-          ?.filter(
-            (grandChild) =>
-              grandChild.kind === ReflectionKind.Property &&
-              grandChild.comment &&
-              !grandChild.flags.isExternal
-          )
-          .forEach((grandChild) => {
-            let description = grandChild
-              .comment!.summary.flatMap((s) => {
-                if (s.kind === "text") return s.text;
-                if (s.kind === "inline-tag") return `{${s.tag} ${s.text}}`;
-                if (s.kind === "code") return s.text;
-                throw new Error(`Unknown kind ${s.kind}`);
-              })
-              .join("");
-            lookup.set(`${subChild.name}.${grandChild.name}`, {
-              href: `${url}#${grandChild.name}`,
-              description,
-            });
-          });
-      }
-    });
-  }
-
   return lookup;
+}
+
+function processTypedocModule(
+  child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
+  lookup: Map<string, { href: string; description?: string }>,
+  prefix: string[] = []
+) {
+  let newPrefix = [...prefix, child.name];
+  let moduleName = newPrefix.join(".");
+  child.children?.forEach((subChild) => {
+    // Recurse into submodules
+    if (subChild.kind === ReflectionKind.Module) {
+      processTypedocModule(subChild, lookup, newPrefix);
+      return;
+    }
+
+    // Prefer linking to repo docs over typedoc docs
+    if (lookup.has(subChild.name)) {
+      return;
+    }
+
+    let apiName = `${moduleName}.${subChild.name}`;
+    let type =
+      subChild.kind === ReflectionKind.Enum
+        ? "enums"
+        : subChild.kind === ReflectionKind.Class
+        ? "classes"
+        : subChild.kind === ReflectionKind.Interface
+        ? "interfaces"
+        : subChild.kind === ReflectionKind.TypeAlias
+        ? "types"
+        : subChild.kind === ReflectionKind.Function
+        ? "functions"
+        : subChild.kind === ReflectionKind.Variable
+        ? "variables"
+        : undefined;
+
+    if (!type) {
+      console.warn(
+        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
+      );
+      return;
+    }
+
+    let modulePath = moduleName.replace(/[@\-/]/g, "_");
+    let path = `${type}/${modulePath}.${subChild.name}.html`;
+    let url = `https://api.reactrouter.com/v7/${path}`;
+    lookup.set(subChild.name, { href: url });
+
+    // When this is an interface, also include it's child properties in the lookup
+    // table for use in cross-referencing param types.  We often document a property
+    // on the `interface` so that it shows up in the IDE hover states, but we want
+    // to leverage the same description for the `@param` JSDoc tag. Mostly needed
+    // for components who separate props out in an interface such as `LinkProps`
+    //
+    // /**
+    //  * @param {LinkProps.to} props.to
+    //  */
+    if (subChild.kind === ReflectionKind.Interface) {
+      subChild.children
+        ?.filter(
+          (grandChild) =>
+            grandChild.kind === ReflectionKind.Property &&
+            grandChild.comment &&
+            !grandChild.flags.isExternal
+        )
+        .forEach((grandChild) => {
+          let description = grandChild
+            .comment!.summary.flatMap((s) => {
+              if (s.kind === "text") return s.text;
+              if (s.kind === "inline-tag") return `{${s.tag} ${s.text}}`;
+              if (s.kind === "code") return s.text;
+              throw new Error(`Unknown kind ${s.kind}`);
+            })
+            .join("");
+          lookup.set(`${subChild.name}.${grandChild.name}`, {
+            href: `${url}#${grandChild.name}`,
+            description,
+          });
+        });
+    }
+  });
 }
 
 function generateMarkdownDocs(
