@@ -122,7 +122,18 @@ export function createRemixRequest(
   res.on("close", () => controller?.abort());
 
   if (req.method !== "GET" && req.method !== "HEAD") {
-    init.body = createReadableStreamFromReadable(req);
+    if (req.closed) {
+      if (
+        req.is("application/x-www-form-urlencoded") ||
+        req.is("multipart/form-data")
+      ) {
+        init.body = new URLSearchParams(req.body);
+      } else {
+        init.body = JSON.stringify(req.body || {});
+      }
+    } else {
+      init.body = createReadableStreamFromReadable(req);
+    }
     (init as { duplex: "half" }).duplex = "half";
   }
 
