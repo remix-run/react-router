@@ -4,7 +4,7 @@ title: createRoutesFromElements
 
 # createRoutesFromElements
 
-[MODES: framework, data, declarative]
+[MODES: data]
 
 ## Summary
 
@@ -22,12 +22,12 @@ createRoutesFromElements(children, parentPath): undefined
 
 ### children
 
-[modes: framework, data, declarative]
+[modes: data]
 
 _No documentation_
 
 ### parentPath
 
-[modes: framework, data, declarative]
+[modes: data]
 
 _No documentation_

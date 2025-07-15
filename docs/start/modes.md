@@ -182,6 +182,7 @@ This is mostly for the LLMs, but knock yourself out:
 | createCookieSessionStorage     | ✅        | ✅   |             |
 | createMemorySessionStorage     | ✅        | ✅   |             |
 | createPath                     | ✅        | ✅   | ✅          |
+| createRoutesFromElements       |           | ✅   |             |
 | createRoutesStub               | ✅        | ✅   |             |
 | createSearchParams             | ✅        | ✅   | ✅          |
 | data                           | ✅        | ✅   |             |
