@@ -1196,7 +1196,14 @@ export function useNavigation(): Navigation {
 }
 
 /**
- * Revalidate the data on the page for reasons outside of normal data mutations like window focus or polling on an interval.
+ * Revalidate the data on the page for reasons outside of normal data mutations
+ * like window focus or polling on an interval.
+ *
+ * Note that page data is already revalidated automatically after actions.
+ * If you find yourself using this for normal CRUD operations on your data in
+ * response to user interactions, you're probably not taking advantage of the
+ * other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do
+ * this automatically.
  *
  * @example
  * import { useRevalidator } from "react-router";
@@ -1214,8 +1221,6 @@ export function useNavigation(): Navigation {
  *     </div>
  *   );
  * }
- *
- * Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do this automatically.
  *
  * @public
  * @category Hooks

@@ -536,7 +536,7 @@ function simplifyComment(
   let name = getApiName(comment);
   let unstable = name.startsWith("unstable_");
 
-  let codeLink = `https://github.com/remix-run/react-router/blob/main/${filepath}#L${comment.line}`;
+  let codeLink = `https://github.com/remix-run/react-router/blob/main/${filepath}`;
 
   let categoryTags = comment.tags.filter((t) => t.type === "category");
   if (categoryTags.length !== 1) {
