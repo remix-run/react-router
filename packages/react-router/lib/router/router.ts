@@ -3944,10 +3944,7 @@ export function createStaticHandler(
           if (isResponse(error)) {
             return respond(error);
           }
-          return new Response(String(error), {
-            status: 500,
-            statusText: "Unexpected Server Error",
-          });
+          throw error;
         }
       );
       return response;
