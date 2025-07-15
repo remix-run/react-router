@@ -369,7 +369,7 @@ This release contains the (currently `unstable_`) RSC APIs for use with RSC in D
 - `react-router` - Pass a copy of `searchParams` to the `setSearchParams` callback function to avoid mutations of the internal `searchParams` instance ([#12784](https://github.com/remix-run/react-router/pull/12784))
   - This causes bugs if you mutate the current stateful `searchParams` when a navigation is blocked because the internal instance gets out of sync with `useLocation().search`
 - `react-router` - Support invalid `Date` in `turbo-stream` v2 fork ([#13684](https://github.com/remix-run/react-router/pull/13684))
-- `react-router` - In Framework Mode, clear critical CSS in development after initial render ([#13872](https://github.com/remix-run/react-router/pull/13872))
+- `react-router` - In Framework Mode, clear critical CSS in development after initial render ([#13872](https://github.com/remix-run/react-router/pull/13872), [#13995](https://github.com/remix-run/react-router/pull/13995))
 - `react-router` - Strip search parameters from `patchRoutesOnNavigation` `path` param for fetcher calls ([#13911](https://github.com/remix-run/react-router/pull/13911))
 - `react-router` - Skip scroll restoration on `useRevalidator()` calls because they're not new locations ([#13671](https://github.com/remix-run/react-router/pull/13671))
 - `react-router` - Support unencoded UTF-8 routes in prerender config with `ssr` set to `false` ([#13699](https://github.com/remix-run/react-router/pull/13699))
