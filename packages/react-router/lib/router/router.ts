@@ -489,8 +489,12 @@ export interface GetScrollPositionFunction {
 }
 
 /**
-  - "route": relative to the route hierarchy so `..` means remove all segments of the current route even if it has many. For example, a `route("posts/:id")` would have both `:id` and `posts` removed from the url.
-  - "path": relative to the pathname so `..` means remove one segment of the pathname. For example, a `route("posts/:id")` would have only `:id` removed from the url.
+ * - "route": relative to the route hierarchy so `..` means remove all segments
+ * of the current route even if it has many. For example, a `route("posts/:id")`
+ * would have both `:id` and `posts` removed from the url.
+ * - "path": relative to the pathname so `..` means remove one segment of the
+ * pathname. For example, a `route("posts/:id")` would have only `:id` removed
+ * from the url.
  */
 export type RelativeRoutingType = "route" | "path";
 

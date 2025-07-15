@@ -18,10 +18,6 @@ type ParamTag = {
   string: string;
   name: string;
   description: string;
-  // TODO: Are these used?
-  types: [];
-  typesDescription: "";
-  // end
   variable: boolean;
   nonNullable: boolean;
   nullable: boolean;
@@ -45,11 +41,11 @@ type ParsedComment = {
   line: number;
   codeStart: number;
   code: string;
-  ctx: {
-    type: string;
-    name: string;
-    string: string;
-  };
+  ctx:
+    | {
+        name: string;
+      }
+    | false;
 };
 
 export type GetArrayElementType<T extends readonly any[]> =
@@ -61,18 +57,20 @@ type Category = GetArrayElementType<typeof CATEGORIES>;
 type SimplifiedComment = {
   category: Category;
   name: string;
-  // TODO: Allow modes on different props
+  unstable: boolean;
+  codeLink: string;
   modes: Mode[];
   summary: string;
+  reference: string;
   example?: string;
-  additionalExamples?: string;
-  reference?: string;
-  signature: string;
+  signature?: string;
   params: {
     name: string;
     description: string;
+    modes: Mode[];
   }[];
-  returns: string;
+  returns?: string;
+  additionalExamples?: string;
 };
 
 const MODES = ["framework", "data", "declarative"] as const;
@@ -83,6 +81,8 @@ const CATEGORIES = [
   "Declarative Routers",
   "Utils",
 ] as const;
+const isComponentApi = (c: SimplifiedComment) =>
+  c.category === "Components" || c.category === "Declarative Routers";
 
 // Read a filename from standard input using the node parseArgs utility
 
@@ -132,8 +132,8 @@ if (args.api) {
 const outputDir = args.output || "docs/api";
 
 // Build lookup table for @link resolution
-const repoApiLookup = buildRepoDocsLookupTable(outputDir);
-const typedocLookup = buildTypedocLookupTable(outputDir);
+const repoApiLookup = buildRepoDocsLinks(outputDir);
+const typedocLookup = buildTypedocLinks(outputDir);
 
 // Resolve file paths using glob patterns
 const filePaths = fg.sync(args.path, {
@@ -152,7 +152,7 @@ filePaths.forEach((filePath) => {
   generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
 });
 
-function buildRepoDocsLookupTable(outputDir: string): Map<string, string> {
+function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   const lookup = new Map<string, string>();
 
   // Add existing files if output directory exists
@@ -179,8 +179,9 @@ function buildRepoDocsLookupTable(outputDir: string): Map<string, string> {
 
   return lookup;
 }
-function buildTypedocLookupTable(outputDir: string): Map<string, string> {
-  const lookup = new Map<string, string>();
+
+function buildTypedocLinks(outputDir: string) {
+  const lookup = new Map<string, { href: string; description?: string }>();
 
   // Prerequisite: `typedoc` has been run first via `npm run docs`
   if (fs.existsSync("public/dev/api.json")) {
@@ -190,78 +191,106 @@ function buildTypedocLookupTable(outputDir: string): Map<string, string> {
 
     apiData.children
       ?.filter((c) => c.kind === ReflectionKind.Module)
-      .forEach((child) => processTypedocModule(child, lookup));
+      .forEach((child) => processModule(child, lookup));
   } else {
     console.warn(
       '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs'
     );
   }
 
+  function processModule(
+    child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
+    lookup: Map<string, { href: string; description?: string }>,
+    prefix: string[] = []
+  ) {
+    let newPrefix = [...prefix, child.name];
+    let moduleName = newPrefix.join(".");
+    child.children?.forEach((subChild) => {
+      // Recurse into submodules
+      if (subChild.kind === ReflectionKind.Module) {
+        processModule(subChild, lookup, newPrefix);
+        return;
+      }
+
+      // Prefer linking to repo docs over typedoc docs
+      if (lookup.has(subChild.name)) {
+        return;
+      }
+
+      let apiName = `${moduleName}.${subChild.name}`;
+      let type =
+        subChild.kind === ReflectionKind.Enum
+          ? "enums"
+          : subChild.kind === ReflectionKind.Class
+          ? "classes"
+          : subChild.kind === ReflectionKind.Interface
+          ? "interfaces"
+          : subChild.kind === ReflectionKind.TypeAlias
+          ? "types"
+          : subChild.kind === ReflectionKind.Function
+          ? "functions"
+          : subChild.kind === ReflectionKind.Variable
+          ? "variables"
+          : undefined;
+
+      if (!type) {
+        console.warn(
+          `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
+        );
+        return;
+      }
+
+      let modulePath = moduleName.replace(/[@\-/]/g, "_");
+      let path = `${type}/${modulePath}.${subChild.name}.html`;
+      let url = `https://api.reactrouter.com/v7/${path}`;
+      lookup.set(subChild.name, { href: url });
+
+      // When this is an interface, also include it's child properties in the lookup
+      // table for use in cross-referencing param types.  We often document a property
+      // on the `interface` so that it shows up in the IDE hover states, but we want
+      // to leverage the same description for the `@param` JSDoc tag. Mostly needed
+      // for components who separate props out in an interface such as `LinkProps`
+      //
+      // /**
+      //  * @param {LinkProps.to} props.to
+      //  */
+      if (subChild.kind === ReflectionKind.Interface) {
+        subChild.children
+          ?.filter(
+            (grandChild) =>
+              grandChild.kind === ReflectionKind.Property &&
+              grandChild.comment &&
+              !grandChild.flags.isExternal
+          )
+          .forEach((grandChild) => {
+            let description = grandChild
+              .comment!.summary.flatMap((s) => {
+                if (s.kind === "text") return s.text;
+                if (s.kind === "inline-tag") return `{${s.tag} ${s.text}}`;
+                if (s.kind === "code") return s.text;
+                throw new Error(`Unknown kind ${s.kind}`);
+              })
+              .join("");
+            lookup.set(`${subChild.name}.${grandChild.name}`, {
+              href: `${url}#${grandChild.name}`,
+              description,
+            });
+          });
+      }
+    });
+  }
+
   return lookup;
-}
-
-function processTypedocModule(
-  child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
-  lookup: Map<string, string>,
-  prefix: string[] = []
-) {
-  let newPrefix = [...prefix, child.name];
-  let moduleName = newPrefix.join(".");
-  child.children?.forEach((subChild) => {
-    // Recurse into submodules
-    if (subChild.kind === ReflectionKind.Module) {
-      processTypedocModule(subChild, lookup, newPrefix);
-      return;
-    }
-
-    // Prefer linking to repo docs over typedoc docs
-    if (lookup.has(subChild.name)) {
-      return;
-    }
-
-    let apiName = `${moduleName}.${subChild.name}`;
-    let type =
-      subChild.kind === ReflectionKind.Enum
-        ? "enums"
-        : subChild.kind === ReflectionKind.Class
-        ? "classes"
-        : subChild.kind === ReflectionKind.Interface
-        ? "interfaces"
-        : subChild.kind === ReflectionKind.TypeAlias
-        ? "types"
-        : subChild.kind === ReflectionKind.Function
-        ? "functions"
-        : subChild.kind === ReflectionKind.Variable
-        ? "variables"
-        : undefined;
-
-    if (!type) {
-      console.warn(
-        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
-      );
-      return;
-    }
-    let modulePath = moduleName.replace(/[@\-/]/g, "_");
-    let path = `${type}/${modulePath}.${subChild.name}.html`;
-    let url = `https://api.reactrouter.com/v7/${path}`;
-    lookup.set(subChild.name, url);
-  });
 }
 
 function generateMarkdownDocs(
   filepath: string,
-  apiFilter?: string[] | null,
+  apiFilter: string[] | null,
   outputDir?: string,
   writeFiles?: boolean
 ) {
-  let data = parseDocComments(filepath);
-
-  data.forEach((comment) => {
-    // Skip if API filter is provided and this API is not in the filter
-    if (apiFilter && !apiFilter.includes(comment.name)) {
-      return;
-    }
-
+  let simplifiedComments = parseDocComments(filepath, apiFilter);
+  simplifiedComments.forEach((comment) => {
     // Generate markdown content for each public function
     let markdownContent = generateMarkdownForComment(comment);
     if (markdownContent) {
@@ -295,7 +324,7 @@ function writeMarkdownFile(
   }
 
   // Create the filename (e.g., useHref.md)
-  const filename = `${comment.name}.md`;
+  const filename = `${comment.name.replace(/^unstable_/, "")}.md`;
   const filePath = path.join(targetDir, filename);
 
   // Write the file
@@ -314,22 +343,30 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   // Title with frontmatter
   markdown += `---\n`;
   markdown += `title: ${comment.name}\n`;
+  markdown += comment.unstable ? "unstable: true\n" : "";
   markdown += `---\n\n`;
 
   markdown += `# ${comment.name}\n\n`;
 
   markdown += `<!--\n`;
   markdown += `⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ \n\n`;
-  markdown += `Hey! Thank you for helping improve our documentation!\n\n`;
+  markdown += `Thank you for helping improve our documentation!\n\n`;
   markdown += `This file is auto-generated from the JSDoc comments in the source\n`;
-  markdown += `code, so please find the definition of this API and edit the JSDoc\n`;
-  markdown += `comments accordingly and this file will be re-generated once those\n`;
-  markdown += `changes are merged.\n`;
+  markdown += `code, so please edit the JSDoc comments in the file below and this\n`;
+  markdown += `file will be re-generated once those changes are merged.\n\n`;
+  markdown += `${comment.codeLink}\n`;
   markdown += `-->\n\n`;
 
   // Modes section
   if (comment.modes && comment.modes.length > 0) {
     markdown += `[MODES: ${comment.modes.join(", ")}]\n\n`;
+  }
+
+  if (comment.unstable) {
+    markdown +=
+      "<docs-warning>This API is experimental and subject to breaking changes in \n" +
+      "minor/patch releases. Please use with caution and pay **very** close attention \n" +
+      "to release notes for relevant changes.</docs-warning>\n\n";
   }
 
   // Summary section
@@ -351,16 +388,17 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   }
 
   // Signature section
-  markdown += `## Signature\n\n`;
-  markdown += "```tsx\n";
-  markdown += `${comment.signature}\n`;
-  markdown += "```\n\n";
+  if (comment.signature) {
+    markdown += `## Signature\n\n`;
+    markdown += "```tsx\n";
+    markdown += `${comment.signature}\n`;
+    markdown += "```\n\n";
+  }
 
   // Parameters section
   if (comment.params && comment.params.length > 0) {
-    let heading = comment.params.some((p) => p.name === "props")
-      ? "Props"
-      : "Params";
+    let heading = isComponentApi(comment) ? "Props" : "Params";
+    let showModes = comment.params.some((p) => p.modes && p.modes.length > 0);
     markdown += `## ${heading}\n\n`;
     comment.params.forEach((param, i) => {
       // Only show modes for parameters if they differ from hook-level modes
@@ -371,34 +409,38 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
       let description = resolveLinkTags(param.description);
 
       // Skip options object param that is there for JSDoc since we will document each option on it own
-      if (param.name === "options" && description === "Options") {
-        if (!comment.params[i + 1].name.startsWith("options.")) {
-          throw new Error(
-            "Expected docs for individual options: " + comment.name
-          );
+      let skippedObjectParams = [
+        ["options", "Options"],
+        ["opts", "Options"],
+        ["props", "Props"],
+      ];
+      for (let skipped of skippedObjectParams) {
+        if (param.name === skipped[0] && description === skipped[1]) {
+          if (!comment.params[i + 1].name.startsWith(skipped[0] + ".")) {
+            throw new Error(
+              "Expected docs for individual options: " + comment.name
+            );
+          }
+          return;
         }
-        return;
-      }
-      if (param.name === "opts" && description === "Options") {
-        if (!comment.params[i + 1].name.startsWith("opts.")) {
-          throw new Error(
-            "Expected docs for individual options: " + comment.name
-          );
-        }
-        return;
-      }
-      if (param.name === "props" && description === "Props") {
-        if (!comment.params[i + 1].name.startsWith("props.")) {
-          throw new Error(
-            "Expected docs for individual props: " + comment.name
-          );
-        }
-        return;
       }
 
-      markdown += `### ${param.name}\n\n`;
+      let paramName = isComponentApi(comment)
+        ? param.name.replace(/^props\./, "")
+        : param.name;
+      markdown += `### ${paramName}\n\n`;
+      if (showModes) {
+        let modes = param.modes.length ? param.modes : MODES;
+        markdown += `[modes: ${modes.join(", ")}]\n\n`;
+      }
       markdown += `${description || "_No documentation_"}\n\n`;
     });
+  }
+
+  // Returns section (if applicable/available)
+  if (comment.returns && !isComponentApi(comment)) {
+    markdown += `## Returns\n\n`;
+    markdown += `${resolveLinkTags(comment.returns)}\n\n`;
   }
 
   // Additional Examples section (if available)
@@ -411,25 +453,54 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   return markdown;
 }
 
-function parseDocComments(filepath: string): SimplifiedComment[] {
+function parseDocComments(filepath: string, apiFilter: string[] | null) {
   let code = fs.readFileSync(filepath).toString();
   let comments = dox.parseComments(code, { raw: true }) as ParsedComment[];
+
+  fs.writeFileSync(
+    "./scripts/jsdoc.json",
+    JSON.stringify(comments, null, 2),
+    "utf8"
+  );
+
   return comments
-    .filter((c) => c.tags.some((t) => t.type === "public"))
-    .map((c) => simplifyComment(c));
+    .filter(
+      (c) =>
+        c.tags.some((t) => t.type === "public") &&
+        (!apiFilter || apiFilter.includes(getApiName(c)))
+    )
+    .map((c) => simplifyComment(c, filepath));
 }
 
-function simplifyComment(comment: ParsedComment): SimplifiedComment {
-  let name = comment.ctx.name;
-  if (!name) {
-    let matches = comment.code.match(/function ([^<(]+)/);
-    if (matches) {
-      name = matches[1];
-    }
-    if (!name) {
-      throw new Error(`Could not determine API name:\n${comment.code}\n`);
-    }
+function getApiName(comment: ParsedComment): string {
+  let name =
+    comment.tags.find((t) => t.type === "name")?.string ||
+    (comment.ctx ? comment.ctx.name : undefined);
+  if (name) {
+    return name;
   }
+
+  let matches = comment.code.match(/^export const ([^=]+)/);
+  if (matches) {
+    return matches[1].trim();
+  }
+
+  matches = comment.code.match(/^export function ([^<(]+)/);
+  if (matches) {
+    return matches[1].trim();
+  }
+
+  throw new Error(`Could not determine API name:\n${comment.code}\n`);
+}
+
+function simplifyComment(
+  comment: ParsedComment,
+  filepath: string
+): SimplifiedComment {
+  let name = getApiName(comment);
+  let unstable = name.startsWith("unstable_");
+
+  let codeLink = `https://github.com/remix-run/react-router/blob/main/${filepath}#L${comment.line}`;
 
   let categoryTags = comment.tags.filter((t) => t.type === "category");
   if (categoryTags.length !== 1) {
@@ -456,9 +527,14 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
     (t) => t.type === "additionalExamples"
   )?.string;
 
-  let reference = typedocLookup.get(name);
+  let reference = typedocLookup.get(name)?.href;
   if (!reference) {
-    throw new Error(`Could not find API in typedoc reference docs: ${name}`);
+    if (args.write) {
+      throw new Error(`Could not find API in typedoc reference docs: ${name}`);
+    } else {
+      console.warn(`Could not find API in typedoc reference docs: ${name}`);
+      reference = "!!! UNKNOWN !!!";
+    }
   }
 
   let signature = getSignature(comment.code);
@@ -466,30 +542,62 @@ function simplifyComment(comment: ParsedComment): SimplifiedComment {
   let params: SimplifiedComment["params"] = [];
   comment.tags.forEach((tag) => {
     if (isParamTag(tag)) {
+      let description: string | undefined = tag.description;
+
+      let modes: Mode[] = [];
+      let modesRegex = /\[modes: ([^\]]+)\]/;
+      let matches = description?.match(modesRegex);
+      if (matches) {
+        modes = matches[1]
+          .split(",")
+          .map((m) => m.trim() as Mode)
+          .filter((m) => MODES.includes(m));
+        description = description.replace(modesRegex, "").trim();
+      }
+
+      if (!description) {
+        // If we don't have a description, try to look up a cross-reference link
+        // to a separate type
+        let matches = tag.string.match(/^\{(.+)\}\s.*/);
+        if (matches && typedocLookup.has(matches[1])) {
+          description = typedocLookup.get(matches[1])!.description;
+        }
+      }
+
+      if (!description) {
+        throw new Error(`Expected a description for param: ${tag.name}`);
+      }
+
       params.push({
         name: tag.name,
-        description: tag.description,
+        description,
+        modes,
       });
     }
   });
 
   let returns = comment.tags.find((t) => t.type === "returns")?.string;
-  if (!returns) {
-    throw new Error(`Expected a @returns tag: ${name}`);
-  }
 
-  return {
+  let simplifiedComment: SimplifiedComment = {
     category,
     name,
+    codeLink,
     modes,
     summary,
     example,
     additionalExamples,
     reference,
     signature,
+    unstable,
     params,
     returns,
   };
+
+  if (!simplifiedComment.returns && !isComponentApi(simplifiedComment)) {
+    throw new Error(`Expected a @returns tag for API: ${name}`);
+  }
+
+  return simplifiedComment;
 }
 
 function isParamTag(tag: Tag): tag is ParamTag {
@@ -498,33 +606,43 @@ function isParamTag(tag: Tag): tag is ParamTag {
 
 // Parse the TypeScript code into an AST so we can remove the function body
 // and just grab the signature
-function getSignature(code: string): string {
+function getSignature(code: string) {
   const ast = ts.createSourceFile("example.ts", code, ts.ScriptTarget.Latest);
   if (ast.statements.length === 0) {
     throw new Error(`Expected one or more statements: ${code}`);
   }
 
-  let functionDeclaration = ast.statements[0];
-  if (!ts.isFunctionDeclaration(functionDeclaration)) {
-    throw new Error(`Expected a function declaration: ${code}`);
+  if (ts.isFunctionDeclaration(ast.statements[0])) {
+    let functionDeclaration = ast.statements[0];
+
+    let modifiedFunction = {
+      ...functionDeclaration,
+      modifiers: functionDeclaration.modifiers?.filter(
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword
+      ),
+      body: ts.factory.createBlock([], false),
+    } as ts.FunctionDeclaration;
+
+    let newCode = ts
+      .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+      .printNode(ts.EmitHint.Unspecified, modifiedFunction, ast);
+
+    return newCode
+      .replace(/^function /, "")
+      .replace("{ }", "")
+      .trim();
   }
 
-  let modifiedFunction = {
-    ...functionDeclaration,
-    modifiers: functionDeclaration.modifiers?.filter(
-      (m) => m.kind !== ts.SyntaxKind.ExportKeyword
-    ),
-    body: ts.factory.createBlock([], false),
-  } as ts.FunctionDeclaration;
+  // TODO: Handle variable statements for forwardRef components
+  if (ts.isVariableStatement(ast.statements[0])) {
+    let api = code.match(/export const (\w+)/);
+    console.log(
+      `Warning: Skipping signature section for \`export const\` component: ${api?.[1]}`
+    );
+    return;
+  }
 
-  let newCode = ts
-    .createPrinter({ newLine: ts.NewLineKind.LineFeed })
-    .printNode(ts.EmitHint.Unspecified, modifiedFunction, ast);
-
-  return newCode
-    .replace(/^function /, "")
-    .replace("{ }", "")
-    .trim();
+  throw new Error("Unable to parse signature from code: " + code);
 }
 
 /**
@@ -546,26 +664,23 @@ function resolveLinkTags(text: string): string {
     const description = parts[1] || `\`${apiName}\``;
 
     // Look up the API in the lookup table
-    let relativePath;
+    let href: string | undefined;
     if (repoApiLookup.has(apiName)) {
-      relativePath = repoApiLookup.get(apiName);
+      href = repoApiLookup.get(apiName);
     } else if (typedocLookup.has(apiName)) {
       console.log(
         `Could not find markdown doc, resolved from typedoc docs: {@link ${apiName}}`
       );
-      relativePath = typedocLookup.get(apiName);
+      href = typedocLookup.get(apiName)?.href;
     }
 
-    if (relativePath) {
+    if (href) {
       // Convert to markdown link
-      let href = relativePath.startsWith("http")
-        ? relativePath
-        : `../${relativePath}`;
-      return `[${description}](${href})`;
+      return `[${description}](${/^http/.test(href) ? href : `../${href}`})`;
     } else {
       // If not found, return as plain text with a warning
       console.warn(
-        `Warning: Could not resolve {@link ${apiName}} in documentation`
+        `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`
       );
       return description;
     }

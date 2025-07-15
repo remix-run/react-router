@@ -430,13 +430,20 @@ export interface HistoryRouterProps {
 }
 
 /**
- * A `<Router>` that accepts a pre-instantiated history object. It's important
- * to note that using your own history object is highly discouraged and may add
- * two versions of the history library to your bundles unless you use the same
- * version of the history library that React Router uses internally.
+ * A declarative `<Router>` that accepts a pre-instantiated history object.
+ * It's important to note that using your own history object is highly discouraged
+ * and may add two versions of the history library to your bundles unless you use
+ * the same version of the history library that React Router uses internally.
  *
  * @name unstable_HistoryRouter
- * @category Component Routers
+ * @public
+ * @category Declarative Routers
+ * @mode declarative
+ * @param props Props
+ * @param props.basename Application basename
+ * @param props.children {@link Route | `<Route>`} components describing your route configuration
+ * @param props.history History implementation for use by the router
+ * @returns A declarative router using the URL hash for client side routing.
  */
 export function HistoryRouter({
   basename,
@@ -474,148 +481,165 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /**
-    Defines the link discovery behavior
-
-    ```tsx
-    <Link /> // default ("render")
-    <Link discover="render" />
-    <Link discover="none" />
-    ```
-
-    - **render** - default, discover the route when the link renders
-    - **none** - don't eagerly discover, only discover if the link is clicked
+   * Defines the link discovery behavior
+   *
+   * ```tsx
+   * <Link /> // default ("render")
+   * <Link discover="render" />
+   * <Link discover="none" />
+   * ```
+   *
+   * - **render** - default, discover the route when the link renders
+   * - **none** - don't eagerly discover, only discover if the link is clicked
   */
   discover?: DiscoverBehavior;
 
   /**
-    Defines the data and module prefetching behavior for the link.
-
-    ```tsx
-    <Link /> // default
-    <Link prefetch="none" />
-    <Link prefetch="intent" />
-    <Link prefetch="render" />
-    <Link prefetch="viewport" />
-    ```
-
-    - **none** - default, no prefetching
-    - **intent** - prefetches when the user hovers or focuses the link
-    - **render** - prefetches when the link renders
-    - **viewport** - prefetches when the link is in the viewport, very useful for mobile
-
-    Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted after the link.
-
-    ```tsx
-    <a href="..." />
-    <a href="..." />
-    <link rel="prefetch" /> // might conditionally render
-    ```
-
-    Because of this, if you are using `nav :last-child` you will need to use `nav :last-of-type` so the styles don't conditionally fall off your last link (and any other similar selectors).
+   * Defines the data and module prefetching behavior for the link.
+   *
+   * ```tsx
+   * <Link /> // default
+   * <Link prefetch="none" />
+   * <Link prefetch="intent" />
+   * <Link prefetch="render" />
+   * <Link prefetch="viewport" />
+   * ```
+   *
+   * - **none** - default, no prefetching
+   * - **intent** - prefetches when the user hovers or focuses the link
+   * - **render** - prefetches when the link renders
+   * - **viewport** - prefetches when the link is in the viewport, very useful for mobile
+   *
+   * Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted
+   * after the link.
+   *
+   * ```tsx
+   * <a href="..." />
+   * <a href="..." />
+   * <link rel="prefetch" /> // might conditionally render
+   * ```
+   *
+   * Because of this, if you are using `nav :last-child` you will need to use
+   * `nav :last-of-type` so the styles don't conditionally fall off your last link
+   * (and any other similar selectors).
    */
   prefetch?: PrefetchBehavior;
 
   /**
-    Will use document navigation instead of client side routing when the link is clicked: the browser will handle the transition normally (as if it were an `<a href>`).
-
-    ```tsx
-    <Link to="/logout" reloadDocument />
-    ```
+   * Will use document navigation instead of client side routing when the link is
+   * clicked: the browser will handle the transition normally (as if it were an `<a href>`).
+   *
+   * ```tsx
+   * <Link to="/logout" reloadDocument />
+   * ```
    */
   reloadDocument?: boolean;
 
   /**
-    Replaces the current entry in the history stack instead of pushing a new one onto it.
-
-    ```tsx
-    <Link replace />
-    ```
-
-    ```
-    # with a history stack like this
-    A -> B
-
-    # normal link click pushes a new entry
-    A -> B -> C
-
-    # but with `replace`, B is replaced by C
-    A -> C
-    ```
+   * Replaces the current entry in the history stack instead of pushing a new one
+   * onto it.
+   *
+   * ```tsx
+   * <Link replace />
+   * ```
+   *
+   * ```
+   * # with a history stack like this
+   * A -> B
+   *
+   * # normal link click pushes a new entry
+   * A -> B -> C
+   *
+   * # but with `replace`, B is replaced by C
+   * A -> C
+   * ```
    */
   replace?: boolean;
 
   /**
-    Adds persistent client side routing state to the next location.
-
-    ```tsx
-    <Link to="/somewhere/else" state={{ some: "value" }} />
-    ```
-
-    The location state is accessed from the `location`.
-
-    ```tsx
-    function SomeComp() {
-      const location = useLocation()
-      location.state; // { some: "value" }
-    }
-    ```
-
-    This state is inaccessible on the server as it is implemented on top of [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
+   * Adds persistent client side routing state to the next location.
+   *
+   * ```tsx
+   * <Link to="/somewhere/else" state={{ some: "value" }} />
+   * ```
+   *
+   * The location state is accessed from the `location`.
+   *
+   * ```tsx
+   * function SomeComp() {
+   *   const location = useLocation();
+   *   location.state; // { some: "value" }
+   * }
+   * ```
+   *
+   * This state is inaccessible on the server as it is implemented on top of
+   * [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
    */
   state?: any;
 
   /**
-    Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using {@link ScrollRestoration}. This only prevents new locations reseting scroll to the top, scroll position will be restored for back/forward button navigation.
-
-    ```tsx
-    <Link to="?tab=one" preventScrollReset />
-    ```
+   * Prevents the scroll position from being reset to the top of the window when
+   * the link is clicked and the app is using {@link ScrollRestoration}. This only
+   * prevents new locations reseting scroll to the top, scroll position will be
+   * restored for back/forward button navigation.
+   *
+   * ```tsx
+   * <Link to="?tab=one" preventScrollReset />
+   * ```
    */
   preventScrollReset?: boolean;
 
   /**
-    Defines the relative path behavior for the link.
-
-    ```tsx
-    <Link to=".." /> // default: "route"
-    <Link relative="route" />
-    <Link relative="path" />
-    ```
-
-    Consider a route hierarchy where a parent route pattern is "blog" and a child route pattern is "blog/:slug/edit".
-
-    - **route** - default, resolves the link relative to the route pattern. In the example above a relative link of `".."` will remove both `:slug/edit` segments back to "/blog".
-    - **path** - relative to the path so `..` will only remove one URL segment up to "/blog/:slug"
+   * Defines the relative path behavior for the link.
+   *
+   * ```tsx
+   * <Link to=".." /> // default: "route"
+   * <Link relative="route" />
+   * <Link relative="path" />
+   * ```
+   *
+   * Consider a route hierarchy where a parent route pattern is "blog" and a child
+   * route pattern is "blog/:slug/edit".
+   *
+   * - **route** - default, resolves the link relative to the route pattern. In the
+   * example above a relative link of `".."` will remove both `:slug/edit` segments
+   * back to "/blog".
+   * - **path** - relative to the path so `..` will only remove one URL segment up
+   * to "/blog/:slug"
+   *
+   * Note that index routes and layout routes do not have paths so they are not
+   * included in the relative path calculation.
    */
   relative?: RelativeRoutingType;
 
   /**
-    Can be a string or a partial {@link Path}:
-
-    ```tsx
-    <Link to="/some/path" />
-
-    <Link
-      to={{
-        pathname: "/some/path",
-        search: "?query=string",
-        hash: "#hash",
-      }}
-    />
-    ```
+   * Can be a string or a partial {@link Path}:
+   *
+   * ```tsx
+   * <Link to="/some/path" />
+   *
+   * <Link
+   *   to={{
+   *     pathname: "/some/path",
+   *     search: "?query=string",
+   *     hash: "#hash",
+   *   }}
+   * />
+   * ```
    */
   to: To;
 
   /**
-    Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation.
-
-    ```jsx
-    <Link to={to} viewTransition>
-      Click me
-    </Link>
-    ```
-
-    To apply specific styles for the transition, see {@link useViewTransitionState}
+   * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+   * for this navigation.
+   *
+   * ```jsx
+   * <Link to={to} viewTransition>
+   *   Click me
+   * </Link>
+   * ```
+   *
+   * To apply specific styles for the transition, see {@link useViewTransitionState}
    */
   viewTransition?: boolean;
 }
@@ -623,23 +647,32 @@ export interface LinkProps
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
-  A progressively enhanced `<a href>` wrapper to enable navigation with client-side routing.
-
-  ```tsx
-  import { Link } from "react-router";
-
-  <Link to="/dashboard">Dashboard</Link>;
-
-  <Link
-    to={{
-      pathname: "/some/path",
-      search: "?query=string",
-      hash: "#hash",
-    }}
-  />
-  ```
-
-  @category Components
+ * A progressively enhanced `<a href>` wrapper to enable navigation with client-side routing.
+ *
+ * @example
+ * import { Link } from "react-router";
+ *
+ * <Link to="/dashboard">Dashboard</Link>;
+ *
+ * <Link
+ *   to={{
+ *     pathname: "/some/path",
+ *     search: "?query=string",
+ *     hash: "#hash",
+ *   }}
+ * />;
+ *
+ * @public
+ * @category Components
+ * @param {LinkProps.discover} props.discover [modes: framework]
+ * @param {LinkProps.prefetch} props.prefetch [modes: framework]
+ * @param {LinkProps.preventScrollReset} props.preventScrollReset [modes: framework, data]
+ * @param {LinkProps.relative} props.relative
+ * @param {LinkProps.reloadDocument} props.reloadDocument
+ * @param {LinkProps.replace} props.replace
+ * @param {LinkProps.state} props.state
+ * @param {LinkProps.to} props.to
+ * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data]
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -748,38 +781,39 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 Link.displayName = "Link";
 
 /**
-  The object passed to {@link NavLink} `children`, `className`, and `style` prop callbacks to render and style the link based on its state.
-
-  ```
-  // className
-  <NavLink
-    to="/messages"
-    className={({ isActive, isPending }) =>
-      isPending ? "pending" : isActive ? "active" : ""
-    }
-  >
-    Messages
-  </NavLink>
-
-  // style
-  <NavLink
-    to="/messages"
-    style={({ isActive, isPending }) => {
-      return {
-        fontWeight: isActive ? "bold" : "",
-        color: isPending ? "red" : "black",
-      }
-    )}
-  />
-
-  // children
-  <NavLink to="/tasks">
-    {({ isActive, isPending }) => (
-      <span className={isActive ? "active" : ""}>Tasks</span>
-    )}
-  </NavLink>
-  ```
-
+ * The object passed to {@link NavLink} `children`, `className`, and `style` prop
+ * callbacks to render and style the link based on its state.
+ *
+ * ```
+ * // className
+ * <NavLink
+ *   to="/messages"
+ *   className={({ isActive, isPending }) =>
+ *     isPending ? "pending" : isActive ? "active" : ""
+ *   }
+ * >
+ *   Messages
+ * </NavLink>
+ *
+ * // style
+ * <NavLink
+ *   to="/messages"
+ *   style={({ isActive, isPending }) => {
+ *     return {
+ *       fontWeight: isActive ? "bold" : "",
+ *       color: isPending ? "red" : "black",
+ *     }
+ *   )}
+ * />
+ *
+ * // children
+ * <NavLink to="/tasks">
+ *   {({ isActive, isPending }) => (
+ *     <span className={isActive ? "active" : ""}>Tasks</span>
+ *   )}
+ * </NavLink>
+ * ```
+ *
  */
 export type NavLinkRenderProps = {
   /**
@@ -788,12 +822,14 @@ export type NavLinkRenderProps = {
   isActive: boolean;
 
   /**
-   * Indicates if the pending location matches the link's URL.
+   * Indicates if the pending location matches the link's URL. Only available in
+   * Framework/Data modes.
    */
   isPending: boolean;
 
   /**
-   * Indicates if a view transition to the link's URL is in progress. See {@link useViewTransitionState}
+   * Indicates if a view transition to the link's URL is in progress.
+   * See {@link useViewTransitionState}
    */
   isTransitioning: boolean;
 };
@@ -804,85 +840,135 @@ export type NavLinkRenderProps = {
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
   /**
-    Can be regular React children or a function that receives an object with the active and pending states of the link.
-
-    ```tsx
-    <NavLink to="/tasks">
-      {({ isActive }) => (
-        <span className={isActive ? "active" : ""}>Tasks</span>
-      )}
-    </NavLink>
-    ```
+   *  Can be regular React children or a function that receives an object with the
+   * `active` and `pending` states of the link.
+   *
+   *  ```tsx
+   *  <NavLink to="/tasks">
+   *    {({ isActive }) => (
+   *      <span className={isActive ? "active" : ""}>Tasks</span>
+   *    )}
+   *  </NavLink>
+   *  ```
    */
   children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
 
   /**
-    Changes the matching logic to make it case-sensitive:
-
-    | Link                                         | URL           | isActive |
-    | -------------------------------------------- | ------------- | -------- |
-    | `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | true     |
-    | `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/sponge-bob` | false    |
+   * Changes the matching logic to make it case-sensitive:
+   *
+   * | Link                                         | URL           | isActive |
+   * | -------------------------------------------- | ------------- | -------- |
+   * | `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | true     |
+   * | `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/sponge-bob` | false    |
    */
   caseSensitive?: boolean;
 
   /**
-    Classes are automatically applied to NavLink that correspond to {@link NavLinkRenderProps}.
-
-    ```css
-    a.active { color: red; }
-    a.pending { color: blue; }
-    a.transitioning {
-      view-transition-name: my-transition;
-    }
-    ```
+   * Classes are automatically applied to NavLink that correspond to the state.
+   *
+   * ```css
+   * a.active {
+   *   color: red;
+   * }
+   * a.pending {
+   *   color: blue;
+   * }
+   * a.transitioning {
+   *   view-transition-name: my-transition;
+   * }
+   * ```
+   *
+   * Or you can specify a function that receives {@link NavLinkRenderProps} and
+   * returns the `className`:
+   *
+   * ```tsx
+   * <NavLink className={({ isActive, isPending }) => (
+   *   isActive ? "my-active-class" :
+   *   isPending ? "my-pending-class" :
+   *   ""
+   * )} />
+   * ```
    */
   className?: string | ((props: NavLinkRenderProps) => string | undefined);
 
   /**
-    Changes the matching logic for the `active` and `pending` states to only match to the "end" of the {@link NavLinkProps.to}. If the URL is longer, it will no longer be considered active.
-
-    | Link                          | URL          | isActive |
-    | ----------------------------- | ------------ | -------- |
-    | `<NavLink to="/tasks" />`     | `/tasks`     | true     |
-    | `<NavLink to="/tasks" />`     | `/tasks/123` | true     |
-    | `<NavLink to="/tasks" end />` | `/tasks`     | true     |
-    | `<NavLink to="/tasks" end />` | `/tasks/123` | false    |
-
-    `<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the root route.
+   * Changes the matching logic for the `active` and `pending` states to only match
+   * to the "end" of the {@link NavLinkProps.to}. If the URL is longer, it will no
+   * longer be considered active.
+   *
+   * | Link                          | URL          | isActive |
+   * | ----------------------------- | ------------ | -------- |
+   * | `<NavLink to="/tasks" />`     | `/tasks`     | true     |
+   * | `<NavLink to="/tasks" />`     | `/tasks/123` | true     |
+   * | `<NavLink to="/tasks" end />` | `/tasks`     | true     |
+   * | `<NavLink to="/tasks" end />` | `/tasks/123` | false    |
+   *
+   * `<NavLink to="/">` is an exceptional case because _every_ URL matches `/`.
+   * To avoid this matching every single route by default, it effectively ignores
+   * the `end` prop and only matches when you're at the root route.
    */
   end?: boolean;
 
+  /**
+   * Styles can also be applied dynamically via a function that receives
+   * `NavLinkRenderProps` and returns the styles:
+   *
+   * ```tsx
+   * <NavLink to="/tasks" style={{ color: "red" }} />
+   * <NavLink to="/tasks" style={({ isActive, isPending }) => ({
+   *   color:
+   *     isActive ? "red" :
+   *     isPending ? "blue" : "black"
+   * })} />
+   * ```
+   */
   style?:
     | React.CSSProperties
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
 }
 
 /**
-  Wraps {@link Link | `<Link>`} with additional props for styling active and pending states.
-
-  - Automatically applies classes to the link based on its active and pending states, see {@link NavLinkProps.className}.
-  - Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
-
-  ```tsx
-  import { NavLink } from "react-router"
-  <NavLink to="/message" />
-  ```
-
-  States are available through the className, style, and children render props. See {@link NavLinkRenderProps}.
-
-  ```tsx
-  <NavLink
-    to="/messages"
-    className={({ isActive, isPending }) =>
-      isPending ? "pending" : isActive ? "active" : ""
-    }
-  >
-    Messages
-  </NavLink>
-  ```
-
-  @category Components
+ * Wraps {@link Link | `<Link>`} with additional props for styling active and
+ * pending states.
+ *
+ * - Automatically applies classes to the link based on its `active` and `pending`
+ * states, see {@link NavLinkProps.className}
+ *   - Note that `pending` is only available with Framework and Data modes.
+ * - Automatically applies `aria-current="page"` to the link when the link is active.
+ * See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current)
+ * on MDN.
+ * - States are additionally available through the className, style, and children
+ * render props. See {@link NavLinkRenderProps}.
+ *
+ * @example
+ * <NavLink to="/message">Messages</NavLink>
+ *
+ * // Using render props
+ * <NavLink
+ *   to="/messages"
+ *   className={({ isActive, isPending }) =>
+ *     isPending ? "pending" : isActive ? "active" : ""
+ *   }
+ * >
+ *   Messages
+ * </NavLink>
+ *
+ * @public
+ * @category Components
+ * @param {NavLinkProps.caseSensitive} props.caseSensitive
+ * @param {NavLinkProps.children} props.children
+ * @param {NavLinkProps.className} props.className
+ * @param {NavLinkProps.discover} props.discover [modes: framework]
+ * @param {NavLinkProps.end} props.end
+ * @param {NavLinkProps.prefetch} props.prefetch [modes: framework]
+ * @param {NavLinkProps.preventScrollReset} props.preventScrollReset [modes: framework, data]
+ * @param {NavLinkProps.relative} props.relative
+ * @param {NavLinkProps.reloadDocument} props.reloadDocument
+ * @param {NavLinkProps.replace} props.replace
+ * @param {NavLinkProps.state} props.state
+ * @param {NavLinkProps.style} props.style
+ * @param {NavLinkProps.to} props.to
+ * @param {NavLinkProps.viewTransition} props.viewTransition [modes: framework, data]
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
@@ -1355,11 +1441,29 @@ function useDataRouterState(hookName: DataRouterStateHook) {
 // External hooks
 
 /**
- * Handles the click behavior for router `<Link>` components. This is useful if
+ * Handles the click behavior for router {@link Link | `<Link>`} components. This is useful if
  * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
  *
+ * @public
  * @category Hooks
+ * @param to The URL to navigate to, can be a string or a partial {@link Path}.
+ * @param options Options
+ * @param options.preventScrollReset Whether to prevent the scroll position from
+ * being reset to the top of the viewport on completion of the navigation when
+ * using the {@link ScrollRestoration | `<ScrollRestoration>`} component.
+ * Defaults to `false`.
+ * @param options.relative The {@link RelativeRoutingType | relative routing type}
+ * to use for the link. Defaults to `"route"`.
+ * @param options.replace Whether to replace the current history entry instead
+ * of pushing a new one. Defaults to `false`.
+ * @param options.state The state to add to the history entry for this navigation.
+ * Defaults to `undefined`.
+ * @param options.target The target attribute for the link. Defaults to `undefined`.
+ * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+ * for this navigation. To apply specific styles during the transition see {@link useViewTransitionState}.
+ * Defaults to `false`.
+ * @returns A click handler function that can be used in a custom Link component.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
