@@ -4,45 +4,30 @@ title: useBeforeUnload
 
 # useBeforeUnload
 
-<!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
-
-Thank you for helping improve our documentation!
-
-This file is auto-generated from the JSDoc comments in the source
-code, so please edit the JSDoc comments in the file below and this
-file will be re-generated once those changes are merged.
-
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L2426
--->
-
 [MODES: framework, data, declarative]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useBeforeUnload.html)
 
-Set up a callback to be fired on [Window's `beforeunload` event](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event).
+Setup a callback to be fired on the window's `beforeunload` event.
 
 ## Signature
 
 ```tsx
-useBeforeUnload(callback: (event: BeforeUnloadEvent) => any, options?: {
-    capture?: boolean;
-}): void
+useBeforeUnload(callback, options): void
 ```
 
 ## Params
 
 ### callback
 
-The callback to be called when the `beforeunload` event is fired.
+[modes: framework, data, declarative]
 
-### options.capture
+_No documentation_
 
-If `true`, the event will be captured during the capture phase. Defaults to `false`.
+### options
 
-## Returns
+[modes: framework, data, declarative]
 
-No return value.
-
+_No documentation_

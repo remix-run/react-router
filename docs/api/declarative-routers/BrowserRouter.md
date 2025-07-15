@@ -4,43 +4,30 @@ title: BrowserRouter
 
 # BrowserRouter
 
-<!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
-
-Thank you for helping improve our documentation!
-
-This file is auto-generated from the JSDoc comments in the source
-code, so please edit the JSDoc comments in the file below and this
-file will be re-generated once those changes are merged.
-
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L323
--->
-
 [MODES: declarative]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.BrowserRouter.html)
 
-A declarative `<Router>` using the browser history API for client side routing.
-
-## Signature
-
-```tsx
-BrowserRouter({ basename, children, window, }: BrowserRouterProps)
-```
+A declarative router using the browser history API for client side routing.
 
 ## Props
 
 ### basename
 
-Application basename
+[modes: declarative]
+
+_No documentation_
 
 ### children
 
-[`<Route>`](../components/Route) components describing your route configuration
+[modes: declarative]
+
+_No documentation_
 
 ### window
 
-Window object override - defaults to the global `window` instance
+[modes: declarative]
 
+_No documentation_

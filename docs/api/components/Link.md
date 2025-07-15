@@ -4,18 +4,6 @@ title: Link
 
 # Link
 
-<!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
-
-Thank you for helping improve our documentation!
-
-This file is auto-generated from the JSDoc comments in the source
-code, so please edit the JSDoc comments in the file below and this
-file will be re-generated once those changes are merged.
-
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L649
--->
-
 [MODES: framework, data, declarative]
 
 ## Summary
@@ -47,9 +35,7 @@ import { Link } from "react-router";
 Defines the link discovery behavior
 
 ```tsx
-<Link /> // default ("render")
 <Link discover="render" />
-<Link discover="none" />
 ```
 
 - **render** - default, discover the route when the link renders
@@ -62,11 +48,7 @@ Defines the link discovery behavior
 Defines the data and module prefetching behavior for the link.
 
 ```tsx
-<Link /> // default
-<Link prefetch="none" />
 <Link prefetch="intent" />
-<Link prefetch="render" />
-<Link prefetch="viewport" />
 ```
 
 - **none** - default, no prefetching
@@ -74,8 +56,7 @@ Defines the data and module prefetching behavior for the link.
 - **render** - prefetches when the link renders
 - **viewport** - prefetches when the link is in the viewport, very useful for mobile
 
-Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted
-after the link.
+Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted after the link.
 
 ```tsx
 <a href="..." />
@@ -83,18 +64,13 @@ after the link.
 <link rel="prefetch" /> // might conditionally render
 ```
 
-Because of this, if you are using `nav :last-child` you will need to use
-`nav :last-of-type` so the styles don't conditionally fall off your last link
-(and any other similar selectors).
+Because of this, if you are using `nav :last-child` you will need to use `nav :last-of-type` so the styles don't conditionally fall off your last link (and any other similar selectors).
 
 ### preventScrollReset
 
 [modes: framework, data]
 
-Prevents the scroll position from being reset to the top of the window when
-the link is clicked and the app is using [`ScrollRestoration`](../components/ScrollRestoration). This only
-prevents new locations reseting scroll to the top, scroll position will be
-restored for back/forward button navigation.
+Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using [ScrollRestoration](../components/ScrollRestoration). This only prevents new locations reseting scroll to the top, scroll position will be restored for back/forward button navigation.
 
 ```tsx
 <Link to="?tab=one" preventScrollReset />
@@ -112,24 +88,18 @@ Defines the relative path behavior for the link.
 <Link relative="path" />
 ```
 
-Consider a route hierarchy where a parent route pattern is "blog" and a child
-route pattern is "blog/:slug/edit".
+Consider a route hierarchy where a parent route pattern is "blog" and a child route pattern is "blog/:slug/edit".
 
-- **route** - default, resolves the link relative to the route pattern. In the
-example above a relative link of `".."` will remove both `:slug/edit` segments
-back to "/blog".
-- **path** - relative to the path so `..` will only remove one URL segment up
-to "/blog/:slug"
+- **route** - default, resolves the link relative to the route pattern. In the example above a relative link of `".."` will remove both `:slug/edit` segments back to "/blog".
+- **path** - relative to the path so `..` will only remove one URL segment up to "/blog/:slug"
 
-Note that index routes and layout routes do not have paths so they are not
-included in the relative path calculation.
+Note that index routes and layout routes have no paths so they are not included in the relative path calculation.
 
 ### reloadDocument
 
 [modes: framework, data, declarative]
 
-Will use document navigation instead of client side routing when the link is
-clicked: the browser will handle the transition normally (as if it were an `<a href>`).
+Will use document navigation instead of client side routing when the link is clicked: the browser will handle the transition normally (as if it were an `<a href>`).
 
 ```tsx
 <Link to="/logout" reloadDocument />
@@ -139,8 +109,7 @@ clicked: the browser will handle the transition normally (as if it were an `<a h
 
 [modes: framework, data, declarative]
 
-Replaces the current entry in the history stack instead of pushing a new one
-onto it.
+Replaces the current entry in the history stack instead of pushing a new one onto it.
 
 ```tsx
 <Link replace />
@@ -176,14 +145,13 @@ function SomeComp() {
 }
 ```
 
-This state is inaccessible on the server as it is implemented on top of
-[`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
+This state is inaccessible on the server as it is implemented on top of [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
 
 ### to
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
+Can be a string or a partial [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
 
 ```tsx
 <Link to="/some/path" />
@@ -199,10 +167,9 @@ Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/
 
 ### viewTransition
 
-[modes: framework, data]
+[modes: framework, data, declarative]
 
-Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-for this navigation.
+Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation.
 
 ```jsx
 <Link to={to} viewTransition>
@@ -210,5 +177,4 @@ for this navigation.
 </Link>
 ```
 
-To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
-
+To apply specific styles for the transition, see [useViewTransitionState](../hooks/useViewTransitionState)

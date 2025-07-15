@@ -4,27 +4,13 @@ title: useFetchers
 
 # useFetchers
 
-<!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
-
-Thank you for helping improve our documentation!
-
-This file is auto-generated from the JSDoc comments in the source
-code, so please edit the JSDoc comments in the file below and this
-file will be re-generated once those changes are merged.
-
-https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L2224
--->
-
 [MODES: framework, data]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useFetchers.html)
 
-Returns an array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.Fetcher.html)s. This is useful for components
-throughout the app that didn't create the fetchers but want to use their submissions
-to participate in optimistic UI.
+Returns an array of all in-flight fetchers. This is useful for components throughout the app that didn't create the fetchers but want to use their submissions to participate in optimistic UI.
 
 ```tsx
 import { useFetchers } from "react-router";
@@ -40,12 +26,5 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useFetchers(): (Fetcher & {
-    key: string;
-})[]
+useFetchers(): undefined
 ```
-
-## Returns
-
-An array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.Fetcher.html)s, each with a unique `key` property.
-
