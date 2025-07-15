@@ -1102,6 +1102,12 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
 
   /**
    * The encoding type to use for the form submission.
+   *
+   * ```tsx
+   * <Form encType="application/x-www-form-urlencoded"/>  // Default
+   * <Form encType="multipart/form-data"/>
+   * <Form encType="text/plain"/>
+   * ```
    */
   encType?:
     | "application/x-www-form-urlencoded"
@@ -1109,14 +1115,16 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     | "text/plain";
 
   /**
-   * The URL to submit the form data to.  If `undefined`, this defaults to the closest route in context.
+   * The URL to submit the form data to.  If `undefined`, this defaults to the
+   * closest route in context.
    */
   action?: string;
 
   /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
-   * hierarchy and want to instead route based on /-delimited URL segments
+   * hierarchy and want to instead route based on slash-delimited URL segments.
+   * See {@link RelativeRoutingType}.
    */
   relative?: RelativeRoutingType;
 
@@ -1144,6 +1152,18 @@ export interface FetcherFormProps extends SharedFormProps {}
  * @category Types
  */
 export interface FormProps extends SharedFormProps {
+  /**
+   * Defines the link discovery behavior. See {@link DiscoverBehavior}.
+   *
+   * ```tsx
+   * <Link /> // default ("render")
+   * <Link discover="render" />
+   * <Link discover="none" />
+   * ```
+   *
+   * - **render** - default, discover the route when the link renders
+   * - **none** - don't eagerly discover, only discover if the link is clicked
+   */
   discover?: DiscoverBehavior;
 
   /**
@@ -1154,10 +1174,9 @@ export interface FormProps extends SharedFormProps {
   fetcherKey?: string;
 
   /**
-   * Skips the navigation and uses a {@link useFetcher | fetcher} internally
-   * when `false`. This is essentially a shorthand for `useFetcher()` +
-   * `<fetcher.Form>` where you don't care about the resulting data in this
-   * component.
+   * When `false`, skips the navigation and submits via a fetcher internally.
+   * This is essentially a shorthand for {@link useFetcher} + `<fetcher.Form>` where
+   * you don't care about the resulting data in this component.
    */
   navigate?: boolean;
 
@@ -1197,28 +1216,43 @@ type HTMLSubmitEvent = React.BaseSyntheticEvent<
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 /**
-
-A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) that submits data to actions via `fetch`, activating pending states in `useNavigation` which enables advanced user interfaces beyond a basic HTML form. After a form's action completes, all data on the page is automatically revalidated to keep the UI in sync with the data.
-
-Because it uses the HTML form API, server rendered pages are interactive at a basic level before JavaScript loads. Instead of React Router managing the submission, the browser manages the submission as well as the pending states (like the spinning favicon). After JavaScript loads, React Router takes over enabling web application user experiences.
-
-Form is most useful for submissions that should also change the URL or otherwise add an entry to the browser history stack. For forms that shouldn't manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
-
-```tsx
-import { Form } from "react-router";
-
-function NewEvent() {
-  return (
-    <Form action="/events" method="post">
-      <input name="title" type="text" />
-      <input name="description" type="text" />
-    </Form>
-  )
-}
-```
-
-@category Components
-*/
+ * A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) that submits data to actions via `fetch`, activating pending states in `useNavigation` which enables advanced user interfaces beyond a basic HTML form. After a form's action completes, all data on the page is automatically revalidated to keep the UI in sync with the data.
+ *
+ * Because it uses the HTML form API, server rendered pages are interactive at a basic level before JavaScript loads. Instead of React Router managing the submission, the browser manages the submission as well as the pending states (like the spinning favicon). After JavaScript loads, React Router takes over enabling web application user experiences.
+ *
+ * Form is most useful for submissions that should also change the URL or otherwise add an entry to the browser history stack. For forms that shouldn't manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
+ *
+ * ```tsx
+ * import { Form } from "react-router";
+ *
+ * function NewEvent() {
+ *   return (
+ *     <Form action="/events" method="post">
+ *       <input name="title" type="text" />
+ *       <input name="description" type="text" />
+ *     </Form>
+ *   );
+ * }
+ * ```
+ * @public
+ * @category Components
+ * @mode framework
+ * @mode data
+ * @param {FormProps.action} action n/a
+ * @param {FormProps.discover} discover n/a
+ * @param {FormProps.encType} encType n/a
+ * @param {FormProps.fetcherKey} fetcherKey n/a
+ * @param {FormProps.method} method n/a
+ * @param {FormProps.navigate} navigate n/a
+ * @param {FormProps.onSubmit} onSubmit n/a
+ * @param {FormProps.preventScrollReset} preventScrollReset n/a
+ * @param {FormProps.relative} relative n/a
+ * @param {FormProps.reloadDocument} reloadDocument n/a
+ * @param {FormProps.replace} replace n/a
+ * @param {FormProps.state} state n/a
+ * @param {FormProps.viewTransition} viewTransition n/a
+ * @returns A progressively enhanced `<form>` component
+ */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
     {

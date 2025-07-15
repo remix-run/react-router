@@ -556,13 +556,10 @@ function simplifyComment(
         description = description.replace(modesRegex, "").trim();
       }
 
-      if (!description) {
-        // If we don't have a description, try to look up a cross-reference link
-        // to a separate type
-        let matches = tag.string.match(/^\{(.+)\}\s.*/);
-        if (matches && typedocLookup.has(matches[1])) {
-          description = typedocLookup.get(matches[1])!.description;
-        }
+      // If we have a type, we prefer to look up the referenced type description
+      matches = tag.string.match(/^\{(.+)\}\s.*/);
+      if (matches && typedocLookup.get(matches[1])?.description) {
+        description = typedocLookup.get(matches[1])!.description;
       }
 
       if (!description) {

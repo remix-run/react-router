@@ -4,6 +4,18 @@ title: Form
 
 # Form
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx#L1218
+-->
+
 [MODES: framework, data]
 
 ## Summary
@@ -33,32 +45,38 @@ function NewEvent() {
 
 ### action
 
-[modes: framework, data]
-
-The URL to submit the form data to. If `undefined`, this defaults to the closest route in context.
+The URL to submit the form data to.  If `undefined`, this defaults to the
+closest route in context.
 
 ### discover
 
-[modes: framework, data]
+Defines the link discovery behavior. See [`DiscoverBehavior`](https://api.reactrouter.com/v7/types/react_router.DiscoverBehavior.html).
 
-Determines application manifest discovery behavior.
+```tsx
+<Link /> // default ("render")
+<Link discover="render" />
+<Link discover="none" />
+```
+
+- **render** - default, discover the route when the link renders
+- **none** - don't eagerly discover, only discover if the link is clicked
 
 ### encType
 
-[modes: framework, data]
-
 The encoding type to use for the form submission.
+
+```tsx
+<Form encType="application/x-www-form-urlencoded"/>  // Default
+<Form encType="multipart/form-data"/>
+<Form encType="text/plain"/>
+```
 
 ### fetcherKey
 
-[modes: framework, data]
-
 Indicates a specific fetcherKey to use when using `navigate={false}` so you
-can pick up the fetcher's state in a different component in a [useFetcher](../hooks/useFetcher).
+can pick up the fetcher's state in a different component in a [`useFetcher`](../hooks/useFetcher).
 
 ### method
-
-[modes: framework, data]
 
 The HTTP verb to use when the form is submitted. Supports "get", "post",
 "put", "delete", and "patch".
@@ -68,45 +86,33 @@ you'd like to support progressive enhancement
 
 ### navigate
 
-[modes: framework, data]
-
-Skips the navigation and uses a [useFetcher](../hooks/useFetcher) internally
-when `false`. This is essentially a shorthand for `useFetcher()` +
-`<fetcher.Form>` where you don't care about the resulting data in this
-component.
+When `false`, skips the navigation and submits via a fetcher internally.
+This is essentially a shorthand for [`useFetcher`](../hooks/useFetcher) + `<fetcher.Form>` where
+you don't care about the resulting data in this component.
 
 ### onSubmit
-
-[modes: framework, data]
 
 A function to call when the form is submitted. If you call
 `event.preventDefault()` then this form will not do anything.
 
 ### preventScrollReset
 
-[modes: framework, data]
-
 Prevent the scroll position from resetting to the top of the viewport on
 completion of the navigation when using the <ScrollRestoration> component
 
 ### relative
 
-[modes: framework, data]
-
 Determines whether the form action is relative to the route hierarchy or
-the pathname. Use this if you want to opt out of navigating the route
-hierarchy and want to instead route based on /-delimited URL segments
+the pathname.  Use this if you want to opt out of navigating the route
+hierarchy and want to instead route based on slash-delimited URL segments.
+See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html).
 
 ### reloadDocument
-
-[modes: framework, data]
 
 Forces a full document navigation instead of client side routing + data
 fetch.
 
 ### replace
-
-[modes: framework, data]
 
 Replaces the current entry in the browser history stack when the form
 navigates. Use this if you don't want the user to be able to click "back"
@@ -114,15 +120,12 @@ to the page with the form on it.
 
 ### state
 
-[modes: framework, data]
-
 State object to add to the history stack entry for this navigation
 
 ### viewTransition
 
-[modes: framework, data]
-
 Enables a [View
 Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
 for this navigation. To apply specific styles during the transition see
-[useViewTransitionState](../hooks/useViewTransitionState).
+[`useViewTransitionState`](../hooks/useViewTransitionState).
+
