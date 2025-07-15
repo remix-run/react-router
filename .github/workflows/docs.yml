@@ -51,7 +51,7 @@ jobs:
           node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write
           node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/dom/lib.tsx --write
 
-        - name: 💪 Commit
+      - name: 💪 Commit
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
