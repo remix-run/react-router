@@ -394,7 +394,7 @@ Congratulations! You are now on React Router v7. Go ahead and run your applicati
 [v2-future-flags]: https://remix.run/docs/start/future-flags
 [routing]: ../start/framework/routing
 [fs-routing]: ../how-to/file-route-conventions
-[v7-changelog-types]: https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#typesafety-improvements
+[v7-changelog-types]: https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#type-safety-improvements
 [server-loaders]: ../start/framework/data-loading#server-data-loading
 [server-actions]: ../start/framework/actions#server-actions
 [ts-module-augmentation]: https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
