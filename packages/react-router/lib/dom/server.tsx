@@ -46,7 +46,7 @@ export interface StaticRouterProps {
  * A `<Router>` that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  *
- * @category Component Routers
+ * @category Declarative Routers
  */
 export function StaticRouter({
   basename,
@@ -90,7 +90,7 @@ export interface StaticRouterProviderProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  *
- * @category Component Routers
+ * @category Data Routers
  */
 export function StaticRouterProvider({
   context,
