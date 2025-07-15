@@ -4,6 +4,18 @@ title: Router
 
 # Router
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/components.tsx#L1018
+-->
+
 [MODES: declarative]
 
 ## Summary
@@ -16,40 +28,39 @@ Note: You usually won't render a `<Router>` directly. Instead, you'll render a
 router that is more specific to your environment such as a `<BrowserRouter>`
 in web browsers or a `<StaticRouter>` for server rendering.
 
+## Signature
+
+```tsx
+function Router({ basename: basenameProp = "/", children = null, location: locationProp, navigationType = NavigationType.Pop, navigator, static: staticProp = false, }: RouterProps): React.ReactElement | null
+```
+
 ## Props
 
 ### basename
 
-[modes: declarative]
-
-_No documentation_
+The base path for the application. This is prepended to all locations
 
 ### children
 
-[modes: declarative]
-
-_No documentation_
+Nested [`Route`](../components/Route) elements describing the route tree
 
 ### location
 
-[modes: declarative]
-
-_No documentation_
+The location to match against. Defaults to the current location.
+This can be a string or an object with `pathname`, `search`, `hash`, `state`, and `key`.
 
 ### navigationType
 
-[modes: declarative]
-
-_No documentation_
+The type of navigation that triggered this location change.
+Defaults to `NavigationType.Pop`.
 
 ### navigator
 
-[modes: declarative]
-
-_No documentation_
+The navigator to use for navigation. This is usually a history object
+or a custom navigator that implements the [`Navigator`](https://api.reactrouter.com/v7/interfaces/react_router.Navigator.html) interface.
 
 ### static
 
-[modes: declarative]
+Whether this router is static or not (used for SSR). If `true`, the router
+will not be reactive to location changes.
 
-_No documentation_

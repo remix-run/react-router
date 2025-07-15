@@ -4,6 +4,18 @@ title: Outlet
 
 # Outlet
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/components.tsx#L724
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
@@ -25,11 +37,15 @@ export default function SomeParent() {
 }
 ```
 
+## Signature
+
+```tsx
+function Outlet(props: OutletProps): React.ReactElement | null
+```
+
 ## Props
 
 ### context
-
-[modes: framework, data, declarative]
 
 Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
 
@@ -37,4 +53,5 @@ Provides a context value to the element tree below the outlet. Use when the pare
 <Outlet context={myContextValue} />
 ```
 
-Access the context with [useOutletContext](../hooks/useOutletContext).
+Access the context with [`useOutletContext`](../hooks/useOutletContext).
+

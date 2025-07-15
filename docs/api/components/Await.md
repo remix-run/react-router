@@ -4,6 +4,18 @@ title: Await
 
 # Await
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/components.tsx#L1264
+-->
+
 [MODES: framework, data]
 
 ## Summary
@@ -12,6 +24,8 @@ title: Await
 
 Used to render promise values with automatic error handling.
 
+**Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
+
 ```tsx
 import { Await, useLoaderData } from "react-router";
 
@@ -19,9 +33,7 @@ export function loader() {
   // not awaited
   const reviews = getReviews();
   // awaited (blocks the transition)
-  const book = await fetch("/api/book").then((res) =>
-    res.json()
-  );
+  const book = await fetch("/api/book").then((res) => res.json());
   return { book, reviews };
 }
 
@@ -47,13 +59,15 @@ function Book() {
 }
 ```
 
-`<Await>` expects to be rendered inside of a `<React.Suspense>`
+## Signature
+
+```tsx
+function Await<Resolve>({ children, errorElement, resolve, }: AwaitProps<Resolve>)
+```
 
 ## Props
 
 ### children
-
-[modes: framework, data]
 
 When using a function, the resolved value is provided as the parameter.
 
@@ -63,13 +77,13 @@ When using a function, the resolved value is provided as the parameter.
 </Await>
 ```
 
-When using React elements, [useAsyncValue](../hooks/useAsyncValue) will provide the
+When using React elements, [`useAsyncValue`](../hooks/useAsyncValue) will provide the
 resolved value:
 
 ```tsx [2]
 <Await resolve={reviewsPromise}>
   <Reviews />
-</Await>;
+</Await>
 
 function Reviews() {
   const resolvedReviews = useAsyncValue();
@@ -78,8 +92,6 @@ function Reviews() {
 ```
 
 ### errorElement
-
-[modes: framework, data]
 
 The error element renders instead of the children when the promise rejects.
 
@@ -92,7 +104,7 @@ The error element renders instead of the children when the promise rejects.
 </Await>
 ```
 
-To provide a more contextual error, you can use the [useAsyncError](../hooks/useAsyncError) in a
+To provide a more contextual error, you can use the [`useAsyncError`](../hooks/useAsyncError) in a
 child component
 
 ```tsx
@@ -101,7 +113,7 @@ child component
   resolve={reviewsPromise}
 >
   <Reviews />
-</Await>;
+</Await>
 
 function ReviewsError() {
   const error = useAsyncError();
@@ -110,14 +122,12 @@ function ReviewsError() {
 ```
 
 If you do not provide an errorElement, the rejected value will bubble up to
-the nearest route-level ErrorBoundary and be accessible
-via [useRouteError](../hooks/useRouteError) hook.
+the nearest route-level `ErrorBoundary` and be accessible via the
+[`useRouteError`](../hooks/useRouteError) hook.
 
 ### resolve
 
-[modes: framework, data]
-
-Takes a promise returned from a [LoaderFunction](https://api.reactrouter.com/v7/types/react_router.LoaderFunction.html) value to be resolved and rendered.
+Takes a promise returned from a `loader` to be resolved and rendered.
 
 ```jsx
 import { useLoaderData, Await } from "react-router";
@@ -153,3 +163,4 @@ export default function Book() {
   );
 }
 ```
+
