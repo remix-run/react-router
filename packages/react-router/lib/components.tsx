@@ -69,9 +69,6 @@ import {
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 
-/**
- * @private
- */
 export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
@@ -138,6 +135,9 @@ export const hydrationRouteProperties: (keyof RouteObject)[] = [
   "hydrateFallbackElement",
 ];
 
+/**
+ * @category Data Routers
+ */
 export interface MemoryRouterOpts {
   /**
    * Basename path for the application.
@@ -179,16 +179,23 @@ export interface MemoryRouterOpts {
  * Create a new data router that manages the application path using an in-memory
  * history stack.  Useful for non-browser environments without a DOM API.
  *
+ * @public
  * @category Data Routers
+ * @mode data
+ * @param routes Application routes
+ * @param opts Options
+ * @param {MemoryRouterOpts.basename} opts.basename n/a
+ * @param {MemoryRouterOpts.unstable_getContext} opts.unstable_getContext n/a
+ * @param {MemoryRouterOpts.future} opts.future n/a
+ * @param {MemoryRouterOpts.hydrationData} opts.hydrationData n/a
+ * @param {MemoryRouterOpts.initialEntries} opts.initialEntries n/a
+ * @param {MemoryRouterOpts.initialIndex} opts.initialIndex n/a
+ * @param {MemoryRouterOpts.dataStrategy} opts.dataStrategy n/a
+ * @param {MemoryRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
+ * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createMemoryRouter(
-  /**
-   * Application routes
-   */
   routes: RouteObject[],
-  /**
-   * Router options
-   */
   opts?: MemoryRouterOpts
 ): DataRouter {
   return createRouter({
@@ -233,14 +240,47 @@ class Deferred<T> {
   }
 }
 
-// Copied from react-dom types
+/**
+ * @category Types
+ */
 export interface RouterProviderProps {
+  /**
+   * The data router instance to use for navigation and data fetching.
+   */
   router: DataRouter;
+  /**
+   * The [`ReactDOM.flushSync`](https://react.dev/reference/react-dom/flushSync)
+   * implementation to use for flushing updates.
+   *
+   * You usually don't have to worry about this:
+   * - The `RouterProvider` exported from `react-router/dom` handles this internally for you
+   * - If you are rendering in a non-DOM environment, you can import
+   *   `RouterProvider` from `react-router` and ignore this prop
+   */
   flushSync?: (fn: () => unknown) => undefined;
 }
 
 /**
- * Given a Remix Router instance, render the appropriate UI
+ * Render the UI for the given data router. Should typically be at the
+ * top of an app's element tree.
+ *
+ * @example
+ * import { createBrowserRouter } from "react-router";
+ * import { RouterProvider } from "react-router/dom";
+ * import { createRoot } from "react-dom/client";
+ *
+ * const router = createBrowserRouter(routes);
+ * createRoot(document.getElementById("root")).render(
+ *   <RouterProvider router={router} />
+ * );
+ *
+ * @public
+ * @category Data Routers
+ * @mode data
+ * @param props Props
+ * @param {RouterProviderProps.router} props.router n/a
+ * @param {RouterProviderProps.flushSync} props.flushSync n/a
+ * @returns React element for the rendered router
  */
 export function RouterProvider({
   router,
@@ -509,16 +549,36 @@ function DataRoutes({
  * @category Types
  */
 export interface MemoryRouterProps {
+  /**
+   * Application basename
+   */
   basename?: string;
+  /**
+   * Nested {@link Route} elements describing the route tree
+   */
   children?: React.ReactNode;
+  /**
+   * Initial entries in the in-memory history stack
+   */
   initialEntries?: InitialEntry[];
+  /**
+   * Index of `initialEntries` the application should initialize to
+   */
   initialIndex?: number;
 }
 
 /**
- * A `<Router>` that stores all entries in memory.
+ * A declarative `<Router>` that stores all entries in memory.
  *
- * @category Component Routers
+ * @public
+ * @category Declarative Routers
+ * @mode declarative
+ * @param props Props
+ * @param {MemoryRouterProps.basename} props.basename n/a
+ * @param {MemoryRouterProps.children} props.children n/a
+ * @param {MemoryRouterProps.initialEntries} props.initialEntries n/a
+ * @param {MemoryRouterProps.initialIndex} props.initialIndex n/a
+ * @returns A declarative router using the browser history API for client side routing.
  */
 export function MemoryRouter({
   basename,
@@ -564,9 +624,21 @@ export function MemoryRouter({
  * @category Types
  */
 export interface NavigateProps {
+  /**
+   * The path to navigate to. This can be a string or an object
+   */
   to: To;
+  /**
+   * Whether to replace the current entry in the history stack
+   */
   replace?: boolean;
+  /**
+   * State to pass to the new location to store in [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state).
+   */
   state?: any;
+  /**
+   * How to interpret relative routing in the `to` prop. See {@link RelativeRoutingType}.
+   */
   relative?: RelativeRoutingType;
 }
 
@@ -577,7 +649,18 @@ export interface NavigateProps {
  *
  * It's recommended to avoid using this component in favor of {@link useNavigate}
  *
+ * @example
+ * <Navigate to="/tasks" />
+ *
+ * @public
  * @category Components
+ * @param props Props
+ * @param {NavigateProps.to} props.to n/a
+ * @param {NavigateProps.replace} props.replace n/a
+ * @param {NavigateProps.state} props.state n/a
+ * @param {NavigateProps.relative} props.relative n/a
+ * @returns {void}
+ *
  */
 export function Navigate({
   to,
@@ -627,34 +710,37 @@ export function Navigate({
  */
 export interface OutletProps {
   /**
-    Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
-
-    ```tsx
-    <Outlet context={myContextValue} />
-    ```
-
-    Access the context with {@link useOutletContext}.
+   * Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
+   *
+   * ```tsx
+   * <Outlet context={myContextValue} />
+   * ```
+   *
+   * Access the context with {@link useOutletContext}.
    */
   context?: unknown;
 }
 
 /**
-  Renders the matching child route of a parent route or nothing if no child route matches.
-
-  ```tsx
-  import { Outlet } from "react-router"
-
-  export default function SomeParent() {
-    return (
-      <div>
-        <h1>Parent Content</h1>
-        <Outlet />
-      </div>
-    );
-  }
-  ```
-
-  @category Components
+ * Renders the matching child route of a parent route or nothing if no child route matches.
+ *
+ * @example
+ * import { Outlet } from "react-router";
+ *
+ * export default function SomeParent() {
+ *   return (
+ *     <div>
+ *       <h1>Parent Content</h1>
+ *       <Outlet />
+ *     </div>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @param props Props
+ * @param {OutletProps.context} props.context n/a
+ * @returns React element for the rendered outlet or null if no child route matches.
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
@@ -664,22 +750,81 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
  * @category Types
  */
 export interface PathRouteProps {
+  /**
+   * Whether the path should be case sensitive. Defaults to `false`.
+   */
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
+  /**
+   * The path pattern to match. If unspecified or empty then this becomes a layout route.
+   */
   path?: NonIndexRouteObject["path"];
+  /**
+   * The unique identifier for this route (for use with Data routers)
+   */
   id?: NonIndexRouteObject["id"];
+  /**
+   * A function that returns a promise that resolves to the route object.
+   * Used for code-splitting routes.
+   * See [`lazy`](../../../start/data/route-object#lazy).
+   */
   lazy?: LazyRouteFunction<NonIndexRouteObject>;
+  /**
+   * The route loader.
+   * See [`loader`](../../../start/data/route-object#loader).
+   */
   loader?: NonIndexRouteObject["loader"];
+  /**
+   * The route action.
+   * See [`action`](../../../start/data/route-object#action).
+   */
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
+  /**
+   * The route shouldRevalidate function.
+   * See [`shouldRevalidate`](../../../start/data/route-object#shouldRevalidate).
+   */
   shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
+  /**
+   * The route handle.
+   */
   handle?: NonIndexRouteObject["handle"];
+  /**
+   * Whether or not this is an index route.
+   */
   index?: false;
+  /**
+   * Child Route components
+   */
   children?: React.ReactNode;
+  /**
+   * The React element to render when this Route matches.
+   * Mutually exclusive with `Component`.
+   */
   element?: React.ReactNode | null;
+  /**
+   * The React element to render while this router is loading data.
+   * Mutually exclusive with `HydrateFallback`.
+   */
   hydrateFallbackElement?: React.ReactNode | null;
+  /**
+   * The React element to render at this route if an error occurs.
+   * Mutually exclusive with `ErrorBoundary`.
+   */
   errorElement?: React.ReactNode | null;
+  /**
+   * The React Component to render when this route matches.
+   * Mutually exclusive with `element`.
+   */
   Component?: React.ComponentType | null;
+  /**
+   * The React Component to render while this router is loading data.
+   * Mutually exclusive with `hydrateFallbackElement`.
+   */
   HydrateFallback?: React.ComponentType | null;
+  /**
+   * The React Component to render at this route if an error occurs.
+   * Mutually exclusive with `errorElement`.
+   */
   ErrorBoundary?: React.ComponentType | null;
 }
 
@@ -692,22 +837,81 @@ export interface LayoutRouteProps extends PathRouteProps {}
  * @category Types
  */
 export interface IndexRouteProps {
+  /**
+   * Whether the path should be case sensitive. Defaults to `false`.
+   */
   caseSensitive?: IndexRouteObject["caseSensitive"];
+  /**
+   * The path pattern to match. If unspecified or empty then this becomes a layout route.
+   */
   path?: IndexRouteObject["path"];
+  /**
+   * The unique identifier for this route (for use with Data routers)
+   */
   id?: IndexRouteObject["id"];
+  /**
+   * A function that returns a promise that resolves to the route object.
+   * Used for code-splitting routes.
+   * See [`lazy`](../../../start/data/route-object#lazy).
+   */
   lazy?: LazyRouteFunction<IndexRouteObject>;
+  /**
+   * The route loader.
+   * See [`loader`](../../../start/data/route-object#loader).
+   */
   loader?: IndexRouteObject["loader"];
+  /**
+   * The route action.
+   * See [`action`](../../../start/data/route-object#action).
+   */
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
+  /**
+   * The route shouldRevalidate function.
+   * See [`shouldRevalidate`](../../../start/data/route-object#shouldRevalidate).
+   */
   shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
+  /**
+   * The route handle.
+   */
   handle?: IndexRouteObject["handle"];
+  /**
+   * Whether or not this is an index route.
+   */
   index: true;
+  /**
+   * Child Route components
+   */
   children?: undefined;
+  /**
+   * The React element to render when this Route matches.
+   * Mutually exclusive with `Component`.
+   */
   element?: React.ReactNode | null;
+  /**
+   * The React element to render while this router is loading data.
+   * Mutually exclusive with `HydrateFallback`.
+   */
   hydrateFallbackElement?: React.ReactNode | null;
+  /**
+   * The React element to render at this route if an error occurs.
+   * Mutually exclusive with `ErrorBoundary`.
+   */
   errorElement?: React.ReactNode | null;
+  /**
+   * The React Component to render when this route matches.
+   * Mutually exclusive with `element`.
+   */
   Component?: React.ComponentType | null;
+  /**
+   * The React Component to render while this router is loading data.
+   * Mutually exclusive with `hydrateFallbackElement`.
+   */
   HydrateFallback?: React.ComponentType | null;
+  /**
+   * The React Component to render at this route if an error occurs.
+   * Mutually exclusive with `errorElement`.
+   */
   ErrorBoundary?: React.ComponentType | null;
 }
 
@@ -719,9 +923,57 @@ export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
  * do not participate in data loading, actions, code splitting, or any other
  * route module features.
  *
+ * @example
+ * // Usually used in a declarative router
+ * function App() {
+ *   return (
+ *     <BrowserRouter>
+ *       <Routes>
+ *         <Route index element={<StepOne />} />
+ *         <Route path="step-2" element={<StepTwo />} />
+ *         <Route path="step-3" element={<StepThree />} />
+ *       </Routes>
+ *    </BrowserRouter>
+ *   );
+ * }
+ *
+ * // But can be used with a data router as well if you prefer the JSX notation
+ * const routes = createRoutesFromElements(
+ *   <>
+ *     <Route index loader={step1Loader} Component={StepOne} />
+ *     <Route path="step-2" loader={step2Loader} Component={StepTwo} />
+ *     <Route path="step-3" loader={step3Loader} Component={StepThree} />
+ *   </>
+ * );
+ *
+ * const router = createBrowserRouter(routes);
+ *
+ * function App() {
+ *   return <RouterProvider router={router} />;
+ * }
+ *
+ * @public
  * @category Components
+ * @param props Props
+ * @param {PathRouteProps.caseSensitive} props.caseSensitive n/a
+ * @param {PathRouteProps.path} props.path n/a
+ * @param {PathRouteProps.id} props.id n/a
+ * @param {PathRouteProps.lazy} props.lazy n/a
+ * @param {PathRouteProps.loader} props.loader n/a
+ * @param {PathRouteProps.action} props.action n/a
+ * @param {PathRouteProps.shouldRevalidate} props.shouldRevalidate n/a
+ * @param {PathRouteProps.handle} props.handle n/a
+ * @param {PathRouteProps.index} props.index n/a
+ * @param {PathRouteProps.children} props.children n/a
+ * @param {PathRouteProps.element} props.element n/a
+ * @param {PathRouteProps.hydrateFallbackElement} props.hydrateFallbackElement n/a
+ * @param {PathRouteProps.errorElement} props.errorElement n/a
+ * @param {PathRouteProps.Component} props.Component n/a
+ * @param {PathRouteProps.HydrateFallback} props.HydrateFallback n/a
+ * @param {PathRouteProps.ErrorBoundary} props.ErrorBoundary n/a
+ * @returns {void}
  */
-export function Route(_props: RouteProps): React.ReactElement | null {
+export function Route(props: RouteProps): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
@@ -733,11 +985,33 @@ export function Route(_props: RouteProps): React.ReactElement | null {
  * @category Types
  */
 export interface RouterProps {
+  /**
+   * The base path for the application. This is prepended to all locations
+   */
   basename?: string;
+  /**
+   * Nested {@link Route} elements describing the route tree
+   */
   children?: React.ReactNode;
+  /**
+   * The location to match against. Defaults to the current location.
+   * This can be a string or an object with `pathname`, `search`, `hash`, `state`, and `key`.
+   */
   location: Partial<Location> | string;
+  /**
+   * The type of navigation that triggered this location change.
+   * Defaults to `NavigationType.Pop`.
+   */
   navigationType?: NavigationType;
+  /**
+   * The navigator to use for navigation. This is usually a history object
+   * or a custom navigator that implements the {@link Navigator} interface.
+   */
   navigator: Navigator;
+  /**
+   * Whether this router is static or not (used for SSR). If `true`, the router
+   * will not be reactive to location changes.
+   */
   static?: boolean;
 }
 
@@ -748,7 +1022,17 @@ export interface RouterProps {
  * router that is more specific to your environment such as a `<BrowserRouter>`
  * in web browsers or a `<StaticRouter>` for server rendering.
  *
- * @category Components
+ * @public
+ * @category Declarative Routers
+ * @mode declarative
+ * @param props Props
+ * @param {RouterProps.basename} props.basename n/a
+ * @param {RouterProps.children} props.children n/a
+ * @param {RouterProps.location} props.location n/a
+ * @param {RouterProps.navigationType} props.navigationType n/a
+ * @param {RouterProps.navigator} props.navigator n/a
+ * @param {RouterProps.static} props.static n/a
+ * @returns React element for the rendered router or null if the location does not match the basename
  */
 export function Router({
   basename: basenameProp = "/",
@@ -834,7 +1118,6 @@ export interface RoutesProps {
    * Nested {@link Route} elements
    */
   children?: React.ReactNode;
-
   /**
    * The location to match against. Defaults to the current location.
    */
@@ -842,21 +1125,25 @@ export interface RoutesProps {
 }
 
 /**
- Renders a branch of {@link Route | `<Routes>`} that best matches the current
- location. Note that these routes do not participate in data loading, actions,
- code splitting, or any other route module features.
-
- ```tsx
- import { Routes, Route } from "react-router"
-
-<Routes>
-  <Route index element={<StepOne />} />
-  <Route path="step-2" element={<StepTwo />} />
-  <Route path="step-3" element={<StepThree />}>
-</Routes>
- ```
-
- @category Components
+ * Renders a branch of {@link Route | `<Routes>`} that best matches the current
+ * location. Note that these routes do not participate in data loading, actions,
+ * code splitting, or any other route module features.
+ *
+ * @example
+ * import { Routes, Route } from "react-router";
+ *
+ * <Routes>
+ *   <Route index element={<StepOne />} />
+ *   <Route path="step-2" element={<StepTwo />} />
+ *   <Route path="step-3" element={<StepThree />}>
+ * </Routes>
+ *
+ * @public
+ * @category Components
+ * @param props Props
+ * @param {RoutesProps.children} props.children n/a
+ * @param {RoutesProps.location} props.location n/a
+ * @returns React element for the rendered routes or null if no route matches
  */
 export function Routes({
   children,
@@ -874,147 +1161,153 @@ export interface AwaitResolveRenderFunction<Resolve = any> {
  */
 export interface AwaitProps<Resolve> {
   /**
-  When using a function, the resolved value is provided as the parameter.
-
-  ```tsx [2]
-  <Await resolve={reviewsPromise}>
-    {(resolvedReviews) => <Reviews items={resolvedReviews} />}
-  </Await>
-  ```
-
-  When using React elements, {@link useAsyncValue} will provide the
-  resolved value:
-
-  ```tsx [2]
-  <Await resolve={reviewsPromise}>
-    <Reviews />
-  </Await>
-
-  function Reviews() {
-    const resolvedReviews = useAsyncValue()
-    return <div>...</div>
-  }
-  ```
-  */
+   * When using a function, the resolved value is provided as the parameter.
+   *
+   * ```tsx [2]
+   * <Await resolve={reviewsPromise}>
+   *   {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+   * </Await>
+   * ```
+   *
+   * When using React elements, {@link useAsyncValue} will provide the
+   * resolved value:
+   *
+   * ```tsx [2]
+   * <Await resolve={reviewsPromise}>
+   *   <Reviews />
+   * </Await>
+   *
+   * function Reviews() {
+   *   const resolvedReviews = useAsyncValue();
+   *   return <div>...</div>;
+   * }
+   * ```
+   */
   children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
-  The error element renders instead of the children when the promise rejects.
-
-  ```tsx
-  <Await
-    errorElement={<div>Oops</div>}
-    resolve={reviewsPromise}
-  >
-    <Reviews />
-  </Await>
-  ```
-
-  To provide a more contextual error, you can use the {@link useAsyncError} in a
-  child component
-
-  ```tsx
-  <Await
-    errorElement={<ReviewsError />}
-    resolve={reviewsPromise}
-  >
-    <Reviews />
-  </Await>
-
-  function ReviewsError() {
-    const error = useAsyncError()
-    return <div>Error loading reviews: {error.message}</div>
-  }
-  ```
-
-  If you do not provide an errorElement, the rejected value will bubble up to
-  the nearest route-level {@link NonIndexRouteObject#ErrorBoundary | ErrorBoundary} and be accessible
-  via {@link useRouteError} hook.
-  */
+   * The error element renders instead of the children when the promise rejects.
+   *
+   * ```tsx
+   * <Await
+   *   errorElement={<div>Oops</div>}
+   *   resolve={reviewsPromise}
+   * >
+   *   <Reviews />
+   * </Await>
+   * ```
+   *
+   * To provide a more contextual error, you can use the {@link useAsyncError} in a
+   * child component
+   *
+   * ```tsx
+   * <Await
+   *   errorElement={<ReviewsError />}
+   *   resolve={reviewsPromise}
+   * >
+   *   <Reviews />
+   * </Await>
+   *
+   * function ReviewsError() {
+   *   const error = useAsyncError();
+   *   return <div>Error loading reviews: {error.message}</div>;
+   * }
+   * ```
+   *
+   * If you do not provide an errorElement, the rejected value will bubble up to
+   * the nearest route-level `ErrorBoundary` and be accessible via the
+   * {@link useRouteError} hook.
+   */
   errorElement?: React.ReactNode;
 
   /**
-  Takes a promise returned from a {@link LoaderFunction | loader} value to be resolved and rendered.
-
-  ```jsx
-  import { useLoaderData, Await } from "react-router"
-
-  export async function loader() {
-    let reviews = getReviews() // not awaited
-    let book = await getBook()
-    return {
-      book,
-      reviews, // this is a promise
-    }
-  }
-
-  export default function Book() {
-    const {
-      book,
-      reviews, // this is the same promise
-    } = useLoaderData()
-
-    return (
-      <div>
-        <h1>{book.title}</h1>
-        <p>{book.description}</p>
-        <React.Suspense fallback={<ReviewsSkeleton />}>
-          <Await
-            // and is the promise we pass to Await
-            resolve={reviews}
-          >
-            <Reviews />
-          </Await>
-        </React.Suspense>
-      </div>
-    );
-  }
-  ```
+   * Takes a promise returned from a `loader` to be resolved and rendered.
+   *
+   * ```jsx
+   * import { useLoaderData, Await } from "react-router";
+   *
+   * export async function loader() {
+   *   let reviews = getReviews(); // not awaited
+   *   let book = await getBook();
+   *   return {
+   *     book,
+   *     reviews, // this is a promise
+   *   };
+   * }
+   *
+   * export default function Book() {
+   *   const {
+   *     book,
+   *     reviews, // this is the same promise
+   *   } = useLoaderData();
+   *
+   *   return (
+   *     <div>
+   *       <h1>{book.title}</h1>
+   *       <p>{book.description}</p>
+   *       <React.Suspense fallback={<ReviewsSkeleton />}>
+   *         <Await
+   *           // and is the promise we pass to Await
+   *           resolve={reviews}
+   *         >
+   *           <Reviews />
+   *         </Await>
+   *       </React.Suspense>
+   *     </div>
+   *   );
+   * }
+   * ```
    */
   resolve: Resolve;
 }
 
 /**
-Used to render promise values with automatic error handling.
-
-```tsx
-import { Await, useLoaderData } from "react-router";
-
-export function loader() {
-  // not awaited
-  const reviews = getReviews()
-  // awaited (blocks the transition)
-  const book = await fetch("/api/book").then((res) => res.json())
-  return { book, reviews }
-}
-
-function Book() {
-  const { book, reviews } = useLoaderData();
-  return (
-    <div>
-      <h1>{book.title}</h1>
-      <p>{book.description}</p>
-      <React.Suspense fallback={<ReviewsSkeleton />}>
-        <Await
-          resolve={reviews}
-          errorElement={
-            <div>Could not load reviews 😬</div>
-          }
-          children={(resolvedReviews) => (
-            <Reviews items={resolvedReviews} />
-          )}
-        />
-      </React.Suspense>
-    </div>
-  );
-}
-```
-
-**Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
-
-@category Components
-
-*/
+ * Used to render promise values with automatic error handling.
+ *
+ * **Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
+ *
+ * @example
+ * import { Await, useLoaderData } from "react-router";
+ *
+ * export function loader() {
+ *   // not awaited
+ *   const reviews = getReviews();
+ *   // awaited (blocks the transition)
+ *   const book = await fetch("/api/book").then((res) => res.json());
+ *   return { book, reviews };
+ * }
+ *
+ * function Book() {
+ *   const { book, reviews } = useLoaderData();
+ *   return (
+ *     <div>
+ *       <h1>{book.title}</h1>
+ *       <p>{book.description}</p>
+ *       <React.Suspense fallback={<ReviewsSkeleton />}>
+ *         <Await
+ *           resolve={reviews}
+ *           errorElement={
+ *             <div>Could not load reviews 😬</div>
+ *           }
+ *           children={(resolvedReviews) => (
+ *             <Reviews items={resolvedReviews} />
+ *           )}
+ *         />
+ *       </React.Suspense>
+ *     </div>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @mode data
+ * @param props Props
+ * @param {AwaitProps.children} props.children n/a
+ * @param {AwaitProps.errorElement} props.errorElement n/a
+ * @param {AwaitProps.resolve} props.resolve n/a
+ * @returns React element for the rendered awaited value
+ */
 export function Await<Resolve>({
   children,
   errorElement,
@@ -1123,10 +1416,7 @@ class AwaitErrorBoundary extends React.Component<
   }
 }
 
-/**
- * @private
- * Indirection to leverage useAsyncValue for a render-prop API on `<Await>`
- */
+// Indirection to leverage useAsyncValue for a render-prop API on `<Await>`
 function ResolveAwait({
   children,
 }: {
@@ -1147,6 +1437,10 @@ function ResolveAwait({
  * `<Routes>` to create a route config from its children.
  *
  * @category Utils
+ * @mode data
+ * @param children The React children to convert into a route config
+ * @param parentPath The path of the parent route, used to generate unique IDs
+ * @returns An array of route objects that can be used with a data router
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,
@@ -1220,14 +1514,42 @@ export function createRoutesFromChildren(
 }
 
 /**
- * Create route objects from JSX elements instead of arrays of objects
+ * Create route objects from JSX elements instead of arrays of objects.
+ *
+ * @example
+ * const routes = createRoutesFromElements(
+ *   <>
+ *     <Route index loader={step1Loader} Component={StepOne} />
+ *     <Route path="step-2" loader={step2Loader} Component={StepTwo} />
+ *     <Route path="step-3" loader={step3Loader} Component={StepThree} />
+ *   </>
+ * );
+ *
+ * const router = createBrowserRouter(routes);
+ *
+ * function App() {
+ *   return <RouterProvider router={router} />;
+ * }
+ *
+ * @name createRoutesFromElements
+ * @public
+ * @category Utils
+ * @mode data
+ * @param children The React children to convert into a route config
+ * @param parentPath The path of the parent route, used to generate unique IDs.
+ * This is used for internal recursion and is not intended to be used by the
+ * application developer.
+ * @returns An array of route objects that can be used with a data router
  */
 export let createRoutesFromElements = createRoutesFromChildren;
 
 /**
  * Renders the result of `matchRoutes()` into a React element.
  *
+ * @public
  * @category Utils
+ * @param matches The array of route matches to render
+ * @returns A React element that renders the matched routes, or null if no matches
  */
 export function renderMatches(
   matches: RouteMatch[] | null

@@ -48,6 +48,7 @@ jobs:
 
       - name: 📚 Generate Markdown Docs
         run: |
+          node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/components.tsx --write
           node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write
           node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/dom/lib.tsx --write
 
