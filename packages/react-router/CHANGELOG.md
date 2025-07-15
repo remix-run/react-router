@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.7.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] (continuation of #13872) In Framework Mode, remove leftover critical CSS elements in development after initial render if there's a hydration mismatch ([#13995](https://github.com/remix-run/react-router/pull/13995))
+
 ## 7.7.0-pre.0
 
 ### Minor Changes
