@@ -4,6 +4,11 @@ title: HTTP Headers
 
 # HTTP Headers
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 Headers are primarily defined with the route module `headers` export. You can also set headers in `entry.server.tsx`.
 
 ## From Route Modules

@@ -1557,57 +1557,85 @@ export function renderMatches(
   return _renderMatches(matches);
 }
 
-export type RouteComponentType = React.ComponentType<{
-  params: ReturnType<typeof useParams>;
-  loaderData: ReturnType<typeof useLoaderData>;
-  actionData: ReturnType<typeof useActionData>;
-  matches: ReturnType<typeof useMatches>;
-}>;
+function useRouteComponentProps() {
+  return {
+    params: useParams(),
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    matches: useMatches(),
+  };
+}
+
+export type RouteComponentProps = ReturnType<typeof useRouteComponentProps>;
+export type RouteComponentType = React.ComponentType<RouteComponentProps>;
+
+export function WithComponentProps({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
+  const props = useRouteComponentProps();
+  return React.cloneElement(children, props);
+}
 
 export function withComponentProps(Component: RouteComponentType) {
   return function WithComponentProps() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-      matches: useMatches(),
-    };
+    const props = useRouteComponentProps();
     return React.createElement(Component, props);
   };
 }
 
-export type HydrateFallbackType = React.ComponentType<{
-  params: ReturnType<typeof useParams>;
-  loaderData: ReturnType<typeof useLoaderData>;
-  actionData: ReturnType<typeof useActionData>;
-}>;
+function useHydrateFallbackProps() {
+  return {
+    params: useParams(),
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+  };
+}
+
+export type HydrateFallbackProps = ReturnType<typeof useHydrateFallbackProps>;
+export type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
+
+export function WithHydrateFallbackProps({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
+  const props = useHydrateFallbackProps();
+  return React.cloneElement(children, props);
+}
 
 export function withHydrateFallbackProps(HydrateFallback: HydrateFallbackType) {
   return function WithHydrateFallbackProps() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-    };
+    const props = useHydrateFallbackProps();
     return React.createElement(HydrateFallback, props);
   };
 }
 
-export type ErrorBoundaryType = React.ComponentType<{
-  params: ReturnType<typeof useParams>;
-  loaderData: ReturnType<typeof useLoaderData>;
-  actionData: ReturnType<typeof useActionData>;
-  error: ReturnType<typeof useRouteError>;
-}>;
+function useErrorBoundaryProps() {
+  return {
+    params: useParams(),
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    error: useRouteError(),
+  };
+}
+
+export type ErrorBoundaryProps = ReturnType<typeof useErrorBoundaryProps>;
+export type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
+
+export function WithErrorBoundaryProps({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
+  const props = useErrorBoundaryProps();
+  return React.cloneElement(children, props);
+}
 
 export function withErrorBoundaryProps(ErrorBoundary: ErrorBoundaryType) {
   return function WithErrorBoundaryProps() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-      error: useRouteError(),
-    };
+    const props = useErrorBoundaryProps();
     return React.createElement(ErrorBoundary, props);
   };
 }

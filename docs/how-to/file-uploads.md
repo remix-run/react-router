@@ -4,6 +4,11 @@ title: File Uploads
 
 # File Uploads
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 Handle file uploads in your React Router applications. This guide uses some packages from the [Remix The Web][remix-the-web] project to make file uploads easier.
 
 _Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) on which this doc is based. You can refer to it for even more examples._

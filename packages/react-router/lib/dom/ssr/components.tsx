@@ -212,6 +212,8 @@ function getActiveMatches(
   return matches;
 }
 
+export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
+
 /**
  * Renders all of the `<link>` tags created by the route module
  * [`links`](../../start/framework/route-module#links) export. You should render
@@ -251,10 +253,17 @@ export function Links(): React.JSX.Element {
   return (
     <>
       {typeof criticalCss === "string" ? (
-        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
+        <style
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          dangerouslySetInnerHTML={{ __html: criticalCss }}
+        />
       ) : null}
       {typeof criticalCss === "object" ? (
-        <link rel="stylesheet" href={criticalCss.href} />
+        <link
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          rel="stylesheet"
+          href={criticalCss.href}
+        />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (

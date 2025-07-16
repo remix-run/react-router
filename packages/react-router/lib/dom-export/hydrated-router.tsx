@@ -24,6 +24,7 @@ import {
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
+import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
 
 type SSRInfo = {
@@ -249,6 +250,22 @@ export function HydratedRouter(props: HydratedRouterProps) {
       setCriticalCss(undefined);
     }
   }, []);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development" && criticalCss === undefined) {
+      // When there's a hydration mismatch, React 19 ignores the server HTML and
+      // re-renders from the root, but it doesn't remove any head tags that
+      // aren't present in the virtual DOM. This means that the original
+      // critical CSS elements are still in the document even though we cleared
+      // them in the effect above. To fix this, this effect is designed to clean
+      // up any leftover elements. If `criticalCss` is undefined in this effect,
+      // this means that React is no longer managing the critical CSS elements,
+      // so if there are any left in the document, these are stale elements from
+      // the original SSR pass and we can safely remove them.
+      document
+        .querySelectorAll(`[${CRITICAL_CSS_DATA_ATTRIBUTE}]`)
+        .forEach((element) => element.remove());
+    }
+  }, [criticalCss]);
 
   let [location, setLocation] = React.useState(router.state.location);
 

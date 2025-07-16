@@ -15,7 +15,7 @@ The features available in each mode are additive, so moving from Declarative to 
 
 The mode depends on which "top level" router API you're using:
 
-**Declarative**
+## Declarative
 
 Declarative mode enables basic routing features like matching URLs to components, navigating around the app, and providing active states with APIs like `<Link>`, `useNavigate`, and `useLocation`.
 
@@ -29,7 +29,7 @@ ReactDOM.createRoot(root).render(
 );
 ```
 
-**Data**
+## Data
 
 By moving route configuration outside of React rendering, Data Mode adds data loading, actions, pending states and more with APIs like `loader`, `action`, and `useFetcher`.
 
@@ -52,7 +52,7 @@ ReactDOM.createRoot(root).render(
 );
 ```
 
-**Framework**
+## Framework
 
 Framework Mode wraps Data Mode with a Vite plugin to add the full React Router experience with:
 

@@ -39,6 +39,29 @@ import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
+import {
+  UNSAFE_WithComponentProps,
+  UNSAFE_WithHydrateFallbackProps,
+  UNSAFE_WithErrorBoundaryProps,
+  // @ts-ignore There are no types before the tsup build when used internally, so
+  // we need to cast. If we add an alias for 'internal/react-server-client' to our
+  // TSConfig, it breaks the Parcel build within this repo.
+} from "react-router/internal/react-server-client";
+import type {
+  WithComponentProps as WithComponentPropsType,
+  WithErrorBoundaryProps as WithErrorBoundaryPropsType,
+  WithHydrateFallbackProps as WithHydrateFallbackPropsType,
+  RouteComponentProps,
+  ErrorBoundaryProps,
+  HydrateFallbackProps,
+} from "../components";
+const WithComponentProps: typeof WithComponentPropsType =
+  UNSAFE_WithComponentProps;
+const WithErrorBoundaryProps: typeof WithErrorBoundaryPropsType =
+  UNSAFE_WithErrorBoundaryProps;
+const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
+  UNSAFE_WithHydrateFallbackProps;
+
 type ServerContext = {
   redirect?: Response;
 };
@@ -207,17 +230,17 @@ export type RSCMatch = {
 };
 
 export type DecodeActionFunction = (
-  formData: FormData,
+  formData: FormData
 ) => Promise<() => Promise<unknown>>;
 
 export type DecodeFormStateFunction = (
   result: unknown,
-  formData: FormData,
+  formData: FormData
 ) => unknown;
 
 export type DecodeReplyFunction = (
   reply: FormData | string,
-  { temporaryReferences }: { temporaryReferences: unknown },
+  { temporaryReferences }: { temporaryReferences: unknown }
 ) => Promise<unknown[]>;
 
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
@@ -251,7 +274,7 @@ export async function matchRSCServerRequest({
       temporaryReferences,
     }: {
       temporaryReferences: unknown;
-    },
+    }
   ) => Response;
 }): Promise<Response> {
   let requestUrl = new URL(request.url);
@@ -264,7 +287,7 @@ export async function matchRSCServerRequest({
       basename,
       request,
       generateResponse,
-      temporaryReferences,
+      temporaryReferences
     );
     return response;
   }
@@ -306,7 +329,7 @@ export async function matchRSCServerRequest({
       basename,
       leafMatch.route.id,
       requestContext,
-      onError,
+      onError
     );
   }
 
@@ -322,7 +345,7 @@ export async function matchRSCServerRequest({
     decodeFormState,
     onError,
     generateResponse,
-    temporaryReferences,
+    temporaryReferences
   );
   // The front end uses this to know whether a 404 status came from app code
   // or 404'd and never reached the origin server
@@ -336,9 +359,9 @@ async function generateManifestResponse(
   request: Request,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    { temporaryReferences }: { temporaryReferences: unknown }
   ) => Response,
-  temporaryReferences: unknown,
+  temporaryReferences: unknown
 ) {
   let url = new URL(request.url);
   let pathnameParams = url.searchParams.getAll("p");
@@ -372,7 +395,7 @@ async function generateManifestResponse(
           pathnames,
           routes,
           basename,
-          Array.from(routeIds),
+          Array.from(routeIds)
         ),
       ])
     ).flat(1),
@@ -387,13 +410,13 @@ async function generateManifestResponse(
       }),
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences }
   );
 }
 
 function prependBasenameToRedirectResponse(
   response: Response,
-  basename: string | undefined = "/",
+  basename: string | undefined = "/"
 ): Response {
   if (basename === "/") {
     return response;
@@ -406,7 +429,7 @@ function prependBasenameToRedirectResponse(
 
   response.headers.set(
     "Location",
-    prependBasename({ basename, pathname: redirect }),
+    prependBasename({ basename, pathname: redirect })
   );
   return response;
 }
@@ -419,7 +442,7 @@ async function processServerAction(
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
   onError: ((error: unknown) => void) | undefined,
-  temporaryReferences: unknown,
+  temporaryReferences: unknown
 ): Promise<
   | {
       revalidationRequest: Request;
@@ -437,13 +460,13 @@ async function processServerAction(
     });
 
   const isFormRequest = canDecodeWithFormData(
-    request.headers.get("Content-Type"),
+    request.headers.get("Content-Type")
   );
   const actionId = request.headers.get("rsc-action-id");
   if (actionId) {
     if (!decodeReply || !loadServerAction) {
       throw new Error(
-        "Cannot handle enhanced server action without decodeReply and loadServerAction functions",
+        "Cannot handle enhanced server action without decodeReply and loadServerAction functions"
       );
     }
 
@@ -475,7 +498,7 @@ async function processServerAction(
     if (Array.from(formData.keys()).some((k) => k.startsWith("$ACTION_"))) {
       if (!decodeAction) {
         throw new Error(
-          "Cannot handle form actions without a decodeAction function",
+          "Cannot handle form actions without a decodeAction function"
         );
       }
       const action = await decodeAction(formData);
@@ -509,7 +532,7 @@ async function generateResourceResponse(
   basename: string | undefined,
   routeId: string,
   requestContext: unstable_RouterContextProvider | undefined,
-  onError: ((error: unknown) => void) | undefined,
+  onError: ((error: unknown) => void) | undefined
 ) {
   let result: Response;
   try {
@@ -573,9 +596,9 @@ async function generateRenderResponse(
   onError: ((error: unknown) => void) | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    { temporaryReferences }: { temporaryReferences: unknown }
   ) => Response,
-  temporaryReferences: unknown,
+  temporaryReferences: unknown
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -625,7 +648,7 @@ async function generateRenderResponse(
             decodeAction,
             decodeFormState,
             onError,
-            temporaryReferences,
+            temporaryReferences
           );
           if (isResponse(result)) {
             return generateRedirectResponse(
@@ -634,7 +657,7 @@ async function generateRenderResponse(
               basename,
               isDataRequest,
               generateResponse,
-              temporaryReferences,
+              temporaryReferences
             );
           }
           actionResult = result?.actionResult;
@@ -649,7 +672,7 @@ async function generateRenderResponse(
             basename,
             isDataRequest,
             generateResponse,
-            temporaryReferences,
+            temporaryReferences
           );
         }
 
@@ -662,7 +685,7 @@ async function generateRenderResponse(
             basename,
             isDataRequest,
             generateResponse,
-            temporaryReferences,
+            temporaryReferences
           );
         }
 
@@ -677,10 +700,10 @@ async function generateRenderResponse(
           actionResult,
           formState,
           staticContext,
-          temporaryReferences,
+          temporaryReferences
         );
       },
-    }),
+    })
   );
 
   if (isRedirectResponse(result)) {
@@ -690,7 +713,7 @@ async function generateRenderResponse(
       basename,
       isDataRequest,
       generateResponse,
-      temporaryReferences,
+      temporaryReferences
     );
   }
 
@@ -705,9 +728,9 @@ function generateRedirectResponse(
   isDataRequest: boolean,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    { temporaryReferences }: { temporaryReferences: unknown }
   ) => Response,
-  temporaryReferences: unknown,
+  temporaryReferences: unknown
 ) {
   let redirect = response.headers.get("Location")!;
 
@@ -743,7 +766,7 @@ function generateRedirectResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences }
   );
 }
 
@@ -752,7 +775,7 @@ async function generateStaticContextResponse(
   basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
-    { temporaryReferences }: { temporaryReferences: unknown },
+    { temporaryReferences }: { temporaryReferences: unknown }
   ) => Response,
   statusCode: number,
   routeIdsToLoad: string[] | null,
@@ -761,7 +784,7 @@ async function generateStaticContextResponse(
   actionResult: Promise<unknown> | undefined,
   formState: unknown | undefined,
   staticContext: StaticHandlerContext,
-  temporaryReferences: unknown,
+  temporaryReferences: unknown
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -772,7 +795,7 @@ async function generateStaticContextResponse(
         isRouteErrorResponse(error)
           ? Object.fromEntries(Object.entries(error))
           : error,
-      ]),
+      ])
     );
   }
 
@@ -791,7 +814,7 @@ async function generateStaticContextResponse(
 
   let headers = getDocumentHeadersImpl(
     staticContext,
-    (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers,
+    (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers
   );
 
   // Remove Content-Length because node:http will truncate the response body
@@ -817,7 +840,7 @@ async function generateStaticContextResponse(
       basename,
       routeIdsToLoad,
       isDataRequest,
-      staticContext,
+      staticContext
     );
 
   let payload: RSCRenderPayload | RSCActionPayload;
@@ -848,7 +871,7 @@ async function generateStaticContextResponse(
       headers,
       payload,
     },
-    { temporaryReferences },
+    { temporaryReferences }
   );
 }
 
@@ -858,7 +881,7 @@ async function getRenderPayload(
   basename: string | undefined,
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
-  staticContext: StaticHandlerContext,
+  staticContext: StaticHandlerContext
 ) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
@@ -895,16 +918,16 @@ async function getRenderPayload(
         staticContext,
         match,
         shouldRenderComponent,
-        parentIds[match.route.id],
+        parentIds[match.route.id]
       );
-    }),
+    })
   );
 
   let patchesPromise = getAdditionalRoutePatches(
     [staticContext.location.pathname],
     routes,
     basename,
-    staticContext.matches.map((m) => m.route.id),
+    staticContext.matches.map((m) => m.route.id)
   );
 
   let [matches, patches] = await Promise.all([matchesPromise, patchesPromise]);
@@ -920,7 +943,7 @@ async function getRSCRouteMatch(
   staticContext: StaticHandlerContext,
   match: AgnosticDataRouteMatch,
   shouldRenderComponent: boolean,
-  parentId: string | undefined,
+  parentId: string | undefined
 ) {
   // @ts-expect-error - FIXME: Fix the types here
   await explodeLazyRoute(match.route);
@@ -937,14 +960,18 @@ async function getRSCRouteMatch(
       ? React.createElement(
           Layout,
           null,
-          React.createElement(Component, {
-            loaderData,
-            actionData,
-            params,
-            matches: staticContext.matches.map((match) =>
-              convertRouteMatchToUiMatch(match, staticContext.loaderData),
-            ),
-          }),
+          isClientReference(Component)
+            ? React.createElement(WithComponentProps, {
+                children: React.createElement(Component),
+              })
+            : React.createElement(Component, {
+                loaderData,
+                actionData,
+                params,
+                matches: staticContext.matches.map((match) =>
+                  convertRouteMatchToUiMatch(match, staticContext.loaderData)
+                ),
+              } satisfies RouteComponentProps)
         )
       : // TODO: Render outlet instead?
         undefined;
@@ -957,23 +984,31 @@ async function getRSCRouteMatch(
     ? React.createElement(
         Layout,
         null,
-        React.createElement(ErrorBoundary, {
-          loaderData,
-          actionData,
-          params,
-          error,
-        }),
+        isClientReference(ErrorBoundary)
+          ? React.createElement(WithErrorBoundaryProps, {
+              children: React.createElement(ErrorBoundary),
+            })
+          : React.createElement(ErrorBoundary, {
+              loaderData,
+              actionData,
+              params,
+              error,
+            } satisfies ErrorBoundaryProps)
       )
     : undefined;
   const hydrateFallbackElement = HydrateFallback
     ? React.createElement(
         Layout,
         null,
-        React.createElement(HydrateFallback, {
-          loaderData,
-          actionData,
-          params,
-        }),
+        isClientReference(HydrateFallback)
+          ? React.createElement(WithHydrateFallbackProps, {
+              children: React.createElement(HydrateFallback),
+            })
+          : React.createElement(HydrateFallback, {
+              loaderData,
+              actionData,
+              params,
+            } satisfies HydrateFallbackProps)
       )
     : undefined;
 
@@ -1002,7 +1037,7 @@ async function getRSCRouteMatch(
 }
 
 async function getManifestRoute(
-  route: RSCRouteConfigEntry & { parentId: string | undefined },
+  route: RSCRouteConfigEntry & { parentId: string | undefined }
 ): Promise<RSCRouteManifest> {
   await explodeLazyRoute(route);
 
@@ -1013,7 +1048,7 @@ async function getManifestRoute(
     ? React.createElement(
         Layout,
         null,
-        React.createElement(route.ErrorBoundary),
+        React.createElement(route.ErrorBoundary)
       )
     : undefined;
 
@@ -1065,7 +1100,7 @@ async function getAdditionalRoutePatches(
   pathnames: string[],
   routes: RSCRouteConfigEntry[],
   basename: string | undefined,
-  matchedRouteIds: string[],
+  matchedRouteIds: string[]
 ): Promise<RSCRouteManifest[]> {
   let patchRouteMatches = new Map<
     string,
@@ -1108,7 +1143,7 @@ async function getAdditionalRoutePatches(
   let patches = await Promise.all(
     [...patchRouteMatches.values()]
       .filter((route) => !matchedRouteIds.some((id) => id === route.id))
-      .map((route) => getManifestRoute(route)),
+      .map((route) => getManifestRoute(route))
   );
   return patches;
 }
@@ -1119,6 +1154,14 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+function isClientReference(x: any) {
+  try {
+    return x.$$typeof === Symbol.for("react.client.reference");
+  } catch {
+    return false;
+  }
 }
 
 function canDecodeWithFormData(contentType: string | null) {

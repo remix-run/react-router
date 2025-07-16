@@ -5,7 +5,7 @@ title: RouterProvider
 # RouterProvider
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
 
 Thank you for helping improve our documentation!
 
@@ -32,14 +32,17 @@ import { createRoot } from "react-dom/client";
 
 const router = createBrowserRouter(routes);
 createRoot(document.getElementById("root")).render(
-  <RouterProvider router={router} />
+  <RouterProvider router={router} />,
 );
 ```
 
 ## Signature
 
 ```tsx
-function RouterProvider({ router, flushSync: reactDomFlushSyncImpl, }: RouterProviderProps): React.ReactElement
+function RouterProvider({
+  router,
+  flushSync: reactDomFlushSyncImpl,
+}: RouterProviderProps): React.ReactElement;
 ```
 
 ## Props
@@ -54,7 +57,7 @@ The [`ReactDOM.flushSync`](https://react.dev/reference/react-dom/flushSync)
 implementation to use for flushing updates.
 
 You usually don't have to worry about this:
+
 - The `RouterProvider` exported from `react-router/dom` handles this internally for you
 - If you are rendering in a non-DOM environment, you can import
   `RouterProvider` from `react-router` and ignore this prop
-

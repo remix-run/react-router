@@ -5,7 +5,7 @@ title: useLocation
 # useLocation
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
 
 Thank you for helping improve our documentation!
 
@@ -45,10 +45,9 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useLocation(): Location
+function useLocation(): Location;
 ```
 
 ## Returns
 
 The current location object
-
