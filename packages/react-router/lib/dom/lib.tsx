@@ -444,8 +444,8 @@ export interface HistoryRouterProps {
  * @param props Props
  * @param props.basename Application basename
  * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.history {@link History} implementation for use by the router
- * @returns A declarative router using the {@link History} API for client-side routing.
+ * @param props.history A history implementation for use by the router
+ * @returns A declarative router using the provided history implementation for client-side routing.
  */
 export function HistoryRouter({
   basename,
@@ -1608,7 +1608,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * ### `setSearchParams` function
  *
  * The second element of the tuple is a function that can be used to update the
- * search params. It accepts the same types as {@link defaultInit} and will
+ * search params. It accepts the same types as `defaultInit` and will
  * cause a navigation to the new URL.
  *
  * ```tsx
@@ -2160,7 +2160,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  *
  * By default, `useFetcher` generates a unique fetcher scoped to that component.
  * If you want to identify a fetcher with your own key such that you can access
- * it from elsewhere in your app, you can do that with the {@link key} option:
+ * it from elsewhere in your app, you can do that with the `key` option:
  *
  * ```tsx
  * function SomeComp() {
@@ -2601,7 +2601,7 @@ export function usePrompt({
  * @param to The {@link To} location to check for an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).
  * @param options Options
  * @param options.relative The relative routing type to use when resolving the
- * {@link to} location, defaults to `"route"`. See {@link RelativeRoutingType} for more details.
+ * `to` location, defaults to `"route"`. See {@link RelativeRoutingType} for more details.
  * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * to the specified {@link Location}, otherwise `false`.
  */

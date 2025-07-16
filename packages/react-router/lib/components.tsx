@@ -1554,7 +1554,7 @@ export function createRoutesFromChildren(
  * application developer.
  * @returns An array of {@link RouteObject}s that can be used with a {@link DataRouter}
  */
-export let createRoutesFromElements = createRoutesFromChildren;
+export const createRoutesFromElements = createRoutesFromChildren;
 
 /**
  * Renders the result of {@link matchRoutes} into a React element.
