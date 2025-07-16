@@ -22,7 +22,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useHref.html)
 
-Resolves a URL against the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html).
+Resolves a URL against the current location.
 
 ```tsx
 import { useHref } from "react-router";
@@ -49,8 +49,7 @@ The path to resolve
 
 ### options.relative
 
-Defaults to `"route"` so routing is relative to the route tree.
-Set to `"path"` to make relative routing operate against path segments.
+Defaults to "route" so routing is relative to the route tree. Set to "path" to make relative routing operate against path segments.
 
 ## Returns
 

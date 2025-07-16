@@ -22,7 +22,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.MemoryRouter.html)
 
-A declarative [`<Router>`](../declarative-routers/Router) that stores all entries in memory.
+A declarative `<Router>` that stores all entries in memory.
 
 ## Signature
 

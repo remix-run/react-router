@@ -22,8 +22,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Link.html)
 
-A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
-wrapper to enable navigation with client-side routing.
+A progressively enhanced `<a href>` wrapper to enable navigation with client-side routing.
 
 ```tsx
 import { Link } from "react-router";
@@ -75,8 +74,8 @@ Defines the data and module prefetching behavior for the link.
 - **render** - prefetches when the link renders
 - **viewport** - prefetches when the link is in the viewport, very useful for mobile
 
-Prefetching is done with HTML [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-tags. They are inserted after the link.
+Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted
+after the link.
 
 ```tsx
 <a href="..." />
@@ -94,7 +93,7 @@ Because of this, if you are using `nav :last-child` you will need to use
 
 Prevents the scroll position from being reset to the top of the window when
 the link is clicked and the app is using [`ScrollRestoration`](../components/ScrollRestoration). This only
-prevents new locations resetting scroll to the top, scroll position will be
+prevents new locations reseting scroll to the top, scroll position will be
 restored for back/forward button navigation.
 
 ```tsx
@@ -113,14 +112,14 @@ Defines the relative path behavior for the link.
 <Link relative="path" />
 ```
 
-Consider a route hierarchy where a parent route pattern is `"blog"` and a child
-route pattern is `"blog/:slug/edit"`.
+Consider a route hierarchy where a parent route pattern is "blog" and a child
+route pattern is "blog/:slug/edit".
 
 - **route** - default, resolves the link relative to the route pattern. In the
-example above, a relative link of `".."` will remove both `:slug/edit` segments
-back to `"/blog"`.
-- **path** - relative to the path so `".."` will only remove one URL segment up
-to `"/blog/:slug"`
+example above a relative link of `".."` will remove both `:slug/edit` segments
+back to "/blog".
+- **path** - relative to the path so `..` will only remove one URL segment up
+to "/blog/:slug"
 
 Note that index routes and layout routes do not have paths so they are not
 included in the relative path calculation.
@@ -130,8 +129,7 @@ included in the relative path calculation.
 [modes: framework, data, declarative]
 
 Will use document navigation instead of client side routing when the link is
-clicked: the browser will handle the transition normally (as if it were an
-[`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)).
+clicked: the browser will handle the transition normally (as if it were an `<a href>`).
 
 ```tsx
 <Link to="/logout" reloadDocument />
@@ -141,8 +139,8 @@ clicked: the browser will handle the transition normally (as if it were an
 
 [modes: framework, data, declarative]
 
-Replaces the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-stack instead of pushing a new one  onto it.
+Replaces the current entry in the history stack instead of pushing a new one
+onto it.
 
 ```tsx
 <Link replace />

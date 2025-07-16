@@ -22,13 +22,12 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Routes.html)
 
-Renders a branch of [`<Route>`s](../components/Route) that best matches the current
-location. Note that these routes do not participate in [data loading](../../start/framework/route-module#loader),
-[`action`](../../start/framework/route-module#action), code splitting, or
-any other [route module](../../start/framework/route-module) features.
+Renders a branch of [`<Routes>`](../components/Route) that best matches the current
+location. Note that these routes do not participate in data loading, actions,
+code splitting, or any other route module features.
 
 ```tsx
-import { Route, Routes } from "react-router";
+import { Routes, Route } from "react-router";
 
 <Routes>
   <Route index element={<StepOne />} />
@@ -51,5 +50,5 @@ Nested [`Route`](../components/Route) elements
 
 ### location
 
-The [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to match against. Defaults to the current location.
+The location to match against. Defaults to the current location.
 

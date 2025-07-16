@@ -22,9 +22,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useActionData.html)
 
-Returns the [`action`](../../start/framework/route-module#action) data from
-the most recent `POST` navigation form submission or `undefined` if there
-hasn't been one.
+Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
 
 ```tsx
 import { Form, useActionData } from "react-router";
@@ -54,7 +52,5 @@ function useActionData<T = any>(): SerializeFrom<T> | undefined
 
 ## Returns
 
-The data returned from the route's [`action`](../../start/framework/route-module#action)
-function, or `undefined` if no [`action`](../../start/framework/route-module#action)
-has been called
+The data returned from the route's action function, or undefined if no action has been called
 

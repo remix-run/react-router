@@ -23,8 +23,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useOutlet.html)
 
 Returns the element for the child route at this level of the route
-hierarchy. Used internally by [`<Outlet>`](../components/Outlet) to render child
-routes.
+hierarchy. Used internally by `<Outlet>` to render child routes.
 
 ## Signature
 
@@ -40,5 +39,5 @@ The context to pass to the outlet
 
 ## Returns
 
-The child route element or `null` if no child routes match
+The child route element or null if no child routes match
 

@@ -47,5 +47,5 @@ function useLoaderData<T = any>(): SerializeFrom<T>
 
 ## Returns
 
-The data returned from the route's [`loader`](../../start/framework/route-module#loader) or [`clientLoader`](../../start/framework/route-module#clientloader) function
+The data returned from the route's loader function
 

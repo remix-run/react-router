@@ -48,6 +48,5 @@ The relative routing type to use when resolving the `to` location, defaults to `
 
 ## Returns
 
-`true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-to the specified [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html), otherwise `false`.
+`true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html), otherwise `false`.
 

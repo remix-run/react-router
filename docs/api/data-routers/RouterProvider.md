@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.RouterProvider.html)
 
-Render the UI for the given [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html). This component should
-typically be at the top of an app's element tree.
+Render the UI for the given data router. Should typically be at the
+top of an app's element tree.
 
 ```tsx
 import { createBrowserRouter } from "react-router";
@@ -44,6 +44,10 @@ function RouterProvider({ router, flushSync: reactDomFlushSyncImpl, }: RouterPro
 
 ## Props
 
+### router
+
+The data router instance to use for navigation and data fetching.
+
 ### flushSync
 
 The [`ReactDOM.flushSync`](https://react.dev/reference/react-dom/flushSync)
@@ -53,8 +57,4 @@ You usually don't have to worry about this:
 - The `RouterProvider` exported from `react-router/dom` handles this internally for you
 - If you are rendering in a non-DOM environment, you can import
   `RouterProvider` from `react-router` and ignore this prop
-
-### router
-
-The [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) instance to use for navigation and data fetching.
 

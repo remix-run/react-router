@@ -53,5 +53,5 @@ application developer.
 
 ## Returns
 
-An array of [`RouteObject`](https://api.reactrouter.com/v7/types/react_router.RouteObject.html)s that can be used with a [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html)
+An array of route objects that can be used with a data router
 

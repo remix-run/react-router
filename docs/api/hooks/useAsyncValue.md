@@ -44,5 +44,5 @@ function useAsyncValue(): unknown
 
 ## Returns
 
-The resolved value from the nearest [`Await`](../components/Await) component
+The resolved value from the nearest Await component
 

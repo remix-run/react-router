@@ -25,19 +25,18 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 Returns a function that lets you navigate programmatically in the browser in
 response to user interactions or effects.
 
-It's often better to use [`redirect`](../utils/redirect) in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
-functions than this hook.
+It's often better to use [`redirect`](../utils/redirect) in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader) functions than this hook.
 
-The returned function signature is `navigate(to, options?)`/`navigate(delta)` where:
+The returned function signature is `navigate(to, options?)/navigate(delta)` where:
 
-* `to` can be a string path, a [`To`](https://api.reactrouter.com/v7/types/react_router.To.html) object, or a number (delta)
+* `to` can be a string path, a `To` object, or a number (delta)
 * `options` contains options for modifying the navigation
-  * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
+  * `flushSync`: Wrap the DOM updates in `ReactDom.flushSync`
   * `preventScrollReset`: Do not scroll back to the top of the page after navigation
-  * `relative`: `"route"` or `"path"` to control relative routing logic
-  * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
-  * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html)
-  * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
+  * `relative`: "route" or "path" to control relative routing logic
+  * `replace`: Replace the current entry in the history stack
+  * `state`: Optional history state to include with the new `Location`
+  * `viewTransition`: Enable `document.startViewTransition` for this navigation
 
 ```tsx
 import { useNavigate } from "react-router";
@@ -71,7 +70,7 @@ navigate("/some/route");
 navigate("/some/route?search=param");
 ```
 
-### Navigate with a [`To`](https://api.reactrouter.com/v7/types/react_router.To.html) object
+### Navigate with a `To` object
 
 All properties are optional.
 
@@ -84,8 +83,7 @@ navigate({
 });
 ```
 
-If you use `state`, that will be available on the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) object on
-the next page. Access it with `useLocation().state` (see [`useLocation`](../hooks/useLocation)).
+If you use `state`, that will be available on the `location` object on the next page. Access it with `useLocation().state` (see [useLocation](./useLocation)).
 
 ### Navigate back or forward in the history stack
 
@@ -95,23 +93,17 @@ the next page. Access it with `useLocation().state` (see [`useLocation`](../hook
 navigate(-1);
 
 // forward
-// often used in a multistep wizard workflows
+// often used in a multi-step wizard workflows
 navigate(1);
 ```
 
-Be cautious with `navigate(number)`. If your application can load up to a
-route that has a button that tries to navigate forward/back, there may not be
-a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-entry to go back or forward to, or it can go somewhere you don't expect
-(like a different domain).
+Be cautions with `navigate(number)`. If your application can load up to a route that has a button that tries to navigate forward/back, there may not be a history entry to go back or forward to, or it can go somewhere you don't expect (like a different domain).
 
-Only use this if you're sure they will have an entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-stack to navigate to.
+Only use this if you're sure they will have an entry in the history stack to navigate to.
 
 ### Replace the current entry in the history stack
 
-This will remove the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-stack, replacing it with a new one, similar to a server side redirect.
+This will remove the current entry in the history stack, replacing it with a new one, similar to a server side redirect.
 
 ```tsx
 navigate("/some/route", { replace: true });
@@ -124,14 +116,11 @@ navigate("/some/route", { replace: true });
 <br/>
 <br/>
 
-To prevent [`<ScrollRestoration>`](../components/ScrollRestoration) from resetting
-the scroll position, use the `preventScrollReset` option.
+To prevent `<ScrollRestoration>` from resetting the scroll position, use the `preventScrollReset` option.
 
 ```tsx
 navigate("?some-tab=1", { preventScrollReset: true });
 ```
 
-For example, if you have a tab interface connected to search params in the
-middle of a page, and you don't want it to scroll to the top when a tab is
-clicked.
+For example, if you have a tab interface connected to search params in the middle of a page and you don't want it to scroll to the top when a tab is clicked.
 
