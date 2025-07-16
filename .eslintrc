@@ -27,7 +27,8 @@
         "packages/react-router/lib/dom/lib.tsx",
         "packages/react-router/lib/dom/ssr/components.tsx",
         "packages/react-router/lib/dom/ssr/server.tsx",
-        "packages/react-router/lib/dom-export/hydrated-router.tsx"
+        "packages/react-router/lib/dom-export/hydrated-router.tsx",
+        "packages/react-router/lib/dom/server.tsx"
       ],
       "plugins": ["jsdoc"],
       "rules": {
