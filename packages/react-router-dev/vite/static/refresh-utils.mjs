@@ -28,16 +28,16 @@ const enqueueUpdate = debounce(async () => {
         // react-refresh takes care of updating these in-place,
         // if we don't preserve existing values we'll loose state.
         default: imported.default
-          ? window.__reactRouterRouteModules[route.id]?.default ??
-            imported.default
+          ? (window.__reactRouterRouteModules[route.id]?.default ??
+            imported.default)
           : imported.default,
         ErrorBoundary: imported.ErrorBoundary
-          ? window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
-            imported.ErrorBoundary
+          ? (window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
+            imported.ErrorBoundary)
           : imported.ErrorBoundary,
         HydrateFallback: imported.HydrateFallback
-          ? window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
-            imported.HydrateFallback
+          ? (window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
+            imported.HydrateFallback)
           : imported.HydrateFallback,
       };
       window.__reactRouterRouteModules[route.id] = routeModule;

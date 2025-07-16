@@ -2308,7 +2308,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         return [
           "const exports = {}",
           await readFile(reactRefreshRuntimePath, "utf8"),
-          await readFile(require.resolve("./static/refresh-utils.cjs"), "utf8"),
+          await readFile(require.resolve("./static/refresh-utils.mjs"), "utf8"),
           "export default exports",
         ].join("\n");
       },
