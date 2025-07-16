@@ -29,7 +29,7 @@ Used to render promise values with automatic error handling.
 ```tsx
 import { Await, useLoaderData } from "react-router";
 
-export function loader() {
+export async function loader() {
   // not awaited
   const reviews = getReviews();
   // awaited (blocks the transition)

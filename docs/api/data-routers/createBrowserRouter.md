@@ -207,7 +207,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  dataStrategy({ request, params, matches }) {
+  async dataStrategy({ request, params, matches }) {
     // Compose route fragments into a single GQL payload
     let gql = getFragmentsFromRouteHandles(matches);
     let data = await fetchGql(gql);
