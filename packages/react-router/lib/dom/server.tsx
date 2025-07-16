@@ -46,7 +46,14 @@ export interface StaticRouterProps {
  * A `<Router>` that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  *
+ * @public
  * @category Declarative Routers
+ * @mode declarative
+ * @param props Props
+ * @param props.basename The base URL for the static router (default: `/`)
+ * @param props.children The child elements to render inside the static router
+ * @param props.location The location to render the static router at (default: `/`)
+ * @returns A React element that renders the static router
  */
 export function StaticRouter({
   basename,
@@ -90,7 +97,32 @@ export interface StaticRouterProviderProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  *
+ * @example
+ * export async function handleRequest(request: Request) {
+ *   let { query, dataRoutes } = createStaticHandler(routes);
+ *   let context = await query(request));
+ *
+ *   if (context instanceof Response) {
+ *     return context;
+ *   }
+ *
+ *   let router = createStaticRouter(dataRoutes, context);
+ *   return new Response(
+ *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
+ *     { headers: { "Content-Type": "text/html" } }
+ *   );
+ * }
+ *
+ * @public
  * @category Data Routers
+ * @mode data
+ * @param props Props
+ * @param props.context The {@link StaticHandlerContext} returned from `staticHandler.query()`
+ * @param props.router The static data router from {@link createStaticRouter}
+ * @param props.hydrate Whether to hydrate the router on the client (default `true`)
+ * @param props.nonce The [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+ * to use for the hydration `<script>` tag
+ * @returns A React element that renders the static router provider
  */
 export function StaticRouterProvider({
   context,
@@ -255,7 +287,32 @@ type CreateStaticHandlerOptions = Omit<
 >;
 
 /**
- * @category Utils
+ * Create a static handler to perform server-side data loading
+ *
+ * @example
+ * export async function handleRequest(request: Request) {
+ *   let { query, dataRoutes } = createStaticHandler(routes);
+ *   let context = await query(request));
+ *
+ *   if (context instanceof Response) {
+ *     return context;
+ *   }
+ *
+ *   let router = createStaticRouter(dataRoutes, context);
+ *   return new Response(
+ *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
+ *     { headers: { "Content-Type": "text/html" } }
+ *   );
+ * }
+ *
+ * @public
+ * @category Data Routers
+ * @mode data
+ * @param routes The route objects to create a static handler for
+ * @param opts Options
+ * @param opts.basename The base URL for the static handler (default: `/`)
+ * @param opts.future Future flags for the static handler
+ * @returns A static handler that can be used to query data for the provided routes
  */
 export function createStaticHandler(
   routes: RouteObject[],
@@ -268,7 +325,32 @@ export function createStaticHandler(
 }
 
 /**
+ * Create a static data router for server-side rendering
+ *
+ * @example
+ * export async function handleRequest(request: Request) {
+ *   let { query, dataRoutes } = createStaticHandler(routes);
+ *   let context = await query(request));
+ *
+ *   if (context instanceof Response) {
+ *     return context;
+ *   }
+ *
+ *   let router = createStaticRouter(dataRoutes, context);
+ *   return new Response(
+ *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
+ *     { headers: { "Content-Type": "text/html" } }
+ *   );
+ * }
+ *
+ * @public
  * @category Data Routers
+ * @mode data
+ * @param routes The route objects to create a static data router for
+ * @param context The static handler context returned from `staticHandler.query()`
+ * @param opts Options
+ * @param opts.future Future flags for the static data router
+ * @returns A static data router that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
