@@ -23,7 +23,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Scripts.html)
 
 Renders the client runtime of your app. It should be rendered inside the
-`<body>` of the document.
+[`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/body)
+ of the document.
 
 If server rendering, you can omit `<Scripts/>` and the app will work as a
 traditional web app without JavaScript, relying solely on HTML and browser

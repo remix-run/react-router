@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useInRouterContext.html)
 
-Returns true if this component is a descendant of a Router, useful to ensure
-a component is used within a Router.
+Returns `true` if this component is a descendant of a [`Router`](../declarative-routers/Router), useful
+to ensure a component is used within a [`Router`](../declarative-routers/Router).
 
 ## Signature
 
@@ -33,5 +33,5 @@ function useInRouterContext(): boolean
 
 ## Returns
 
-Whether the component is within a Router context
+Whether the component is within a [`Router`](../declarative-routers/Router) context
 

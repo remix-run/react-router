@@ -22,8 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createMemoryRouter.html)
 
-Create a new data router that manages the application path using an in-memory
-history stack.  Useful for non-browser environments without a DOM API.
+Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application path using an
+in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+stack. Useful for non-browser environments without a DOM API.
 
 ## Signature
 
@@ -44,13 +45,19 @@ Application routes
 
 Basename path for the application.
 
-### opts.unstable_getContext
+### opts.dataStrategy
 
-Function to provide the initial context values for all client side navigations/fetches
+Override the default data strategy of loading in parallel.
+Only intended for advanced usage.
 
 ### opts.future
 
 Future flags to enable for the router.
+
+### opts.unstable_getContext
+
+Function to provide the initial context values for all client side
+navigations/fetches
 
 ### opts.hydrationData
 
@@ -59,16 +66,11 @@ data loading on the server.
 
 ### opts.initialEntries
 
-Initial entires in the in-memory history stack
+Initial entries in the in-memory history stack
 
 ### opts.initialIndex
 
 Index of `initialEntries` the application should initialize to
-
-### opts.dataStrategy
-
-Override the default data strategy of loading in parallel.
-Only intended for advanced usage.
 
 ### opts.patchRoutesOnNavigation
 
@@ -76,5 +78,5 @@ Lazily define portions of the route tree on navigations.
 
 ## Returns
 
-An initialized data router to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

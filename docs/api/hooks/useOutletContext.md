@@ -32,5 +32,5 @@ function useOutletContext<Context = unknown>(): Context
 
 ## Returns
 
-The context value passed to the Outlet
+The context value passed to the [`Outlet`](../components/Outlet) component
 

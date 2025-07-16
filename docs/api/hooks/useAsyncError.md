@@ -49,5 +49,5 @@ function useAsyncError(): unknown
 
 ## Returns
 
-The error that was thrown in the nearest Await component
+The error that was thrown in the nearest [`Await`](../components/Await) component
 

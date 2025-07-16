@@ -22,8 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createBrowserRouter.html)
 
-Create a new data router that manages the application path via `history.pushState`
-and `history.replaceState`.
+Create a new [data router](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application
+path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
+and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
 
 ## Signature
 
@@ -226,6 +227,10 @@ let router = createBrowserRouter(routes, {
 ### opts.future
 
 Future flags to enable for the router.
+
+### opts.unstable_getContext
+
+Function to provide the initial `context` values for all client side navigations/fetches
 
 ### opts.hydrationData
 
@@ -583,15 +588,12 @@ definitions co-located:
   ```
 </details>
 
-### opts.unstable_getContext
-
-Function to provide the initial context values for all client side navigations/fetches
-
 ### opts.window
 
-Window object override - defaults to the global `window` instance.
+[`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
+override - defaults to the global `window` instance.
 
 ## Returns
 
-An initialized data router to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [data router](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

@@ -23,7 +23,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRevalidator.html)
 
 Revalidate the data on the page for reasons outside of normal data mutations
-like window focus or polling on an interval.
+like [`Window` focus](https://developer.mozilla.org/en-US/docs/Web/API/Window/focus_event)
+or polling on an interval.
 
 Note that page data is already revalidated automatically after actions.
 If you find yourself using this for normal CRUD operations on your data in
@@ -60,5 +61,6 @@ function useRevalidator(): {
 
 ## Returns
 
-An object with a `revalidate` function and the current revalidation `state`
+An object with a `revalidate` function and the current revalidation
+`state`
 

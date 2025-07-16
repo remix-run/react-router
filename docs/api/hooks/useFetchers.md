@@ -47,5 +47,6 @@ function useFetchers(): (Fetcher & {
 
 ## Returns
 
-An array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.Fetcher.html)s, each with a unique `key` property.
+An array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.Fetcher.html)s, each with a unique `key`
+property.
 

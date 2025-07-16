@@ -22,7 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Outlet.html)
 
-Renders the matching child route of a parent route or nothing if no child route matches.
+Renders the matching child route of a parent route or nothing if no child
+route matches.
 
 ```tsx
 import { Outlet } from "react-router";
@@ -47,7 +48,8 @@ function Outlet(props: OutletProps): React.ReactElement | null
 
 ### context
 
-Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
+Provides a context value to the element tree below the outlet. Use when
+the parent route needs to provide values to child routes.
 
 ```tsx
 <Outlet context={myContextValue} />

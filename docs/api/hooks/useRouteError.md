@@ -43,5 +43,6 @@ function useRouteError(): unknown
 
 ## Returns
 
-The error that was thrown during route loading, action execution, or rendering
+The error that was thrown during route [loading](../../start/framework/route-module#loader),
+[`action`](../../start/framework/route-module#action) execution, or rendering
 
