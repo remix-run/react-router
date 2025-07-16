@@ -139,7 +139,7 @@ test.describe("actions", () => {
 
       test("is not called on document GET requests", async () => {
         let res = await fixture.requestDocument("/urlencoded");
-        let html = selectHtml(await res.text(), "#text");
+        let html = await selectHtml(await res.text(), "#text");
         expect(html).toMatch(WAITING_VALUE);
       });
 
@@ -151,7 +151,7 @@ test.describe("actions", () => {
 
         let res = await fixture.postDocument("/urlencoded", params);
 
-        let html = selectHtml(await res.text(), "#text");
+        let html = await selectHtml(await res.text(), "#text");
         expect(html).toMatch(FIELD_VALUE);
       });
 

@@ -227,7 +227,10 @@ export class PlaywrightFixture {
 
 export async function getHtml(page: Page, selector?: string) {
   let html = await page.content();
-  return selector ? selectHtml(html, selector) : prettyHtml(html);
+  let selectedHtml = selector
+    ? await selectHtml(html, selector)
+    : await prettyHtml(html);
+  return selectedHtml;
 }
 
 export function getElement(source: string, selector: string) {
@@ -238,12 +241,13 @@ export function getElement(source: string, selector: string) {
   return el;
 }
 
-export function selectHtml(source: string, selector: string) {
+export async function selectHtml(source: string, selector: string) {
   let el = getElement(source, selector);
-  return prettyHtml(cheerio.html(el)).trim();
+  let html = await prettyHtml(cheerio.html(el));
+  return html.trim();
 }
 
-export function prettyHtml(source: string) {
+export async function prettyHtml(source: string) {
   return prettier.format(source, { parser: "html" });
 }
 
