@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
-import fg from "fast-glob";
 
+import fg from "fast-glob";
 import dox from "dox";
 import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
@@ -61,7 +61,7 @@ type SimplifiedComment = {
   codeLink: string;
   modes: Mode[];
   summary: string;
-  reference: string;
+  reference?: string;
   example?: string;
   signature?: string;
   params: {
@@ -80,13 +80,17 @@ const CATEGORIES = [
   "Framework Routers",
   "Data Routers",
   "Declarative Routers",
+  "RSC",
   "Utils",
 ] as const;
 const isComponentApi = (c: SimplifiedComment) =>
   c.category === "Components" ||
   c.category === "Framework Routers" ||
   c.category === "Declarative Routers" ||
-  (c.category === "Data Routers" && !c.name.startsWith("create"));
+  c.name === "RouterProvider" ||
+  c.name === "StaticRouterProvider" ||
+  c.name === "unstable_RSCStaticRouter" ||
+  c.name === "unstable_RSCHydratedRouter";
 
 // Read a filename from standard input using the node parseArgs utility
 
