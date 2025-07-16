@@ -304,7 +304,7 @@ const { "*": splat } = params;
 You can also use a splat to catch requests that don't match any route:
 
 ```ts filename=app/routes.ts
-route("*", "./catchall.tsx"); // catcall route,
+route("*", "./catchall.tsx"); // catchall route,
 ```
 
 ```tsx filename=app/catchall.tsx
