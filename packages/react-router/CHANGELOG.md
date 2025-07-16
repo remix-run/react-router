@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.7.0-pre.2
+
+### Patch Changes
+
+- [REMOVE] Inject client route component props during RSC render ([#14007](https://github.com/remix-run/react-router/pull/14007))
+
 ## 7.7.0-pre.1
 
 ### Patch Changes
