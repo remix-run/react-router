@@ -18,6 +18,63 @@
       "env": {
         "jest/globals": false
       }
+    },
+    {
+      // Only apply JSDoc lint rules to files we auto-generate docs for
+      "files": [
+        "packages/react-router/lib/components.tsx",
+        "packages/react-router/lib/hooks.tsx",
+        "packages/react-router/lib/dom/lib.tsx"
+      ],
+      "plugins": ["jsdoc"],
+      "rules": {
+        "jsdoc/check-access": "error",
+        "jsdoc/check-alignment": "error",
+        "jsdoc/check-param-names": "error",
+        "jsdoc/check-property-names": "error",
+        "jsdoc/check-tag-names": [
+          "error",
+          {
+            "definedTags": ["additionalExamples", "category", "mode"]
+          }
+        ],
+        "jsdoc/no-defaults": "error",
+        "jsdoc/no-multi-asterisks": ["error", { "allowWhitespace": true }],
+        "jsdoc/require-description": "error",
+        "jsdoc/require-param": ["error", { "enableRootFixer": false }],
+        "jsdoc/require-param-description": "error",
+        "jsdoc/require-param-name": "error",
+        "jsdoc/require-returns": "error",
+        "jsdoc/require-returns-check": "error",
+        "jsdoc/require-returns-description": "error",
+        "jsdoc/sort-tags": [
+          "error",
+          {
+            "tagSequence": [
+              {
+                "tags": ["description"]
+              },
+              {
+                "tags": ["example"]
+              },
+              {
+                "tags": ["additionalExamples"]
+              },
+              {
+                "tags": [
+                  "name",
+                  "public",
+                  "private",
+                  "category",
+                  "mode",
+                  "param",
+                  "returns"
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "reportUnusedDisableDirectives": true

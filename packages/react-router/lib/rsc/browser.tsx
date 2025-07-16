@@ -10,7 +10,7 @@ import {
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
-import type { Router as DataRouter } from "../router/router";
+import type { Router as DataRouter, RouterInit } from "../router/router";
 import { createRouter, isMutationMethod } from "../router/router";
 import type {
   RSCPayload,
@@ -114,53 +114,59 @@ export function createCallServer({
     }
 
     if (payload.rerender) {
-      (async () => {
-        const rerender = await payload.rerender;
-        if (!rerender) return;
+      React.startTransition(
+        // @ts-expect-error - We have old react types that don't know this can be async
+        async () => {
+          const rerender = await payload.rerender;
+          if (!rerender) return;
 
-        if (landedActionId < actionId && window.__routerActionID <= actionId) {
-          landedActionId = actionId;
+          if (
+            landedActionId < actionId &&
+            window.__routerActionID <= actionId
+          ) {
+            landedActionId = actionId;
 
-          if (rerender.type === "redirect") {
-            if (rerender.reload) {
-              window.location.href = rerender.location;
+            if (rerender.type === "redirect") {
+              if (rerender.reload) {
+                window.location.href = rerender.location;
+                return;
+              }
+              window.__router.navigate(rerender.location, {
+                replace: rerender.replace,
+              });
               return;
             }
-            window.__router.navigate(rerender.location, {
-              replace: rerender.replace,
-            });
-            return;
-          }
 
-          let lastMatch: RSCRouteManifest | undefined;
-          for (const match of rerender.matches) {
-            window.__router.patchRoutes(
-              lastMatch?.id ?? null,
-              [createRouteFromServerManifest(match)],
-              true
-            );
-            lastMatch = match;
-          }
-          window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
+            let lastMatch: RSCRouteManifest | undefined;
+            for (const match of rerender.matches) {
+              window.__router.patchRoutes(
+                lastMatch?.id ?? null,
+                [createRouteFromServerManifest(match)],
+                true
+              );
+              lastMatch = match;
+            }
+            window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
 
-          React.startTransition(() => {
-            window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
-              loaderData: Object.assign(
-                {},
-                window.__router.state.loaderData,
-                rerender.loaderData
-              ),
-              errors: rerender.errors
-                ? Object.assign(
-                    {},
-                    window.__router.state.errors,
-                    rerender.errors
-                  )
-                : null,
+            React.startTransition(() => {
+              window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
+                loaderData: Object.assign(
+                  {},
+                  window.__router.state.loaderData,
+                  rerender.loaderData
+                ),
+                errors: rerender.errors
+                  ? Object.assign(
+                      {},
+                      window.__router.state.errors,
+                      rerender.errors
+                    )
+                  : null,
+              });
             });
-          });
+          }
         }
-      })();
+      );
     }
 
     return payload.actionResult;
@@ -170,11 +176,13 @@ export function createCallServer({
 function createRouterFromPayload({
   fetchImplementation,
   createFromReadableStream,
+  unstable_getContext,
   payload,
 }: {
   payload: RSCPayload;
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
+  unstable_getContext: RouterInit["unstable_getContext"] | undefined;
 }) {
   if (window.__router) return window.__router;
 
@@ -207,6 +215,7 @@ function createRouterFromPayload({
 
   window.__router = createRouter({
     routes,
+    unstable_getContext,
     basename: payload.basename,
     history: createBrowserHistory(),
     hydrationData: getHydrationData(
@@ -240,11 +249,11 @@ function createRouterFromPayload({
         signal
       );
     },
-    // FIXME: Pass `build.ssr` and `build.basename` into this function
+    // FIXME: Pass `build.ssr` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
       () => window.__router,
       true,
-      undefined,
+      payload.basename,
       createFromReadableStream,
       fetchImplementation
     ),
@@ -449,11 +458,13 @@ export function RSCHydratedRouter({
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
+  unstable_getContext,
 }: {
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetch?: (request: Request) => Promise<Response>;
   payload: RSCPayload;
   routeDiscovery?: "eager" | "lazy";
+  unstable_getContext?: RouterInit["unstable_getContext"];
 }) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
@@ -462,9 +473,15 @@ export function RSCHydratedRouter({
       createRouterFromPayload({
         payload,
         fetchImplementation,
+        unstable_getContext,
         createFromReadableStream,
       }),
-    [createFromReadableStream, payload, fetchImplementation]
+    [
+      createFromReadableStream,
+      payload,
+      fetchImplementation,
+      unstable_getContext,
+    ]
   );
 
   React.useLayoutEffect(() => {
@@ -664,7 +681,7 @@ function createRouteFromServerManifest(
             ...args,
             serverAction: async () => {
               preventInvalidServerHandlerCall(
-                "loader",
+                "action",
                 match.id,
                 match.hasLoader
               );

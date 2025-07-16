@@ -52,9 +52,9 @@ import {
   isUnsupportedLazyRouteObjectKey,
   isUnsupportedLazyRouteFunctionKey,
   isRouteErrorResponse,
-  joinPaths,
   matchRoutes,
   matchRoutesImpl,
+  prependBasename,
   resolveTo,
   stripBasename,
   unstable_RouterContextProvider,
@@ -489,8 +489,12 @@ export interface GetScrollPositionFunction {
 }
 
 /**
-  - "route": relative to the route hierarchy so `..` means remove all segments of the current route even if it has many. For example, a `route("posts/:id")` would have both `:id` and `posts` removed from the url.
-  - "path": relative to the pathname so `..` means remove one segment of the pathname. For example, a `route("posts/:id")` would have only `:id` removed from the url.
+ * - "route": relative to the route hierarchy so `..` means remove all segments
+ * of the current route even if it has many. For example, a `route("posts/:id")`
+ * would have both `:id` and `posts` removed from the url.
+ * - "path": relative to the pathname so `..` means remove one segment of the
+ * pathname. For example, a `route("posts/:id")` would have only `:id` removed
+ * from the url.
  */
 export type RelativeRoutingType = "route" | "path";
 
@@ -673,8 +677,8 @@ export type Fetcher<TData = any> =
 
 interface BlockerBlocked {
   state: "blocked";
-  reset(): void;
-  proceed(): void;
+  reset: () => void;
+  proceed: () => void;
   location: Location;
 }
 
@@ -814,6 +818,7 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
 };
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
 
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
@@ -2330,7 +2335,7 @@ export function createRouter(init: RouterInit): Router {
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         requestMatches,
-        path,
+        new URL(fetchRequest.url).pathname,
         fetchRequest.signal,
         key
       );
@@ -2634,7 +2639,7 @@ export function createRouter(init: RouterInit): Router {
     if (isFogOfWar) {
       let discoverResult = await discoverRoutes(
         matches,
-        path,
+        new URL(fetchRequest.url).pathname,
         fetchRequest.signal,
         key
       );
@@ -2779,7 +2784,7 @@ export function createRouter(init: RouterInit): Router {
       if (redirect.response.headers.has("X-Remix-Reload-Document")) {
         // Hard reload if the response contained X-Remix-Reload-Document
         isDocumentReload = true;
-      } else if (ABSOLUTE_URL_REGEX.test(location)) {
+      } else if (isAbsoluteUrl(location)) {
         // We skip `history.createURL` here for absolute URLs because we don't
         // want to inherit the current `window.location` base URL
         const url = createBrowserURLImpl(location, true);
@@ -4529,13 +4534,9 @@ function normalizeTo(
     }
   }
 
-  // If we're operating within a basename, prepend it to the pathname.  If
-  // this is a root navigation, then just use the raw basename which allows
-  // the basename to have full control over the presence of a trailing slash
-  // on root actions
+  // If we're operating within a basename, prepend it to the pathname.
   if (basename !== "/") {
-    path.pathname =
-      path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
+    path.pathname = prependBasename({ basename, pathname: path.pathname });
   }
 
   return createPath(path);
@@ -6062,7 +6063,7 @@ function normalizeRelativeRoutingRedirectResponse(
     "Redirects returned/thrown from loaders/actions must have a Location header"
   );
 
-  if (!ABSOLUTE_URL_REGEX.test(location)) {
+  if (!isAbsoluteUrl(location)) {
     let trimmedMatches = matches.slice(
       0,
       matches.findIndex((m) => m.route.id === routeId) + 1
@@ -6084,7 +6085,7 @@ function normalizeRedirectLocation(
   currentUrl: URL,
   basename: string
 ): string {
-  if (ABSOLUTE_URL_REGEX.test(location)) {
+  if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
     let normalizedLocation = location;
     let url = normalizedLocation.startsWith("//")

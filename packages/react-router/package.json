@@ -110,7 +110,7 @@
   },
   "wireit": {
     "build": {
-      "command": "rimraf dist && tsup && tsup --config tsup.config.rsc.ts",
+      "command": "premove dist && tsup && tsup --config tsup.config.rsc.ts",
       "files": [
         "lib/**",
         "*.ts",
@@ -131,10 +131,11 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/set-cookie-parser": "^2.4.1",
+    "jest-environment-jsdom": "^29.6.2",
+    "premove": "^4.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-test-renderer": "^19.1.0",
-    "rimraf": "^6.0.1",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
     "undici": "^6.19.2",

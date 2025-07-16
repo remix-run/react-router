@@ -12,6 +12,7 @@ import type {
 import { type Location } from "../router/history";
 import {
   createStaticHandler,
+  isAbsoluteUrl,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
@@ -23,12 +24,15 @@ import {
   type LoaderFunction,
   type Params,
   type ShouldRevalidateFunction,
+  type unstable_RouterContextProvider,
   isRouteErrorResponse,
   matchRoutes,
+  prependBasename,
   convertRouteMatchToUiMatch,
   redirect as baseRedirect,
   redirectDocument as baseRedirectDocument,
   replace as baseReplace,
+  stripBasename,
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
@@ -155,7 +159,7 @@ export type RSCRouteMatch = RSCRouteManifest & {
 export type RSCRenderPayload = {
   type: "render";
   actionData: Record<string, any> | null;
-  basename?: string;
+  basename: string | undefined;
   errors: Record<string, any> | null;
   loaderData: Record<string, any>;
   location: Location;
@@ -204,7 +208,7 @@ export type RSCMatch = {
 
 export type DecodeActionFunction = (
   formData: FormData
-) => Promise<() => Promise<void>>;
+) => Promise<() => Promise<unknown>>;
 
 export type DecodeFormStateFunction = (
   result: unknown,
@@ -220,7 +224,9 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
 
 export async function matchRSCServerRequest({
   createTemporaryReferenceSet,
+  basename,
   decodeReply,
+  requestContext,
   loadServerAction,
   decodeAction,
   decodeFormState,
@@ -230,9 +236,11 @@ export async function matchRSCServerRequest({
   generateResponse,
 }: {
   createTemporaryReferenceSet: () => unknown;
+  basename?: string;
   decodeReply?: DecodeReplyFunction;
   decodeAction?: DecodeActionFunction;
   decodeFormState?: DecodeFormStateFunction;
+  requestContext?: unstable_RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
   onError?: (error: unknown) => void;
   request: Request;
@@ -253,6 +261,7 @@ export async function matchRSCServerRequest({
   if (isManifestRequest(requestUrl)) {
     let response = await generateManifestResponse(
       routes,
+      basename,
       request,
       generateResponse,
       temporaryReferences
@@ -279,7 +288,7 @@ export async function matchRSCServerRequest({
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
   // and if we move to `lazy: {}` then we lose all the other things from the
   // `RSCRouteConfigEntry` like `Layout` etc.
-  let matches = matchRoutes(routes, url.pathname);
+  let matches = matchRoutes(routes, url.pathname, basename);
   if (matches) {
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
@@ -294,7 +303,9 @@ export async function matchRSCServerRequest({
     return generateResourceResponse(
       routerRequest,
       routes,
+      basename,
       leafMatch.route.id,
+      requestContext,
       onError
     );
   }
@@ -302,8 +313,10 @@ export async function matchRSCServerRequest({
   let response = await generateRenderResponse(
     routerRequest,
     routes,
+    basename,
     isDataRequest,
     decodeReply,
+    requestContext,
     loadServerAction,
     decodeAction,
     decodeFormState,
@@ -319,6 +332,7 @@ export async function matchRSCServerRequest({
 
 async function generateManifestResponse(
   routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
   request: Request,
   generateResponse: (
     match: RSCMatch,
@@ -334,7 +348,7 @@ async function generateManifestResponse(
   let routeIds = new Set<string>();
   let matchedRoutes = pathnames
     .flatMap((pathname) => {
-      let pathnameMatches = matchRoutes(routes, pathname);
+      let pathnameMatches = matchRoutes(routes, pathname, basename);
       return (
         pathnameMatches?.map((m, i) => ({
           ...m.route,
@@ -354,7 +368,12 @@ async function generateManifestResponse(
     patches: (
       await Promise.all([
         ...matchedRoutes.map((route) => getManifestRoute(route)),
-        getAdditionalRoutePatches(pathnames, routes, Array.from(routeIds)),
+        getAdditionalRoutePatches(
+          pathnames,
+          routes,
+          basename,
+          Array.from(routeIds)
+        ),
       ])
     ).flat(1),
   };
@@ -372,8 +391,29 @@ async function generateManifestResponse(
   );
 }
 
+function prependBasenameToRedirectResponse(
+  response: Response,
+  basename: string | undefined = "/"
+): Response {
+  if (basename === "/") {
+    return response;
+  }
+
+  let redirect = response.headers.get("Location");
+  if (!redirect || isAbsoluteUrl(redirect)) {
+    return response;
+  }
+
+  response.headers.set(
+    "Location",
+    prependBasename({ basename, pathname: redirect })
+  );
+  return response;
+}
+
 async function processServerAction(
   request: Request,
+  basename: string | undefined,
   decodeReply: DecodeReplyFunction | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
@@ -441,9 +481,15 @@ async function processServerAction(
       const action = await decodeAction(formData);
       let formState = undefined;
       try {
-        const result = await action();
+        let result = await action();
+        if (isRedirectResponse(result)) {
+          result = prependBasenameToRedirectResponse(result, basename);
+        }
         formState = decodeFormState?.(result, formData);
       } catch (error) {
+        if (isRedirectResponse(error)) {
+          return prependBasenameToRedirectResponse(error, basename);
+        }
         if (isResponse(error)) {
           return error;
         }
@@ -460,20 +506,20 @@ async function processServerAction(
 async function generateResourceResponse(
   request: Request,
   routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
   routeId: string,
+  requestContext: unstable_RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined
 ) {
   let result: Response;
   try {
     const staticHandler = createStaticHandler(routes, {
-      // TODO: Support basename
-      // basename
+      basename,
     });
 
     let response = await staticHandler.queryRoute(request, {
       routeId,
-      // TODO: Support loadContext
-      // requestContext: loadContext,
+      requestContext,
       unstable_respond: (ctx) => ctx,
     });
 
@@ -489,10 +535,16 @@ async function generateResourceResponse(
   } catch (error) {
     if (isResponse(error)) {
       result = error;
-    } else {
-      // TODO: Do we need to handle ErrorResponse?
+    } else if (isRouteErrorResponse(error)) {
       onError?.(error);
-
+      const errorMessage =
+        typeof error.data === "string" ? error.data : error.statusText;
+      result = new Response(errorMessage, {
+        status: error.status,
+        statusText: error.statusText,
+      });
+    } else {
+      onError?.(error);
       result = new Response("Internal Server Error", {
         status: 500,
       });
@@ -511,8 +563,10 @@ async function generateResourceResponse(
 async function generateRenderResponse(
   request: Request,
   routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
+  requestContext: unstable_RouterContextProvider | undefined,
   loadServerAction: LoadServerActionFunction | undefined,
   decodeAction: DecodeActionFunction | undefined,
   decodeFormState: DecodeFormStateFunction | undefined,
@@ -539,7 +593,8 @@ async function generateRenderResponse(
       : null;
 
   // Create the handler here with exploded routes
-  const handler = createStaticHandler(routes, {
+  const staticHandler = createStaticHandler(routes, {
+    basename,
     mapRouteProperties: (r) => ({
       hasErrorBoundary: (r as RouteObject).ErrorBoundary != null,
     }),
@@ -548,7 +603,8 @@ async function generateRenderResponse(
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {};
   const result = await ServerStorage.run(ctx, () =>
-    handler.query(request, {
+    staticHandler.query(request, {
+      requestContext,
       skipLoaderErrorBubbling: isDataRequest,
       skipRevalidation: isSubmission,
       ...(routeIdsToLoad
@@ -563,6 +619,7 @@ async function generateRenderResponse(
         if (request.method === "POST") {
           let result = await processServerAction(
             request,
+            basename,
             decodeReply,
             loadServerAction,
             decodeAction,
@@ -574,6 +631,8 @@ async function generateRenderResponse(
             return generateRedirectResponse(
               result,
               actionResult,
+              basename,
+              isDataRequest,
               generateResponse,
               temporaryReferences
             );
@@ -587,6 +646,8 @@ async function generateRenderResponse(
           return generateRedirectResponse(
             ctx.redirect,
             actionResult,
+            basename,
+            isDataRequest,
             generateResponse,
             temporaryReferences
           );
@@ -598,6 +659,8 @@ async function generateRenderResponse(
           return generateRedirectResponse(
             staticContext,
             actionResult,
+            basename,
+            isDataRequest,
             generateResponse,
             temporaryReferences
           );
@@ -605,6 +668,7 @@ async function generateRenderResponse(
 
         return generateStaticContextResponse(
           routes,
+          basename,
           generateResponse,
           statusCode,
           routeIdsToLoad,
@@ -623,6 +687,8 @@ async function generateRenderResponse(
     return generateRedirectResponse(
       result,
       actionResult,
+      basename,
+      isDataRequest,
       generateResponse,
       temporaryReferences
     );
@@ -635,27 +701,46 @@ async function generateRenderResponse(
 function generateRedirectResponse(
   response: Response,
   actionResult: Promise<unknown> | undefined,
+  basename: string | undefined,
+  isDataRequest: boolean,
   generateResponse: (
     match: RSCMatch,
     { temporaryReferences }: { temporaryReferences: unknown }
   ) => Response,
   temporaryReferences: unknown
 ) {
+  let redirect = response.headers.get("Location")!;
+
+  if (isDataRequest && basename) {
+    redirect = stripBasename(redirect, basename) || redirect;
+  }
+
   let payload: RSCRedirectPayload = {
     type: "redirect",
-    location: response.headers.get("Location") || "",
+    location: redirect,
     reload: response.headers.get("X-Remix-Reload-Document") === "true",
     replace: response.headers.get("X-Remix-Replace") === "true",
     status: response.status,
     actionResult,
   };
+
+  // Preserve non-internal headers on the user-created redirect
+  let headers = new Headers(response.headers);
+  headers.delete("Location");
+  headers.delete("X-Remix-Reload-Document");
+  headers.delete("X-Remix-Replace");
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  headers.delete("Content-Length");
+  headers.set("Content-Type", "text/x-component");
+  headers.set("Vary", "Content-Type");
+
   return generateResponse(
     {
       statusCode: SINGLE_FETCH_REDIRECT_STATUS,
-      headers: new Headers({
-        "Content-Type": "text/x-component",
-        Vary: "Content-Type",
-      }),
+      headers,
       payload,
     },
     { temporaryReferences }
@@ -664,6 +749,7 @@ function generateRedirectResponse(
 
 async function generateStaticContextResponse(
   routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
     { temporaryReferences }: { temporaryReferences: unknown }
@@ -708,8 +794,15 @@ async function generateStaticContextResponse(
     (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers
   );
 
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  headers.delete("Content-Length");
+
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
+    basename,
     actionData: staticContext.actionData,
     errors: staticContext.errors,
     loaderData: staticContext.loaderData,
@@ -721,6 +814,7 @@ async function generateStaticContextResponse(
     getRenderPayload(
       baseRenderPayload,
       routes,
+      basename,
       routeIdsToLoad,
       isDataRequest,
       staticContext
@@ -761,6 +855,7 @@ async function generateStaticContextResponse(
 async function getRenderPayload(
   baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches">,
   routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
   staticContext: StaticHandlerContext
@@ -805,13 +900,12 @@ async function getRenderPayload(
     })
   );
 
-  let patchesPromise = !isDataRequest
-    ? getAdditionalRoutePatches(
-        [staticContext.location.pathname],
-        routes,
-        staticContext.matches.map((m) => m.route.id)
-      )
-    : undefined;
+  let patchesPromise = getAdditionalRoutePatches(
+    [staticContext.location.pathname],
+    routes,
+    basename,
+    staticContext.matches.map((m) => m.route.id)
+  );
 
   let [matches, patches] = await Promise.all([matchesPromise, patchesPromise]);
 
@@ -852,20 +946,12 @@ async function getRSCRouteMatch(
             ),
           })
         )
-      : // TODO: Render outet instead?
+      : // TODO: Render outlet instead?
         undefined;
   let error: unknown = undefined;
 
-  // FIXME: Is this logic right?  We don't want to take any error - only the
-  // error pegged to our route because the staticHandler should have done the
-  // bubbling for us (on document requests at least)?
   if (ErrorBoundary && staticContext.errors) {
-    for (const match of [...staticContext.matches].reverse()) {
-      if (match.route.id in staticContext.errors) {
-        error = staticContext.errors[match.route.id];
-        break;
-      }
-    }
+    error = staticContext.errors[match.route.id];
   }
   const errorElement = ErrorBoundary
     ? React.createElement(
@@ -889,12 +975,7 @@ async function getRSCRouteMatch(
           params,
         })
       )
-    : match.route.id === "root"
-      ? // FIXME: This should use the `RemixRootDefaultErrorBoundary` but that
-        // currently uses a hook internally so it fails during RSC.  Restructure
-        // so it can be used safely in an RSC render pass.
-        React.createElement("p", null, "Loading!")
-      : undefined;
+    : undefined;
 
   return {
     clientAction: (match.route as any).clientAction,
@@ -983,6 +1064,7 @@ async function explodeLazyRoute(route: RSCRouteConfigEntry) {
 async function getAdditionalRoutePatches(
   pathnames: string[],
   routes: RSCRouteConfigEntry[],
+  basename: string | undefined,
   matchedRouteIds: string[]
 ): Promise<RSCRouteManifest[]> {
   let patchRouteMatches = new Map<
@@ -1010,7 +1092,7 @@ async function getAdditionalRoutePatches(
         return;
       }
       matchedPaths.add(path);
-      let matches = matchRoutes(routes, path) || [];
+      let matches = matchRoutes(routes, path, basename) || [];
       matches.forEach((m, i) => {
         if (patchRouteMatches.get(m.route.id)) {
           return;

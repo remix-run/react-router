@@ -65,17 +65,19 @@
     "babel-jest": "^29.7.0",
     "babel-plugin-dev-expression": "^0.2.3",
     "chalk": "^4.1.2",
+    "dox": "^1.0.0",
     "eslint": "^8.57.0",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-flowtype": "^8.0.3",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jest": "^27.9.0",
+    "eslint-plugin-jsdoc": "^51.3.4",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "next",
+    "fast-glob": "3.2.11",
     "isbot": "^5.1.11",
     "jest": "^29.6.4",
-    "jest-environment-jsdom": "^29.6.2",
     "jsonfile": "^6.1.0",
     "prettier": "^3.6.2",
     "prompts": "^2.4.2",
@@ -99,7 +101,7 @@
       "@changesets/assemble-release-plan": "patches/@changesets__assemble-release-plan.patch"
     },
     "overrides": {
-      "workerd": "1.20250224.0",
+      "workerd": "1.20250705.0",
       "react-is": "19.1.0"
     }
   }

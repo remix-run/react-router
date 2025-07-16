@@ -1,5 +1,6 @@
 ---
 title: matchRSCServerRequest
+unstable: true
 ---
 
 # matchRSCServerRequest
@@ -10,7 +11,32 @@ title: matchRSCServerRequest
 
 Matches the given routes to a Request and returns a RSC Response encoding an `RSCPayload` for consumption by a RSC enabled client router.
 
+```tsx filename=entry.rsc.ts
+matchRSCServerRequest({
+  createTemporaryReferenceSet,
+  decodeAction,
+  decodeFormState,
+  decodeReply,
+  loadServerAction,
+  request,
+  routes: routes(),
+  generateResponse(match) {
+    return new Response(
+      renderToReadableStream(match.payload),
+      {
+        status: match.statusCode,
+        headers: match.headers,
+      }
+    );
+  },
+});
+```
+
 ## Options
+
+### basename
+
+The basename to use when matching the request.
 
 ### decodeAction
 
@@ -35,6 +61,10 @@ Your `react-server-dom-xyz/server`'s `loadServerAction` function, used to load a
 ### request
 
 The request to match against.
+
+### requestContext
+
+An instance of `unstable_RouterContextProvider` that should be created per request, to be passed to loaders, actions and middleware.
 
 ### routes
 

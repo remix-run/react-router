@@ -115,6 +115,10 @@ export function RSCStaticRouter({
 
   let patchedLoaderData = { ...payload.loaderData };
   for (const match of payload.matches) {
+    // Clear out the loaderData to avoid rendering the route component when the
+    // route opted into clientLoader hydration and either:
+    // * gave us a HydrateFallback
+    // * or doesn't have a server loader and we have no data to render
     if (
       shouldHydrateRouteLoader(
         match.id,

@@ -623,7 +623,13 @@ export type ScriptsProps = Omit<
   | "noModule"
   | "dangerouslySetInnerHTML"
   | "suppressHydrationWarning"
->;
+> & {
+  /**
+   * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+   * attribute to render on the `<script>` element
+   */
+  nonce?: string | undefined;
+};
 
 /**
   Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.

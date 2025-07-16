@@ -1102,11 +1102,7 @@ test.describe("Forms", () => {
 
     test("empty file inputs resolve to File objects on the server", async ({
       page,
-      channel,
     }) => {
-      // TODO: Look into this test failing on windows
-      test.skip(channel === "msedge", "Fails on windows with undici");
-
       let app = new PlaywrightFixture(appFixture, page);
 
       await app.goto("/empty-file-upload");

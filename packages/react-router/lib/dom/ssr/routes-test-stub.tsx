@@ -1,8 +1,9 @@
 import * as React from "react";
 import type {
   ActionFunction,
+  ActionFunctionArgs,
   LoaderFunction,
-  unstable_InitialContext,
+  LoaderFunctionArgs,
 } from "../../router/utils";
 import type {
   DataRouteObject,
@@ -12,7 +13,12 @@ import type {
 import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
-import { convertRoutesToDataRoutes } from "../../router/utils";
+import {
+  convertRoutesToDataRoutes,
+  unstable_RouterContextProvider,
+} from "../../router/utils";
+import type { MiddlewareEnabled } from "../../types/future";
+import type { AppLoadContext } from "../../server-runtime/data";
 import type {
   AssetsManifest,
   FutureConfig,
@@ -111,7 +117,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  unstable_getContext?: () => unstable_InitialContext
+  _context?: AppLoadContext | unstable_RouterContextProvider
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -120,10 +126,10 @@ export function createRoutesStub(
     future,
   }: RoutesTestStubProps) {
     let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let remixContextRef = React.useRef<FrameworkContextObject>();
+    let frameworkContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
-      remixContextRef.current = {
+      frameworkContextRef.current = {
         future: {
           unstable_subResourceIntegrity:
             future?.unstable_subResourceIntegrity === true,
@@ -147,11 +153,15 @@ export function createRoutesStub(
         // @ts-expect-error `StubRouteObject` is stricter about `loader`/`action`
         // types compared to `AgnosticRouteObject`
         convertRoutesToDataRoutes(routes, (r) => r),
-        remixContextRef.current.manifest,
-        remixContextRef.current.routeModules
+        _context !== undefined
+          ? _context
+          : future?.unstable_middleware
+          ? new unstable_RouterContextProvider()
+          : {},
+        frameworkContextRef.current.manifest,
+        frameworkContextRef.current.routeModules
       );
       routerRef.current = createMemoryRouter(patched, {
-        unstable_getContext,
         initialEntries,
         initialIndex,
         hydrationData,
@@ -159,7 +169,7 @@ export function createRoutesStub(
     }
 
     return (
-      <FrameworkContext.Provider value={remixContextRef.current}>
+      <FrameworkContext.Provider value={frameworkContextRef.current}>
         <RouterProvider router={routerRef.current} />
       </FrameworkContext.Provider>
     );
@@ -168,6 +178,7 @@ export function createRoutesStub(
 
 function processRoutes(
   routes: StubRouteObject[],
+  context: unknown,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   parentId?: string
@@ -175,7 +186,7 @@ function processRoutes(
   return routes.map((route) => {
     if (!route.id) {
       throw new Error(
-        "Expected a route.id in @remix-run/testing processRoutes() function"
+        "Expected a route.id in react-router processRoutes() function"
       );
     }
 
@@ -192,8 +203,12 @@ function processRoutes(
       ErrorBoundary: route.ErrorBoundary
         ? withErrorBoundaryProps(route.ErrorBoundary)
         : undefined,
-      action: route.action,
-      loader: route.loader,
+      action: route.action
+        ? (args: ActionFunctionArgs) => route.action!({ ...args, context })
+        : undefined,
+      loader: route.loader
+        ? (args: LoaderFunctionArgs) => route.loader!({ ...args, context })
+        : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,
     };
@@ -235,6 +250,7 @@ function processRoutes(
     if (route.children) {
       newRoute.children = processRoutes(
         route.children,
+        context,
         manifest,
         routeModules,
         newRoute.id

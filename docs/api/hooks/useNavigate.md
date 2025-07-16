@@ -4,13 +4,39 @@ title: useNavigate
 
 # useNavigate
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useNavigate.html)
 
-Returns a function that lets you navigate programmatically in the browser in response to user interactions or effects.
+Returns a function that lets you navigate programmatically in the browser in
+response to user interactions or effects.
+
+It's often better to use [`redirect`](../utils/redirect) in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader) functions than this hook.
+
+The returned function signature is `navigate(to, options?)/navigate(delta)` where:
+
+* `to` can be a string path, a `To` object, or a number (delta)
+* `options` contains options for modifying the navigation
+  * `flushSync`: Wrap the DOM updates in `ReactDom.flushSync`
+  * `preventScrollReset`: Do not scroll back to the top of the page after navigation
+  * `relative`: "route" or "path" to control relative routing logic
+  * `replace`: Replace the current entry in the history stack
+  * `state`: Optional history state to include with the new `Location`
+  * `viewTransition`: Enable `document.startViewTransition` for this navigation
 
 ```tsx
 import { useNavigate } from "react-router";
@@ -18,43 +44,33 @@ import { useNavigate } from "react-router";
 function SomeComponent() {
   let navigate = useNavigate();
   return (
-    <button
-      onClick={() => {
-        navigate(-1);
-      }}
-    />
+    <button onClick={() => navigate(-1)}>
+      Go Back
+    </button>
   );
 }
 ```
 
-It's often better to use [redirect](../utils/redirect) in [ActionFunction](https://api.reactrouter.com/v7/interfaces/react_router.ActionFunction.html) and [LoaderFunction](https://api.reactrouter.com/v7/types/react_router.LoaderFunction.html) than this hook.
-
 ## Signature
 
 ```tsx
-navigate(
-  to: To,
-  options?: {
-    flushSync?: boolean;
-    preventScrollReset?: boolean;
-    relative?: RelativeRoutingType;
-    replace?: boolean;
-    state?: any;
-    viewTransition?: boolean;
-  }
-): void | Promise<void>;
+function useNavigate(): NavigateFunction
 ```
+
+## Returns
+
+A navigate function for programmatic navigation
 
 ## Examples
 
-### Navigate to another path:
+### Navigate to another path
 
 ```tsx
 navigate("/some/route");
 navigate("/some/route?search=param");
 ```
 
-### Navigate with a `To` object:
+### Navigate with a `To` object
 
 All properties are optional.
 
@@ -69,7 +85,7 @@ navigate({
 
 If you use `state`, that will be available on the `location` object on the next page. Access it with `useLocation().state` (see [useLocation](./useLocation)).
 
-### Navigate back or forward in the history stack:
+### Navigate back or forward in the history stack
 
 ```tsx
 // back
@@ -85,7 +101,7 @@ Be cautions with `navigate(number)`. If your application can load up to a route 
 
 Only use this if you're sure they will have an entry in the history stack to navigate to.
 
-### Replace the current entry in the history stack:
+### Replace the current entry in the history stack
 
 This will remove the current entry in the history stack, replacing it with a new one, similar to a server side redirect.
 
@@ -95,7 +111,10 @@ navigate("/some/route", { replace: true });
 
 ### Prevent Scroll Reset
 
-[modes: framework, data]
+[MODES: framework, data]
+
+<br/>
+<br/>
 
 To prevent `<ScrollRestoration>` from resetting the scroll position, use the `preventScrollReset` option.
 
@@ -104,3 +123,4 @@ navigate("?some-tab=1", { preventScrollReset: true });
 ```
 
 For example, if you have a tab interface connected to search params in the middle of a page and you don't want it to scroll to the top when a tab is clicked.
+

@@ -4,13 +4,27 @@ title: useLoaderData
 
 # useLoaderData
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx
+-->
+
 [MODES: framework, data]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useLoaderData.html)
 
-Returns the data from the closest route [LoaderFunction](https://api.reactrouter.com/v7/types/react_router.LoaderFunction.html) or [ClientLoaderFunction](https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunction.html).
+Returns the data from the closest route
+[`loader`](../../start/framework/route-module#loader) or
+[`clientLoader`](../../start/framework/route-module#clientloader).
 
 ```tsx
 import { useLoaderData } from "react-router";
@@ -28,5 +42,10 @@ export default function Invoices() {
 ## Signature
 
 ```tsx
-useLoaderData(): SerializeFrom
+function useLoaderData<T = any>(): SerializeFrom<T>
 ```
+
+## Returns
+
+The data returned from the route's loader function
+

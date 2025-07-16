@@ -64,6 +64,7 @@
     }
   },
   "dependencies": {
+    "isbot": "^5.1.11",
     "@babel/core": "^7.27.7",
     "@babel/generator": "^7.27.5",
     "@babel/parser": "^7.27.7",
@@ -89,7 +90,7 @@
     "set-cookie-parser": "^2.6.0",
     "tinyglobby": "^0.2.14",
     "valibot": "^0.41.0",
-    "vite-node": "^3.1.4"
+    "vite-node": "^3.2.2"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",
@@ -114,7 +115,7 @@
     "typescript": "^5.1.6",
     "vite": "^6.1.0",
     "wireit": "0.14.9",
-    "wrangler": "^4.2.0"
+    "wrangler": "^4.23.0"
   },
   "peerDependencies": {
     "@react-router/serve": "workspace:^",

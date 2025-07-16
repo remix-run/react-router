@@ -4,13 +4,25 @@ title: ScrollRestoration
 
 # ScrollRestoration
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx
+-->
+
 [MODES: framework, data]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.ScrollRestoration.html)
 
-Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the [Scripts](../components/Scripts) component.
+Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the [`Scripts`](../components/Scripts) component.
 
 ```tsx
 import { ScrollRestoration } from "react-router";
@@ -33,15 +45,40 @@ This component renders an inline `<script>` to prevent scroll flashing. The `non
 <ScrollRestoration nonce={cspNonce} />
 ```
 
+## Signature
+
+```tsx
+function ScrollRestoration({ getKey, storageKey, ...props }: ScrollRestorationProps)
+```
+
 ## Props
 
-### ScriptsProps
+### getKey
 
-[modes: framework, data]
+A function that returns a key to use for scroll restoration. This is useful
+for custom scroll restoration logic, such as using only the pathname so
+that subsequent navigations to prior paths will restore the scroll.  Defaults
+to `location.key`.  See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.GetScrollRestorationKeyFunction.html).
 
-A couple common attributes:
+```tsx
+<ScrollRestoration
+  getKey={(location, matches) => {
+    // Restore based on unique location key (default behavior)
+    return location.key
 
-- `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
-- `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
+    // Restore based on pathname
+    return location.pathname
+  }}
+/>
+```
 
-You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
+### storageKey
+
+The key to use for storing scroll positions in `sessionStorage`. Defaults
+to `"react-router-scroll-positions"`.
+
+### nonce
+
+A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+attribute to render on the `<script>` element
+

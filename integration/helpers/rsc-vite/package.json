@@ -1,5 +1,6 @@
 {
   "name": "integration-rsc-vite",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +10,7 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@hiogawa/vite-rsc": "0.4.4",
+    "@vitejs/plugin-rsc": "0.4.11",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
@@ -21,6 +22,7 @@
   "dependencies": {
     "@mjackson/node-fetch-server": "0.6.1",
     "compression": "^1.8.0",
+    "cross-env": "^7.0.3",
     "express": "^4.21.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

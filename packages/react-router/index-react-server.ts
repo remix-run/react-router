@@ -44,7 +44,12 @@ export {
 
 // Shared implementation of agnostic APIs
 export { createStaticHandler } from "./lib/router/router";
-export { data, matchRoutes, unstable_createContext } from "./lib/router/utils";
+export {
+  data,
+  matchRoutes,
+  unstable_createContext,
+  unstable_RouterContextProvider,
+} from "./lib/router/utils";
 
 export { createCookie, isCookie } from "./lib/server-runtime/cookies";
 export {
@@ -59,7 +64,6 @@ export type {
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
   unstable_RouterContext,
-  unstable_RouterContextProvider,
 } from "./lib/router/utils";
 
 export type {

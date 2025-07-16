@@ -158,8 +158,6 @@ const routeUpdates = new Map();
 window.__reactRouterRouteModuleUpdates = new Map();
 
 import.meta.hot.on("react-router:hmr", async ({ route }) => {
-  window.__reactRouterClearCriticalCss();
-
   if (route) {
     routeUpdates.set(route.id, route);
   }

@@ -4,6 +4,18 @@ title: renderMatches
 
 # renderMatches
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/components.tsx
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
@@ -15,13 +27,16 @@ Renders the result of `matchRoutes()` into a React element.
 ## Signature
 
 ```tsx
-renderMatches(matches): undefined
+function renderMatches(matches: RouteMatch[] | null): React.ReactElement | null
 ```
 
 ## Params
 
 ### matches
 
-[modes: framework, data, declarative]
+The array of route matches to render
 
-_No documentation_
+## Returns
+
+A React element that renders the matched routes, or null if no matches
+

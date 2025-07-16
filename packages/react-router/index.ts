@@ -204,7 +204,11 @@ export {
   Scripts,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
-export type { ScriptsProps } from "./lib/dom/ssr/components";
+export type {
+  ScriptsProps,
+  PrefetchBehavior,
+  DiscoverBehavior,
+} from "./lib/dom/ssr/components";
 export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
   ClientActionFunction,

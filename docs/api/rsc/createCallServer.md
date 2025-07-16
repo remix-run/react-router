@@ -1,5 +1,6 @@
 ---
 title: createCallServer
+unstable: true
 ---
 
 # createCallServer
@@ -9,6 +10,16 @@ title: createCallServer
 ## Summary
 
 Create a React `callServer` implementation for React Router.
+
+```tsx filename=entry.browser.tsx
+setServerCallback(
+  createCallServer({
+    createFromReadableStream,
+    createTemporaryReferenceSet,
+    encodeReply,
+  })
+);
+```
 
 ## Options
 

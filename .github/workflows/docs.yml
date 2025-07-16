@@ -1,0 +1,67 @@
+name: 📚 Docs
+
+on:
+  push:
+    branches:
+      # Enable main after the next release beyond `7.7.0`
+      # - main
+      - dev
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to generate docs for (usually dev)"
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.FORMAT_PAT }}
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗 Build
+        run: pnpm build
+
+      - name: 📚 Generate Typedoc Docs
+        run: pnpm run docs
+
+      - name: 📚 Generate Markdown Docs
+        run: |
+          node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/components.tsx --write
+          node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write
+          node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/dom/lib.tsx --write
+
+      - name: 💪 Commit
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "💿 no docs changed"
+            exit 0
+          fi
+          git commit -m "chore: generate markdown docs from jsdocs"
+          git push
+          echo "💿 pushed docs changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
