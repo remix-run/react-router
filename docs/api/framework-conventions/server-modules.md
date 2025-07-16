@@ -21,6 +21,12 @@ export function validateToken(token: string) {
 
 `.server` modules are a good way to explicitly mark entire modules as server-only. The build will fail if any code in a `.server` file or `.server` directory accidentally ends up in the client module graph.
 
+<docs-info>
+
+If you need more sophisticated control over what is included in the client/server bundles, check out the [`vite-env-only` plugin](https://github.com/pcattori/vite-env-only).
+
+</docs-info>
+
 ## Usage Patterns
 
 ### Individual Files
