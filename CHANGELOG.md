@@ -391,19 +391,19 @@ For more information, check out the [blog post](https://remix.run/blog/react-rou
   - We've reverted this change and re-implemented it in such a way that both sets of users can leverage it
   - ⚠️ This may be a breaking bug for if you have adopted the unstable Middleware feature and are using `createRoutesStub` with the updated API.
 
-  ```tsx
-  // If you have not opted into middleware, the old API should work again
-  let context: AppLoadContext = {
-    /*...*/
-  };
-  let Stub = createRoutesStub(routes, context);
+    ```tsx
+    // If you have not opted into middleware, the old API should work again
+    let context: AppLoadContext = {
+      /*...*/
+    };
+    let Stub = createRoutesStub(routes, context);
 
-  // If you have opted into middleware, you should now pass an instantiated
-  // `unstable_routerContextProvider` instead of a `getContext` factory function.
-  let context = new unstable_RouterContextProvider();
-  context.set(SomeContext, someValue);
-  let Stub = createRoutesStub(routes, context);
-  ```
+    // If you have opted into middleware, you should now pass an instantiated
+    // `unstable_routerContextProvider` instead of a `getContext` factory function.
+    let context = new unstable_RouterContextProvider();
+    context.set(SomeContext, someValue);
+    let Stub = createRoutesStub(routes, context);
+    ```
 
 - `@react-router/dev` - Update `vite-node` to `^3.2.2` to support Vite 7 ([#13781](https://github.com/remix-run/react-router/pull/13781))
 - `@react-router/dev` - Properly handle `https` protocol in dev mode ([#13746](https://github.com/remix-run/react-router/pull/13746))
