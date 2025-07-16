@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
-import fg from "fast-glob";
 
+import fg from "fast-glob";
 import dox from "dox";
+import prettier from "prettier";
 import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
 
@@ -61,7 +62,7 @@ type SimplifiedComment = {
   codeLink: string;
   modes: Mode[];
   summary: string;
-  reference: string;
+  reference?: string;
   example?: string;
   signature?: string;
   params: {
@@ -150,11 +151,15 @@ if (filePaths.length === 0) {
   process.exit(1);
 }
 
+run();
+
 // Generate markdown documentation for all matching files
-filePaths.forEach((filePath) => {
-  console.log(`\nProcessing file: ${filePath}`);
-  generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
-});
+async function run() {
+  for (let filePath of filePaths) {
+    console.log(`\nProcessing file: ${filePath}`);
+    await generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
+  }
+}
 
 function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   const lookup = new Map<string, string>();
@@ -318,13 +323,13 @@ function getDeclarationDescription(child: JSONOutput.DeclarationReflection) {
     .join("");
 }
 
-function generateMarkdownDocs(
+async function generateMarkdownDocs(
   filepath: string,
   apiFilter: string[] | null,
   outputDir?: string,
   writeFiles?: boolean,
 ) {
-  let simplifiedComments = parseDocComments(filepath, apiFilter);
+  let simplifiedComments = await parseDocComments(filepath, apiFilter);
   simplifiedComments.forEach((comment) => {
     // Generate markdown content for each public function
     let markdownContent = generateMarkdownForComment(comment);
@@ -495,17 +500,16 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   return markdown;
 }
 
-function parseDocComments(filepath: string, apiFilter: string[] | null) {
+async function parseDocComments(filepath: string, apiFilter: string[] | null) {
   let code = fs.readFileSync(filepath).toString();
   let comments = dox.parseComments(code, { raw: true }) as ParsedComment[];
+  let filteredComments = comments.filter(
+    (c) =>
+      c.tags.some((t) => t.type === "public") &&
+      (!apiFilter || apiFilter.includes(getApiName(c))),
+  );
 
-  return comments
-    .filter(
-      (c) =>
-        c.tags.some((t) => t.type === "public") &&
-        (!apiFilter || apiFilter.includes(getApiName(c))),
-    )
-    .map((c) => simplifyComment(c, filepath));
+  return Promise.all(filteredComments.map((c) => simplifyComment(c, filepath)));
 }
 
 function getApiName(comment: ParsedComment): string {
@@ -529,10 +533,10 @@ function getApiName(comment: ParsedComment): string {
   throw new Error(`Could not determine API name:\n${comment.code}\n`);
 }
 
-function simplifyComment(
+async function simplifyComment(
   comment: ParsedComment,
   filepath: string,
-): SimplifiedComment {
+): Promise<SimplifiedComment> {
   let name = getApiName(comment);
   let unstable = name.startsWith("unstable_");
 
@@ -570,7 +574,7 @@ function simplifyComment(
     );
   }
 
-  let signature = getSignature(comment.code);
+  let signature = await getSignature(comment.code);
 
   let params: SimplifiedComment["params"] = [];
   comment.tags.forEach((tag) => {
@@ -642,7 +646,7 @@ function isParamTag(tag: Tag): tag is ParamTag {
 
 // Parse the TypeScript code into an AST so we can remove the function body
 // and just grab the signature
-function getSignature(code: string) {
+async function getSignature(code: string) {
   const ast = ts.createSourceFile("example.ts", code, ts.ScriptTarget.Latest);
   if (ast.statements.length === 0) {
     throw new Error(`Expected one or more statements: ${code}`);
@@ -663,7 +667,9 @@ function getSignature(code: string) {
       .createPrinter({ newLine: ts.NewLineKind.LineFeed })
       .printNode(ts.EmitHint.Unspecified, modifiedFunction, ast);
 
-    return newCode.replace("{ }", "").trim();
+    let formatted = await prettier.format(newCode, { parser: "typescript" });
+
+    return formatted.replace("{}", "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
