@@ -3,15 +3,29 @@ title: routeRSCServerRequest
 unstable: true
 ---
 
-# routeRSCServerRequest
+# unstable_routeRSCServerRequest
 
 [MODES: data]
+
+<br />
+<br />
+
+<docs-warning>This API is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
+to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
 Routes the incoming request to the RSC server and appropriately proxies the server response for data / resource requests, or renders to HTML for a document request.
 
 ```tsx filename=entry.ssr.tsx
+import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
+import * as ReactDomServer from "react-dom/server.edge";
+import {
+  unstable_RSCStaticRouter as RSCStaticRouter,
+  unstable_routeRSCServerRequest as routeRSCServerRequest,
+} from "react-router";
+
 routeRSCServerRequest({
   request,
   fetchServer,
