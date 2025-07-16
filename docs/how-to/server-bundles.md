@@ -24,7 +24,7 @@ export default {
   // ...
   serverBundles: ({ branch }) => {
     const isAuthenticatedRoute = branch.some((route) =>
-      route.id.split("/").includes("_authenticated")
+      route.id.split("/").includes("_authenticated"),
     );
 
     return isAuthenticatedRoute

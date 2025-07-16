@@ -385,7 +385,6 @@ For more information, check out the [blog post](https://remix.run/blog/react-rou
 - `react-router` - Do not throw if the url hash is not a valid URI component ([#13247](https://github.com/remix-run/react-router/pull/13247))
 - `react-router` - Remove `Content-Length` header from Single Fetch responses ([#13902](https://github.com/remix-run/react-router/pull/13902))
 - `react-router` - Fix a regression in `createRoutesStub` introduced with the middleware feature ([#13946](https://github.com/remix-run/react-router/pull/13946))
-
   - As part of that work we altered the signature to align with the new middleware APIs without making it backwards compatible with the prior `AppLoadContext` API
   - This permitted `createRoutesStub` to work if you were opting into middleware and the updated `context` typings, but broke `createRoutesStub` for users not yet opting into middleware
   - We've reverted this change and re-implemented it in such a way that both sets of users can leverage it

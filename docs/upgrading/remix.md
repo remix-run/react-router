@@ -149,7 +149,7 @@ For backwards-compatibility, there are a few ways to adopt `routes.ts` to align 
    import { createRoutesFromFolders } from "@remix-run/v1-route-convention";
 
    export default remixRoutesOptionAdapter(
-     createRoutesFromFolders
+     createRoutesFromFolders,
    ) satisfies RouteConfig;
    ```
 
@@ -169,7 +169,7 @@ For backwards-compatibility, there are a few ways to adopt `routes.ts` to align 
            route(":city", "concerts/city.tsx");
          });
        });
-     }
+     },
    ) satisfies RouteConfig;
    ```
 

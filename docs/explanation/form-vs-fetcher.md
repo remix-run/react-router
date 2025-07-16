@@ -23,7 +23,6 @@ Understanding the distinctions and intersections of these APIs is vital for effi
 The primary criterion when choosing among these tools is whether you want the URL to change or not:
 
 - **URL Change Desired**: When navigating or transitioning between pages, or after certain actions like creating or deleting records. This ensures that the user's browser history accurately reflects their journey through your application.
-
   - **Expected Behavior**: In many cases, when users hit the back button, they should be taken to the previous page. Other times the history entry may be replaced but the URL change is important nonetheless.
 
 - **No URL Change Desired**: For actions that don't significantly change the context or primary content of the current view. This might include updating individual fields or minor data manipulations that don't warrant a new URL or page reload. This also applies to loading data with fetchers for things like popovers, combo boxes, etc.
@@ -228,7 +227,7 @@ function useMarkAsRead({ articleId, userId }) {
       {
         action: `/article/${articleId}/mark-as-read`,
         method: "post",
-      }
+      },
     );
   });
 }

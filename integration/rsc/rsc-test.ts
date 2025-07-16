@@ -2273,7 +2273,7 @@ implementations.forEach((implementation) => {
         // Verify loader data is passed
         await page.waitForSelector("[data-loader-data]");
         expect(await page.locator("[data-loader-data]").textContent()).toBe(
-          "Hello from client loader!"
+          "Hello from client loader!",
         );
 
         // Verify params are passed (empty for home route)
@@ -2281,17 +2281,17 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-params-type]");
         await page.waitForSelector("[data-params-count]");
         expect(await page.locator("[data-params-type]").textContent()).toBe(
-          "typeof params: object"
+          "typeof params: object",
         );
         expect(await page.locator("[data-params-count]").textContent()).toBe(
-          "params count: 0"
+          "params count: 0",
         );
 
         // Verify matches are passed
         await page.waitForSelector("[data-matches]");
         await page.waitForSelector("[data-matches-ids]");
         expect(await page.locator("[data-matches-ids]").textContent()).toBe(
-          "matches ids: root, home"
+          "matches ids: root, home",
         );
 
         // Submit the form to trigger the client action
@@ -2301,7 +2301,7 @@ implementations.forEach((implementation) => {
         // Verify the action data is displayed
         await page.waitForSelector("[data-action-data]");
         expect(await page.locator("[data-action-data]").textContent()).toBe(
-          "Hello World from client action!"
+          "Hello World from client action!",
         );
 
         // Ensure this is using RSC
@@ -2358,10 +2358,10 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-error-title]");
         await page.waitForSelector("[data-error-message]");
         expect(await page.locator("[data-error-title]").textContent()).toBe(
-          "Error Caught!"
+          "Error Caught!",
         );
         expect(await page.locator("[data-error-message]").textContent()).toBe(
-          "Intentional error from client loader"
+          "Intentional error from client loader",
         );
 
         // Verify params are passed to error boundary
@@ -2369,10 +2369,10 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-error-params-type]");
         await page.waitForSelector("[data-error-params-count]");
         expect(
-          await page.locator("[data-error-params-type]").textContent()
+          await page.locator("[data-error-params-type]").textContent(),
         ).toBe("typeof params: object");
         expect(
-          await page.locator("[data-error-params-count]").textContent()
+          await page.locator("[data-error-params-count]").textContent(),
         ).toBe("params count: 0");
 
         // Ensure this is using RSC
@@ -2426,10 +2426,10 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-error-title]");
         await page.waitForSelector("[data-error-message]");
         expect(await page.locator("[data-error-title]").textContent()).toBe(
-          "Error Caught!"
+          "Error Caught!",
         );
         expect(await page.locator("[data-error-message]").textContent()).toBe(
-          "Intentional error from server loader"
+          "Intentional error from server loader",
         );
 
         // Verify params are passed to error boundary
@@ -2437,10 +2437,10 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-error-params-type]");
         await page.waitForSelector("[data-error-params-count]");
         expect(
-          await page.locator("[data-error-params-type]").textContent()
+          await page.locator("[data-error-params-type]").textContent(),
         ).toBe("typeof params: object");
         expect(
-          await page.locator("[data-error-params-count]").textContent()
+          await page.locator("[data-error-params-count]").textContent(),
         ).toBe("params count: 0");
 
         // Ensure this is using RSC
@@ -2502,7 +2502,7 @@ implementations.forEach((implementation) => {
         // Verify the hydrate fallback is shown initially
         await page.waitForSelector("[data-hydrate-fallback]");
         expect(
-          await page.locator("[data-hydrate-fallback]").textContent()
+          await page.locator("[data-hydrate-fallback]").textContent(),
         ).toBe("Hydrate Fallback");
 
         // Verify params are passed to hydrate fallback
@@ -2510,10 +2510,10 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-hydrate-params-type]");
         await page.waitForSelector("[data-hydrate-params-count]");
         expect(
-          await page.locator("[data-hydrate-params-type]").textContent()
+          await page.locator("[data-hydrate-params-type]").textContent(),
         ).toBe("typeof params: object");
         expect(
-          await page.locator("[data-hydrate-params-count]").textContent()
+          await page.locator("[data-hydrate-params-count]").textContent(),
         ).toBe("params count: 0");
 
         // Unblock the client loader to allow it to complete

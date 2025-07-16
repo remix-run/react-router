@@ -33,14 +33,14 @@ async function run() {
           // Remove uploaded image URLs and links to react router source code
           // and new issue links before looking for git repo reproductions
           .replace("https://github.com/user-attachments/", "")
-          .replace("https://github.com/remix-run/react-router/", "")
+          .replace("https://github.com/remix-run/react-router/", ""),
       )
     );
   });
 
   console.log(
     `Found ${noReproIssues.length} issues without a reproduction:\n` +
-      noReproIssues.map((i) => i.number).join(",")
+      noReproIssues.map((i) => i.number).join(","),
   );
 
   for (let issue of noReproIssues) {
