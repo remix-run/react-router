@@ -566,7 +566,7 @@ function simplifyComment(
   let reference = typedocLookup.get(name)?.href;
   if (!reference) {
     console.warn(
-      `Warning: Could not find API in typedoc reference docs, skipping reference link: ${name}`
+      `Warning: Could not find API in typedoc reference docs, skipping reference link: ${name}`,
     );
   }
 
