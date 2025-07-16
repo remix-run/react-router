@@ -182,7 +182,8 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   markdownFiles.forEach((filePath) => {
     const relativePath = path
       .relative(outputDir, filePath)
-      .replace(/\.md$/, "");
+      .replace(/\.md$/, "")
+      .replace(/\\/g, "/");
     const apiName = path.basename(relativePath);
 
     if (apiName !== "index") {
