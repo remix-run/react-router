@@ -9,6 +9,9 @@ export {
   Router,
   RouterProvider,
   Routes,
+  WithComponentProps as UNSAFE_WithComponentProps,
+  WithErrorBoundaryProps as UNSAFE_WithErrorBoundaryProps,
+  WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
 } from "./lib/components";
 export {
   BrowserRouter,
