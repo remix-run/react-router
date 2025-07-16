@@ -41,7 +41,7 @@ function useDataRouterContext() {
   let context = React.useContext(DataRouterContext);
   invariant(
     context,
-    "You must render this element inside a <DataRouterContext.Provider> element",
+    "You must render this element inside a <DataRouterContext.Provider> element"
   );
   return context;
 }
@@ -50,7 +50,7 @@ function useDataRouterStateContext() {
   let context = React.useContext(DataRouterStateContext);
   invariant(
     context,
-    "You must render this element inside a <DataRouterStateContext.Provider> element",
+    "You must render this element inside a <DataRouterStateContext.Provider> element"
   );
   return context;
 }
@@ -67,7 +67,7 @@ export function useFrameworkContext(): FrameworkContextObject {
   let context = React.useContext(FrameworkContext);
   invariant(
     context,
-    "You must render this element inside a <HydratedRouter> element",
+    "You must render this element inside a <HydratedRouter> element"
   );
   return context;
 }
@@ -103,7 +103,7 @@ interface PrefetchHandlers {
 
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
-  theirElementProps: PrefetchHandlers,
+  theirElementProps: PrefetchHandlers
 ): [boolean, React.RefObject<T>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
@@ -177,10 +177,10 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
 }
 
 export function composeEventHandlers<
-  EventType extends React.SyntheticEvent | Event,
+  EventType extends React.SyntheticEvent | Event
 >(
   theirHandler: ((event: EventType) => any) | undefined,
-  ourHandler: (event: EventType) => any,
+  ourHandler: (event: EventType) => any
 ): (event: EventType) => any {
   return (event) => {
     theirHandler && theirHandler(event);
@@ -198,7 +198,7 @@ export function composeEventHandlers<
 function getActiveMatches(
   matches: RouterState["matches"],
   errors: RouterState["errors"],
-  isSpaMode: boolean,
+  isSpaMode: boolean
 ) {
   if (isSpaMode && !isHydrated) {
     return [matches[0]];
@@ -247,7 +247,7 @@ export function Links(): React.JSX.Element {
 
   let keyedLinks = React.useMemo(
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
-    [matches, routeModules, manifest],
+    [matches, routeModules, manifest]
   );
 
   return (
@@ -270,7 +270,7 @@ export function Links(): React.JSX.Element {
           <PrefetchPageLinks key={key} {...link} />
         ) : (
           <link key={key} {...link} />
-        ),
+        )
       )}
     </>
   );
@@ -307,7 +307,7 @@ export function PrefetchPageLinks({
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
-    [router.routes, page, router.basename],
+    [router.routes, page, router.basename]
   );
 
   if (!matches) {
@@ -334,7 +334,7 @@ function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
         if (!interrupted) {
           setKeyedPrefetchLinks(links);
         }
-      },
+      }
     );
 
     return () => {
@@ -365,9 +365,9 @@ function PrefetchPageLinksImpl({
         matches,
         manifest,
         location,
-        "data",
+        "data"
       ),
-    [page, nextMatches, matches, manifest, location],
+    [page, nextMatches, matches, manifest, location]
   );
 
   let newMatchesForAssets = React.useMemo(
@@ -378,9 +378,9 @@ function PrefetchPageLinksImpl({
         matches,
         manifest,
         location,
-        "assets",
+        "assets"
       ),
-    [page, nextMatches, matches, manifest, location],
+    [page, nextMatches, matches, manifest, location]
   );
 
   let dataHrefs = React.useMemo(() => {
@@ -427,7 +427,7 @@ function PrefetchPageLinksImpl({
         nextMatches
           .filter((m) => routesParams.has(m.route.id))
           .map((m) => m.route.id)
-          .join(","),
+          .join(",")
       );
     }
 
@@ -445,7 +445,7 @@ function PrefetchPageLinksImpl({
 
   let moduleHrefs = React.useMemo(
     () => getModuleLinkHrefs(newMatchesForAssets, manifest),
-    [newMatchesForAssets, manifest],
+    [newMatchesForAssets, manifest]
   );
 
   // needs to be a hook with async behavior because we need the modules, not
@@ -541,8 +541,8 @@ export function Meta(): React.JSX.Element {
               error,
             })
           : Array.isArray(routeModule.meta)
-            ? [...routeModule.meta]
-            : routeModule.meta;
+          ? [...routeModule.meta]
+          : routeModule.meta;
     } else if (leafMeta) {
       // We only assign the route's meta to the nearest leaf if there is no meta
       // export in the route. The meta function may return a falsy value which
@@ -557,7 +557,7 @@ export function Meta(): React.JSX.Element {
           _match.route.path +
           " returns an invalid value. All route meta functions must " +
           "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
+          "\n\nTo reference the meta function API, see https://remix.run/route/meta"
       );
     }
 
@@ -578,7 +578,7 @@ export function Meta(): React.JSX.Element {
           let { tagName, ...rest } = metaProps;
           if (!isValidMetaTag(tagName)) {
             console.warn(
-              `A meta object uses an invalid tagName: ${tagName}. Expected either 'link' or 'meta'`,
+              `A meta object uses an invalid tagName: ${tagName}. Expected either 'link' or 'meta'`
             );
             return null;
           }
@@ -643,25 +643,26 @@ let isHydrated = false;
  */
 export type ScriptsProps = Omit<
   React.HTMLProps<HTMLScriptElement>,
-  | "children"
   | "async"
+  | "children"
+  | "dangerouslySetInnerHTML"
   | "defer"
   | "src"
   | "type"
   | "noModule"
-  | "dangerouslySetInnerHTML"
   | "suppressHydrationWarning"
 > & {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
-   * attribute to render on the `<script>` element
+   * attribute to render on [the `<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
    */
   nonce?: string | undefined;
 };
 
 /**
  * Renders the client runtime of your app. It should be rendered inside the
- * `<body>` of the document.
+ * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/body)
+ *  of the document.
  *
  * If server rendering, you can omit `<Scripts/>` and the app will work as a
  * traditional web app without JavaScript, relying solely on HTML and browser
@@ -808,7 +809,7 @@ ${matches
         `window.__reactRouterManifest = ${JSON.stringify(
           getPartialManifest(manifest, router),
           null,
-          2,
+          2
         )};`
       : ""
   }
@@ -848,15 +849,15 @@ import(${JSON.stringify(manifest.entry.module)});`;
           manifest.entry.imports.concat(
             getModuleLinkHrefs(matches, manifest, {
               includeHydrateFallback: true,
-            }),
-          ),
+            })
+          )
         );
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
   warnOnce(
     !isRSCRouterContext,
-    "The <Scripts /> element is a no-op when using RSC and can be safely removed.",
+    "The <Scripts /> element is a no-op when using RSC and can be safely removed."
   );
 
   return isHydrated || isRSCRouterContext ? null : (

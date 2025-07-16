@@ -53,7 +53,7 @@ import {
 import type { SerializeFrom } from "./types/route-data";
 
 /**
- * Resolves a URL against the current location.
+ * Resolves a URL against the current {@link Location}.
  *
  * @example
  * import { useHref } from "react-router";
@@ -67,8 +67,9 @@ import type { SerializeFrom } from "./types/route-data";
  * @category Hooks
  * @param to The path to resolve
  * @param options Options
- * @param options.relative Defaults to "route" so routing is relative to the route tree.
- * Set to "path" to make relative routing operate against path segments.
+ * @param options.relative Defaults to `"route"` so routing is relative to the
+ * route tree.
+ * Set to `"path"` to make relative routing operate against path segments.
  * @returns The resolved href string
  */
 export function useHref(
@@ -100,21 +101,22 @@ export function useHref(
 }
 
 /**
- * Returns true if this component is a descendant of a Router, useful to ensure
- * a component is used within a Router.
+ * Returns `true` if this component is a descendant of a {@link Router}, useful
+ * to ensure a component is used within a {@link Router}.
  *
  * @public
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns Whether the component is within a Router context
+ * @returns Whether the component is within a {@link Router} context
  */
 export function useInRouterContext(): boolean {
   return React.useContext(LocationContext) != null;
 }
 
 /**
- * Returns the current {@link Location}. This can be useful if you'd like to perform some side effect whenever it changes.
+ * Returns the current {@link Location}. This can be useful if you'd like to
+ * perform some side effect whenever it changes.
  *
  * @example
  * import * as React from 'react'
@@ -135,7 +137,7 @@ export function useInRouterContext(): boolean {
  *
  * @public
  * @category Hooks
- * @returns The current location object
+ * @returns The current {@link Location} object
  */
 export function useLocation(): Location {
   invariant(
@@ -149,26 +151,27 @@ export function useLocation(): Location {
 }
 
 /**
- * Returns the current navigation action which describes how the router came to
- * the current location, either by a pop, push, or replace on the history stack.
+ * Returns the current {@link Navigation} action which describes how the router
+ * came to the current {@link Location}, either by a pop, push, or replace on
+ * the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack.
  *
  * @public
  * @category Hooks
- * @returns The current navigation type (Action.Pop, Action.Push, or Action.Replace)
+ * @returns The current {@link NavigationType} type (`"PUSH"`, `"REPLACE"`, or `"POP"`)
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
 }
 
 /**
- * Returns a PathMatch object if the given pattern matches the current URL.
+ * Returns a {@link PathMatch} object if the given pattern matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
- * `<NavLink>`.
+ * {@link NavLink | `<NavLink>`}.
  *
  * @public
  * @category Hooks
- * @param pattern The pattern to match against the current location
- * @returns The path match object if the pattern matches, null otherwise
+ * @param pattern The pattern to match against the current {@link Location}
+ * @returns The path match object if the pattern matches, `null` otherwise
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
@@ -189,7 +192,7 @@ export function useMatch<
 }
 
 /**
- * The interface for the navigate() function returned from useNavigate().
+ * The interface for the `navigate` function returned from {@link useNavigate}.
  */
 export interface NavigateFunction {
   (to: To, options?: NavigateOptions): void | Promise<void>;
@@ -217,18 +220,19 @@ function useIsomorphicLayoutEffect(
  * Returns a function that lets you navigate programmatically in the browser in
  * response to user interactions or effects.
  *
- * It's often better to use {@link redirect} in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader) functions than this hook.
+ * It's often better to use {@link redirect} in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
+ * functions than this hook.
  *
- * The returned function signature is `navigate(to, options?)/navigate(delta)` where:
+ * The returned function signature is `navigate(to, options?)`/`navigate(delta)` where:
  *
- * * `to` can be a string path, a `To` object, or a number (delta)
+ * * `to` can be a string path, a {@link To} object, or a number (delta)
  * * `options` contains options for modifying the navigation
- *   * `flushSync`: Wrap the DOM updates in `ReactDom.flushSync`
+ *   * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
  *   * `preventScrollReset`: Do not scroll back to the top of the page after navigation
- *   * `relative`: "route" or "path" to control relative routing logic
- *   * `replace`: Replace the current entry in the history stack
- *   * `state`: Optional history state to include with the new `Location`
- *   * `viewTransition`: Enable `document.startViewTransition` for this navigation
+ *   * `relative`: `"route"` or `"path"` to control relative routing logic
+ *   * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
+ *   * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new {@link Location}
+ *   * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
  *
  * @example
  * import { useNavigate } from "react-router";
@@ -250,7 +254,7 @@ function useIsomorphicLayoutEffect(
  * navigate("/some/route?search=param");
  * ```
  *
- * ### Navigate with a `To` object
+ * ### Navigate with a {@link To} object
  *
  * All properties are optional.
  *
@@ -263,7 +267,8 @@ function useIsomorphicLayoutEffect(
  * });
  * ```
  *
- * If you use `state`, that will be available on the `location` object on the next page. Access it with `useLocation().state` (see [useLocation](./useLocation)).
+ * If you use `state`, that will be available on the {@link Location} object on
+ * the next page. Access it with `useLocation().state` (see {@link useLocation}).
  *
  * ### Navigate back or forward in the history stack
  *
@@ -273,17 +278,23 @@ function useIsomorphicLayoutEffect(
  * navigate(-1);
  *
  * // forward
- * // often used in a multi-step wizard workflows
+ * // often used in a multistep wizard workflows
  * navigate(1);
  * ```
  *
- * Be cautions with `navigate(number)`. If your application can load up to a route that has a button that tries to navigate forward/back, there may not be a history entry to go back or forward to, or it can go somewhere you don't expect (like a different domain).
+ * Be cautious with `navigate(number)`. If your application can load up to a
+ * route that has a button that tries to navigate forward/back, there may not be
+ * a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * entry to go back or forward to, or it can go somewhere you don't expect
+ * (like a different domain).
  *
- * Only use this if you're sure they will have an entry in the history stack to navigate to.
+ * Only use this if you're sure they will have an entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * stack to navigate to.
  *
  * ### Replace the current entry in the history stack
  *
- * This will remove the current entry in the history stack, replacing it with a new one, similar to a server side redirect.
+ * This will remove the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * stack, replacing it with a new one, similar to a server side redirect.
  *
  * ```tsx
  * navigate("/some/route", { replace: true });
@@ -296,13 +307,16 @@ function useIsomorphicLayoutEffect(
  * <br/>
  * <br/>
  *
- * To prevent `<ScrollRestoration>` from resetting the scroll position, use the `preventScrollReset` option.
+ * To prevent {@link ScrollRestoration | `<ScrollRestoration>`} from resetting
+ * the scroll position, use the `preventScrollReset` option.
  *
  * ```tsx
  * navigate("?some-tab=1", { preventScrollReset: true });
  * ```
  *
- * For example, if you have a tab interface connected to search params in the middle of a page and you don't want it to scroll to the top when a tab is clicked.
+ * For example, if you have a tab interface connected to search params in the
+ * middle of a page, and you don't want it to scroll to the top when a tab is
+ * clicked.
  *
  * @public
  * @category Hooks
@@ -393,7 +407,7 @@ const OutletContext = React.createContext<unknown>(null);
  *
  * @public
  * @category Hooks
- * @returns The context value passed to the Outlet
+ * @returns The context value passed to the {@link Outlet} component
  */
 export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
@@ -401,12 +415,13 @@ export function useOutletContext<Context = unknown>(): Context {
 
 /**
  * Returns the element for the child route at this level of the route
- * hierarchy. Used internally by `<Outlet>` to render child routes.
+ * hierarchy. Used internally by {@link Outlet | `<Outlet>`} to render child
+ * routes.
  *
  * @public
  * @category Hooks
  * @param context The context to pass to the outlet
- * @returns The child route element or null if no child routes match
+ * @returns The child route element or `null` if no child routes match
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
@@ -419,9 +434,12 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
 }
 
 /**
- * Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
+ * Returns an object of key/value-pairs of the dynamic params from the current
+ * URL that were matched by the routes. Child routes inherit all params from
+ * their parent routes.
  *
- * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+ * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
+ * then `params.postId` will be `"123"`.
  *
  * @example
  * import { useParams } from "react-router";
@@ -530,7 +548,9 @@ export function useParams<
 }
 
 /**
- * Resolves the pathname of the given `to` value against the current location. Similar to {@link useHref}, but returns a {@link Path} instead of a string.
+ * Resolves the pathname of the given `to` value against the current
+ * {@link Location}. Similar to {@link useHref}, but returns a
+ * {@link Path} instead of a string.
  *
  * @example
  * import { useResolvedPath } from "react-router";
@@ -547,9 +567,9 @@ export function useParams<
  * @category Hooks
  * @param to The path to resolve
  * @param options Options
- * @param options.relative Defaults to "route" so routing is relative to the route tree.
- *                         Set to "path" to make relative routing operate against path segments.
- * @returns The resolved `Path` object with pathname, search, and hash
+ * @param options.relative Defaults to `"route"` so routing is relative to the route tree.
+ *                         Set to `"path"` to make relative routing operate against path segments.
+ * @returns The resolved {@link Path} object with `pathname`, `search`, and `hash`
  */
 export function useResolvedPath(
   to: To,
@@ -572,11 +592,12 @@ export function useResolvedPath(
 }
 
 /**
- * Hook version of {@link Routes | `<Routes>`} that uses objects instead of components. These objects have the same properties as the component props.
- * The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
+ * Hook version of {@link Routes | `<Routes>`} that uses objects instead of
+ * components. These objects have the same properties as the component props.
+ * The return value of `useRoutes` is either a valid React element you can use
+ * to render the route tree, or `null` if nothing matched.
  *
  * @example
- * import * as React from "react";
  * import { useRoutes } from "react-router";
  *
  * function App() {
@@ -600,8 +621,9 @@ export function useResolvedPath(
  *
  * @public
  * @category Hooks
- * @param routes An array of route objects that define the route hierarchy
- * @param locationArg An optional location object or pathname string to use instead of the current location
+ * @param routes An array of {@link RouteObject}s that define the route hierarchy
+ * @param locationArg An optional {@link Location} object or pathname string to
+ * use instead of the current {@link Location}
  * @returns A React element to render the matched route, or `null` if no routes matched
  */
 export function useRoutes(
@@ -1177,7 +1199,10 @@ export function useRouteId() {
 }
 
 /**
- * Returns the current navigation, defaulting to an "idle" navigation when no navigation is in progress. You can use this to render pending UI (like a global spinner) or read FormData from a form navigation.
+ * Returns the current {@link Navigation}, defaulting to an "idle" navigation
+ * when no navigation is in progress. You can use this to render pending UI
+ * (like a global spinner) or read [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+ * from a form navigation.
  *
  * @example
  * import { useNavigation } from "react-router";
@@ -1193,7 +1218,7 @@ export function useRouteId() {
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns The current navigation object
+ * @returns The current {@link Navigation} object
  */
 export function useNavigation(): Navigation {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
@@ -1202,7 +1227,8 @@ export function useNavigation(): Navigation {
 
 /**
  * Revalidate the data on the page for reasons outside of normal data mutations
- * like window focus or polling on an interval.
+ * like [`Window` focus](https://developer.mozilla.org/en-US/docs/Web/API/Window/focus_event)
+ * or polling on an interval.
  *
  * Note that page data is already revalidated automatically after actions.
  * If you find yourself using this for normal CRUD operations on your data in
@@ -1231,7 +1257,8 @@ export function useNavigation(): Navigation {
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns An object with a `revalidate` function and the current revalidation `state`
+ * @returns An object with a `revalidate` function and the current revalidation
+ * `state`
  */
 export function useRevalidator(): {
   revalidate: () => Promise<void>;
@@ -1250,14 +1277,15 @@ export function useRevalidator(): {
 }
 
 /**
- * Returns the active route matches, useful for accessing loaderData for
- * parent/child routes or the route "handle" property
+ * Returns the active route matches, useful for accessing `loaderData` for
+ * parent/child routes or the route [`handle`](../../start/framework/route-module#handle)
+ * property
  *
  * @public
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns An array of UI matches for the current route hierarchy
+ * @returns An array of {@link UIMatch | UI matches} for the current route hierarchy
  */
 export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
@@ -1290,7 +1318,7 @@ export function useMatches(): UIMatch[] {
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns The data returned from the route's loader function
+ * @returns The data returned from the route's [`loader`](../../start/framework/route-module#loader) or [`clientLoader`](../../start/framework/route-module#clientloader) function
  */
 export function useLoaderData<T = any>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
@@ -1299,7 +1327,8 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
 }
 
 /**
- * Returns the loader data for a given route by route ID.
+ * Returns the [`loader`](../../start/framework/route-module#loader) data for a
+ * given route by route ID.
  *
  * Route IDs are created automatically. They are simply the path of the route file
  * relative to the app folder without the extension.
@@ -1318,7 +1347,7 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
  * }
  *
  * // You can also specify your own route ID's manually in your routes.ts file:
- * route("/", "containers/app.tsx", { id: "app" }})
+ * route("/", "containers/app.tsx", { id: "app" })
  * useRouteLoaderData("app");
  *
  * @public
@@ -1326,7 +1355,8 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
  * @mode framework
  * @mode data
  * @param routeId The ID of the route to return loader data from
- * @returns The data returned from the specified route's loader function, or undefined if not found
+ * @returns The data returned from the specified route's [`loader`](../../start/framework/route-module#loader)
+ * function, or `undefined` if not found
  */
 export function useRouteLoaderData<T = any>(
   routeId: string,
@@ -1336,7 +1366,9 @@ export function useRouteLoaderData<T = any>(
 }
 
 /**
- * Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
+ * Returns the [`action`](../../start/framework/route-module#action) data from
+ * the most recent `POST` navigation form submission or `undefined` if there
+ * hasn't been one.
  *
  * @example
  * import { Form, useActionData } from "react-router";
@@ -1361,7 +1393,9 @@ export function useRouteLoaderData<T = any>(
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns The data returned from the route's action function, or undefined if no action has been called
+ * @returns The data returned from the route's [`action`](../../start/framework/route-module#action)
+ * function, or `undefined` if no [`action`](../../start/framework/route-module#action)
+ * has been called
  */
 export function useActionData<T = any>(): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
@@ -1388,7 +1422,8 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns The error that was thrown during route loading, action execution, or rendering
+ * @returns The error that was thrown during route [loading](../../start/framework/route-module#loader),
+ * [`action`](../../start/framework/route-module#action) execution, or rendering
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
@@ -1423,7 +1458,7 @@ export function useRouteError(): unknown {
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns The resolved value from the nearest Await component
+ * @returns The resolved value from the nearest {@link Await} component
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1453,7 +1488,7 @@ export function useAsyncValue(): unknown {
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns The error that was thrown in the nearest Await component
+ * @returns The error that was thrown in the nearest {@link Await} component
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1464,11 +1499,11 @@ let blockerId = 0;
 
 /**
  * Allow the application to block navigations within the SPA and present the
- * user a confirmation dialog to confirm the navigation.  Mostly used to avoid
- * using half-filled form data.  This does not handle hard-reloads or
+ * user a confirmation dialog to confirm the navigation. Mostly used to avoid
+ * using half-filled form data. This does not handle hard-reloads or
  * cross-origin navigations.
  *
- * The Blocker object returned by the hook has the following properties:
+ * The {@link Blocker} object returned by the hook has the following properties:
  *
  * - **`state`**
  *   - `unblocked` - the blocker is idle and has not prevented any navigation
@@ -1564,8 +1599,11 @@ let blockerId = 0;
  * @category Hooks
  * @mode framework
  * @mode data
- * @param shouldBlock Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked.  The function format receives a single object parameter containing the `currentLocation`, `nextLocation`, and `historyAction` of the potential navigation.
- * @returns A blocker object with state and reset functionality
+ * @param shouldBlock Either a boolean or a function returning a boolean which
+ * indicates whether the navigation should be blocked. The function format
+ * receives a single object parameter containing the `currentLocation`,
+ * `nextLocation`, and `historyAction` of the potential navigation.
+ * @returns A {@link Blocker} object with state and reset functionality
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);

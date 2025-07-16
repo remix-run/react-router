@@ -138,7 +138,7 @@ export interface DOMRouterOpts {
    */
   basename?: string;
   /**
-   * Function to provide the initial context values for all client side navigations/fetches
+   * Function to provide the initial `context` values for all client side navigations/fetches
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
   /**
@@ -681,14 +681,16 @@ export interface DOMRouterOpts {
    */
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   /**
-   * Window object override - defaults to the global `window` instance.
+   * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
+   * override - defaults to the global `window` instance.
    */
   window?: Window;
 }
 
 /**
- * Create a new data router that manages the application path via `history.pushState`
- * and `history.replaceState`.
+ * Create a new {@link DataRouter| data router} that manages the application
+ * path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
+ * and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
  *
  * @public
  * @category Data Routers
@@ -698,11 +700,11 @@ export interface DOMRouterOpts {
  * @param {DOMRouterOpts.basename} opts.basename n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.future} opts.future n/a
+ * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
- * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
  * @param {DOMRouterOpts.window} opts.window n/a
- * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
+ * @returns An initialized {@link DataRouter| data router} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createBrowserRouter(
   routes: RouteObject[],
@@ -724,7 +726,8 @@ export function createBrowserRouter(
 }
 
 /**
- * Create a new data router that manages the application path via the URL hash.
+ * Create a new {@link DataRouter| data router} that manages the application
+ * path via the URL [`hash`]https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
  *
  * @public
  * @category Data Routers
@@ -732,13 +735,13 @@ export function createBrowserRouter(
  * @param routes Application routes
  * @param opts Options
  * @param {DOMRouterOpts.basename} opts.basename n/a
- * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
  * @param {DOMRouterOpts.future} opts.future n/a
+ * @param {DOMRouterOpts.unstable_getContext} opts.unstable_getContext n/a
  * @param {DOMRouterOpts.hydrationData} opts.hydrationData n/a
  * @param {DOMRouterOpts.dataStrategy} opts.dataStrategy n/a
  * @param {DOMRouterOpts.patchRoutesOnNavigation} opts.patchRoutesOnNavigation n/a
  * @param {DOMRouterOpts.window} opts.window n/a
- * @returns An initialized data router to pass to {@link RouterProvider | `<RouterProvider>`}
+ * @returns An initialized {@link DataRouter| data router} to pass to {@link RouterProvider | `<RouterProvider>`}
  */
 export function createHashRouter(
   routes: RouteObject[],
@@ -834,7 +837,8 @@ export interface BrowserRouterProps {
 }
 
 /**
- * A declarative `<Router>` using the browser history API for client side routing.
+ * A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * API for client-side routing.
  *
  * @public
  * @category Declarative Routers
@@ -842,8 +846,10 @@ export interface BrowserRouterProps {
  * @param props Props
  * @param props.basename Application basename
  * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.window Window object override - defaults to the global `window` instance
- * @returns A declarative router using the browser history API for client side routing.
+ * @param props.window [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window)
+ * object override - defaults to the global `window` instance
+ * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * API for client-side routing.
  */
 export function BrowserRouter({
   basename,
@@ -890,8 +896,9 @@ export interface HashRouterProps {
 }
 
 /**
- * A declarative `<Router>` that stores the location in the hash portion of the
- * URL so it is not sent to the server.
+ * A declarative {@link Router | `<Router>`} that stores the location in the
+ * [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash) portion
+ * of the URL so it is not sent to the server.
  *
  * @public
  * @category Declarative Routers
@@ -899,8 +906,10 @@ export interface HashRouterProps {
  * @param props Props
  * @param props.basename Application basename
  * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.window Window object override - defaults to the global `window` instance
- * @returns A declarative router using the URL hash for client side routing.
+ * @param props.window [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window)
+ * object override - defaults to the global `window` instance
+ * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
+ * for client-side routing.
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
@@ -943,10 +952,11 @@ export interface HistoryRouterProps {
 }
 
 /**
- * A declarative `<Router>` that accepts a pre-instantiated history object.
- * It's important to note that using your own history object is highly discouraged
- * and may add two versions of the history library to your bundles unless you use
- * the same version of the history library that React Router uses internally.
+ * A declarative {@link Router | `<Router>`} that accepts a pre-instantiated
+ * `history` object.
+ * It's important to note that using your own `history` object is highly discouraged
+ * and may add two versions of the `history` library to your bundles unless you use
+ * the same version of the `history` library that React Router uses internally.
  *
  * @name unstable_HistoryRouter
  * @public
@@ -955,8 +965,8 @@ export interface HistoryRouterProps {
  * @param props Props
  * @param props.basename Application basename
  * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.history History implementation for use by the router
- * @returns A declarative router using the URL hash for client side routing.
+ * @param props.history A history implementation for use by the router
+ * @returns A declarative router using the provided history implementation for client-side routing.
  */
 export function HistoryRouter({
   basename,
@@ -1023,8 +1033,8 @@ export interface LinkProps
    * - **render** - prefetches when the link renders
    * - **viewport** - prefetches when the link is in the viewport, very useful for mobile
    *
-   * Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted
-   * after the link.
+   * Prefetching is done with HTML [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * tags. They are inserted after the link.
    *
    * ```tsx
    * <a href="..." />
@@ -1040,7 +1050,8 @@ export interface LinkProps
 
   /**
    * Will use document navigation instead of client side routing when the link is
-   * clicked: the browser will handle the transition normally (as if it were an `<a href>`).
+   * clicked: the browser will handle the transition normally (as if it were an
+   * [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)).
    *
    * ```tsx
    * <Link to="/logout" reloadDocument />
@@ -1049,8 +1060,8 @@ export interface LinkProps
   reloadDocument?: boolean;
 
   /**
-   * Replaces the current entry in the history stack instead of pushing a new one
-   * onto it.
+   * Replaces the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+   * stack instead of pushing a new one  onto it.
    *
    * ```tsx
    * <Link replace />
@@ -1093,7 +1104,7 @@ export interface LinkProps
   /**
    * Prevents the scroll position from being reset to the top of the window when
    * the link is clicked and the app is using {@link ScrollRestoration}. This only
-   * prevents new locations reseting scroll to the top, scroll position will be
+   * prevents new locations resetting scroll to the top, scroll position will be
    * restored for back/forward button navigation.
    *
    * ```tsx
@@ -1111,14 +1122,14 @@ export interface LinkProps
    * <Link relative="path" />
    * ```
    *
-   * Consider a route hierarchy where a parent route pattern is "blog" and a child
-   * route pattern is "blog/:slug/edit".
+   * Consider a route hierarchy where a parent route pattern is `"blog"` and a child
+   * route pattern is `"blog/:slug/edit"`.
    *
    * - **route** - default, resolves the link relative to the route pattern. In the
-   * example above a relative link of `".."` will remove both `:slug/edit` segments
-   * back to "/blog".
-   * - **path** - relative to the path so `..` will only remove one URL segment up
-   * to "/blog/:slug"
+   * example above, a relative link of `".."` will remove both `:slug/edit` segments
+   * back to `"/blog"`.
+   * - **path** - relative to the path so `".."` will only remove one URL segment up
+   * to `"/blog/:slug"`
    *
    * Note that index routes and layout routes do not have paths so they are not
    * included in the relative path calculation.
@@ -1160,7 +1171,8 @@ export interface LinkProps
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
- * A progressively enhanced `<a href>` wrapper to enable navigation with client-side routing.
+ * A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
+ * wrapper to enable navigation with client-side routing.
  *
  * @example
  * import { Link } from "react-router";
@@ -1177,15 +1189,15 @@ const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
  *
  * @public
  * @category Components
- * @param {LinkProps.discover} props.discover [modes: framework]
- * @param {LinkProps.prefetch} props.prefetch [modes: framework]
- * @param {LinkProps.preventScrollReset} props.preventScrollReset [modes: framework, data]
- * @param {LinkProps.relative} props.relative
- * @param {LinkProps.reloadDocument} props.reloadDocument
- * @param {LinkProps.replace} props.replace
- * @param {LinkProps.state} props.state
- * @param {LinkProps.to} props.to
- * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data]
+ * @param {LinkProps.discover} props.discover [modes: framework] n/a
+ * @param {LinkProps.prefetch} props.prefetch [modes: framework] n/a
+ * @param {LinkProps.preventScrollReset} props.preventScrollReset [modes: framework, data] n/a
+ * @param {LinkProps.relative} props.relative n/a
+ * @param {LinkProps.reloadDocument} props.reloadDocument n/a
+ * @param {LinkProps.replace} props.replace n/a
+ * @param {LinkProps.state} props.state n/a
+ * @param {LinkProps.to} props.to n/a
+ * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1330,13 +1342,13 @@ Link.displayName = "Link";
  */
 export type NavLinkRenderProps = {
   /**
-   * Indicates if the link's URL matches the current location.
+   * Indicates if the link's URL matches the current {@link Location}.
    */
   isActive: boolean;
 
   /**
-   * Indicates if the pending location matches the link's URL. Only available in
-   * Framework/Data modes.
+   * Indicates if the pending {@link Location} matches the link's URL. Only
+   * available in Framework/Data modes.
    */
   isPending: boolean;
 
@@ -1377,7 +1389,7 @@ export interface NavLinkProps
   caseSensitive?: boolean;
 
   /**
-   * Classes are automatically applied to NavLink that correspond to the state.
+   * Classes are automatically applied to `NavLink` that correspond to the state.
    *
    * ```css
    * a.active {
@@ -1424,7 +1436,7 @@ export interface NavLinkProps
 
   /**
    * Styles can also be applied dynamically via a function that receives
-   * `NavLinkRenderProps` and returns the styles:
+   * {@link NavLinkRenderProps} and returns the styles:
    *
    * ```tsx
    * <NavLink to="/tasks" style={{ color: "red" }} />
@@ -1468,20 +1480,20 @@ export interface NavLinkProps
  *
  * @public
  * @category Components
- * @param {NavLinkProps.caseSensitive} props.caseSensitive
- * @param {NavLinkProps.children} props.children
- * @param {NavLinkProps.className} props.className
- * @param {NavLinkProps.discover} props.discover [modes: framework]
- * @param {NavLinkProps.end} props.end
- * @param {NavLinkProps.prefetch} props.prefetch [modes: framework]
- * @param {NavLinkProps.preventScrollReset} props.preventScrollReset [modes: framework, data]
- * @param {NavLinkProps.relative} props.relative
- * @param {NavLinkProps.reloadDocument} props.reloadDocument
- * @param {NavLinkProps.replace} props.replace
- * @param {NavLinkProps.state} props.state
- * @param {NavLinkProps.style} props.style
- * @param {NavLinkProps.to} props.to
- * @param {NavLinkProps.viewTransition} props.viewTransition [modes: framework, data]
+ * @param {NavLinkProps.caseSensitive} props.caseSensitive n/a
+ * @param {NavLinkProps.children} props.children n/a
+ * @param {NavLinkProps.className} props.className n/a
+ * @param {NavLinkProps.discover} props.discover [modes: framework] n/a
+ * @param {NavLinkProps.end} props.end n/a
+ * @param {NavLinkProps.prefetch} props.prefetch [modes: framework] n/a
+ * @param {NavLinkProps.preventScrollReset} props.preventScrollReset [modes: framework, data] n/a
+ * @param {NavLinkProps.relative} props.relative n/a
+ * @param {NavLinkProps.reloadDocument} props.reloadDocument n/a
+ * @param {NavLinkProps.replace} props.replace n/a
+ * @param {NavLinkProps.state} props.state n/a
+ * @param {NavLinkProps.style} props.style n/a
+ * @param {NavLinkProps.to} props.to n/a
+ * @param {NavLinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
@@ -1608,8 +1620,9 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * The HTTP verb to use when the form is submitted. Supports "get", "post",
    * "put", "delete", and "patch".
    *
-   * Native `<form>` only supports `get` and `post`, avoid the other verbs if
-   * you'd like to support progressive enhancement
+   * Native [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
+   * only supports `get` and `post`, avoid the other verbs if you'd like to
+   * support progressive enhancement
    */
   method?: HTMLFormMethod;
 
@@ -1628,14 +1641,14 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     | "text/plain";
 
   /**
-   * The URL to submit the form data to.  If `undefined`, this defaults to the
+   * The URL to submit the form data to. If `undefined`, this defaults to the
    * closest route in context.
    */
   action?: string;
 
   /**
    * Determines whether the form action is relative to the route hierarchy or
-   * the pathname.  Use this if you want to opt out of navigating the route
+   * the pathname. Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on slash-delimited URL segments.
    * See {@link RelativeRoutingType}.
    */
@@ -1643,13 +1656,15 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
 
   /**
    * Prevent the scroll position from resetting to the top of the viewport on
-   * completion of the navigation when using the <ScrollRestoration> component
+   * completion of the navigation when using the
+   * {@link ScrollRestoration | `<ScrollRestoration>`} component
    */
   preventScrollReset?: boolean;
 
   /**
    * A function to call when the form is submitted. If you call
-   * `event.preventDefault()` then this form will not do anything.
+   * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
+   * then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 }
@@ -1681,8 +1696,7 @@ export interface FormProps extends SharedFormProps {
 
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
-   * can pick up the fetcher's state in a different component in a {@link
-   * useFetcher}.
+   * can pick up the fetcher's state in a different component in a {@link useFetcher}.
    */
   fetcherKey?: string;
 
@@ -1694,27 +1708,27 @@ export interface FormProps extends SharedFormProps {
   navigate?: boolean;
 
   /**
-   * Forces a full document navigation instead of client side routing + data
+   * Forces a full document navigation instead of client side routing and data
    * fetch.
    */
   reloadDocument?: boolean;
 
   /**
-   * Replaces the current entry in the browser history stack when the form
-   * navigates. Use this if you don't want the user to be able to click "back"
-   * to the page with the form on it.
+   * Replaces the current entry in the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+   * stack when the form navigates. Use this if you don't want the user to be
+   * able to click "back" to the page with the form on it.
    */
   replace?: boolean;
 
   /**
-   * State object to add to the history stack entry for this navigation
+   * State object to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+   * stack entry for this navigation
    */
   state?: any;
 
   /**
-   * Enables a [View
-   * Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-   * for this navigation. To apply specific styles during the transition see
+   * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+   * for this navigation. To apply specific styles during the transition, see
    * {@link useViewTransitionState}.
    */
   viewTransition?: boolean;
@@ -1729,13 +1743,24 @@ type HTMLSubmitEvent = React.BaseSyntheticEvent<
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 /**
- * A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) that submits data to actions via `fetch`, activating pending states in `useNavigation` which enables advanced user interfaces beyond a basic HTML form. After a form's action completes, all data on the page is automatically revalidated to keep the UI in sync with the data.
+ * A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
+ * that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API),
+ * activating pending states in {@link useNavigation} which enables advanced
+ * user interfaces beyond a basic HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form).
+ * After a form's `action` completes, all data on the page is automatically
+ * revalidated to keep the UI in sync with the data.
  *
- * Because it uses the HTML form API, server rendered pages are interactive at a basic level before JavaScript loads. Instead of React Router managing the submission, the browser manages the submission as well as the pending states (like the spinning favicon). After JavaScript loads, React Router takes over enabling web application user experiences.
+ * Because it uses the HTML form API, server rendered pages are interactive at a
+ * basic level before JavaScript loads. Instead of React Router managing the
+ * submission, the browser manages the submission as well as the pending states
+ * (like the spinning favicon). After JavaScript loads, React Router takes over
+ * enabling web application user experiences.
  *
- * Form is most useful for submissions that should also change the URL or otherwise add an entry to the browser history stack. For forms that shouldn't manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
+ * `Form` is most useful for submissions that should also change the URL or
+ * otherwise add an entry to the browser history stack. For forms that shouldn't
+ * manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
  *
- * ```tsx
+ * @example
  * import { Form } from "react-router";
  *
  * function NewEvent() {
@@ -1746,7 +1771,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  *     </Form>
  *   );
  * }
- * ```
+ *
  * @public
  * @category Components
  * @mode framework
@@ -1764,7 +1789,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.replace} replace n/a
  * @param {FormProps.state} state n/a
  * @param {FormProps.viewTransition} viewTransition n/a
- * @returns A progressively enhanced `<form>` component
+ * @returns A progressively enhanced [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) component
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
@@ -1836,13 +1861,13 @@ export type ScrollRestorationProps = ScriptsProps & {
   /**
    * A function that returns a key to use for scroll restoration. This is useful
    * for custom scroll restoration logic, such as using only the pathname so
-   * that subsequent navigations to prior paths will restore the scroll.  Defaults
-   * to `location.key`.  See {@link GetScrollRestorationKeyFunction}.
+   * that subsequent navigations to prior paths will restore the scroll. Defaults
+   * to `location.key`. See {@link GetScrollRestorationKeyFunction}.
    *
    * ```tsx
    * <ScrollRestoration
    *   getKey={(location, matches) => {
-   *     // Restore based on unique location key (default behavior)
+   *     // Restore based on a unique location key (default behavior)
    *     return location.key
    *
    *     // Restore based on pathname
@@ -1854,8 +1879,8 @@ export type ScrollRestorationProps = ScriptsProps & {
   getKey?: GetScrollRestorationKeyFunction;
 
   /**
-   * The key to use for storing scroll positions in `sessionStorage`. Defaults
-   * to `"react-router-scroll-positions"`.
+   * The key to use for storing scroll positions in [`sessionStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+   * Defaults to `"react-router-scroll-positions"`.
    */
   storageKey?: string;
 };
@@ -1890,9 +1915,10 @@ export type ScrollRestorationProps = ScriptsProps & {
  * @mode data
  * @param props Props
  * @param {ScrollRestorationProps.getKey} props.getKey n/a
- * @param {ScrollRestorationProps.storageKey} props.storageKey n/a
  * @param {ScriptsProps.nonce} props.nonce n/a
- * @returns A script tag that restores scroll positions on navigation.
+ * @param {ScrollRestorationProps.storageKey} props.storageKey n/a
+ * @returns A [`script`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tag that restores scroll positions on navigation.
  */
 export function ScrollRestoration({
   getKey,
@@ -2006,9 +2032,9 @@ function useDataRouterState(hookName: DataRouterStateHook) {
 // External hooks
 
 /**
- * Handles the click behavior for router {@link Link | `<Link>`} components. This is useful if
- * you need to create custom `<Link>` components with the same click behavior we
- * use in our exported `<Link>`.
+ * Handles the click behavior for router {@link Link | `<Link>`} components.This
+ * is useful if you need to create custom {@link Link | `<Link>`} components with
+ * the same click behavior we use in our exported {@link Link | `<Link>`}.
  *
  * @public
  * @category Hooks
@@ -2016,19 +2042,18 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options Options
  * @param options.preventScrollReset Whether to prevent the scroll position from
  * being reset to the top of the viewport on completion of the navigation when
- * using the {@link ScrollRestoration | `<ScrollRestoration>`} component.
- * Defaults to `false`.
+ * using the {@link ScrollRestoration} component. Defaults to `false`.
  * @param options.relative The {@link RelativeRoutingType | relative routing type}
  * to use for the link. Defaults to `"route"`.
- * @param options.replace Whether to replace the current history entry instead
- * of pushing a new one. Defaults to `false`.
- * @param options.state The state to add to the history entry for this navigation.
- * Defaults to `undefined`.
+ * @param options.replace Whether to replace the current [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * entry instead of pushing a new one. Defaults to `false`.
+ * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
  * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
- * for this navigation. To apply specific styles during the transition see {@link useViewTransitionState}.
- * Defaults to `false`.
- * @returns A click handler function that can be used in a custom Link component.
+ * for this navigation. To apply specific styles during the transition, see
+ * {@link useViewTransitionState}. Defaults to `false`.
+ * @returns A click handler function that can be used in a custom {@link Link} component.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
@@ -2101,9 +2126,11 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * }
  * ```
  *
- * ### SetSearchParams Function
+ * ### `setSearchParams` function
  *
- * The second element of the tuple is a function that can be used to update the search params. It accepts the same types as `defaultInit` and will cause a navigation to the new URL.
+ * The second element of the tuple is a function that can be used to update the
+ * search params. It accepts the same types as `defaultInit` and will
+ * cause a navigation to the new URL.
  *
  * ```tsx
  * let [searchParams, setSearchParams] = useSearchParams();
@@ -2111,7 +2138,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * // a search param string
  * setSearchParams("?tab=1");
  *
- * // a short-hand object
+ * // a shorthand object
  * setSearchParams({ tab: "1" });
  *
  * // object keys can be arrays for multiple values on the key
@@ -2120,11 +2147,11 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * // an array of tuples
  * setSearchParams([["tab", "1"]]);
  *
- * // a URLSearchParams object
+ * // a `URLSearchParams` object
  * setSearchParams(new URLSearchParams("?tab=1"));
  * ```
  *
- * It also supports a function callback like `setState`:
+ * It also supports a function callback like React's [`setState`](https://react.dev/reference/react/useState#setstate):
  *
  * ```tsx
  * setSearchParams((searchParams) => {
@@ -2135,7 +2162,9 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  *
  * ### Notes
  *
- * Note that `searchParams` is a stable reference, so you can reliably use it as a dependency in `useEffect` hooks.
+ * Note that `searchParams` is a stable reference, so you can reliably use it
+ * as a dependency in React's [`useEffect`](https://react.dev/reference/react/useEffect)
+ * hooks.
  *
  * ```tsx
  * useEffect(() => {
@@ -2143,18 +2172,22 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * }, [searchParams]);
  * ```
  *
- * However, this also means it's mutable. If you change the object without calling `setSearchParams`, its values will change between renders if some other state causes the component to re-render and URL will not reflect the values.
+ * However, this also means it's mutable. If you change the object without
+ * calling `setSearchParams`, its values will change between renders if some
+ * other state causes the component to re-render and URL will not reflect the
+ * values.
  *
  * @public
  * @category Hooks
  * @param defaultInit
- * You can initialize the search params with a default value, though it **will not** change the URL on the first render.
+ * You can initialize the search params with a default value, though it **will
+ * not** change the URL on the first render.
  *
  * ```tsx
  * // a search param string
  * useSearchParams("?tab=1");
  *
- * // a short-hand object
+ * // a shorthand object
  * useSearchParams({ tab: "1" });
  *
  * // object keys can be arrays for multiple values on the key
@@ -2163,7 +2196,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * // an array of tuples
  * useSearchParams([["tab", "1"]]);
  *
- * // a URLSearchParams object
+ * // a `URLSearchParams` object
  * useSearchParams(new URLSearchParams("?tab=1"));
  * ```
  * @returns A tuple of the current [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
@@ -2249,14 +2282,15 @@ export type SetURLSearchParams = (
 ) => void;
 
 /**
- * Submits a HTML `<form>` to the server without reloading the page.
+ * Submits a HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
+ * to the server without reloading the page.
  */
 export interface SubmitFunction {
   (
     /**
      * Can be multiple types of elements and objects
      *
-     * **`HTMLFormElement`**
+     * **[`HTMLFormElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement)**
      *
      * ```tsx
      * <Form
@@ -2266,7 +2300,7 @@ export interface SubmitFunction {
      * />
      * ```
      *
-     * **`FormData`**
+     * **[`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)**
      *
      * ```tsx
      * const formData = new FormData();
@@ -2274,7 +2308,7 @@ export interface SubmitFunction {
      * submit(formData, { method: "post" });
      * ```
      *
-     * **Plain object that will be serialized as `FormData`**
+     * **Plain object that will be serialized as [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)**
      *
      * ```tsx
      * submit({ myKey: "myValue" }, { method: "post" });
@@ -2292,22 +2326,23 @@ export interface SubmitFunction {
     target: SubmitTarget,
 
     /**
-     * Options that override the `<form>`'s own attributes. Required when
-     * submitting arbitrary data without a backing `<form>`.
+     * Options that override the [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)'s
+     * own attributes. Required when submitting arbitrary data without a backing
+     * [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form).
      */
     options?: SubmitOptions,
   ): Promise<void>;
 }
 
 /**
- * Submits a fetcher `<form>` to the server without reloading the page.
+ * Submits a fetcher [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) to the server without reloading the page.
  */
 export interface FetcherSubmitFunction {
   (
     /**
      * Can be multiple types of elements and objects
      *
-     * **`HTMLFormElement`**
+     * **[`HTMLFormElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement)**
      *
      * ```tsx
      * <fetcher.Form
@@ -2317,7 +2352,7 @@ export interface FetcherSubmitFunction {
      * />
      * ```
      *
-     * **`FormData`**
+     * **[`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)**
      *
      * ```tsx
      * const formData = new FormData();
@@ -2325,7 +2360,7 @@ export interface FetcherSubmitFunction {
      * fetcher.submit(formData, { method: "post" });
      * ```
      *
-     * **Plain object that will be serialized as `FormData`**
+     * **Plain object that will be serialized as [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)**
      *
      * ```tsx
      * fetcher.submit({ myKey: "myValue" }, { method: "post" });
@@ -2417,7 +2452,7 @@ export function useSubmit(): SubmitFunction {
  * Resolves the URL to the closest route in the component hierarchy instead of
  * the current URL of the app.
  *
- * This is used internally by {@link Form} resolve the `action` to the closest
+ * This is used internally by {@link Form} to resolve the `action` to the closest
  * route, but can be used generically as well.
  *
  * @example
@@ -2497,7 +2532,7 @@ export function useFormAction(
 }
 
 /**
- * The return value of `useFetcher` that keeps track of the state of a fetcher.
+ * The return value {@link useFetcher} that keeps track of the state of a fetcher.
  *
  * ```tsx
  * let fetcher = useFetcher();
@@ -2527,11 +2562,20 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
    *
    *  The `formData` can be multiple types:
    *
-   *  - [`FormData`][form_data] - A `FormData` instance.
-   *  - [`HTMLFormElement`][html_form_element] - A [`<form>`][form_element] DOM element.
-   *  - `Object` - An object of key/value pairs that will be converted to a `FormData` instance by default. You can pass a more complex object and serialize it as JSON by specifying `encType: "application/json"`. See [`useSubmit`][use-submit] for more details.
+   *  - [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+   *    A `FormData` instance.
+   *  - [`HTMLFormElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement)
+   *    A [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) DOM element.
+   *  - `Object`
+   *    An object of key/value-pairs that will be converted to a [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+   *    instance by default. You can pass a more complex object and serialize it
+   *    as JSON by specifying `encType: "application/json"`. See
+   *    {@link useSubmit} for more details.
    *
-   *  If the method is `GET`, then the route [`loader`][loader] is being called and with the `formData` serialized to the url as [`URLSearchParams`][url_search_params]. If `DELETE`, `PATCH`, `POST`, or `PUT`, then the route [`action`][action] is being called with `formData` as the body.
+   *  If the method is `GET`, then the route [`loader`](../../start/framework/route-module#loader)
+   *  is being called and with the `formData` serialized to the url as [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
+   *  If `DELETE`, `PATCH`, `POST`, or `PUT`, then the route [`action`](../../start/framework/route-module#action)
+   *  is being called with `formData` as the body.
    *
    *  ```tsx
    *  // Submit a FormData instance (GET request)
@@ -2568,7 +2612,8 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   submit: FetcherSubmitFunction;
 
   /**
-   * Loads data from a route. Useful for loading data imperatively inside of user events outside of a normal button or form, like a combobox or search input.
+   * Loads data from a route. Useful for loading data imperatively inside user
+   * events outside a normal button or form, like a combobox or search input.
    *
    * ```tsx
    * let fetcher = useFetcher()
@@ -2583,7 +2628,8 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
     opts?: {
       /**
        * Wraps the initial state update for this `fetcher.load` in a
-       * `ReactDOM.flushSync` call instead of the default `React.startTransition`.
+       * [`ReactDOM.flushSync`](https://react.dev/reference/react-dom/flushSync)
+       * call instead of the default [`React.startTransition`](https://react.dev/reference/react/startTransition).
        * This allows you to perform synchronous DOM actions immediately after the
        * update is flushed to the DOM.
        */
@@ -2633,8 +2679,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  * @param options Options
  * @param options.key A unique key to identify the fetcher.
  *
- *
- * By default, `useFetcher` generate a unique fetcher scoped to that component.
+ * By default, `useFetcher` generates a unique fetcher scoped to that component.
  * If you want to identify a fetcher with your own key such that you can access
  * it from elsewhere in your app, you can do that with the `key` option:
  *
@@ -2753,7 +2798,8 @@ export function useFetcher<T = any>({
  * @category Hooks
  * @mode framework
  * @mode data
- * @returns An array of all in-flight {@link Fetcher}s, each with a unique `key` property.
+ * @returns An array of all in-flight {@link Fetcher}s, each with a unique `key`
+ * property.
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
@@ -2809,7 +2855,7 @@ function getScrollRestorationKey(
  * @param options Options
  * @param options.getKey A function that returns a key to use for scroll restoration.
  * This is useful for custom scroll restoration logic, such as using only the pathname
- * so that subsequent navigations to prior paths will restore the scroll.  Defaults
+ * so that subsequent navigations to prior paths will restore the scroll. Defaults
  * to `location.key`.
  * @param options.storageKey The key to use for storing scroll positions in
  * `sessionStorage`. Defaults to `"react-router-scroll-positions"`.
@@ -2821,7 +2867,7 @@ export function useScrollRestoration({
 }: {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
-} = {}) {
+} = {}): void {
   let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
     DataRouterStateHook.UseScrollRestoration,
@@ -2941,7 +2987,8 @@ export function useScrollRestoration({
  *
  * @public
  * @category Hooks
- * @param callback The callback to be called when the `beforeunload` event is fired.
+ * @param callback The callback to be called when the [`beforeunload` event](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event)
+ * is fired.
  * @param options Options
  * @param options.capture If `true`, the event will be captured during the capture
  * phase. Defaults to `false`.
@@ -2984,9 +3031,13 @@ function usePageHide(
 }
 
 /**
- * Wrapper around {@link useBlocker} to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) prompt to users instead of building a custom UI with {@link useBlocker}.
+ * Wrapper around {@link useBlocker} to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm)
+ * prompt to users instead of building a custom UI with {@link useBlocker}.
  *
- * The `unstable_` flag will not be removed because this technique has a lot of rough edges and behaves very differently (and incorrectly sometimes) across browsers if users click addition back/forward navigations while the confirmation is open. Use at your own risk.
+ * The `unstable_` flag will not be removed because this technique has a lot of
+ * rough edges and behaves very differently (and incorrectly sometimes) across
+ * browsers if users click addition back/forward navigations while the
+ * confirmation is open. Use at your own risk.
  *
  * @example
  * function ImportantForm() {
@@ -3070,8 +3121,10 @@ export function usePrompt({
  * @mode data
  * @param to The {@link To} location to check for an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).
  * @param options Options
- * @param options.relative The relative routing type to use when resolving the `to` location, defaults to `"route"`. See {@link RelativeRoutingType} for more details.
- * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified {@link Location}, otherwise `false`.
+ * @param options.relative The relative routing type to use when resolving the
+ * `to` location, defaults to `"route"`. See {@link RelativeRoutingType} for more details.
+ * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+ * to the specified {@link Location}, otherwise `false`.
  */
 export function useViewTransitionState(
   to: To,
