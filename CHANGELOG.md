@@ -350,7 +350,7 @@ Date: YYYY-MM-DD
 
 ## v7.7.0
 
-Date: 2025-07-15
+Date: 2025-07-16
 
 ### What's Changed
 
