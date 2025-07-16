@@ -49,14 +49,6 @@ The [vite template][vite-rsc-template] uses the experimental Vite `@vitejs/plugi
 npx create-react-router-app@latest --template=unstable_rsc-vite
 ```
 
-**RSC + SPA (no SSR) Template**
-
-For those who like alphabet soup.
-
-```shellscript
-npx create-react-router-app@latest --template=unstable_rsc-vite-spa
-```
-
 ## Using RSC with React Router
 
 ### Configuring Routes
