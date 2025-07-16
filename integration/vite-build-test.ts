@@ -257,7 +257,7 @@ test.describe("Build", () => {
                 }
               `,
             },
-            templateName
+            templateName,
           );
 
           let { stderr, status } = build({ cwd });
@@ -266,7 +266,7 @@ test.describe("Build", () => {
               .toString()
               // This can be removed when this issue is fixed: https://github.com/remix-run/remix/issues/9055
               .replace('Generated an empty chunk: "resource".', "")
-              .trim()
+              .trim(),
           ).toBeFalsy();
           expect(status).toBe(0);
           stop = await reactRouterServe({ cwd, port });
@@ -275,10 +275,10 @@ test.describe("Build", () => {
 
         test("server code is removed from client build", async () => {
           expect(
-            grep(path.join(cwd, "build/client"), /SERVER_ONLY_1/).length
+            grep(path.join(cwd, "build/client"), /SERVER_ONLY_1/).length,
           ).toBe(0);
           expect(
-            grep(path.join(cwd, "build/client"), /SERVER_ONLY_2/).length
+            grep(path.join(cwd, "build/client"), /SERVER_ONLY_2/).length,
           ).toBe(0);
         });
 
@@ -290,7 +290,7 @@ test.describe("Build", () => {
             waitUntil: "networkidle",
           });
           await expect(page.locator("[data-mdx-route]")).toHaveText(
-            "MDX route content from loader: mounted"
+            "MDX route content from loader: mounted",
           );
           expect(pageErrors).toEqual([]);
         });
@@ -336,7 +336,7 @@ test.describe("Build", () => {
           });
 
           await expect(page.locator("[data-ssr-code-split]")).toHaveText(
-            "ssrCodeSplitTest"
+            "ssrCodeSplitTest",
           );
           expect(pageErrors).toEqual([]);
         });
@@ -358,7 +358,7 @@ test.describe("Build", () => {
           expect(
             await page
               .locator("#code-split1 span")
-              .evaluate((e) => window.getComputedStyle(e).backgroundColor)
+              .evaluate((e) => window.getComputedStyle(e).backgroundColor),
           ).toBe("rgb(255, 170, 0)");
 
           await page.goto(`http://localhost:${port}/code-split2`, {
@@ -367,7 +367,7 @@ test.describe("Build", () => {
           expect(
             await page
               .locator("#code-split2 span")
-              .evaluate((e) => window.getComputedStyle(e).backgroundColor)
+              .evaluate((e) => window.getComputedStyle(e).backgroundColor),
           ).toBe("rgb(255, 170, 0)");
 
           expect(pageErrors).toEqual([]);
@@ -383,10 +383,10 @@ test.describe("Build", () => {
           expect(pageErrors).toEqual([]);
 
           let loaderContent = page.locator(
-            "[data-dotenv-route-loader-content]"
+            "[data-dotenv-route-loader-content]",
           );
           await expect(loaderContent).toHaveText(
-            ".env file was NOT loaded, which is a good thing"
+            ".env file was NOT loaded, which is a good thing",
           );
 
           expect(pageErrors).toEqual([]);

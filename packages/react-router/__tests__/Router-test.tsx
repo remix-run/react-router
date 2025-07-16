@@ -18,7 +18,7 @@ describe("<Router>", () => {
         TestRenderer.create(
           <MemoryRouter>
             <MemoryRouter />
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
     }).toThrow(/cannot render a <Router> inside another <Router>/);
@@ -38,7 +38,7 @@ describe("<Router>", () => {
       renderer = TestRenderer.create(
         <MemoryRouter>
           <CaptureLocation1 />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -54,7 +54,7 @@ describe("<Router>", () => {
       renderer.update(
         <MemoryRouter>
           <CaptureLocation2 />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

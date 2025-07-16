@@ -74,13 +74,13 @@ import type { SerializeFrom } from "./types/route-data";
  */
 export function useHref(
   to: To,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  { relative }: { relative?: RelativeRoutingType } = {},
 ): string {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useHref() may be used only in the context of a <Router> component.`
+    `useHref() may be used only in the context of a <Router> component.`,
   );
 
   let { basename, navigator } = React.useContext(NavigationContext);
@@ -144,7 +144,7 @@ export function useLocation(): Location {
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useLocation() may be used only in the context of a <Router> component.`
+    `useLocation() may be used only in the context of a <Router> component.`,
   );
 
   return React.useContext(LocationContext).location;
@@ -175,19 +175,19 @@ export function useNavigationType(): NavigationType {
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
-  Path extends string
+  Path extends string,
 >(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useMatch() may be used only in the context of a <Router> component.`
+    `useMatch() may be used only in the context of a <Router> component.`,
   );
 
   let { pathname } = useLocation();
   return React.useMemo(
     () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
-    [pathname, pattern]
+    [pathname, pattern],
   );
 }
 
@@ -205,7 +205,7 @@ const navigateEffectWarning =
 
 // Mute warnings for calls to useNavigate in SSR environments
 function useIsomorphicLayoutEffect(
-  cb: Parameters<typeof React.useLayoutEffect>[0]
+  cb: Parameters<typeof React.useLayoutEffect>[0],
 ) {
   let isStatic = React.useContext(NavigationContext).static;
   if (!isStatic) {
@@ -334,7 +334,7 @@ function useNavigateUnstable(): NavigateFunction {
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useNavigate() may be used only in the context of a <Router> component.`
+    `useNavigate() may be used only in the context of a <Router> component.`,
   );
 
   let dataRouterContext = React.useContext(DataRouterContext);
@@ -366,7 +366,7 @@ function useNavigateUnstable(): NavigateFunction {
         to,
         JSON.parse(routePathnamesJson),
         locationPathname,
-        options.relative === "path"
+        options.relative === "path",
       );
 
       // If we're operating within a basename, prepend it to the pathname prior
@@ -385,7 +385,7 @@ function useNavigateUnstable(): NavigateFunction {
       (!!options.replace ? navigator.replace : navigator.push)(
         path,
         options.state,
-        options
+        options,
       );
     },
     [
@@ -394,7 +394,7 @@ function useNavigateUnstable(): NavigateFunction {
       routePathnamesJson,
       locationPathname,
       dataRouterContext,
-    ]
+    ],
   );
 
   return navigate;
@@ -538,7 +538,7 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * @returns An object containing the dynamic route parameters
  */
 export function useParams<
-  ParamsOrKey extends string | Record<string, string | undefined> = string
+  ParamsOrKey extends string | Record<string, string | undefined> = string,
 >(): Readonly<
   [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
 > {
@@ -573,7 +573,7 @@ export function useParams<
  */
 export function useResolvedPath(
   to: To,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  { relative }: { relative?: RelativeRoutingType } = {},
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
@@ -585,9 +585,9 @@ export function useResolvedPath(
         to,
         JSON.parse(routePathnamesJson),
         locationPathname,
-        relative === "path"
+        relative === "path",
       ),
-    [to, routePathnamesJson, locationPathname, relative]
+    [to, routePathnamesJson, locationPathname, relative],
   );
 }
 
@@ -628,7 +628,7 @@ export function useResolvedPath(
  */
 export function useRoutes(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string
+  locationArg?: Partial<Location> | string,
 ): React.ReactElement | null {
   return useRoutesImpl(routes, locationArg);
 }
@@ -638,13 +638,13 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  future?: DataRouter["future"]
+  future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useRoutes() may be used only in the context of a <Router> component.`
+    `useRoutes() may be used only in the context of a <Router> component.`,
   );
 
   let { navigator } = React.useContext(NavigationContext);
@@ -686,7 +686,7 @@ export function useRoutesImpl(
         `deeper, the parent won't match anymore and therefore the child ` +
         `routes will never render.\n\n` +
         `Please change the parent <Route path="${parentPath}"> to <Route ` +
-        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`
+        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`,
     );
   }
 
@@ -703,7 +703,7 @@ export function useRoutesImpl(
       `When overriding the location using \`<Routes location>\` or \`useRoutes(routes, location)\`, ` +
         `the location pathname must begin with the portion of the URL pathname that was ` +
         `matched by all parent routes. The current pathname base is "${parentPathnameBase}" ` +
-        `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`
+        `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`,
     );
 
     location = parsedLocationArg;
@@ -739,7 +739,7 @@ export function useRoutesImpl(
   if (ENABLE_DEV_WARNINGS) {
     warning(
       parentRoute || matches != null,
-      `No routes matched location "${location.pathname}${location.search}${location.hash}" `
+      `No routes matched location "${location.pathname}${location.search}${location.hash}" `,
     );
 
     warning(
@@ -749,7 +749,7 @@ export function useRoutesImpl(
         matches[matches.length - 1].route.lazy !== undefined,
       `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" ` +
         `does not have an element or Component. This means it will render an <Outlet /> with a ` +
-        `null value by default resulting in an "empty" page.`
+        `null value by default resulting in an "empty" page.`,
     );
   }
 
@@ -775,11 +775,11 @@ export function useRoutesImpl(
                     ? navigator.encodeLocation(match.pathnameBase).pathname
                     : match.pathnameBase,
                 ]),
-        })
+        }),
       ),
     parentMatches,
     dataRouterState,
-    future
+    future,
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -813,8 +813,8 @@ function DefaultErrorComponent() {
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
-    ? error.message
-    : JSON.stringify(error);
+      ? error.message
+      : JSON.stringify(error);
   let stack = error instanceof Error ? error.stack : null;
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
@@ -824,7 +824,7 @@ function DefaultErrorComponent() {
   if (ENABLE_DEV_WARNINGS) {
     console.error(
       "Error handled by React Router default ErrorBoundary:",
-      error
+      error,
     );
 
     devInfo = (
@@ -884,7 +884,7 @@ export class RenderErrorBoundary extends React.Component<
 
   static getDerivedStateFromProps(
     props: RenderErrorBoundaryProps,
-    state: RenderErrorBoundaryState
+    state: RenderErrorBoundaryState,
   ) {
     // When we get into an error state, the user will likely click "back" to the
     // previous page that didn't have an error. Because this wraps the entire
@@ -920,7 +920,7 @@ export class RenderErrorBoundary extends React.Component<
     console.error(
       "React Router caught the following error during render",
       error,
-      errorInfo
+      errorInfo,
     );
   }
 
@@ -969,7 +969,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  future: DataRouter["future"] | null = null
+  future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
     if (!dataRouterState) {
@@ -1003,17 +1003,17 @@ export function _renderMatches(
   let errors = dataRouterState?.errors;
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(
-      (m) => m.route.id && errors?.[m.route.id] !== undefined
+      (m) => m.route.id && errors?.[m.route.id] !== undefined,
     );
     invariant(
       errorIndex >= 0,
       `Could not find a matching route for errors on route IDs: ${Object.keys(
-        errors
-      ).join(",")}`
+        errors,
+      ).join(",")}`,
     );
     renderedMatches = renderedMatches.slice(
       0,
-      Math.min(renderedMatches.length, errorIndex + 1)
+      Math.min(renderedMatches.length, errorIndex + 1),
     );
   }
 
@@ -1051,82 +1051,87 @@ export function _renderMatches(
     }
   }
 
-  return renderedMatches.reduceRight((outlet, match, index) => {
-    // Only data routers handle errors/fallbacks
-    let error: any;
-    let shouldRenderHydrateFallback = false;
-    let errorElement: React.ReactNode | null = null;
-    let hydrateFallbackElement: React.ReactNode | null = null;
-    if (dataRouterState) {
-      error = errors && match.route.id ? errors[match.route.id] : undefined;
-      errorElement = match.route.errorElement || defaultErrorElement;
+  return renderedMatches.reduceRight(
+    (outlet, match, index) => {
+      // Only data routers handle errors/fallbacks
+      let error: any;
+      let shouldRenderHydrateFallback = false;
+      let errorElement: React.ReactNode | null = null;
+      let hydrateFallbackElement: React.ReactNode | null = null;
+      if (dataRouterState) {
+        error = errors && match.route.id ? errors[match.route.id] : undefined;
+        errorElement = match.route.errorElement || defaultErrorElement;
 
-      if (renderFallback) {
-        if (fallbackIndex < 0 && index === 0) {
-          warningOnce(
-            "route-fallback",
-            false,
-            "No `HydrateFallback` element provided to render during initial hydration"
-          );
-          shouldRenderHydrateFallback = true;
-          hydrateFallbackElement = null;
-        } else if (fallbackIndex === index) {
-          shouldRenderHydrateFallback = true;
-          hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+        if (renderFallback) {
+          if (fallbackIndex < 0 && index === 0) {
+            warningOnce(
+              "route-fallback",
+              false,
+              "No `HydrateFallback` element provided to render during initial hydration",
+            );
+            shouldRenderHydrateFallback = true;
+            hydrateFallbackElement = null;
+          } else if (fallbackIndex === index) {
+            shouldRenderHydrateFallback = true;
+            hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+          }
         }
       }
-    }
 
-    let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
-    let getChildren = () => {
-      let children: React.ReactNode;
-      if (error) {
-        children = errorElement;
-      } else if (shouldRenderHydrateFallback) {
-        children = hydrateFallbackElement;
-      } else if (match.route.Component) {
-        // Note: This is a de-optimized path since React won't re-use the
-        // ReactElement since it's identity changes with each new
-        // React.createElement call.  We keep this so folks can use
-        // `<Route Component={...}>` in `<Routes>` but generally `Component`
-        // usage is only advised in `RouterProvider` when we can convert it to
-        // `element` ahead of time.
-        children = <match.route.Component />;
-      } else if (match.route.element) {
-        children = match.route.element;
-      } else {
-        children = outlet;
-      }
+      let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
+      let getChildren = () => {
+        let children: React.ReactNode;
+        if (error) {
+          children = errorElement;
+        } else if (shouldRenderHydrateFallback) {
+          children = hydrateFallbackElement;
+        } else if (match.route.Component) {
+          // Note: This is a de-optimized path since React won't re-use the
+          // ReactElement since it's identity changes with each new
+          // React.createElement call.  We keep this so folks can use
+          // `<Route Component={...}>` in `<Routes>` but generally `Component`
+          // usage is only advised in `RouterProvider` when we can convert it to
+          // `element` ahead of time.
+          children = <match.route.Component />;
+        } else if (match.route.element) {
+          children = match.route.element;
+        } else {
+          children = outlet;
+        }
 
-      return (
-        <RenderedRoute
-          match={match}
-          routeContext={{
-            outlet,
-            matches,
-            isDataRoute: dataRouterState != null,
-          }}
-          children={children}
+        return (
+          <RenderedRoute
+            match={match}
+            routeContext={{
+              outlet,
+              matches,
+              isDataRoute: dataRouterState != null,
+            }}
+            children={children}
+          />
+        );
+      };
+      // Only wrap in an error boundary within data router usages when we have an
+      // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
+      // an ancestor ErrorBoundary/errorElement
+      return dataRouterState &&
+        (match.route.ErrorBoundary ||
+          match.route.errorElement ||
+          index === 0) ? (
+        <RenderErrorBoundary
+          location={dataRouterState.location}
+          revalidation={dataRouterState.revalidation}
+          component={errorElement}
+          error={error}
+          children={getChildren()}
+          routeContext={{ outlet: null, matches, isDataRoute: true }}
         />
+      ) : (
+        getChildren()
       );
-    };
-    // Only wrap in an error boundary within data router usages when we have an
-    // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
-    // an ancestor ErrorBoundary/errorElement
-    return dataRouterState &&
-      (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
-      <RenderErrorBoundary
-        location={dataRouterState.location}
-        revalidation={dataRouterState.revalidation}
-        component={errorElement}
-        error={error}
-        children={getChildren()}
-        routeContext={{ outlet: null, matches, isDataRoute: true }}
-      />
-    ) : (
-      getChildren()
-    );
-  }, null as React.ReactElement | null);
+    },
+    null as React.ReactElement | null,
+  );
 }
 
 enum DataRouterHook {
@@ -1149,7 +1154,7 @@ enum DataRouterStateHook {
 }
 
 function getDataRouterConsoleError(
-  hookName: DataRouterHook | DataRouterStateHook
+  hookName: DataRouterHook | DataRouterStateHook,
 ) {
   return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
 }
@@ -1178,7 +1183,7 @@ function useCurrentRouteId(hookName: DataRouterStateHook) {
   let thisRoute = route.matches[route.matches.length - 1];
   invariant(
     thisRoute.route.id,
-    `${hookName} can only be used on routes that contain a unique "id"`
+    `${hookName} can only be used on routes that contain a unique "id"`,
   );
   return thisRoute.route.id;
 }
@@ -1267,7 +1272,7 @@ export function useRevalidator(): {
 
   return React.useMemo(
     () => ({ revalidate, state: state.revalidation }),
-    [revalidate, state.revalidation]
+    [revalidate, state.revalidation],
   );
 }
 
@@ -1284,11 +1289,11 @@ export function useRevalidator(): {
  */
 export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
-    DataRouterStateHook.UseMatches
+    DataRouterStateHook.UseMatches,
   );
   return React.useMemo(
     () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
-    [matches, loaderData]
+    [matches, loaderData],
   );
 }
 
@@ -1354,7 +1359,7 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
  * function, or `undefined` if not found
  */
 export function useRouteLoaderData<T = any>(
-  routeId: string
+  routeId: string,
 ): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
   return state.loaderData[routeId] as SerializeFrom<T> | undefined;
@@ -1634,7 +1639,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
         historyAction,
       });
     },
-    [basename, shouldBlock]
+    [basename, shouldBlock],
   );
 
   // This effect is in charge of blocker key assignment and deletion (which is
@@ -1687,7 +1692,7 @@ function useNavigateStable(): NavigateFunction {
         await router.navigate(to, { fromRouteId: id, ...options });
       }
     },
-    [router, id]
+    [router, id],
   );
 
   return navigate;

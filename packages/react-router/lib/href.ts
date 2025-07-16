@@ -42,7 +42,7 @@ export function href<Path extends keyof Args>(
       const isRequired = match[2] === undefined;
       if (isRequired && value === undefined) {
         throw Error(
-          `Path '${path}' requires param '${param}' but it was not provided`
+          `Path '${path}' requires param '${param}' but it was not provided`,
         );
       }
       return value;

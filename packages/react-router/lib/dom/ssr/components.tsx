@@ -212,27 +212,33 @@ function getActiveMatches(
   return matches;
 }
 
+export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
+
 /**
-  Renders all of the `<link>` tags created by route module {@link LinksFunction} export. You should render it inside the `<head>` of your document.
-
-  ```tsx
-  import { Links } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <head>
-          <Links />
-        </head>
-        <body></body>
-      </html>
-    );
-  }
-  ```
-
-  @category Components
+ * Renders all of the `<link>` tags created by the route module
+ * [`links`](../../start/framework/route-module#links) export. You should render
+ * it inside the `<head>` of your document.
+ *
+ * @example
+ * import { Links } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head>
+ *         <Links />
+ *       </head>
+ *       <body></body>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @returns A collection of React elements for `<link>` tags
  */
-export function Links() {
+export function Links(): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
@@ -247,10 +253,17 @@ export function Links() {
   return (
     <>
       {typeof criticalCss === "string" ? (
-        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
+        <style
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          dangerouslySetInnerHTML={{ __html: criticalCss }}
+        />
       ) : null}
       {typeof criticalCss === "object" ? (
-        <link rel="stylesheet" href={criticalCss.href} />
+        <link
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          rel="stylesheet"
+          href={criticalCss.href}
+        />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
@@ -264,17 +277,28 @@ export function Links() {
 }
 
 /**
-  Renders `<link rel=prefetch|modulepreload>` tags for modules and data of another page to enable an instant navigation to that page. {@link LinkProps.prefetch | `<Link prefetch>`} uses this internally, but you can render it to prefetch a page for any other reason.
-
-  ```tsx
-  import { PrefetchPageLinks } from "react-router"
-
-  <PrefetchPageLinks page="/absolute/path" />
-  ```
-
-  For example, you may render one of this as the user types into a search field to prefetch search results before they click through to their selection.
-
-  @category Components
+ * Renders `<link rel=prefetch|modulepreload>` tags for modules and data of
+ * another page to enable an instant navigation to that page.
+ * [`<Link prefetch>`](../../components/Link#prefetch) uses this internally, but
+ * you can render it to prefetch a page for any other reason.
+ *
+ * For example, you may render one of this as the user types into a search field
+ * to prefetch search results before they click through to their selection.
+ *
+ * @example
+ * import { PrefetchPageLinks } from "react-router";
+ *
+ * <PrefetchPageLinks page="/absolute/path" />
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @param props Props
+ * @param props.page The absolute path of the page to prefetch, e.g. `/absolute/path`.
+ * @param props.dataLinkProps Additional props to pass to the
+ * [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link)
+ * tag, such as `crossOrigin`, `integrity`, `rel`, etc.
+ * @returns A collection of React elements for `<link>` tags
  */
 export function PrefetchPageLinks({
   page,
@@ -446,25 +470,29 @@ function PrefetchPageLinksImpl({
 }
 
 /**
-  Renders all the `<meta>` tags created by route module {@link MetaFunction} exports. You should render it inside the `<head>` of your HTML.
-
-  ```tsx
-  import { Meta } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <head>
-          <Meta />
-        </head>
-      </html>
-    );
-  }
-  ```
-
-  @category Components
+ * Renders all the `<meta>` tags created by the route module
+ * [`meta`](../../start/framework/route-module#meta) exports. You should render
+ * it inside the `<head>` of your HTML.
+ *
+ * @example
+ * import { Meta } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head>
+ *         <Meta />
+ *       </head>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @returns A collection of React elements for `<meta>` tags
  */
-export function Meta() {
+export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
   let {
     errors,
@@ -604,14 +632,14 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
 let isHydrated = false;
 
 /**
-  A couple common attributes:
-
-  - `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
-  - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
-
-  You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
-
-  @category Types
+ * A couple common attributes:
+ *
+ * - `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
+ * - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
+ *
+ * You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
+ *
+ * @category Types
  */
 export type ScriptsProps = Omit<
   React.HTMLProps<HTMLScriptElement>,
@@ -632,30 +660,37 @@ export type ScriptsProps = Omit<
 };
 
 /**
-  Renders the client runtime of your app. It should be rendered inside the
-  [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/body)
-  of the document.
-
-  ```tsx
-  import { Scripts } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <head />
-        <body>
-          <Scripts />
-        </body>
-      </html>
-    );
-  }
-  ```
-
-  If server rendering, you can omit `<Scripts/>` and the app will work as a traditional web app without JavaScript, relying solely on HTML and browser behaviors.
-
-  @category Components
+ * Renders the client runtime of your app. It should be rendered inside the
+ * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/body)
+ *  of the document.
+ *
+ * If server rendering, you can omit `<Scripts/>` and the app will work as a
+ * traditional web app without JavaScript, relying solely on HTML and browser
+ * behaviors.
+ *
+ * @example
+ * import { Scripts } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head />
+ *       <body>
+ *         <Scripts />
+ *       </body>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @param props Props for the
+ * [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
+ * tag, such as `crossOrigin`, `nonce`, etc.
+ * @returns A collection of React elements for `<script>` tags
  */
-export function Scripts(props: ScriptsProps) {
+export function Scripts(props: ScriptsProps): React.JSX.Element | null {
   let {
     manifest,
     serverHandoffString,

@@ -1,5 +1,12 @@
 # react-router-dom
 
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+
 ## 7.6.3
 
 ### Patch Changes
@@ -145,7 +152,6 @@
 ### Major Changes
 
 - Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
-
   - `defer`
   - `AbortedDeferredError`
   - `type TypedDeferredData`

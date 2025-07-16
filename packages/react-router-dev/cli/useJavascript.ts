@@ -10,7 +10,7 @@ export function transpile(
   options: {
     cwd?: string;
     filename?: string;
-  } = {}
+  } = {},
 ): string {
   let mjs = babel.transformSync(tsx, {
     compact: false,

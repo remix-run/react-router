@@ -7,7 +7,7 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
   let decoder = new TextDecoder();
   let resolveFlightDataPromise: (value: void) => void;
   let flightDataPromise = new Promise(
-    (resolve) => (resolveFlightDataPromise = resolve)
+    (resolve) => (resolveFlightDataPromise = resolve),
   );
   let startedRSC = false;
 
@@ -17,7 +17,7 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
   let buffered: Uint8Array[] = [];
   let timeout: ReturnType<typeof setTimeout> | null = null;
   function flushBufferedChunks(
-    controller: TransformStreamDefaultController<Uint8Array>
+    controller: TransformStreamDefaultController<Uint8Array>,
   ) {
     for (let chunk of buffered) {
       let buf = decoder.decode(chunk, { stream: true });
@@ -61,7 +61,7 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
 
 async function writeRSCStream(
   rscStream: ReadableStream<Uint8Array>,
-  controller: TransformStreamDefaultController<Uint8Array>
+  controller: TransformStreamDefaultController<Uint8Array>,
 ) {
   let decoder = new TextDecoder("utf-8", { fatal: true });
   const reader = rscStream.getReader();
@@ -74,13 +74,13 @@ async function writeRSCStream(
       try {
         writeChunk(
           JSON.stringify(decoder.decode(chunk, { stream: true })),
-          controller
+          controller,
         );
       } catch (err) {
         let base64 = JSON.stringify(btoa(String.fromCodePoint(...chunk)));
         writeChunk(
           `Uint8Array.from(atob(${base64}), m => m.codePointAt(0))`,
-          controller
+          controller,
         );
       }
     }
@@ -96,14 +96,14 @@ async function writeRSCStream(
 
 function writeChunk(
   chunk: string,
-  controller: TransformStreamDefaultController<Uint8Array>
+  controller: TransformStreamDefaultController<Uint8Array>,
 ) {
   controller.enqueue(
     encoder.encode(
       `<script>${escapeScript(
-        `(self.__FLIGHT_DATA||=[]).push(${chunk})`
-      )}</script>`
-    )
+        `(self.__FLIGHT_DATA||=[]).push(${chunk})`,
+      )}</script>`,
+    ),
   );
 }
 

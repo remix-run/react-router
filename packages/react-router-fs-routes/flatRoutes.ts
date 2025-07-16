@@ -41,7 +41,7 @@ class PrefixLookupTrie {
 
   findAndRemove(
     prefix: string,
-    filter: (nodeValue: string) => boolean
+    filter: (nodeValue: string) => boolean,
   ): string[] {
     let node = this.root;
     for (let char of prefix) {
@@ -56,7 +56,7 @@ class PrefixLookupTrie {
     values: string[],
     node: PrefixLookupNode,
     prefix: string,
-    filter: (nodeValue: string) => boolean
+    filter: (nodeValue: string) => boolean,
   ): string[] {
     for (let char of Object.keys(node)) {
       this.#findAndRemoveRecursive(values, node[char], prefix + char, filter);
@@ -74,7 +74,7 @@ class PrefixLookupTrie {
 export function flatRoutes(
   appDirectory: string,
   ignoredFilePatterns: string[] = [],
-  prefix = "routes"
+  prefix = "routes",
 ) {
   let ignoredFileRegex = Array.from(new Set(["**/.*", ...ignoredFilePatterns]))
     .map((re) => makeRe(re))
@@ -85,13 +85,13 @@ export function flatRoutes(
 
   if (!rootRoute) {
     throw new Error(
-      `Could not find a root route module in the app directory: ${appDirectory}`
+      `Could not find a root route module in the app directory: ${appDirectory}`,
     );
   }
 
   if (!fs.existsSync(routesDir)) {
     throw new Error(
-      `Could not find the routes directory: ${routesDir}. Did you forget to create it?`
+      `Could not find the routes directory: ${routesDir}. Did you forget to create it?`,
     );
   }
 
@@ -111,7 +111,7 @@ export function flatRoutes(
       route = findRouteModuleForFolder(
         appDirectory,
         filepath,
-        ignoredFileRegex
+        ignoredFileRegex,
       );
     } else if (entry.isFile()) {
       route = findRouteModuleForFile(appDirectory, filepath, ignoredFileRegex);
@@ -127,7 +127,7 @@ export function flatRoutes(
 export function flatRoutesUniversal(
   appDirectory: string,
   routes: string[],
-  prefix: string = "routes"
+  prefix: string = "routes",
 ): RouteManifest {
   let urlConflicts = new Map<string, RouteManifestEntry[]>();
   let routeManifest: RouteManifest = {};
@@ -165,7 +165,7 @@ export function flatRoutesUniversal(
   }
 
   let sortedRouteIds = Array.from(routeIds).sort(
-    ([a], [b]) => b.length - a.length
+    ([a], [b]) => b.length - a.length,
   );
 
   for (let [routeId, file] of sortedRouteIds) {
@@ -299,7 +299,7 @@ export function flatRoutesUniversal(
 function findRouteModuleForFile(
   appDirectory: string,
   filepath: string,
-  ignoredFileRegex: RegExp[]
+  ignoredFileRegex: RegExp[],
 ): string | null {
   let relativePath = normalizeSlashes(path.relative(appDirectory, filepath));
   let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
@@ -310,7 +310,7 @@ function findRouteModuleForFile(
 function findRouteModuleForFolder(
   appDirectory: string,
   filepath: string,
-  ignoredFileRegex: RegExp[]
+  ignoredFileRegex: RegExp[],
 ): string | null {
   let relativePath = path.relative(appDirectory, filepath);
   let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
@@ -323,14 +323,14 @@ function findRouteModuleForFolder(
   // preferring the route module over the index module
   if (routeRouteModule && routeIndexModule) {
     let [segments, raw] = getRouteSegments(
-      path.relative(appDirectory, filepath)
+      path.relative(appDirectory, filepath),
     );
     let routePath = createRoutePath(segments, raw, false);
     console.error(
       getRoutePathConflictErrorMessage(routePath || "/", [
         routeRouteModule,
         routeIndexModule,
-      ])
+      ]),
     );
   }
 
@@ -361,7 +361,7 @@ export function getRouteSegments(routeId: string): [string[], string[]] {
     let notSupportedInRR = (segment: string, char: string) => {
       throw new Error(
         `Route segment "${segment}" for "${routeId}" cannot contain "${char}".\n` +
-          `If this is something you need, upvote this proposal for React Router https://github.com/remix-run/react-router/discussions/9822.`
+          `If this is something you need, upvote this proposal for React Router https://github.com/remix-run/react-router/discussions/9822.`,
       );
     };
 
@@ -481,7 +481,7 @@ export function getRouteSegments(routeId: string): [string[], string[]] {
 export function createRoutePath(
   routeSegments: string[],
   rawRouteSegments: string[],
-  isIndex?: boolean
+  isIndex?: boolean,
 ) {
   let result: string[] = [];
 
@@ -511,7 +511,7 @@ export function createRoutePath(
 
 export function getRoutePathConflictErrorMessage(
   pathname: string,
-  routes: string[]
+  routes: string[],
 ) {
   let [taken, ...others] = routes;
 
@@ -530,7 +530,7 @@ export function getRoutePathConflictErrorMessage(
 
 export function getRouteIdConflictErrorMessage(
   routeId: string,
-  files: string[]
+  files: string[],
 ) {
   let [taken, ...others] = files;
 
@@ -551,7 +551,7 @@ export function isSegmentSeparator(checkChar: string | undefined) {
 function findFile(
   dir: string,
   basename: string,
-  extensions: string[]
+  extensions: string[],
 ): string | undefined {
   for (let ext of extensions) {
     let name = basename + ext;

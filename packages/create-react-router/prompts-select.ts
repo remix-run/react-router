@@ -14,7 +14,7 @@ export interface SelectChoice {
 }
 
 export interface SelectPromptOptions<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends PromptOptions {
   hint?: string;
   message: string;
@@ -26,7 +26,7 @@ export interface SelectPromptOptions<
 }
 
 export class SelectPrompt<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends Prompt {
   choices: Choices;
   label: string;
@@ -108,7 +108,7 @@ export class SelectPrompt<
     this.search += c.toLowerCase();
     let choices = !this.search ? this.choices.slice(this.cursor) : this.choices;
     let n = choices.findIndex((c) =>
-      c.label.toLowerCase().includes(this.search!)
+      c.label.toLowerCase().includes(this.search!),
     );
     if (n > -1) {
       this.moveCursor(n);
@@ -184,9 +184,9 @@ export class SelectPrompt<
       this.done
         ? ""
         : this.hint
-        ? (this.out.columns < 80 ? "\n" + " ".repeat(8) : "") +
-          color.dim(` (${this.hint})`)
-        : "",
+          ? (this.out.columns < 80 ? "\n" + " ".repeat(8) : "") +
+            color.dim(` (${this.hint})`)
+          : "",
       "\n",
     ];
 
@@ -195,7 +195,7 @@ export class SelectPrompt<
     if (this.done) {
       outputText.push(
         `${prefix} `,
-        color.dim(`${this.choices[this.cursor]?.label}`)
+        color.dim(`${this.choices[this.cursor]?.label}`),
       );
     } else {
       outputText.push(
@@ -203,15 +203,15 @@ export class SelectPrompt<
           .map((choice, i) =>
             i === this.cursor
               ? `${prefix} ${color.green(
-                  shouldUseAscii() ? ">" : "●"
+                  shouldUseAscii() ? ">" : "●",
                 )} ${this.highlight(choice.label)} ${
                   choice.hint ? color.dim(choice.hint) : ""
                 }`
               : color.dim(
-                  `${prefix} ${shouldUseAscii() ? "—" : "○"} ${choice.label} `
-                )
+                  `${prefix} ${shouldUseAscii() ? "—" : "○"} ${choice.label} `,
+                ),
           )
-          .join("\n")
+          .join("\n"),
       );
     }
     this.outputText = outputText.join("");

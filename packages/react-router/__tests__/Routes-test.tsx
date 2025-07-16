@@ -21,14 +21,14 @@ describe("<Routes>", () => {
       renderer = TestRenderer.create(
         <MemoryRouter>
           <Routes />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(renderer.toJSON()).toBeNull();
     expect(consoleWarn).toHaveBeenCalledTimes(1);
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining("No routes matched location")
+      expect.stringContaining("No routes matched location"),
     );
   });
 
@@ -40,7 +40,7 @@ describe("<Routes>", () => {
           <Routes>
             <Route path="/" element={<h1>Home</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -60,7 +60,7 @@ describe("<Routes>", () => {
             <Route path="home" element={<h1>Home</h1>} />
             <Route path="home" element={<h1>Dashboard</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -81,7 +81,7 @@ describe("<Routes>", () => {
             {false}
             {undefined}
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -103,7 +103,7 @@ describe("<Routes>", () => {
               <Route path="admin" element={<h1>Admin</h1>} />
             </React.Fragment>
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -125,7 +125,7 @@ describe("<Routes>", () => {
               <Route path="/" element={<h1>Home</h1>} />
               <CustomRoute path="admin" element={<h1>Admin</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
     }).toThrow(/children of <Routes> must be a <Route>/);
@@ -142,7 +142,7 @@ describe("<Routes>", () => {
               <Route path="/" element={<h1>Home</h1>} />
               <div {...({ path: "admin", element: <h1>Admin</h1> } as any)} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
     }).toThrow(/children of <Routes> must be a <Route>/);

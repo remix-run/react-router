@@ -24,7 +24,15 @@
       "files": [
         "packages/react-router/lib/components.tsx",
         "packages/react-router/lib/hooks.tsx",
-        "packages/react-router/lib/dom/lib.tsx"
+        "packages/react-router/lib/dom/lib.tsx",
+        "packages/react-router/lib/dom/ssr/components.tsx",
+        "packages/react-router/lib/dom/ssr/server.tsx",
+        "packages/react-router/lib/dom-export/hydrated-router.tsx",
+        "packages/react-router/lib/dom/server.tsx",
+        "packages/react-router/lib/rsc/browser.tsx",
+        "packages/react-router/lib/rsc/server.rsc.ts",
+        "packages/react-router/lib/rsc/server.ssr.tsx",
+        "packages/react-router/lib/rsc/html-stream/browser.ts",
       ],
       "plugins": ["jsdoc"],
       "rules": {

@@ -172,7 +172,7 @@ test.describe("Vite / presets", async () => {
 
       // Rewrite path args to be relative and normalized for snapshot test
       reactRouterConfig.buildDirectory = relativeToCwd(
-        reactRouterConfig.buildDirectory
+        reactRouterConfig.buildDirectory,
       );
 
       // Ensure preset configs are merged in correct order, resulting in the correct build directory
@@ -186,9 +186,9 @@ test.describe("Vite / presets", async () => {
         JSON.parse(
           await fs.readFile(
             path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_META.json"),
-            "utf-8"
-          )
-        )
+            "utf-8",
+          ),
+        ),
       ).toEqual({
         reactRouterUserConfigFrozen: true,
       });
@@ -198,9 +198,9 @@ test.describe("Vite / presets", async () => {
         JSON.parse(
           await fs.readFile(
             path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_RESOLVED_META.json"),
-            "utf-8"
-          )
-        )
+            "utf-8",
+          ),
+        ),
       ).toEqual({
         reactRouterUserConfigFrozen: true,
       });

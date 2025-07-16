@@ -203,7 +203,7 @@ describe("shouldRevalidate", () => {
 
     // On actions we send along the action result
     shouldRevalidate.mockImplementation(
-      ({ actionResult }) => actionResult.ok === true
+      ({ actionResult }) => actionResult.ok === true,
     );
     router.navigate("/child", {
       formMethod: "post",
@@ -1204,13 +1204,13 @@ describe("shouldRevalidate", () => {
             request.method === "POST"
               ? undefined
               : !match.unstable_shouldRevalidateArgs?.actionStatus ||
-                  match.unstable_shouldRevalidateArgs.actionStatus < 400
-          )
+                  match.unstable_shouldRevalidateArgs.actionStatus < 400,
+          ),
         );
         await Promise.all(
           matchesToLoad.map(async (match) => {
             keyedResults[match.route.id] = await match.resolve();
-          })
+          }),
         );
         return keyedResults;
       },

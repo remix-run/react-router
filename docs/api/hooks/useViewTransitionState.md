@@ -31,9 +31,14 @@ transitions have been enabled for the given navigation via [`LinkProps.viewTrans
 ## Signature
 
 ```tsx
-function useViewTransitionState(to: To, { relative }: {
+function useViewTransitionState(
+  to: To,
+  {
+    relative,
+  }: {
     relative?: RelativeRoutingType;
-} = {})
+  } = ,
+) {}
 ```
 
 ## Params

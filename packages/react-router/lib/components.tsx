@@ -85,7 +85,7 @@ export function mapRouteProperties(route: RouteObject) {
         warning(
           false,
           "You should not include both `Component` and `element` on your route - " +
-            "`Component` will be used."
+            "`Component` will be used.",
         );
       }
     }
@@ -101,7 +101,7 @@ export function mapRouteProperties(route: RouteObject) {
         warning(
           false,
           "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
-            "`HydrateFallback` will be used."
+            "`HydrateFallback` will be used.",
         );
       }
     }
@@ -117,7 +117,7 @@ export function mapRouteProperties(route: RouteObject) {
         warning(
           false,
           "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-            "`ErrorBoundary` will be used."
+            "`ErrorBoundary` will be used.",
         );
       }
     }
@@ -198,7 +198,7 @@ export interface MemoryRouterOpts {
  */
 export function createMemoryRouter(
   routes: RouteObject[],
-  opts?: MemoryRouterOpts
+  opts?: MemoryRouterOpts,
 ): DataRouter {
   return createRouter({
     basename: opts?.basename,
@@ -305,7 +305,7 @@ export function RouterProvider({
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
-      { deletedFetchers, flushSync, viewTransitionOpts }
+      { deletedFetchers, flushSync, viewTransitionOpts },
     ) => {
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
@@ -321,7 +321,7 @@ export function RouterProvider({
           "so `ReactDOM.flushSync()` is unavailable.  Please update your app " +
           'to `import { RouterProvider } from "react-router/dom"` and ensure ' +
           "you have `react-dom` installed as a dependency to use the " +
-          "`flushSync` option."
+          "`flushSync` option.",
       );
 
       let isViewTransitionAvailable =
@@ -333,7 +333,7 @@ export function RouterProvider({
         viewTransitionOpts == null || isViewTransitionAvailable,
         "You provided the `viewTransition` option to a router update, " +
           "but you do not appear to be running in a DOM environment as " +
-          "`window.startViewTransition` is not available."
+          "`window.startViewTransition` is not available.",
       );
 
       // If this isn't a view transition or it's not available in this browser,
@@ -405,7 +405,7 @@ export function RouterProvider({
         });
       }
     },
-    [router.window, reactDomFlushSyncImpl, transition, renderDfd]
+    [router.window, reactDomFlushSyncImpl, transition, renderDfd],
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -496,7 +496,7 @@ export function RouterProvider({
       static: false,
       basename,
     }),
-    [router, navigator, basename]
+    [router, navigator, basename],
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
@@ -606,7 +606,7 @@ export function MemoryRouter({
     (newState: { action: NavigationType; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl]
+    [setStateImpl],
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -676,7 +676,7 @@ export function Navigate({
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of
     // the router loaded. We can help them understand how to avoid that.
-    `<Navigate> may be used only in the context of a <Router> component.`
+    `<Navigate> may be used only in the context of a <Router> component.`,
   );
 
   let { static: isStatic } = React.useContext(NavigationContext);
@@ -685,7 +685,7 @@ export function Navigate({
     !isStatic,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
-      `only ever rendered in response to some user interaction or state change.`
+      `only ever rendered in response to some user interaction or state change.`,
   );
 
   let { matches } = React.useContext(RouteContext);
@@ -698,7 +698,7 @@ export function Navigate({
     to,
     getResolveToMatches(matches),
     locationPathname,
-    relative === "path"
+    relative === "path",
   );
   let jsonPath = JSON.stringify(path);
 
@@ -985,7 +985,7 @@ export function Route(props: RouteProps): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
-      `never rendered directly. Please wrap your <Route> in a <Routes>.`
+      `never rendered directly. Please wrap your <Route> in a <Routes>.`,
   );
 }
 
@@ -1054,7 +1054,7 @@ export function Router({
   invariant(
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
-      ` You should never have more than one in your app.`
+      ` You should never have more than one in your app.`,
   );
 
   // Preserve trailing slashes on basename, so we can let the user control
@@ -1067,7 +1067,7 @@ export function Router({
       static: staticProp,
       future: {},
     }),
-    [basename, navigator, staticProp]
+    [basename, navigator, staticProp],
   );
 
   if (typeof locationProp === "string") {
@@ -1105,7 +1105,7 @@ export function Router({
     locationContext != null,
     `<Router basename="${basename}"> is not able to match the URL ` +
       `"${pathname}${search}${hash}" because it does not start with the ` +
-      `basename, so the <Router> won't render anything.`
+      `basename, so the <Router> won't render anything.`,
   );
 
   if (locationContext == null) {
@@ -1365,7 +1365,7 @@ class AwaitErrorBoundary extends React.Component<
     console.error(
       "<Await> caught the following error during render",
       error,
-      errorInfo
+      errorInfo,
     );
   }
 
@@ -1395,8 +1395,8 @@ class AwaitErrorBoundary extends React.Component<
         "_error" in promise
           ? AwaitRenderStatus.error
           : "_data" in promise
-          ? AwaitRenderStatus.success
-          : AwaitRenderStatus.pending;
+            ? AwaitRenderStatus.success
+            : AwaitRenderStatus.pending;
     } else {
       // Raw (untracked) promise - track it
       status = AwaitRenderStatus.pending;
@@ -1405,7 +1405,7 @@ class AwaitErrorBoundary extends React.Component<
         (data: any) =>
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) =>
-          Object.defineProperty(resolve, "_error", { get: () => error })
+          Object.defineProperty(resolve, "_error", { get: () => error }),
       );
     }
 
@@ -1457,7 +1457,7 @@ function ResolveAwait({
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,
-  parentPath: number[] = []
+  parentPath: number[] = [],
 ): RouteObject[] {
   let routes: RouteObject[] = [];
 
@@ -1474,7 +1474,7 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, treePath)
+        createRoutesFromChildren(element.props.children, treePath),
       );
       return;
     }
@@ -1483,12 +1483,12 @@ export function createRoutesFromChildren(
       element.type === Route,
       `[${
         typeof element.type === "string" ? element.type : element.type.name
-      }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+      }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`,
     );
 
     invariant(
       !element.props.index || !element.props.children,
-      "An index route cannot have child routes."
+      "An index route cannot have child routes.",
     );
 
     let route: RouteObject = {
@@ -1516,7 +1516,7 @@ export function createRoutesFromChildren(
     if (element.props.children) {
       route.children = createRoutesFromChildren(
         element.props.children,
-        treePath
+        treePath,
       );
     }
 
@@ -1565,62 +1565,90 @@ export const createRoutesFromElements = createRoutesFromChildren;
  * @returns A React element that renders the matched routes or `null` if no matches
  */
 export function renderMatches(
-  matches: RouteMatch[] | null
+  matches: RouteMatch[] | null,
 ): React.ReactElement | null {
   return _renderMatches(matches);
 }
 
-export type RouteComponentType = React.ComponentType<{
-  params: ReturnType<typeof useParams>;
-  loaderData: ReturnType<typeof useLoaderData>;
-  actionData: ReturnType<typeof useActionData>;
-  matches: ReturnType<typeof useMatches>;
-}>;
+function useRouteComponentProps() {
+  return {
+    params: useParams(),
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    matches: useMatches(),
+  };
+}
+
+export type RouteComponentProps = ReturnType<typeof useRouteComponentProps>;
+export type RouteComponentType = React.ComponentType<RouteComponentProps>;
+
+export function WithComponentProps({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
+  const props = useRouteComponentProps();
+  return React.cloneElement(children, props);
+}
 
 export function withComponentProps(Component: RouteComponentType) {
   return function WithComponentProps() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-      matches: useMatches(),
-    };
+    const props = useRouteComponentProps();
     return React.createElement(Component, props);
   };
 }
 
-export type HydrateFallbackType = React.ComponentType<{
-  params: ReturnType<typeof useParams>;
-  loaderData: ReturnType<typeof useLoaderData>;
-  actionData: ReturnType<typeof useActionData>;
-}>;
+function useHydrateFallbackProps() {
+  return {
+    params: useParams(),
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+  };
+}
+
+export type HydrateFallbackProps = ReturnType<typeof useHydrateFallbackProps>;
+export type HydrateFallbackType = React.ComponentType<HydrateFallbackProps>;
+
+export function WithHydrateFallbackProps({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
+  const props = useHydrateFallbackProps();
+  return React.cloneElement(children, props);
+}
 
 export function withHydrateFallbackProps(HydrateFallback: HydrateFallbackType) {
   return function WithHydrateFallbackProps() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-    };
+    const props = useHydrateFallbackProps();
     return React.createElement(HydrateFallback, props);
   };
 }
 
-export type ErrorBoundaryType = React.ComponentType<{
-  params: ReturnType<typeof useParams>;
-  loaderData: ReturnType<typeof useLoaderData>;
-  actionData: ReturnType<typeof useActionData>;
-  error: ReturnType<typeof useRouteError>;
-}>;
+function useErrorBoundaryProps() {
+  return {
+    params: useParams(),
+    loaderData: useLoaderData(),
+    actionData: useActionData(),
+    error: useRouteError(),
+  };
+}
+
+export type ErrorBoundaryProps = ReturnType<typeof useErrorBoundaryProps>;
+export type ErrorBoundaryType = React.ComponentType<ErrorBoundaryProps>;
+
+export function WithErrorBoundaryProps({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
+  const props = useErrorBoundaryProps();
+  return React.cloneElement(children, props);
+}
 
 export function withErrorBoundaryProps(ErrorBoundary: ErrorBoundaryType) {
   return function WithErrorBoundaryProps() {
-    const props = {
-      params: useParams(),
-      loaderData: useLoaderData(),
-      actionData: useActionData(),
-      error: useRouteError(),
-    };
+    const props = useErrorBoundaryProps();
     return React.createElement(ErrorBoundary, props);
   };
 }

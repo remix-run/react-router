@@ -1,5 +1,13 @@
 # `@react-router/express`
 
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+  - `@react-router/node@7.7.0`
+
 ## 7.6.3
 
 ### Patch Changes
@@ -171,7 +179,6 @@
 - Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
   - Remove `installGlobals()` as this should no longer be necessary
 
 ### Patch Changes
@@ -224,7 +231,6 @@
 ### Patch Changes
 
 - Use `req.originalUrl` instead of `req.url` so that Remix sees the full URL ([#8145](https://github.com/remix-run/remix/pull/8145))
-
   - Remix relies on the knowing the full URL to ensure that server and client code can function together, and does not support URL rewriting prior to the Remix handler
 
 - Updated dependencies:
@@ -312,7 +318,6 @@
 - Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
 
 - For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install the globals yourself
 
@@ -323,7 +328,6 @@
     ```
 
 - `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
 

@@ -29,14 +29,24 @@ use in our exported `<Link>`.
 ## Signature
 
 ```tsx
-function useLinkClickHandler<E extends Element = HTMLAnchorElement>(to: To, { target, replace: replaceProp, state, preventScrollReset, relative, viewTransition, }: {
+function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
+  to: To,
+  {
+    target,
+    replace: replaceProp,
+    state,
+    preventScrollReset,
+    relative,
+    viewTransition,
+  }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
     viewTransition?: boolean;
-} = {}): (event: React.MouseEvent<E, MouseEvent>) => void
+  } = ,
+): (event: React.MouseEvent<E, MouseEvent>) => void {}
 ```
 
 ## Params

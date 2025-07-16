@@ -27,9 +27,12 @@ Set up a callback to be fired on [Window's `beforeunload` event](https://develop
 ## Signature
 
 ```tsx
-function useBeforeUnload(callback: (event: BeforeUnloadEvent) => any, options?: {
+function useBeforeUnload(
+  callback: (event: BeforeUnloadEvent) => any,
+  options?: {
     capture?: boolean;
-}): void
+  },
+): void
 ```
 
 ## Params

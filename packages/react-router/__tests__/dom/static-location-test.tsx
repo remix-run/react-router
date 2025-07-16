@@ -16,7 +16,7 @@ describe("A <StaticRouter>", () => {
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </StaticRouter>
+        </StaticRouter>,
       );
 
       expect(location).toEqual({
@@ -44,7 +44,7 @@ describe("A <StaticRouter>", () => {
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </StaticRouter>
+        </StaticRouter>,
       );
 
       expect(location).toEqual({
@@ -70,7 +70,7 @@ describe("A <StaticRouter>", () => {
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </StaticRouter>
+        </StaticRouter>,
       );
 
       expect(location).toEqual({

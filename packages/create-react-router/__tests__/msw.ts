@@ -13,20 +13,20 @@ let miscHandlers: Array<RequestHandler> = [
     "https://example.com/error/:status/template.tar.gz",
     ({ params }) => {
       return new Response(null, { status: Number(params.status) });
-    }
+    },
   ),
   http.get<{ status: string }>(
     "https://example.com/error/:status/template.tar.gz",
     ({ params }) => {
       return new Response(null, { status: Number(params.status) });
-    }
+    },
   ),
   http.head("https://example.com/template.tar.gz", () => {
     return new Response();
   }),
   http.get("https://example.com/template.tar.gz", async () => {
     let fileBuffer = await fsp.readFile(
-      path.join(__dirname, "fixtures", "template.tar.gz")
+      path.join(__dirname, "fixtures", "template.tar.gz"),
     );
 
     return new Response(fileBuffer, {

@@ -157,7 +157,7 @@ test.describe("Client Data", () => {
       [true, false].forEach((splitRouteModules) => {
         test.skip(
           templateName === "rsc-parcel-framework" && splitRouteModules,
-          "RSC Data Mode doesn't support splitRouteModules"
+          "RSC Data Mode doesn't support splitRouteModules",
         );
 
         test.skip(
@@ -165,7 +165,7 @@ test.describe("Client Data", () => {
             Boolean(process.env.CI) &&
             splitRouteModules &&
             (browserName === "webkit" || process.platform === "win32"),
-          "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific"
+          "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific",
         );
 
         test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
@@ -181,7 +181,7 @@ test.describe("Client Data", () => {
                     childClientLoader: false,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -203,7 +203,7 @@ test.describe("Client Data", () => {
                     childClientLoader: true,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -227,7 +227,7 @@ test.describe("Client Data", () => {
                     childClientLoader: true,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -257,7 +257,7 @@ test.describe("Client Data", () => {
                     childClientLoader: true,
                     childClientLoaderHydrate: true,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -287,7 +287,7 @@ test.describe("Client Data", () => {
                     childClientLoader: true,
                     childClientLoaderHydrate: true,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -530,7 +530,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -547,7 +547,7 @@ test.describe("Client Data", () => {
             }) => {
               test.skip(
                 templateName === "rsc-parcel-framework",
-                "RSC Data Mode doesn't need to provide a default root HydrateFallback since it doesn't need to ensure <Scripts /> is rendered, and you already get a console warning"
+                "RSC Data Mode doesn't need to provide a default root HydrateFallback since it doesn't need to ensure <Scripts /> is rendered, and you already get a console warning",
               );
 
               appFixture = await createAppFixture(
@@ -577,14 +577,14 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
               await app.goto("/parent/child");
               let html = await app.getHtml();
               expect(html).toMatch(
-                "💿 Hey developer 👋. You can provide a way better UX than this"
+                "💿 Hey developer 👋. You can provide a way better UX than this",
               );
               expect(html).not.toMatch("child-data");
               await page.waitForSelector("#child-data");
@@ -624,7 +624,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -633,7 +633,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverLoader() on a route that does " +
-                  'not have a server loader (routeId: "routes/parent.child")'
+                  'not have a server loader (routeId: "routes/parent.child")',
               );
             });
 
@@ -685,7 +685,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -693,15 +693,15 @@ test.describe("Client Data", () => {
               await page.waitForSelector("#child-data");
               let html = await app.getHtml();
               expect(html).toMatch(
-                "Child Server Loader Data (1) (mutated by client)"
+                "Child Server Loader Data (1) (mutated by client)",
               );
               app.clickElement("button");
               await page.waitForSelector(
-                ':has-text("Child Server Loader Data (2+)")'
+                ':has-text("Child Server Loader Data (2+)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch(
-                "Child Server Loader Data (2+) (mutated by client)"
+                "Child Server Loader Data (2+) (mutated by client)",
               );
             });
 
@@ -763,7 +763,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -773,11 +773,11 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Client Loader Data");
               app.clickElement("button");
               await page.waitForSelector(
-                ':has-text("Child Server Loader Data (2+)")'
+                ':has-text("Child Server Loader Data (2+)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch(
-                "Child Server Loader Data (2+) (mutated by client)"
+                "Child Server Loader Data (2+) (mutated by client)",
               );
             });
 
@@ -821,9 +821,9 @@ test.describe("Client Data", () => {
                       `,
                     },
                   },
-                  ServerMode.Development // Avoid error sanitization
+                  ServerMode.Development, // Avoid error sanitization
                 ),
-                ServerMode.Development // Avoid error sanitization
+                ServerMode.Development, // Avoid error sanitization
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -912,9 +912,9 @@ test.describe("Client Data", () => {
                       `,
                     },
                   },
-                  ServerMode.Development // Avoid error sanitization
+                  ServerMode.Development, // Avoid error sanitization
                 ),
-                ServerMode.Development // Avoid error sanitization
+                ServerMode.Development, // Avoid error sanitization
               );
               let app = new PlaywrightFixture(appFixture, page);
               let logs: string[] = [];
@@ -929,12 +929,12 @@ test.describe("Client Data", () => {
                   /Download the React DevTools/.test(text) ||
                   (templateName === "rsc-parcel-framework" &&
                     /The <Scripts \/> element is a no-op when using RSC and can be safely removed./.test(
-                      text
+                      text,
                     )) ||
                   // TODO: Render outlet on RSC render error?
                   (templateName === "rsc-parcel-framework" &&
                     /Matched leaf route at location "\/parent\/child" does not have an element/.test(
-                      text
+                      text,
                     ))
                 ) {
                   return;
@@ -948,11 +948,11 @@ test.describe("Client Data", () => {
               expect(html).not.toMatch("Should not see me");
               // Ensure we hydrate and remain on the boundary
               await page.waitForSelector(
-                ":has-text('Parent Server Loader (mutated by client)')"
+                ":has-text('Parent Server Loader (mutated by client)')",
               );
               html = await app.getHtml("main");
               expect(html).toMatch(
-                "Parent Server Loader (mutated by client)</p>"
+                "Parent Server Loader (mutated by client)</p>",
               );
               expect(html).toMatch("Child Server Error");
               expect(html).not.toMatch("Should not see me");
@@ -1027,7 +1027,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -1053,7 +1053,7 @@ test.describe("Client Data", () => {
                     childClientLoader: false,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1077,7 +1077,7 @@ test.describe("Client Data", () => {
                     childClientLoader: false,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1100,7 +1100,7 @@ test.describe("Client Data", () => {
                     childClientLoader: true,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1123,7 +1123,7 @@ test.describe("Client Data", () => {
                     childClientLoader: true,
                     childClientLoaderHydrate: false,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1167,7 +1167,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
 
@@ -1177,7 +1177,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverLoader() on a route that does " +
-                  'not have a server loader (routeId: "routes/parent.child")'
+                  'not have a server loader (routeId: "routes/parent.child")',
               );
             });
             test("does not prefetch server loader if a client loader is present", async ({
@@ -1186,7 +1186,7 @@ test.describe("Client Data", () => {
             }) => {
               test.skip(
                 templateName === "rsc-parcel-framework",
-                "This test is specific to non-RSC Data Mode"
+                "This test is specific to non-RSC Data Mode",
               );
 
               appFixture = await createAppFixture(
@@ -1212,7 +1212,7 @@ test.describe("Client Data", () => {
                       }
                   `,
                   },
-                })
+                }),
               );
 
               let dataUrls: string[] = [];
@@ -1233,7 +1233,7 @@ test.describe("Client Data", () => {
                 // Only prefetch child server loader since parent has a `clientLoader`
                 expect(dataUrls).toEqual([
                   expect.stringMatching(
-                    /parent\/child\.data\?_routes=routes%2Fparent\.child/
+                    /parent\/child\.data\?_routes=routes%2Fparent\.child/,
                   ),
                 ]);
               }
@@ -1262,9 +1262,9 @@ test.describe("Client Data", () => {
                     `,
                     }),
                   },
-                  ServerMode.Development
+                  ServerMode.Development,
                 ),
-                ServerMode.Development
+                ServerMode.Development,
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/parent/child");
@@ -1300,7 +1300,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/parent/child");
@@ -1317,7 +1317,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
 
               await page.waitForSelector(
-                ':has-text("Parent Server Loader (mutated by client)")'
+                ':has-text("Parent Server Loader (mutated by client)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch("Parent Server Loader (mutated by client)");
@@ -1344,7 +1344,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/parent/child");
@@ -1361,7 +1361,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
 
               await page.waitForSelector(
-                ':has-text("Child Server Loader (mutated by client)")'
+                ':has-text("Child Server Loader (mutated by client)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch("Parent Server Loader");
@@ -1390,7 +1390,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/parent/child");
@@ -1407,7 +1407,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
 
               await page.waitForSelector(
-                ':has-text("Child Server Loader (mutated by client)")'
+                ':has-text("Child Server Loader (mutated by client)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch("Parent Server Loader (mutated by client)");
@@ -1448,7 +1448,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/parent/child");
@@ -1457,7 +1457,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverAction() on a route that does " +
-                  'not have a server action (routeId: "routes/parent.child")'
+                  'not have a server action (routeId: "routes/parent.child")',
               );
             });
           });
@@ -1482,7 +1482,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1520,7 +1520,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1539,7 +1539,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
 
               await page.waitForSelector(
-                ':has-text("Parent Server Loader (mutated by client)")'
+                ':has-text("Parent Server Loader (mutated by client)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch("Parent Server Loader (mutated by client)");
@@ -1566,7 +1566,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1585,7 +1585,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
 
               await page.waitForSelector(
-                ':has-text("Child Server Loader (mutated by client)")'
+                ':has-text("Child Server Loader (mutated by client)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch("Parent Server Loader");
@@ -1614,7 +1614,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   }),
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1633,7 +1633,7 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Action (mutated by client)");
 
               await page.waitForSelector(
-                ':has-text("Child Server Loader (mutated by client)")'
+                ':has-text("Child Server Loader (mutated by client)")',
               );
               html = await app.getHtml("main");
               expect(html).toMatch("Parent Server Loader (mutated by client)");
@@ -1674,7 +1674,7 @@ test.describe("Client Data", () => {
                       }
                     `,
                   },
-                })
+                }),
               );
               let app = new PlaywrightFixture(appFixture, page);
               await app.goto("/");
@@ -1685,7 +1685,7 @@ test.describe("Client Data", () => {
               let html = await app.getHtml("#child-error");
               expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
                 "400 Error: You are trying to call serverAction() on a route that does " +
-                  'not have a server action (routeId: "routes/parent.child")'
+                  'not have a server action (routeId: "routes/parent.child")',
               );
             });
           });

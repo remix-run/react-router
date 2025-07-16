@@ -16,7 +16,7 @@ function initializeTodos(): Todos {
     .reduce(
       (acc, _, index) =>
         Object.assign(acc, { [uuid()]: `Seeded Todo #${index + 1}` }),
-      {}
+      {},
     );
   saveTodos(todos);
   return todos;

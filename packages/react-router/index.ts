@@ -290,12 +290,16 @@ export { href } from "./lib/href";
 export type {
   BrowserCreateFromReadableStreamFunction as unstable_BrowserCreateFromReadableStreamFunction,
   EncodeReplyFunction as unstable_EncodeReplyFunction,
+  RSCHydratedRouterProps as unstable_RSCHydratedRouterProps,
 } from "./lib/rsc/browser";
 export {
   createCallServer as unstable_createCallServer,
   RSCHydratedRouter as unstable_RSCHydratedRouter,
 } from "./lib/rsc/browser";
-export type { SSRCreateFromReadableStreamFunction as unstable_SSRCreateFromReadableStreamFunction } from "./lib/rsc/server.ssr";
+export type {
+  SSRCreateFromReadableStreamFunction as unstable_SSRCreateFromReadableStreamFunction,
+  RSCStaticRouterProps as unstable_RSCStaticRouterProps,
+} from "./lib/rsc/server.ssr";
 export {
   routeRSCServerRequest as unstable_routeRSCServerRequest,
   RSCStaticRouter as unstable_RSCStaticRouter,
@@ -362,8 +366,11 @@ export {
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  WithComponentProps as UNSAFE_WithComponentProps,
   withComponentProps as UNSAFE_withComponentProps,
+  WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
   withHydrateFallbackProps as UNSAFE_withHydrateFallbackProps,
+  WithErrorBoundaryProps as UNSAFE_WithErrorBoundaryProps,
   withErrorBoundaryProps as UNSAFE_withErrorBoundaryProps,
 } from "./lib/components";
 

@@ -38,11 +38,11 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useParams<ParamsOrKey extends string | Record<string, string | undefined> = string>(): Readonly<[
-    ParamsOrKey
-] extends [
-    string
-] ? Params<ParamsOrKey> : Partial<ParamsOrKey>>
+function useParams<
+  ParamsOrKey extends string | Record<string, string | undefined> = string,
+>(): Readonly<
+  [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
+>
 ```
 
 ## Returns

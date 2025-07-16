@@ -33,7 +33,7 @@
     "pathe": "^1.1.2",
     "postcss": "^8.4.19",
     "postcss-import": "^15.1.0",
-    "prettier": "^2.7.1",
+    "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "workspace:*",

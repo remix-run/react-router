@@ -4,6 +4,11 @@ title: File Uploads
 
 # File Uploads
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 Handle file uploads in your React Router applications. This guide uses some packages from the [Remix The Web][remix-the-web] project to make file uploads easier.
 
 _Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) on which this doc is based. You can refer to it for even more examples._
@@ -65,7 +70,7 @@ export async function action({
 
   const formData = await parseFormData(
     request,
-    uploadHandler
+    uploadHandler,
   );
   // 'avatar' has already been processed at this point
   const file = formData.get("avatar");
@@ -101,7 +106,7 @@ Create a file that exports a `LocalFileStorage` instance to be used by different
 import { LocalFileStorage } from "@mjackson/file-storage/local";
 
 export const fileStorage = new LocalFileStorage(
-  "./uploads/avatars"
+  "./uploads/avatars",
 );
 
 export function getStorageKey(userId: string) {
@@ -148,7 +153,7 @@ export async function action({
 
   const formData = await parseFormData(
     request,
-    uploadHandler
+    uploadHandler,
   );
 }
 

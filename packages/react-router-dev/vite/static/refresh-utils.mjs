@@ -20,7 +20,7 @@ const enqueueUpdate = debounce(async () => {
       let imported = window.__reactRouterRouteModuleUpdates.get(route.id);
       if (!imported) {
         throw Error(
-          `[react-router:hmr] No module update found for route ${route.id}`
+          `[react-router:hmr] No module update found for route ${route.id}`,
         );
       }
       let routeModule = {
@@ -28,16 +28,16 @@ const enqueueUpdate = debounce(async () => {
         // react-refresh takes care of updating these in-place,
         // if we don't preserve existing values we'll loose state.
         default: imported.default
-          ? window.__reactRouterRouteModules[route.id]?.default ??
-            imported.default
+          ? (window.__reactRouterRouteModules[route.id]?.default ??
+            imported.default)
           : imported.default,
         ErrorBoundary: imported.ErrorBoundary
-          ? window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
-            imported.ErrorBoundary
+          ? (window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
+            imported.ErrorBoundary)
           : imported.ErrorBoundary,
         HydrateFallback: imported.HydrateFallback
-          ? window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
-            imported.HydrateFallback
+          ? (window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
+            imported.HydrateFallback)
           : imported.HydrateFallback,
       };
       window.__reactRouterRouteModules[route.id] = routeModule;
@@ -49,9 +49,9 @@ const enqueueUpdate = debounce(async () => {
           (route) =>
             route.hasLoader ||
             route.hasClientLoader ||
-            route.hasClientMiddleware
+            route.hasClientMiddleware,
         )
-        .map((route) => route.id)
+        .map((route) => route.id),
     );
 
     let routes = __reactRouterDataRouter.createRoutesForHMR(
@@ -59,7 +59,7 @@ const enqueueUpdate = debounce(async () => {
       manifest.routes,
       window.__reactRouterRouteModules,
       window.__reactRouterContext.ssr,
-      window.__reactRouterContext.isSpaMode
+      window.__reactRouterContext.isSpaMode,
     );
     __reactRouterDataRouter._internalSetRoutes(routes);
     routeUpdates.clear();
@@ -99,12 +99,12 @@ function validateRefreshBoundaryAndEnqueueUpdate(
   prevExports,
   nextExports,
   // non-component exports that are handled by the framework (e.g. `meta` and `links` for route modules)
-  acceptExports = []
+  acceptExports = [],
 ) {
   if (
     !predicateOnExport(
       prevExports,
-      (key) => key in nextExports || acceptExports.includes(key)
+      (key) => key in nextExports || acceptExports.includes(key),
     )
   ) {
     return "Could not Fast Refresh (export removed)";
@@ -112,7 +112,7 @@ function validateRefreshBoundaryAndEnqueueUpdate(
   if (
     !predicateOnExport(
       nextExports,
-      (key) => key in prevExports || acceptExports.includes(key)
+      (key) => key in prevExports || acceptExports.includes(key),
     )
   ) {
     return "Could not Fast Refresh (new export)";
@@ -129,7 +129,7 @@ function validateRefreshBoundaryAndEnqueueUpdate(
       if (exports.isLikelyComponentType(value)) return true;
       // Unchanged exports are implicitly handled
       return prevExports[key] === nextExports[key];
-    }
+    },
   );
   if (hasExports && allExportsAreHandledOrUnchanged) {
     enqueueUpdate();

@@ -17,7 +17,7 @@ async function run() {
     let givenVersion = args[0];
     invariant(
       givenVersion != null,
-      `Missing next version. Usage: node version.js [nextVersion]`
+      `Missing next version. Usage: node version.js [nextVersion]`,
     );
 
     // 0. Make sure the working directory is clean
@@ -41,7 +41,7 @@ async function run() {
         pkg.version = version;
       });
       console.log(
-        chalk.green(`  Updated ${packageName} to version ${version}`)
+        chalk.green(`  Updated ${packageName} to version ${version}`),
       );
     }
 

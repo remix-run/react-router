@@ -195,7 +195,7 @@ test.describe("Vite CSS", () => {
               "vite.config.ts": await VITE_CONFIG({ port }),
               ...files,
             },
-            templateName
+            templateName,
           );
           stop = await dev({ cwd, port });
         });
@@ -234,7 +234,7 @@ test.describe("Vite CSS", () => {
               "vite.config.ts": await VITE_CONFIG({ port, base }),
               ...files,
             },
-            templateName
+            templateName,
           );
           stop = await dev({ cwd, port, basename: base });
         });
@@ -269,7 +269,7 @@ test.describe("Vite CSS", () => {
               "server.mjs": EXPRESS_SERVER({ port }),
               ...files,
             },
-            templateName
+            templateName,
           );
           stop = await customDev({ cwd, port });
         });
@@ -303,15 +303,15 @@ test.describe("Vite CSS", () => {
               "vite.config.ts": await VITE_CONFIG({ port }),
               ...files,
             },
-            templateName
+            templateName,
           );
 
           let edit = createEditor(cwd);
           await edit("package.json", (contents) =>
             contents.replace(
               '"sideEffects": false',
-              '"sideEffects": ["*.css.ts"]'
-            )
+              '"sideEffects": ["*.css.ts"]',
+            ),
           );
 
           let { stderr, status } = build({
@@ -357,15 +357,15 @@ test.describe("Vite CSS", () => {
               }),
               ...files,
             },
-            templateName
+            templateName,
           );
 
           let edit = createEditor(cwd);
           await edit("package.json", (contents) =>
             contents.replace(
               '"sideEffects": false',
-              '"sideEffects": ["*.css.ts"]'
-            )
+              '"sideEffects": ["*.css.ts"]',
+            ),
           );
 
           let { stderr, status } = build({
@@ -424,8 +424,8 @@ async function pageLoadWorkflow({
       "#css-vanilla-local",
     ].map(
       async (selector) =>
-        await expect(page.locator(selector)).toHaveCSS("padding", PADDING)
-    )
+        await expect(page.locator(selector)).toHaveCSS("padding", PADDING),
+    ),
   );
 }
 
@@ -458,7 +458,7 @@ async function hmrWorkflow({
       .replace(PADDING, NEW_PADDING)
       .replace(
         "PADDING_INJECTED_VIA_POSTCSS",
-        "NEW_PADDING_INJECTED_VIA_POSTCSS"
+        "NEW_PADDING_INJECTED_VIA_POSTCSS",
       );
 
   await Promise.all([
@@ -478,8 +478,8 @@ async function hmrWorkflow({
       "#css-vanilla-local",
     ].map(
       async (selector) =>
-        await expect(page.locator(selector)).toHaveCSS("padding", NEW_PADDING)
-    )
+        await expect(page.locator(selector)).toHaveCSS("padding", NEW_PADDING),
+    ),
   );
 
   // Ensure CSS updates were handled by HMR

@@ -27,7 +27,7 @@ test.describe(() => {
 
   test("Vite / plugin order validation / MDX", () => {
     expect(buildResult.stderr.toString()).toContain(
-      'Error: The "@mdx-js/rollup" plugin should be placed before the React Router plugin in your Vite config file'
+      'Error: The "@mdx-js/rollup" plugin should be placed before the React Router plugin in your Vite config file',
     );
   });
 });

@@ -35,7 +35,7 @@ It's recommended to avoid using this component in favor of [`useNavigate`](../ho
 ## Signature
 
 ```tsx
-function Navigate({ to, replace, state, relative, }: NavigateProps): null
+function Navigate({ to, replace, state, relative }: NavigateProps): null
 ```
 
 ## Props

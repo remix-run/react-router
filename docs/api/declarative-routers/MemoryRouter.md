@@ -27,7 +27,12 @@ A declarative `<Router>` that stores all entries in memory.
 ## Signature
 
 ```tsx
-function MemoryRouter({ basename, children, initialEntries, initialIndex, }: MemoryRouterProps): React.ReactElement
+function MemoryRouter({
+  basename,
+  children,
+  initialEntries,
+  initialIndex,
+}: MemoryRouterProps): React.ReactElement
 ```
 
 ## Props

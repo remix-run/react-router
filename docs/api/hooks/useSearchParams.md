@@ -81,10 +81,9 @@ However, this also means it's mutable. If you change the object without calling 
 ## Signature
 
 ```tsx
-function useSearchParams(defaultInit?: URLSearchParamsInit): [
-    URLSearchParams,
-    SetURLSearchParams
-]
+function useSearchParams(
+  defaultInit?: URLSearchParamsInit,
+): [URLSearchParams, SetURLSearchParams]
 ```
 
 ## Params

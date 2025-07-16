@@ -28,7 +28,10 @@ history stack.  Useful for non-browser environments without a DOM API.
 ## Signature
 
 ```tsx
-function createMemoryRouter(routes: RouteObject[], opts?: MemoryRouterOpts): DataRouter
+function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: MemoryRouterOpts,
+): DataRouter
 ```
 
 ## Params

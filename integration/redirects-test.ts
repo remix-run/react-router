@@ -211,7 +211,7 @@ test.describe("redirects", () => {
         await app.clickElement("#increment");
         expect(await app.getHtml("#increment")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
-          app.clickSubmitButton("/absolute?index")
+          app.clickSubmitButton("/absolute?index"),
         );
         await page.waitForSelector(`h1:has-text("Landing")`);
         // No hard reload
@@ -226,7 +226,7 @@ test.describe("redirects", () => {
         await app.clickElement("#increment");
         expect(await app.getHtml("#increment")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
-          app.clickSubmitButton("/absolute/content-length")
+          app.clickSubmitButton("/absolute/content-length"),
         );
         await page.waitForSelector(`h1:has-text("Landing")`);
         // No hard reload
@@ -242,7 +242,7 @@ test.describe("redirects", () => {
         await app.clickElement("button");
         expect(await app.getHtml("button")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
-          app.clickLink("/redirect-document/a")
+          app.clickLink("/redirect-document/a"),
         );
         await page.waitForSelector('h1:has-text("Hello B!")');
         // Hard reload resets client side react state
@@ -287,7 +287,7 @@ test.describe("redirects", () => {
         await app.goto("/headers", true);
         await app.clickElement("#loader-redirect");
         await expect(page.locator("#search-params")).toHaveText(
-          "Search Params: ?loader-redirect"
+          "Search Params: ?loader-redirect",
         );
         expect(hasGetHeader).toBe(true);
         expect(hasPostHeader).toBe(false);
@@ -298,7 +298,7 @@ test.describe("redirects", () => {
         await app.goto("/headers", true);
         await app.clickElement("#action-redirect");
         await expect(page.locator("#search-params")).toHaveText(
-          "Search Params: ?action-redirect"
+          "Search Params: ?action-redirect",
         );
         expect(hasGetHeader).toBe(false);
         expect(hasPostHeader).toBe(true);

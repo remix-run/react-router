@@ -13,7 +13,7 @@ test(
   async ({ page, browserName }) => {
     test.skip(
       browserName === "firefox",
-      "FireFox doesn't support browsing to an empty page (aka about:blank)"
+      "FireFox doesn't support browsing to an empty page (aka about:blank)",
     );
 
     let fixture = await createFixture({
@@ -78,7 +78,7 @@ test(
     expect(await app.getHtml()).toContain("cheeseburger");
 
     appFixture.close();
-  }
+  },
 );
 
 test("allows users to pass a client side context to HydratedRouter", async ({

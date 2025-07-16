@@ -170,13 +170,13 @@ import "./index.css";
 import App from "./App";
 
 ReactDOM.createRoot(
-  document.getElementById("root")!
+  document.getElementById("root")!,
 ).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
@@ -192,7 +192,7 @@ ReactDOM.hydrateRoot(
   document,
   <React.StrictMode>
     <HydratedRouter />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 

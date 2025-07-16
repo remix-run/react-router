@@ -4,13 +4,30 @@ title: Scripts
 
 # Scripts
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/ssr/components.tsx
+-->
+
 [MODES: framework]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Scripts.html)
 
-Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.
+Renders the client runtime of your app. It should be rendered inside the
+`<body>` of the document.
+
+If server rendering, you can omit `<Scripts/>` and the app will work as a
+traditional web app without JavaScript, relying solely on HTML and browser
+behaviors.
 
 ```tsx
 import { Scripts } from "react-router";
@@ -27,17 +44,16 @@ export default function Root() {
 }
 ```
 
-If server rendering, you can omit `<Scripts/>` and the app will work as a traditional web app without JavaScript, relying solely on HTML and browser behaviors.
+## Signature
+
+```tsx
+function Scripts(props: ScriptsProps): React.JSX.Element | null
+```
 
 ## Props
 
-### ScriptsProps
+### props
 
-[modes: framework]
+Props for the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
+tag, such as `crossOrigin`, `nonce`, etc.
 
-A couple common attributes:
-
-- `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
-- `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
-
-You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.

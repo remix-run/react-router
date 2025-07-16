@@ -33,7 +33,7 @@ function createApp() {
     // We don't have a real app to test, but it doesn't matter. We won't ever
     // call through to the real createRequestHandler
     // @ts-expect-error
-    createRequestHandler({ build: {} })
+    createRequestHandler({ build: {} }),
   );
 
   return app;
@@ -127,15 +127,15 @@ describe("express createRequestHandler", () => {
         let headers = new Headers({ "X-Time-Of-Year": "most wonderful" });
         headers.append(
           "Set-Cookie",
-          "first=one; Expires=0; Path=/; HttpOnly; Secure; SameSite=Lax"
+          "first=one; Expires=0; Path=/; HttpOnly; Secure; SameSite=Lax",
         );
         headers.append(
           "Set-Cookie",
-          "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax"
+          "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax",
         );
         headers.append(
           "Set-Cookie",
-          "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax"
+          "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax",
         );
         return new Response(null, { headers });
       });
@@ -213,7 +213,7 @@ describe("express createRemixRequest", () => {
 
     expect(remixRequest.method).toBe("GET");
     expect(remixRequest.headers.get("cache-control")).toBe(
-      "max-age=300, s-maxage=3600"
+      "max-age=300, s-maxage=3600",
     );
     expect(remixRequest.headers.get("host")).toBe("localhost:3000");
   });
@@ -236,7 +236,7 @@ describe("express createRemixRequest", () => {
 
     expect(remixRequest.method).toBe("GET");
     expect(remixRequest.headers.get("cache-control")).toBe(
-      "max-age=300, s-maxage=3600"
+      "max-age=300, s-maxage=3600",
     );
     expect(remixRequest.headers.get("host")).toBe("localhost:3000");
     expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");

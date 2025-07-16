@@ -29,7 +29,9 @@ This is useful for components that need to know "active" state, e.g.
 ## Signature
 
 ```tsx
-function useMatch<ParamKey extends ParamParseKey<Path>, Path extends string>(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null
+function useMatch<ParamKey extends ParamParseKey<Path>, Path extends string>(
+  pattern: PathPattern<Path> | Path,
+): PathMatch<ParamKey> | null
 ```
 
 ## Params

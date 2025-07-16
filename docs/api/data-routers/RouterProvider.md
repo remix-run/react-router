@@ -39,7 +39,10 @@ createRoot(document.getElementById("root")).render(
 ## Signature
 
 ```tsx
-function RouterProvider({ router, flushSync: reactDomFlushSyncImpl, }: RouterProviderProps): React.ReactElement
+function RouterProvider({
+  router,
+  flushSync: reactDomFlushSyncImpl,
+}: RouterProviderProps): React.ReactElement
 ```
 
 ## Props

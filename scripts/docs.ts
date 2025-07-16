@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
-import fg from "fast-glob";
 
+import fg from "fast-glob";
 import dox from "dox";
+import prettier from "prettier";
 import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
 
@@ -57,7 +58,7 @@ type SimplifiedComment = {
   codeLink: string;
   modes: Mode[];
   summary: string;
-  reference: string;
+  reference?: string;
   example?: string;
   signature?: string;
   params: {
@@ -73,16 +74,20 @@ const MODES = ["framework", "data", "declarative"] as const;
 const CATEGORIES = [
   "Components",
   "Hooks",
+  "Framework Routers",
   "Data Routers",
   "Declarative Routers",
+  "RSC",
   "Utils",
 ] as const;
 const isComponentApi = (c: SimplifiedComment) =>
   c.category === "Components" ||
+  c.category === "Framework Routers" ||
   c.category === "Declarative Routers" ||
-  c.name === "HydratedRouter" ||
   c.name === "RouterProvider" ||
-  c.name === "StaticRouterProvider";
+  c.name === "StaticRouterProvider" ||
+  c.name === "unstable_RSCStaticRouter" ||
+  c.name === "unstable_RSCHydratedRouter";
 
 // Read a filename from standard input using the node parseArgs utility
 
@@ -111,11 +116,11 @@ const { values: args } = util.parseArgs({
 
 if (!args.path) {
   console.error(
-    "Usage: docs.ts --path <filepath-or-glob> [--api <api1,api2,...>] [--write] [--output <output-dir>]"
+    "Usage: docs.ts --path <filepath-or-glob> [--api <api1,api2,...>] [--write] [--output <output-dir>]",
   );
   console.error("  --path, -p    File path or glob pattern to parse");
   console.error(
-    "  --api, -a     Comma-separated list of specific APIs to generate"
+    "  --api, -a     Comma-separated list of specific APIs to generate",
   );
   console.error("  --write, -w   Write markdown files to output directory");
   console.error("  --output, -o  Output directory (default: docs/api)");
@@ -146,11 +151,15 @@ if (filePaths.length === 0) {
   process.exit(1);
 }
 
+run();
+
 // Generate markdown documentation for all matching files
-filePaths.forEach((filePath) => {
-  console.log(`\nProcessing file: ${filePath}`);
-  generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
-});
+async function run() {
+  for (let filePath of filePaths) {
+    console.log(`\nProcessing file: ${filePath}`);
+    await generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
+  }
+}
 
 function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   const lookup = new Map<string, string>();
@@ -158,7 +167,7 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   // Add existing files if output directory exists
   if (!fs.existsSync(outputDir)) {
     throw new Error(
-      `Docs directory does not exist for cross-linking: ${outputDir}`
+      `Docs directory does not exist for cross-linking: ${outputDir}`,
     );
   }
 
@@ -169,7 +178,8 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   markdownFiles.forEach((filePath) => {
     const relativePath = path
       .relative(outputDir, filePath)
-      .replace(/\.md$/, "");
+      .replace(/\.md$/, "")
+      .replace(/\\/g, "/");
     const apiName = path.basename(relativePath);
 
     if (apiName !== "index") {
@@ -186,7 +196,7 @@ function buildTypedocLinks(outputDir: string) {
   // Prerequisite: `typedoc` has been run first via `npm run docs`
   if (fs.existsSync("public/dev/api.json")) {
     let apiData = JSON.parse(
-      fs.readFileSync("public/dev/api.json", "utf8")
+      fs.readFileSync("public/dev/api.json", "utf8"),
     ) as JSONOutput.ProjectReflection;
 
     apiData.children
@@ -194,7 +204,7 @@ function buildTypedocLinks(outputDir: string) {
       .forEach((child) => processTypedocModule(child, lookup));
   } else {
     console.warn(
-      '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs'
+      '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs',
     );
   }
 
@@ -204,7 +214,7 @@ function buildTypedocLinks(outputDir: string) {
 function processTypedocModule(
   child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
   lookup: Map<string, { href: string; description?: string }>,
-  prefix: string[] = []
+  prefix: string[] = [],
 ) {
   let newPrefix = [...prefix, child.name];
   let moduleName = newPrefix.join(".");
@@ -225,20 +235,20 @@ function processTypedocModule(
       subChild.kind === ReflectionKind.Enum
         ? "enums"
         : subChild.kind === ReflectionKind.Class
-        ? "classes"
-        : subChild.kind === ReflectionKind.Interface
-        ? "interfaces"
-        : subChild.kind === ReflectionKind.TypeAlias
-        ? "types"
-        : subChild.kind === ReflectionKind.Function
-        ? "functions"
-        : subChild.kind === ReflectionKind.Variable
-        ? "variables"
-        : undefined;
+          ? "classes"
+          : subChild.kind === ReflectionKind.Interface
+            ? "interfaces"
+            : subChild.kind === ReflectionKind.TypeAlias
+              ? "types"
+              : subChild.kind === ReflectionKind.Function
+                ? "functions"
+                : subChild.kind === ReflectionKind.Variable
+                  ? "variables"
+                  : undefined;
 
     if (!type) {
       console.warn(
-        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
+        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`,
       );
       return;
     }
@@ -314,13 +324,13 @@ function getDeclarationDescription(child: JSONOutput.DeclarationReflection) {
     .join("");
 }
 
-function generateMarkdownDocs(
+async function generateMarkdownDocs(
   filepath: string,
   apiFilter: string[] | null,
   outputDir?: string,
-  writeFiles?: boolean
+  writeFiles?: boolean,
 ) {
-  let simplifiedComments = parseDocComments(filepath, apiFilter);
+  let simplifiedComments = await parseDocComments(filepath, apiFilter);
   simplifiedComments.forEach((comment) => {
     // Generate markdown content for each public function
     let markdownContent = generateMarkdownForComment(comment);
@@ -341,7 +351,7 @@ function generateMarkdownDocs(
 function writeMarkdownFile(
   comment: SimplifiedComment,
   markdownContent: string,
-  outputDir: string
+  outputDir: string,
 ) {
   // Convert category to lowercase and replace spaces with hyphens for folder name
   const categoryFolder = comment.category.toLowerCase().replace(/\s+/g, "-");
@@ -452,7 +462,7 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
         if (param.name === skipped[0] && description === skipped[1]) {
           if (!comment.params[i + 1].name.startsWith(skipped[0] + ".")) {
             throw new Error(
-              "Expected docs for individual options: " + comment.name
+              "Expected docs for individual options: " + comment.name,
             );
           }
           return;
@@ -491,17 +501,16 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   return markdown;
 }
 
-function parseDocComments(filepath: string, apiFilter: string[] | null) {
+async function parseDocComments(filepath: string, apiFilter: string[] | null) {
   let code = fs.readFileSync(filepath).toString();
   let comments = dox.parseComments(code, { raw: true }) as ParsedComment[];
+  let filteredComments = comments.filter(
+    (c) =>
+      c.tags.some((t) => t.type === "public") &&
+      (!apiFilter || apiFilter.includes(getApiName(c))),
+  );
 
-  return comments
-    .filter(
-      (c) =>
-        c.tags.some((t) => t.type === "public") &&
-        (!apiFilter || apiFilter.includes(getApiName(c)))
-    )
-    .map((c) => simplifyComment(c, filepath));
+  return Promise.all(filteredComments.map((c) => simplifyComment(c, filepath)));
 }
 
 function getApiName(comment: ParsedComment): string {
@@ -525,10 +534,10 @@ function getApiName(comment: ParsedComment): string {
   throw new Error(`Could not determine API name:\n${comment.code}\n`);
 }
 
-function simplifyComment(
+async function simplifyComment(
   comment: ParsedComment,
-  filepath: string
-): SimplifiedComment {
+  filepath: string,
+): Promise<SimplifiedComment> {
   let name = getApiName(comment);
   let unstable = name.startsWith("unstable_");
 
@@ -556,20 +565,17 @@ function simplifyComment(
 
   let example = comment.tags.find((t) => t.type === "example")?.string;
   let additionalExamples = comment.tags.find(
-    (t) => t.type === "additionalExamples"
+    (t) => t.type === "additionalExamples",
   )?.string;
 
   let reference = typedocLookup.get(name)?.href;
   if (!reference) {
-    if (args.write) {
-      throw new Error(`Could not find API in typedoc reference docs: ${name}`);
-    } else {
-      console.warn(`Could not find API in typedoc reference docs: ${name}`);
-      reference = "!!! UNKNOWN !!!";
-    }
+    console.warn(
+      `Warning: Could not find API in typedoc reference docs, skipping reference link: ${name}`,
+    );
   }
 
-  let signature = getSignature(comment.code);
+  let signature = await getSignature(comment.code);
 
   let params: SimplifiedComment["params"] = [];
   comment.tags.forEach((tag) => {
@@ -594,7 +600,7 @@ function simplifyComment(
           description = typedocLookup.get(matches[1])!.description;
         } else {
           throw new Error(
-            `Unable to find cross-referenced documentation for param type: ${matches[1]}`
+            `Unable to find cross-referenced documentation for param type: ${matches[1]}`,
           );
         }
       }
@@ -641,7 +647,7 @@ function isParamTag(tag: Tag): tag is ParamTag {
 
 // Parse the TypeScript code into an AST so we can remove the function body
 // and just grab the signature
-function getSignature(code: string) {
+async function getSignature(code: string) {
   const ast = ts.createSourceFile("example.ts", code, ts.ScriptTarget.Latest);
   if (ast.statements.length === 0) {
     throw new Error(`Expected one or more statements: ${code}`);
@@ -653,7 +659,7 @@ function getSignature(code: string) {
     let modifiedFunction = {
       ...functionDeclaration,
       modifiers: functionDeclaration.modifiers?.filter(
-        (m) => m.kind !== ts.SyntaxKind.ExportKeyword
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword,
       ),
       body: ts.factory.createBlock([], false),
     } as ts.FunctionDeclaration;
@@ -662,14 +668,16 @@ function getSignature(code: string) {
       .createPrinter({ newLine: ts.NewLineKind.LineFeed })
       .printNode(ts.EmitHint.Unspecified, modifiedFunction, ast);
 
-    return newCode.replace("{ }", "").trim();
+    let formatted = await prettier.format(newCode, { parser: "typescript" });
+
+    return formatted.replace("{}", "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
   if (ts.isVariableStatement(ast.statements[0])) {
     let api = code.match(/export const (\w+)/);
     console.log(
-      `Warning: Skipping signature section for \`export const\` component: ${api?.[1]}`
+      `Warning: Skipping signature section for \`export const\` component: ${api?.[1]}`,
     );
     return;
   }
@@ -701,7 +709,7 @@ function resolveLinkTags(text: string): string {
     if (!href) {
       // If not found, return as plain text with a warning
       console.warn(
-        `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`
+        `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`,
       );
       return description;
     }

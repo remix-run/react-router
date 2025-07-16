@@ -122,7 +122,7 @@ test.describe("Fog of War", () => {
 
     expect(html).toContain("window.__reactRouterManifest = {");
     expect(html).not.toContain(
-      '<link rel="modulepreload" href="/assets/manifest-'
+      '<link rel="modulepreload" href="/assets/manifest-',
     );
     expect(html).toContain('"root": {');
     expect(html).toContain('"routes/_index": {');
@@ -135,8 +135,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toContain("routes/a");
   });
 
@@ -150,8 +150,8 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
@@ -169,21 +169,21 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
     await page.waitForSelector("#a");
 
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -199,19 +199,19 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -260,19 +260,19 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a"]
+      () => (window as any).__reactRouterManifest.routes["routes/a"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
   });
 
@@ -304,8 +304,8 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
@@ -315,8 +315,8 @@ test.describe("Fog of War", () => {
     // /a/b is not discovered yet even thought it's rendered
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     // /a/b gets discovered on click
@@ -325,8 +325,8 @@ test.describe("Fog of War", () => {
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -373,12 +373,12 @@ test.describe("Fog of War", () => {
 
     await app.goto("/", true);
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a"]
+      () => (window as any).__reactRouterManifest.routes["routes/a"],
     );
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickSubmitButton("/a");
@@ -408,21 +408,21 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickLink("/a");
     await page.waitForSelector("form");
 
     await page.waitForFunction(
-      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"],
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
@@ -477,8 +477,8 @@ test.describe("Fog of War", () => {
     await app.goto("/deep", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/deep", "routes/_index"]);
 
     // Without pre-loading the index, we'd "match" `/` to just the root route
@@ -571,8 +571,8 @@ test.describe("Fog of War", () => {
     await app.goto("/parent/child/grandchild", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual([
       "root",
       "routes/parent",
@@ -686,8 +686,8 @@ test.describe("Fog of War", () => {
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual([
       "root",
       "routes/parent",
@@ -779,8 +779,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$slug"]);
     expect(manifestRequests).toEqual([
       expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
@@ -801,8 +801,8 @@ test.describe("Fog of War", () => {
     ]);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$slug", "routes/static"]);
   });
 
@@ -866,8 +866,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$"]);
     expect(manifestRequests).toEqual([
       expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
@@ -888,8 +888,8 @@ test.describe("Fog of War", () => {
     ]);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
   });
 
@@ -946,8 +946,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
 
@@ -1034,8 +1034,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
 
@@ -1128,8 +1128,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
 
@@ -1194,8 +1194,8 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#a")).toMatch("A LOADER");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
   });
 
@@ -1233,7 +1233,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&version=[a-z0-9]{8}/
+        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&version=[a-z0-9]{8}/,
       ),
     ]);
   });
@@ -1275,7 +1275,7 @@ test.describe("Fog of War", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&p=%2Fc&p=%2Fd&p=%2Fe&p=%2Ff&p=%2F/
+        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&p=%2Fc&p=%2Fd&p=%2Fe&p=%2Ff&p=%2F/,
       ),
     ]);
   });
@@ -1316,22 +1316,22 @@ test.describe("Fog of War", () => {
     await app.goto("/a", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/a", "routes/_index"]);
 
     // /a/b gets discovered on click
     await app.clickElement("[data-link]");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     expect(await (await page.$("body"))?.textContent()).not.toContain(
-      "Not Found"
+      "Not Found",
     );
     await page.waitForSelector("#b");
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/a", "routes/_index", "routes/a.b"]);
   });
 
@@ -1380,8 +1380,8 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index"]);
 
     await app.clickLink("/a/b/c");
@@ -1390,8 +1390,8 @@ test.describe("Fog of War", () => {
     // /a/b is not discovered yet even thought it's rendered
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual([
       "root",
       "routes/_index",
@@ -1435,8 +1435,8 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__reactRouterManifest.routes)
-      )
+        Object.keys((window as any).__reactRouterManifest.routes),
+      ),
     ).toEqual(["root", "routes/_index", "routes/a"]);
     expect(manifestRequests).toEqual([
       expect.stringMatching(/\/custom-manifest\?p=%2F&p=%2Fa&version=/),
@@ -1493,15 +1493,15 @@ test.describe("Fog of War", () => {
 
       expect(html).not.toContain("window.__reactRouterManifest = {");
       expect(html).toContain(
-        '<link rel="modulepreload" href="/assets/manifest-'
+        '<link rel="modulepreload" href="/assets/manifest-',
       );
 
       // Linking to A succeeds
       await app.goto("/", true);
       expect(
         await page.evaluate(() =>
-          Object.keys((window as any).__reactRouterManifest.routes)
-        )
+          Object.keys((window as any).__reactRouterManifest.routes),
+        ),
       ).toEqual([
         "root",
         "routes/_index",
@@ -1611,13 +1611,13 @@ test.describe("Fog of War", () => {
         buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
         buildStdio.on("error", (err) => reject(err));
         buildStdio.on("end", () =>
-          resolve(Buffer.concat(chunks).toString("utf8"))
+          resolve(Buffer.concat(chunks).toString("utf8")),
         );
       });
 
       expect(err).toEqual(new Error("Build failed, check the output above"));
       expect(buildOutput).toContain(
-        'Error: The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`'
+        'Error: The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`',
       );
       console.error = ogConsole;
     });

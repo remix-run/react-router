@@ -110,13 +110,13 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let templateName = init.templateName ?? defaultTemplateName;
   let projectDir = await createFixtureProject(init, mode);
   let buildPath = url.pathToFileURL(
-    path.join(projectDir, "build/server/index.js")
+    path.join(projectDir, "build/server/index.js"),
   ).href;
 
   let getBrowserAsset = async (asset: string) => {
     return readFile(
       path.join(projectDir, "public", asset.replace(/^\//, "")),
-      "utf8"
+      "utf8",
     );
   };
 
@@ -128,7 +128,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       prerender: init.prerender,
       requestDocument() {
         let html = readFileSync(
-          path.join(projectDir, "build/client/index.html")
+          path.join(projectDir, "build/client/index.html"),
         );
         return new Response(html, {
           headers: {
@@ -163,7 +163,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
           projectDir,
           "build",
           "client",
-          "__spa-fallback.html"
+          "__spa-fallback.html",
         );
         let html = existsSync(mainPath)
           ? readFileSync(mainPath)
@@ -205,7 +205,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       serverBuild?.default?.requestHandler) as RequestHandler;
     if (!handler) {
       throw new Error(
-        "Expected a 'requestHandler' export in Parcel server build"
+        "Expected a 'requestHandler' export in Parcel server build",
       );
     }
   } else {
@@ -305,7 +305,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           let parsedPort = parseInt(matches[1], 10);
           if (port !== parsedPort) {
             throw new Error(
-              `Expected react-router-serve to start on port ${port}, but it started on port ${parsedPort}`
+              `Expected react-router-serve to start on port ${port}, but it started on port ${parsedPort}`,
             );
           }
         },
@@ -319,7 +319,9 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         let app = express();
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
         app.get("*", (_, res) =>
-          res.sendFile(path.join(fixture.projectDir, "build/client/index.html"))
+          res.sendFile(
+            path.join(fixture.projectDir, "build/client/index.html"),
+          ),
         );
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });
@@ -331,7 +333,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         let port = await getPort();
         let app = express();
         app.use(
-          express.static(path.join(fixture.projectDir, "build", "client"))
+          express.static(path.join(fixture.projectDir, "build", "client")),
         );
         app.get("*", (req, res, next) => {
           let dir = path.join(fixture.projectDir, "build", "client");
@@ -368,7 +370,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           let parsedPort = parseInt(matches[1], 10);
           if (port !== parsedPort) {
             throw new Error(
-              `Expected Parcel build server to start on port ${port}, but it started on port ${parsedPort}`
+              `Expected Parcel build server to start on port ${port}, but it started on port ${parsedPort}`,
             );
           }
         },
@@ -379,7 +381,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     const build = fixture.build;
     if (!build) {
       return Promise.reject(
-        new Error("Cannot start app server without a build")
+        new Error("Cannot start app server without a build"),
       );
     }
 
@@ -393,7 +395,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         createExpressHandler({
           build,
           mode: mode || ServerMode.Production,
-        })
+        }),
       );
 
       let server = app.listen(port);
@@ -428,7 +430,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 
 export async function createFixtureProject(
   init: FixtureInit = {},
-  mode?: ServerMode
+  mode?: ServerMode,
 ): Promise<string> {
   let templateName = init.templateName ?? defaultTemplateName;
   let integrationTemplateDir = path.resolve(__dirname, templateName);
@@ -440,11 +442,11 @@ export async function createFixtureProject(
   await cp(integrationTemplateDir, projectDir, { recursive: true });
 
   let hasViteConfig = Object.keys(init.files ?? {}).some((filename) =>
-    filename.startsWith("vite.config.")
+    filename.startsWith("vite.config."),
   );
 
   let hasReactRouterConfig = Object.keys(init.files ?? {}).some((filename) =>
-    filename.startsWith("react-router.config.")
+    filename.startsWith("react-router.config."),
   );
 
   let { spaMode } = init;
@@ -467,7 +469,7 @@ export async function createFixtureProject(
           }),
       ...init.files,
     },
-    projectDir
+    projectDir,
   );
 
   if (templateName.includes("parcel")) {
@@ -482,7 +484,7 @@ export async function createFixtureProject(
 function parcelBuild(
   projectDir: string,
   buildStdio?: Writable,
-  mode?: ServerMode
+  mode?: ServerMode,
 ) {
   let parcelBin = "node_modules/parcel/lib/bin.js";
 
@@ -518,7 +520,7 @@ function parcelBuild(
 function reactRouterBuild(
   projectDir: string,
   buildStdio?: Writable,
-  mode?: ServerMode
+  mode?: ServerMode,
 ) {
   // We have a "require" instead of a dynamic import in readConfig gated
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
@@ -563,7 +565,7 @@ function reactRouterBuild(
 
 async function writeTestFiles(
   files: Record<string, string> | undefined,
-  dir: string
+  dir: string,
 ) {
   await Promise.all(
     Object.keys(files ?? {}).map(async (filename) => {
@@ -572,6 +574,6 @@ async function writeTestFiles(
       let file = files![filename];
 
       await writeFile(filePath, stripIndent(file));
-    })
+    }),
   );
 }

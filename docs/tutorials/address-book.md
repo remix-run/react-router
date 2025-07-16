@@ -270,7 +270,7 @@ export default function Contact() {
             method="post"
             onSubmit={(event) => {
               const response = confirm(
-                "Please confirm you want to delete this record."
+                "Please confirm you want to delete this record.",
               );
               if (!response) {
                 event.preventDefault();
@@ -999,7 +999,7 @@ export default [
     route("contacts/:contactId", "routes/contact.tsx"),
     route(
       "contacts/:contactId/edit",
-      "routes/edit-contact.tsx"
+      "routes/edit-contact.tsx",
     ),
   ]),
   route("about", "routes/about.tsx"),
@@ -1238,8 +1238,8 @@ export default function SidebarLayout({
                   isActive
                     ? "active"
                     : isPending
-                    ? "pending"
-                    : ""
+                      ? "pending"
+                      : ""
                 }
                 to={`contacts/${contact.id}`}
               >
@@ -1315,7 +1315,7 @@ If we review code in the contact route, we can find the delete button looks like
   method="post"
   onSubmit={(event) => {
     const response = confirm(
-      "Please confirm you want to delete this record."
+      "Please confirm you want to delete this record.",
     );
     if (!response) {
       event.preventDefault();
@@ -1346,7 +1346,7 @@ export default [
   // existing routes
   route(
     "contacts/:contactId/destroy",
-    "routes/destroy-contact.tsx"
+    "routes/destroy-contact.tsx",
   ),
   // existing routes
 ] satisfies RouteConfig;
@@ -1684,7 +1684,7 @@ export default function SidebarLayout({
   const searching =
     navigation.location &&
     new URLSearchParams(navigation.location.search).has(
-      "q"
+      "q",
     );
 
   // existing code

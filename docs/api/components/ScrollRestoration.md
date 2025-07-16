@@ -48,7 +48,11 @@ This component renders an inline `<script>` to prevent scroll flashing. The `non
 ## Signature
 
 ```tsx
-function ScrollRestoration({ getKey, storageKey, ...props }: ScrollRestorationProps)
+function ScrollRestoration({
+  getKey,
+  storageKey,
+  ...props
+}: ScrollRestorationProps)
 ```
 
 ## Props

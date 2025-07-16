@@ -31,7 +31,14 @@ in web browsers or a `<StaticRouter>` for server rendering.
 ## Signature
 
 ```tsx
-function Router({ basename: basenameProp = "/", children = null, location: locationProp, navigationType = NavigationType.Pop, navigator, static: staticProp = false, }: RouterProps): React.ReactElement | null
+function Router({
+  basename: basenameProp = "/",
+  children = null,
+  location: locationProp,
+  navigationType = NavigationType.Pop,
+  navigator,
+  static: staticProp = false,
+}: RouterProps): React.ReactElement | null
 ```
 
 ## Props

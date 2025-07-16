@@ -27,7 +27,7 @@ A declarative `<Router>` using the browser history API for client side routing.
 ## Signature
 
 ```tsx
-function BrowserRouter({ basename, children, window, }: BrowserRouterProps)
+function BrowserRouter({ basename, children, window }: BrowserRouterProps)
 ```
 
 ## Props

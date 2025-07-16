@@ -36,9 +36,14 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useHref(to: To, { relative }: {
+function useHref(
+  to: To,
+  {
+    relative,
+  }: {
     relative?: RelativeRoutingType;
-} = {}): string
+  } = ,
+): string {}
 ```
 
 ## Params

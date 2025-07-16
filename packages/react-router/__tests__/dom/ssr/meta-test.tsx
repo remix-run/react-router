@@ -46,7 +46,7 @@ describe("meta", () => {
             },
           },
         }}
-      />
+      />,
     );
 
     expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
@@ -411,7 +411,7 @@ describe("meta", () => {
     ]);
 
     let { container } = render(
-      <RoutesStub hydrationData={{ errors: { index: new Error("Oh no!") } }} />
+      <RoutesStub hydrationData={{ errors: { index: new Error("Oh no!") } }} />,
     );
     expect(getDocumentHtmlForElement(container)).toMatchInlineSnapshot(`
       "<html>

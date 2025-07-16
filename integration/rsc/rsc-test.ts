@@ -125,7 +125,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}/`);
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: Loader Data"
+          "Home: Loader Data",
         );
 
         // Ensure this is actually using RSC lol
@@ -185,7 +185,7 @@ implementations.forEach((implementation) => {
         // Verify server component rendered
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: Loader Data"
+          "Home: Loader Data",
         );
 
         // Verify client component rendered
@@ -300,7 +300,7 @@ implementations.forEach((implementation) => {
         // Load a server route
         await page.waitForSelector("[data-page=home]");
         expect(await page.locator("[data-content]").textContent()).toBe(
-          "Home Page Data"
+          "Home Page Data",
         );
 
         // Navigate to a client route
@@ -309,26 +309,26 @@ implementations.forEach((implementation) => {
 
         // Verify server data
         expect(await page.locator("[data-server-count]").textContent()).toBe(
-          "Server count: 1"
+          "Server count: 1",
         );
         expect(await page.locator("[data-client-count]").textContent()).toBe(
-          "Client count: 1"
+          "Client count: 1",
         );
 
         // Increment via the client component
         await page.click("[data-increment]");
         expect(await page.locator("[data-server-count]").textContent()).toBe(
-          "Server count: 1"
+          "Server count: 1",
         );
         expect(await page.locator("[data-client-count]").textContent()).toBe(
-          "Client count: 2"
+          "Client count: 2",
         );
 
         // Navigate back to a server route
         await page.click("a[href='/']");
         await page.waitForSelector("[data-page=home]");
         expect(await page.locator("[data-content]").textContent()).toBe(
-          "Home Page Data"
+          "Home Page Data",
         );
 
         // Ensure this is using RSC
@@ -431,36 +431,36 @@ implementations.forEach((implementation) => {
 
         // Verify server data
         expect(await page.locator("[data-server-count]").textContent()).toBe(
-          "Server count: 1"
+          "Server count: 1",
         );
         expect(await page.locator("[data-client-count]").textContent()).toBe(
-          "Client count: 1"
+          "Client count: 1",
         );
 
         // Increment via the client component
         await page.click("[data-increment]");
         expect(await page.locator("[data-server-count]").textContent()).toBe(
-          "Server count: 1"
+          "Server count: 1",
         );
         expect(await page.locator("[data-client-count]").textContent()).toBe(
-          "Client count: 2"
+          "Client count: 2",
         );
 
         // Navigate to a server route
         await page.click("a[href='/']");
         await page.waitForSelector("[data-page=home]");
         expect(await page.locator("[data-content]").textContent()).toBe(
-          "Home Page Data"
+          "Home Page Data",
         );
 
         // Navigate back to a client route
         await page.click("a[href='/dashboard']");
         await page.waitForSelector("[data-page=dashboard]");
         expect(await page.locator("[data-server-count]").textContent()).toBe(
-          "Server count: 1"
+          "Server count: 1",
         );
         expect(await page.locator("[data-client-count]").textContent()).toBe(
-          "Client count: 1"
+          "Client count: 1",
         );
 
         // Ensure this is using RSC
@@ -506,7 +506,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}/`);
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: test-context-value"
+          "Home: test-context-value",
         );
 
         // Ensure this is actually using RSC
@@ -609,19 +609,19 @@ implementations.forEach((implementation) => {
         });
 
         const getResponse = await request.get(
-          `http://localhost:${port}/resource`
+          `http://localhost:${port}/resource`,
         );
         expect(getResponse?.status()).toBe(200);
         expect((await getResponse?.json()).contextValue).toBe(
-          "test-context-value"
+          "test-context-value",
         );
 
         const postResponse = await request.post(
-          `http://localhost:${port}/resource`
+          `http://localhost:${port}/resource`,
         );
         expect(postResponse?.status()).toBe(200);
         expect((await postResponse?.json()).contextValue).toBe(
-          "test-context-value"
+          "test-context-value",
         );
 
         await page.goto(`http://localhost:${port}/`);
@@ -630,7 +630,7 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-testid=resource-data]");
         const fetcherData = JSON.parse(
           (await page.locator("[data-testid=resource-data]").textContent()) ||
-            "{}"
+            "{}",
         );
         expect(fetcherData.contextValue).toBe("test-context-value");
 
@@ -716,7 +716,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}/`);
         await page.waitForSelector("[data-context-value]");
         expect(await page.locator("[data-context-value]").textContent()).toBe(
-          "Context value: test-context-value"
+          "Context value: test-context-value",
         );
 
         // Ensure this is using RSC
@@ -814,7 +814,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}/`);
         await page.waitForSelector("[data-client-context]");
         expect(await page.locator("[data-client-context]").textContent()).toBe(
-          "Client context value: client-context-value"
+          "Client context value: client-context-value",
         );
 
         // Ensure this is using RSC
@@ -901,7 +901,7 @@ implementations.forEach((implementation) => {
           },
         });
         const getResponse = await request.get(
-          `http://localhost:${port}/resource`
+          `http://localhost:${port}/resource`,
         );
         expect(getResponse?.status()).toBe(200);
         expect(await getResponse?.json()).toEqual({
@@ -912,7 +912,7 @@ implementations.forEach((implementation) => {
           `http://localhost:${port}/resource`,
           {
             data: { hello: "world" },
-          }
+          },
         );
         expect(postResponse?.status()).toBe(200);
         expect(await postResponse?.json()).toEqual({
@@ -925,12 +925,12 @@ implementations.forEach((implementation) => {
 
         await page.waitForSelector("[data-testid=resource-data]");
         expect(
-          await page.locator("[data-testid=resource-data]").textContent()
+          await page.locator("[data-testid=resource-data]").textContent(),
         ).toBe(
           JSON.stringify({
             message: "Hello from resource route!",
             echo: "hello=world",
-          })
+          }),
         );
       });
     });
@@ -1008,23 +1008,23 @@ implementations.forEach((implementation) => {
       });
 
       const getResponse = await request.get(
-        `http://localhost:${port}/no-loader-resource`
+        `http://localhost:${port}/no-loader-resource`,
       );
       expect(getResponse?.status()).toBe(400);
       expect(await getResponse?.text()).toBe(
-        'Error: You made a GET request to "/no-loader-resource" but did not provide a `loader` for route "no-loader-resource", so there is no way to handle the request.'
+        'Error: You made a GET request to "/no-loader-resource" but did not provide a `loader` for route "no-loader-resource", so there is no way to handle the request.',
       );
 
       const postResponse = await request.post(
-        `http://localhost:${port}/no-action-resource`
+        `http://localhost:${port}/no-action-resource`,
       );
       expect(postResponse?.status()).toBe(405);
       expect(await postResponse?.text()).toBe(
-        'Error: You made a POST request to "/no-action-resource" but did not provide an `action` for route "no-action-resource", so there is no way to handle the request.'
+        'Error: You made a POST request to "/no-action-resource" but did not provide an `action` for route "no-action-resource", so there is no way to handle the request.',
       );
 
       const postWithActionResponse = await request.post(
-        `http://localhost:${port}/no-loader-resource`
+        `http://localhost:${port}/no-loader-resource`,
       );
       expect(postWithActionResponse?.status()).toBe(200);
       expect(await postWithActionResponse?.json()).toEqual({
@@ -1032,7 +1032,7 @@ implementations.forEach((implementation) => {
       });
 
       const getWithLoaderResponse = await request.get(
-        `http://localhost:${port}/no-action-resource`
+        `http://localhost:${port}/no-action-resource`,
       );
       expect(getWithLoaderResponse?.status()).toBe(200);
       expect(await getWithLoaderResponse?.json()).toEqual({
@@ -1092,7 +1092,7 @@ implementations.forEach((implementation) => {
         // Verify initial server render
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: (0)"
+          "Home: (0)",
         );
 
         // Submit the form to trigger server function
@@ -1113,7 +1113,7 @@ implementations.forEach((implementation) => {
         // FIXME: Waiting on parcel support: https://github.com/parcel-bundler/parcel/pull/10165
         test.skip(
           implementation.name === "parcel",
-          "Not supported in parcel yet"
+          "Not supported in parcel yet",
         );
 
         let port = await getPort();
@@ -1156,7 +1156,7 @@ implementations.forEach((implementation) => {
         // Verify initial server render
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: Default (0)"
+          "Home: Default (0)",
         );
 
         // Submit the form to trigger server function
@@ -1164,13 +1164,13 @@ implementations.forEach((implementation) => {
 
         // Verify server function updated the UI
         await expect(page.locator("[data-home]")).toHaveText(
-          "Home: Updated (1)"
+          "Home: Updated (1)",
         );
 
         // Submit again to ensure server functions work repeatedly
         await page.click("[data-submit]");
         await expect(page.locator("[data-home]")).toHaveText(
-          "Home: Updated (2)"
+          "Home: Updated (2)",
         );
 
         // Ensure this is using RSC
@@ -1228,27 +1228,27 @@ implementations.forEach((implementation) => {
         // Verify initial server render
         await page.waitForSelector("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 0"
+          "Count: 0",
         );
         await page.click("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 1"
+          "Count: 1",
         );
 
         // Submit the form to trigger server function redirect
         await page.click("[data-submit]");
 
         await expect(page).toHaveURL(
-          `http://localhost:${port}/?redirected=true`
+          `http://localhost:${port}/?redirected=true`,
         );
 
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 1"
+          "Count: 1",
         );
         // Validate things are still interactive after redirect
         await page.click("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 2"
+          "Count: 2",
         );
 
         // Ensure this is using RSC
@@ -1310,11 +1310,11 @@ implementations.forEach((implementation) => {
         // Verify initial server render
         await page.waitForSelector("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 0"
+          "Count: 0",
         );
         await page.click("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 1"
+          "Count: 1",
         );
 
         // Submit the form to trigger server function redirect
@@ -1325,12 +1325,12 @@ implementations.forEach((implementation) => {
         await page.waitForURL(`http://localhost:${port}/?redirected=true`);
 
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 1"
+          "Count: 1",
         );
         // Validate things are still interactive after redirect
         await page.click("[data-count]");
         expect(await page.locator("[data-count]").textContent()).toBe(
-          "Count: 2"
+          "Count: 2",
         );
 
         // Ensure this is using RSC
@@ -1385,7 +1385,7 @@ implementations.forEach((implementation) => {
         // Verify initial server render
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: (0)"
+          "Home: (0)",
         );
         await expect(page.locator("[data-home-ref]")).toHaveText("good");
 
@@ -1432,7 +1432,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}${basename}`);
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home: Loader Data"
+          "Home: Loader Data",
         );
 
         // Ensure this is using RSC
@@ -1518,7 +1518,7 @@ implementations.forEach((implementation) => {
         await page.waitForURL(`http://localhost:${port}${basename}target`);
         await page.waitForSelector("[data-target]");
         expect(await page.locator("[data-target]").textContent()).toBe(
-          "Target Route"
+          "Target Route",
         );
 
         // Ensure this is using RSC
@@ -1611,7 +1611,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}${basename}action-redirect`);
         await page.waitForSelector("[data-action-redirect]");
         expect(await page.locator("[data-action-redirect]").textContent()).toBe(
-          "Action Redirect Route"
+          "Action Redirect Route",
         );
 
         // Mutate the window object so we can check if the navigation occurred
@@ -1628,7 +1628,7 @@ implementations.forEach((implementation) => {
         await page.waitForURL(`http://localhost:${port}${basename}target`);
         await page.waitForSelector("[data-target]");
         expect(await page.locator("[data-target]").textContent()).toBe(
-          "Target Route"
+          "Target Route",
         );
 
         // Ensure a document navigation occurred
@@ -1636,7 +1636,7 @@ implementations.forEach((implementation) => {
           await page.evaluate(() => {
             // @ts-expect-error
             return window.__isWithinSameBrowserContext;
-          })
+          }),
         ).not.toBe(true);
 
         // Ensure this is using RSC
@@ -1721,7 +1721,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}${basename}`);
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home Route"
+          "Home Route",
         );
 
         // Click link to redirect route
@@ -1731,7 +1731,7 @@ implementations.forEach((implementation) => {
         await page.waitForURL(`http://localhost:${port}${basename}target`);
         await page.waitForSelector("[data-target]");
         expect(await page.locator("[data-target]").textContent()).toBe(
-          "Target Route"
+          "Target Route",
         );
 
         // Ensure this is using RSC
@@ -1824,7 +1824,7 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}${basename}action-redirect`);
         await page.waitForSelector("[data-action-redirect]");
         expect(await page.locator("[data-action-redirect]").textContent()).toBe(
-          "Action Redirect Route"
+          "Action Redirect Route",
         );
 
         // Mutate the window object so we can check if the navigation occurred
@@ -1841,7 +1841,7 @@ implementations.forEach((implementation) => {
         await page.waitForURL(`http://localhost:${port}${basename}target`);
         await page.waitForSelector("[data-target]");
         expect(await page.locator("[data-target]").textContent()).toBe(
-          "Target Route"
+          "Target Route",
         );
 
         // Ensure a client-side navigation occurred
@@ -1849,7 +1849,7 @@ implementations.forEach((implementation) => {
           await page.evaluate(() => {
             // @ts-expect-error
             return window.__isWithinSameBrowserContext;
-          })
+          }),
         ).toBe(true);
 
         // Ensure this is using RSC
@@ -1955,14 +1955,14 @@ implementations.forEach((implementation) => {
         await page.goto(`http://localhost:${port}${basename}`);
         await page.waitForSelector("[data-home]");
         expect(await page.locator("[data-home]").textContent()).toBe(
-          "Home Route"
+          "Home Route",
         );
 
         // Navigate to redirect route via client navigation
         await page.click("[data-link-to-redirect]");
         await page.waitForSelector("[data-redirect]");
         expect(await page.locator("[data-redirect]").textContent()).toBe(
-          "Server Action Redirect Route"
+          "Server Action Redirect Route",
         );
 
         // Submit the form to trigger server action redirect
@@ -1972,7 +1972,7 @@ implementations.forEach((implementation) => {
         await page.waitForURL(`http://localhost:${port}${basename}target`);
         await page.waitForSelector("[data-target]");
         expect(await page.locator("[data-target]").textContent()).toBe(
-          "Target Route"
+          "Target Route",
         );
 
         // Ensure this is using RSC
@@ -2082,14 +2082,14 @@ implementations.forEach((implementation) => {
           await page.goto(`http://localhost:${port}${basename}`);
           await page.waitForSelector("[data-home]");
           expect(await page.locator("[data-home]").textContent()).toBe(
-            "Home Route"
+            "Home Route",
           );
 
           // Navigate to redirect route
           await page.click("[data-link-to-redirect]");
           await page.waitForSelector("[data-redirect]");
           expect(await page.locator("[data-redirect]").textContent()).toBe(
-            "Server Action Redirect Route"
+            "Server Action Redirect Route",
           );
 
           // Submit the form to trigger server action redirect
@@ -2099,7 +2099,7 @@ implementations.forEach((implementation) => {
           await page.waitForURL(`http://localhost:${port}${basename}target`);
           await page.waitForSelector("[data-target]");
           expect(await page.locator("[data-target]").textContent()).toBe(
-            "Target Route"
+            "Target Route",
           );
 
           // Ensure this is using RSC
@@ -2152,7 +2152,7 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-error-title]");
         await page.waitForSelector("[data-error-message]");
         expect(await page.locator("[data-error-message]").textContent()).toBe(
-          "Intentional error from loader"
+          "Intentional error from loader",
         );
 
         // Ensure this is using RSC
@@ -2201,8 +2201,327 @@ implementations.forEach((implementation) => {
         await page.waitForSelector("[data-error-title]");
         await page.waitForSelector("[data-error-message]");
         expect(await page.locator("[data-error-message]").textContent()).toBe(
-          "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error."
+          "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
         );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+    });
+
+    test.describe("Route Client Component Props", () => {
+      test("Passes props to client route component", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export { default, clientLoader, clientAction } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              import { Form } from "react-router";
+
+              export async function clientLoader() {
+                return { message: "Hello from client loader!" };
+              }
+
+              export async function clientAction({ request }) {
+                const formData = await request.formData();
+                const name = formData.get("name") as string;
+                return { actionResult: "Hello " + name + " from client action!" };
+              }
+
+              export default function HomeRoute({ loaderData, actionData, matches, params }) {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    {loaderData && (
+                      <p data-loader-data>{loaderData.message}</p>
+                    )}
+                    {actionData && (
+                      <p data-action-data>{actionData.actionResult}</p>
+                    )}
+                    {matches && (
+                      <div data-matches>
+                        <p data-matches-ids>matches ids: {matches.map(match => match.id).join(", ")}</p>
+                      </div>
+                    )}
+                    {params && (
+                      <div data-params>
+                        <p data-params-type>typeof params: {typeof params}</p>
+                        <p data-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                    <Form method="post">
+                      <input name="name" data-name-input />
+                      <button type="submit" data-submit-button>
+                        Submit Action
+                      </button>
+                    </Form>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify loader data is passed
+        await page.waitForSelector("[data-loader-data]");
+        expect(await page.locator("[data-loader-data]").textContent()).toBe(
+          "Hello from client loader!",
+        );
+
+        // Verify params are passed (empty for home route)
+        await page.waitForSelector("[data-params]");
+        await page.waitForSelector("[data-params-type]");
+        await page.waitForSelector("[data-params-count]");
+        expect(await page.locator("[data-params-type]").textContent()).toBe(
+          "typeof params: object",
+        );
+        expect(await page.locator("[data-params-count]").textContent()).toBe(
+          "params count: 0",
+        );
+
+        // Verify matches are passed
+        await page.waitForSelector("[data-matches]");
+        await page.waitForSelector("[data-matches-ids]");
+        expect(await page.locator("[data-matches-ids]").textContent()).toBe(
+          "matches ids: root, home",
+        );
+
+        // Submit the form to trigger the client action
+        await page.fill("[data-name-input]", "World");
+        await page.click("[data-submit-button]");
+
+        // Verify the action data is displayed
+        await page.waitForSelector("[data-action-data]");
+        expect(await page.locator("[data-action-data]").textContent()).toBe(
+          "Hello World from client action!",
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Passes props to client ErrorBoundary when error is thrown in client loader", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export { default, clientLoader, ErrorBoundary } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              export async function clientLoader() {
+                throw new Error("Intentional error from client loader");
+              }
+
+              export function ErrorBoundary({ error, params }) {
+                return (
+                  <div>
+                    <h2 data-error-title>Error Caught!</h2>
+                    <p data-error-message>{error.message}</p>
+                    {params && (
+                      <div data-error-params>
+                        <p data-error-params-type>typeof params: {typeof params}</p>
+                        <p data-error-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2>Home Route</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify error boundary is shown
+        await page.waitForSelector("[data-error-title]");
+        await page.waitForSelector("[data-error-message]");
+        expect(await page.locator("[data-error-title]").textContent()).toBe(
+          "Error Caught!",
+        );
+        expect(await page.locator("[data-error-message]").textContent()).toBe(
+          "Intentional error from client loader",
+        );
+
+        // Verify params are passed to error boundary
+        await page.waitForSelector("[data-error-params]");
+        await page.waitForSelector("[data-error-params-type]");
+        await page.waitForSelector("[data-error-params-count]");
+        expect(
+          await page.locator("[data-error-params-type]").textContent(),
+        ).toBe("typeof params: object");
+        expect(
+          await page.locator("[data-error-params-count]").textContent(),
+        ).toBe("params count: 0");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Passes props to client ErrorBoundary when error is thrown in server loader", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          dev: true,
+          files: {
+            "src/routes/home.tsx": js`
+              export function loader() {
+                throw new Error("Intentional error from server loader");
+              }
+
+              export default function HomeRoute() {
+                return <h2>This should not be rendered</h2>;
+              }
+
+              export { ErrorBoundary } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              export function ErrorBoundary({ error, params }) {
+                return (
+                  <div>
+                    <h2 data-error-title>Error Caught!</h2>
+                    <p data-error-message>{error.message}</p>
+                    {params && (
+                      <div data-error-params>
+                        <p data-error-params-type>typeof params: {typeof params}</p>
+                        <p data-error-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify error boundary is shown
+        await page.waitForSelector("[data-error-title]");
+        await page.waitForSelector("[data-error-message]");
+        expect(await page.locator("[data-error-title]").textContent()).toBe(
+          "Error Caught!",
+        );
+        expect(await page.locator("[data-error-message]").textContent()).toBe(
+          "Intentional error from server loader",
+        );
+
+        // Verify params are passed to error boundary
+        await page.waitForSelector("[data-error-params]");
+        await page.waitForSelector("[data-error-params-type]");
+        await page.waitForSelector("[data-error-params-count]");
+        expect(
+          await page.locator("[data-error-params-type]").textContent(),
+        ).toBe("typeof params: object");
+        expect(
+          await page.locator("[data-error-params-count]").textContent(),
+        ).toBe("params count: 0");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Passes props to client HydrateFallback", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export { default, clientLoader, HydrateFallback } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              export async function clientLoader() {
+                const pollingPromise = (async () => {
+                  while (globalThis.unblockClientLoader !== true) {
+                    await new Promise((resolve) => setTimeout(resolve, 0));
+                  }
+                })();
+                const timeoutPromise = new Promise((_, reject) => {
+                  setTimeout(() => reject(new Error("Client loader wasn't unblocked after 5s")), 5000);
+                });
+                await Promise.race([pollingPromise, timeoutPromise]);
+                return { message: "Hello from client loader!" };
+              }
+
+              export function HydrateFallback({ params }) {
+                return (
+                  <div>
+                    <h2 data-hydrate-fallback>Hydrate Fallback</h2>
+                    {params && (
+                      <div data-hydrate-params>
+                        <p data-hydrate-params-type>typeof params: {typeof params}</p>
+                        <p data-hydrate-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify the hydrate fallback is shown initially
+        await page.waitForSelector("[data-hydrate-fallback]");
+        expect(
+          await page.locator("[data-hydrate-fallback]").textContent(),
+        ).toBe("Hydrate Fallback");
+
+        // Verify params are passed to hydrate fallback
+        await page.waitForSelector("[data-hydrate-params]");
+        await page.waitForSelector("[data-hydrate-params-type]");
+        await page.waitForSelector("[data-hydrate-params-count]");
+        expect(
+          await page.locator("[data-hydrate-params-type]").textContent(),
+        ).toBe("typeof params: object");
+        expect(
+          await page.locator("[data-hydrate-params-count]").textContent(),
+        ).toBe("params count: 0");
+
+        // Unblock the client loader to allow it to complete
+        await page.evaluate(() => {
+          (globalThis as any).unblockClientLoader = true;
+        });
+
+        await page.waitForSelector("[data-home]");
 
         // Ensure this is using RSC
         validateRSCHtml(await page.content());

@@ -111,8 +111,7 @@ In React Router v7 you define your routes using the `app/routes.ts` file. View t
 
 **👉 Update dependencies (if using Remix v2 `v3_routeConfig` flag)**
 
-```diff
-// app/routes.ts
+```diff filename=app/routes.ts
 -import { type RouteConfig } from "@remix-run/route-config";
 -import { flatRoutes } from "@remix-run/fs-routes";
 -import { remixRoutesOptionAdapter } from "@remix-run/routes-option-adapter";
@@ -123,7 +122,6 @@ In React Router v7 you define your routes using the `app/routes.ts` file. View t
 export default [
   // however your routes are defined
 ] satisfies RouteConfig;
-
 ```
 
 **👉 Add a `routes.ts` file (if _not_ using Remix v2 `v3_routeConfig` flag)**
@@ -132,51 +130,67 @@ export default [
 touch app/routes.ts
 ```
 
-For backwards-compatibility and for folks who prefer [file-based conventions][fs-routing], you can opt-into the same "flat routes" convention you are using in Remix v2 via the new `@react-router/fs-routes` package:
+For backwards-compatibility, there are a few ways to adopt `routes.ts` to align with your route setup in Remix v2:
 
-```ts filename=app/routes.ts
-import { type RouteConfig } from "@react-router/dev/routes";
-import { flatRoutes } from "@react-router/fs-routes";
+1. If you were using the "flat routes" [file-based convention][fs-routing], you can continue to use that via the new `@react-router/fs-routes` package:
 
-export default flatRoutes() satisfies RouteConfig;
-```
+   ```ts filename=app/routes.ts
+   import { type RouteConfig } from "@react-router/dev/routes";
+   import { flatRoutes } from "@react-router/fs-routes";
 
-Or, if you were using the `routes` option to define config-based routes:
+   export default flatRoutes() satisfies RouteConfig;
+   ```
 
-```ts filename=app/routes.ts
-import { type RouteConfig } from "@react-router/dev/routes";
-import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
+2. If you were using the "nested" convention from Remix v1 via the `@remix-run/v1-route-convention` package, you can continue using that as well in conjunction with `@react-router/remix-routes-option-adapter`:
 
-export default remixRoutesOptionAdapter((defineRoutes) => {
-  return defineRoutes((route) => {
-    route("/", "home/route.tsx", { index: true });
-    route("about", "about/route.tsx");
-    route("", "concerts/layout.tsx", () => {
-      route("trending", "concerts/trending.tsx");
-      route(":city", "concerts/city.tsx");
-    });
-  });
-}) satisfies RouteConfig;
-```
+   ```ts filename=app/routes.ts
+   import { type RouteConfig } from "@react-router/dev/routes";
+   import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
+   import { createRoutesFromFolders } from "@remix-run/v1-route-convention";
 
-If you were using the `routes` option in your `vite.config.ts`, be sure to remove it.
+   export default remixRoutesOptionAdapter(
+     createRoutesFromFolders,
+   ) satisfies RouteConfig;
+   ```
 
-```diff
-export default defineConfig({
-  plugins: [
-    remix({
-      ssr: true,
--     ignoredRouteFiles: ['**/*'],
--     routes(defineRoutes) {
--       return defineRoutes((route) => {
--         route("/somewhere/cool/*", "catchall.tsx");
--       });
--     },
-    })
-    tsconfigPaths(),
-  ],
-});
-```
+3. If you were using the `routes` option to define config-based routes, you can keep that config via `@react-router/remix-routes-option-adapter`:
+
+   ```ts filename=app/routes.ts
+   import { type RouteConfig } from "@react-router/dev/routes";
+   import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
+
+   export default remixRoutesOptionAdapter(
+     (defineRoutes) => {
+       return defineRoutes((route) => {
+         route("/", "home/route.tsx", { index: true });
+         route("about", "about/route.tsx");
+         route("", "concerts/layout.tsx", () => {
+           route("trending", "concerts/trending.tsx");
+           route(":city", "concerts/city.tsx");
+         });
+       });
+     },
+   ) satisfies RouteConfig;
+   ```
+
+   - Be sure to also remove the `routes` option in your `vite.config.ts`:
+
+     ```diff filename=vite.config.ts
+     export default defineConfig({
+       plugins: [
+         remix({
+           ssr: true,
+     -     ignoredRouteFiles: ['**/*'],
+     -     routes(defineRoutes) {
+     -       return defineRoutes((route) => {
+     -         route("/somewhere/cool/*", "catchall.tsx");
+     -       });
+     -     },
+         })
+         tsconfigPaths(),
+       ],
+     });
+     ```
 
 ## 5. Add a React Router config
 
@@ -190,8 +204,7 @@ Note: At this point you should remove the v3 future flags you added in step 1.
 touch react-router.config.ts
 ```
 
-```diff
-// vite.config.ts
+```diff filename=vite.config.ts
 export default defineConfig({
   plugins: [
 -   remix({
@@ -202,8 +215,9 @@ export default defineConfig({
     tsconfigPaths(),
   ],
 });
+```
 
-// react-router.config.ts
+```diff filename=react-router.config.ts
 +import type { Config } from "@react-router/dev/config";
 +export default {
 +  ssr: true,
@@ -222,7 +236,7 @@ If you used the codemod you can skip this step as it was automatically completed
 
 Change `vite.config.ts` to import and use the new `reactRouter` plugin from `@react-router/dev/vite`:
 
-```diff
+```diff filename=vite.config.ts
 -import { vitePlugin as remix } from "@remix-run/dev";
 +import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
@@ -261,7 +275,7 @@ Update the `types` field in your `tsconfig.json` to include:
 - The appropriate `@react-router/*` package in the `types` field
 - `rootDirs` for simplified relative imports
 
-```diff
+```diff filename=tsconfig.json
 {
   "include": [
     /* ... */

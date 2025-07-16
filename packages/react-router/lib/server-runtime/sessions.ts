@@ -43,7 +43,7 @@ export interface Session<Data = SessionData, FlashData = Data> {
    * Returns the value for the given `name` in this session.
    */
   get<Key extends (keyof Data | keyof FlashData) & string>(
-    name: Key
+    name: Key,
   ):
     | (Key extends keyof Data ? Data[Key] : undefined)
     | (Key extends keyof FlashData ? FlashData[Key] : undefined)
@@ -60,7 +60,7 @@ export interface Session<Data = SessionData, FlashData = Data> {
    */
   flash<Key extends keyof FlashData & string>(
     name: Key,
-    value: FlashData[Key]
+    value: FlashData[Key],
   ): void;
 
   /**
@@ -81,7 +81,7 @@ function flash<Key extends string>(name: Key): FlashDataKey<Key> {
 
 export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
   initialData?: Data,
-  id?: string
+  id?: string,
 ) => Session<Data, FlashData>;
 
 /**
@@ -92,10 +92,10 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  */
 export const createSession: CreateSessionFunction = <
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >(
   initialData: Partial<Data> = {},
-  id = ""
+  id = "",
 ): Session<Data, FlashData> => {
   let map = new Map(Object.entries(initialData)) as Map<
     keyof Data | FlashDataKey<keyof FlashData & string>,
@@ -174,7 +174,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   getSession: (
     cookieHeader?: string | null,
-    options?: ParseOptions
+    options?: ParseOptions,
   ) => Promise<Session<Data, FlashData>>;
 
   /**
@@ -183,7 +183,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   commitSession: (
     session: Session<Data, FlashData>,
-    options?: SerializeOptions
+    options?: SerializeOptions,
   ) => Promise<string>;
 
   /**
@@ -192,7 +192,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   destroySession: (
     session: Session<Data, FlashData>,
-    options?: SerializeOptions
+    options?: SerializeOptions,
   ) => Promise<string>;
 }
 
@@ -207,7 +207,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
  */
 export interface SessionIdStorageStrategy<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 > {
   /**
    * The Cookie used to store the session id, or options used to automatically
@@ -220,7 +220,7 @@ export interface SessionIdStorageStrategy<
    */
   createData: (
     data: FlashSessionData<Data, FlashData>,
-    expires?: Date
+    expires?: Date,
   ) => Promise<string>;
 
   /**
@@ -234,7 +234,7 @@ export interface SessionIdStorageStrategy<
   updateData: (
     id: string,
     data: FlashSessionData<Data, FlashData>,
-    expires?: Date
+    expires?: Date,
   ) => Promise<void>;
 
   /**
@@ -274,8 +274,8 @@ export function createSessionStorage<Data = SessionData, FlashData = Data>({
         options?.maxAge != null
           ? new Date(Date.now() + options.maxAge * 1000)
           : options?.expires != null
-          ? options.expires
-          : cookie.expires;
+            ? options.expires
+            : cookie.expires;
 
       if (id) {
         await updateData(id, data, expires);
@@ -302,6 +302,6 @@ export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
     `The "${cookie.name}" cookie is not signed, but session cookies should be ` +
       `signed to prevent tampering on the client before they are sent back to the ` +
       `server. See https://reactrouter.com/explanation/sessions-and-cookies#signing-cookies ` +
-      `for more information.`
+      `for more information.`,
   );
 }

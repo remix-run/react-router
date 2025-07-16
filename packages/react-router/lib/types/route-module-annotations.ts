@@ -69,12 +69,12 @@ type HeadersArgs = {
 
 type CreateServerMiddlewareFunction<T extends RouteInfo> = (
   args: ServerDataFunctionArgs<T["params"]>,
-  next: unstable_MiddlewareNextFunction<Response>
+  next: unstable_MiddlewareNextFunction<Response>,
 ) => MaybePromise<Response | void>;
 
 type CreateClientMiddlewareFunction<T extends RouteInfo> = (
   args: ClientDataFunctionArgs<T["params"]>,
-  next: unstable_MiddlewareNextFunction<undefined>
+  next: unstable_MiddlewareNextFunction<undefined>,
 ) => MaybePromise<void>;
 
 type CreateServerLoaderArgs<T extends RouteInfo> = ServerDataFunctionArgs<

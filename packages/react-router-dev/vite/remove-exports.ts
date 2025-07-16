@@ -8,7 +8,7 @@ import { traverse } from "./babel";
 
 export const removeExports = (
   ast: ParseResult<Babel.File>,
-  exportsToRemove: string[]
+  exportsToRemove: string[],
 ) => {
   let previouslyReferencedIdentifiers = findReferencedIdentifiers(ast);
   let exportsFiltered = false;
@@ -69,7 +69,7 @@ export const removeExports = (
               }
 
               return true;
-            }
+            },
           );
           // Remove the entire export statement if all variables were removed
           if (declaration.declarations.length === 0) {
@@ -116,7 +116,7 @@ export const removeExports = (
 
 function validateDestructuredExports(
   id: Babel.ArrayPattern | Babel.ObjectPattern,
-  exportsToRemove: string[]
+  exportsToRemove: string[],
 ) {
   if (id.type === "ArrayPattern") {
     for (let element of id.elements) {

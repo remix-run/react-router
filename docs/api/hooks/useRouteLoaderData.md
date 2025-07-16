@@ -48,7 +48,9 @@ useRouteLoaderData("app");
 ## Signature
 
 ```tsx
-function useRouteLoaderData<T = any>(routeId: string): SerializeFrom<T> | undefined
+function useRouteLoaderData<T = any>(
+  routeId: string,
+): SerializeFrom<T> | undefined
 ```
 
 ## Params
