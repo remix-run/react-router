@@ -114,12 +114,11 @@ const isBrowser =
 // Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
 // to detect and properly classify live websites as being built with React Router:
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
-declare global {
-  const REACT_ROUTER_VERSION: string;
-}
 try {
   if (isBrowser) {
-    window.__reactRouterVersion = REACT_ROUTER_VERSION;
+    window.__reactRouterVersion =
+      // @ts-expect-error
+      REACT_ROUTER_VERSION;
   }
 } catch (e) {
   // no-op
@@ -1425,7 +1424,9 @@ export function useSearchParams(
   let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOptions) => {
       const newSearchParams = createSearchParams(
-        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+        typeof nextInit === "function"
+          ? nextInit(new URLSearchParams(searchParams))
+          : nextInit
       );
       hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOptions);
@@ -2077,7 +2078,7 @@ export function useScrollRestoration({
     // Restore scrolling when state.restoreScrollPosition changes
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      // Explicit false means don't do anything (used for submissions)
+      // Explicit false means don't do anything (used for submissions or revalidations)
       if (restoreScrollPosition === false) {
         return;
       }
@@ -2089,14 +2090,23 @@ export function useScrollRestoration({
       }
 
       // try to scroll to the hash
-      if (location.hash) {
-        let el = document.getElementById(
-          decodeURIComponent(location.hash.slice(1))
-        );
-        if (el) {
-          el.scrollIntoView();
-          return;
+      try {
+        if (location.hash) {
+          let el = document.getElementById(
+            decodeURIComponent(location.hash.slice(1))
+          );
+          if (el) {
+            el.scrollIntoView();
+            return;
+          }
         }
+      } catch {
+        warning(
+          false,
+          `"${location.hash.slice(
+            1
+          )}" is not a decodable element ID. The view will not scroll to it.`
+        );
       }
 
       // Don't reset if this navigation opted out

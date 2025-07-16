@@ -2370,6 +2370,86 @@ test.describe("Prerendering", () => {
       expect(requests).toEqual(["/page.data"]);
     });
 
+    test("Navigates prerendered multibyte path routes", async ({ page }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false, // turn off fog of war since we're serving with a static server
+            prerender: ["/", "/page", "/ページ"],
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import * as React from "react";
+            import { Link, Outlet, Scripts } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    <nav>
+                      <Link to="/page">Page</Link><br/>
+                      <Link to="/ページ">ページ</Link><br/>
+                    </nav>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root({ loaderData }) {
+              return <Outlet />
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            export default function Index() {
+              return <h1 data-index>Index</h1>
+            }
+          `,
+          "app/routes/page.tsx": js`
+            export function loader() {
+              return "PAGE DATA"
+            }
+            export default function Page({ loaderData }) {
+              return <h1 data-page>{loaderData}</h1>;
+            }
+          `,
+          "app/routes/ページ.tsx": js`
+            export function loader() {
+              return "ページ データ";
+            }
+            export default function Page({ loaderData }) {
+              return <h1 data-multibyte-page>{loaderData}</h1>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let encodedMultibytePath = encodeURIComponent("ページ");
+      let requests = captureRequests(page);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      await page.waitForSelector("[data-index]");
+
+      await app.clickLink("/page");
+      await page.waitForSelector("[data-page]");
+      expect(await (await page.$("[data-page]"))?.innerText()).toBe(
+        "PAGE DATA"
+      );
+      expect(requests).toEqual(["/page.data"]);
+      clearRequests(requests);
+
+      await app.clickLink("/ページ");
+      await page.waitForSelector("[data-multibyte-page]");
+      expect(await (await page.$("[data-multibyte-page]"))?.innerText()).toBe(
+        "ページ データ"
+      );
+      expect(requests).toEqual([`/${encodedMultibytePath}.data`]);
+    });
+
     test("Returns a 404 if navigating to a non-prerendered param value", async ({
       page,
     }) => {

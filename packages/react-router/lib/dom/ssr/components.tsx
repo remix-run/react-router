@@ -27,7 +27,12 @@ import type {
   MetaMatches,
 } from "./routeModules";
 import { singleFetchUrl } from "./single-fetch";
-import { DataRouterContext, DataRouterStateContext } from "../../context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  useIsRSCRouterContext,
+} from "../../context";
+import { warnOnce } from "../../server-runtime/warnings";
 import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
@@ -207,6 +212,8 @@ function getActiveMatches(
   return matches;
 }
 
+export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
+
 /**
   Renders all of the `<link>` tags created by route module {@link LinksFunction} export. You should render it inside the `<head>` of your document.
 
@@ -242,10 +249,17 @@ export function Links() {
   return (
     <>
       {typeof criticalCss === "string" ? (
-        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
+        <style
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          dangerouslySetInnerHTML={{ __html: criticalCss }}
+        />
       ) : null}
       {typeof criticalCss === "object" ? (
-        <link rel="stylesheet" href={criticalCss.href} />
+        <link
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          rel="stylesheet"
+          href={criticalCss.href}
+        />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
@@ -388,7 +402,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, basename);
+    let url = singleFetchUrl(page, basename, "data");
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -653,6 +667,7 @@ export function Scripts(props: ScriptsProps) {
   } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
+  let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
@@ -668,6 +683,10 @@ export function Scripts(props: ScriptsProps) {
   }, []);
 
   let initialScripts = React.useMemo(() => {
+    if (isRSCRouterContext) {
+      return null;
+    }
+
     let streamScript =
       "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
@@ -789,19 +808,25 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  let preloads = isHydrated
-    ? []
-    : dedupe(
-        manifest.entry.imports.concat(
-          getModuleLinkHrefs(matches, manifest, {
-            includeHydrateFallback: true,
-          })
-        )
-      );
+  let preloads =
+    isHydrated || isRSCRouterContext
+      ? []
+      : dedupe(
+          manifest.entry.imports.concat(
+            getModuleLinkHrefs(matches, manifest, {
+              includeHydrateFallback: true,
+            })
+          )
+        );
 
   let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
-  return isHydrated ? null : (
+  warnOnce(
+    !isRSCRouterContext,
+    "The <Scripts /> element is a no-op when using RSC and can be safely removed."
+  );
+
+  return isHydrated || isRSCRouterContext ? null : (
     <>
       {typeof manifest.sri === "object" ? (
         <script

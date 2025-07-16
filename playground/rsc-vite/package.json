@@ -1,0 +1,31 @@
+{
+  "name": "@playground/rsc-vite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --app",
+    "start": "cross-env NODE_ENV=production node server.js",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-rsc": "0.4.11",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.1.6",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@mjackson/node-fetch-server": "0.6.1",
+    "compression": "^1.8.0",
+    "express": "^4.21.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "workspace:*"
+  }
+}

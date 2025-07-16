@@ -24,6 +24,7 @@ import {
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
+import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
 
 type SSRInfo = {
@@ -229,19 +230,35 @@ export function HydratedRouter(props: HydratedRouterProps) {
     });
   }
 
-  // Critical CSS can become stale after code changes, e.g. styles might be
-  // removed from a component, but the styles will still be present in the
-  // server HTML. This allows our HMR logic to clear the critical CSS state.
+  // We only want to show critical CSS in dev for the initial server render to
+  // avoid a flash of unstyled content. Once the client-side JS kicks in, we can
+  // clear it to avoid duplicate styles.
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? ssrInfo?.context.criticalCss
       : undefined
   );
-  if (process.env.NODE_ENV === "development") {
-    if (ssrInfo) {
-      window.__reactRouterClearCriticalCss = () => setCriticalCss(undefined);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      setCriticalCss(undefined);
     }
-  }
+  }, []);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development" && criticalCss === undefined) {
+      // When there's a hydration mismatch, React 19 ignores the server HTML and
+      // re-renders from the root, but it doesn't remove any head tags that
+      // aren't present in the virtual DOM. This means that the original
+      // critical CSS elements are still in the document even though we cleared
+      // them in the effect above. To fix this, this effect is designed to clean
+      // up any leftover elements. If `criticalCss` is undefined in this effect,
+      // this means that React is no longer managing the critical CSS elements,
+      // so if there are any left in the document, these are stale elements from
+      // the original SSR pass and we can safely remove them.
+      document
+        .querySelectorAll(`[${CRITICAL_CSS_DATA_ATTRIBUTE}]`)
+        .forEach((element) => element.remove());
+    }
+  }, [criticalCss]);
 
   let [location, setLocation] = React.useState(router.state.location);
 

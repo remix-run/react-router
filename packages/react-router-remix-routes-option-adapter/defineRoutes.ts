@@ -28,7 +28,7 @@ interface DefineRouteChildren {
   (): void;
 }
 
-interface DefineRouteFunction {
+export interface DefineRouteFunction {
   (
     /**
      * The path this route uses to match the URL pathname.

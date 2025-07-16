@@ -1,5 +1,21 @@
 # `@react-router/dev`
 
+## 7.7.0
+
+### Patch Changes
+
+- Update `vite-node` to `^3.2.2` to support Vite 7 ([#13781](https://github.com/remix-run/react-router/pull/13781))
+- Properly handle `https` protocol in dev mode ([#13746](https://github.com/remix-run/react-router/pull/13746))
+- Fix missing styles when Vite's `build.cssCodeSplit` option is disabled ([#13943](https://github.com/remix-run/react-router/pull/13943))
+- Allow `.mts` and `.mjs` extensions for route config file ([#13931](https://github.com/remix-run/react-router/pull/13931))
+- Fix prerender file locations when `cwd` differs from project root ([#13824](https://github.com/remix-run/react-router/pull/13824))
+- Improve chunk error logging when a chunk cannot be found during the build ([#13799](https://github.com/remix-run/react-router/pull/13799))
+- Fix incorrectly configured `externalConditions` which had enabled `module` condition for externals and broke builds with certain packages, like Emotion. ([#13871](https://github.com/remix-run/react-router/pull/13871))
+- Updated dependencies:
+  - `react-router@7.7.0`
+  - `@react-router/node@7.7.0`
+  - `@react-router/serve@7.7.0`
+
 ## 7.6.3
 
 ### Patch Changes

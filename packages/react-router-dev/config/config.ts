@@ -695,7 +695,7 @@ export async function createConfigLoader({
           },
         });
 
-        fsWatcher.on("all", async (...args: ChokidarEmitArgs) => {
+        fsWatcher.on("all", async (...args) => {
           let [event, rawFilepath] = args;
           let filepath = Path.normalize(rawFilepath);
 
@@ -914,7 +914,7 @@ function omitRoutes(
   };
 }
 
-const entryExts = [".js", ".jsx", ".ts", ".tsx"];
+const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
 
 function isEntryFile(entryBasename: string, filename: string) {
   return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
