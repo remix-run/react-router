@@ -75,7 +75,7 @@ test.describe("Vite .env", () => {
 
       let clientContent = page.locator("[data-dotenv-route-client-content]");
       await expect(clientContent).toHaveText(
-        "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+        "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
       );
 
       expect(pageErrors).toEqual([]);
@@ -106,12 +106,12 @@ test.describe("Vite .env", () => {
 
       let loaderContent = page.locator("[data-dotenv-route-loader-content]");
       await expect(loaderContent).toHaveText(
-        "Content from custom-env-dir/.env file"
+        "Content from custom-env-dir/.env file",
       );
 
       let clientContent = page.locator("[data-dotenv-route-client-content]");
       await expect(clientContent).toHaveText(
-        "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+        "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
       );
 
       expect(pageErrors).toEqual([]);

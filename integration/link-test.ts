@@ -530,7 +530,7 @@ test.describe("route module link export", () => {
     await app.goto("/");
 
     let cssResponses = app.collectResponses((url) =>
-      url.pathname.endsWith(".css")
+      url.pathname.endsWith(".css"),
     );
 
     await page.click('a[href="/gists"]');
@@ -561,7 +561,7 @@ test.describe("route module link export", () => {
     test("adds links to the document", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       let responses = app.collectResponses((url) =>
-        url.pathname.endsWith(".css")
+        url.pathname.endsWith(".css"),
       );
 
       await app.goto("/links");
@@ -606,19 +606,19 @@ test.describe("route module link export", () => {
       let moduleScriptText = await moduleScript.innerText();
       expect(
         Array.from(moduleScriptText.matchAll(/import "\/assets\/manifest-/g)),
-        "did not expect a manifest due to fog of war"
+        "did not expect a manifest due to fog of war",
       ).toHaveLength(0);
       expect(
         Array.from(moduleScriptText.matchAll(/import \* as route0 from "/g)),
-        "invalid route0"
+        "invalid route0",
       ).toHaveLength(1);
       expect(
         Array.from(moduleScriptText.matchAll(/import \* as route1 from "/g)),
-        "invalid route1"
+        "invalid route1",
       ).toHaveLength(1);
       expect(
         Array.from(moduleScriptText.matchAll(/import \* as route2 from "/g)),
-        "too many routes"
+        "too many routes",
       ).toHaveLength(0);
     });
   });

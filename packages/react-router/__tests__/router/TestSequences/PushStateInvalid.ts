@@ -12,7 +12,7 @@ export default function PushState(history: History, window: DOMWindow) {
   });
 
   expect(() =>
-    history.push("/home?the=query#the-hash", { invalid: () => {} })
+    history.push("/home?the=query#the-hash", { invalid: () => {} }),
   ).toThrow(err);
 
   expect(history.location.pathname).toBe("/");

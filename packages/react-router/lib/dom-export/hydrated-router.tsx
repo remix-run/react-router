@@ -55,7 +55,7 @@ function initSsrInfo(): void {
       if (importMap?.textContent) {
         try {
           window.__reactRouterManifest.sri = JSON.parse(
-            importMap.textContent
+            importMap.textContent,
           ).integrity;
         } catch (err) {
           console.error("Failed to parse import map", err);
@@ -84,7 +84,7 @@ function createHydratedRouter({
   if (!ssrInfo) {
     throw new Error(
       "You must be using the SSR features of React Router in order to skip " +
-        "passing a `router` prop to `<RouterProvider>`"
+        "passing a `router` prop to `<RouterProvider>`",
     );
   }
 
@@ -121,7 +121,7 @@ function createHydratedRouter({
     ssrInfo.routeModules,
     ssrInfo.context.state,
     ssrInfo.context.ssr,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
@@ -151,7 +151,7 @@ function createHydratedRouter({
       }),
       window.location,
       window.__reactRouterContext?.basename,
-      ssrInfo.context.isSpaMode
+      ssrInfo.context.isSpaMode,
     );
 
     if (hydrationData && hydrationData.errors) {
@@ -179,7 +179,7 @@ function createHydratedRouter({
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
@@ -187,7 +187,7 @@ function createHydratedRouter({
       ssrInfo.context.ssr,
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
     ),
   });
   ssrInfo.router = router;
@@ -235,7 +235,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? ssrInfo?.context.criticalCss
-      : undefined
+      : undefined,
   );
   React.useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -272,7 +272,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.routeModules,
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error

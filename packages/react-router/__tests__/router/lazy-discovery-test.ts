@@ -1563,7 +1563,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/parent/junk"'),
-            true
+            true,
           ),
         },
       });
@@ -1622,7 +1622,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/parent/junk"'),
-            true
+            true,
           ),
         },
       });

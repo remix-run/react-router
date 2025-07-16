@@ -139,7 +139,7 @@ test.describe("actions", () => {
 
       test("is not called on document GET requests", async () => {
         let res = await fixture.requestDocument("/urlencoded");
-        let html = selectHtml(await res.text(), "#text");
+        let html = await selectHtml(await res.text(), "#text");
         expect(html).toMatch(WAITING_VALUE);
       });
 
@@ -151,7 +151,7 @@ test.describe("actions", () => {
 
         let res = await fixture.postDocument("/urlencoded", params);
 
-        let html = selectHtml(await res.text(), "#text");
+        let html = await selectHtml(await res.text(), "#text");
         expect(html).toMatch(FIELD_VALUE);
       });
 
@@ -172,7 +172,7 @@ test.describe("actions", () => {
         await page.waitForSelector(`h1:has-text("405 Method Not Allowed")`);
         expect(logs.length).toBe(2);
         expect(logs[0]).toMatch(
-          'Route "routes/no-action" does not have an action'
+          'Route "routes/no-action" does not have an action',
         );
         // logs[1] is the raw ErrorResponse instance from the boundary but playwright
         // seems to just log the name of the constructor, which in the minified code
@@ -193,7 +193,7 @@ test.describe("actions", () => {
         await page.click("button[type=submit]");
         await page.waitForSelector("#action-text");
         expect(await app.getHtml("#action-text")).toBe(
-          '<span id="action-text">a=1&amp;b=2</span>'
+          '<span id="action-text">a=1&amp;b=2</span>',
         );
       });
 

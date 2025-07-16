@@ -383,7 +383,7 @@ Defining this function allows you to opt out of revalidation for a route loader 
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
 export function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs
+  arg: ShouldRevalidateFunctionArgs,
 ) {
   return true;
 }

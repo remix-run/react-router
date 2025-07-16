@@ -267,7 +267,7 @@ test.describe("emits warnings for route conflicts", async () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
   });
@@ -309,7 +309,7 @@ test.describe("", () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
   });

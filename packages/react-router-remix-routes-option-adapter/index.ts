@@ -16,10 +16,10 @@ export type { DefineRoutesFunction, DefineRouteFunction };
  */
 export async function remixRoutesOptionAdapter(
   routes: (
-    defineRoutes: DefineRoutesFunction
+    defineRoutes: DefineRoutesFunction,
   ) =>
     | ReturnType<DefineRoutesFunction>
-    | Promise<ReturnType<DefineRoutesFunction>>
+    | Promise<ReturnType<DefineRoutesFunction>>,
 ): Promise<RouteConfigEntry[]> {
   let routeManifest = await routes(defineRoutes);
   return routeManifestToRouteConfig(routeManifest);

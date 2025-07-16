@@ -81,7 +81,7 @@ function fetchServer(request: Request) {
         {
           status: match.statusCode,
           headers: match.headers,
-        }
+        },
       );
     },
   });
@@ -111,11 +111,11 @@ import {
 
 export async function prerender(
   request: Request,
-  fetchServer: (request: Request) => Promise<Response>
+  fetchServer: (request: Request) => Promise<Response>,
 ): Promise<Response> {
   const bootstrapScriptContent =
     await import.meta.viteRsc.loadBootstrapScriptContent(
-      "index"
+      "index",
     );
   return await routeRSCServerRequest({
     // The incoming request.
@@ -138,7 +138,7 @@ export async function prerender(
           bootstrapScriptContent,
           // @ts-expect-error - no types for this yet
           formState,
-        }
+        },
       );
     },
   });
@@ -169,12 +169,12 @@ setServerCallback(
   createCallServer({
     createFromReadableStream,
     encodeReply,
-  })
+  }),
 );
 
 // Get and decode the initial server payload
 createFromReadableStream<RSCServerPayload>(
-  getRSCStream()
+  getRSCStream(),
 ).then((payload) => {
   startTransition(async () => {
     const formState =
@@ -195,7 +195,7 @@ createFromReadableStream<RSCServerPayload>(
       {
         // @ts-expect-error - no types for this yet
         formState,
-      }
+      },
     );
   });
 });
@@ -399,7 +399,7 @@ app.use(
   express.static("dist/client/assets", {
     immutable: true,
     maxAge: "1y",
-  })
+  }),
 );
 app.use(compression(), express.static("dist/client"));
 
@@ -408,7 +408,7 @@ app.get(
   (_, res) => {
     res.status(404);
     res.end();
-  }
+  },
 );
 
 app.use(createRequestListener(build));
@@ -416,7 +416,7 @@ app.use(createRequestListener(build));
 const PORT = Number.parseInt(process.env.PORT || "3000");
 app.listen(PORT, () => {
   console.log(
-    `Server listening on port ${PORT} (http://localhost:${PORT})`
+    `Server listening on port ${PORT} (http://localhost:${PORT})`,
   );
 });
 ```

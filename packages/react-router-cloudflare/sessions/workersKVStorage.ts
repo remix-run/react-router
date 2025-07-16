@@ -26,7 +26,7 @@ interface WorkersKVSessionStorageOptions {
  */
 export function createWorkersKVSessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({
   cookie,
   kv,

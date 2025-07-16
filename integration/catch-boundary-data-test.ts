@@ -202,13 +202,13 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         await app.clickLink(NO_BOUNDARY_LOADER);
         await page.waitForSelector("#root-boundary");
         await page.waitForSelector(
-          `#root-boundary-data:has-text("${ROOT_DATA}")`
+          `#root-boundary-data:has-text("${ROOT_DATA}")`,
         );
       });
 
       test("renders layout boundary with data available", async () => {
         let res = await fixture.requestDocument(
-          HAS_BOUNDARY_LAYOUT_NESTED_LOADER
+          HAS_BOUNDARY_LAYOUT_NESTED_LOADER,
         );
         expect(res.status).toBe(401);
         let html = await res.text();
@@ -225,10 +225,10 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         await app.clickLink(HAS_BOUNDARY_LAYOUT_NESTED_LOADER);
         await page.waitForSelector(`#root-data:has-text("${ROOT_DATA}")`);
         await page.waitForSelector(
-          `#layout-boundary:has-text("${LAYOUT_BOUNDARY_TEXT}")`
+          `#layout-boundary:has-text("${LAYOUT_BOUNDARY_TEXT}")`,
         );
         await page.waitForSelector(
-          `#layout-boundary-data:has-text("${LAYOUT_DATA}")`
+          `#layout-boundary-data:has-text("${LAYOUT_DATA}")`,
         );
       });
 
@@ -250,7 +250,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         await page.waitForSelector(`#root-data:has-text("${ROOT_DATA}")`);
         await page.waitForSelector(`#layout-data:has-text("${LAYOUT_DATA}")`);
         await page.waitForSelector(
-          `#own-boundary:has-text("${OWN_BOUNDARY_TEXT}")`
+          `#own-boundary:has-text("${OWN_BOUNDARY_TEXT}")`,
         );
       });
     });

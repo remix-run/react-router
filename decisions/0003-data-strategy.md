@@ -113,7 +113,7 @@ Therefore, we're introducing the concept of a `DataStrategyMatch` which is just 
 ```js
 function dataStrategy({ matches, defaultStrategy }) {
   return Promise.all(
-    matches.map((m) => match.route.then((route) => route.loader(/* ... */)))
+    matches.map((m) => match.route.then((route) => route.loader(/* ... */))),
   );
 }
 ```

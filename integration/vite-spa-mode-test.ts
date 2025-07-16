@@ -43,7 +43,7 @@ test.describe("SPA Mode", () => {
             expect(stderr).toMatch(
               "SPA Mode: 3 invalid route export(s) in `routes/invalid-exports.tsx`: " +
                 "`headers`, `loader`, `action`. See https://reactrouter.com/how-to/spa " +
-                "for more information."
+                "for more information.",
             );
           });
 
@@ -75,7 +75,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: 2 invalid route export(s) in `root.tsx`: `headers`, `action`. " +
-                "See https://reactrouter.com/how-to/spa for more information."
+                "See https://reactrouter.com/how-to/spa for more information.",
             );
           });
 
@@ -100,7 +100,7 @@ test.describe("SPA Mode", () => {
             expect(stderr).toMatch(
               "SPA Mode: Invalid `HydrateFallback` export found in `routes/invalid-exports.tsx`. " +
                 "`HydrateFallback` is only permitted on the root route in SPA Mode. " +
-                "See https://reactrouter.com/how-to/spa for more information."
+                "See https://reactrouter.com/how-to/spa for more information.",
             );
           });
 
@@ -167,7 +167,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-                "prerendering your `index.html` file."
+                "prerendering your `index.html` file.",
             );
             expect(stderr).toMatch("<h1>Loading...</h1>");
           });
@@ -188,7 +188,7 @@ test.describe("SPA Mode", () => {
             let stderr = result.stderr.toString("utf8");
             expect(stderr).toMatch(
               "SPA Mode: Did you forget to include `<Scripts/>` in your root route? " +
-                "Your pre-rendered HTML cannot hydrate without `<Scripts />`."
+                "Your pre-rendered HTML cannot hydrate without `<Scripts />`.",
             );
           });
         });
@@ -332,10 +332,10 @@ test.describe("SPA Mode", () => {
           await app.goto("/base/");
           await page.waitForSelector("[data-mounted]");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
           expect(await page.locator("[data-loader-data]").textContent()).toBe(
-            "Index Loader Data"
+            "Index Loader Data",
           );
         });
 
@@ -506,14 +506,14 @@ test.describe("SPA Mode", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(await page.locator("title").textContent()).toBe(
-            "Not from Remix!"
+            "Not from Remix!",
           );
           await page.waitForSelector("[data-mounted]");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
           expect(await page.locator("[data-loader-data]").textContent()).toBe(
-            "Index Loader Data"
+            "Index Loader Data",
           );
         });
 
@@ -595,7 +595,7 @@ test.describe("SPA Mode", () => {
           await page.waitForSelector("[data-root]");
           expect(await page.locator("[data-root]").textContent()).toBe("Root");
           expect(await page.locator("[data-index]").textContent()).toBe(
-            "Index"
+            "Index",
           );
         });
 
@@ -1014,7 +1014,7 @@ test.describe("SPA Mode", () => {
           let html = await res.text();
           expect(html).toMatch('<h1 data-loading="true">Loading SPA...</h1>');
           expect(html).toMatch(
-            '<p data-loader-data="true">Root Loader Data</p>'
+            '<p data-loader-data="true">Root Loader Data</p>',
           );
         });
 
@@ -1025,7 +1025,7 @@ test.describe("SPA Mode", () => {
           let html = await res.text();
           expect(html).toMatch("<title>Root Title</title>");
           expect(html).toMatch(
-            '<link rel="stylesheet" href="styles-root.css"/>'
+            '<link rel="stylesheet" href="styles-root.css"/>',
           );
           expect(html).not.toMatch("Index Title");
           expect(html).not.toMatch("styles-index.css");
@@ -1034,13 +1034,13 @@ test.describe("SPA Mode", () => {
           await app.goto("/");
           await page.waitForSelector("[data-mounted]");
           expect(
-            await page.locator('link[href="styles-index.css"]')
+            await page.locator('link[href="styles-index.css"]'),
           ).toBeDefined();
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
           expect(await page.locator("title").textContent()).toBe(
-            "Index Title: Index Loader Data"
+            "Index Title: Index Loader Data",
           );
         });
 
@@ -1048,16 +1048,16 @@ test.describe("SPA Mode", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
           expect(await page.locator("[data-loader-data]").textContent()).toBe(
-            "Index Loader Data"
+            "Index Loader Data",
           );
           expect(await page.locator("[data-mounted]").textContent()).toBe(
-            "Mounted"
+            "Mounted",
           );
           expect(await page.locator("title").textContent()).toBe(
-            "Index Title: Index Loader Data"
+            "Index Title: Index Loader Data",
           );
         });
 
@@ -1075,16 +1075,16 @@ test.describe("SPA Mode", () => {
           await app.goto("/?slow");
           await page.waitForSelector("[data-hydrated]");
           expect(await page.locator("[data-use-id]").textContent()).toBe(
-            useIdValue
+            useIdValue,
           );
 
           // Once hydrated, we should get a different useId value from the root Component
           await page.waitForSelector("[data-route]");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
           expect(await page.locator("[data-use-id]").textContent()).not.toBe(
-            useIdValue
+            useIdValue,
           );
         });
 
@@ -1092,19 +1092,19 @@ test.describe("SPA Mode", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
 
           await app.clickLink("/about");
           await page.waitForSelector('[data-route]:has-text("About")');
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "About"
+            "About",
           );
           expect(await page.locator("[data-loader-data]").textContent()).toBe(
-            "About Loader Data"
+            "About Loader Data",
           );
           expect(await page.locator("title").textContent()).toBe(
-            "About Title: About Loader Data"
+            "About Title: About Loader Data",
           );
         });
 
@@ -1112,22 +1112,22 @@ test.describe("SPA Mode", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
 
           await app.clickSubmitButton("/about");
           await page.waitForSelector('[data-route]:has-text("About")');
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "About"
+            "About",
           );
           expect(await page.locator("[data-action-data]").textContent()).toBe(
-            "About Action Data"
+            "About Action Data",
           );
           expect(await page.locator("[data-loader-data]").textContent()).toBe(
-            "About Loader Data"
+            "About Loader Data",
           );
           expect(await page.locator("title").textContent()).toBe(
-            "About Title: About Loader Data"
+            "About Title: About Loader Data",
           );
         });
 
@@ -1135,13 +1135,13 @@ test.describe("SPA Mode", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
 
           await app.clickLink("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You are trying to call serverLoader() on a route that does not have a server loader (routeId: "routes/error")'
+            'Error: You are trying to call serverLoader() on a route that does not have a server loader (routeId: "routes/error")',
           );
         });
 
@@ -1149,19 +1149,19 @@ test.describe("SPA Mode", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(await page.locator("[data-route]").textContent()).toBe(
-            "Index"
+            "Index",
           );
 
           await app.clickSubmitButton("/error");
           await page.waitForSelector("[data-error]");
           expect(await page.locator("[data-error]").textContent()).toBe(
-            'Error: You are trying to call serverAction() on a route that does not have a server action (routeId: "routes/error")'
+            'Error: You are trying to call serverAction() on a route that does not have a server action (routeId: "routes/error")',
           );
         });
 
         test("only generates client Vite manifest", () => {
           let viteManifestFiles = fs.readdirSync(
-            path.join(fixture.projectDir, "build", "client", ".vite")
+            path.join(fixture.projectDir, "build", "client", ".vite"),
           );
 
           expect(viteManifestFiles).toEqual(["manifest.json"]);
@@ -1259,7 +1259,7 @@ test.describe("SPA Mode", () => {
     let importedRoutes = (
       await fs.promises.readFile(
         path.join(fixture.projectDir, "ssr-route-imports.txt"),
-        "utf-8"
+        "utf-8",
       )
     )
       .trim()

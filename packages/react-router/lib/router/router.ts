@@ -142,7 +142,7 @@ export interface Router {
   enableScrollRestoration(
     savedScrollPositions: Record<string, number>,
     getScrollPosition: GetScrollPositionFunction,
-    getKey?: GetScrollRestorationKeyFunction
+    getKey?: GetScrollRestorationKeyFunction,
   ): () => void;
 
   /**
@@ -176,7 +176,7 @@ export interface Router {
     key: string,
     routeId: string,
     href: string | null,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions,
   ): Promise<void>;
 
   /**
@@ -266,7 +266,7 @@ export interface Router {
   patchRoutes(
     routeId: string | null,
     children: AgnosticRouteObject[],
-    unstable_allowElementMutations?: boolean
+    unstable_allowElementMutations?: boolean,
   ): void;
 
   /**
@@ -285,7 +285,7 @@ export interface Router {
    * Cause subscribers to re-render.  This is used to force a re-render.
    */
   _internalSetStateDoNotUseOrYouWillBreakYourApp(
-    state: Partial<RouterState>
+    state: Partial<RouterState>,
   ): void;
 
   /**
@@ -435,13 +435,13 @@ export interface StaticHandler {
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_respond?: (
-        staticContext: StaticHandlerContext
+        staticContext: StaticHandlerContext,
       ) => MaybePromise<Response>;
       unstable_stream?: (
         context: unstable_RouterContextProvider,
-        query: (r: Request) => Promise<StaticHandlerContext | Response>
+        query: (r: Request) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
-    }
+    },
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
     request: Request,
@@ -450,7 +450,7 @@ export interface StaticHandler {
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_respond?: (res: Response) => MaybePromise<Response>;
-    }
+    },
   ): Promise<any>;
 }
 
@@ -469,7 +469,7 @@ export interface RouterSubscriber {
       deletedFetchers: string[];
       viewTransitionOpts?: ViewTransitionOpts;
       flushSync: boolean;
-    }
+    },
   ): void;
 }
 
@@ -776,7 +776,7 @@ const validMutationMethodsArr: MutationFormMethod[] = [
   "DELETE",
 ];
 const validMutationMethods = new Set<MutationFormMethod>(
-  validMutationMethodsArr
+  validMutationMethodsArr,
 );
 
 const validRequestMethodsArr: FormMethod[] = [
@@ -843,8 +843,8 @@ export function createRouter(init: RouterInit): Router {
   const routerWindow = init.window
     ? init.window
     : typeof window !== "undefined"
-    ? window
-    : undefined;
+      ? window
+      : undefined;
   const isBrowser =
     typeof routerWindow !== "undefined" &&
     typeof routerWindow.document !== "undefined" &&
@@ -852,7 +852,7 @@ export function createRouter(init: RouterInit): Router {
 
   invariant(
     init.routes.length > 0,
-    "You must provide a non-empty routes array to createRouter"
+    "You must provide a non-empty routes array to createRouter",
   );
 
   let hydrationRouteProperties = init.hydrationRouteProperties || [];
@@ -865,7 +865,7 @@ export function createRouter(init: RouterInit): Router {
     init.routes,
     mapRouteProperties,
     undefined,
-    manifest
+    manifest,
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
@@ -920,7 +920,7 @@ export function createRouter(init: RouterInit): Router {
       let fogOfWar = checkFogOfWar(
         initialMatches,
         dataRoutes,
-        init.history.location.pathname
+        init.history.location.pathname,
       );
       if (fogOfWar.active) {
         initialMatches = null;
@@ -937,7 +937,7 @@ export function createRouter(init: RouterInit): Router {
       let fogOfWar = checkFogOfWar(
         null,
         dataRoutes,
-        init.history.location.pathname
+        init.history.location.pathname,
       );
       if (fogOfWar.active && fogOfWar.matches) {
         initialMatchesIsFOW = true;
@@ -961,16 +961,16 @@ export function createRouter(init: RouterInit): Router {
       // If errors exist, don't consider routes below the boundary
       if (errors) {
         let idx = initialMatches.findIndex(
-          (m) => errors![m.route.id] !== undefined
+          (m) => errors![m.route.id] !== undefined,
         );
         initialized = initialMatches
           .slice(0, idx + 1)
           .every(
-            (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+            (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors),
           );
       } else {
         initialized = initialMatches.every(
-          (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors)
+          (m) => !shouldLoadRouteOnHydration(m.route, loaderData, errors),
         );
       }
     }
@@ -1092,7 +1092,7 @@ export function createRouter(init: RouterInit): Router {
             "production. This can happen if you are navigating outside the router " +
             "via `window.history.pushState`/`window.location.hash` instead of using " +
             "router navigation APIs.  This can also happen if you are using " +
-            "createHashRouter and the user manually changes the URL."
+            "createHashRouter and the user manually changes the URL.",
         );
 
         let blockerKey = shouldBlockNavigation({
@@ -1134,7 +1134,7 @@ export function createRouter(init: RouterInit): Router {
         }
 
         return startNavigation(historyAction, location);
-      }
+      },
     );
 
     if (isBrowser) {
@@ -1188,7 +1188,7 @@ export function createRouter(init: RouterInit): Router {
     opts: {
       flushSync?: boolean;
       viewTransitionOpts?: ViewTransitionOpts;
-    } = {}
+    } = {},
   ): void {
     // We may have patched routes during the navigation and if so we need to
     // get references to the latest elements here
@@ -1251,7 +1251,7 @@ export function createRouter(init: RouterInit): Router {
         deletedFetchers: unmountedFetchers,
         viewTransitionOpts: opts.viewTransitionOpts,
         flushSync: opts.flushSync === true,
-      })
+      }),
     );
 
     // Cleanup internally now that we've called our subscribers/updated state
@@ -1267,7 +1267,7 @@ export function createRouter(init: RouterInit): Router {
   function completeNavigation(
     location: Location,
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>,
-    { flushSync }: { flushSync?: boolean } = {}
+    { flushSync }: { flushSync?: boolean } = {},
   ): void {
     // Deduce if we're in a loading/actionReload state:
     // - We have committed actionData in the store
@@ -1303,7 +1303,7 @@ export function createRouter(init: RouterInit): Router {
           state.loaderData,
           newState.loaderData,
           newState.matches || [],
-          newState.errors
+          newState.errors,
         )
       : state.loaderData;
 
@@ -1395,7 +1395,7 @@ export function createRouter(init: RouterInit): Router {
       {
         viewTransitionOpts,
         flushSync: flushSync === true,
-      }
+      },
     );
 
     // Reset stateful navigation vars
@@ -1412,7 +1412,7 @@ export function createRouter(init: RouterInit): Router {
   // replace with an optional submission
   async function navigate(
     to: number | To | null,
-    opts?: RouterNavigateOptions
+    opts?: RouterNavigateOptions,
   ) {
     if (typeof to === "number") {
       init.history.go(to);
@@ -1425,12 +1425,12 @@ export function createRouter(init: RouterInit): Router {
       basename,
       to,
       opts?.fromRouteId,
-      opts?.relative
+      opts?.relative,
     );
     let { path, submission, error } = normalizeNavigateOptions(
       false,
       normalizedPath,
-      opts
+      opts,
     );
 
     let currentLocation = state.location;
@@ -1565,7 +1565,7 @@ export function createRouter(init: RouterInit): Router {
         overrideNavigation: state.navigation,
         // Proxy through any rending view transition
         enableViewTransition: pendingViewTransitionEnabled === true,
-      }
+      },
     );
     return promise;
   }
@@ -1587,7 +1587,7 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
       enableViewTransition?: boolean;
       flushSync?: boolean;
-    }
+    },
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
@@ -1642,7 +1642,7 @@ export function createRouter(init: RouterInit): Router {
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
       let { error, notFoundMatches, route } = handleNavigational404(
-        location.pathname
+        location.pathname,
       );
       completeNavigation(
         location,
@@ -1653,7 +1653,7 @@ export function createRouter(init: RouterInit): Router {
             [route.id]: error,
           },
         },
-        { flushSync }
+        { flushSync },
       );
       return;
     }
@@ -1664,11 +1664,11 @@ export function createRouter(init: RouterInit): Router {
       init.history,
       location,
       pendingNavigationController.signal,
-      opts && opts.submission
+      opts && opts.submission,
     );
     // Create a new context per navigation
     let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined
+      init.unstable_getContext ? await init.unstable_getContext() : undefined,
     );
     let pendingActionResult: PendingActionResult | undefined;
 
@@ -1695,7 +1695,7 @@ export function createRouter(init: RouterInit): Router {
         scopedContext,
         fogOfWar.active,
         opts && opts.initialHydration === true,
-        { replace: opts.replace, flushSync }
+        { replace: opts.replace, flushSync },
       );
 
       if (actionResult.shortCircuited) {
@@ -1735,7 +1735,7 @@ export function createRouter(init: RouterInit): Router {
       request = createClientSideRequest(
         init.history,
         request.url,
-        request.signal
+        request.signal,
       );
     }
 
@@ -1757,7 +1757,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.replace,
       opts && opts.initialHydration === true,
       flushSync,
-      pendingActionResult
+      pendingActionResult,
     );
 
     if (shortCircuited) {
@@ -1787,7 +1787,7 @@ export function createRouter(init: RouterInit): Router {
     scopedContext: unstable_RouterContextProvider,
     isFogOfWar: boolean,
     initialHydration: boolean,
-    opts: { replace?: boolean; flushSync?: boolean } = {}
+    opts: { replace?: boolean; flushSync?: boolean } = {},
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
 
@@ -1799,7 +1799,7 @@ export function createRouter(init: RouterInit): Router {
       let discoverResult = await discoverRoutes(
         matches,
         location.pathname,
-        request.signal
+        request.signal,
       );
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
@@ -1818,7 +1818,7 @@ export function createRouter(init: RouterInit): Router {
         };
       } else if (!discoverResult.matches) {
         let { notFoundMatches, error, route } = handleNavigational404(
-          location.pathname
+          location.pathname,
         );
         return {
           matches: notFoundMatches,
@@ -1856,13 +1856,13 @@ export function createRouter(init: RouterInit): Router {
         matches,
         actionMatch,
         initialHydration ? [] : hydrationRouteProperties,
-        scopedContext
+        scopedContext,
       );
       let results = await callDataStrategy(
         request,
         dsMatches,
         scopedContext,
-        null
+        null,
       );
       result = results[actionMatch.route.id];
 
@@ -1893,7 +1893,7 @@ export function createRouter(init: RouterInit): Router {
         let location = normalizeRedirectLocation(
           result.response.headers.get("Location")!,
           new URL(request.url),
-          basename
+          basename,
         );
         replace = location === state.location.pathname + state.location.search;
       }
@@ -1948,7 +1948,7 @@ export function createRouter(init: RouterInit): Router {
     replace?: boolean,
     initialHydration?: boolean,
     flushSync?: boolean,
-    pendingActionResult?: PendingActionResult
+    pendingActionResult?: PendingActionResult,
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
@@ -1985,14 +1985,14 @@ export function createRouter(init: RouterInit): Router {
           },
           {
             flushSync,
-          }
+          },
         );
       }
 
       let discoverResult = await discoverRoutes(
         matches,
         location.pathname,
-        request.signal
+        request.signal,
       );
 
       if (discoverResult.type === "aborted") {
@@ -2009,7 +2009,7 @@ export function createRouter(init: RouterInit): Router {
         };
       } else if (!discoverResult.matches) {
         let { error, notFoundMatches, route } = handleNavigational404(
-          location.pathname
+          location.pathname,
         );
         return {
           matches: notFoundMatches,
@@ -2044,7 +2044,7 @@ export function createRouter(init: RouterInit): Router {
       routesToUse,
       basename,
       init.patchRoutesOnNavigation != null,
-      pendingActionResult
+      pendingActionResult,
     );
 
     pendingNavigationLoadId = ++incrementingLoadId;
@@ -2070,7 +2070,7 @@ export function createRouter(init: RouterInit): Router {
           ...getActionDataForCommit(pendingActionResult),
           ...(updatedFetchers ? { fetchers: new Map(state.fetchers) } : {}),
         },
-        { flushSync }
+        { flushSync },
       );
       return { shortCircuited: true };
     }
@@ -2107,7 +2107,7 @@ export function createRouter(init: RouterInit): Router {
     if (pendingNavigationController) {
       pendingNavigationController.signal.addEventListener(
         "abort",
-        abortPendingFetchRevalidations
+        abortPendingFetchRevalidations,
       );
     }
 
@@ -2116,7 +2116,7 @@ export function createRouter(init: RouterInit): Router {
         dsMatches,
         revalidatingFetchers,
         request,
-        scopedContext
+        scopedContext,
       );
 
     if (request.signal.aborted) {
@@ -2129,7 +2129,7 @@ export function createRouter(init: RouterInit): Router {
     if (pendingNavigationController) {
       pendingNavigationController.signal.removeEventListener(
         "abort",
-        abortPendingFetchRevalidations
+        abortPendingFetchRevalidations,
       );
     }
 
@@ -2163,7 +2163,7 @@ export function createRouter(init: RouterInit): Router {
       loaderResults,
       pendingActionResult,
       revalidatingFetchers,
-      fetcherResults
+      fetcherResults,
     );
 
     // Preserve SSR errors during partial hydration
@@ -2185,7 +2185,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function getUpdatedActionData(
-    pendingActionResult: PendingActionResult | undefined
+    pendingActionResult: PendingActionResult | undefined,
   ): Record<string, RouteData> | null | undefined {
     if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
       // This is cast to `any` currently because `RouteData`uses any and it
@@ -2204,13 +2204,13 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function getUpdatedRevalidatingFetchers(
-    revalidatingFetchers: RevalidatingFetcher[]
+    revalidatingFetchers: RevalidatingFetcher[],
   ) {
     revalidatingFetchers.forEach((rf) => {
       let fetcher = state.fetchers.get(rf.key);
       let revalidatingFetcher = getLoadingFetcher(
         undefined,
-        fetcher ? fetcher.data : undefined
+        fetcher ? fetcher.data : undefined,
       );
       state.fetchers.set(rf.key, revalidatingFetcher);
     });
@@ -2222,7 +2222,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     href: string | null,
-    opts?: RouterFetchOptions
+    opts?: RouterFetchOptions,
   ) {
     abortFetcher(key);
 
@@ -2235,7 +2235,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       href,
       routeId,
-      opts?.relative
+      opts?.relative,
     );
     let matches = matchRoutes(routesToUse, normalizedPath, basename);
 
@@ -2249,7 +2249,7 @@ export function createRouter(init: RouterInit): Router {
         key,
         routeId,
         getInternalRouterError(404, { pathname: normalizedPath }),
-        { flushSync }
+        { flushSync },
       );
       return;
     }
@@ -2257,7 +2257,7 @@ export function createRouter(init: RouterInit): Router {
     let { path, submission, error } = normalizeNavigateOptions(
       true,
       normalizedPath,
-      opts
+      opts,
     );
 
     if (error) {
@@ -2267,7 +2267,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Create a new context per fetch
     let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined
+      init.unstable_getContext ? await init.unstable_getContext() : undefined,
     );
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
@@ -2281,7 +2281,7 @@ export function createRouter(init: RouterInit): Router {
         fogOfWar.active,
         flushSync,
         preventScrollReset,
-        submission
+        submission,
       );
       return;
     }
@@ -2298,7 +2298,7 @@ export function createRouter(init: RouterInit): Router {
       fogOfWar.active,
       flushSync,
       preventScrollReset,
-      submission
+      submission,
     );
   }
 
@@ -2313,7 +2313,7 @@ export function createRouter(init: RouterInit): Router {
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
-    submission: Submission
+    submission: Submission,
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -2329,7 +2329,7 @@ export function createRouter(init: RouterInit): Router {
       init.history,
       path,
       abortController.signal,
-      submission
+      submission,
     );
 
     if (isFogOfWar) {
@@ -2337,7 +2337,7 @@ export function createRouter(init: RouterInit): Router {
         requestMatches,
         new URL(fetchRequest.url).pathname,
         fetchRequest.signal,
-        key
+        key,
       );
 
       if (discoverResult.type === "aborted") {
@@ -2350,7 +2350,7 @@ export function createRouter(init: RouterInit): Router {
           key,
           routeId,
           getInternalRouterError(404, { pathname: path }),
-          { flushSync }
+          { flushSync },
         );
         return;
       } else {
@@ -2381,13 +2381,13 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       match,
       hydrationRouteProperties,
-      scopedContext
+      scopedContext,
     );
     let actionResults = await callDataStrategy(
       fetchRequest,
       fetchMatches,
       scopedContext,
-      key
+      key,
     );
     let actionResult = actionResults[match.route.id];
 
@@ -2441,7 +2441,7 @@ export function createRouter(init: RouterInit): Router {
     let revalidationRequest = createClientSideRequest(
       init.history,
       nextLocation,
-      abortController.signal
+      abortController.signal,
     );
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let matches =
@@ -2477,7 +2477,7 @@ export function createRouter(init: RouterInit): Router {
       routesToUse,
       basename,
       init.patchRoutesOnNavigation != null,
-      [match.route.id, actionResult]
+      [match.route.id, actionResult],
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -2490,7 +2490,7 @@ export function createRouter(init: RouterInit): Router {
         let existingFetcher = state.fetchers.get(staleKey);
         let revalidatingFetcher = getLoadingFetcher(
           undefined,
-          existingFetcher ? existingFetcher.data : undefined
+          existingFetcher ? existingFetcher.data : undefined,
         );
         state.fetchers.set(staleKey, revalidatingFetcher);
         abortFetcher(staleKey);
@@ -2506,7 +2506,7 @@ export function createRouter(init: RouterInit): Router {
 
     abortController.signal.addEventListener(
       "abort",
-      abortPendingFetchRevalidations
+      abortPendingFetchRevalidations,
     );
 
     let { loaderResults, fetcherResults } =
@@ -2514,7 +2514,7 @@ export function createRouter(init: RouterInit): Router {
         dsMatches,
         revalidatingFetchers,
         revalidationRequest,
-        scopedContext
+        scopedContext,
       );
 
     if (abortController.signal.aborted) {
@@ -2523,7 +2523,7 @@ export function createRouter(init: RouterInit): Router {
 
     abortController.signal.removeEventListener(
       "abort",
-      abortPendingFetchRevalidations
+      abortPendingFetchRevalidations,
     );
 
     fetchReloadIds.delete(key);
@@ -2543,7 +2543,7 @@ export function createRouter(init: RouterInit): Router {
         revalidationRequest,
         redirect.result,
         false,
-        { preventScrollReset }
+        { preventScrollReset },
       );
     }
 
@@ -2557,7 +2557,7 @@ export function createRouter(init: RouterInit): Router {
         revalidationRequest,
         redirect.result,
         false,
-        { preventScrollReset }
+        { preventScrollReset },
       );
     }
 
@@ -2568,7 +2568,7 @@ export function createRouter(init: RouterInit): Router {
       loaderResults,
       undefined,
       revalidatingFetchers,
-      fetcherResults
+      fetcherResults,
     );
 
     abortStaleFetchLoads(loadId);
@@ -2599,7 +2599,7 @@ export function createRouter(init: RouterInit): Router {
           state.loaderData,
           loaderData,
           matches,
-          errors
+          errors,
         ),
         fetchers: new Map(state.fetchers),
       });
@@ -2617,23 +2617,23 @@ export function createRouter(init: RouterInit): Router {
     isFogOfWar: boolean,
     flushSync: boolean,
     preventScrollReset: boolean,
-    submission?: Submission
+    submission?: Submission,
   ) {
     let existingFetcher = state.fetchers.get(key);
     updateFetcherState(
       key,
       getLoadingFetcher(
         submission,
-        existingFetcher ? existingFetcher.data : undefined
+        existingFetcher ? existingFetcher.data : undefined,
       ),
-      { flushSync }
+      { flushSync },
     );
 
     let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
-      abortController.signal
+      abortController.signal,
     );
 
     if (isFogOfWar) {
@@ -2641,7 +2641,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         new URL(fetchRequest.url).pathname,
         fetchRequest.signal,
-        key
+        key,
       );
 
       if (discoverResult.type === "aborted") {
@@ -2654,7 +2654,7 @@ export function createRouter(init: RouterInit): Router {
           key,
           routeId,
           getInternalRouterError(404, { pathname: path }),
-          { flushSync }
+          { flushSync },
         );
         return;
       } else {
@@ -2675,13 +2675,13 @@ export function createRouter(init: RouterInit): Router {
       matches,
       match,
       hydrationRouteProperties,
-      scopedContext
+      scopedContext,
     );
     let results = await callDataStrategy(
       fetchRequest,
       dsMatches,
       scopedContext,
-      key
+      key,
     );
     let result = results[match.route.id];
 
@@ -2761,7 +2761,7 @@ export function createRouter(init: RouterInit): Router {
       fetcherSubmission?: Submission;
       preventScrollReset?: boolean;
       replace?: boolean;
-    } = {}
+    } = {},
   ) {
     if (redirect.response.headers.has("X-Remix-Revalidate")) {
       isRevalidationRequired = true;
@@ -2772,7 +2772,7 @@ export function createRouter(init: RouterInit): Router {
     location = normalizeRedirectLocation(
       location,
       new URL(request.url),
-      basename
+      basename,
     );
     let redirectLocation = createLocation(state.location, location, {
       _isRedirect: true,
@@ -2852,7 +2852,7 @@ export function createRouter(init: RouterInit): Router {
       // redirect navigation
       let overrideNavigation = getLoadingNavigation(
         redirectLocation,
-        submission
+        submission,
       );
       await startNavigation(redirectNavigationType, redirectLocation, {
         overrideNavigation,
@@ -2873,7 +2873,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     matches: DataStrategyMatch[],
     scopedContext: unstable_RouterContextProvider,
-    fetcherKey: string | null
+    fetcherKey: string | null,
   ): Promise<Record<string, DataResult>> {
     let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
@@ -2884,7 +2884,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         fetcherKey,
         scopedContext,
-        false
+        false,
       );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
@@ -2914,13 +2914,12 @@ export function createRouter(init: RouterInit): Router {
             request,
             routeId,
             matches,
-            basename
+            basename,
           ),
         };
       } else {
-        dataResults[routeId] = await convertDataStrategyResultToDataResult(
-          result
-        );
+        dataResults[routeId] =
+          await convertDataStrategyResultToDataResult(result);
       }
     }
 
@@ -2931,14 +2930,14 @@ export function createRouter(init: RouterInit): Router {
     matches: DataStrategyMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request,
-    scopedContext: unstable_RouterContextProvider
+    scopedContext: unstable_RouterContextProvider,
   ) {
     // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = callDataStrategy(
       request,
       matches,
       scopedContext,
-      null
+      null,
     );
 
     let fetcherResultsPromise = Promise.all(
@@ -2948,7 +2947,7 @@ export function createRouter(init: RouterInit): Router {
             f.request,
             f.matches,
             scopedContext,
-            f.key
+            f.key,
           );
           let result = results[f.match.route.id];
           // Fetcher results are keyed by fetcher key from here on out, not routeId
@@ -2963,13 +2962,13 @@ export function createRouter(init: RouterInit): Router {
             } as ErrorResult,
           });
         }
-      })
+      }),
     );
 
     let loaderResults = await loaderResultsPromise;
     let fetcherResults = (await fetcherResultsPromise).reduce(
       (acc, r) => Object.assign(acc, r),
-      {}
+      {},
     );
 
     return {
@@ -2994,12 +2993,12 @@ export function createRouter(init: RouterInit): Router {
   function updateFetcherState(
     key: string,
     fetcher: Fetcher,
-    opts: { flushSync?: boolean } = {}
+    opts: { flushSync?: boolean } = {},
   ) {
     state.fetchers.set(key, fetcher);
     updateState(
       { fetchers: new Map(state.fetchers) },
-      { flushSync: (opts && opts.flushSync) === true }
+      { flushSync: (opts && opts.flushSync) === true },
     );
   }
 
@@ -3007,7 +3006,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     error: any,
-    opts: { flushSync?: boolean } = {}
+    opts: { flushSync?: boolean } = {},
   ) {
     let boundaryMatch = findNearestBoundary(state.matches, routeId);
     deleteFetcher(key);
@@ -3018,7 +3017,7 @@ export function createRouter(init: RouterInit): Router {
         },
         fetchers: new Map(state.fetchers),
       },
-      { flushSync: (opts && opts.flushSync) === true }
+      { flushSync: (opts && opts.flushSync) === true },
     );
   }
 
@@ -3138,7 +3137,7 @@ export function createRouter(init: RouterInit): Router {
         (blocker.state === "blocked" && newBlocker.state === "proceeding") ||
         (blocker.state === "blocked" && newBlocker.state === "unblocked") ||
         (blocker.state === "proceeding" && newBlocker.state === "unblocked"),
-      `Invalid blocker state transition: ${blocker.state} -> ${newBlocker.state}`
+      `Invalid blocker state transition: ${blocker.state} -> ${newBlocker.state}`,
     );
 
     let blockers = new Map(state.blockers);
@@ -3195,7 +3194,7 @@ export function createRouter(init: RouterInit): Router {
   function enableScrollRestoration(
     positions: Record<string, number>,
     getPosition: GetScrollPositionFunction,
-    getKey?: GetScrollRestorationKeyFunction
+    getKey?: GetScrollRestorationKeyFunction,
   ) {
     savedScrollPositions = positions;
     getScrollPosition = getPosition;
@@ -3223,7 +3222,7 @@ export function createRouter(init: RouterInit): Router {
     if (getScrollRestorationKey) {
       let key = getScrollRestorationKey(
         location,
-        matches.map((m) => convertRouteMatchToUiMatch(m, state.loaderData))
+        matches.map((m) => convertRouteMatchToUiMatch(m, state.loaderData)),
       );
       return key || location.key;
     }
@@ -3232,7 +3231,7 @@ export function createRouter(init: RouterInit): Router {
 
   function saveScrollPosition(
     location: Location,
-    matches: AgnosticDataRouteMatch[]
+    matches: AgnosticDataRouteMatch[],
   ): void {
     if (savedScrollPositions && getScrollPosition) {
       let key = getScrollKey(location, matches);
@@ -3242,7 +3241,7 @@ export function createRouter(init: RouterInit): Router {
 
   function getSavedScrollPosition(
     location: Location,
-    matches: AgnosticDataRouteMatch[]
+    matches: AgnosticDataRouteMatch[],
   ): number | null {
     if (savedScrollPositions) {
       let key = getScrollKey(location, matches);
@@ -3257,7 +3256,7 @@ export function createRouter(init: RouterInit): Router {
   function checkFogOfWar(
     matches: AgnosticDataRouteMatch[] | null,
     routesToUse: AgnosticDataRouteObject[],
-    pathname: string
+    pathname: string,
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
     if (init.patchRoutesOnNavigation) {
       if (!matches) {
@@ -3265,7 +3264,7 @@ export function createRouter(init: RouterInit): Router {
           routesToUse,
           pathname,
           basename,
-          true
+          true,
         );
 
         return { active: true, matches: fogMatches || [] };
@@ -3278,7 +3277,7 @@ export function createRouter(init: RouterInit): Router {
             routesToUse,
             pathname,
             basename,
-            true
+            true,
           );
           return { active: true, matches: partialMatches };
         }
@@ -3307,7 +3306,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     pathname: string,
     signal: AbortSignal,
-    fetcherKey?: string
+    fetcherKey?: string,
   ): Promise<DiscoverRoutesResult> {
     if (!init.patchRoutesOnNavigation) {
       return { type: "success", matches };
@@ -3332,7 +3331,7 @@ export function createRouter(init: RouterInit): Router {
               routesToUse,
               localManifest,
               mapRouteProperties,
-              false
+              false,
             );
           },
         });
@@ -3363,7 +3362,7 @@ export function createRouter(init: RouterInit): Router {
         routesToUse,
         pathname,
         basename,
-        true
+        true,
       );
 
       // Avoid loops if the second pass results in the same partial matches
@@ -3371,7 +3370,7 @@ export function createRouter(init: RouterInit): Router {
         !newPartialMatches ||
         (partialMatches.length === newPartialMatches.length &&
           partialMatches.every(
-            (m, i) => m.route.id === newPartialMatches![i].route.id
+            (m, i) => m.route.id === newPartialMatches![i].route.id,
           ))
       ) {
         return { type: "success", matches: null };
@@ -3387,14 +3386,14 @@ export function createRouter(init: RouterInit): Router {
       newRoutes,
       mapRouteProperties,
       undefined,
-      manifest
+      manifest,
     );
   }
 
   function patchRoutes(
     routeId: string | null,
     children: AgnosticRouteObject[],
-    unstable_allowElementMutations = false
+    unstable_allowElementMutations = false,
   ): void {
     let isNonHMR = inFlightDataRoutes == null;
     let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3404,7 +3403,7 @@ export function createRouter(init: RouterInit): Router {
       routesToUse,
       manifest,
       mapRouteProperties,
-      unstable_allowElementMutations
+      unstable_allowElementMutations,
     );
 
     // If we are not in the middle of an HMR revalidation and we changed the
@@ -3475,11 +3474,11 @@ export interface CreateStaticHandlerOptions {
 
 export function createStaticHandler(
   routes: AgnosticRouteObject[],
-  opts?: CreateStaticHandlerOptions
+  opts?: CreateStaticHandlerOptions,
 ): StaticHandler {
   invariant(
     routes.length > 0,
-    "You must provide a non-empty routes array to createStaticHandler"
+    "You must provide a non-empty routes array to createStaticHandler",
   );
 
   let manifest: RouteManifest = {};
@@ -3491,7 +3490,7 @@ export function createStaticHandler(
     routes,
     mapRouteProperties,
     undefined,
-    manifest
+    manifest,
   );
 
   /**
@@ -3530,7 +3529,7 @@ export function createStaticHandler(
       dataStrategy,
       unstable_stream: stream,
       unstable_respond: respond,
-    }: Parameters<StaticHandler["query"]>[1] = {}
+    }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3542,15 +3541,15 @@ export function createStaticHandler(
         : new unstable_RouterContextProvider();
 
     let respondOrStreamStaticContext = (
-      ctx: StaticHandlerContext
+      ctx: StaticHandlerContext,
     ): MaybePromise<Response> | StaticHandlerContext => {
       return stream
         ? stream(requestContext as unstable_RouterContextProvider, () =>
-            Promise.resolve(ctx)
+            Promise.resolve(ctx),
           )
         : respond
-        ? respond(ctx)
-        : ctx;
+          ? respond(ctx)
+          : ctx;
     };
 
     // SSR supports HEAD requests while SPA doesn't
@@ -3599,19 +3598,19 @@ export function createStaticHandler(
           (m) =>
             m.route.unstable_middleware ||
             (typeof m.route.lazy === "object" &&
-              m.route.lazy.unstable_middleware)
+              m.route.lazy.unstable_middleware),
         ))
     ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
-          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`",
       );
       try {
         await loadLazyMiddlewareForMatches(
           matches,
           manifest,
-          mapRouteProperties
+          mapRouteProperties,
         );
         let renderedStaticContext: StaticHandlerContext | undefined;
         let response = await runMiddlewarePipeline(
@@ -3683,13 +3682,13 @@ export function createStaticHandler(
                     skipLoaderErrorBubbling === true,
                     null,
                     filterMatchesToLoad || null,
-                    skipRevalidation === true
+                    skipRevalidation === true,
                   );
 
                   return isResponse(result)
                     ? result
                     : { location, basename, ...result };
-                }
+                },
               );
               return res;
             }
@@ -3706,7 +3705,7 @@ export function createStaticHandler(
               skipLoaderErrorBubbling === true,
               null,
               filterMatchesToLoad || null,
-              skipRevalidation === true
+              skipRevalidation === true,
             );
 
             if (isResponse(result)) {
@@ -3744,7 +3743,7 @@ export function createStaticHandler(
                 error,
                 skipLoaderErrorBubbling
                   ? routeId
-                  : findNearestBoundary(matches, routeId).route.id
+                  : findNearestBoundary(matches, routeId).route.id,
               );
               return respondOrStreamStaticContext(staticContext);
             } else {
@@ -3759,8 +3758,8 @@ export function createStaticHandler(
                 : findNearestBoundary(
                     matches,
                     matches.find(
-                      (m) => m.route.id === routeId || m.route.loader
-                    )?.route.id || routeId
+                      (m) => m.route.id === routeId || m.route.loader,
+                    )?.route.id || routeId,
                   ).route.id;
 
               let staticContext: StaticHandlerContext = {
@@ -3778,7 +3777,7 @@ export function createStaticHandler(
               };
               return respondOrStreamStaticContext(staticContext);
             }
-          }
+          },
         );
 
         invariant(isResponse(response), "Expected a response in query()");
@@ -3800,7 +3799,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling === true,
       null,
       filterMatchesToLoad || null,
-      skipRevalidation === true
+      skipRevalidation === true,
     );
 
     if (isResponse(result)) {
@@ -3846,7 +3845,7 @@ export function createStaticHandler(
       requestContext,
       dataStrategy,
       unstable_respond: respond,
-    }: Parameters<StaticHandler["queryRoute"]>[1] = {}
+    }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3883,13 +3882,14 @@ export function createStaticHandler(
       matches.some(
         (m) =>
           m.route.unstable_middleware ||
-          (typeof m.route.lazy === "object" && m.route.lazy.unstable_middleware)
+          (typeof m.route.lazy === "object" &&
+            m.route.lazy.unstable_middleware),
       )
     ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
-          "`requestContext` must be an instance of `unstable_RouterContextProvider`"
+          "`requestContext` must be an instance of `unstable_RouterContextProvider`",
       );
       await loadLazyMiddlewareForMatches(matches, manifest, mapRouteProperties);
       let response = await runMiddlewarePipeline(
@@ -3912,7 +3912,7 @@ export function createStaticHandler(
             false,
             match!,
             null,
-            false
+            false,
           );
 
           if (isResponse(result)) {
@@ -3948,7 +3948,7 @@ export function createStaticHandler(
             status: 500,
             statusText: "Unexpected Server Error",
           });
-        }
+        },
       );
       return response;
     }
@@ -3962,7 +3962,7 @@ export function createStaticHandler(
       false,
       match,
       null,
-      false
+      false,
     );
 
     if (isResponse(result)) {
@@ -3999,11 +3999,11 @@ export function createStaticHandler(
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
-    skipRevalidation: boolean
+    skipRevalidation: boolean,
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
-      "query()/queryRoute() requests must contain an AbortController signal"
+      "query()/queryRoute() requests must contain an AbortController signal",
     );
 
     try {
@@ -4017,7 +4017,7 @@ export function createStaticHandler(
           skipLoaderErrorBubbling,
           routeMatch != null,
           filterMatchesToLoad,
-          skipRevalidation
+          skipRevalidation,
         );
         return result;
       }
@@ -4029,7 +4029,7 @@ export function createStaticHandler(
         dataStrategy,
         skipLoaderErrorBubbling,
         routeMatch,
-        filterMatchesToLoad
+        filterMatchesToLoad,
       );
       return isResponse(result)
         ? result
@@ -4066,7 +4066,7 @@ export function createStaticHandler(
     skipLoaderErrorBubbling: boolean,
     isRouteRequest: boolean,
     filterMatchesToLoad: ((m: AgnosticDataRouteMatch) => boolean) | null,
-    skipRevalidation: boolean
+    skipRevalidation: boolean,
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
 
@@ -4091,7 +4091,7 @@ export function createStaticHandler(
         matches,
         actionMatch,
         [],
-        requestContext
+        requestContext,
       );
 
       let results = await callDataStrategy(
@@ -4099,7 +4099,7 @@ export function createStaticHandler(
         dsMatches,
         isRouteRequest,
         requestContext,
-        dataStrategy
+        dataStrategy,
       );
       result = results[actionMatch.route.id];
 
@@ -4151,8 +4151,8 @@ export function createStaticHandler(
           statusCode: isRouteErrorResponse(result.error)
             ? result.error.status
             : result.statusCode != null
-            ? result.statusCode
-            : 500,
+              ? result.statusCode
+              : 500,
           actionData: null,
           actionHeaders: {
             ...(result.headers
@@ -4205,7 +4205,7 @@ export function createStaticHandler(
         skipLoaderErrorBubbling,
         null,
         filterMatchesToLoad,
-        [boundaryMatch.route.id, result]
+        [boundaryMatch.route.id, result],
       );
 
       // action status codes take precedence over loader status codes
@@ -4214,8 +4214,8 @@ export function createStaticHandler(
         statusCode: isRouteErrorResponse(result.error)
           ? result.error.status
           : result.statusCode != null
-          ? result.statusCode
-          : 500,
+            ? result.statusCode
+            : 500,
         actionData: null,
         actionHeaders: {
           ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
@@ -4230,7 +4230,7 @@ export function createStaticHandler(
       dataStrategy,
       skipLoaderErrorBubbling,
       null,
-      filterMatchesToLoad
+      filterMatchesToLoad,
     );
 
     return {
@@ -4254,7 +4254,7 @@ export function createStaticHandler(
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     filterMatchesToLoad: ((match: AgnosticDataRouteMatch) => boolean) | null,
-    pendingActionResult?: PendingActionResult
+    pendingActionResult?: PendingActionResult,
   ): Promise<
     | Omit<
         StaticHandlerContext,
@@ -4286,7 +4286,7 @@ export function createStaticHandler(
         matches,
         routeMatch,
         [],
-        requestContext
+        requestContext,
       );
     } else {
       let maxIdx =
@@ -4304,7 +4304,7 @@ export function createStaticHandler(
             match,
             [],
             requestContext,
-            false
+            false,
           );
         }
 
@@ -4316,7 +4316,7 @@ export function createStaticHandler(
           [],
           requestContext,
           (match.route.loader || match.route.lazy) != null &&
-            (!filterMatchesToLoad || filterMatchesToLoad(match))
+            (!filterMatchesToLoad || filterMatchesToLoad(match)),
         );
       });
     }
@@ -4343,7 +4343,7 @@ export function createStaticHandler(
       dsMatches,
       isRouteRequest,
       requestContext,
-      dataStrategy
+      dataStrategy,
     );
 
     if (request.signal.aborted) {
@@ -4356,7 +4356,7 @@ export function createStaticHandler(
       results,
       pendingActionResult,
       true,
-      skipLoaderErrorBubbling
+      skipLoaderErrorBubbling,
     );
 
     return {
@@ -4372,7 +4372,7 @@ export function createStaticHandler(
     matches: DataStrategyMatch[],
     isRouteRequest: boolean,
     requestContext: unknown,
-    dataStrategy: DataStrategyFunction<unknown> | null
+    dataStrategy: DataStrategyFunction<unknown> | null,
   ): Promise<Record<string, DataResult>> {
     let results = await callDataStrategyImpl(
       dataStrategy || defaultDataStrategy,
@@ -4380,7 +4380,7 @@ export function createStaticHandler(
       matches,
       null,
       requestContext,
-      true
+      true,
     );
 
     let dataResults: Record<string, DataResult> = {};
@@ -4398,7 +4398,7 @@ export function createStaticHandler(
             request,
             match.route.id,
             matches,
-            basename
+            basename,
           );
         }
         if (isResponse(result.result) && isRouteRequest) {
@@ -4409,7 +4409,7 @@ export function createStaticHandler(
 
         dataResults[match.route.id] =
           await convertDataStrategyResultToDataResult(result);
-      })
+      }),
     );
     return dataResults;
   }
@@ -4437,7 +4437,7 @@ export function getStaticContextFromError(
   routes: AgnosticDataRouteObject[],
   handlerContext: StaticHandlerContext,
   error: any,
-  boundaryId?: string
+  boundaryId?: string,
 ): StaticHandlerContext {
   let errorBoundaryId =
     boundaryId || handlerContext._deepestRenderedBoundaryId || routes[0].id;
@@ -4452,7 +4452,7 @@ export function getStaticContextFromError(
 
 function throwStaticHandlerAbortedError(
   request: Request,
-  isRouteRequest: boolean
+  isRouteRequest: boolean,
 ) {
   if (request.signal.reason !== undefined) {
     throw request.signal.reason;
@@ -4460,12 +4460,12 @@ function throwStaticHandlerAbortedError(
 
   let method = isRouteRequest ? "queryRoute" : "query";
   throw new Error(
-    `${method}() call aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`
+    `${method}() call aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`,
   );
 }
 
 function isSubmissionNavigation(
-  opts: BaseNavigateOrFetchOptions
+  opts: BaseNavigateOrFetchOptions,
 ): opts is SubmissionNavigateOptions {
   return (
     opts != null &&
@@ -4480,7 +4480,7 @@ function normalizeTo(
   basename: string,
   to: To | null,
   fromRouteId?: string,
-  relative?: RelativeRoutingType
+  relative?: RelativeRoutingType,
 ) {
   let contextualMatches: AgnosticDataRouteMatch[];
   let activeRouteMatch: AgnosticDataRouteMatch | undefined;
@@ -4505,7 +4505,7 @@ function normalizeTo(
     to ? to : ".",
     getResolveToMatches(contextualMatches),
     stripBasename(location.pathname, basename) || location.pathname,
-    relative === "path"
+    relative === "path",
   );
 
   // When `to` is not specified we inherit search/hash from the current
@@ -4548,7 +4548,7 @@ function normalizeTo(
 function normalizeNavigateOptions(
   isFetcher: boolean,
   path: string,
-  opts?: BaseNavigateOrFetchOptions
+  opts?: BaseNavigateOrFetchOptions,
 ): {
   path: string;
   submission?: Submission;
@@ -4587,13 +4587,13 @@ function normalizeNavigateOptions(
         typeof opts.body === "string"
           ? opts.body
           : opts.body instanceof FormData ||
-            opts.body instanceof URLSearchParams
-          ? // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#plain-text-form-data
-            Array.from(opts.body.entries()).reduce(
-              (acc, [name, value]) => `${acc}${name}=${value}\n`,
-              ""
-            )
-          : String(opts.body);
+              opts.body instanceof URLSearchParams
+            ? // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#plain-text-form-data
+              Array.from(opts.body.entries()).reduce(
+                (acc, [name, value]) => `${acc}${name}=${value}\n`,
+                "",
+              )
+            : String(opts.body);
 
       return {
         path,
@@ -4635,7 +4635,7 @@ function normalizeNavigateOptions(
 
   invariant(
     typeof FormData === "function",
-    "FormData is not available in this environment"
+    "FormData is not available in this environment",
   );
 
   let searchParams: URLSearchParams;
@@ -4709,7 +4709,7 @@ function getMatchesToLoad(
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   hasPatchRoutesOnNavigation: boolean,
-  pendingActionResult?: PendingActionResult
+  pendingActionResult?: PendingActionResult,
 ): {
   dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
@@ -4778,7 +4778,7 @@ function getMatchesToLoad(
       forceShouldLoad = shouldLoadRouteOnHydration(
         route,
         state.loaderData,
-        state.errors
+        state.errors,
       );
     } else if (isNewLoader(state.loaderData, state.matches[index], match)) {
       // Always call the loader on new route instances
@@ -4793,7 +4793,7 @@ function getMatchesToLoad(
         match,
         lazyRoutePropertiesToSkip,
         scopedContext,
-        forceShouldLoad
+        forceShouldLoad,
       );
     }
 
@@ -4823,7 +4823,7 @@ function getMatchesToLoad(
       lazyRoutePropertiesToSkip,
       scopedContext,
       shouldLoad,
-      shouldRevalidateArgs
+      shouldRevalidateArgs,
     );
   });
 
@@ -4886,7 +4886,7 @@ function getMatchesToLoad(
     let fetchRequest = createClientSideRequest(
       history,
       f.path,
-      fetchController.signal
+      fetchController.signal,
     );
 
     let fetcherDsMatches: DataStrategyMatch[] | null = null;
@@ -4901,7 +4901,7 @@ function getMatchesToLoad(
         fetcherMatches,
         fetcherMatch,
         lazyRoutePropertiesToSkip,
-        scopedContext
+        scopedContext,
       );
     } else if (isMidInitialLoad) {
       if (isRevalidationRequired) {
@@ -4915,7 +4915,7 @@ function getMatchesToLoad(
           fetcherMatches,
           fetcherMatch,
           lazyRoutePropertiesToSkip,
-          scopedContext
+          scopedContext,
         );
       }
     } else {
@@ -4936,7 +4936,7 @@ function getMatchesToLoad(
           fetcherMatch,
           lazyRoutePropertiesToSkip,
           scopedContext,
-          shouldRevalidateArgs
+          shouldRevalidateArgs,
         );
       }
     }
@@ -4960,7 +4960,7 @@ function getMatchesToLoad(
 function shouldLoadRouteOnHydration(
   route: AgnosticDataRouteObject,
   loaderData: RouteData | null | undefined,
-  errors: RouteData | null | undefined
+  errors: RouteData | null | undefined,
 ) {
   // We dunno if we have a loader - gotta find out!
   if (route.lazy) {
@@ -4992,7 +4992,7 @@ function shouldLoadRouteOnHydration(
 function isNewLoader(
   currentLoaderData: RouteData,
   currentMatch: AgnosticDataRouteMatch,
-  match: AgnosticDataRouteMatch
+  match: AgnosticDataRouteMatch,
 ) {
   let isNew =
     // [a] -> [a, b]
@@ -5010,7 +5010,7 @@ function isNewLoader(
 
 function isNewRouteInstance(
   currentMatch: AgnosticDataRouteMatch,
-  match: AgnosticDataRouteMatch
+  match: AgnosticDataRouteMatch,
 ) {
   let currentPath = currentMatch.route.path;
   return (
@@ -5026,7 +5026,7 @@ function isNewRouteInstance(
 
 function shouldRevalidateLoader(
   loaderMatch: AgnosticDataRouteMatch,
-  arg: ShouldRevalidateFunctionArgs
+  arg: ShouldRevalidateFunctionArgs,
 ) {
   if (loaderMatch.route.shouldRevalidate) {
     let routeChoice = loaderMatch.route.shouldRevalidate(arg);
@@ -5044,14 +5044,14 @@ function patchRoutesImpl(
   routesToUse: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  allowElementMutations: boolean
+  allowElementMutations: boolean,
 ) {
   let childrenToPatch: AgnosticDataRouteObject[];
   if (routeId) {
     let route = manifest[routeId];
     invariant(
       route,
-      `No route found to patch children into: routeId = ${routeId}`
+      `No route found to patch children into: routeId = ${routeId}`,
     );
     if (!route.children) {
       route.children = [];
@@ -5071,7 +5071,7 @@ function patchRoutesImpl(
   }[] = [];
   children.forEach((newRoute) => {
     let existingRoute = childrenToPatch.find((existingRoute) =>
-      isSameRoute(newRoute, existingRoute)
+      isSameRoute(newRoute, existingRoute),
     );
     if (existingRoute) {
       existingChildren.push({ existingRoute, newRoute });
@@ -5085,7 +5085,7 @@ function patchRoutesImpl(
       uniqueChildren,
       mapRouteProperties,
       [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
-      manifest
+      manifest,
     );
     childrenToPatch.push(...newRoutes);
   }
@@ -5103,7 +5103,7 @@ function patchRoutesImpl(
         mapRouteProperties,
         [], // Doesn't matter for mutated routes since they already have an id
         {}, // Don't touch the manifest here since we're updating in place
-        true
+        true,
       ) as RouteObject[];
       Object.assign(existingRouteTyped, {
         element: newRouteTyped.element
@@ -5122,7 +5122,7 @@ function patchRoutesImpl(
 
 function isSameRoute(
   newRoute: AgnosticRouteObject,
-  existingRoute: AgnosticRouteObject
+  existingRoute: AgnosticRouteObject,
 ): boolean {
   // Most optimal check is by id
   if (
@@ -5156,7 +5156,7 @@ function isSameRoute(
   // Otherwise, we look to see if every child in the new route is already
   // represented in the existing route's children
   return newRoute.children!.every((aChild, i) =>
-    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
+    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild)),
   );
 }
 
@@ -5211,14 +5211,14 @@ const loadLazyRouteProperty = ({
         !isUnsupported,
         "Route property " +
           key +
-          " is not a supported lazy route property. This property will be ignored."
+          " is not a supported lazy route property. This property will be ignored.",
       );
       cache[key] = Promise.resolve();
     } else if (isStaticallyDefined) {
       warning(
         false,
         `Route "${routeToUpdate.id}" has a static property "${key}" ` +
-          `defined. The lazy property will be ignored.`
+          `defined. The lazy property will be ignored.`,
       );
     } else {
       let value = await lazyFn();
@@ -5258,7 +5258,7 @@ function loadLazyRoute(
   type: "loader" | "action",
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  lazyRoutePropertiesToSkip?: string[]
+  lazyRoutePropertiesToSkip?: string[],
 ): {
   lazyRoutePromise: Promise<void> | undefined;
   lazyHandlerPromise: Promise<void> | undefined;
@@ -5291,7 +5291,7 @@ function loadLazyRoute(
     let lazyRoutePromise = (async () => {
       invariant(
         typeof route.lazy === "function",
-        "No lazy route function found"
+        "No lazy route function found",
       );
       let lazyRoute = await route.lazy();
       // Here we update the route in place.  This should be safe because there's
@@ -5325,14 +5325,14 @@ function loadLazyRoute(
             !isUnsupported,
             "Route property " +
               lazyRouteProperty +
-              " is not a supported property to be returned from a lazy route function. This property will be ignored."
+              " is not a supported property to be returned from a lazy route function. This property will be ignored.",
           );
         } else if (isStaticallyDefined) {
           warning(
             !isStaticallyDefined,
             `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" ` +
               `defined but its lazy function is also returning a value for this property. ` +
-              `The lazy route property "${lazyRouteProperty}" will be ignored.`
+              `The lazy route property "${lazyRouteProperty}" will be ignored.`,
           );
         } else {
           routeUpdates[lazyRouteProperty] = lazyValue;
@@ -5413,7 +5413,7 @@ function isNonNullable<T>(value: T): value is NonNullable<T> {
 function loadLazyMiddlewareForMatches(
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction
+  mapRouteProperties: MapRoutePropertiesFunction,
 ): Promise<void[]> | void {
   let promises: Promise<void>[] = matches
     .map(({ route }) => {
@@ -5435,7 +5435,7 @@ function loadLazyMiddlewareForMatches(
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
 async function defaultDataStrategy(
-  args: DataStrategyFunctionArgs<unknown>
+  args: DataStrategyFunctionArgs<unknown>,
 ): ReturnType<DataStrategyFunction<unknown>> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
   let keyedResults: Record<string, DataStrategyResult> = {};
@@ -5449,7 +5449,7 @@ async function defaultDataStrategy(
 // Middleware-enabled implementation of `dataStrategy` which calls middleware
 // and fetches all loaders in parallel
 async function defaultDataStrategyWithMiddleware(
-  args: DataStrategyFunctionArgs<unstable_RouterContextProvider>
+  args: DataStrategyFunctionArgs<unstable_RouterContextProvider>,
 ): ReturnType<DataStrategyFunction<unknown>> {
   // Short circuit all the middleware logic if we have no middlewares
   if (!args.matches.some((m) => m.route.unstable_middleware)) {
@@ -5460,7 +5460,7 @@ async function defaultDataStrategyWithMiddleware(
     args,
     false,
     () => defaultDataStrategy(args),
-    (error, routeId) => ({ [routeId]: { type: "error", result: error } })
+    (error, routeId) => ({ [routeId]: { type: "error", result: error } }),
   ) as Promise<Record<string, DataStrategyResult>>;
 }
 
@@ -5490,7 +5490,7 @@ export async function runMiddlewarePipeline<T extends boolean>(
   handler: () => T extends true
     ? MaybePromise<Response>
     : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (error: unknown, routeId: string) => unknown
+  errorHandler: (error: unknown, routeId: string) => unknown,
 ): Promise<unknown> {
   let { matches, request, params, context } = args;
   let middlewareState: MutableMiddlewareState = {
@@ -5500,14 +5500,14 @@ export async function runMiddlewarePipeline<T extends boolean>(
     let tuples = matches.flatMap((m) =>
       m.route.unstable_middleware
         ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
-        : []
+        : [],
     ) as [string, unstable_MiddlewareFunction][];
     let result = await callRouteMiddleware(
       { request, params, context },
       tuples,
       propagateResult,
       middlewareState,
-      handler
+      handler,
     );
     return propagateResult ? result : middlewareState.handlerResult;
   } catch (e) {
@@ -5518,7 +5518,7 @@ export async function runMiddlewarePipeline<T extends boolean>(
     }
     let result = await errorHandler(
       middlewareState.middlewareError.error,
-      middlewareState.middlewareError.routeId
+      middlewareState.middlewareError.routeId,
     );
     if (propagateResult || !middlewareState.handlerResult) {
       return result;
@@ -5535,7 +5535,7 @@ async function callRouteMiddleware(
   propagateResult: boolean,
   middlewareState: MutableMiddlewareState,
   handler: () => void,
-  idx = 0
+  idx = 0,
 ): Promise<unknown> {
   let { request } = args;
   if (request.signal.aborted) {
@@ -5543,7 +5543,7 @@ async function callRouteMiddleware(
       throw request.signal.reason;
     }
     throw new Error(
-      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`
+      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`,
     );
   }
 
@@ -5568,7 +5568,7 @@ async function callRouteMiddleware(
       propagateResult,
       middlewareState,
       handler,
-      idx + 1
+      idx + 1,
     );
     if (propagateResult) {
       nextResult = result;
@@ -5583,7 +5583,7 @@ async function callRouteMiddleware(
         params: args.params,
         context: args.context,
       },
-      next
+      next,
     );
     if (nextCalled) {
       if (result === undefined) {
@@ -5614,7 +5614,7 @@ function getDataStrategyMatchLazyPromises(
   manifest: RouteManifest,
   request: Request,
   match: DataRouteMatch,
-  lazyRoutePropertiesToSkip: string[]
+  lazyRoutePropertiesToSkip: string[],
 ): DataStrategyMatch["_lazyPromises"] {
   let lazyMiddlewarePromise = loadLazyRouteProperty({
     key: "unstable_middleware",
@@ -5628,7 +5628,7 @@ function getDataStrategyMatchLazyPromises(
     isMutationMethod(request.method) ? "action" : "loader",
     manifest,
     mapRouteProperties,
-    lazyRoutePropertiesToSkip
+    lazyRoutePropertiesToSkip,
   );
 
   return {
@@ -5646,7 +5646,7 @@ function getDataStrategyMatch(
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
   shouldLoad: boolean,
-  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
+  unstable_shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
   // Opt-ing into the `unstable_shouldCallHandler` API changes some nuanced behavior
@@ -5658,7 +5658,7 @@ function getDataStrategyMatch(
     manifest,
     request,
     match,
-    lazyRoutePropertiesToSkip
+    lazyRoutePropertiesToSkip,
   );
 
   return {
@@ -5710,7 +5710,7 @@ function getTargetedDataStrategyMatches(
   targetMatch: AgnosticDataRouteMatch,
   lazyRoutePropertiesToSkip: string[],
   scopedContext: unknown,
-  shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null
+  shouldRevalidateArgs: DataStrategyMatch["unstable_shouldRevalidateArgs"] = null,
 ): DataStrategyMatch[] {
   return matches.map((match) => {
     if (match.route.id !== targetMatch.route.id) {
@@ -5726,7 +5726,7 @@ function getTargetedDataStrategyMatches(
           manifest,
           request,
           match,
-          lazyRoutePropertiesToSkip
+          lazyRoutePropertiesToSkip,
         ),
         resolve: () => Promise.resolve({ type: "data", result: undefined }),
       };
@@ -5740,7 +5740,7 @@ function getTargetedDataStrategyMatches(
       lazyRoutePropertiesToSkip,
       scopedContext,
       true,
-      shouldRevalidateArgs
+      shouldRevalidateArgs,
     );
   });
 }
@@ -5751,7 +5751,7 @@ async function callDataStrategyImpl(
   matches: DataStrategyMatch[],
   fetcherKey: string | null,
   scopedContext: unknown,
-  isStaticHandler: boolean
+  isStaticHandler: boolean,
 ): Promise<Record<string, DataStrategyResult>> {
   // Ensure all middleware is loaded before we start executing routes
   if (matches.some((m) => m._lazyPromises?.middleware)) {
@@ -5773,7 +5773,7 @@ async function callDataStrategyImpl(
           "You cannot call `unstable_runClientMiddleware()` from a static handler " +
             "`dataStrategy`. Middleware is run outside of `dataStrategy` during " +
             "SSR in order to bubble up the Response.  You can enable middleware " +
-            "via the `respond` API in `query`/`queryRoute`"
+            "via the `respond` API in `query`/`queryRoute`",
         );
       }
     : (cb: DataStrategyFunction<unstable_RouterContextProvider>) => {
@@ -5793,13 +5793,13 @@ async function callDataStrategyImpl(
               unstable_runClientMiddleware: () => {
                 throw new Error(
                   "Cannot call `unstable_runClientMiddleware()` from within an " +
-                    "`unstable_runClientMiddleware` handler"
+                    "`unstable_runClientMiddleware` handler",
                 );
               },
             }),
           (error: unknown, routeId: string) => ({
             [routeId]: { type: "error", result: error },
-          })
+          }),
         ) as Promise<Record<string, DataStrategyResult>>;
       };
 
@@ -5815,7 +5815,10 @@ async function callDataStrategyImpl(
   // awaited so that we don't inadvertently leave any hanging promises.
   try {
     await Promise.all(
-      matches.flatMap((m) => [m._lazyPromises?.handler, m._lazyPromises?.route])
+      matches.flatMap((m) => [
+        m._lazyPromises?.handler,
+        m._lazyPromises?.route,
+      ]),
     );
   } catch (e) {
     // No-op
@@ -5845,7 +5848,7 @@ async function callLoaderOrAction({
   let isAction = isMutationMethod(request.method);
   let type = isAction ? "action" : "loader";
   let runHandler = (
-    handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>
+    handler: boolean | LoaderFunction<unknown> | ActionFunction<unknown>,
   ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;
@@ -5860,8 +5863,8 @@ async function callLoaderOrAction({
         return Promise.reject(
           new Error(
             `You cannot call the handler for a route which defines a boolean ` +
-              `"${type}" [routeId: ${match.route.id}]`
-          )
+              `"${type}" [routeId: ${match.route.id}]`,
+          ),
         );
       }
       return handler(
@@ -5870,7 +5873,7 @@ async function callLoaderOrAction({
           params: match.params,
           context: scopedContext,
         },
-        ...(ctx !== undefined ? [ctx] : [])
+        ...(ctx !== undefined ? [ctx] : []),
       );
     };
 
@@ -5960,7 +5963,7 @@ async function callLoaderOrAction({
 }
 
 async function convertDataStrategyResultToDataResult(
-  dataStrategyResult: DataStrategyResult
+  dataStrategyResult: DataStrategyResult,
 ): Promise<DataResult> {
   let { result, type } = dataStrategyResult;
 
@@ -6020,7 +6023,7 @@ async function convertDataStrategyResultToDataResult(
         error: new ErrorResponseImpl(
           result.init?.status || 500,
           undefined,
-          result.data
+          result.data,
         ),
         statusCode: isRouteErrorResponse(result) ? result.status : undefined,
         headers: result.init?.headers
@@ -6056,24 +6059,24 @@ function normalizeRelativeRoutingRedirectResponse(
   request: Request,
   routeId: string,
   matches: AgnosticDataRouteMatch[],
-  basename: string
+  basename: string,
 ) {
   let location = response.headers.get("Location");
   invariant(
     location,
-    "Redirects returned/thrown from loaders/actions must have a Location header"
+    "Redirects returned/thrown from loaders/actions must have a Location header",
   );
 
   if (!isAbsoluteUrl(location)) {
     let trimmedMatches = matches.slice(
       0,
-      matches.findIndex((m) => m.route.id === routeId) + 1
+      matches.findIndex((m) => m.route.id === routeId) + 1,
     );
     location = normalizeTo(
       new URL(request.url),
       trimmedMatches,
       basename,
-      location
+      location,
     );
     response.headers.set("Location", location);
   }
@@ -6084,7 +6087,7 @@ function normalizeRelativeRoutingRedirectResponse(
 function normalizeRedirectLocation(
   location: string,
   currentUrl: URL,
-  basename: string
+  basename: string,
 ): string {
   if (isAbsoluteUrl(location)) {
     // Strip off the protocol+origin for same-origin + same-basename absolute redirects
@@ -6107,7 +6110,7 @@ function createClientSideRequest(
   history: History,
   location: string | Location,
   signal: AbortSignal,
-  submission?: Submission
+  submission?: Submission,
 ): Request {
   let url = history.createURL(stripHashFromPath(location)).toString();
   let init: RequestInit = { signal };
@@ -6152,7 +6155,7 @@ function convertFormDataToSearchParams(formData: FormData): URLSearchParams {
 }
 
 function convertSearchParamsToFormData(
-  searchParams: URLSearchParams
+  searchParams: URLSearchParams,
 ): FormData {
   let formData = new FormData();
   for (let [key, value] of searchParams.entries()) {
@@ -6166,7 +6169,7 @@ function processRouteLoaderData(
   results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
   isStaticHandler = false,
-  skipLoaderErrorBubbling = false
+  skipLoaderErrorBubbling = false,
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"] | null;
@@ -6193,7 +6196,7 @@ function processRouteLoaderData(
     let result = results[id];
     invariant(
       !isRedirectResult(result),
-      "Cannot handle redirect results in processLoaderData"
+      "Cannot handle redirect results in processLoaderData",
     );
     if (isErrorResult(result)) {
       let error = result.error;
@@ -6272,7 +6275,7 @@ function processLoaderData(
   results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
   revalidatingFetchers: RevalidatingFetcher[],
-  fetcherResults: Record<string, DataResult>
+  fetcherResults: Record<string, DataResult>,
 ): {
   loaderData: RouterState["loaderData"];
   errors?: RouterState["errors"];
@@ -6280,7 +6283,7 @@ function processLoaderData(
   let { loaderData, errors } = processRouteLoaderData(
     matches,
     results,
-    pendingActionResult
+    pendingActionResult,
   );
 
   // Process results from our revalidating fetchers
@@ -6323,7 +6326,7 @@ function mergeLoaderData(
   loaderData: RouteData,
   newLoaderData: RouteData,
   matches: AgnosticDataRouteMatch[],
-  errors: RouteData | null | undefined
+  errors: RouteData | null | undefined,
 ): RouteData {
   // Start with all new entries that are not being reset
   let mergedLoaderData = Object.entries(newLoaderData)
@@ -6354,7 +6357,7 @@ function mergeLoaderData(
 }
 
 function getActionDataForCommit(
-  pendingActionResult: PendingActionResult | undefined
+  pendingActionResult: PendingActionResult | undefined,
 ) {
   if (!pendingActionResult) {
     return {};
@@ -6376,7 +6379,7 @@ function getActionDataForCommit(
 // defaulting to the root match
 function findNearestBoundary(
   matches: AgnosticDataRouteMatch[],
-  routeId?: string
+  routeId?: string,
 ): AgnosticDataRouteMatch {
   let eligibleMatches = routeId
     ? matches.slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
@@ -6426,7 +6429,7 @@ function getInternalRouterError(
     method?: string;
     type?: "invalid-body";
     message?: string;
-  } = {}
+  } = {},
 ) {
   let statusText = "Unknown Server Error";
   let errorMessage = "Unknown @remix-run/router error";
@@ -6463,13 +6466,13 @@ function getInternalRouterError(
     status || 500,
     statusText,
     new Error(errorMessage),
-    true
+    true,
   );
 }
 
 // Find any returned redirect errors, starting from the lowest match
 function findRedirect(
-  results: Record<string, DataResult>
+  results: Record<string, DataResult>,
 ): { key: string; result: RedirectResult } | undefined {
   let entries = Object.entries(results);
   for (let i = entries.length - 1; i >= 0; i--) {
@@ -6530,7 +6533,7 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
 }
 
 export function isDataWithResponseInit(
-  value: any
+  value: any,
 ): value is DataWithResponseInit<unknown> {
   return (
     typeof value === "object" &&
@@ -6581,7 +6584,7 @@ function hasNakedIndexQuery(search: string): boolean {
 
 function getTargetMatch(
   matches: AgnosticDataRouteMatch[],
-  location: Location | string
+  location: Location | string,
 ) {
   let search =
     typeof location === "string" ? parsePath(location).search : location.search;
@@ -6599,7 +6602,7 @@ function getTargetMatch(
 }
 
 function getSubmissionFromNavigation(
-  navigation: Navigation
+  navigation: Navigation,
 ): Submission | undefined {
   let { formMethod, formAction, formEncType, text, formData, json } =
     navigation;
@@ -6639,7 +6642,7 @@ function getSubmissionFromNavigation(
 
 function getLoadingNavigation(
   location: Location,
-  submission?: Submission
+  submission?: Submission,
 ): NavigationStates["Loading"] {
   if (submission) {
     let navigation: NavigationStates["Loading"] = {
@@ -6670,7 +6673,7 @@ function getLoadingNavigation(
 
 function getSubmittingNavigation(
   location: Location,
-  submission: Submission
+  submission: Submission,
 ): NavigationStates["Submitting"] {
   let navigation: NavigationStates["Submitting"] = {
     state: "submitting",
@@ -6687,7 +6690,7 @@ function getSubmittingNavigation(
 
 function getLoadingFetcher(
   submission?: Submission,
-  data?: Fetcher["data"]
+  data?: Fetcher["data"],
 ): FetcherStates["Loading"] {
   if (submission) {
     let fetcher: FetcherStates["Loading"] = {
@@ -6718,7 +6721,7 @@ function getLoadingFetcher(
 
 function getSubmittingFetcher(
   submission: Submission,
-  existingFetcher?: Fetcher
+  existingFetcher?: Fetcher,
 ): FetcherStates["Submitting"] {
   let fetcher: FetcherStates["Submitting"] = {
     state: "submitting",
@@ -6749,11 +6752,11 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
 
 function restoreAppliedTransitions(
   _window: Window,
-  transitions: Map<string, Set<string>>
+  transitions: Map<string, Set<string>>,
 ) {
   try {
     let sessionPositions = _window.sessionStorage.getItem(
-      TRANSITIONS_STORAGE_KEY
+      TRANSITIONS_STORAGE_KEY,
     );
     if (sessionPositions) {
       let json = JSON.parse(sessionPositions);
@@ -6770,7 +6773,7 @@ function restoreAppliedTransitions(
 
 function persistAppliedTransitions(
   _window: Window,
-  transitions: Map<string, Set<string>>
+  transitions: Map<string, Set<string>>,
 ) {
   if (transitions.size > 0) {
     let json: Record<string, string[]> = {};
@@ -6780,12 +6783,12 @@ function persistAppliedTransitions(
     try {
       _window.sessionStorage.setItem(
         TRANSITIONS_STORAGE_KEY,
-        JSON.stringify(json)
+        JSON.stringify(json),
       );
     } catch (error) {
       warning(
         false,
-        `Failed to save applied view transitions in sessionStorage (${error}).`
+        `Failed to save applied view transitions in sessionStorage (${error}).`,
       );
     }
   }

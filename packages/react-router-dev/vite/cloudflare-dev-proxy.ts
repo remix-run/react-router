@@ -48,7 +48,7 @@ const PLUGIN_NAME = "react-router-cloudflare-vite-dev-proxy";
 export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
   options: {
     getLoadContext?: GetLoadContext<Env, Cf>;
-  } & GetPlatformProxyOptions = {}
+  } & GetPlatformProxyOptions = {},
 ): Plugin => {
   let { getLoadContext, ...restOptions } = options;
   const workerdConditions = ["workerd", "worker"];
@@ -115,7 +115,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
         reactRouterPluginIndex < pluginIndex(PLUGIN_NAME)
       ) {
         throw new Error(
-          `The "${PLUGIN_NAME}" plugin should be placed before the React Router plugin in your Vite config file`
+          `The "${PLUGIN_NAME}" plugin should be placed before the React Router plugin in your Vite config file`,
         );
       }
     },
@@ -125,7 +125,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
         let { getPlatformProxy } = await importWrangler();
         // Do not include `dispose` in Cloudflare context
         let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
-          restOptions
+          restOptions,
         );
         return { cloudflare };
       };
@@ -134,7 +134,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
           viteDevServer.middlewares.use(async (nodeReq, nodeRes, next) => {
             try {
               let build = (await viteDevServer.ssrLoadModule(
-                serverBuildId
+                serverBuildId,
               )) as ServerBuild;
 
               let handler = createRequestHandler(build, "development");

@@ -173,7 +173,7 @@ app.use(
   createRequestHandler({
     // and the result of `react-router build` is "just a module"
     build: await import("./build/server/index.js"),
-  })
+  }),
 );
 
 app.listen(3000, () => {
@@ -205,8 +205,8 @@ First, as a convenience, add `dev` and `start` commands in `package.json` that w
 {
   "scripts": {
     "dev": "node ./server.js",
-    "start": "cross-env NODE_ENV=production node ./server.js"
-  }
+    "start": "cross-env NODE_ENV=production node ./server.js",
+  },
   // ...
 }
 ```
@@ -226,22 +226,22 @@ if (process.env.NODE_ENV === "production") {
   app.use(
     createRequestHandler({
       build: await import("./build/server/index.js"),
-    })
+    }),
   );
 } else {
   const viteDevServer = await import("vite").then((vite) =>
     vite.createServer({
       server: { middlewareMode: true },
-    })
+    }),
   );
   app.use(viteDevServer.middlewares);
   app.use(
     createRequestHandler({
       build: () =>
         viteDevServer.ssrLoadModule(
-          "virtual:react-router/server-build"
+          "virtual:react-router/server-build",
         ),
-    })
+    }),
   );
 }
 

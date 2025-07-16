@@ -16,7 +16,7 @@ export type { DecodePlugin, EncodePlugin };
 
 export async function decode(
   readable: ReadableStream<Uint8Array>,
-  options?: { plugins?: DecodePlugin[] }
+  options?: { plugins?: DecodePlugin[] },
 ) {
   const { plugins } = options ?? {};
 
@@ -58,7 +58,7 @@ export async function decode(
 
 async function decodeInitial(
   this: ThisDecode,
-  reader: ReadableStreamDefaultReader<string>
+  reader: ReadableStreamDefaultReader<string>,
 ) {
   const read = await reader.read();
   if (!read.value) {
@@ -80,7 +80,7 @@ async function decodeInitial(
 
 async function decodeDeferred(
   this: ThisDecode,
-  reader: ReadableStreamDefaultReader<string>
+  reader: ReadableStreamDefaultReader<string>,
 ) {
   let read = await reader.read();
   while (!read.done) {
@@ -138,7 +138,7 @@ export function encode(
     plugins?: EncodePlugin[];
     postPlugins?: EncodePlugin[];
     signal?: AbortSignal;
-  }
+  },
 ) {
   const { plugins, postPlugins, signal } = options ?? {};
 
@@ -163,7 +163,7 @@ export function encode(
         controller.enqueue(textEncoder.encode(`${id}\n`));
       } else {
         controller.enqueue(
-          textEncoder.encode(`[${encoder.stringified.join(",")}]\n`)
+          textEncoder.encode(`[${encoder.stringified.join(",")}]\n`),
         );
         lastSentIndex = encoder.stringified.length - 1;
       }
@@ -187,7 +187,7 @@ export function encode(
         });
         while (Object.keys(encoder.deferred).length > 0) {
           for (const [deferredId, deferred] of Object.entries(
-            encoder.deferred
+            encoder.deferred,
           )) {
             if (seenPromises.has(deferred)) continue;
             seenPromises.add(
@@ -202,16 +202,16 @@ export function encode(
                     if (Array.isArray(id)) {
                       controller.enqueue(
                         textEncoder.encode(
-                          `${TYPE_PROMISE}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`
-                        )
+                          `${TYPE_PROMISE}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
+                        ),
                       );
                       encoder.index++;
                       lastSentIndex++;
                     } else if (id < 0) {
                       controller.enqueue(
                         textEncoder.encode(
-                          `${TYPE_PROMISE}${deferredId}:${id}\n`
-                        )
+                          `${TYPE_PROMISE}${deferredId}:${id}\n`,
+                        ),
                       );
                     } else {
                       const values = encoder.stringified
@@ -219,8 +219,8 @@ export function encode(
                         .join(",");
                       controller.enqueue(
                         textEncoder.encode(
-                          `${TYPE_PROMISE}${deferredId}:[${values}]\n`
-                        )
+                          `${TYPE_PROMISE}${deferredId}:[${values}]\n`,
+                        ),
                       );
                       lastSentIndex = encoder.stringified.length - 1;
                     }
@@ -238,14 +238,16 @@ export function encode(
                     if (Array.isArray(id)) {
                       controller.enqueue(
                         textEncoder.encode(
-                          `${TYPE_ERROR}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`
-                        )
+                          `${TYPE_ERROR}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
+                        ),
                       );
                       encoder.index++;
                       lastSentIndex++;
                     } else if (id < 0) {
                       controller.enqueue(
-                        textEncoder.encode(`${TYPE_ERROR}${deferredId}:${id}\n`)
+                        textEncoder.encode(
+                          `${TYPE_ERROR}${deferredId}:${id}\n`,
+                        ),
                       );
                     } else {
                       const values = encoder.stringified
@@ -253,16 +255,16 @@ export function encode(
                         .join(",");
                       controller.enqueue(
                         textEncoder.encode(
-                          `${TYPE_ERROR}${deferredId}:[${values}]\n`
-                        )
+                          `${TYPE_ERROR}${deferredId}:[${values}]\n`,
+                        ),
                       );
                       lastSentIndex = encoder.stringified.length - 1;
                     }
-                  }
+                  },
                 )
                 .finally(() => {
                   delete encoder.deferred[Number(deferredId)];
-                }))
+                })),
             );
           }
           await Promise.race(Object.values(encoder.deferred));

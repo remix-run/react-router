@@ -293,7 +293,7 @@ test.describe("ErrorBoundary", () => {
             `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     appFixture = await createAppFixture(fixture, ServerMode.Development);
@@ -597,7 +597,7 @@ test.describe("Default ErrorBoundary", () => {
     let errorBoundaryCode = !includeRootErrorBoundary
       ? ""
       : rootErrorBoundaryThrows
-      ? js`
+        ? js`
           export function ErrorBoundary() {
             let error = useRouteError();
             return (
@@ -615,7 +615,7 @@ test.describe("Default ErrorBoundary", () => {
             )
           }
         `
-      : js`
+        : js`
         export function ErrorBoundary() {
           let error = useRouteError();
           return (
@@ -703,7 +703,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: false }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
@@ -774,7 +774,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: true }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });

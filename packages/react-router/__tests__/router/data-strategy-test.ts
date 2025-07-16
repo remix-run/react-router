@@ -20,15 +20,15 @@ describe("router dataStrategy", () => {
 
   function keyedResults(
     matches: DataStrategyMatch[],
-    results: DataStrategyResult[]
+    results: DataStrategyResult[],
   ) {
     return results.reduce(
       (acc, r, i) =>
         Object.assign(
           acc,
-          matches[i].shouldLoad ? { [matches[i].route.id]: r } : {}
+          matches[i].shouldLoad ? { [matches[i].route.id]: r } : {},
         ),
-      {}
+      {},
     );
   }
 
@@ -36,8 +36,8 @@ describe("router dataStrategy", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
         Promise.all(matches.map((m) => m.resolve())).then((results) =>
-          keyedResults(matches, results)
-        )
+          keyedResults(matches, results),
+        ),
       );
       let t = setup({
         routes: [
@@ -89,15 +89,15 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
         Promise.all(matches.map((m) => m.resolve())).then((results) =>
-          keyedResults(matches, results)
-        )
+          keyedResults(matches, results),
+        ),
       );
       let [lazyJson, lazyJsonDeferred] = createAsyncStub();
       let [lazyText, lazyTextDeferred] = createAsyncStub();
@@ -148,7 +148,7 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
 
@@ -170,8 +170,8 @@ describe("router dataStrategy", () => {
               m.resolve(async (handler) => {
                 let result = await handler();
                 return `Route ID "${m.route.id}" returned "${result}"`;
-              })
-            )
+              }),
+            ),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -202,8 +202,8 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async () => {
                 throw new Error(`Route ID "${m.route.id}" errored!`);
-              })
-            )
+              }),
+            ),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -235,8 +235,8 @@ describe("router dataStrategy", () => {
               m.resolve(async (handler) => {
                 let result = await handler();
                 return `Route ID "${m.route.id}" returned "${result}"`;
-              })
-            )
+              }),
+            ),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -275,7 +275,7 @@ describe("router dataStrategy", () => {
         ],
         dataStrategy({ matches }) {
           return Promise.all(
-            matches.map(async (match) => match.resolve())
+            matches.map(async (match) => match.resolve()),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -320,7 +320,7 @@ describe("router dataStrategy", () => {
                   result: await handler(),
                 };
               });
-            })
+            }),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -402,10 +402,10 @@ describe("router dataStrategy", () => {
                 return undefined;
               }
               return match.resolve();
-            })
+            }),
           ).then((results) =>
             // @ts-expect-error
-            keyedResults(matches, results)
+            keyedResults(matches, results),
           );
         },
       });
@@ -446,7 +446,7 @@ describe("router dataStrategy", () => {
         Parameters<DataStrategyFunction>
       >(({ matches }) => {
         return Promise.all(matches.map((m) => m.resolve())).then((results) =>
-          keyedResults(matches, results)
+          keyedResults(matches, results),
         );
       });
       let [lazy, lazyDeferred] = createAsyncStub();
@@ -581,13 +581,13 @@ describe("router dataStrategy", () => {
     it("does not short circuit when there are no matchesToLoad", async () => {
       let dataStrategy = mockDataStrategy(async ({ matches }) => {
         let results = await Promise.all(
-          matches.map((m) => m.resolve((handler) => handler()))
+          matches.map((m) => m.resolve((handler) => handler())),
         );
         // Don't use keyedResults since it checks for shouldLoad and this test
         // is always loading
         return results.reduce(
           (acc, r, i) => Object.assign(acc, { [matches[i].route.id]: r }),
-          {}
+          {},
         );
       });
       let t = setup({
@@ -669,8 +669,8 @@ describe("router dataStrategy", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
         Promise.all(matches.map((m) => m.resolve())).then((results) =>
-          keyedResults(matches, results)
-        )
+          keyedResults(matches, results),
+        ),
       );
       let t = setup({
         routes: [
@@ -706,15 +706,15 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
         Promise.all(matches.map((m) => m.resolve())).then((results) =>
-          keyedResults(matches, results)
-        )
+          keyedResults(matches, results),
+        ),
       );
       let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
@@ -751,7 +751,7 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
   });
@@ -761,8 +761,8 @@ describe("router dataStrategy", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
           Promise.all(matches.map((m) => m.resolve())).then((results) =>
-            keyedResults(matches, results)
-          )
+            keyedResults(matches, results),
+          ),
         );
         let t = setup({
           routes: [
@@ -795,15 +795,15 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ],
-          })
+          }),
         );
       });
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
           Promise.all(matches.map((m) => m.resolve())).then((results) =>
-            keyedResults(matches, results)
-          )
+            keyedResults(matches, results),
+          ),
         );
         let [lazy, lazyDeferred] = createAsyncStub();
         let t = setup({
@@ -836,7 +836,7 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ],
-          })
+          }),
         );
       });
     });
@@ -845,8 +845,8 @@ describe("router dataStrategy", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
           Promise.all(matches.map((m) => m.resolve())).then((results) =>
-            keyedResults(matches, results)
-          )
+            keyedResults(matches, results),
+          ),
         );
         let t = setup({
           routes: [
@@ -882,15 +882,15 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ]),
-          })
+          }),
         );
       });
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
           Promise.all(matches.map((m) => m.resolve())).then((results) =>
-            keyedResults(matches, results)
-          )
+            keyedResults(matches, results),
+          ),
         );
         let [lazy, lazyDeferred] = createAsyncStub();
         let t = setup({
@@ -928,7 +928,7 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ]),
-          })
+          }),
         );
       });
     });
@@ -972,7 +972,7 @@ describe("router dataStrategy", () => {
                 // This will be a JSON response we expect to be decoded the normal way
                 return result;
               });
-            })
+            }),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -982,7 +982,7 @@ describe("router dataStrategy", () => {
       await A.loaders.reverse.resolve(
         new Response("hello text", {
           headers: { "Content-Type": "application/reverse" },
-        })
+        }),
       );
 
       expect(t.router.state.loaderData).toEqual({
@@ -1029,7 +1029,7 @@ describe("router dataStrategy", () => {
               let dfd = createDeferred();
               routeDeferreds.set(m.route.id, dfd);
               return dfd.promise as Promise<DataStrategyResult>;
-            })
+            }),
           );
 
           // Mocked single fetch call response for the routes that need loading
@@ -1042,10 +1042,10 @@ describe("router dataStrategy", () => {
 
           // Resolve the deferred's above and return the mapped match promises
           routeDeferreds.forEach((dfd, routeId) =>
-            dfd.resolve(result.loaderData[routeId])
+            dfd.resolve(result.loaderData[routeId]),
           );
           return Promise.all(matchPromises).then((results) =>
-            keyedResults(matches, results)
+            keyedResults(matches, results),
           );
         },
       });
@@ -1107,7 +1107,7 @@ describe("router dataStrategy", () => {
                     // @ts-expect-error
                     [key]: value(),
                   }),
-                {}
+                {},
               );
               Object.assign(acc, matchContext);
             }
@@ -1130,8 +1130,8 @@ describe("router dataStrategy", () => {
                 }, {});
                 let result = await handler(handlerCtx);
                 return result;
-              })
-            )
+              }),
+            ),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -1150,7 +1150,7 @@ describe("router dataStrategy", () => {
             id: "parent",
             whatever: "PARENT MIDDLEWARE",
           },
-        }
+        },
       );
 
       expect(A.loaders.child.stub).toHaveBeenCalledWith(
@@ -1167,7 +1167,7 @@ describe("router dataStrategy", () => {
             id: "child",
             whatever: "CHILD MIDDLEWARE",
           },
-        }
+        },
       );
 
       await A.loaders.parent.resolve("PARENT LOADER");
@@ -1227,7 +1227,7 @@ describe("router dataStrategy", () => {
                     // @ts-expect-error
                     [key]: value(),
                   }),
-                {}
+                {},
               );
               Object.assign(acc, matchContext);
             }
@@ -1252,8 +1252,8 @@ describe("router dataStrategy", () => {
                   ? await callHandler(handlerCtx)
                   : t.router.state.loaderData[m.route.id];
                 return result;
-              })
-            )
+              }),
+            ),
           ).then((results) => keyedResults(matches, results));
         },
       });
@@ -1283,7 +1283,7 @@ describe("router dataStrategy", () => {
             id: "child",
             whatever: "CHILD MIDDLEWARE",
           },
-        }
+        },
       );
 
       await B.loaders.child.resolve("CHILD");
@@ -1346,7 +1346,7 @@ describe("router dataStrategy", () => {
 
                 return dsResult;
               });
-            })
+            }),
           ).then((results) => keyedResults(matchesToLoad, results));
         },
       });

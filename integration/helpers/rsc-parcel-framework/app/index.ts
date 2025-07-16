@@ -22,7 +22,7 @@ export const requestHandler = async (request: Request) => {
           bootstrapScriptContent: (
             fetchServer as unknown as { bootstrapScript: string }
           ).bootstrapScript,
-        }
+        },
       );
     },
   });

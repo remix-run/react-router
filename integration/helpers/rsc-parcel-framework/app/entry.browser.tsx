@@ -21,7 +21,7 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 
 createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
@@ -34,8 +34,8 @@ createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
         React.createElement(RSCHydratedRouter, {
           createFromReadableStream,
           payload,
-        })
-      )
+        }),
+      ),
     );
   });
 });

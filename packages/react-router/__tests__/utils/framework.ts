@@ -4,7 +4,7 @@ import type {
 } from "../../lib/dom/ssr/entry";
 
 export function mockFrameworkContext(
-  overrides?: Partial<FrameworkContextObject>
+  overrides?: Partial<FrameworkContextObject>,
 ): FrameworkContextObject {
   return {
     routeModules: { root: { default: () => null } },
@@ -44,7 +44,7 @@ export function mockFrameworkContext(
 }
 
 export function mockEntryContext(
-  overrides?: Partial<EntryContext>
+  overrides?: Partial<EntryContext>,
 ): EntryContext {
   return {
     ...mockFrameworkContext(overrides),

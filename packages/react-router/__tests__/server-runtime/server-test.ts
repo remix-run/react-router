@@ -43,7 +43,7 @@ describe("server", () => {
       handleDocumentRequest(request) {
         return new Response(`${request.method}, ${request.url} COMPONENT`);
       },
-    }
+    },
   );
 
   describe("createRequestHandler", () => {
@@ -72,7 +72,7 @@ describe("server", () => {
         let response = await handler(
           new Request(`http://localhost:3000${to}`, {
             method,
-          })
+          }),
         );
 
         expect(response.status).toBe(200);
@@ -80,7 +80,7 @@ describe("server", () => {
         expect(text).toContain(method);
         expect(text).toContain(expected);
         expect(spy.console).not.toHaveBeenCalled();
-      }
+      },
     );
 
     it("strips body for HEAD requests", async () => {
@@ -88,7 +88,7 @@ describe("server", () => {
       let response = await handler(
         new Request("http://localhost:3000/", {
           method: "HEAD",
-        })
+        }),
       );
 
       expect(await response.text()).toBe("");
@@ -107,14 +107,14 @@ describe("server", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method}, ${request.url} COMPONENT`);
           },
-        }
+        },
       );
       let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/_root.data"),
         {
           foo: "FOO",
-        }
+        },
       );
 
       expect(await response.text()).toContain("FOO");
@@ -134,13 +134,13 @@ describe("server", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method}, ${request.url} COMPONENT`);
           },
-        }
+        },
       );
       let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/_root.data"),
         // @ts-expect-error In apps the expected type is handled via the Future interface
-        new Map([[fooContext, "FOO"]])
+        new Map([[fooContext, "FOO"]]),
       );
 
       expect(await response.text()).toContain("FOO");
@@ -164,14 +164,14 @@ describe("server", () => {
           handleDocumentRequest(request) {
             return new Response(`${request.method}, ${request.url} COMPONENT`);
           },
-        }
+        },
       );
       let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/_root.data"),
         {
           foo: "FOO",
-        }
+        },
       );
 
       expect(response.status).toBe(500);
@@ -314,7 +314,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(await result.text()).toBe(
-        "Unexpected Server Error\n\nError: should be logged when resource loader throws"
+        "Unexpected Server Error\n\nError: should be logged when resource loader throws",
       );
     });
 
@@ -457,7 +457,7 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(await result.text()).toBe(
-        "Unexpected Server Error\n\nError: should be logged when resource loader throws"
+        "Unexpected Server Error\n\nError: should be logged when resource loader throws",
       );
     });
 
@@ -505,7 +505,7 @@ describe("shared server runtime", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -526,15 +526,15 @@ describe("shared server runtime", () => {
       `);
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
-        true
+        true,
       );
       expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "This operation was aborted"
+        "This operation was aborted",
       );
       expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
       expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
-        "http://test.com/resource"
+        "http://test.com/resource",
       );
     });
   });
@@ -999,7 +999,7 @@ describe("shared server runtime", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -1016,19 +1016,19 @@ describe("shared server runtime", () => {
       let error = await result.json();
       expect(error.message).toBe("This operation was aborted");
       expect(
-        error.stack.startsWith("AbortError: This operation was aborted")
+        error.stack.startsWith("AbortError: This operation was aborted"),
       ).toBe(true);
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
-        true
+        true,
       );
       expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "This operation was aborted"
+        "This operation was aborted",
       );
       expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
       expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
-        "http://test.com/?_data=routes/_index"
+        "http://test.com/?_data=routes/_index",
       );
     });
   });
@@ -1538,7 +1538,7 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/_index"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/_index"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/_index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
@@ -1680,7 +1680,7 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/test"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/test"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/test"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
@@ -1730,7 +1730,7 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/_index"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/_index"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/_index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
@@ -1788,7 +1788,7 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/__layout"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/__layout"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
@@ -1846,7 +1846,7 @@ describe("shared server runtime", () => {
       expect(context.errors).toBeTruthy();
       expect(context.errors!["routes/__layout"]).toBeInstanceOf(Error);
       expect(context.errors!["routes/__layout"].message).toBe(
-        "Unexpected Server Error"
+        "Unexpected Server Error",
       );
       expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
@@ -1923,7 +1923,7 @@ describe("shared server runtime", () => {
       let ogHandleDocumentRequest = build.entry.module.default;
       build.entry.module.default = function (
         _: Request,
-        responseStatusCode: number
+        responseStatusCode: number,
       ) {
         if (responseStatusCode === 200) {
           throw new Response("Uh oh!", {
@@ -1972,7 +1972,7 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect(await result.text()).toBe(
-        "Unexpected Server Error\n\nError: rofl"
+        "Unexpected Server Error\n\nError: rofl",
       );
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(indexLoader.mock.calls.length).toBe(0);
@@ -2025,7 +2025,7 @@ describe("shared server runtime", () => {
       expect(spy.console.mock.calls).toEqual([
         [
           new Error(
-            "thrown from handleDocumentRequest and expected to be logged in console only once"
+            "thrown from handleDocumentRequest and expected to be logged in console only once",
           ),
         ],
         [new Error("second error thrown from handleDocumentRequest")],
@@ -2055,7 +2055,7 @@ describe("shared server runtime", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -2073,15 +2073,15 @@ describe("shared server runtime", () => {
 
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
       expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
-        true
+        true,
       );
       expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
       expect(handleErrorSpy.mock.calls[0][0].message).toBe(
-        "This operation was aborted"
+        "This operation was aborted",
       );
       expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
       expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
-        "http://test.com/"
+        "http://test.com/",
       );
     });
   });
@@ -2113,7 +2113,7 @@ describe("shared server runtime", () => {
             headers: responseHeaders,
           });
         },
-      }
+      },
     );
 
     let handler = createRequestHandler(build, ServerMode.Development);

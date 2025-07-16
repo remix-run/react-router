@@ -25,8 +25,8 @@ const globalObj = (
   typeof window !== "undefined"
     ? window
     : typeof globalThis !== "undefined"
-    ? globalThis
-    : undefined
+      ? globalThis
+      : undefined
 ) as Record<string, typeof Error> | undefined;
 
 export function unflatten(this: ThisDecode, parsed: unknown): unknown {

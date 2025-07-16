@@ -31,7 +31,7 @@ export async function dev(
     open,
     port,
     strictPort,
-  }: ViteDevOptions
+  }: ViteDevOptions,
 ) {
   // Ensure Vite's ESM build is preloaded at the start of the process
   // so it can be accessed synchronously via `getVite`
@@ -50,7 +50,7 @@ export async function dev(
 
   if (!server.config.plugins.find((plugin) => plugin.name === "react-router")) {
     console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
+      colors.red("React Router Vite plugin not found in Vite config"),
     );
     process.exit(1);
   }

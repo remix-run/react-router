@@ -10,7 +10,7 @@ import invariant from "../invariant";
 
 export type NodeRequestHandler = (
   req: Vite.Connect.IncomingMessage,
-  res: ServerResponse
+  res: ServerResponse,
 ) => Promise<void>;
 
 function fromNodeHeaders(nodeReq: IncomingMessage): Headers {
@@ -47,7 +47,7 @@ function fromNodeHeaders(nodeReq: IncomingMessage): Headers {
 // Based on `createRemixRequest` in packages/react-router-express/server.ts
 export function fromNodeRequest(
   nodeReq: Vite.Connect.IncomingMessage,
-  nodeRes: ServerResponse<Vite.Connect.IncomingMessage>
+  nodeRes: ServerResponse<Vite.Connect.IncomingMessage>,
 ): Request {
   let protocol =
     nodeReq.socket instanceof TLSSocket && nodeReq.socket.encrypted
@@ -60,7 +60,7 @@ export function fromNodeRequest(
   // Use `req.originalUrl` so React Router is aware of the full path
   invariant(
     nodeReq.originalUrl,
-    "Expected `nodeReq.originalUrl` to be defined"
+    "Expected `nodeReq.originalUrl` to be defined",
   );
   let url = new URL(nodeReq.originalUrl, origin);
 

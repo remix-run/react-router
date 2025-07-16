@@ -271,14 +271,14 @@ test("can pass context values (w/o middleware)", async () => {
         ],
       },
     ],
-    { message: "hello" }
+    { message: "hello" },
   );
 
   render(<RoutesStub initialEntries={["/hello"]} />);
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
   expect(await screen.findByTestId("hello")).toHaveTextContent(
-    /Context: hello/
+    /Context: hello/,
   );
 });
 
@@ -315,19 +315,19 @@ test("can pass context values (w/middleware)", async () => {
         ],
       },
     ],
-    new unstable_RouterContextProvider(new Map([[helloContext, "hello"]]))
+    new unstable_RouterContextProvider(new Map([[helloContext, "hello"]])),
   );
 
   render(
     <RoutesStub
       future={{ unstable_middleware: true }}
       initialEntries={["/hello"]}
-    />
+    />,
   );
 
   expect(await screen.findByTestId("root")).toHaveTextContent(/Context: hello/);
   expect(await screen.findByTestId("hello")).toHaveTextContent(
-    /Context: hello/
+    /Context: hello/,
   );
 });
 

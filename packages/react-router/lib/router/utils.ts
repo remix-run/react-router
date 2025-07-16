@@ -128,7 +128,7 @@ export interface unstable_RouterContext<T = unknown> {
  * @returns A context object
  */
 export function unstable_createContext<T>(
-  defaultValue?: T
+  defaultValue?: T,
 ): unstable_RouterContext<T> {
   return { defaultValue };
 }
@@ -167,7 +167,7 @@ export class unstable_RouterContextProvider {
 
   set<C extends unstable_RouterContext>(
     context: C,
-    value: C extends unstable_RouterContext<infer T> ? T : never
+    value: C extends unstable_RouterContext<infer T> ? T : never,
   ): void {
     this.#map.set(context, value);
   }
@@ -224,7 +224,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  */
 export type unstable_MiddlewareFunction<Result = unknown> = (
   args: DataFunctionArgs<unstable_RouterContextProvider>,
-  next: unstable_MiddlewareNextFunction<Result>
+  next: unstable_MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 
 /**
@@ -252,7 +252,7 @@ type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 export type LoaderFunction<Context = DefaultContext> = {
   (
     args: LoaderFunctionArgs<Context>,
-    handlerCtx?: unknown
+    handlerCtx?: unknown,
   ): DataFunctionReturnValue;
 } & { hydrate?: boolean };
 
@@ -262,7 +262,7 @@ export type LoaderFunction<Context = DefaultContext> = {
 export interface ActionFunction<Context = DefaultContext> {
   (
     args: ActionFunctionArgs<Context>,
-    handlerCtx?: unknown
+    handlerCtx?: unknown,
   ): DataFunctionReturnValue;
 }
 
@@ -353,8 +353,8 @@ export interface DataStrategyMatch
   unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   resolve: (
     handlerOverride?: (
-      handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => DataFunctionReturnValue
+      handler: (ctx?: unknown) => DataFunctionReturnValue,
+    ) => DataFunctionReturnValue,
   ) => Promise<DataStrategyResult>;
 }
 
@@ -362,7 +362,7 @@ export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
   unstable_runClientMiddleware: (
-    cb: DataStrategyFunction<Context>
+    cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
   fetcherKey: string | null;
 }
@@ -376,14 +376,14 @@ export interface DataStrategyResult {
 }
 
 export interface DataStrategyFunction<Context = DefaultContext> {
-  (args: DataStrategyFunctionArgs<Context>): Promise<
-    Record<string, DataStrategyResult>
-  >;
+  (
+    args: DataStrategyFunctionArgs<Context>,
+  ): Promise<Record<string, DataStrategyResult>>;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch
+  M extends AgnosticRouteMatch = AgnosticRouteMatch,
 > = {
   signal: AbortSignal;
   path: string;
@@ -394,9 +394,9 @@ export type AgnosticPatchRoutesOnNavigationFunctionArgs<
 
 export type AgnosticPatchRoutesOnNavigationFunction<
   O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch
+  M extends AgnosticRouteMatch = AgnosticRouteMatch,
 > = (
-  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
+  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>,
 ) => MaybePromise<void>;
 
 /**
@@ -430,10 +430,10 @@ const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "children",
 ]);
 export function isUnsupportedLazyRouteObjectKey(
-  key: string
+  key: string,
 ): key is UnsupportedLazyRouteObjectKey {
   return unsupportedLazyRouteObjectKeys.has(
-    key as UnsupportedLazyRouteObjectKey
+    key as UnsupportedLazyRouteObjectKey,
   );
 }
 
@@ -456,10 +456,10 @@ const unsupportedLazyRouteFunctionKeys =
     "children",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
-  key: string
+  key: string,
 ): key is UnsupportedLazyRouteFunctionKey {
   return unsupportedLazyRouteFunctionKeys.has(
-    key as UnsupportedLazyRouteFunctionKey
+    key as UnsupportedLazyRouteFunctionKey,
   );
 }
 
@@ -560,7 +560,7 @@ type ParamChar = Regex_w | "-";
 // Emulates regex `+`
 type RegexMatchPlus<
   CharPattern extends string,
-  T extends string
+  T extends string,
 > = T extends `${infer First}${infer Rest}`
   ? First extends CharPattern
     ? RegexMatchPlus<CharPattern, Rest> extends never
@@ -575,22 +575,22 @@ type _PathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `:${infer Param}`
-    ? Param extends `${infer Optional}?${string}`
-      ? RegexMatchPlus<ParamChar, Optional>
-      : RegexMatchPlus<ParamChar, Param>
-    : // otherwise, there aren't any params present
-      never;
+      Path extends `:${infer Param}`
+      ? Param extends `${infer Optional}?${string}`
+        ? RegexMatchPlus<ParamChar, Optional>
+        : RegexMatchPlus<ParamChar, Param>
+      : // otherwise, there aren't any params present
+        never;
 
 export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
     ? "*"
     : // look for wildcard at the end of the path
-    Path extends `${infer Rest}/*`
-    ? "*" | _PathParam<Rest>
-    : // look for params in the absence of wildcards
-      _PathParam<Path>;
+      Path extends `${infer Rest}/*`
+      ? "*" | _PathParam<Rest>
+      : // look for params in the absence of wildcards
+        _PathParam<Path>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _tests = [
@@ -601,7 +601,7 @@ type _tests = [
   Expect<Equal<PathParam<"/:a/:b">, "a" | "b">>,
   Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
   Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
-  Expect<Equal<PathParam<"/:lang?.xml">, "lang">>
+  Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
 ];
 
 // Attempt to parse the given string segment. If it fails, then just return the
@@ -623,7 +623,7 @@ export type Params<Key extends string = string> = {
  */
 export interface AgnosticRouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -647,7 +647,7 @@ export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
 function isIndexRoute(
-  route: AgnosticRouteObject
+  route: AgnosticRouteObject,
 ): route is AgnosticIndexRouteObject {
   return route.index === true;
 }
@@ -659,19 +659,19 @@ export function convertRoutesToDataRoutes(
   mapRouteProperties: MapRoutePropertiesFunction,
   parentPath: string[] = [],
   manifest: RouteManifest = {},
-  allowInPlaceMutations = false
+  allowInPlaceMutations = false,
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
       route.index !== true || !route.children,
-      `Cannot specify children on an index route`
+      `Cannot specify children on an index route`,
     );
     invariant(
       allowInPlaceMutations || !manifest[id],
       `Found a route id collision on id "${id}".  Route ` +
-        "id's must be globally unique within Data Router usages"
+        "id's must be globally unique within Data Router usages",
     );
 
     if (isIndexRoute(route)) {
@@ -697,7 +697,7 @@ export function convertRoutesToDataRoutes(
           mapRouteProperties,
           treePath,
           manifest,
-          allowInPlaceMutations
+          allowInPlaceMutations,
         );
       }
 
@@ -712,22 +712,22 @@ export function convertRoutesToDataRoutes(
  * @category Utils
  */
 export function matchRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
-  basename = "/"
+  basename = "/",
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
 export function matchRoutesImpl<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename: string,
-  allowPartial: boolean
+  allowPartial: boolean,
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
@@ -753,7 +753,7 @@ export function matchRoutesImpl<
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
       decoded,
-      allowPartial
+      allowPartial,
     );
   }
 
@@ -775,7 +775,7 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
 
 export function convertRouteMatchToUiMatch(
   match: AgnosticDataRouteMatch,
-  loaderData: RouteData
+  loaderData: RouteData,
 ): UIMatch {
   let { route, pathname, params } = match;
   return {
@@ -788,7 +788,7 @@ export function convertRouteMatchToUiMatch(
 }
 
 interface RouteMeta<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   relativePath: string;
   caseSensitive: boolean;
@@ -797,7 +797,7 @@ interface RouteMeta<
 }
 
 interface RouteBranch<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   path: string;
   score: number;
@@ -805,17 +805,17 @@ interface RouteBranch<
 }
 
 function flattenRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
-  parentPath = ""
+  parentPath = "",
 ): RouteBranch<RouteObjectType>[] {
   let flattenRoute = (
     route: RouteObjectType,
     index: number,
-    relativePath?: string
+    relativePath?: string,
   ) => {
     let meta: RouteMeta<RouteObjectType> = {
       relativePath:
@@ -830,7 +830,7 @@ function flattenRoutes<
         meta.relativePath.startsWith(parentPath),
         `Absolute route path "${meta.relativePath}" nested under path ` +
           `"${parentPath}" is not valid. An absolute child route path ` +
-          `must start with the combined path of all its parent routes.`
+          `must start with the combined path of all its parent routes.`,
       );
 
       meta.relativePath = meta.relativePath.slice(parentPath.length);
@@ -848,7 +848,7 @@ function flattenRoutes<
         // @ts-expect-error
         route.index !== true,
         `Index routes must not have child routes. Please remove ` +
-          `all child routes from route path "${path}".`
+          `all child routes from route path "${path}".`,
       );
       flattenRoutes(route.children, branches, routesMeta, path);
     }
@@ -923,8 +923,8 @@ function explodeOptionalSegments(path: string): string[] {
   // first, we avoid this issue
   result.push(
     ...restExploded.map((subpath) =>
-      subpath === "" ? required : [required, subpath].join("/")
-    )
+      subpath === "" ? required : [required, subpath].join("/"),
+    ),
   );
 
   // Then, if this is an optional value, add all child versions without
@@ -934,7 +934,7 @@ function explodeOptionalSegments(path: string): string[] {
 
   // for absolute paths, ensure `/` instead of empty segment
   return result.map((exploded) =>
-    path.startsWith("/") && exploded === "" ? "/" : exploded
+    path.startsWith("/") && exploded === "" ? "/" : exploded,
   );
 }
 
@@ -944,8 +944,8 @@ function rankRouteBranches(branches: RouteBranch[]): void {
       ? b.score - a.score // Higher score first
       : compareIndexes(
           a.routesMeta.map((meta) => meta.childrenIndex),
-          b.routesMeta.map((meta) => meta.childrenIndex)
-        )
+          b.routesMeta.map((meta) => meta.childrenIndex),
+        ),
   );
 }
 
@@ -976,9 +976,9 @@ function computeScore(path: string, index: boolean | undefined): number {
         (paramRe.test(segment)
           ? dynamicSegmentValue
           : segment === ""
-          ? emptySegmentValue
-          : staticSegmentValue),
-      initialScore
+            ? emptySegmentValue
+            : staticSegmentValue),
+      initialScore,
     );
 }
 
@@ -999,11 +999,11 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string,
-  allowPartial = false
+  allowPartial = false,
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -1019,7 +1019,7 @@ function matchRouteBranch<
         : pathname.slice(matchedPathname.length) || "/";
     let match = matchPath(
       { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
-      remainingPathname
+      remainingPathname,
     );
 
     let route = meta.route;
@@ -1036,7 +1036,7 @@ function matchRouteBranch<
           caseSensitive: meta.caseSensitive,
           end: false,
         },
-        remainingPathname
+        remainingPathname,
       );
     }
 
@@ -1051,7 +1051,7 @@ function matchRouteBranch<
       params: matchedParams as Params<ParamKey>,
       pathname: joinPaths([matchedPathname, match.pathname]),
       pathnameBase: normalizePathname(
-        joinPaths([matchedPathname, match.pathnameBase])
+        joinPaths([matchedPathname, match.pathnameBase]),
       ),
       route,
     });
@@ -1073,7 +1073,7 @@ export function generatePath<Path extends string>(
   originalPath: Path,
   params: {
     [key in PathParam<Path>]: string | null;
-  } = {} as any
+  } = {} as any,
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
@@ -1082,7 +1082,7 @@ export function generatePath<Path extends string>(
       `Route path "${path}" will be treated as if it were ` +
         `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
         `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-        `please change the route path to "${path.replace(/\*$/, "/*")}".`
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`,
     );
     path = path.replace(/\*$/, "/*") as Path;
   }
@@ -1177,10 +1177,10 @@ type Mutable<T> = {
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
-  Path extends string
+  Path extends string,
 >(
   pattern: PathPattern<Path> | Path,
-  pathname: string
+  pathname: string,
 ): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
     pattern = { path: pattern, caseSensitive: false, end: true };
@@ -1189,7 +1189,7 @@ export function matchPath<
   let [matcher, compiledParams] = compilePath(
     pattern.path,
     pattern.caseSensitive,
-    pattern.end
+    pattern.end,
   );
 
   let match = pathname.match(matcher);
@@ -1217,7 +1217,7 @@ export function matchPath<
       }
       return memo;
     },
-    {}
+    {},
   );
 
   return {
@@ -1233,14 +1233,14 @@ type CompiledPathParam = { paramName: string; isOptional?: boolean };
 export function compilePath(
   path: string,
   caseSensitive = false,
-  end = true
+  end = true,
 ): [RegExp, CompiledPathParam[]] {
   warning(
     path === "*" || !path.endsWith("*") || path.endsWith("/*"),
     `Route path "${path}" will be treated as if it were ` +
       `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
       `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-      `please change the route path to "${path.replace(/\*$/, "/*")}".`
+      `please change the route path to "${path.replace(/\*$/, "/*")}".`,
   );
 
   let params: CompiledPathParam[] = [];
@@ -1255,7 +1255,7 @@ export function compilePath(
         (_: string, paramName: string, isOptional) => {
           params.push({ paramName, isOptional: isOptional != null });
           return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
-        }
+        },
       );
 
   if (path.endsWith("*")) {
@@ -1296,7 +1296,7 @@ export function decodePath(value: string) {
       false,
       `The URL path "${value}" could not be decoded because it is a ` +
         `malformed URL segment. This is probably due to a bad percent ` +
-        `encoding (${error}).`
+        `encoding (${error}).`,
     );
 
     return value;
@@ -1308,7 +1308,7 @@ export function decodePath(value: string) {
  */
 export function stripBasename(
   pathname: string,
-  basename: string
+  basename: string,
 ): string | null {
   if (basename === "/") return pathname;
 
@@ -1388,12 +1388,12 @@ function getInvalidPathError(
   char: string,
   field: string,
   dest: string,
-  path: Partial<Path>
+  path: Partial<Path>,
 ) {
   return (
     `Cannot include a '${char}' character in a manually specified ` +
     `\`to.${field}\` field [${JSON.stringify(
-      path
+      path,
     )}].  Please separate it out to the ` +
     `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
     `a string in <Link to="..."> and the router will parse it for you.`
@@ -1424,25 +1424,25 @@ function getInvalidPathError(
  *   </Route>
  */
 export function getPathContributingMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
+  T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
   return matches.filter(
     (match, index) =>
-      index === 0 || (match.route.path && match.route.path.length > 0)
+      index === 0 || (match.route.path && match.route.path.length > 0),
   );
 }
 
 // Return the array of pathnames for the current route matches - used to
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
+  T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
   let pathMatches = getPathContributingMatches(matches);
 
   // Use the full pathname for the leaf match so we include splat values for "." links
   // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
   return pathMatches.map((match, idx) =>
-    idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
+    idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase,
   );
 }
 
@@ -1453,7 +1453,7 @@ export function resolveTo(
   toArg: To,
   routePathnames: string[],
   locationPathname: string,
-  isPathRelative = false
+  isPathRelative = false,
 ): Path {
   let to: Partial<Path>;
   if (typeof toArg === "string") {
@@ -1463,15 +1463,15 @@ export function resolveTo(
 
     invariant(
       !to.pathname || !to.pathname.includes("?"),
-      getInvalidPathError("?", "pathname", "search", to)
+      getInvalidPathError("?", "pathname", "search", to),
     );
     invariant(
       !to.pathname || !to.pathname.includes("#"),
-      getInvalidPathError("#", "pathname", "hash", to)
+      getInvalidPathError("#", "pathname", "hash", to),
     );
     invariant(
       !to.search || !to.search.includes("#"),
-      getInvalidPathError("#", "search", "hash", to)
+      getInvalidPathError("#", "search", "hash", to),
     );
   }
 
@@ -1549,8 +1549,8 @@ export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
     : search.startsWith("?")
-    ? search
-    : "?" + search;
+      ? search
+      : "?" + search;
 
 /**
  * @private
@@ -1578,7 +1578,7 @@ export class DataWithResponseInit<D> {
 export function data<D>(data: D, init?: number | ResponseInit) {
   return new DataWithResponseInit(
     data,
-    typeof init === "number" ? { status: init } : init
+    typeof init === "number" ? { status: init } : init,
   );
 }
 
@@ -1592,7 +1592,7 @@ export interface TrackedPromise extends Promise<any> {
 
 export type RedirectFunction = (
   url: string,
-  init?: number | ResponseInit
+  init?: number | ResponseInit,
 ) => Response;
 
 /**
@@ -1667,7 +1667,7 @@ export class ErrorResponseImpl implements ErrorResponse {
     status: number,
     statusText: string | undefined,
     data: any,
-    internal = false
+    internal = false,
   ) {
     this.status = status;
     this.statusText = statusText || "";

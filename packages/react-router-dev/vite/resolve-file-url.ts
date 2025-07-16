@@ -4,7 +4,7 @@ import { getVite } from "./vite";
 
 export const resolveFileUrl = (
   { rootDirectory }: { rootDirectory: string },
-  filePath: string
+  filePath: string,
 ) => {
   let vite = getVite();
   let relativePath = path.relative(rootDirectory, filePath);

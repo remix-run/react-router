@@ -23,7 +23,7 @@ import { type HandleErrorFunction } from "react-router";
 
 export const handleError: HandleErrorFunction = (
   error,
-  { request }
+  { request },
 ) => {
   // React Router may abort some interrupted requests, don't log those
   if (!request.signal.aborted) {
