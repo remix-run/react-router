@@ -15,11 +15,20 @@ export interface ServerRouterProps {
 }
 
 /**
- * The entry point for a Remix app when it is rendered on the server (in
- * `app/entry.server.js`). This component is used to generate the HTML in the
- * response from the server.
+ * The server entry point for a React Router app in Framework Mode. This component
+ * is used to generate the HTML in the response from the server.
+ * See [`entry.server.tsx`](../api/framework-conventions/entry.server.tsx).
  *
- * @category Components
+ * @public
+ * @category Framework Routers
+ * @mode framework
+ * @param props Props
+ * @param props.context The entry context containing the manifest, route modules,
+ * and other data needed for rendering.
+ * @param props.url The URL of the request being handled.
+ * @param props.nonce An optional nonce for Content Security Policy (CSP) compliance,
+ * used to allow inline scripts to run safely.
+ * @returns A React element that represents the server-rendered application.
  */
 export function ServerRouter({
   context,

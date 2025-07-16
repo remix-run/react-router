@@ -217,10 +217,17 @@ interface HydratedRouterProps {
 }
 
 /**
- * Framework-mode router component to be used in `entry.client.tsx` to hydrate a
- * router from a `ServerRouter`
+ * Framework-mode router component to be used to to hydrate a router from a
+ * `ServerRouter`. See [`entry.client.tsx`](../api/framework-conventions/entry.client.tsx).
  *
- * @category Component Routers
+ * @public
+ * @category Framework Routers
+ * @mode framework
+ * @param props Props
+ * @param props.unstable_getContext Context object to passed through to
+ * {@link createBrowserRouter} and made available to `clientLoader`/`clientAction`
+ * functions
+ * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
