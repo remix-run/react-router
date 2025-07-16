@@ -77,16 +77,16 @@ const MODES = ["framework", "data", "declarative"] as const;
 const CATEGORIES = [
   "Components",
   "Hooks",
+  "Framework Routers",
   "Data Routers",
   "Declarative Routers",
   "Utils",
 ] as const;
 const isComponentApi = (c: SimplifiedComment) =>
   c.category === "Components" ||
+  c.category === "Framework Routers" ||
   c.category === "Declarative Routers" ||
-  c.name === "HydratedRouter" ||
-  c.name === "RouterProvider" ||
-  c.name === "StaticRouterProvider";
+  (c.category === "Data Routers" && !c.name.startsWith("create"));
 
 // Read a filename from standard input using the node parseArgs utility
 
@@ -565,12 +565,9 @@ function simplifyComment(
 
   let reference = typedocLookup.get(name)?.href;
   if (!reference) {
-    if (args.write) {
-      throw new Error(`Could not find API in typedoc reference docs: ${name}`);
-    } else {
-      console.warn(`Could not find API in typedoc reference docs: ${name}`);
-      reference = "!!! UNKNOWN !!!";
-    }
+    console.warn(
+      `Warning: Could not find API in typedoc reference docs, skipping reference link: ${name}`
+    );
   }
 
   let signature = getSignature(comment.code);
