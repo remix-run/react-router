@@ -1,8 +1,8 @@
 ---
-title: StaticRouterProvider
+title: createStaticHandler
 ---
 
-# StaticRouterProvider
+# createStaticHandler
 
 <!--
 ⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
@@ -20,10 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.StaticRouterProvider.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createStaticHandler.html)
 
-A Data Router that may not navigate to any other location. This is useful
-on the server where there is no stateful UI.
+Create a static handler to perform server-side data loading
 
 ```tsx
 export async function handleRequest(request: Request) {
@@ -45,24 +44,24 @@ export async function handleRequest(request: Request) {
 ## Signature
 
 ```tsx
-function StaticRouterProvider({ context, router, hydrate = true, nonce, }: StaticRouterProviderProps)
+function createStaticHandler(routes: RouteObject[], opts?: CreateStaticHandlerOptions)
 ```
 
-## Props
+## Params
 
-### context
+### routes
 
-The [`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandlerContext.html) returned from `staticHandler.query()`
+The route objects to create a static handler for
 
-### router
+### opts.basename
 
-The static data router from [`createStaticRouter`](../data-routers/createStaticRouter)
+The base URL for the static handler (default: `/`)
 
-### hydrate
+### opts.future
 
-Whether to hydrate the router on the client (default `true`)
+Future flags for the static handler
 
-### nonce
+## Returns
 
-The [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce) to use for the hydration `<script>` tag
+A static handler that can be used to query data for the provided routes
 

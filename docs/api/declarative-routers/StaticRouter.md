@@ -4,6 +4,18 @@ title: StaticRouter
 
 # StaticRouter
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/server.tsx
+-->
+
 [MODES: declarative]
 
 ## Summary
@@ -13,22 +25,23 @@ title: StaticRouter
 A `<Router>` that may not navigate to any other location. This is useful
 on the server where there is no stateful UI.
 
+## Signature
+
+```tsx
+function StaticRouter({ basename, children, location: locationProp = "/", }: StaticRouterProps)
+```
+
 ## Props
 
 ### basename
 
-[modes: declarative]
-
-_No documentation_
+The base URL for the static router (default: `/`)
 
 ### children
 
-[modes: declarative]
-
-_No documentation_
+The child elements to render inside the static router
 
 ### location
 
-[modes: declarative]
+The location to render the static router at (default: `/`)
 
-_No documentation_
