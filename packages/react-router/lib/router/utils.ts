@@ -344,6 +344,27 @@ export interface DataStrategyMatch
     handler: Promise<void> | undefined;
     route: Promise<void> | undefined;
   };
+  /**
+   * A boolean value indicating whether this route handler should be called in this pass.
+   *
+   * The `matches` array always includes _all_ matched routes even when only _some_
+   * route handlers need to be called so that things like middleware can be implemented.
+   *
+   * `shouldLoad` is usually only interesting if you are skipping the route handler
+   * entirely and implementing custom handler logic - since it lets you determine
+   * if that custom logic should run for this route or not.
+   *
+   * For example:
+   *  - If you are on `/parent/child/a` and you navigate to `/parent/child/b` -
+   *    you'll get an array of three matches (`[parent, child, b]`), but only `b`
+   *    will have `shouldLoad=true` because the data for `parent` and `child` is
+   *    already loaded
+   *  - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only
+   *    `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
+   *  - After the `action`, `dataStrategy` will be called again for the `loader`
+   *    revalidation, and all matches will have `shouldLoad=true` (assuming no custom
+   *   `shouldRevalidate` implementations)
+   */
   shouldLoad: boolean;
   // This can be null for actions calls and for initial hydration calls
   unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
@@ -351,6 +372,20 @@ export interface DataStrategyMatch
   // they are read-only but let the user provide an optional override value for
   // `defaultShouldRevalidate` if they choose
   unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  /**
+   * An async function that will resolve any `route.lazy` implementations and
+   * execute the route's handler (if necessary), returning a `DataStrategyResult`
+   *
+   * - Calling `match.resolve` does not mean you're calling the `loader`/`action`
+   *   (the "handler") - `resolve` will only call the `handler` internally if
+   *   needed _and_ if you don't pass your own `handlerOverride` function parameter
+   * - It is safe to call `match.resolve` for all matches, even if they have
+   *   `shouldLoad=false`, and it will no-op if no loading is required
+   * - You should generally always call `match.resolve()` for `shouldLoad:true`
+   *   routes to ensure that any `route.lazy` implementations are processed
+   * - See the examples below for how to implement custom handler execution via
+   *   `match.resolve`
+   */
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue,
@@ -360,10 +395,17 @@ export interface DataStrategyMatch
 
 export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
+  /**
+   * Matches for this route extended with Data strategy APIs
+   */
   matches: DataStrategyMatch[];
   unstable_runClientMiddleware: (
     cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
+  /**
+   * The key of the fetcher we are calling `dataStrategy` for, otherwise `null`
+   * for navigational executions
+   */
   fetcherKey: string | null;
 }
 
