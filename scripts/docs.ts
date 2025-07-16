@@ -81,13 +81,17 @@ const CATEGORIES = [
   "Framework Routers",
   "Data Routers",
   "Declarative Routers",
+  "RSC",
   "Utils",
 ] as const;
 const isComponentApi = (c: SimplifiedComment) =>
   c.category === "Components" ||
   c.category === "Framework Routers" ||
   c.category === "Declarative Routers" ||
-  (c.category === "Data Routers" && !c.name.startsWith("create"));
+  c.name === "RouterProvider" ||
+  c.name === "StaticRouterProvider" ||
+  c.name === "unstable_RSCStaticRouter" ||
+  c.name === "unstable_RSCHydratedRouter";
 
 // Read a filename from standard input using the node parseArgs utility
 

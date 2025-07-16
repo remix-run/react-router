@@ -55,6 +55,10 @@ jobs:
           pnpm run docs:jsdoc --path packages/react-router/lib/dom/ssr/server.tsx --write
           pnpm run docs:jsdoc --path packages/react-router/lib/dom-export/hydrated-router.tsx --write
           pnpm run docs:jsdoc --path packages/react-router/lib/dom/server.tsx --write
+          pnpm run docs:jsdoc --path packages/react-router/lib/rsc/browser.tsx --write
+          pnpm run docs:jsdoc --path packages/react-router/lib/rsc/server.rsc.ts --write
+          pnpm run docs:jsdoc --path packages/react-router/lib/rsc/server.ssr.tsx --write
+          pnpm run docs:jsdoc --path packages/react-router/lib/rsc/html-stream/browser.ts --write
 
       - name: 💪 Commit
         run: |
