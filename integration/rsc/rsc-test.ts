@@ -2208,5 +2208,324 @@ implementations.forEach((implementation) => {
         validateRSCHtml(await page.content());
       });
     });
+
+    test.describe("Route Client Component Props", () => {
+      test("Passes props to client route component", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export { default, clientLoader, clientAction } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              import { Form } from "react-router";
+
+              export async function clientLoader() {
+                return { message: "Hello from client loader!" };
+              }
+
+              export async function clientAction({ request }) {
+                const formData = await request.formData();
+                const name = formData.get("name") as string;
+                return { actionResult: "Hello " + name + " from client action!" };
+              }
+
+              export default function HomeRoute({ loaderData, actionData, matches, params }) {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                    {loaderData && (
+                      <p data-loader-data>{loaderData.message}</p>
+                    )}
+                    {actionData && (
+                      <p data-action-data>{actionData.actionResult}</p>
+                    )}
+                    {matches && (
+                      <div data-matches>
+                        <p data-matches-ids>matches ids: {matches.map(match => match.id).join(", ")}</p>
+                      </div>
+                    )}
+                    {params && (
+                      <div data-params>
+                        <p data-params-type>typeof params: {typeof params}</p>
+                        <p data-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                    <Form method="post">
+                      <input name="name" data-name-input />
+                      <button type="submit" data-submit-button>
+                        Submit Action
+                      </button>
+                    </Form>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify loader data is passed
+        await page.waitForSelector("[data-loader-data]");
+        expect(await page.locator("[data-loader-data]").textContent()).toBe(
+          "Hello from client loader!"
+        );
+
+        // Verify params are passed (empty for home route)
+        await page.waitForSelector("[data-params]");
+        await page.waitForSelector("[data-params-type]");
+        await page.waitForSelector("[data-params-count]");
+        expect(await page.locator("[data-params-type]").textContent()).toBe(
+          "typeof params: object"
+        );
+        expect(await page.locator("[data-params-count]").textContent()).toBe(
+          "params count: 0"
+        );
+
+        // Verify matches are passed
+        await page.waitForSelector("[data-matches]");
+        await page.waitForSelector("[data-matches-ids]");
+        expect(await page.locator("[data-matches-ids]").textContent()).toBe(
+          "matches ids: root, home"
+        );
+
+        // Submit the form to trigger the client action
+        await page.fill("[data-name-input]", "World");
+        await page.click("[data-submit-button]");
+
+        // Verify the action data is displayed
+        await page.waitForSelector("[data-action-data]");
+        expect(await page.locator("[data-action-data]").textContent()).toBe(
+          "Hello World from client action!"
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Passes props to client ErrorBoundary when error is thrown in client loader", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export { default, clientLoader, ErrorBoundary } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              export async function clientLoader() {
+                throw new Error("Intentional error from client loader");
+              }
+
+              export function ErrorBoundary({ error, params }) {
+                return (
+                  <div>
+                    <h2 data-error-title>Error Caught!</h2>
+                    <p data-error-message>{error.message}</p>
+                    {params && (
+                      <div data-error-params>
+                        <p data-error-params-type>typeof params: {typeof params}</p>
+                        <p data-error-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2>Home Route</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify error boundary is shown
+        await page.waitForSelector("[data-error-title]");
+        await page.waitForSelector("[data-error-message]");
+        expect(await page.locator("[data-error-title]").textContent()).toBe(
+          "Error Caught!"
+        );
+        expect(await page.locator("[data-error-message]").textContent()).toBe(
+          "Intentional error from client loader"
+        );
+
+        // Verify params are passed to error boundary
+        await page.waitForSelector("[data-error-params]");
+        await page.waitForSelector("[data-error-params-type]");
+        await page.waitForSelector("[data-error-params-count]");
+        expect(
+          await page.locator("[data-error-params-type]").textContent()
+        ).toBe("typeof params: object");
+        expect(
+          await page.locator("[data-error-params-count]").textContent()
+        ).toBe("params count: 0");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Passes props to client ErrorBoundary when error is thrown in server loader", async ({
+        page,
+      }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          dev: true,
+          files: {
+            "src/routes/home.tsx": js`
+              export function loader() {
+                throw new Error("Intentional error from server loader");
+              }
+
+              export default function HomeRoute() {
+                return <h2>This should not be rendered</h2>;
+              }
+
+              export { ErrorBoundary } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              export function ErrorBoundary({ error, params }) {
+                return (
+                  <div>
+                    <h2 data-error-title>Error Caught!</h2>
+                    <p data-error-message>{error.message}</p>
+                    {params && (
+                      <div data-error-params>
+                        <p data-error-params-type>typeof params: {typeof params}</p>
+                        <p data-error-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify error boundary is shown
+        await page.waitForSelector("[data-error-title]");
+        await page.waitForSelector("[data-error-message]");
+        expect(await page.locator("[data-error-title]").textContent()).toBe(
+          "Error Caught!"
+        );
+        expect(await page.locator("[data-error-message]").textContent()).toBe(
+          "Intentional error from server loader"
+        );
+
+        // Verify params are passed to error boundary
+        await page.waitForSelector("[data-error-params]");
+        await page.waitForSelector("[data-error-params-type]");
+        await page.waitForSelector("[data-error-params-count]");
+        expect(
+          await page.locator("[data-error-params-type]").textContent()
+        ).toBe("typeof params: object");
+        expect(
+          await page.locator("[data-error-params-count]").textContent()
+        ).toBe("params count: 0");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+
+      test("Passes props to client HydrateFallback", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          files: {
+            "src/routes/home.tsx": js`
+              export { default, clientLoader, HydrateFallback } from "./home.client";
+            `,
+            "src/routes/home.client.tsx": js`
+              "use client";
+
+              export async function clientLoader() {
+                const pollingPromise = (async () => {
+                  while (globalThis.unblockClientLoader !== true) {
+                    await new Promise((resolve) => setTimeout(resolve, 0));
+                  }
+                })();
+                const timeoutPromise = new Promise((_, reject) => {
+                  setTimeout(() => reject(new Error("Client loader wasn't unblocked after 5s")), 5000);
+                });
+                await Promise.race([pollingPromise, timeoutPromise]);
+                return { message: "Hello from client loader!" };
+              }
+
+              export function HydrateFallback({ params }) {
+                return (
+                  <div>
+                    <h2 data-hydrate-fallback>Hydrate Fallback</h2>
+                    {params && (
+                      <div data-hydrate-params>
+                        <p data-hydrate-params-type>typeof params: {typeof params}</p>
+                        <p data-hydrate-params-count>params count: {Object.keys(params).length}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              export default function HomeRoute() {
+                return (
+                  <div>
+                    <h2 data-home>Home Route</h2>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`);
+
+        // Verify the hydrate fallback is shown initially
+        await page.waitForSelector("[data-hydrate-fallback]");
+        expect(
+          await page.locator("[data-hydrate-fallback]").textContent()
+        ).toBe("Hydrate Fallback");
+
+        // Verify params are passed to hydrate fallback
+        await page.waitForSelector("[data-hydrate-params]");
+        await page.waitForSelector("[data-hydrate-params-type]");
+        await page.waitForSelector("[data-hydrate-params-count]");
+        expect(
+          await page.locator("[data-hydrate-params-type]").textContent()
+        ).toBe("typeof params: object");
+        expect(
+          await page.locator("[data-hydrate-params-count]").textContent()
+        ).toBe("params count: 0");
+
+        // Unblock the client loader to allow it to complete
+        await page.evaluate(() => {
+          (globalThis as any).unblockClientLoader = true;
+        });
+
+        await page.waitForSelector("[data-home]");
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
+    });
   });
 });

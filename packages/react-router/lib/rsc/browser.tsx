@@ -54,13 +54,12 @@ export type EncodeReplyFunction = (
   options: { temporaryReferences: unknown }
 ) => Promise<BodyInit>;
 
-declare global {
-  interface Window {
+type WindowWithRouterGlobals = Window &
+  typeof globalThis & {
     __router: DataRouter;
     __routerInitialized: boolean;
     __routerActionID: number;
-  }
-}
+  };
 
 export function createCallServer({
   createFromReadableStream,
@@ -73,10 +72,12 @@ export function createCallServer({
   encodeReply: EncodeReplyFunction;
   fetch?: (request: Request) => Promise<Response>;
 }) {
+  const globalVar = window as WindowWithRouterGlobals;
+
   let landedActionId = 0;
   return async (id: string, args: unknown[]) => {
-    let actionId = (window.__routerActionID =
-      (window.__routerActionID ??= 0) + 1);
+    let actionId = (globalVar.__routerActionID =
+      (globalVar.__routerActionID ??= 0) + 1);
 
     const temporaryReferences = createTemporaryReferenceSet();
     const response = await fetchImplementation(
@@ -102,7 +103,7 @@ export function createCallServer({
         return;
       }
 
-      window.__router.navigate(payload.location, {
+      globalVar.__router.navigate(payload.location, {
         replace: payload.replace,
       });
 
@@ -122,7 +123,7 @@ export function createCallServer({
 
           if (
             landedActionId < actionId &&
-            window.__routerActionID <= actionId
+            globalVar.__routerActionID <= actionId
           ) {
             landedActionId = actionId;
 
@@ -131,7 +132,7 @@ export function createCallServer({
                 window.location.href = rerender.location;
                 return;
               }
-              window.__router.navigate(rerender.location, {
+              globalVar.__router.navigate(rerender.location, {
                 replace: rerender.replace,
               });
               return;
@@ -139,26 +140,30 @@ export function createCallServer({
 
             let lastMatch: RSCRouteManifest | undefined;
             for (const match of rerender.matches) {
-              window.__router.patchRoutes(
+              globalVar.__router.patchRoutes(
                 lastMatch?.id ?? null,
                 [createRouteFromServerManifest(match)],
                 true
               );
               lastMatch = match;
             }
-            window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
+            (
+              window as WindowWithRouterGlobals
+            ).__router._internalSetStateDoNotUseOrYouWillBreakYourApp({});
 
             React.startTransition(() => {
-              window.__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
+              (
+                window as WindowWithRouterGlobals
+              ).__router._internalSetStateDoNotUseOrYouWillBreakYourApp({
                 loaderData: Object.assign(
                   {},
-                  window.__router.state.loaderData,
+                  globalVar.__router.state.loaderData,
                   rerender.loaderData
                 ),
                 errors: rerender.errors
                   ? Object.assign(
                       {},
-                      window.__router.state.errors,
+                      globalVar.__router.state.errors,
                       rerender.errors
                     )
                   : null,
@@ -184,7 +189,9 @@ function createRouterFromPayload({
   fetchImplementation: (request: Request) => Promise<Response>;
   unstable_getContext: RouterInit["unstable_getContext"] | undefined;
 }) {
-  if (window.__router) return window.__router;
+  const globalVar = window as WindowWithRouterGlobals;
+
+  if (globalVar.__router) return globalVar.__router;
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
@@ -213,7 +220,7 @@ function createRouterFromPayload({
     return [route];
   }, [] as DataRouteObject[]);
 
-  window.__router = createRouter({
+  globalVar.__router = createRouter({
     routes,
     unstable_getContext,
     basename: payload.basename,
@@ -251,7 +258,7 @@ function createRouterFromPayload({
     },
     // FIXME: Pass `build.ssr` into this function
     dataStrategy: getRSCSingleFetchDataStrategy(
-      () => window.__router,
+      () => globalVar.__router,
       true,
       payload.basename,
       createFromReadableStream,
@@ -261,21 +268,21 @@ function createRouterFromPayload({
 
   // We can call initialize() immediately if the router doesn't have any
   // loaders to run on hydration
-  if (window.__router.state.initialized) {
-    window.__routerInitialized = true;
-    window.__router.initialize();
+  if (globalVar.__router.state.initialized) {
+    globalVar.__routerInitialized = true;
+    globalVar.__router.initialize();
   } else {
-    window.__routerInitialized = false;
+    globalVar.__routerInitialized = false;
   }
 
   let lastLoaderData: unknown = undefined;
-  window.__router.subscribe(({ loaderData, actionData }) => {
+  globalVar.__router.subscribe(({ loaderData, actionData }) => {
     if (lastLoaderData !== loaderData) {
-      window.__routerActionID = (window.__routerActionID ??= 0) + 1;
+      globalVar.__routerActionID = (globalVar.__routerActionID ??= 0) + 1;
     }
   });
 
-  return window.__router;
+  return globalVar.__router;
 }
 
 const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
@@ -355,7 +362,7 @@ export function getRSCSingleFetchDataStrategy(
         const renderedRoutes = renderedRoutesById.get(match.route.id);
         if (renderedRoutes) {
           for (const rendered of renderedRoutes) {
-            window.__router.patchRoutes(
+            (window as WindowWithRouterGlobals).__router.patchRoutes(
               rendered.parentId ?? null,
               [createRouteFromServerManifest(rendered)],
               true
@@ -487,9 +494,10 @@ export function RSCHydratedRouter({
   React.useLayoutEffect(() => {
     // If we had to run clientLoaders on hydration, we delay initialization until
     // after we've hydrated to avoid hydration issues from synchronous client loaders
-    if (!window.__routerInitialized) {
-      window.__routerInitialized = true;
-      window.__router.initialize();
+    const globalVar = window as WindowWithRouterGlobals;
+    if (!globalVar.__routerInitialized) {
+      globalVar.__routerInitialized = true;
+      globalVar.__router.initialize();
     }
   }, []);
 
@@ -757,7 +765,8 @@ function getManifestUrl(paths: string[]): URL | null {
     return new URL(`${paths[0]}.manifest`, window.location.origin);
   }
 
-  let basename = (window.__router.basename ?? "").replace(/^\/|\/$/g, "");
+  const globalVar = window as WindowWithRouterGlobals;
+  let basename = (globalVar.__router.basename ?? "").replace(/^\/|\/$/g, "");
   let url = new URL(`${basename}/.manifest`, window.location.origin);
   paths.sort().forEach((path) => url.searchParams.append("p", path));
 
@@ -801,9 +810,10 @@ async function fetchAndApplyManifestPatches(
   // Without the `allowElementMutations` flag, this will no-op if the route
   // already exists so we can just call it for all returned patches
   payload.patches.forEach((p) => {
-    window.__router.patchRoutes(p.parentId ?? null, [
-      createRouteFromServerManifest(p),
-    ]);
+    (window as WindowWithRouterGlobals).__router.patchRoutes(
+      p.parentId ?? null,
+      [createRouteFromServerManifest(p)]
+    );
   });
 }
 

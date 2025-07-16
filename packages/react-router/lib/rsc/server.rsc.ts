@@ -39,6 +39,29 @@ import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
+import {
+  UNSAFE_WithComponentProps,
+  UNSAFE_WithHydrateFallbackProps,
+  UNSAFE_WithErrorBoundaryProps,
+  // @ts-ignore There are no types before the tsup build when used internally, so
+  // we need to cast. If we add an alias for 'internal/react-server-client' to our
+  // TSConfig, it breaks the Parcel build within this repo.
+} from "react-router/internal/react-server-client";
+import type {
+  WithComponentProps as WithComponentPropsType,
+  WithErrorBoundaryProps as WithErrorBoundaryPropsType,
+  WithHydrateFallbackProps as WithHydrateFallbackPropsType,
+  RouteComponentProps,
+  ErrorBoundaryProps,
+  HydrateFallbackProps,
+} from "../components";
+const WithComponentProps: typeof WithComponentPropsType =
+  UNSAFE_WithComponentProps;
+const WithErrorBoundaryProps: typeof WithErrorBoundaryPropsType =
+  UNSAFE_WithErrorBoundaryProps;
+const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
+  UNSAFE_WithHydrateFallbackProps;
+
 type ServerContext = {
   redirect?: Response;
 };
@@ -937,14 +960,18 @@ async function getRSCRouteMatch(
       ? React.createElement(
           Layout,
           null,
-          React.createElement(Component, {
-            loaderData,
-            actionData,
-            params,
-            matches: staticContext.matches.map((match) =>
-              convertRouteMatchToUiMatch(match, staticContext.loaderData)
-            ),
-          })
+          isClientReference(Component)
+            ? React.createElement(WithComponentProps, {
+                children: React.createElement(Component),
+              })
+            : React.createElement(Component, {
+                loaderData,
+                actionData,
+                params,
+                matches: staticContext.matches.map((match) =>
+                  convertRouteMatchToUiMatch(match, staticContext.loaderData)
+                ),
+              } satisfies RouteComponentProps)
         )
       : // TODO: Render outlet instead?
         undefined;
@@ -957,23 +984,31 @@ async function getRSCRouteMatch(
     ? React.createElement(
         Layout,
         null,
-        React.createElement(ErrorBoundary, {
-          loaderData,
-          actionData,
-          params,
-          error,
-        })
+        isClientReference(ErrorBoundary)
+          ? React.createElement(WithErrorBoundaryProps, {
+              children: React.createElement(ErrorBoundary),
+            })
+          : React.createElement(ErrorBoundary, {
+              loaderData,
+              actionData,
+              params,
+              error,
+            } satisfies ErrorBoundaryProps)
       )
     : undefined;
   const hydrateFallbackElement = HydrateFallback
     ? React.createElement(
         Layout,
         null,
-        React.createElement(HydrateFallback, {
-          loaderData,
-          actionData,
-          params,
-        })
+        isClientReference(HydrateFallback)
+          ? React.createElement(WithHydrateFallbackProps, {
+              children: React.createElement(HydrateFallback),
+            })
+          : React.createElement(HydrateFallback, {
+              loaderData,
+              actionData,
+              params,
+            } satisfies HydrateFallbackProps)
       )
     : undefined;
 
@@ -1119,6 +1154,14 @@ export function isReactServerRequest(url: URL) {
 
 export function isManifestRequest(url: URL) {
   return url.pathname.endsWith(".manifest");
+}
+
+function isClientReference(x: any) {
+  try {
+    return x.$$typeof === Symbol.for("react.client.reference");
+  } catch {
+    return false;
+  }
 }
 
 function canDecodeWithFormData(contentType: string | null) {
