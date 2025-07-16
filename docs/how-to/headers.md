@@ -113,7 +113,7 @@ You can avoid the need to merge headers by only defining headers in "leaf routes
 The `handleRequest` export receives the headers from the route module as an argument. You can append global headers here.
 
 ```tsx
-export default function handleRequest(
+export default async function handleRequest(
   request,
   responseStatusCode,
   responseHeaders,

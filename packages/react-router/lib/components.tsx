@@ -1269,7 +1269,7 @@ export interface AwaitProps<Resolve> {
  * @example
  * import { Await, useLoaderData } from "react-router";
  *
- * export function loader() {
+ * export async function loader() {
  *   // not awaited
  *   const reviews = getReviews();
  *   // awaited (blocks the transition)
