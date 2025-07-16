@@ -51,6 +51,7 @@ jobs:
           pnpm run docs:jsdoc --path packages/react-router/lib/components.tsx --write
           pnpm run docs:jsdoc --path packages/react-router/lib/hooks.tsx --write
           pnpm run docs:jsdoc --path packages/react-router/lib/dom/lib.tsx --write
+          pnpm run docs:jsdoc --path packages/react-router/lib/dom/ssr/components.tsx --write
 
       - name: 💪 Commit
         run: |

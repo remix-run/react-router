@@ -24,7 +24,8 @@
       "files": [
         "packages/react-router/lib/components.tsx",
         "packages/react-router/lib/hooks.tsx",
-        "packages/react-router/lib/dom/lib.tsx"
+        "packages/react-router/lib/dom/lib.tsx",
+        "packages/react-router/lib/dom/ssr/components.tsx"
       ],
       "plugins": ["jsdoc"],
       "rules": {
