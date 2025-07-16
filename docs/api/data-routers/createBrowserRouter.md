@@ -28,7 +28,10 @@ and `history.replaceState`.
 ## Signature
 
 ```tsx
-function createBrowserRouter(routes: RouteObject[], opts?: DOMRouterOpts): DataRouter
+function createBrowserRouter(
+  routes: RouteObject[],
+  opts?: DOMRouterOpts,
+): DataRouter
 ```
 
 ## Params

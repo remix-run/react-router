@@ -53,8 +53,8 @@ function WindowFocusRevalidator() {
 
 ```tsx
 function useRevalidator(): {
-    revalidate: () => Promise<void>;
-    state: DataRouter["state"]["revalidation"];
+  revalidate: () => Promise<void>;
+  state: DataRouter["state"]["revalidation"];
 }
 ```
 

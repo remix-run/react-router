@@ -27,7 +27,9 @@ Renders the result of `matchRoutes()` into a React element.
 ## Signature
 
 ```tsx
-function renderMatches(matches: RouteMatch[] | null): React.ReactElement | null
+function renderMatches(
+  matches: RouteMatch[] | null,
+): React.ReactElement | null
 ```
 
 ## Params

@@ -28,7 +28,11 @@ on the server where there is no stateful UI.
 ## Signature
 
 ```tsx
-function StaticRouter({ basename, children, location: locationProp = "/", }: StaticRouterProps)
+function StaticRouter({
+  basename,
+  children,
+  location: locationProp = "/",
+}: StaticRouterProps)
 ```
 
 ## Props

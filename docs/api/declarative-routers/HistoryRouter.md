@@ -38,7 +38,7 @@ the same version of the history library that React Router uses internally.
 ## Signature
 
 ```tsx
-function HistoryRouter({ basename, children, history, }: HistoryRouterProps)
+function HistoryRouter({ basename, children, history }: HistoryRouterProps)
 ```
 
 ## Props

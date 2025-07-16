@@ -41,7 +41,7 @@ function SomeComponent() {
 
 ```tsx
 function useFetchers(): (Fetcher & {
-    key: string;
+  key: string;
 })[]
 ```
 

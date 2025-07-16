@@ -45,7 +45,12 @@ export async function handleRequest(request: Request) {
 ## Signature
 
 ```tsx
-function StaticRouterProvider({ context, router, hydrate = true, nonce, }: StaticRouterProviderProps)
+function StaticRouterProvider({
+  context,
+  router,
+  hydrate = true,
+  nonce,
+}: StaticRouterProviderProps)
 ```
 
 ## Props

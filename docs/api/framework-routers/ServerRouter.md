@@ -29,7 +29,11 @@ See [`entry.server.tsx`](../api/framework-conventions/entry.server.tsx).
 ## Signature
 
 ```tsx
-function ServerRouter({ context, url, nonce, }: ServerRouterProps): ReactElement
+function ServerRouter({
+  context,
+  url,
+  nonce,
+}: ServerRouterProps): ReactElement
 ```
 
 ## Props

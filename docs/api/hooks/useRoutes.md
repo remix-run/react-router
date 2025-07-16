@@ -52,7 +52,10 @@ function App() {
 ## Signature
 
 ```tsx
-function useRoutes(routes: RouteObject[], locationArg?: Partial<Location> | string): React.ReactElement | null
+function useRoutes(
+  routes: RouteObject[],
+  locationArg?: Partial<Location> | string,
+): React.ReactElement | null
 ```
 
 ## Params

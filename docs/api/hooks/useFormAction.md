@@ -43,9 +43,14 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useFormAction(action?: string, { relative }: {
+function useFormAction(
+  action?: string,
+  {
+    relative,
+  }: {
     relative?: RelativeRoutingType;
-} = {}): string
+  } = ,
+): string {}
 ```
 
 ## Params

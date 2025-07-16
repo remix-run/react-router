@@ -39,7 +39,10 @@ import { Routes, Route } from "react-router";
 ## Signature
 
 ```tsx
-function Routes({ children, location, }: RoutesProps): React.ReactElement | null
+function Routes({
+  children,
+  location,
+}: RoutesProps): React.ReactElement | null
 ```
 
 ## Props

@@ -62,7 +62,11 @@ function Book() {
 ## Signature
 
 ```tsx
-function Await<Resolve>({ children, errorElement, resolve, }: AwaitProps<Resolve>)
+function Await<Resolve>({
+  children,
+  errorElement,
+  resolve,
+}: AwaitProps<Resolve>)
 ```
 
 ## Props

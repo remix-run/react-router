@@ -27,7 +27,10 @@ Create a new data router that manages the application path via the URL hash.
 ## Signature
 
 ```tsx
-function createHashRouter(routes: RouteObject[], opts?: DOMRouterOpts): DataRouter
+function createHashRouter(
+  routes: RouteObject[],
+  opts?: DOMRouterOpts,
+): DataRouter
 ```
 
 ## Params

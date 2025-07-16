@@ -44,9 +44,13 @@ export async function handleRequest(request: Request) {
 ## Signature
 
 ```tsx
-function createStaticRouter(routes: RouteObject[], context: StaticHandlerContext, opts: {
+function createStaticRouter(
+  routes: RouteObject[],
+  context: StaticHandlerContext,
+  opts: {
     future?: Partial<FutureConfig>;
-} = {}): DataRouter
+  } = ,
+): DataRouter {}
 ```
 
 ## Params

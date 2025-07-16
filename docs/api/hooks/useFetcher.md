@@ -57,9 +57,11 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-function useFetcher<T = any>({ key, }: {
-    key?: string;
-} = {}): FetcherWithComponents<SerializeFrom<T>>
+function useFetcher<T = any>({
+  key,
+}: {
+  key?: string;
+} = ): FetcherWithComponents<SerializeFrom<T>> {}
 ```
 
 ## Params

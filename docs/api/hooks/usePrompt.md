@@ -65,9 +65,12 @@ function ImportantForm() {
 ## Signature
 
 ```tsx
-function usePrompt({ when, message, }: {
-    when: boolean | BlockerFunction;
-    message: string;
+function usePrompt({
+  when,
+  message,
+}: {
+  when: boolean | BlockerFunction;
+  message: string;
 }): void
 ```
 

@@ -44,7 +44,10 @@ export async function handleRequest(request: Request) {
 ## Signature
 
 ```tsx
-function createStaticHandler(routes: RouteObject[], opts?: CreateStaticHandlerOptions)
+function createStaticHandler(
+  routes: RouteObject[],
+  opts?: CreateStaticHandlerOptions,
+)
 ```
 
 ## Params
