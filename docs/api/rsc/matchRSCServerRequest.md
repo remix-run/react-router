@@ -3,15 +3,31 @@ title: matchRSCServerRequest
 unstable: true
 ---
 
-# matchRSCServerRequest
+# unstable_matchRSCServerRequest
 
 [MODES: data]
+
+<br />
+<br />
+
+<docs-warning>This API is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
+to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
 Matches the given routes to a Request and returns a RSC Response encoding an `RSCPayload` for consumption by a RSC enabled client router.
 
 ```tsx filename=entry.rsc.ts
+import {
+  createTemporaryReferenceSet,
+  decodeAction,
+  decodeReply,
+  loadServerAction,
+  renderToReadableStream,
+} from "@vitejs/plugin-rsc/rsc";
+import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
+
 matchRSCServerRequest({
   createTemporaryReferenceSet,
   decodeAction,
