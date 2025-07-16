@@ -356,7 +356,16 @@ Date: 2025-07-16
 
 #### Unstable RSC APIs
 
-This release contains the (currently `unstable_`) RSC APIs for use with RSC in Data Mode. For more information, check out the [RSC Preview](https://remix.run/blog/rsc-preview) blog post and the [RSC Docs](https://reactrouter.com/dev/how-to/react-server-components).
+We're excited to introduce experimental support for RSC in Data Mode via the following new APIs:
+
+- [`unstable_RSCHydratedRouter`](https://reactrouter.com/api/rsc/RSCHydratedRouter)
+- [`unstable_RSCStaticRouter`](https://reactrouter.com/api/rsc/RSCStaticRouter)
+- [`unstable_createCallServer`](https://reactrouter.com/api/rsc/createCallServer)
+- [`unstable_getRSCStream`](https://reactrouter.com/api/rsc/getRSCStream)
+- [`unstable_matchRSCServerRequest`](https://reactrouter.com/api/rsc/matchRSCServerRequest)
+- [`unstable_routeRSCServerRequest`](https://reactrouter.com/api/rsc/routeRSCServerRequest)
+
+For more information, check out the [blog post](https://remix.run/blog/react-router-and-react-server-components) and the [RSC Docs](https://reactrouter.com/how-to/react-server-components).
 
 ### Minor Changes
 

@@ -35,7 +35,7 @@ These templates come with React Router RSC APIs already configured with the resp
 
 **Parcel Template**
 
-The parcel template uses the official React `react-server-dom-parcel` plugin.
+The [parcel template][parcel-rsc-template] uses the official React `react-server-dom-parcel` plugin.
 
 ```shellscript
 npx create-react-router-app@latest --template=unstable_rsc-parcel
@@ -43,7 +43,7 @@ npx create-react-router-app@latest --template=unstable_rsc-parcel
 
 **Vite Template**
 
-The vite template uses the experimental Vite `@vitejs/plugin-rsc` plugin.
+The [vite template][vite-rsc-template] uses the experimental Vite `@vitejs/plugin-rsc` plugin.
 
 ```shellscript
 npx create-react-router-app@latest --template=unstable_rsc-vite
