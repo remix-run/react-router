@@ -10,7 +10,7 @@ const cleanIds = (obj: any) =>
   JSON.parse(
     JSON.stringify(obj, function replacer(key, value) {
       return key === "id" ? undefined : value;
-    })
+    }),
   );
 
 describe("routeManifestToRouteConfig", () => {

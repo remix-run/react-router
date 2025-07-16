@@ -51,7 +51,7 @@ app.use(
   express.static("dist/client", {
     immutable: true,
     maxAge: "1y",
-  })
+  }),
 );
 app.use(express.static("public"));
 
@@ -67,9 +67,9 @@ app.use(
     prerender(
       request,
       fetchServer,
-      (assets as unknown as { bootstrapScript?: string }).bootstrapScript
-    )
-  )
+      (assets as unknown as { bootstrapScript?: string }).bootstrapScript,
+    ),
+  ),
 );
 
 const { values } = parseArgs({

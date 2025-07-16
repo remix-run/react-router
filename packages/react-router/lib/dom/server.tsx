@@ -100,7 +100,7 @@ export function StaticRouterProvider({
 }: StaticRouterProviderProps) {
   invariant(
     router && context,
-    "You must provide `router` and `context` to <StaticRouterProvider>"
+    "You must provide `router` and `context` to <StaticRouterProvider>",
   );
 
   let dataRouterContext = {
@@ -178,7 +178,7 @@ function DataRoutes({
 }
 
 function serializeErrors(
-  errors: StaticHandlerContext["errors"]
+  errors: StaticHandlerContext["errors"],
 ): StaticHandlerContext["errors"] {
   if (!errors) return null;
   let entries = Object.entries(errors);
@@ -216,7 +216,7 @@ function getStatelessNavigator() {
       throw new Error(
         `You cannot use navigator.push() on the server because it is a stateless ` +
           `environment. This error was probably triggered when you did a ` +
-          `\`navigate(${JSON.stringify(to)})\` somewhere in your app.`
+          `\`navigate(${JSON.stringify(to)})\` somewhere in your app.`,
       );
     },
     replace(to: To) {
@@ -224,26 +224,26 @@ function getStatelessNavigator() {
         `You cannot use navigator.replace() on the server because it is a stateless ` +
           `environment. This error was probably triggered when you did a ` +
           `\`navigate(${JSON.stringify(to)}, { replace: true })\` somewhere ` +
-          `in your app.`
+          `in your app.`,
       );
     },
     go(delta: number) {
       throw new Error(
         `You cannot use navigator.go() on the server because it is a stateless ` +
           `environment. This error was probably triggered when you did a ` +
-          `\`navigate(${delta})\` somewhere in your app.`
+          `\`navigate(${delta})\` somewhere in your app.`,
       );
     },
     back() {
       throw new Error(
         `You cannot use navigator.back() on the server because it is a stateless ` +
-          `environment.`
+          `environment.`,
       );
     },
     forward() {
       throw new Error(
         `You cannot use navigator.forward() on the server because it is a stateless ` +
-          `environment.`
+          `environment.`,
       );
     },
   };
@@ -259,7 +259,7 @@ type CreateStaticHandlerOptions = Omit<
  */
 export function createStaticHandler(
   routes: RouteObject[],
-  opts?: CreateStaticHandlerOptions
+  opts?: CreateStaticHandlerOptions,
 ) {
   return routerCreateStaticHandler(routes, {
     ...opts,
@@ -275,14 +275,14 @@ export function createStaticRouter(
   context: StaticHandlerContext,
   opts: {
     future?: Partial<FutureConfig>;
-  } = {}
+  } = {},
 ): DataRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
     mapRouteProperties,
     undefined,
-    manifest
+    manifest,
   );
 
   // Because our context matches may be from a framework-agnostic set of

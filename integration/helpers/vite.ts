@@ -238,7 +238,7 @@ export const rscBundlerTemplates = [
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-5-template"
+  templateName: TemplateName = "vite-5-template",
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -254,7 +254,7 @@ export async function createProject(
       let filepath = path.join(projectDir, filename);
       await mkdir(path.dirname(filepath), { recursive: true });
       await writeFile(filepath, stripIndent(contents));
-    })
+    }),
   );
 
   return projectDir;
@@ -312,7 +312,7 @@ export const reactRouterServe = async ({
       cwd,
       stdio: "pipe",
       env: { NODE_ENV: "production", PORT: port.toFixed(0) },
-    }
+    },
   );
   await waitForServer(serveProc, { port, basename });
   return () => serveProc.kill();
@@ -337,7 +337,7 @@ export const wranglerPagesDev = async ({
       cwd,
       stdio: "pipe",
       env: { NODE_ENV: "production" },
-    }
+    },
   );
   await waitForServer(proc, { port, host: "127.0.0.1" });
   return () => proc.kill();
@@ -382,14 +382,14 @@ type Fixtures = {
   page: Page;
   dev: (
     files: Files,
-    templateName?: TemplateName
+    templateName?: TemplateName,
   ) => Promise<{
     port: number;
     cwd: string;
   }>;
   customDev: (
     files: Files,
-    templateName?: TemplateName
+    templateName?: TemplateName,
   ) => Promise<{
     port: number;
     cwd: string;
@@ -452,7 +452,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "cloudflare-dev-proxy-template"
+        "cloudflare-dev-proxy-template",
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
@@ -465,7 +465,7 @@ export const test = base.extend<Fixtures>({
 
 function node(
   args: string[],
-  options: { cwd: string; env?: Record<string, string> }
+  options: { cwd: string; env?: Record<string, string> },
 ) {
   let nodeBin = process.argv[0];
 
@@ -483,7 +483,7 @@ function node(
 
 async function waitForServer(
   proc: ChildProcess & { stdout: Readable; stderr: Readable },
-  args: { port: number; host?: string; basename?: string }
+  args: { port: number; host?: string; basename?: string },
 ) {
   let devStdout = bufferize(proc.stdout);
   let devStderr = bufferize(proc.stderr);
@@ -506,7 +506,7 @@ async function waitForServer(
         "exit code: " + proc.exitCode,
         "stdout: " + stdout ? `\n${stdout}\n` : "<empty>",
         "stderr: " + stderr ? `\n${stderr}\n` : "<empty>",
-      ].join("\n")
+      ].join("\n"),
     );
   });
 }
@@ -520,7 +520,7 @@ function bufferize(stream: Readable): () => string {
 export function createEditor(projectDir: string) {
   return async function edit(
     file: string,
-    transform: (contents: string) => string
+    transform: (contents: string) => string,
   ) {
     let filepath = path.join(projectDir, file);
     let contents = await readFile(filepath, "utf8");

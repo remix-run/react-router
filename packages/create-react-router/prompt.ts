@@ -20,10 +20,10 @@ const prompts = {
   text: (args: TextPromptOptions) => toPrompt(TextPrompt, args),
   confirm: (args: ConfirmPromptOptions) => toPrompt(ConfirmPrompt, args),
   select: <Choices extends readonly Readonly<SelectChoice>[]>(
-    args: SelectPromptOptions<Choices>
+    args: SelectPromptOptions<Choices>,
   ) => toPrompt(SelectPrompt, args),
   multiselect: <Choices extends readonly Readonly<SelectChoice>[]>(
-    args: MultiSelectPromptOptions<Choices>
+    args: MultiSelectPromptOptions<Choices>,
   ) => toPrompt(MultiSelectPrompt, args),
 };
 
@@ -91,7 +91,7 @@ function toPrompt<
     let p = new el(
       args,
       // @ts-expect-error
-      opts
+      opts,
     );
     let onAbort = args.onAbort || opts.onAbort || identity;
     let onSubmit = args.onSubmit || opts.onSubmit || identity;
@@ -104,7 +104,7 @@ function toPrompt<
 }
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
-  k: infer I
+  k: infer I,
 ) => void
   ? I
   : never;
@@ -185,7 +185,7 @@ interface PromptTypeOptions<
   onSubmit?(
     question: T | Readonly<T>,
     answer: Answer<T, Choices>,
-    answers: Answers<T>
+    answers: Answers<T>,
   ): any;
   onCancel?(question: T | Readonly<T>, answers: Answers<T>): any;
   stdin?: NodeJS.ReadStream;

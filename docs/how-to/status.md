@@ -20,7 +20,7 @@ export async function action({
   if (!title) {
     return data(
       { message: "Invalid title" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

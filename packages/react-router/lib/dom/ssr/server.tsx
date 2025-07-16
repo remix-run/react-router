@@ -35,7 +35,7 @@ export function ServerRouter({
     manifest.routes,
     routeModules,
     context.future,
-    context.isSpaMode
+    context.isSpaMode,
   );
 
   // Create a shallow clone of `loaderData` we can mutate for partial hydration.
@@ -61,7 +61,7 @@ export function ServerRouter({
         routeId,
         route.clientLoader,
         manifestRoute.hasLoader,
-        context.isSpaMode
+        context.isSpaMode,
       ) &&
       (route.HydrateFallback || !manifestRoute.hasLoader)
     ) {

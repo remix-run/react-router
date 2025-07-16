@@ -43,7 +43,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -58,14 +58,14 @@ describe("flushSync", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     fireEvent.click(screen.getByText("Go to /"));
     await waitFor(() => screen.getByText("Home"));
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -117,7 +117,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -177,7 +177,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -226,7 +226,7 @@ describe("flushSync", () => {
                   onClick={() =>
                     fetcher2.submit(
                       {},
-                      { method: "post", action: "/", flushSync: true }
+                      { method: "post", action: "/", flushSync: true },
                     )
                   }
                 >
@@ -240,7 +240,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 

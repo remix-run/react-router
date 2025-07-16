@@ -625,13 +625,13 @@ test.describe("typegen", () => {
       });
 
       const tsconfig = JSON.parse(
-        await readFile(path.join(cwd, "tsconfig.json"), "utf-8")
+        await readFile(path.join(cwd, "tsconfig.json"), "utf-8"),
       );
       tsconfig.compilerOptions.moduleDetection = "force";
       await writeFile(
         path.join(cwd, "tsconfig.json"),
         JSON.stringify(tsconfig),
-        "utf-8"
+        "utf-8",
       );
 
       const proc = typecheck(cwd);

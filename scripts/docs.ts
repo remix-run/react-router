@@ -115,11 +115,11 @@ const { values: args } = util.parseArgs({
 
 if (!args.path) {
   console.error(
-    "Usage: docs.ts --path <filepath-or-glob> [--api <api1,api2,...>] [--write] [--output <output-dir>]"
+    "Usage: docs.ts --path <filepath-or-glob> [--api <api1,api2,...>] [--write] [--output <output-dir>]",
   );
   console.error("  --path, -p    File path or glob pattern to parse");
   console.error(
-    "  --api, -a     Comma-separated list of specific APIs to generate"
+    "  --api, -a     Comma-separated list of specific APIs to generate",
   );
   console.error("  --write, -w   Write markdown files to output directory");
   console.error("  --output, -o  Output directory (default: docs/api)");
@@ -162,7 +162,7 @@ function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   // Add existing files if output directory exists
   if (!fs.existsSync(outputDir)) {
     throw new Error(
-      `Docs directory does not exist for cross-linking: ${outputDir}`
+      `Docs directory does not exist for cross-linking: ${outputDir}`,
     );
   }
 
@@ -190,7 +190,7 @@ function buildTypedocLinks(outputDir: string) {
   // Prerequisite: `typedoc` has been run first via `npm run docs`
   if (fs.existsSync("public/dev/api.json")) {
     let apiData = JSON.parse(
-      fs.readFileSync("public/dev/api.json", "utf8")
+      fs.readFileSync("public/dev/api.json", "utf8"),
     ) as JSONOutput.ProjectReflection;
 
     apiData.children
@@ -198,7 +198,7 @@ function buildTypedocLinks(outputDir: string) {
       .forEach((child) => processTypedocModule(child, lookup));
   } else {
     console.warn(
-      '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs'
+      '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs',
     );
   }
 
@@ -208,7 +208,7 @@ function buildTypedocLinks(outputDir: string) {
 function processTypedocModule(
   child: JSONOutput.ReferenceReflection | JSONOutput.DeclarationReflection,
   lookup: Map<string, { href: string; description?: string }>,
-  prefix: string[] = []
+  prefix: string[] = [],
 ) {
   let newPrefix = [...prefix, child.name];
   let moduleName = newPrefix.join(".");
@@ -242,7 +242,7 @@ function processTypedocModule(
 
     if (!type) {
       console.warn(
-        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`
+        `Skipping ${apiName} because it is not a function, class, enum, interface, or type`,
       );
       return;
     }
@@ -322,7 +322,7 @@ function generateMarkdownDocs(
   filepath: string,
   apiFilter: string[] | null,
   outputDir?: string,
-  writeFiles?: boolean
+  writeFiles?: boolean,
 ) {
   let simplifiedComments = parseDocComments(filepath, apiFilter);
   simplifiedComments.forEach((comment) => {
@@ -345,7 +345,7 @@ function generateMarkdownDocs(
 function writeMarkdownFile(
   comment: SimplifiedComment,
   markdownContent: string,
-  outputDir: string
+  outputDir: string,
 ) {
   // Convert category to lowercase and replace spaces with hyphens for folder name
   const categoryFolder = comment.category.toLowerCase().replace(/\s+/g, "-");
@@ -456,7 +456,7 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
         if (param.name === skipped[0] && description === skipped[1]) {
           if (!comment.params[i + 1].name.startsWith(skipped[0] + ".")) {
             throw new Error(
-              "Expected docs for individual options: " + comment.name
+              "Expected docs for individual options: " + comment.name,
             );
           }
           return;
@@ -503,7 +503,7 @@ function parseDocComments(filepath: string, apiFilter: string[] | null) {
     .filter(
       (c) =>
         c.tags.some((t) => t.type === "public") &&
-        (!apiFilter || apiFilter.includes(getApiName(c)))
+        (!apiFilter || apiFilter.includes(getApiName(c))),
     )
     .map((c) => simplifyComment(c, filepath));
 }
@@ -531,7 +531,7 @@ function getApiName(comment: ParsedComment): string {
 
 function simplifyComment(
   comment: ParsedComment,
-  filepath: string
+  filepath: string,
 ): SimplifiedComment {
   let name = getApiName(comment);
   let unstable = name.startsWith("unstable_");
@@ -560,7 +560,7 @@ function simplifyComment(
 
   let example = comment.tags.find((t) => t.type === "example")?.string;
   let additionalExamples = comment.tags.find(
-    (t) => t.type === "additionalExamples"
+    (t) => t.type === "additionalExamples",
   )?.string;
 
   let reference = typedocLookup.get(name)?.href;
@@ -598,7 +598,7 @@ function simplifyComment(
           description = typedocLookup.get(matches[1])!.description;
         } else {
           throw new Error(
-            `Unable to find cross-referenced documentation for param type: ${matches[1]}`
+            `Unable to find cross-referenced documentation for param type: ${matches[1]}`,
           );
         }
       }
@@ -657,7 +657,7 @@ function getSignature(code: string) {
     let modifiedFunction = {
       ...functionDeclaration,
       modifiers: functionDeclaration.modifiers?.filter(
-        (m) => m.kind !== ts.SyntaxKind.ExportKeyword
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword,
       ),
       body: ts.factory.createBlock([], false),
     } as ts.FunctionDeclaration;
@@ -673,7 +673,7 @@ function getSignature(code: string) {
   if (ts.isVariableStatement(ast.statements[0])) {
     let api = code.match(/export const (\w+)/);
     console.log(
-      `Warning: Skipping signature section for \`export const\` component: ${api?.[1]}`
+      `Warning: Skipping signature section for \`export const\` component: ${api?.[1]}`,
     );
     return;
   }
@@ -705,7 +705,7 @@ function resolveLinkTags(text: string): string {
     if (!href) {
       // If not found, return as plain text with a warning
       console.warn(
-        `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`
+        `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`,
       );
       return description;
     }

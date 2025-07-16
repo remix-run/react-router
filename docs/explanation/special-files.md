@@ -208,7 +208,7 @@ startTransition(() => {
     document,
     <StrictMode>
       <HydratedRouter />
-    </StrictMode>
+    </StrictMode>,
   );
 });
 ```
@@ -266,7 +266,7 @@ export function handleDataRequest(
     request,
     params,
     context,
-  }: LoaderFunctionArgs | ActionFunctionArgs
+  }: LoaderFunctionArgs | ActionFunctionArgs,
 ) {
   response.headers.set("X-Custom-Header", "value");
   return response;
@@ -284,7 +284,7 @@ export function handleError(
     request,
     params,
     context,
-  }: LoaderFunctionArgs | ActionFunctionArgs
+  }: LoaderFunctionArgs | ActionFunctionArgs,
 ) {
   if (!request.signal.aborted) {
     sendErrorToErrorReportingService(error);

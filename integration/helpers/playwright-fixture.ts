@@ -39,7 +39,7 @@ export class PlaywrightFixture {
     });
     if (response == null)
       throw new Error(
-        "Unexpected null response, possible about:blank request or same-URL redirect"
+        "Unexpected null response, possible about:blank request or same-URL redirect",
       );
     return response;
   }
@@ -88,7 +88,7 @@ export class PlaywrightFixture {
    */
   async clickSubmitButton(
     action: string,
-    options: { wait?: boolean; method?: string } = { wait: true }
+    options: { wait?: boolean; method?: string } = { wait: true },
   ) {
     let selector: string;
     if (options.method) {
@@ -168,7 +168,7 @@ export class PlaywrightFixture {
    */
   collectSingleFetchResponses() {
     return this.collectResponses(
-      (url) => url.pathname.endsWith(".data") || url.pathname.endsWith(".rsc")
+      (url) => url.pathname.endsWith(".data") || url.pathname.endsWith(".rsc"),
     );
   }
 
@@ -218,7 +218,7 @@ export class PlaywrightFixture {
     let ms = seconds * 1000;
     test.setTimeout(ms);
     console.log(
-      `🙈 Poke around for ${seconds} seconds 👉 ${this.app.serverUrl}`
+      `🙈 Poke around for ${seconds} seconds 👉 ${this.app.serverUrl}`,
     );
     cp.exec(`open ${this.app.serverUrl}${href}`);
     return new Promise((res) => setTimeout(res, ms));
@@ -250,7 +250,7 @@ export function prettyHtml(source: string) {
 async function doAndWait(
   page: Page,
   action: () => Promise<unknown>,
-  longPolls = 0
+  longPolls = 0,
 ) {
   let DEBUG = !!process.env.DEBUG;
   let networkSettledCallback: any;

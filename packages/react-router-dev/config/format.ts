@@ -4,7 +4,7 @@ export type RoutesFormat = "json" | "jsx";
 
 export function formatRoutes(
   routeManifest: RouteManifest,
-  format: RoutesFormat
+  format: RoutesFormat,
 ) {
   switch (format) {
     case "json":
@@ -25,10 +25,10 @@ type JsonFormattedRoute = {
 
 export function formatRoutesAsJson(routeManifest: RouteManifest): string {
   function handleRoutesRecursive(
-    parentId?: string
+    parentId?: string,
   ): JsonFormattedRoute[] | undefined {
     let routes = Object.values(routeManifest).filter(
-      (route) => route.parentId === parentId
+      (route) => route.parentId === parentId,
     );
 
     let children = [];
@@ -58,7 +58,7 @@ export function formatRoutesAsJsx(routeManifest: RouteManifest) {
 
   function handleRoutesRecursive(parentId?: string, level = 1): boolean {
     let routes = Object.values(routeManifest).filter(
-      (route) => route.parentId === parentId
+      (route) => route.parentId === parentId,
     );
 
     let indent = Array(level * 2)

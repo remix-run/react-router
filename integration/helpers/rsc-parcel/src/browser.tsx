@@ -23,7 +23,7 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 
 // Get and decode the initial server payload
@@ -45,7 +45,7 @@ createFromReadableStream(getRSCStream()).then((payload: RSCPayload) => {
       {
         // @ts-expect-error - no types for this yet
         formState,
-      }
+      },
     );
   });
 });

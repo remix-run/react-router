@@ -28,7 +28,7 @@ export class RSCRouterGlobalErrorBoundary extends React.Component<
 
   static getDerivedStateFromProps(
     props: RSCRouterGlobalErrorBoundaryProps,
-    state: RSCRouterGlobalErrorBoundaryState
+    state: RSCRouterGlobalErrorBoundaryState,
   ) {
     // When we get into an error state, the user will likely click "back" to the
     // previous page that didn't have an error. Because this wraps the entire

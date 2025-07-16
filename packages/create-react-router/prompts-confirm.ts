@@ -165,9 +165,9 @@ export class ConfirmPrompt extends Prompt {
           .map((choice, i) =>
             i === this.cursor
               ? `${color.green("●")} ${choice.label} `
-              : color.dim(`○ ${choice.label} `)
+              : color.dim(`○ ${choice.label} `),
           )
-          .join(color.dim(" "))
+          .join(color.dim(" ")),
       );
     }
     this.outputText = outputText.join("");

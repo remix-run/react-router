@@ -105,7 +105,7 @@ export default function Contact() {
   let [isDirty, setIsDirty] = useState(false);
   let fetcher = useFetcher();
   let blocker = useBlocker(
-    useCallback(() => isDirty, [isDirty])
+    useCallback(() => isDirty, [isDirty]),
   );
 
   // ... existing code
@@ -123,7 +123,7 @@ export default function Contact() {
   let [isDirty, setIsDirty] = useState(false);
   let fetcher = useFetcher();
   let blocker = useBlocker(
-    useCallback(() => isDirty, [isDirty])
+    useCallback(() => isDirty, [isDirty]),
   );
 
   return (

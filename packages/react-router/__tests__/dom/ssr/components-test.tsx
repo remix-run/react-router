@@ -72,7 +72,7 @@ function itPrefetchesPageLinks<
         let { container, unmount } = render(
           <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </FrameworkContext.Provider>
+          </FrameworkContext.Provider>,
         );
 
         fireEvent[event](container.firstChild);
@@ -124,7 +124,7 @@ function itPrefetchesPageLinks<
         let { container, unmount } = render(
           <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </FrameworkContext.Provider>
+          </FrameworkContext.Provider>,
         );
 
         fireEvent[event](container.firstChild);
@@ -133,7 +133,7 @@ function itPrefetchesPageLinks<
         });
 
         expect(
-          container.ownerDocument.querySelector("link[rel=prefetch]")
+          container.ownerDocument.querySelector("link[rel=prefetch]"),
         ).toBeTruthy();
         expect(ranHandler).toBe(true);
         unmount();
@@ -153,12 +153,12 @@ describe("<NavLink />", () => {
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/")
+      new Request("http://localhost/"),
     );
 
     invariant(
       !(staticHandlerContext instanceof Response),
-      "Expected a context"
+      "Expected a context",
     );
 
     let context = mockEntryContext({
@@ -205,11 +205,11 @@ describe("<ServerRouter>", () => {
     jest.spyOn(console, "error");
 
     let { container } = render(
-      <ServerRouter context={context} url="http://localhost/" />
+      <ServerRouter context={context} url="http://localhost/" />,
     );
 
     expect(console.warn).toHaveBeenCalledWith(
-      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.'
+      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.',
     );
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
@@ -267,7 +267,7 @@ describe("<HydratedRouter>", () => {
     }).pipeThrough(new TextEncoderStream());
     window.__reactRouterContext!.streamController.enqueue(
       // @ts-expect-error
-      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n'
+      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n',
     );
     window.__reactRouterContext!.streamController.close();
 

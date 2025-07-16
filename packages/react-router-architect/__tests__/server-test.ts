@@ -165,15 +165,15 @@ describe("architect createRequestHandler", () => {
         headers.append("X-Time-Of-Year", "most wonderful");
         headers.append(
           "Set-Cookie",
-          "first=one; Expires=0; Path=/; HttpOnly; Secure; SameSite=Lax"
+          "first=one; Expires=0; Path=/; HttpOnly; Secure; SameSite=Lax",
         );
         headers.append(
           "Set-Cookie",
-          "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax"
+          "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax",
         );
         headers.append(
           "Set-Cookie",
-          "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax"
+          "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax",
         );
 
         return new Response(null, { headers });
@@ -233,7 +233,7 @@ describe("architect createReactRouterHeaders", () => {
         "__other=some_other_value",
       ]);
       expect(headers.get("cookie")).toEqual(
-        "__session=some_value; __other=some_other_value"
+        "__session=some_value; __other=some_other_value",
       );
     });
   });
@@ -242,7 +242,7 @@ describe("architect createReactRouterHeaders", () => {
 describe("architect createReactRouterRequest", () => {
   it("creates a request with the correct headers", () => {
     let request = createReactRouterRequest(
-      createMockEvent({ cookies: ["__session=value"] })
+      createMockEvent({ cookies: ["__session=value"] }),
     );
 
     expect(request.method).toBe("GET");

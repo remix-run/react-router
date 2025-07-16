@@ -135,7 +135,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
     expect(warnSpy).toHaveBeenCalledWith(
       "You provided the `viewTransition` option to a router update, but you do " +
         "not appear to be running in a DOM environment as `window.startViewTransition` " +
-        "is not available."
+        "is not available.",
     );
     warnSpy.mockRestore();
 
@@ -270,7 +270,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
                     method: "post",
                     action: "/fetch",
                     encType: "application/json",
-                  }
+                  },
                 )
               }
             >

@@ -98,7 +98,7 @@ function fetchServer(request: Request) {
         {
           status: match.statusCode,
           headers: match.headers,
-        }
+        },
       );
     },
   });
@@ -113,7 +113,7 @@ app.use(
   express.static("dist/client", {
     immutable: true,
     maxAge: "1y",
-  })
+  }),
 );
 app.use(compression(), express.static("public"));
 
@@ -123,7 +123,7 @@ app.get(
   (_, res) => {
     res.status(404);
     res.end();
-  }
+  },
 );
 
 // Hookup our application.
@@ -133,15 +133,15 @@ app.use(
       request,
       fetchServer,
       (routes as unknown as { bootstrapScript?: string })
-        .bootstrapScript
-    )
-  )
+        .bootstrapScript,
+    ),
+  ),
 );
 
 const PORT = Number.parseInt(process.env.PORT || "3000");
 app.listen(PORT, () => {
   console.log(
-    `Server listening on port ${PORT} (http://localhost:${PORT})`
+    `Server listening on port ${PORT} (http://localhost:${PORT})`,
   );
 });
 ```
@@ -162,7 +162,7 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
 export async function prerender(
   request: Request,
   fetchServer: (request: Request) => Promise<Response>,
-  bootstrapScriptContent: string | undefined
+  bootstrapScriptContent: string | undefined,
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
@@ -185,7 +185,7 @@ export async function prerender(
           bootstrapScriptContent,
           // @ts-expect-error - no types for this yet
           formState,
-        }
+        },
       );
     },
   });
@@ -220,7 +220,7 @@ setServerCallback(
   createCallServer({
     createFromReadableStream,
     encodeReply,
-  })
+  }),
 );
 
 // Get and decode the initial server payload
@@ -245,10 +245,10 @@ createFromReadableStream(getRSCStream()).then(
         {
           // @ts-expect-error - no types for this yet
           formState,
-        }
+        },
       );
     });
-  }
+  },
 );
 ```
 

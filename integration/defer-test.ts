@@ -556,12 +556,12 @@ test.describe("non-aborted", () => {
   function getCriticalHTML(html: string) {
     return html.slice(
       0,
-      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length
+      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length,
     );
   }
   function getDeferredHTML(html: string) {
     return html.slice(
-      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length
+      html.indexOf(deferredHTMLStartString) + deferredHTMLStartString.length,
     );
   }
 
@@ -609,7 +609,7 @@ test.describe("non-aborted", () => {
 
   test("slow promises render in subsequent payload", async ({ page }) => {
     let response = await fixture.requestDocument(
-      "/deferred-noscript-unresolved"
+      "/deferred-noscript-unresolved",
     );
     let html = await response.text();
     let criticalHTML = getCriticalHTML(html);
@@ -809,7 +809,7 @@ test.describe("non-aborted", () => {
     await ensureInteractivity(page, RESOLVED_DEFERRED_ID);
 
     global.__deferredManualResolveCache.deferreds[id].reject(
-      new Error("error")
+      new Error("error"),
     );
 
     await ensureInteractivity(page, ROOT_ID, 2);
@@ -1288,7 +1288,7 @@ function monitorConsole(page: Page) {
         logs.push(arg0);
       }
       errors.push(
-        `Unexpected console.log(${JSON.stringify(logs).slice(1, -1)})`
+        `Unexpected console.log(${JSON.stringify(logs).slice(1, -1)})`,
       );
     }
     if (errors.length) {

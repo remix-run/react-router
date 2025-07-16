@@ -612,7 +612,7 @@
       await writeFile(
         "build/manifest.json",
         JSON.stringify(buildManifest, null, 2),
-        "utf-8"
+        "utf-8",
       );
     },
   } satisfies Config;
@@ -1111,7 +1111,7 @@
       remix({
         unstable_serverBundles: ({ branch }) => {
           const isAuthenticatedRoute = branch.some(
-            (route) => route.id === "routes/_authenticated"
+            (route) => route.id === "routes/_authenticated",
           );
 
           return isAuthenticatedRoute ? "authenticated" : "unauthenticated";
@@ -1791,7 +1791,7 @@
       key: fs.readFileSync("key.pem"),
       cert: fs.readFileSync("cert.pem"),
     },
-    app
+    app,
   );
 
   appServer.listen(3000, () => {

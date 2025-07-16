@@ -28,7 +28,7 @@ describe("NavLink", () => {
                 element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -54,7 +54,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
       renderer = renderer!;
@@ -84,7 +84,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -103,7 +103,7 @@ describe("NavLink", () => {
             <Routes>
               <Route path="/home" element={<NavLink to=".">Home</NavLink>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -123,7 +123,7 @@ describe("NavLink", () => {
                 element={<NavLink to="/home/">Home</NavLink>}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -152,7 +152,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -183,7 +183,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -207,7 +207,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
       renderer = renderer!;
@@ -235,7 +235,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 
@@ -268,7 +268,7 @@ describe("NavLink", () => {
                 <Route path="children" element={<div>Child</div>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -303,7 +303,7 @@ describe("NavLink", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -338,7 +338,7 @@ describe("NavLink", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -355,7 +355,7 @@ describe("NavLink", () => {
             <Routes>
               <Route index element={<NavLink to="/">Root</NavLink>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -375,7 +375,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -395,7 +395,7 @@ describe("NavLink", () => {
                 element={<NavLink to="/">Root</NavLink>}
               ></Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -425,7 +425,7 @@ describe("NavLink", () => {
                 ></Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -454,7 +454,7 @@ describe("NavLink", () => {
                 <Route path="child" element={<div>Child</div>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -481,7 +481,7 @@ describe("NavLink", () => {
                 <Route path="child" element={<div>Child</div>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -510,7 +510,7 @@ describe("NavLink", () => {
                   <Route path="child" element={<div>Child</div>} />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -542,7 +542,7 @@ describe("NavLink", () => {
                   <Route path="child" element={<div>Child</div>} />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -573,7 +573,7 @@ describe("NavLink", () => {
                   <Route path="child" element={<div>Child</div>} />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -592,7 +592,7 @@ describe("NavLink", () => {
             <Routes>
               <Route path="home" element={<NavLink to=".">Home</NavLink>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -617,7 +617,7 @@ describe("NavLink", () => {
                   }
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -644,7 +644,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -668,11 +668,11 @@ describe("NavLink using a data router", () => {
             loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/foo"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -707,11 +707,11 @@ describe("NavLink using a data router", () => {
             loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/foo"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -741,13 +741,13 @@ describe("NavLink using a data router", () => {
 
     fireEvent.click(screen.getByText("Link to Bar"));
     expect(screen.getByText("Link to Bar").className).toBe(
-      "some-pending-classname"
+      "some-pending-classname",
     );
 
     dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe(
-      "some-active-classname"
+      "some-active-classname",
     );
   });
 
@@ -762,11 +762,11 @@ describe("NavLink using a data router", () => {
             loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/foo"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -796,13 +796,13 @@ describe("NavLink using a data router", () => {
 
     fireEvent.click(screen.getByText("Link to Bar"));
     expect(screen.getByText("Link to Bar").style.textTransform).toBe(
-      "lowercase"
+      "lowercase",
     );
 
     dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").style.textTransform).toBe(
-      "uppercase"
+      "uppercase",
     );
   });
 
@@ -817,11 +817,11 @@ describe("NavLink using a data router", () => {
             loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/foo"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -866,11 +866,11 @@ describe("NavLink using a data router", () => {
             loader={() => dfd.promise}
             element={<p>Baz page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/foo"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -912,11 +912,11 @@ describe("NavLink using a data router", () => {
             loader={() => bazDfd.promise}
             element={<p>Baz page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/foo"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -964,12 +964,12 @@ describe("NavLink using a data router", () => {
             loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
-        </Route>
+        </Route>,
       ),
       {
         window: getWindow("/base/foo"),
         basename: "/base",
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -1007,7 +1007,7 @@ describe("NavLink under a Routes with a basename", () => {
                 element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -1026,7 +1026,7 @@ describe("NavLink under a Routes with a basename", () => {
             <Routes>
               <Route path="home" element={<NavLink to=".">Home</NavLink>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 

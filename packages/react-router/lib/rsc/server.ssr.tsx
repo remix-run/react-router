@@ -9,7 +9,7 @@ import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 
 export type SSRCreateFromReadableStreamFunction = (
-  body: ReadableStream<Uint8Array>
+  body: ReadableStream<Uint8Array>,
 ) => Promise<unknown>;
 
 export async function routeRSCServerRequest({
@@ -23,7 +23,7 @@ export async function routeRSCServerRequest({
   fetchServer: (request: Request) => Promise<Response>;
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<RSCPayload>
+    getPayload: () => Promise<RSCPayload>,
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
 }) {
@@ -124,7 +124,7 @@ export function RSCStaticRouter({
         match.id,
         match.clientLoader,
         match.hasLoader,
-        false
+        false,
       ) &&
       (match.hydrateFallbackElement || !match.hasLoader)
     ) {
@@ -178,7 +178,7 @@ export function RSCStaticRouter({
       }
       return [route];
     }, [] as DataRouteObject[]),
-    context
+    context,
   );
 
   const frameworkContext: FrameworkContextObject = {

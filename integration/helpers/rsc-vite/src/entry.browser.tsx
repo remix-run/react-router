@@ -19,7 +19,7 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 
 createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
@@ -32,7 +32,7 @@ createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
           createFromReadableStream={createFromReadableStream}
           unstable_getContext={unstable_getContext}
         />
-      </StrictMode>
+      </StrictMode>,
     );
   });
 });

@@ -43,7 +43,7 @@ export async function singleFetchAction(
   request: Request,
   handlerUrl: URL,
   loadContext: AppLoadContext | unstable_RouterContextProvider,
-  handleError: (err: unknown) => void
+  handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
     let handlerRequest = new Request(handlerUrl, {
@@ -62,7 +62,7 @@ export async function singleFetchAction(
           result: getSingleFetchRedirect(
             context.statusCode,
             headers,
-            build.basename
+            build.basename,
           ),
           headers,
           status: SINGLE_FETCH_REDIRECT_STATUS,
@@ -117,7 +117,7 @@ export async function singleFetchAction(
         result: getSingleFetchRedirect(
           result.status,
           result.headers,
-          build.basename
+          build.basename,
         ),
         headers: result.headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
@@ -143,7 +143,7 @@ export async function singleFetchLoaders(
   request: Request,
   handlerUrl: URL,
   loadContext: AppLoadContext | unstable_RouterContextProvider,
-  handleError: (err: unknown) => void
+  handleError: (err: unknown) => void,
 ): Promise<Response> {
   try {
     let handlerRequest = new Request(handlerUrl, {
@@ -162,7 +162,7 @@ export async function singleFetchLoaders(
             [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
               context.statusCode,
               headers,
-              build.basename
+              build.basename,
             ),
           },
           headers,
@@ -187,9 +187,11 @@ export async function singleFetchLoaders(
       let loadedMatches = new Set(
         context.matches
           .filter((m) =>
-            loadRouteIds ? loadRouteIds.has(m.route.id) : m.route.loader != null
+            loadRouteIds
+              ? loadRouteIds.has(m.route.id)
+              : m.route.loader != null,
           )
-          .map((m) => m.route.id)
+          .map((m) => m.route.id),
       );
 
       if (context.errors) {
@@ -230,7 +232,7 @@ export async function singleFetchLoaders(
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
             result.status,
             result.headers,
-            build.basename
+            build.basename,
           ),
         },
         headers: result.headers,
@@ -262,7 +264,7 @@ function generateSingleFetchResponse(
     result: SingleFetchResult | SingleFetchResults;
     headers: Headers;
     status: number;
-  }
+  },
 ) {
   // Mark all successful responses with a header so we can identify in-flight
   // network errors that are missing this header
@@ -291,19 +293,19 @@ function generateSingleFetchResponse(
       result,
       request.signal,
       build.entry.module.streamTimeout,
-      serverMode
+      serverMode,
     ),
     {
       status: status || 200,
       headers: resultHeaders,
-    }
+    },
   );
 }
 
 export function getSingleFetchRedirect(
   status: number,
   headers: Headers,
-  basename: string | undefined
+  basename: string | undefined,
 ): SingleFetchRedirectResult {
   let redirect = headers.get("Location")!;
 
@@ -356,7 +358,7 @@ export function encodeViaTurboStream(
   data: any,
   requestSignal: AbortSignal,
   streamTimeout: number | undefined,
-  serverMode: ServerMode
+  serverMode: ServerMode,
 ) {
   let controller = new AbortController();
   // How long are we willing to wait for all of the promises in `data` to resolve
@@ -368,7 +370,7 @@ export function encodeViaTurboStream(
   // stream from the aborting of React's `renderToPipeableStream`
   let timeoutId = setTimeout(
     () => controller.abort(new Error("Server Timeout")),
-    typeof streamTimeout === "number" ? streamTimeout : 4950
+    typeof streamTimeout === "number" ? streamTimeout : 4950,
   );
   requestSignal.addEventListener("abort", () => clearTimeout(timeoutId));
 

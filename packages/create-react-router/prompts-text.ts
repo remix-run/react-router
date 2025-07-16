@@ -235,7 +235,7 @@ export class TextPrompt extends Prompt {
       if (this.outputError)
         this.out.write(
           cursor.down(lines(this.outputError, this.out.columns) - 1) +
-            clear(this.outputError, this.out.columns)
+            clear(this.outputError, this.out.columns),
         );
       this.out.write(clear(this.outputText, this.out.columns));
     }
@@ -262,7 +262,7 @@ export class TextPrompt extends Prompt {
 
     if (this.error) {
       this.outputError += `  ${color.redBright(
-        (shouldUseAscii() ? "> " : "▶ ") + this.errorMsg
+        (shouldUseAscii() ? "> " : "▶ ") + this.errorMsg,
       )}`;
     }
 
@@ -277,8 +277,8 @@ export class TextPrompt extends Prompt {
           this.placeholder
             ? (this.rendered.length - 9) * -1
             : this.cursorOffset,
-          0
-        )
+          0,
+        ),
     );
   }
 }

@@ -23,7 +23,7 @@ export async function routes(
     config?: string;
     json?: boolean;
     mode?: string;
-  } = {}
+  } = {},
 ): Promise<void> {
   rootDirectory = resolveRootDirectory(rootDirectory, flags);
   let configResult = await loadConfig({
@@ -42,7 +42,7 @@ export async function routes(
 
 export async function build(
   root?: string,
-  options: ViteBuildOptions = {}
+  options: ViteBuildOptions = {},
 ): Promise<void> {
   root = resolveRootDirectory(root, options);
 
@@ -87,7 +87,7 @@ export async function generateEntry(
     typescript?: boolean;
     config?: string;
     mode?: string;
-  } = {}
+  } = {},
 ) {
   // if no entry passed, attempt to create both
   if (!entry) {
@@ -114,7 +114,7 @@ export async function generateEntry(
     let list = conjunctionListFormat.format(entriesArray);
 
     console.error(
-      colors.red(`Invalid entry file. Valid entry files are ${list}`)
+      colors.red(`Invalid entry file. Valid entry files are ${list}`),
     );
     return;
   }
@@ -131,13 +131,13 @@ export async function generateEntry(
     path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
-    "defaults"
+    "defaults",
   );
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
 
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    `entry.server.node.tsx`
+    `entry.server.node.tsx`,
   );
 
   let isServerEntry = entry === "entry.server";
@@ -165,9 +165,9 @@ export async function generateEntry(
     colors.blue(
       `Entry file ${entry} created at ${path.relative(
         rootDirectory,
-        outputFile
-      )}.`
-    )
+        outputFile,
+      )}.`,
+    ),
   );
 }
 
@@ -185,7 +185,7 @@ function resolveRootDirectory(root?: string, flags?: { config?: string }) {
 async function checkForEntry(
   rootDirectory: string,
   appDirectory: string,
-  entries: string[]
+  entries: string[],
 ) {
   for (let entry of entries) {
     let entryPath = path.resolve(appDirectory, entry);
@@ -201,7 +201,7 @@ async function checkForEntry(
 async function createServerEntry(
   rootDirectory: string,
   appDirectory: string,
-  inputFile: string
+  inputFile: string,
 ) {
   await checkForEntry(rootDirectory, appDirectory, serverEntries);
   let contents = await readFile(inputFile, "utf-8");
@@ -211,7 +211,7 @@ async function createServerEntry(
 async function createClientEntry(
   rootDirectory: string,
   appDirectory: string,
-  inputFile: string
+  inputFile: string,
 ) {
   await checkForEntry(rootDirectory, appDirectory, clientEntries);
   let contents = await readFile(inputFile, "utf-8");
@@ -224,7 +224,7 @@ export async function typegen(
     watch: boolean;
     mode?: string;
     config?: string;
-  }
+  },
 ) {
   root = resolveRootDirectory(root, flags);
 

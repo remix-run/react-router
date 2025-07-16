@@ -370,7 +370,7 @@
   ```tsx
   const clientLogger: Route.unstable_ClientMiddlewareFunction = async (
     { request },
-    next
+    next,
   ) => {
     let start = performance.now();
 
@@ -389,7 +389,7 @@
   ```tsx
   const serverLogger: Route.unstable_MiddlewareFunction = async (
     { request, params, context },
-    next
+    next,
   ) => {
     let start = performance.now();
 
@@ -410,7 +410,7 @@
   import { sessionContext } from "../context";
   const serverAuth: Route.unstable_MiddlewareFunction = (
     { request, params, context },
-    next
+    next,
   ) => {
     let session = context.get(sessionContext);
     let user = session.get("user");
@@ -1527,7 +1527,7 @@ No significant changes to this package were made in this release. [See the repo 
       <Route index element={<Home />} />
       <Route path="a" lazy={() => import("./a")} />
       <Route path="b" lazy={() => import("./b")} />
-    </Route>
+    </Route>,
   );
   ```
 

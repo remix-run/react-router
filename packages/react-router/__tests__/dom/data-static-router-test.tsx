@@ -83,7 +83,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -92,7 +92,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
     expect(html).toMatch('<a href="/the/other/path" data-discover="true">');
@@ -230,7 +230,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -239,7 +239,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(dataRoutes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
     expect(html).toMatch('<a href="/the/other/path" data-discover="true">');
@@ -342,7 +342,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/base/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -351,11 +351,11 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
     expect(html).toMatch(
-      '<a href="/base/the/other/path" data-discover="true">'
+      '<a href="/base/the/other/path" data-discover="true">',
     );
 
     // @ts-expect-error
@@ -394,7 +394,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -403,7 +403,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
 
@@ -415,10 +415,10 @@ describe("A <StaticRouterProvider>", () => {
         },
         actionData: null,
         errors: null,
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -452,7 +452,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -461,7 +461,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(dataRoutes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
 
@@ -473,10 +473,10 @@ describe("A <StaticRouterProvider>", () => {
         },
         actionData: null,
         errors: null,
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -495,7 +495,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -504,10 +504,10 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatchInlineSnapshot(
-      `"<h1>👋</h1><script>window.__staticRouterHydrationData = JSON.parse("{\\"loaderData\\":{\\"0\\":{\\"key\\":\\"uh \\u003c/script\\u003e oh\\"}},\\"actionData\\":null,\\"errors\\":null}");</script>"`
+      `"<h1>👋</h1><script>window.__staticRouterHydrationData = JSON.parse("{\\"loaderData\\":{\\"0\\":{\\"key\\":\\"uh \\u003c/script\\u003e oh\\"}},\\"actionData\\":null,\\"errors\\":null}");</script>"`,
     );
   });
 
@@ -518,7 +518,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/path/with space", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -527,10 +527,10 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toContain(
-      '<a href="/path/with%20space" data-discover="true">👋</a>'
+      '<a href="/path/with%20space" data-discover="true">👋</a>',
     );
   });
 
@@ -543,7 +543,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -552,10 +552,10 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toContain(
-      '<a href="/path/with space" data-discover="true">👋</a>'
+      '<a href="/path/with space" data-discover="true">👋</a>',
     );
   });
 
@@ -566,7 +566,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/path/with space", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -575,10 +575,10 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toContain(
-      '<form data-discover="true" action="/path/with%20space" method="get">👋</form>'
+      '<form data-discover="true" action="/path/with%20space" method="get">👋</form>',
     );
   });
 
@@ -591,7 +591,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/path/with space", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -600,10 +600,10 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toContain(
-      '<form data-discover="true" action="/path/with%20space" method="get">👋</form>'
+      '<form data-discover="true" action="/path/with%20space" method="get">👋</form>',
     );
   });
 
@@ -616,7 +616,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -625,10 +625,10 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toContain(
-      '<form data-discover="true" action="/path/with space" method="get">👋</form>'
+      '<form data-discover="true" action="/path/with space" method="get">👋</form>',
     );
   });
 
@@ -639,7 +639,7 @@ describe("A <StaticRouterProvider>", () => {
         loader: () => {
           throw Response.json(
             { not: "found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
       },
@@ -649,7 +649,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -658,7 +658,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
 
     let expectedJsonString = JSON.stringify(
@@ -674,10 +674,10 @@ describe("A <StaticRouterProvider>", () => {
             __type: "RouteErrorResponse",
           },
         },
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -689,7 +689,7 @@ describe("A <StaticRouterProvider>", () => {
           loader: () => {
             throw Response.json(
               { not: "found" },
-              { status: 404, statusText: "Not Found" }
+              { status: 404, statusText: "Not Found" },
             );
           },
         }),
@@ -700,7 +700,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -709,7 +709,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(dataRoutes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
 
     let expectedJsonString = JSON.stringify(
@@ -725,10 +725,10 @@ describe("A <StaticRouterProvider>", () => {
             __type: "RouteErrorResponse",
           },
         },
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -746,7 +746,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -755,7 +755,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
 
     // stack is stripped by default from SSR errors
@@ -769,10 +769,10 @@ describe("A <StaticRouterProvider>", () => {
             __type: "Error",
           },
         },
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -792,7 +792,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -801,7 +801,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(dataRoutes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
 
     // stack is stripped by default from SSR errors
@@ -815,10 +815,10 @@ describe("A <StaticRouterProvider>", () => {
             __type: "Error",
           },
         },
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -836,7 +836,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -845,7 +845,7 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
 
     // stack is stripped by default from SSR errors
@@ -860,10 +860,10 @@ describe("A <StaticRouterProvider>", () => {
             __subType: "ReferenceError",
           },
         },
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -885,7 +885,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -895,7 +895,7 @@ describe("A <StaticRouterProvider>", () => {
           context={context}
           nonce="nonce-string"
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
 
@@ -904,10 +904,10 @@ describe("A <StaticRouterProvider>", () => {
         loaderData: {},
         actionData: null,
         errors: null,
-      })
+      }),
     );
     expect(html).toMatch(
-      `<script nonce="nonce-string">window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+      `<script nonce="nonce-string">window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`,
     );
   });
 
@@ -935,7 +935,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -945,7 +945,7 @@ describe("A <StaticRouterProvider>", () => {
           context={context}
           hydrate={false}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch("<h1>👋</h1>");
     expect(html).not.toMatch("<script>");
@@ -965,7 +965,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     expect(() =>
@@ -973,10 +973,10 @@ describe("A <StaticRouterProvider>", () => {
         <React.StrictMode>
           {/* @ts-expect-error */}
           <StaticRouterProvider context={context} />
-        </React.StrictMode>
-      )
+        </React.StrictMode>,
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`
+      `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`,
     );
 
     expect(() =>
@@ -984,10 +984,10 @@ describe("A <StaticRouterProvider>", () => {
         <React.StrictMode>
           {/* @ts-expect-error */}
           <StaticRouterProvider router={createStaticRouter(routes, context)} />
-        </React.StrictMode>
-      )
+        </React.StrictMode>,
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`
+      `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`,
     );
   });
 
@@ -1009,7 +1009,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let frameworkAwareRoutes = [
@@ -1131,7 +1131,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let frameworkAwareRoutes = [
@@ -1249,7 +1249,7 @@ describe("A <StaticRouterProvider>", () => {
     let context = (await query(
       new Request("http://localhost/", {
         signal: new AbortController().signal,
-      })
+      }),
     )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
@@ -1258,13 +1258,13 @@ describe("A <StaticRouterProvider>", () => {
           router={createStaticRouter(routes, context)}
           context={context}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
     expect(html).toMatch(
       '<a href="/the/path" data-discover="true">relative path</a>' +
         '<a href="http://localhost/the/path">absolute same-origin url</a>' +
         '<a href="https://remix.run">absolute different-origin url</a>' +
-        '<a href="mailto:foo@baz.com">absolute mailto: url</a>'
+        '<a href="mailto:foo@baz.com">absolute mailto: url</a>',
     );
   });
 
@@ -1288,7 +1288,7 @@ describe("A <StaticRouterProvider>", () => {
       let context = (await createStaticHandler(routes).query(
         new Request("http://localhost/", {
           signal: new AbortController().signal,
-        })
+        }),
       )) as StaticHandlerContext;
 
       let html = ReactDOMServer.renderToStaticMarkup(
@@ -1298,7 +1298,7 @@ describe("A <StaticRouterProvider>", () => {
             context={context}
             hydrate={false}
           />
-        </React.StrictMode>
+        </React.StrictMode>,
       );
       expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
       expect(context._deepestRenderedBoundaryId).toBe("0-0");
@@ -1328,7 +1328,7 @@ describe("A <StaticRouterProvider>", () => {
       let context = (await query(
         new Request("http://localhost/", {
           signal: new AbortController().signal,
-        })
+        }),
       )) as StaticHandlerContext;
 
       let html = ReactDOMServer.renderToStaticMarkup(
@@ -1338,7 +1338,7 @@ describe("A <StaticRouterProvider>", () => {
             context={context}
             hydrate={false}
           />
-        </React.StrictMode>
+        </React.StrictMode>,
       );
       expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
       expect(context._deepestRenderedBoundaryId).toBe("0-0");
@@ -1362,7 +1362,7 @@ describe("A <StaticRouterProvider>", () => {
       let context = (await createStaticHandler(routes).query(
         new Request("http://localhost/", {
           signal: new AbortController().signal,
-        })
+        }),
       )) as StaticHandlerContext;
 
       let html = ReactDOMServer.renderToStaticMarkup(
@@ -1372,7 +1372,7 @@ describe("A <StaticRouterProvider>", () => {
             context={context}
             hydrate={false}
           />
-        </React.StrictMode>
+        </React.StrictMode>,
       );
       expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
       expect(context._deepestRenderedBoundaryId).toBe("0");
@@ -1399,7 +1399,7 @@ describe("A <StaticRouterProvider>", () => {
       let context = (await query(
         new Request("http://localhost/", {
           signal: new AbortController().signal,
-        })
+        }),
       )) as StaticHandlerContext;
 
       let html = ReactDOMServer.renderToStaticMarkup(
@@ -1409,7 +1409,7 @@ describe("A <StaticRouterProvider>", () => {
             context={context}
             hydrate={false}
           />
-        </React.StrictMode>
+        </React.StrictMode>,
       );
       expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
       expect(context._deepestRenderedBoundaryId).toBe("0");

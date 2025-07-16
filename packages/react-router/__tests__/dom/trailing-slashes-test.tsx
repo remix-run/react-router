@@ -44,7 +44,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -78,7 +78,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -138,7 +138,7 @@ describe("trailing slashes", () => {
                   </Route>
                 </Route>
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -206,7 +206,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -240,7 +240,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -300,7 +300,7 @@ describe("trailing slashes", () => {
                   </Route>
                 </Route>
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -366,7 +366,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="/" />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo");
@@ -384,7 +384,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="../" />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo");
@@ -403,7 +403,7 @@ describe("trailing slashes", () => {
                 <Route index element={<SingleNavigate to="bar" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -423,7 +423,7 @@ describe("trailing slashes", () => {
                 <Route index element={<SingleNavigate to="bar/" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -444,7 +444,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="/" />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo/");
@@ -462,7 +462,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to=".." />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo/");
@@ -481,7 +481,7 @@ describe("trailing slashes", () => {
                 <Route index element={<SingleNavigate to="bar" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -501,7 +501,7 @@ describe("trailing slashes", () => {
                 <Route index element={<SingleNavigate to="bar/" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -523,7 +523,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="" />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -543,7 +543,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="" />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -565,7 +565,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="." />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -585,7 +585,7 @@ describe("trailing slashes", () => {
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="." />} />
               </Routes>
-            </BrowserRouter>
+            </BrowserRouter>,
           );
         });
 
@@ -605,7 +605,7 @@ describe("trailing slashes", () => {
         let [, setSearchParams] = useSearchParams();
         React.useEffect(
           () => setSearchParams({ key: "value" }),
-          [setSearchParams]
+          [setSearchParams],
         );
         return <h1>👋</h1>;
       }
@@ -616,7 +616,7 @@ describe("trailing slashes", () => {
             <Routes>
               <Route index element={<SetSearchParams />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 
@@ -633,7 +633,7 @@ describe("trailing slashes", () => {
         let [, setSearchParams] = useSearchParams();
         React.useEffect(
           () => setSearchParams({ key: "value" }),
-          [setSearchParams]
+          [setSearchParams],
         );
         return <h1>👋</h1>;
       }
@@ -644,7 +644,7 @@ describe("trailing slashes", () => {
             <Routes>
               <Route index element={<SetSearchParams />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 

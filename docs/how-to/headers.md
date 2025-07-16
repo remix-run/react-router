@@ -34,7 +34,7 @@ import { data } from "react-router";
 
 export async function loader({ params }: LoaderArgs) {
   let [page, ms] = await fakeTimeCall(
-    await getPage(params.id)
+    await getPage(params.id),
   );
 
   return data(page, {
@@ -81,7 +81,7 @@ The easiest way is to simply append to the parent headers. This avoids overwriti
 ```tsx
 export function headers({ parentHeaders }: HeadersArgs) {
   parentHeaders.append(
-    "Permissions-Policy: geolocation=()"
+    "Permissions-Policy: geolocation=()",
   );
   return parentHeaders;
 }
@@ -95,7 +95,7 @@ Sometimes it's important to overwrite the parent header. Do this with `set` inst
 export function headers({ parentHeaders }: HeadersArgs) {
   parentHeaders.set(
     "Cache-Control",
-    "max-age=3600, s-maxage=86400"
+    "max-age=3600, s-maxage=86400",
   );
   return parentHeaders;
 }
@@ -113,12 +113,12 @@ export default function handleRequest(
   responseStatusCode,
   responseHeaders,
   routerContext,
-  loadContext
+  loadContext,
 ) {
   // set, append global headers
   responseHeaders.set(
     "X-App-Version",
-    routerContext.manifest.version
+    routerContext.manifest.version,
   );
 
   return new Response(await getStream(), {

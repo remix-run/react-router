@@ -45,7 +45,7 @@ const { getSession, commitSession, destroySession } =
         secrets: ["s3cret1"],
         secure: true,
       },
-    }
+    },
   );
 
 export { getSession, commitSession, destroySession };
@@ -64,7 +64,7 @@ export async function action({
   request,
 }: ActionFunctionArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   session.get("foo");
   session.has("bar");
@@ -91,7 +91,7 @@ export async function loader({
   request,
 }: Route.LoaderArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
 
   if (session.has("userId")) {
@@ -105,7 +105,7 @@ export async function loader({
       headers: {
         "Set-Cookie": await commitSession(session),
       },
-    }
+    },
   );
 }
 
@@ -113,7 +113,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   const form = await request.formData();
   const username = form.get("username");
@@ -121,7 +121,7 @@ export async function action({
 
   const userId = await validateCredentials(
     username,
-    password
+    password,
   );
 
   if (userId == null) {
@@ -183,7 +183,7 @@ export async function action({
   request,
 }: Route.ActionArgs) {
   const session = await getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   return redirect("/login", {
     headers: {

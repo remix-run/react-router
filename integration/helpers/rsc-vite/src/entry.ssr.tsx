@@ -8,7 +8,7 @@ import {
 
 export default async function handler(
   request: Request,
-  fetchServer: (request: Request) => Promise<Response>
+  fetchServer: (request: Request) => Promise<Response>,
 ) {
   const bootstrapScriptContent =
     await import.meta.viteRsc.loadBootstrapScriptContent("index");
@@ -22,7 +22,7 @@ export default async function handler(
         {
           bootstrapScriptContent,
           signal: request.signal,
-        }
+        },
       );
     },
   });

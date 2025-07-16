@@ -244,7 +244,7 @@ test("should encode and decode object and dedupe object key, value, and promise 
       write(chunk) {
         encoded += chunk;
       },
-    })
+    }),
   );
 
   expect(Array.from(encoded.matchAll(/"foo"/g))).toHaveLength(1);
@@ -288,7 +288,7 @@ test("should encode and decode rejected promise", async () => {
   const decoded = await decode(encode(input));
   expect(decoded.value).toBeInstanceOf(Promise);
   await expect(decoded.value).rejects.toEqual(
-    await input.catch((reason) => reason)
+    await input.catch((reason) => reason),
   );
   await decoded.done;
 });
@@ -308,7 +308,7 @@ test("should encode and decode object with rejected promise", async () => {
   const value = decoded.value as typeof input;
   expect(value.foo).toBeInstanceOf(Promise);
   await expect(value.foo).rejects.toEqual(
-    await input.foo.catch((reason) => reason)
+    await input.foo.catch((reason) => reason),
   );
   return decoded.done;
 });
@@ -352,7 +352,7 @@ test("should encode and decode custom type", async () => {
     }),
     {
       plugins: [decoder],
-    }
+    },
   );
   const value = decoded.value as Custom;
   expect(value).toBeInstanceOf(Custom);
@@ -393,7 +393,7 @@ test("should encode and decode custom type when nested alongside Promise", async
           }
         },
       ],
-    }
+    },
   )) as unknown as {
     value: {
       number: number;
@@ -431,7 +431,7 @@ test("should allow plugins to encode and decode functions", async () => {
           }
         },
       ],
-    }
+    },
   );
   expect(decoded.value).toBeInstanceOf(Function);
   expect((decoded.value as typeof input)()).toBe("foo");
@@ -460,7 +460,7 @@ test("should allow postPlugins to handle values that would otherwise throw", asy
           }
         },
       ],
-    }
+    },
   );
   expect(decoded.value).toEqual({ func: undefined, class: undefined });
   await decoded.done;
@@ -471,7 +471,7 @@ test("should propagate abort reason to deferred promises for sync resolved promi
   const reason = new Error("reason");
   abortController.abort(reason);
   const decoded = await decode(
-    encode(Promise.resolve("foo"), { signal: abortController.signal })
+    encode(Promise.resolve("foo"), { signal: abortController.signal }),
   );
   await expect(decoded.value).rejects.toEqual(reason);
 });
@@ -481,7 +481,7 @@ test("should propagate abort reason to deferred promises for async resolved prom
   const deferred = new Deferred();
   const reason = new Error("reason");
   const decoded = await decode(
-    encode(deferred.promise, { signal: abortController.signal })
+    encode(deferred.promise, { signal: abortController.signal }),
   );
   abortController.abort(reason);
   await expect(decoded.value).rejects.toEqual(reason);
@@ -511,7 +511,7 @@ test("should encode and decode objects with multiple promises resolving to the s
       write(chunk) {
         encoded += chunk;
       },
-    })
+    }),
   );
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
 });
@@ -542,7 +542,7 @@ test("should encode and decode objects with reused values", async () => {
       write(chunk) {
         encoded += chunk;
       },
-    })
+    }),
   );
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
   await decoded.done;
@@ -573,7 +573,7 @@ test("should encode and decode objects with multiple promises rejecting to the s
       write(chunk) {
         encoded += chunk;
       },
-    })
+    }),
   );
   expect(Array.from(encoded.matchAll(/"baz"/g))).toHaveLength(1);
 });

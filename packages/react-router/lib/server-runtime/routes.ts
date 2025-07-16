@@ -52,7 +52,7 @@ export function createRoutes(
   routesByParentId: Record<
     string,
     Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
+  > = groupRoutesByParentId(manifest),
 ): ServerRoute[] {
   return (routesByParentId[parentId] || []).map((route) => ({
     ...route,
@@ -69,7 +69,7 @@ export function createStaticHandlerDataRoutes(
   routesByParentId: Record<
     string,
     Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
+  > = groupRoutesByParentId(manifest),
 ): AgnosticDataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
@@ -89,7 +89,7 @@ export function createStaticHandlerDataRoutes(
             // the .data route so we don't call loaders twice
             let preRenderedData = getBuildTimeHeader(
               args.request,
-              "X-React-Router-Prerender-Data"
+              "X-React-Router-Prerender-Data",
             );
             if (preRenderedData != null) {
               let encoded = preRenderedData
@@ -121,12 +121,12 @@ export function createStaticHandlerDataRoutes(
               } else {
                 invariant(
                   data && route.id in data,
-                  "Unable to decode prerendered data"
+                  "Unable to decode prerendered data",
                 );
                 let result = data[route.id] as SingleFetchResult;
                 invariant(
                   "data" in result,
-                  "Unable to process prerendered data"
+                  "Unable to process prerendered data",
                 );
                 return result.data;
               }
@@ -153,7 +153,7 @@ export function createStaticHandlerDataRoutes(
             manifest,
             future,
             route.id,
-            routesByParentId
+            routesByParentId,
           ),
           ...commonRoute,
         };

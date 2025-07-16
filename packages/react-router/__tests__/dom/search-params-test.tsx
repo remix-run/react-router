@@ -53,7 +53,7 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -68,7 +68,7 @@ describe("useSearchParams", () => {
     act(() => {
       queryInput.value = "Ryan Florence";
       form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true })
+        new Event("submit", { bubbles: true, cancelable: true }),
       );
     });
 
@@ -110,7 +110,7 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -125,12 +125,12 @@ describe("useSearchParams", () => {
 
     act(() => {
       form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true })
+        new Event("submit", { bubbles: true, cancelable: true }),
       );
     });
 
     expect(node.innerHTML).toMatch(
-      /The current query is "Michael Jackson - appended"/
+      /The current query is "Michael Jackson - appended"/,
     );
     expect(node.innerHTML).toMatch(/The new query is "Ryan Florence"/);
   });
@@ -155,7 +155,7 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -183,12 +183,12 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(node.innerHTML).toMatchInlineSnapshot(
-      `"<p>value=initial&amp;a=1&amp;b=2</p>"`
+      `"<p>value=initial&amp;a=1&amp;b=2</p>"`,
     );
   });
 

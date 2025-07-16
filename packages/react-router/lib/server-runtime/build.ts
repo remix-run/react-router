@@ -51,14 +51,14 @@ export interface HandleDocumentRequestFunction {
     context: EntryContext,
     loadContext: MiddlewareEnabled extends true
       ? unstable_RouterContextProvider
-      : AppLoadContext
+      : AppLoadContext,
   ): Promise<Response> | Response;
 }
 
 export interface HandleDataRequestFunction {
   (
     response: Response,
-    args: LoaderFunctionArgs | ActionFunctionArgs
+    args: LoaderFunctionArgs | ActionFunctionArgs,
   ): Promise<Response> | Response;
 }
 

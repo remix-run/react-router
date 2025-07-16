@@ -151,7 +151,7 @@ test.describe("Revalidation", () => {
               }
             `,
         },
-      })
+      }),
     );
   });
 
@@ -169,57 +169,57 @@ test.describe("Revalidation", () => {
     await app.clickLink("/parent");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call child (first load) but not parent (no param)
     await app.clickLink("/parent/child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:1" })
+      page.getByTestId("child-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call neither
     await app.clickLink("/parent/child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:1" })
+      page.getByTestId("child-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call both
     await app.clickLink("/parent/child?revalidate=parent,child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:2" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:2" })
+      page.getByTestId("child-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
 
     // Should call parent only
     await app.clickLink("/parent/child?revalidate=parent");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:3" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:2" })
+      page.getByTestId("child-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
 
     // Should call child only
     await app.clickLink("/parent/child?revalidate=child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:3" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:3" })
+      page.getByTestId("child-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
   });
 
@@ -233,50 +233,50 @@ test.describe("Revalidation", () => {
     await app.clickLink("/parent/child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:1" })
+      page.getByTestId("child-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call neither
     await app.clickElement("#submit-neither");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:1" })
+      page.getByTestId("child-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call both
     await app.clickElement("#submit-both");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:2" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:2" })
+      page.getByTestId("child-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
 
     // Should call parent only
     await app.clickElement("#submit-parent");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:3" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:2" })
+      page.getByTestId("child-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
 
     // Should call child only
     await app.clickElement("#submit-child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:3" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:3" })
+      page.getByTestId("child-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
   });
 
@@ -288,80 +288,80 @@ test.describe("Revalidation", () => {
     await app.clickLink("/parent/child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:1" })
+      page.getByTestId("child-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call neither on manual revalidate (no params)
     await app.clickElement("#revalidate");
     await page.waitForSelector("#revalidation-idle", { state: "visible" });
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:1" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:1" })
+      page.getByTestId("child-data").filter({ hasText: "Value:1" }),
     ).toBeAttached();
 
     // Should call both
     await app.clickLink("/parent/child?revalidate=parent,child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:2" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:2" })
+      page.getByTestId("child-data").filter({ hasText: "Value:2" }),
     ).toBeAttached();
 
     // Should call both on manual revalidate
     await app.clickElement("#revalidate");
     await page.waitForSelector("#revalidation-idle", { state: "visible" });
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:3" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:3" })
+      page.getByTestId("child-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
 
     // Should call parent only
     await app.clickLink("/parent/child?revalidate=parent");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:4" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:4" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:3" })
+      page.getByTestId("child-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
 
     // Should call parent only on manual revalidate
     await app.clickElement("#revalidate");
     await page.waitForSelector("#revalidation-idle", { state: "visible" });
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:5" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:5" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:3" })
+      page.getByTestId("child-data").filter({ hasText: "Value:3" }),
     ).toBeAttached();
 
     // Should call child only
     await app.clickLink("/parent/child?revalidate=child");
     await page.waitForSelector("#idle");
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:5" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:5" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:4" })
+      page.getByTestId("child-data").filter({ hasText: "Value:4" }),
     ).toBeAttached();
 
     // Should call child only on manual revalidate
     await app.clickElement("#revalidate");
     await page.waitForSelector("#revalidation-idle", { state: "visible" });
     await expect(
-      page.getByTestId("parent-data").filter({ hasText: "Value:5" })
+      page.getByTestId("parent-data").filter({ hasText: "Value:5" }),
     ).toBeAttached();
     await expect(
-      page.getByTestId("child-data").filter({ hasText: "Value:5" })
+      page.getByTestId("child-data").filter({ hasText: "Value:5" }),
     ).toBeAttached();
   });
 });

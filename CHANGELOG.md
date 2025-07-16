@@ -1041,7 +1041,7 @@ Here's a simple example of a client-side logging middleware that can be placed o
 ```tsx
 const clientLogger: Route.unstable_ClientMiddlewareFunction = async (
   { request },
-  next
+  next,
 ) => {
   let start = performance.now();
 
@@ -1060,7 +1060,7 @@ For a server-side middleware, the `next` function will return the HTTP `Response
 ```tsx
 const serverLogger: Route.unstable_MiddlewareFunction = async (
   { request, params, context },
-  next
+  next,
 ) => {
   let start = performance.now();
 
@@ -1081,7 +1081,7 @@ You can throw a `redirect` from a middleware to short circuit any remaining proc
 import { sessionContext } from "../context";
 const serverAuth: Route.unstable_MiddlewareFunction = (
   { request, params, context },
-  next
+  next,
 ) => {
   let session = context.get(sessionContext);
   let user = session.get("user");
@@ -1334,7 +1334,7 @@ import { MassiveComponent } from "~/components";
 
 export async function clientLoader() {
   return await fetch("https://example.com/api").then((response) =>
-    response.json()
+    response.json(),
   );
 }
 
@@ -1369,7 +1369,7 @@ To achieve this optimization, React Router will split the route module into mult
 ```tsx filename=routes/example.tsx?route-chunk=clientLoader
 export async function clientLoader() {
   return await fetch("https://example.com/api").then((response) =>
-    response.json()
+    response.json(),
   );
 }
 ```
@@ -1415,7 +1415,7 @@ const shared = () => console.log("hello");
 export async function clientLoader() {
   shared();
   return await fetch("https://example.com/api").then((response) =>
-    response.json()
+    response.json(),
   );
 }
 
@@ -1442,7 +1442,7 @@ import { shared } from "./shared";
 export async function clientLoader() {
   shared();
   return await fetch("https://example.com/api").then((response) =>
-    response.json()
+    response.json(),
   );
 }
 
@@ -1460,7 +1460,7 @@ import { shared } from "./shared";
 export async function clientLoader() {
   shared();
   return await fetch("https://example.com/api").then((response) =>
-    response.json()
+    response.json(),
   );
 }
 ```
@@ -2326,7 +2326,7 @@ const router = createBrowserRouter(
         patch("root", [route]);
       }
     },
-  }
+  },
 );
 ```
 
@@ -3106,7 +3106,7 @@ let routes = createRoutesFromElements(
     <Route index element={<Home />} />
     <Route path="a" lazy={() => import("./a")} />
     <Route path="b" lazy={() => import("./b")} />
-  </Route>
+  </Route>,
 );
 ```
 

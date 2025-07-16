@@ -293,7 +293,7 @@ test.describe("ErrorBoundary", () => {
             `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     appFixture = await createAppFixture(fixture, ServerMode.Development);
@@ -703,7 +703,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: false }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
@@ -774,7 +774,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: true }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });

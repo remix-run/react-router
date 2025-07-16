@@ -46,7 +46,7 @@ describe("navigate with params", () => {
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 
@@ -79,7 +79,7 @@ describe("navigate with params", () => {
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
 

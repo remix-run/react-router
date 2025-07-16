@@ -19,7 +19,7 @@ export function getHydrationData(
   },
   location: Path,
   basename: string | undefined,
-  isSpaMode: boolean
+  isSpaMode: boolean,
 ): HydrationState {
   // Create a shallow clone of `loaderData` we can mutate for partial hydration.
   // When a route exports a `clientLoader` and a `HydrateFallback`, the SSR will
@@ -45,7 +45,7 @@ export function getHydrationData(
           routeId,
           routeInfo.clientLoader,
           routeInfo.hasLoader,
-          isSpaMode
+          isSpaMode,
         ) &&
         (routeInfo.hasHydrateFallback || !routeInfo.hasLoader)
       ) {

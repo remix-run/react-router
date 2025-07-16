@@ -35,7 +35,7 @@ export default defineConfig([
           await fsp.mkdir("dist/static", { recursive: true });
           await fsp.copyFile(
             "vite/static/refresh-utils.mjs",
-            "dist/static/refresh-utils.mjs"
+            "dist/static/refresh-utils.mjs",
           );
 
           await fsp.mkdir("dist/config/defaults", { recursive: true });
@@ -43,7 +43,7 @@ export default defineConfig([
           for (const file of files) {
             await fsp.copyFile(
               `config/defaults/${file}`,
-              `dist/config/defaults/${file}`
+              `dist/config/defaults/${file}`,
             );
           }
         },

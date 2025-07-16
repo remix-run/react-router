@@ -46,7 +46,7 @@ test.describe("pathless layout routes", () => {
             };
           `,
         },
-      })
+      }),
     );
   });
 
@@ -68,7 +68,7 @@ test.describe("pathless layout routes", () => {
     await app.goto("/");
     // do this after the first request so that it doesnt appear in our next assertions
     let responses = app.collectResponses(
-      (url) => url.pathname === "/_root.data"
+      (url) => url.pathname === "/_root.data",
     );
     await page.click("button[type=submit]");
     await page.waitForSelector(`[data-testid="action-success"]`);

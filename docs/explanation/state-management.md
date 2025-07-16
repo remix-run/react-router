@@ -78,7 +78,7 @@ export function List() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [view, setView] = useState(
-    searchParams.get("view") || "list"
+    searchParams.get("view") || "list",
   );
 
   return (
@@ -224,7 +224,7 @@ In this approach, state must be initialized within an effect. This is crucial to
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(
     // error: window is not defined
-    window.localStorage.getItem("sidebar")
+    window.localStorage.getItem("sidebar"),
   );
 
   // ...
