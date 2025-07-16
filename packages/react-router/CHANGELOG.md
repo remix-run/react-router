@@ -1,18 +1,6 @@
 # `react-router`
 
-## 7.7.0-pre.2
-
-### Patch Changes
-
-- [REMOVE] Inject client route component props during RSC render ([#14007](https://github.com/remix-run/react-router/pull/14007))
-
-## 7.7.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] (continuation of #13872) In Framework Mode, remove leftover critical CSS elements in development after initial render if there's a hydration mismatch ([#13995](https://github.com/remix-run/react-router/pull/13995))
-
-## 7.7.0-pre.0
+## 7.7.0
 
 ### Minor Changes
 
@@ -23,13 +11,21 @@
 ### Patch Changes
 
 - Handle `InvalidCharacterError` when validating cookie signature ([#13847](https://github.com/remix-run/react-router/pull/13847))
+
 - Pass a copy of `searchParams` to the `setSearchParams` callback function to avoid muations of the internal `searchParams` instance. This was an issue when navigations were blocked because the internal instance be out of sync with `useLocation().search`. ([#12784](https://github.com/remix-run/react-router/pull/12784))
+
 - Support invalid `Date` in `turbo-stream` v2 fork ([#13684](https://github.com/remix-run/react-router/pull/13684))
+
 - In Framework Mode, clear critical CSS in development after initial render ([#13872](https://github.com/remix-run/react-router/pull/13872))
+
 - Strip search parameters from `patchRoutesOnNavigation` `path` param for fetcher calls ([#13911](https://github.com/remix-run/react-router/pull/13911))
+
 - Skip scroll restoration on useRevalidator() calls because they're not new locations ([#13671](https://github.com/remix-run/react-router/pull/13671))
+
 - Support unencoded UTF-8 routes in prerender config with `ssr` set to `false` ([#13699](https://github.com/remix-run/react-router/pull/13699))
+
 - Do not throw if the url hash is not a valid URI component ([#13247](https://github.com/remix-run/react-router/pull/13247))
+
 - Fix a regression in `createRoutesStub` introduced with the middleware feature. ([#13946](https://github.com/remix-run/react-router/pull/13946))
 
   As part of that work we altered the signature to align with the new middleware APIs without making it backwards compatible with the prior `AppLoadContext` API. This permitted `createRoutesStub` to work if you were opting into middleware and the updated `context` typings, but broke `createRoutesStub` for users not yet opting into middleware.

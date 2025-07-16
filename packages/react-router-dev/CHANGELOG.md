@@ -1,24 +1,6 @@
 # `@react-router/dev`
 
-## 7.7.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.7.0-pre.2`
-  - `@react-router/node@7.7.0-pre.2`
-  - `@react-router/serve@7.7.0-pre.2`
-
-## 7.7.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@7.7.0-pre.1`
-  - `@react-router/node@7.7.0-pre.1`
-  - `@react-router/serve@7.7.0-pre.1`
-
-## 7.7.0-pre.0
+## 7.7.0
 
 ### Patch Changes
 
@@ -30,9 +12,9 @@
 - Improve chunk error logging when a chunk cannot be found during the build ([#13799](https://github.com/remix-run/react-router/pull/13799))
 - Fix incorrectly configured `externalConditions` which had enabled `module` condition for externals and broke builds with certain packages, like Emotion. ([#13871](https://github.com/remix-run/react-router/pull/13871))
 - Updated dependencies:
-  - `react-router@7.7.0-pre.0`
-  - `@react-router/node@7.7.0-pre.0`
-  - `@react-router/serve@7.7.0-pre.0`
+  - `react-router@7.7.0`
+  - `@react-router/node@7.7.0`
+  - `@react-router/serve@7.7.0`
 
 ## 7.6.3
 
