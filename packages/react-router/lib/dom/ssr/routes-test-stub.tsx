@@ -156,8 +156,8 @@ export function createRoutesStub(
         _context !== undefined
           ? _context
           : future?.unstable_middleware
-          ? new unstable_RouterContextProvider()
-          : {},
+            ? new unstable_RouterContextProvider()
+            : {},
         frameworkContextRef.current.manifest,
         frameworkContextRef.current.routeModules
       );

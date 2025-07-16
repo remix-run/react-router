@@ -229,16 +229,16 @@ function processTypedocModule(
       subChild.kind === ReflectionKind.Enum
         ? "enums"
         : subChild.kind === ReflectionKind.Class
-        ? "classes"
-        : subChild.kind === ReflectionKind.Interface
-        ? "interfaces"
-        : subChild.kind === ReflectionKind.TypeAlias
-        ? "types"
-        : subChild.kind === ReflectionKind.Function
-        ? "functions"
-        : subChild.kind === ReflectionKind.Variable
-        ? "variables"
-        : undefined;
+          ? "classes"
+          : subChild.kind === ReflectionKind.Interface
+            ? "interfaces"
+            : subChild.kind === ReflectionKind.TypeAlias
+              ? "types"
+              : subChild.kind === ReflectionKind.Function
+                ? "functions"
+                : subChild.kind === ReflectionKind.Variable
+                  ? "variables"
+                  : undefined;
 
     if (!type) {
       console.warn(

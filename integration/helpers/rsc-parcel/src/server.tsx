@@ -15,7 +15,7 @@ import {
 // Import the prerender function from the client environment
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
-import { assets } from "./parcel-entry-wrapper"
+import { assets } from "./parcel-entry-wrapper";
 import { basename } from "./config/basename";
 import { requestContext } from "./config/request-context";
 
