@@ -1,7 +1,7 @@
 import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
-import type { RouteModules } from "./routeModules";
+import type { LoadRouteModuleFunction, RouteModules } from "./routeModules";
 import type { RouteManifest } from "../../router/utils";
 import type { ServerBuild } from "../../server-runtime/build";
 
@@ -19,6 +19,7 @@ export interface FrameworkContextObject {
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  loadRouteModule: LoadRouteModuleFunction;
   routeDiscovery: ServerBuild["routeDiscovery"];
   serializeError?(error: Error): SerializedError;
   renderMeta?: {

@@ -25,6 +25,12 @@ import {
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
 import { RouterProvider } from "./dom-router-provider";
+import type {
+  LoadRouteModuleFunction,
+} from "../dom/ssr/routeModules";
+import {
+  defaultLoadRouteModule,
+} from "../dom/ssr/routeModules";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -75,8 +81,10 @@ function initSsrInfo(): void {
 }
 
 function createHydratedRouter({
+  loadRouteModule = defaultLoadRouteModule,
   unstable_getContext,
 }: {
+  loadRouteModule?: LoadRouteModuleFunction;
   unstable_getContext?: RouterInit["unstable_getContext"];
 }): DataRouter {
   initSsrInfo();
@@ -121,7 +129,8 @@ function createHydratedRouter({
     ssrInfo.routeModules,
     ssrInfo.context.state,
     ssrInfo.context.ssr,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
+    loadRouteModule
   );
 
   let hydrationData: HydrationState | undefined = undefined;
@@ -187,7 +196,8 @@ function createHydratedRouter({
       ssrInfo.context.ssr,
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
+      loadRouteModule
     ),
   });
   ssrInfo.router = router;
@@ -214,6 +224,11 @@ interface HydratedRouterProps {
    * to `clientLoader`/`clientActon` functions
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
+  /**
+   * Optional function to take control over how route modules are loaded into
+   * the browser.  Primarily for use by bundler plugins.
+   */
+  unstable_loadRouteModule?: LoadRouteModuleFunction;
 }
 
 /**
@@ -223,8 +238,11 @@ interface HydratedRouterProps {
  * @category Component Routers
  */
 export function HydratedRouter(props: HydratedRouterProps) {
+  let loadRouteModule = props.unstable_loadRouteModule ?? defaultLoadRouteModule;
+
   if (!router) {
     router = createHydratedRouter({
+      loadRouteModule,
       unstable_getContext: props.unstable_getContext,
     });
   }
@@ -272,7 +290,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.routeModules,
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
+    loadRouteModule
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
@@ -291,6 +310,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
           criticalCss,
           ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
+          loadRouteModule,
           routeDiscovery: ssrInfo.context.routeDiscovery,
         }}
       >

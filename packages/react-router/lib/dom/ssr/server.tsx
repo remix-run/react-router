@@ -7,6 +7,7 @@ import type { EntryContext } from "./entry";
 import { RemixErrorBoundary } from "./errorBoundaries";
 import { createServerRoutes, shouldHydrateRouteLoader } from "./routes";
 import { StreamTransfer } from "./single-fetch";
+import { defaultLoadRouteModule } from "./routeModules";
 
 export interface ServerRouterProps {
   context: EntryContext;
@@ -85,6 +86,7 @@ export function ServerRouter({
           routeDiscovery: context.routeDiscovery,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,
+          loadRouteModule: defaultLoadRouteModule,
         }}
       >
         <RemixErrorBoundary location={router.state.location}>
