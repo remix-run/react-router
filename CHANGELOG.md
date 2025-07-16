@@ -417,7 +417,7 @@ For more information, check out the [blog post](https://remix.run/blog/react-rou
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- Add unstable RSC support ([#13700](https://github.com/remix-run/react-router/pull/13700))
+- Add unstable RSC support for Data Mode ([#13700](https://github.com/remix-run/react-router/pull/13700))
   - For more information, see the [RSC documentation](https://reactrouter.com/how-to/react-server-components)
 
 ### Changes by Package
