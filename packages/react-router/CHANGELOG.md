@@ -22,10 +22,6 @@
 
 - Skip scroll restoration on useRevalidator() calls because they're not new locations ([#13671](https://github.com/remix-run/react-router/pull/13671))
 
-- \[REMOVE] (continuation of #13872) In Framework Mode, remove leftover critical CSS elements in development after initial render if there's a hydration mismatch ([#13995](https://github.com/remix-run/react-router/pull/13995))
-
-- \[REMOVE] Inject client route component props during RSC render ([#14007](https://github.com/remix-run/react-router/pull/14007))
-
 - Support unencoded UTF-8 routes in prerender config with `ssr` set to `false` ([#13699](https://github.com/remix-run/react-router/pull/13699))
 
 - Do not throw if the url hash is not a valid URI component ([#13247](https://github.com/remix-run/react-router/pull/13247))
