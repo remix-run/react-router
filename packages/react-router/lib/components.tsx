@@ -580,7 +580,8 @@ export interface MemoryRouterProps {
  * @param {MemoryRouterProps.children} props.children n/a
  * @param {MemoryRouterProps.initialEntries} props.initialEntries n/a
  * @param {MemoryRouterProps.initialIndex} props.initialIndex n/a
- * @returns A declarative in memory router for client side routing.
+ * @returns A declarative in-memory {@link Router | `<Router>`} for client-side
+ * routing.
  */
 export function MemoryRouter({
   basename,
@@ -1007,7 +1008,7 @@ export interface RouterProps {
    */
   location: Partial<Location> | string;
   /**
-   * The type of navigation that triggered this location change.
+   * The type of navigation that triggered this `location` change.
    * Defaults to {@link NavigationType.Pop}.
    */
   navigationType?: NavigationType;
