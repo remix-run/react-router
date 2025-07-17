@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useSearchParams.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useSearchParams.html)
 
 Returns a tuple of the current URL's [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
 and a function to update them. Setting the search params causes a navigation.
@@ -37,8 +37,8 @@ export function SomeComponent() {
 ### `setSearchParams` function
 
 The second element of the tuple is a function that can be used to update the
-search params. It accepts the same types as `defaultInit` and will cause a
-navigation to the new URL.
+search params. It accepts the same types as `defaultInit` and will
+cause a navigation to the new URL.
 
 ```tsx
 let [searchParams, setSearchParams] = useSearchParams();

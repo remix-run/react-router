@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useOutlet.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useOutlet.html)
 
 Returns the element for the child route at this level of the route
 hierarchy. Used internally by [`<Outlet>`](../components/Outlet) to render child

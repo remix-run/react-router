@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useRevalidator.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRevalidator.html)
 
 Revalidate the data on the page for reasons outside of normal data mutations
 like [`Window` focus](https://developer.mozilla.org/en-US/docs/Web/API/Window/focus_event)

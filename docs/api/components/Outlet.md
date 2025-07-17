@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.Outlet.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Outlet.html)
 
 Renders the matching child route of a parent route or nothing if no child
 route matches.

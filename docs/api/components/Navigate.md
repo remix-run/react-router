@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.Navigate.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Navigate.html)
 
 A component-based version of [`useNavigate`](../hooks/useNavigate) to use in a
 [`React.Component` class](https://react.dev/reference/react/Component) where
@@ -43,7 +43,7 @@ function Navigate({ to, replace, state, relative }: NavigateProps): null
 ### relative
 
 How to interpret relative routing in the `to` prop.
-See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.index.RelativeRoutingType.html).
+See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html).
 
 ### replace
 
@@ -52,9 +52,9 @@ stack
 
 ### state
 
-State to pass to the new [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.index.Location.html) to store in [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state).
+State to pass to the new [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to store in [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state).
 
 ### to
 
-The path to navigate to. This can be a string or a [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.index.Path.html) object
+The path to navigate to. This can be a string or a [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object
 

@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useRouteLoaderData.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRouteLoaderData.html)
 
 Returns the [`loader`](../../start/framework/route-module#loader) data for a
 given route by route ID.

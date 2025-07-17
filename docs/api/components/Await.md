@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.Await.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Await.html)
 
 Used to render promise values with automatic error handling.
 

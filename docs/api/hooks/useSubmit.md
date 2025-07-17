@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useSubmit.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useSubmit.html)
 
 The imperative version of [`<Form>`](../components/Form) that lets you submit a form
 from code instead of a user interaction.

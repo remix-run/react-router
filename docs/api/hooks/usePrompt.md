@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.unstable_usePrompt.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_usePrompt.html)
 
 Wrapper around [`useBlocker`](../hooks/useBlocker) to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm)
 prompt to users instead of building a custom UI with [`useBlocker`](../hooks/useBlocker).

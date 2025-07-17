@@ -20,14 +20,14 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.createStaticHandler.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createStaticHandler.html)
 
 Create a static handler to perform server-side data loading
 
 ```tsx
 export async function handleRequest(request: Request) {
   let { query, dataRoutes } = createStaticHandler(routes);
-  let context = await query(request);
+  let context = await query(request));
 
   if (context instanceof Response) {
     return context;
@@ -54,7 +54,7 @@ function createStaticHandler(
 
 ### routes
 
-The [route objects](https://api.reactrouter.com/v7/types/react_router.index.RouteObject.html) to create a static handler for
+The route objects to create a static handler for
 
 ### opts.basename
 
@@ -66,6 +66,5 @@ Future flags for the static handler
 
 ## Returns
 
-A static handler that can be used to query data for the provided
-routes
+A static handler that can be used to query data for the provided routes
 

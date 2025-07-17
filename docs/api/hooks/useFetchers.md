@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useFetchers.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useFetchers.html)
 
-Returns an array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.index.Fetcher.html)s. This is useful for components
+Returns an array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.Fetcher.html)s. This is useful for components
 throughout the app that didn't create the fetchers but want to use their submissions
 to participate in optimistic UI.
 
@@ -47,6 +47,6 @@ function useFetchers(): (Fetcher & {
 
 ## Returns
 
-An array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.index.Fetcher.html)s, each with a unique `key`
+An array of all in-flight [`Fetcher`](https://api.reactrouter.com/v7/types/react_router.Fetcher.html)s, each with a unique `key`
 property.
 

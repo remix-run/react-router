@@ -20,9 +20,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.createMemoryRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createMemoryRouter.html)
 
-Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.index.DataRouter.html) that manages the application path using an
+Create a new [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that manages the application path using an
 in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 stack. Useful for non-browser environments without a DOM API.
 
@@ -78,5 +78,5 @@ Lazily define portions of the route tree on navigations.
 
 ## Returns
 
-An initialized [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.index.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useMatches.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useMatches.html)
 
 Returns the active route matches, useful for accessing `loaderData` for
 parent/child routes or the route [`handle`](../../start/framework/route-module#handle)
@@ -34,5 +34,5 @@ function useMatches(): UIMatch[]
 
 ## Returns
 
-An array of [UI matches](https://api.reactrouter.com/v7/interfaces/react_router.index.UIMatch.html) for the current route hierarchy
+An array of [UI matches](https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html) for the current route hierarchy
 

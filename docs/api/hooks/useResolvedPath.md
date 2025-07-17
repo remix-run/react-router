@@ -20,11 +20,11 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useResolvedPath.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useResolvedPath.html)
 
 Resolves the pathname of the given `to` value against the current
-[`Location`](https://api.reactrouter.com/v7/interfaces/react_router.index.Location.html). Similar to [`useHref`](../hooks/useHref), but returns a
-[`Path`](https://api.reactrouter.com/v7/interfaces/react_router.index.Path.html) instead of a string.
+[`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html). Similar to [`useHref`](../hooks/useHref), but returns a
+[`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) instead of a string.
 
 ```tsx
 import { useResolvedPath } from "react-router";
@@ -63,5 +63,5 @@ Defaults to `"route"` so routing is relative to the route tree.                 
 
 ## Returns
 
-The resolved [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.index.Path.html) object with `pathname`, `search`, and `hash`
+The resolved [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object with `pathname`, `search`, and `hash`
 
