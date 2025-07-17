@@ -1050,6 +1050,9 @@ importers:
       '@babel/types':
         specifier: ^7.27.7
         version: 7.27.7
+      '@mjackson/node-fetch-server':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@npmcli/package-json':
         specifier: ^4.0.1
         version: 4.0.1
@@ -1098,9 +1101,6 @@ importers:
       semver:
         specifier: ^7.3.7
         version: 7.7.2
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
@@ -1147,9 +1147,6 @@ importers:
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
-      '@types/set-cookie-parser':
-        specifier: ^2.4.1
-        version: 2.4.7
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)

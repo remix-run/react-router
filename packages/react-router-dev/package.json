@@ -72,6 +72,7 @@
     "@babel/preset-typescript": "^7.27.1",
     "@babel/traverse": "^7.27.7",
     "@babel/types": "^7.27.7",
+    "@mjackson/node-fetch-server": "^0.7.0",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
     "arg": "^5.0.1",
@@ -87,7 +88,6 @@
     "prettier": "^2.7.1",
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
-    "set-cookie-parser": "^2.6.0",
     "tinyglobby": "^0.2.14",
     "valibot": "^0.41.0",
     "vite-node": "^3.2.2"
@@ -104,7 +104,6 @@
     "@types/node": "^20.0.0",
     "@types/npmcli__package-json": "^4.0.0",
     "@types/prettier": "^2.7.3",
-    "@types/set-cookie-parser": "^2.4.1",
     "@types/semver": "^7.7.0",
     "esbuild-register": "^3.6.0",
     "execa": "5.1.1",
