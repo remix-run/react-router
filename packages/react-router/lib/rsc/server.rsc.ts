@@ -40,6 +40,7 @@ import type { RouteMatch, RouteObject } from "../context";
 import invariant from "../server-runtime/invariant";
 
 import {
+  Outlet as UNTYPED_Outlet,
   UNSAFE_WithComponentProps,
   UNSAFE_WithHydrateFallbackProps,
   UNSAFE_WithErrorBoundaryProps,
@@ -48,6 +49,7 @@ import {
   // TSConfig, it breaks the Parcel build within this repo.
 } from "react-router/internal/react-server-client";
 import type {
+  Outlet as OutletType,
   WithComponentProps as WithComponentPropsType,
   WithErrorBoundaryProps as WithErrorBoundaryPropsType,
   WithHydrateFallbackProps as WithHydrateFallbackPropsType,
@@ -55,6 +57,7 @@ import type {
   ErrorBoundaryProps,
   HydrateFallbackProps,
 } from "../components";
+const Outlet: typeof OutletType = UNTYPED_Outlet;
 const WithComponentProps: typeof WithComponentPropsType =
   UNSAFE_WithComponentProps;
 const WithErrorBoundaryProps: typeof WithErrorBoundaryPropsType =
@@ -1016,8 +1019,9 @@ async function getRSCRouteMatch(
   const actionData = staticContext.actionData?.[match.route.id];
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
-  const element =
-    Component && shouldRenderComponent
+  let element: React.ReactElement | undefined = undefined;
+  if (Component) {
+    element = shouldRenderComponent
       ? React.createElement(
           Layout,
           null,
@@ -1034,8 +1038,8 @@ async function getRSCRouteMatch(
                 ),
               } satisfies RouteComponentProps),
         )
-      : // TODO: Render outlet instead?
-        undefined;
+      : React.createElement(Outlet);
+  }
   let error: unknown = undefined;
 
   if (ErrorBoundary && staticContext.errors) {
