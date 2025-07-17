@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useAsyncError.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useAsyncError.html)
 
 Returns the rejection value from the closest [`<Await>`](../components/Await).
 

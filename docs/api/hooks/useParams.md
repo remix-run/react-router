@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useParams.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useParams.html)
 
 Returns an object of key/value-pairs of the dynamic params from the current
 URL that were matched by the routes. Child routes inherit all params from

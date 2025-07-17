@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Routes.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.Routes.html)
 
 Renders a branch of [`<Route>`s](../components/Route) that best matches the current
 location. Note that these routes do not participate in [data loading](../../start/framework/route-module#loader),
@@ -54,5 +54,5 @@ Nested [`Route`](../components/Route) elements
 
 ### location
 
-The [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to match against. Defaults to the current location.
+The [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.index.Location.html) to match against. Defaults to the current location.
 

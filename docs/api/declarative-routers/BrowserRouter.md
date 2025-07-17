@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.BrowserRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.BrowserRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
 API for client-side routing.
@@ -39,9 +39,10 @@ Application basename
 
 ### children
 
-[`<Route>`](../components/Route) components describing your route configuration
+``<Route>`` components describing your route configuration
 
 ### window
 
-[`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object override - defaults to the global `window` instance
+[`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
+override — defaults to the global `window` instance
 

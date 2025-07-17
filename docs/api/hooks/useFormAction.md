@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useFormAction.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useFormAction.html)
 
 Resolves the URL to the closest route in the component hierarchy instead of
 the current URL of the app.

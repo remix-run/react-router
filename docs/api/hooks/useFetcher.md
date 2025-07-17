@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useFetcher.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useFetcher.html)
 
 Useful for creating complex, dynamic user interfaces that require multiple,
 concurrent data interactions without causing a navigation.
@@ -69,6 +69,7 @@ function useFetcher<T = any>({
 ### options.key
 
 A unique key to identify the fetcher. 
+
 By default, `useFetcher` generates a unique fetcher scoped to that component.
 If you want to identify a fetcher with your own key such that you can access
 it from elsewhere in your app, you can do that with the `key` option:
@@ -89,5 +90,5 @@ function AnotherComp() {
 
 ## Returns
 
-A [`FetcherWithComponents`](https://api.reactrouter.com/v7/types/react_router.FetcherWithComponents.html) object that contains the fetcher's state, data, and components for submitting forms and loading data.
+A [`FetcherWithComponents`](https://api.reactrouter.com/v7/types/react_router.index.FetcherWithComponents.html) object that contains the fetcher's state, data, and components for submitting forms and loading data.
 

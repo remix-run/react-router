@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useRouteError.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useRouteError.html)
 
 Accesses the error thrown during an
 [`action`](../../start/framework/route-module#action),

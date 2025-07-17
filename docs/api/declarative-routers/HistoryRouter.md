@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_HistoryRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.unstable_HistoryRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) that accepts a pre-instantiated
 `history` object.
@@ -50,9 +50,9 @@ Application basename
 
 ### children
 
-[`<Route>`](../components/Route) components describing your route configuration
+``<Route>`` components describing your route configuration
 
 ### history
 
-A history implementation for use by the router
+A `History` implementation for use by the router
 

@@ -20,10 +20,10 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Form.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.Form.html)
 
 A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
-that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API),
+that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch),
 activating pending states in [`useNavigation`](../hooks/useNavigation) which enables advanced
 user interfaces beyond a basic HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form).
 After a form's `action` completes, all data on the page is automatically
@@ -37,7 +37,8 @@ enabling web application user experiences.
 
 `Form` is most useful for submissions that should also change the URL or
 otherwise add an entry to the browser history stack. For forms that shouldn't
-manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
+manipulate the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+stack, use [`<fetcher.Form>`](https://api.reactrouter.com/v7/types/react_router.index.FetcherWithComponents.html#Form).
 
 ```tsx
 import { Form } from "react-router";
@@ -61,7 +62,7 @@ closest route in context.
 
 ### discover
 
-Defines the link discovery behavior. See [`DiscoverBehavior`](https://api.reactrouter.com/v7/types/react_router.DiscoverBehavior.html).
+Defines the link discovery behavior. See [`DiscoverBehavior`](https://api.reactrouter.com/v7/types/react_router.index.DiscoverBehavior.html).
 
 ```tsx
 <Link /> // default ("render")
@@ -69,8 +70,8 @@ Defines the link discovery behavior. See [`DiscoverBehavior`](https://api.reactr
 <Link discover="none" />
 ```
 
-- **render** - default, discover the route when the link renders
-- **none** - don't eagerly discover, only discover if the link is clicked
+- **render** — default, discover the route when the link renders
+- **none** — don't eagerly discover, only discover if the link is clicked
 
 ### encType
 
@@ -89,11 +90,11 @@ can pick up the fetcher's state in a different component in a [`useFetcher`](../
 
 ### method
 
-The HTTP verb to use when the form is submitted. Supports "get", "post",
-"put", "delete", and "patch".
+The HTTP verb to use when the form is submitted. Supports `"delete"`,
+`"get"`, `"patch"`, `"post"`, and `"put"`.
 
 Native [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
-only supports `get` and `post`, avoid the other verbs if you'd like to
+only supports `"get"` and `"post"`, avoid the other verbs if you'd like to
 support progressive enhancement
 
 ### navigate
@@ -119,7 +120,7 @@ completion of the navigation when using the
 Determines whether the form action is relative to the route hierarchy or
 the pathname. Use this if you want to opt out of navigating the route
 hierarchy and want to instead route based on slash-delimited URL segments.
-See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html).
+See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.index.RelativeRoutingType.html).
 
 ### reloadDocument
 

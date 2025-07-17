@@ -20,10 +20,10 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useNavigationType.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.useNavigationType.html)
 
-Returns the current [`Navigation`](https://api.reactrouter.com/v7/types/react_router.Navigation.html) action which describes how the router
-came to the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html), either by a pop, push, or replace on
+Returns the current [`Navigation`](https://api.reactrouter.com/v7/types/react_router.index.Navigation.html) action which describes how the router
+came to the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.index.Location.html), either by a pop, push, or replace on
 the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack.
 
 ## Signature
@@ -34,5 +34,5 @@ function useNavigationType(): NavigationType
 
 ## Returns
 
-The current [`NavigationType`](https://api.reactrouter.com/v7/enums/react_router.NavigationType.html) type (`"PUSH"`, `"REPLACE"`, or `"POP"`)
+The current [`NavigationType`](https://api.reactrouter.com/v7/enums/react_router.index.NavigationType.html) (`"POP"`, `"PUSH"`, or `"REPLACE"`)
 
