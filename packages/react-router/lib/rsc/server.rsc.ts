@@ -249,8 +249,11 @@ export type DecodeReplyFunction = (
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
 
 /**
- * Matches the given routes to a Request and returns a RSC Response encoding an
- * `RSCPayload` for consumption by a RSC enabled client router.
+ * Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * and returns an [RSC](https://react.dev/reference/rsc/server-components)
+ * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * encoding an {@link unstable_RSCPayload} for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
+ * enabled client router.
  *
  * @example
  * import {
@@ -287,27 +290,33 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * @mode data
  * @param opts Options
  * @param opts.basename The basename to use when matching the request.
+ * @param opts.createTemporaryReferenceSet A function that returns a temporary
+ * reference set for the request, used to track temporary references in the [RSC](https://react.dev/reference/rsc/server-components)
+ * stream.
  * @param opts.decodeAction Your `react-server-dom-xyz/server`'s `decodeAction`
  * function, responsible for loading a server action.
+ * @param opts.decodeFormState A function responsible for decoding form state for
+ * progressively enhanceable forms with React's [`useActionState`](https://react.dev/reference/react/useActionState)
+ * using your `react-server-dom-xyz/server`'s `decodeFormState`.
  * @param opts.decodeReply Your `react-server-dom-xyz/server`'s `decodeReply`
  * function, used to decode the server function's arguments and bind them to the
  * implementation for invocation by the router.
- * @param opts.decodeFormState A function responsible for decoding form state for
- * progressively enhanceable forms with `useActionState` using your
- * `react-server-dom-xyz/server`'s `decodeFormState`.
  * @param opts.generateResponse A function responsible for using your
- * `renderToReadableStream` to generate a Response encoding the `RSCPayload`.
+ * `renderToReadableStream` to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * encoding the {@link unstable_RSCPayload}.
  * @param opts.loadServerAction Your `react-server-dom-xyz/server`'s
  * `loadServerAction` function, used to load a server action by ID.
- * @param opts.request The request to match against.
- * @param opts.requestContext An instance of `unstable_RouterContextProvider`
- * that should be created per request, to be passed to loaders, actions and middleware.
- * @param opts.routes Your route definitions.
- * @param opts.createTemporaryReferenceSet A function that returns a temporary
- * reference set for the request, used to track temporary references in the RSC stream.
  * @param opts.onError An optional error handler that will be called with any
  * errors that occur during the request processing.
- * @returns A Response that contains the RSC data for hydration.
+ * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * to match against.
+ * @param opts.requestContext An instance of {@link unstable_RouterContextProvider}
+ * that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
+ * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+ * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that contains the [RSC](https://react.dev/reference/rsc/server-components)
+ * data for hydration.
  */
 export async function matchRSCServerRequest({
   createTemporaryReferenceSet,
