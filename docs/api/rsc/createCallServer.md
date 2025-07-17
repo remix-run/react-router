@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.unstable_createCallServer.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_createCallServer.html)
 
 Create a React `callServer` implementation for React Router.
 
@@ -74,8 +74,7 @@ Your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode 
 
 ### opts.createTemporaryReferenceSet
 
-A function that creates a temporary reference set for the [RSC](https://react.dev/reference/rsc/server-components)
-payload.
+A function that creates a temporary reference set for the RSC payload.
 
 ### opts.encodeReply
 
@@ -83,7 +82,7 @@ Your `react-server-dom-xyz/client`'s `encodeReply`. Used when sending payloads t
 
 ### opts.fetch
 
-Optional [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) implementation. Defaults to global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
+Optional fetch implementation. Defaults to global `fetch`.
 
 ## Returns
 

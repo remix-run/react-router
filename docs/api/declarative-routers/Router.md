@@ -5,7 +5,7 @@ title: Router
 # Router
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
 Thank you for helping improve our documentation!
 
@@ -38,7 +38,7 @@ function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-}: RouterProps): React.ReactElement | null;
+}: RouterProps): React.ReactElement | null
 ```
 
 ## Props
@@ -58,7 +58,7 @@ This can be a string or a [`Location`](https://api.reactrouter.com/v7/interfaces
 
 ### navigationType
 
-The type of navigation that triggered this `location` change.
+The type of navigation that triggered this location change.
 Defaults to `NavigationType.Pop`.
 
 ### navigator
@@ -70,3 +70,4 @@ or a custom navigator that implements the [`Navigator`](https://api.reactrouter.
 
 Whether this router is static or not (used for SSR). If `true`, the router
 will not be reactive to location changes.
+

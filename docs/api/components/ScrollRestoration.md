@@ -79,8 +79,7 @@ to `location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrout
 ### nonce
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
-attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
-element
+attribute to render on [the `<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
 
 ### storageKey
 

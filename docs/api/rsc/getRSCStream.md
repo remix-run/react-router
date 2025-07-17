@@ -28,10 +28,9 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.index.unstable_getRSCStream.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_getRSCStream.html)
 
-Get the prerendered [RSC](https://react.dev/reference/rsc/server-components)
-stream for hydration. Usually passed directly to your
+Get the prerendered RSC stream for hydration. Usually passed directly to your
 `react-server-dom-xyz/client`'s `createFromReadableStream`.
 
 ```tsx
@@ -49,7 +48,7 @@ createFromReadableStream(getRSCStream()).then(
       hydrateRoot(
         document,
         <StrictMode>
-          <RSCHydratedRouter {...props} />
+          <RSCHydratedRouter ...props />
         </StrictMode>,
         {
           // Options
@@ -63,12 +62,10 @@ createFromReadableStream(getRSCStream()).then(
 ## Signature
 
 ```tsx
-function getRSCStream(): ReadableStream
+function getRSCStream(): ReadableStream<any>
 ```
 
 ## Returns
 
-A [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
-that contains the [RSC](https://react.dev/reference/rsc/server-components)
-data for hydration.
+A `ReadableStream` that contains the RSC data for hydration.
 
