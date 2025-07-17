@@ -27,7 +27,7 @@ Create a static handler to perform server-side data loading
 ```tsx
 export async function handleRequest(request: Request) {
   let { query, dataRoutes } = createStaticHandler(routes);
-  let context = await query(request));
+  let context = await query(request);
 
   if (context instanceof Response) {
     return context;
@@ -54,7 +54,7 @@ function createStaticHandler(
 
 ### routes
 
-The route objects to create a static handler for
+The [route objects](https://api.reactrouter.com/v7/types/react_router.RouteObject.html) to create a static handler for
 
 ### opts.basename
 
@@ -66,5 +66,6 @@ Future flags for the static handler
 
 ## Returns
 
-A static handler that can be used to query data for the provided routes
+A static handler that can be used to query data for the provided
+routes
 

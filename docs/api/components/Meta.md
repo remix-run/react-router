@@ -22,9 +22,10 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Meta.html)
 
-Renders all the `<meta>` tags created by the route module
-[`meta`](../../start/framework/route-module#meta) exports. You should render
-it inside the `<head>` of your HTML.
+Renders all the [`<meta>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta)
+tags created by the route module's [`meta`](../../start/framework/route-module#meta)
+export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
+of your document.
 
 ```tsx
 import { Meta } from "react-router";

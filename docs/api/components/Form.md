@@ -23,7 +23,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Form.html)
 
 A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
-that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API),
+that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch),
 activating pending states in [`useNavigation`](../hooks/useNavigation) which enables advanced
 user interfaces beyond a basic HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form).
 After a form's `action` completes, all data on the page is automatically
@@ -37,7 +37,8 @@ enabling web application user experiences.
 
 `Form` is most useful for submissions that should also change the URL or
 otherwise add an entry to the browser history stack. For forms that shouldn't
-manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
+manipulate the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+stack, use `<fetcher.Form>`.
 
 ```tsx
 import { Form } from "react-router";

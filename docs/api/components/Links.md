@@ -22,9 +22,10 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.Links.html)
 
-Renders all of the `<link>` tags created by the route module
-[`links`](../../start/framework/route-module#links) export. You should render
-it inside the `<head>` of your document.
+Renders all the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+tags created by the route module's [`links`](../../start/framework/route-module#links)
+export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
+of your document.
 
 ```tsx
 import { Links } from "react-router";

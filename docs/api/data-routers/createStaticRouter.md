@@ -22,12 +22,12 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.createStaticRouter.html)
 
-Create a static data router for server-side rendering
+Create a static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) for server-side rendering
 
 ```tsx
 export async function handleRequest(request: Request) {
   let { query, dataRoutes } = createStaticHandler(routes);
-  let context = await query(request));
+  let context = await query(request);
 
   if (context instanceof Response) {
     return context;
@@ -57,17 +57,17 @@ function createStaticRouter(
 
 ### routes
 
-The route objects to create a static data router for
+The route objects to create a static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) for
 
 ### context
 
-The static handler context returned from `staticHandler.query()`
+The [`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandlerContext.html) returned from [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandler.html)'s `query`
 
 ### opts.future
 
-Future flags for the static data router
+Future flags for the static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html)
 
 ## Returns
 
-A static data router that can be used to render the provided routes
+A static [`DataRouter`](https://api.reactrouter.com/v7/interfaces/react_router.DataRouter.html) that can be used to render the provided routes
 
