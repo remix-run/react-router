@@ -7,7 +7,8 @@ declare global {
 }
 
 /**
- * Get the prerendered RSC stream for hydration. Usually passed directly to your
+ * Get the prerendered [RSC](https://react.dev/reference/rsc/server-components)
+ * stream for hydration. Usually passed directly to your
  * `react-server-dom-xyz/client`'s `createFromReadableStream`.
  *
  * @example
@@ -25,7 +26,7 @@ declare global {
  *       hydrateRoot(
  *         document,
  *         <StrictMode>
- *           <RSCHydratedRouter ...props />
+ *           <RSCHydratedRouter {...props} />
  *         </StrictMode>,
  *         {
  *           // Options
@@ -39,9 +40,11 @@ declare global {
  * @public
  * @category RSC
  * @mode data
- * @returns A `ReadableStream` that contains the RSC data for hydration.
+ * @returns A [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
+ * that contains the [RSC](https://react.dev/reference/rsc/server-components)
+ * data for hydration.
  */
-export function getRSCStream(): ReadableStream<any> {
+export function getRSCStream(): ReadableStream {
   let encoder = new TextEncoder();
   let streamController: ReadableStreamDefaultController<Uint8Array> | null =
     null;

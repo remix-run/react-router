@@ -157,7 +157,7 @@ export function useLocation(): Location {
  *
  * @public
  * @category Hooks
- * @returns The current {@link NavigationType} type (`"PUSH"`, `"REPLACE"`, or `"POP"`)
+ * @returns The current {@link NavigationType} (`"POP"`, `"PUSH"`, or `"REPLACE"`)
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
