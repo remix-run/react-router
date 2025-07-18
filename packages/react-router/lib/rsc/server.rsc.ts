@@ -869,9 +869,16 @@ async function generateStaticContextResponse(
   // actually have a loader so the single fetch logic can find a result for
   // the route.  This is a bit of a hack but allows us to re-use all the
   // existing logic.  This can go away if we ever fork off and re-implement a
-  // standalone RSC `dataStrategy`
+  // standalone RSC `dataStrategy`. We also need to ensure that we don't set
+  // `loaderData` to `null` for routes that have an error, otherwise they won't
+  // be forced to revalidate on navigation.
   staticContext.matches.forEach((m) => {
-    if (staticContext.loaderData[m.route.id] === undefined) {
+    const routeHasNoLoaderData =
+      staticContext.loaderData[m.route.id] === undefined;
+    const routeHasError = Boolean(
+      staticContext.errors && m.route.id in staticContext.errors,
+    );
+    if (routeHasNoLoaderData && !routeHasError) {
       staticContext.loaderData[m.route.id] = null;
     }
   });
