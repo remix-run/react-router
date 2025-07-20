@@ -2207,6 +2207,134 @@ implementations.forEach((implementation) => {
         // Ensure this is using RSC
         validateRSCHtml(await page.content());
       });
+
+      test("Forces revalidation of routes with errors", async ({ page }) => {
+        let port = await getPort();
+        stop = await setupRscTest({
+          implementation,
+          port,
+          dev: true,
+          files: {
+            "src/routes.ts": js`
+              import type { unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+
+              export const routes = [
+                {
+                  id: "root",
+                  path: "",
+                  lazy: () => import("./routes/root"),
+                  children: [
+                    {
+                      id: "index",
+                      index: true,
+                      lazy: () => import("./routes/index"),
+                    },
+                    {
+                      id: "other",
+                      path: "other",
+                      lazy: () => import("./routes/other"),
+                    },
+                  ],
+                },
+              ] satisfies RSCRouteConfig;
+            `,
+            "src/routes/root.tsx": js`
+              import { Outlet, Link } from "react-router";
+
+              export { shouldRevalidate } from "./root.client";
+
+              let loaderCallCount = 0;
+
+              export function loader() {
+                loaderCallCount++;
+                throw new Error("Root loader error (call #" + loaderCallCount + ")");
+              }
+
+              export function Layout({ children }: { children: React.ReactNode }) {
+                return (
+                  <html>
+                    <body>
+                      <ul>
+                        <li><Link to="/" data-link-index>Index route</Link></li>
+                        <li><Link to="/other" data-link-other>Other route</Link></li>
+                      </ul>
+                      {children}
+                    </body>
+                  </html>
+                );
+              }
+
+              export function ErrorBoundary({ error }) {
+                return (
+                  <div>
+                    <h1 data-error-boundary-loader-call-count={loaderCallCount}>
+                      Root ErrorBoundary (loaderCallCount: {loaderCallCount})
+                    </h1>
+                  </div>
+                );
+              }
+
+              export default function RootRoute() {
+                return (
+                  <div>
+                    <h1>Root Route</h1>
+                    <p>This should never be rendered since the root loader always throws</p>
+                    <Outlet />
+                  </div>
+                );
+              }
+            `,
+            "src/routes/root.client.tsx": js`
+              "use client";
+
+              export function shouldRevalidate() {
+                // This should be ignored since this route always throws an error
+                return false;
+              }
+            `,
+            "src/routes/index.tsx": js`
+              export default function IndexRoute() {
+                return (
+                  <div>
+                    <h2>Index Route</h2>
+                    <p>This should never be rendered since the root loader always throws</p>
+                  </div>
+                );
+              }
+            `,
+            "src/routes/other.tsx": js`
+              export default function OtherRoute() {
+                return (
+                  <div>
+                    <h2>Other Route</h2>
+                    <p>This should never be rendered since the root loader always throws</p>
+                  </div>
+                );
+              }
+            `,
+          },
+        });
+
+        await page.goto(`http://localhost:${port}/`, {
+          waitUntil: "networkidle",
+        });
+
+        // Verify that the root error boundary is re-rendered as we navigate around
+        await page.waitForSelector(
+          "[data-error-boundary-loader-call-count='1']",
+        );
+        await page.click("[data-link-other]");
+        await page.waitForSelector(
+          "[data-error-boundary-loader-call-count='2']",
+        );
+        await page.click("[data-link-index]");
+        await page.waitForSelector(
+          "[data-error-boundary-loader-call-count='3']",
+        );
+
+        // Ensure this is using RSC
+        validateRSCHtml(await page.content());
+      });
     });
 
     test.describe("Route Client Component Props", () => {
