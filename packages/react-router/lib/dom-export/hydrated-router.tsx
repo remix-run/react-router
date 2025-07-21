@@ -224,6 +224,8 @@ export interface HydratedRouterProps {
   unstable_getContext?: RouterInit["unstable_getContext"];
 }
 
+// TODO: Reference `HydratedRouterProps` in the `HydratedRouter` JSDoc
+//  @param {HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
 /**
  * Framework-mode router component to be used to hydrate a router from a
  * {@link ServerRouter}. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
@@ -232,7 +234,10 @@ export interface HydratedRouterProps {
  * @category Framework Routers
  * @mode framework
  * @param props Props
- * @param {HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @param props.unstable_getContext Context object to be passed through to
+ * {@link createBrowserRouter} and made available to
+ * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+ * functions
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
