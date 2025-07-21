@@ -39,7 +39,7 @@ import { PrefetchPageLinks } from "react-router";
 ## Signature
 
 ```tsx
-function PrefetchPageLinks({ page, ...dataLinkProps }: PageLinkDescriptor)
+function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor)
 ```
 
 ## Props
@@ -48,8 +48,8 @@ function PrefetchPageLinks({ page, ...dataLinkProps }: PageLinkDescriptor)
 
 The absolute path of the page to prefetch, e.g. `/absolute/path`.
 
-### dataLinkProps
+### linkProps
 
-Additional props to pass to the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link)
-tag, such as `crossOrigin`, `integrity`, `rel`, etc.
+Additional props to spread onto the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link)
+tags, such as `crossOrigin`, `integrity`, `rel`, etc.
 

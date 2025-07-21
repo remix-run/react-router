@@ -110,20 +110,39 @@ const { values: args } = util.parseArgs({
       type: "string",
       short: "o",
     },
+    help: {
+      type: "boolean",
+      short: "h",
+    },
   },
   allowPositionals: true,
 });
 
-if (!args.path) {
-  console.error(
-    "Usage: docs.ts --path <filepath-or-glob> [--api <api1,api2,...>] [--write] [--output <output-dir>]",
+if (args.help) {
+  console.log("\n");
+  console.log(
+    "Usage: docs.ts [--path <filepath-or-glob>] [--api <api1,api2,...>] [--write] [--output <output-dir>]",
   );
-  console.error("  --path, -p    File path or glob pattern to parse");
-  console.error(
+  console.log(
+    '  --path, -p    File path or glob pattern to parse (default "packages/**/*.{ts,tsx}")',
+  );
+  console.log(
     "  --api, -a     Comma-separated list of specific APIs to generate",
   );
-  console.error("  --write, -w   Write markdown files to output directory");
-  console.error("  --output, -o  Output directory (default: docs/api)");
+  console.log("  --write, -w   Write markdown files to output directory");
+  console.log("  --output, -o  Output directory (default: docs/api)");
+  process.exit(0);
+}
+
+// Resolve file paths using glob patterns
+let pathGlob = args.path || "packages/**/*.{ts,tsx}";
+const filePaths = fg.sync(pathGlob, {
+  onlyFiles: true,
+  ignore: ["**/node_modules/**", "**/__tests__/**", "**/dist/**"],
+});
+
+if (filePaths.length === 0) {
+  console.error(`No files found matching pattern: ${pathGlob}`);
   process.exit(1);
 }
 
@@ -139,17 +158,6 @@ const outputDir = args.output || "docs/api";
 // Build lookup table for @link resolution
 const repoApiLookup = buildRepoDocsLinks(outputDir);
 const typedocLookup = buildTypedocLinks(outputDir);
-
-// Resolve file paths using glob patterns
-const filePaths = fg.sync(args.path, {
-  onlyFiles: true,
-  ignore: ["**/node_modules/**", "**/__tests__/**", "**/dist/**"],
-});
-
-if (filePaths.length === 0) {
-  console.error(`No files found matching pattern: ${args.path}`);
-  process.exit(1);
-}
 
 run();
 
