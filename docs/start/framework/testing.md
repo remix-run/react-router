@@ -77,3 +77,65 @@ test("LoginForm renders error messages", async () => {
   await waitFor(() => screen.findByText(PASSWORD_MESSAGE));
 });
 ```
+
+## Using with Framework Mode Types
+
+It's important to note that `createRoutesStub` is designed for _unit_ testing of reusable components in your application that rely on on contextual router information (i.e., `loaderData`, `actionData`, `matches`). These components usually obtain this information via the hooks (`useLoaderData`, `useActionData`, `useMatches`) or via props passed down from the ancestor route component. We **strongly** recommend limiting your usage of `createRoutesStub` to unit testing of these types of reusable components.
+
+`createRoutesStub` is _not designed_ for (and is arguably incompatible with) direct testing of Route components using the [Route.\*](../../explanation/type-safety) types available in Framework Mode. This is because the `Route.*` types are derived from your actual application - including the real `loader`/`action` functions as well as the structure of your route tree structure (which defiones the `matches` type). When you use `createRoutesStub`, you are providing stubbed values for `loaderData`, `actionData`, and even your `matches` based on the route tree you pass to `createRoutesStub`. Therefore, the types won't align exactly and you'll get type issues trying to use a route component in a route stub.
+
+```tsx filename=routes/login.tsx
+export default function Login({
+  actionData,
+}: Route.ComponentProps) {
+  return <Form method="post">...</Form>;
+}
+```
+
+```tsx filename=routes/login.test.tsx
+import LoginRoute from "./login";
+
+test("LoginRoute renders error messages", async () => {
+  const Stub = createRoutesStub([
+    {
+      path: "/login",
+      Component: LoginRoute,
+      // ^ ❌ Types of property 'matches' are incompatible.
+      action() {
+        /*...*/
+      },
+    },
+  ]);
+
+  // ...
+});
+```
+
+These type errors are generally accurate if you try to setup your tests like this. As long as your stubbed `loader`/`action` functions match your real implementations, then the types for `loaderData`/`actionData` will be correct, but if they differ your types will be lying to you. `matches` is more complicated since you don't usually stub out all of the ancestor routes. In this example, there is no `root` route so `matches` will only contain your test route, while it will contain the root route and any other ancestors at runtime. There's no great way to automatically align the typegen types with the runtime types in you test.
+
+Therefore, if you need to test Route level components, we recommend you do that via an Integration/E2E test (Playwright, Cypress, etc.) against a running application because you're venturing out of unit testing territory when testing your route as a whole.
+
+If you _need_ to write a unit test against the route, you can add a `@ts-expect-error` comment in your test to silence the TypeScript error:
+
+```tsx
+const Stub = createRoutesStub([
+  {
+    path: "/login",
+    // @ts-expect-error: `matches` won't align between test code and app code
+    Component: LoginRoute,
+    action() {
+      /*...*/
+    },
+  },
+]);
+```
+
+If you don't use `matches` at all within your Route component, you can also just tell the route prop to omit that from the types and your `matches` type-error will go away:
+
+```tsx
+export default function Login({
+  actionData,
+}: Omit<Route.ComponentProps, "matches">) {
+  // ...
+}
+```
