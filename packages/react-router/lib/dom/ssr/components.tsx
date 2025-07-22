@@ -215,6 +215,20 @@ function getActiveMatches(
 export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
 
 /**
+ * Props for the {@link Links} component.
+ *
+ * @category Types
+ */
+export interface LinksProps {
+  /**
+   * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+   * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * element
+   */
+  nonce?: string | undefined;
+}
+
+/**
  * Renders all the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags created by the route module's [`links`](../../start/framework/route-module#links)
  * export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
@@ -237,10 +251,12 @@ export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
  * @public
  * @category Components
  * @mode framework
+ * @param props Props
+ * @param {LinksProps.nonce} props.nonce n/a
  * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  * tags
  */
-export function Links(): React.JSX.Element {
+export function Links({ nonce }: LinksProps): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
@@ -265,13 +281,14 @@ export function Links(): React.JSX.Element {
           {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
           rel="stylesheet"
           href={criticalCss.href}
+          nonce={nonce}
         />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
-          <PrefetchPageLinks key={key} {...link} />
+          <PrefetchPageLinks key={key} nonce={nonce} {...link} />
         ) : (
-          <link key={key} {...link} />
+          <link key={key} nonce={nonce} {...link} />
         ),
       )}
     </>
@@ -463,7 +480,7 @@ function PrefetchPageLinksImpl({
       {keyedPrefetchLinks.map(({ key, link }) => (
         // these don't spread `linkProps` because they are full link descriptors
         // already with their own props
-        <link key={key} {...link} />
+        <link key={key} nonce={linkProps.nonce} {...link} />
       ))}
     </>
   );
