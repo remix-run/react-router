@@ -7,6 +7,7 @@
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
+    "docs": "pnpm run docs:typedoc && pnpm run docs:jsdoc",
     "docs:typedoc": "typedoc",
     "docs:jsdoc": "node --experimental-strip-types scripts/docs.ts",
     "format": "prettier --ignore-path .eslintignore --write .",

@@ -48,13 +48,13 @@ export default function Root() {
 ## Signature
 
 ```tsx
-function Scripts(props: ScriptsProps): React.JSX.Element | null
+function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null
 ```
 
 ## Props
 
-### props
+### scriptProps
 
-Props for the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
+Additional props to spread onto the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
 tag, such as `crossOrigin`, `nonce`, etc.
 

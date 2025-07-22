@@ -295,15 +295,12 @@ export function Links(): React.JSX.Element {
  * @mode framework
  * @param props Props
  * @param props.page The absolute path of the page to prefetch, e.g. `/absolute/path`.
- * @param props.dataLinkProps Additional props to pass to the
+ * @param props.linkProps Additional props to spread onto the
  * [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link)
- * tag, such as `crossOrigin`, `integrity`, `rel`, etc.
+ * tags, such as `crossOrigin`, `integrity`, `rel`, etc.
  * @returns A collection of React elements for `<link>` tags
  */
-export function PrefetchPageLinks({
-  page,
-  ...dataLinkProps
-}: PageLinkDescriptor) {
+export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -314,9 +311,7 @@ export function PrefetchPageLinks({
     return null;
   }
 
-  return (
-    <PrefetchPageLinksImpl page={page} matches={matches} {...dataLinkProps} />
-  );
+  return <PrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />;
 }
 
 function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
@@ -685,12 +680,12 @@ export type ScriptsProps = Omit<
  * @public
  * @category Components
  * @mode framework
- * @param props Props for the
+ * @param scriptProps Additional props to spread onto the
  * [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
  * tag, such as `crossOrigin`, `nonce`, etc.
  * @returns A collection of React elements for `<script>` tags
  */
-export function Scripts(props: ScriptsProps): React.JSX.Element | null {
+export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   let {
     manifest,
     serverHandoffString,
@@ -822,13 +817,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
     return (
       <>
         <script
-          {...props}
+          {...scriptProps}
           suppressHydrationWarning
           dangerouslySetInnerHTML={createHtml(contextScript)}
           type={undefined}
         />
         <script
-          {...props}
+          {...scriptProps}
           suppressHydrationWarning
           dangerouslySetInnerHTML={createHtml(routeModulesScript)}
           type="module"
@@ -878,7 +873,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         <link
           rel="modulepreload"
           href={manifest.url}
-          crossOrigin={props.crossOrigin}
+          crossOrigin={scriptProps.crossOrigin}
           integrity={sri[manifest.url]}
           suppressHydrationWarning
         />
@@ -886,7 +881,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
       <link
         rel="modulepreload"
         href={manifest.entry.module}
-        crossOrigin={props.crossOrigin}
+        crossOrigin={scriptProps.crossOrigin}
         integrity={sri[manifest.entry.module]}
         suppressHydrationWarning
       />
@@ -895,7 +890,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           key={path}
           rel="modulepreload"
           href={path}
-          crossOrigin={props.crossOrigin}
+          crossOrigin={scriptProps.crossOrigin}
           integrity={sri[path]}
           suppressHydrationWarning
         />
