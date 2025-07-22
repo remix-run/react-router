@@ -115,6 +115,9 @@ describe("A <StaticRouterProvider>", () => {
         data: {
           key1: "value1",
         },
+        loaderData: {
+          key1: "value1",
+        },
         handle: "1",
         id: "0",
         params: {},
@@ -122,6 +125,9 @@ describe("A <StaticRouterProvider>", () => {
       },
       {
         data: {
+          key2: "value2",
+        },
+        loaderData: {
           key2: "value2",
         },
         handle: "2",
@@ -149,6 +155,9 @@ describe("A <StaticRouterProvider>", () => {
         data: {
           key1: "value1",
         },
+        loaderData: {
+          key1: "value1",
+        },
         handle: "1",
         id: "0",
         params: {},
@@ -156,6 +165,9 @@ describe("A <StaticRouterProvider>", () => {
       },
       {
         data: {
+          key2: "value2",
+        },
+        loaderData: {
           key2: "value2",
         },
         handle: "2",
@@ -262,6 +274,9 @@ describe("A <StaticRouterProvider>", () => {
         data: {
           key1: "value1",
         },
+        loaderData: {
+          key1: "value1",
+        },
         handle: "1",
         id: "0",
         params: {},
@@ -269,6 +284,9 @@ describe("A <StaticRouterProvider>", () => {
       },
       {
         data: {
+          key2: "value2",
+        },
+        loaderData: {
           key2: "value2",
         },
         handle: "2",
@@ -296,6 +314,9 @@ describe("A <StaticRouterProvider>", () => {
         data: {
           key1: "value1",
         },
+        loaderData: {
+          key1: "value1",
+        },
         handle: "1",
         id: "0",
         params: {},
@@ -303,6 +324,9 @@ describe("A <StaticRouterProvider>", () => {
       },
       {
         data: {
+          key2: "value2",
+        },
+        loaderData: {
           key2: "value2",
         },
         handle: "2",
