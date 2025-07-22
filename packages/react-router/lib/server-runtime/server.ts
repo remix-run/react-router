@@ -48,7 +48,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
-    ? unstable_InitialContext
+    ? unstable_RouterContextProvider
     : AppLoadContext,
 ) => Promise<Response>;
 
@@ -112,7 +112,9 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let params: RouteMatch<ServerRoute>["params"] = {};
-    let loadContext: AppLoadContext | unstable_RouterContextProvider;
+    let loadContext = _build.future.unstable_middleware
+      ? initialContext || new unstable_RouterContextProvider()
+      : initialContext || {};
 
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -125,29 +127,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
       });
     };
-
-    if (_build.future.unstable_middleware) {
-      if (initialContext == null) {
-        loadContext = new unstable_RouterContextProvider();
-      } else {
-        try {
-          loadContext = new unstable_RouterContextProvider(
-            initialContext as unknown as unstable_InitialContext,
-          );
-        } catch (e) {
-          let error = new Error(
-            "Unable to create initial `unstable_RouterContextProvider` instance. " +
-              "Please confirm you are returning an instance of " +
-              "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
-              `\n\nError: ${e instanceof Error ? e.toString() : e}`,
-          );
-          handleError(error);
-          return returnLastResortErrorResponse(error, serverMode);
-        }
-      }
-    } else {
-      loadContext = initialContext || {};
-    }
 
     let url = new URL(request.url);
 
