@@ -814,8 +814,14 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
    **/
   params: AgnosticRouteMatch["params"];
-  /** The return value from the matched route's loader or clientLoader */
+  /**
+   * The return value from the matched route's loader or clientLoader
+   *
+   * @deprecated Use `loaderData` instead
+   */
   data: Data;
+  /** The return value from the matched route's loader or clientLoader */
+  loaderData: Data;
   /** The {@link https://reactrouter.com/start/framework/route-module#handle handle object} exported from the matched route module */
   handle: Handle;
 }
@@ -830,6 +836,7 @@ export function convertRouteMatchToUiMatch(
     pathname,
     params,
     data: loaderData[route.id],
+    loaderData: loaderData[route.id],
     handle: route.handle,
   };
 }
