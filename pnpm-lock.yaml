@@ -110,7 +110,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-d85ec5f5-20250716(eslint@8.57.0)
+        version: 6.1.0-canary-7513996f-20250722(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -6247,8 +6247,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-d85ec5f5-20250716:
-    resolution: {integrity: sha512-fBBf68+xsaNKm+QzWVa9egM/ApiU9cF1UJUAn8fcJ1BMiW7ON0nG5B1z52rfsOGa1v+cU3I3opXMyCNSm1cfbQ==}
+  eslint-plugin-react-hooks@6.1.0-canary-7513996f-20250722:
+    resolution: {integrity: sha512-/PrnKT1FWhEOpPnPY1vXxygvH1W7CaPha86lhsY4JFkTpF62PBNrBNCgVCWO4V2Rq9GAp9cyaj30V1eKzUwUrQ==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9201,7 +9201,7 @@ packages:
   superagent@8.1.2:
     resolution: {integrity: sha512-6WTxW1EB6yCxV5VFOIPQruWGHqc3yI7hEmZK6h+pyk69Lk/Ut7rLUY6W/ONF2MjBuGjvmMiIpsrVJ2vjrHlslA==}
     engines: {node: '>=6.4.0 <13 || >=14'}
-    deprecated: Please upgrade to v9.0.0+ as we have fixed a public vulnerability with formidable dependency. Note that v9.0.0+ requires Node.js v14.18.0+. See https://github.com/ladjs/superagent/pull/1800 for insight. This project is supported and maintained by the team at Forward Email @ https://forwardemail.net
+    deprecated: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
 
   supertest@6.3.4:
     resolution: {integrity: sha512-erY3HFDG0dPnhw4U+udPfrzXa4xhSG+n4rxfRuZWCUvjFWwKl+OxWf/7zk50s84/fAAs7vf5QAb9uRa0cCykxw==}
@@ -15125,7 +15125,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-d85ec5f5-20250716(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-7513996f-20250722(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
