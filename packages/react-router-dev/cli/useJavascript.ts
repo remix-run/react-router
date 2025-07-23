@@ -5,13 +5,13 @@ import babelPluginSyntaxJSX from "@babel/plugin-syntax-jsx";
 import babelPresetTypeScript from "@babel/preset-typescript";
 import prettier from "prettier";
 
-export function transpile(
+export async function transpile(
   tsx: string,
   options: {
     cwd?: string;
     filename?: string;
   } = {},
-): string {
+): Promise<string> {
   let mjs = babel.transformSync(tsx, {
     compact: false,
     cwd: options.cwd,
@@ -26,5 +26,5 @@ export function transpile(
    * Babel's `compact` and `retainLines` options are both bad at formatting code.
    * Use Prettier for nicer formatting.
    */
-  return prettier.format(mjs.code, { parser: "babel" });
+  return await prettier.format(mjs.code, { parser: "babel" });
 }

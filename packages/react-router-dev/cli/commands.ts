@@ -152,7 +152,7 @@ export async function generateEntry(
   let outputFile = path.resolve(appDirectory, outputEntry);
 
   if (!useTypeScript) {
-    let javascript = convertFileToJS(contents, {
+    let javascript = await convertFileToJS(contents, {
       cwd: rootDirectory,
       filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
     });
