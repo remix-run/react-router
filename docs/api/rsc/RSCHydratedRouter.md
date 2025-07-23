@@ -6,7 +6,7 @@ unstable: true
 # unstable_RSCHydratedRouter
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
 
 Thank you for helping improve our documentation!
 
@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 <br />
 <br />
 
-<docs-warning>This API is experimental and subject to breaking changes in 
-minor/patch releases. Please use with caution and pay **very** close attention 
+<docs-warning>This API is experimental and subject to breaking changes in
+minor/patch releases. Please use with caution and pay **very** close attention
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
@@ -56,10 +56,10 @@ createFromReadableStream(getRSCStream()).then(
         </StrictMode>,
         {
           formState: await getFormState(payload),
-        }
+        },
       );
     });
-  }
+  },
 );
 ```
 
@@ -72,7 +72,7 @@ function RSCHydratedRouter({
   payload,
   routeDiscovery = "eager",
   unstable_getContext,
-}: RSCHydratedRouterProps)
+}: RSCHydratedRouterProps);
 ```
 
 ## Props
@@ -84,7 +84,7 @@ used to decode payloads from the server.
 
 ### fetch
 
-Optional fetch implementation.  Defaults to global `fetch`.
+Optional fetch implementation. Defaults to global `fetch`.
 
 ### payload
 
@@ -100,4 +100,3 @@ until clicked.
 A function that returns an `unstable_InitialContext` object
 (`Map<RouterContext, unknown>`), for use in client loaders, actions and
 middleware.
-

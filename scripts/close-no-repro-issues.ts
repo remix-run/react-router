@@ -4,7 +4,7 @@ import { parseArgs } from "node:util";
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const ignoredIssues = new Set([9991, 12570, 13607, 13659]);
+const ignoredIssues = new Set([9991, 12570, 13607, 13659, 11940]);
 
 const { values: args } = parseArgs({
   options: {

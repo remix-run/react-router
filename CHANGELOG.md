@@ -107,7 +107,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
       - [Exposed Router Promises](#exposed-router-promises)
     - [Other Notable Changes](#other-notable-changes)
       - [`routes.ts`](#routests)
-      - [Typesafety improvements](#typesafety-improvements)
+      - [Type-safety improvements](#type-safety-improvements)
       - [Prerendering](#prerendering)
     - [Major Changes (`react-router`)](#major-changes-react-router)
     - [Major Changes (`@react-router/*`)](#major-changes-react-router-1)
@@ -416,8 +416,8 @@ For more information, check out the [blog post](https://remix.run/blog/react-rou
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- Add unstable RSC support ([#13700](https://github.com/remix-run/react-router/pull/13700))
-  - For more information, see the [RSC documentation](https://reactrouter.com/start/rsc/installation)
+- Add unstable RSC support for Data Mode ([#13700](https://github.com/remix-run/react-router/pull/13700))
+  - For more information, see the [RSC documentation](https://reactrouter.com/how-to/react-server-components)
 
 ### Changes by Package
 
@@ -1947,7 +1947,7 @@ Also note that, if you were using Remix's `routes` option to define config-based
 +];
 ```
 
-#### Typesafety improvements
+#### Type-safety improvements
 
 React Router now generates types for each of your route modules and passes typed props to route module component exports ([#11961](https://github.com/remix-run/react-router/pull/11961), [#12019](https://github.com/remix-run/react-router/pull/12019)). You can access those types by importing them from `./+types/<route filename without extension>`.
 

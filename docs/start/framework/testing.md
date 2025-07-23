@@ -17,7 +17,8 @@ Consider a login form component that relies on `useActionData`
 import { useActionData } from "react-router";
 
 export function LoginForm() {
-  const { errors } = useActionData();
+  const actionData = useActionData();
+  const errors = actionData?.errors;
   return (
     <Form method="post">
       <label>

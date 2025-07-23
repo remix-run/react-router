@@ -38,7 +38,7 @@ These templates come with React Router RSC APIs already configured with the resp
 The [parcel template][parcel-rsc-template] uses the official React `react-server-dom-parcel` plugin.
 
 ```shellscript
-npx create-react-router-app@latest --template=unstable_rsc-parcel
+npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-parcel
 ```
 
 **Vite Template**
@@ -46,15 +46,7 @@ npx create-react-router-app@latest --template=unstable_rsc-parcel
 The [vite template][vite-rsc-template] uses the experimental Vite `@vitejs/plugin-rsc` plugin.
 
 ```shellscript
-npx create-react-router-app@latest --template=unstable_rsc-vite
-```
-
-**RSC + SPA (no SSR) Template**
-
-For those who like alphabet soup.
-
-```shellscript
-npx create-react-router-app@latest --template=unstable_rsc-vite-spa
+npx create-react-router@latest --template remix-run/react-router-templates/unstable_rsc-vite
 ```
 
 ## Using RSC with React Router
@@ -778,7 +770,7 @@ createFromReadableStream<RSCServerPayload>(
 [use-client-docs]: https://react.dev/reference/rsc/use-client
 [use-server-docs]: https://react.dev/reference/rsc/use-server
 [route-module]: ../start/framework/route-module
-[framework-mode]: ../start/framework/route-module
+[framework-mode]: ../start/modes#framework
 [custom-framework]: ../start/data/custom
 [parcel-rsc-doc]: https://parceljs.org/recipes/rsc/
 [vite-rsc-doc]: https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc
@@ -790,5 +782,5 @@ createFromReadableStream<RSCServerPayload>(
 [rsc-hydrated-router]: ../api/rsc/RSCHydratedRouter
 [express]: https://expressjs.com/
 [node-fetch-server]: https://github.com/mjackson/remix-the-web/tree/main/packages/node-fetch-server
-[parcel-rsc-template]: (https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-parcel)
-[vite-rsc-template]: (https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-vite)
+[parcel-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-parcel
+[vite-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-vite
