@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-fix: remove dependency on @types/node in declaration files
+Remove dependency on `@types/node` in declaration files
