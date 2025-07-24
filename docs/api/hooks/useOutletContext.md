@@ -5,7 +5,7 @@ title: useOutletContext
 # useOutletContext
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
 
 Thank you for helping improve our documentation!
 
@@ -96,10 +96,9 @@ export default function DashboardMessages() {
 ## Signature
 
 ```tsx
-function useOutletContext<Context = unknown>(): Context
+function useOutletContext<Context = unknown>(): Context;
 ```
 
 ## Returns
 
 The context value passed to the parent [`Outlet`](../components/Outlet) component
-

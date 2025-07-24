@@ -26,6 +26,12 @@ console.log(supportsVibrationAPI);
 // client: true | false
 ```
 
+<docs-info>
+
+If you need more sophisticated control over what is included in the client/server bundles, check out the [`vite-env-only` plugin](https://github.com/pcattori/vite-env-only).
+
+</docs-info>
+
 ## Usage Patterns
 
 ### Individual Files
