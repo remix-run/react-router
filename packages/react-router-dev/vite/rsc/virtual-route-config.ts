@@ -25,7 +25,7 @@ export function createVirtualRouteConfigCode({
     code += "{";
     code += `lazy: () => import(${JSON.stringify(
       `${path.resolve(appDirectory, route.file)}?route-module${
-        route.id === "root" ? "&root=true" : ""
+        route.id === "root-route" ? "&root-route=true" : ""
       }`,
     )}),`;
 
