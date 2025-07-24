@@ -150,6 +150,42 @@ test.describe("redirects", () => {
                 return <h1 id="d">D</h1>
               }
             `,
+
+            "app/routes/headers.tsx": js`
+              import * as React from 'react';
+              import { Link, Form, redirect, useLocation } from 'react-router';
+
+              export function action() {
+                return redirect('/headers?action-redirect', {
+                  headers: { 'X-Test': 'Foo' }
+                })
+              }
+
+              export function loader({ request }) {
+                let url = new URL(request.url);
+                if (url.searchParams.has('redirect')) {
+                  return redirect('/headers?loader-redirect', {
+                    headers: { 'X-Test': 'Foo' }
+                  })
+                }
+                return null
+              }
+
+              export default function Component() {
+                let location = useLocation()
+                return (
+                  <>
+                    <Link id="loader-redirect" to="/headers?redirect">Redirect</Link>
+                    <Form method="post">
+                      <button id="action-redirect" type="submit">Action Redirect</button>
+                    </Form>
+                    <p id="search-params">
+                      Search Params: {location.search}
+                    </p>
+                  </>
+                );
+              }
+            `,
           },
         });
 
@@ -175,7 +211,7 @@ test.describe("redirects", () => {
         await app.clickElement("#increment");
         expect(await app.getHtml("#increment")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
-          app.clickSubmitButton("/absolute?index")
+          app.clickSubmitButton("/absolute?index"),
         );
         await page.waitForSelector(`h1:has-text("Landing")`);
         // No hard reload
@@ -190,7 +226,7 @@ test.describe("redirects", () => {
         await app.clickElement("#increment");
         expect(await app.getHtml("#increment")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
-          app.clickSubmitButton("/absolute/content-length")
+          app.clickSubmitButton("/absolute/content-length"),
         );
         await page.waitForSelector(`h1:has-text("Landing")`);
         // No hard reload
@@ -206,7 +242,7 @@ test.describe("redirects", () => {
         await app.clickElement("button");
         expect(await app.getHtml("button")).toMatch("Count:1");
         await app.waitForNetworkAfter(() =>
-          app.clickLink("/redirect-document/a")
+          app.clickLink("/redirect-document/a"),
         );
         await page.waitForSelector('h1:has-text("Hello B!")');
         // Hard reload resets client side react state
@@ -223,6 +259,49 @@ test.describe("redirects", () => {
         await page.waitForSelector("#d"); // [/a, /d]
         await page.goBack();
         await page.waitForSelector("#a"); // [/a]
+      });
+
+      test("maintains custom headers on redirects", async ({ page }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+
+        let hasGetHeader = false;
+        let hasPostHeader = false;
+        page.on("request", async (request) => {
+          let extension = /^rsc/.test(templateName) ? "rsc" : "data";
+          if (
+            request.method() === "GET" &&
+            request.url().endsWith(`headers.${extension}?redirect=`)
+          ) {
+            const headers = (await request.response())?.headers() || {};
+            hasGetHeader = headers["x-test"] === "Foo";
+          }
+          if (
+            request.method() === "POST" &&
+            request.url().endsWith(`headers.${extension}`)
+          ) {
+            const headers = (await request.response())?.headers() || {};
+            hasPostHeader = headers["x-test"] === "Foo";
+          }
+        });
+
+        await app.goto("/headers", true);
+        await app.clickElement("#loader-redirect");
+        await expect(page.locator("#search-params")).toHaveText(
+          "Search Params: ?loader-redirect",
+        );
+        expect(hasGetHeader).toBe(true);
+        expect(hasPostHeader).toBe(false);
+
+        hasGetHeader = false;
+        hasPostHeader = false;
+
+        await app.goto("/headers", true);
+        await app.clickElement("#action-redirect");
+        await expect(page.locator("#search-params")).toHaveText(
+          "Search Params: ?action-redirect",
+        );
+        expect(hasGetHeader).toBe(false);
+        expect(hasPostHeader).toBe(true);
       });
     });
   }

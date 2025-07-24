@@ -69,7 +69,7 @@ function groupRoutesByParentId(manifest: RouteManifest<EntryRoute>) {
 function getRouteComponents(
   route: EntryRoute,
   routeModule: RouteModule,
-  isSpaMode: boolean
+  isSpaMode: boolean,
 ) {
   let Component = getRouteModuleComponent(routeModule);
   // HydrateFallback can only exist on the root route in SPA Mode
@@ -77,13 +77,13 @@ function getRouteComponents(
     routeModule.HydrateFallback && (!isSpaMode || route.id === "root")
       ? routeModule.HydrateFallback
       : route.id === "root"
-      ? RemixRootDefaultHydrateFallback
-      : undefined;
+        ? RemixRootDefaultHydrateFallback
+        : undefined;
   let ErrorBoundary = routeModule.ErrorBoundary
     ? routeModule.ErrorBoundary
     : route.id === "root"
-    ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
-    : undefined;
+      ? () => <RemixRootDefaultErrorBoundary error={useRouteError()} />
+      : undefined;
 
   if (route.id === "root" && routeModule.Layout) {
     return {
@@ -130,13 +130,13 @@ export function createServerRoutes(
     string,
     Omit<EntryRoute, "children">[]
   > = groupRoutesByParentId(manifest),
-  spaModeLazyPromise = Promise.resolve({ Component: () => null })
+  spaModeLazyPromise = Promise.resolve({ Component: () => null }),
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModules[route.id];
     invariant(
       routeModule,
-      "No `routeModule` available to create server routes"
+      "No `routeModule` available to create server routes",
     );
 
     let dataRoute: DataRouteObject = {
@@ -167,7 +167,7 @@ export function createServerRoutes(
       isSpaMode,
       route.id,
       routesByParentId,
-      spaModeLazyPromise
+      spaModeLazyPromise,
     );
     if (children.length > 0) dataRoute.children = children;
     return dataRoute;
@@ -181,7 +181,7 @@ export function createClientRoutesWithHMRRevalidationOptOut(
   initialState: HydrationState,
   ssr: boolean,
   isSpaMode: boolean,
-  loadRouteModule: LoadRouteModuleFunction
+  loadRouteModule: LoadRouteModuleFunction,
 ) {
   return createClientRoutes(
     manifest,
@@ -192,13 +192,13 @@ export function createClientRoutesWithHMRRevalidationOptOut(
     loadRouteModule,
     "",
     groupRoutesByParentId(manifest),
-    needsRevalidation
+    needsRevalidation,
   );
 }
 
 function preventInvalidServerHandlerCall(
   type: "action" | "loader",
-  route: Omit<EntryRoute, "children">
+  route: Omit<EntryRoute, "children">,
 ) {
   if (
     (type === "loader" && !route.hasLoader) ||
@@ -215,7 +215,7 @@ function preventInvalidServerHandlerCall(
 
 export function noActionDefinedError(
   type: "action" | "clientAction",
-  routeId: string
+  routeId: string,
 ) {
   let article = type === "clientAction" ? "a" : "an";
   let msg =
@@ -237,7 +237,7 @@ export function createClientRoutes(
     string,
     Omit<EntryRoute, "children">[]
   > = groupRoutesByParentId(manifest),
-  needsRevalidation?: Set<string>
+  needsRevalidation?: Set<string>,
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModulesCache[route.id];
@@ -245,7 +245,7 @@ export function createClientRoutes(
     function fetchServerHandler(singleFetch: unknown) {
       invariant(
         typeof singleFetch === "function",
-        "No single fetch function available for route handler"
+        "No single fetch function available for route handler",
       );
       return singleFetch();
     }
@@ -287,7 +287,7 @@ export function createClientRoutes(
     }
 
     async function prefetchStylesAndCallHandler(
-      handler: () => Promise<unknown>
+      handler: () => Promise<unknown>,
     ) {
       // Only prefetch links if we exist in the routeModulesCache (critical modules
       // and navigating back to pages previously loaded via route.lazy).  Initial
@@ -322,7 +322,7 @@ export function createClientRoutes(
           routeModule,
           route,
           ssr,
-          needsRevalidation
+          needsRevalidation,
         ),
       });
 
@@ -344,13 +344,13 @@ export function createClientRoutes(
 
       dataRoute.loader = async (
         { request, params, context }: LoaderFunctionArgs,
-        singleFetch?: unknown
+        singleFetch?: unknown,
       ) => {
         try {
           let result = await prefetchStylesAndCallHandler(async () => {
             invariant(
               routeModule,
-              "No `routeModule` available for critical-route loader"
+              "No `routeModule` available for critical-route loader",
             );
             if (!routeModule.clientLoader) {
               // Call the server when no client loader exists
@@ -392,17 +392,17 @@ export function createClientRoutes(
         route.id,
         routeModule.clientLoader,
         route.hasLoader,
-        isSpaMode
+        isSpaMode,
       );
 
       dataRoute.action = (
         { request, params, context }: ActionFunctionArgs,
-        singleFetch?: unknown
+        singleFetch?: unknown,
       ) => {
         return prefetchStylesAndCallHandler(async () => {
           invariant(
             routeModule,
-            "No `routeModule` available for critical-route action"
+            "No `routeModule` available for critical-route action",
           );
           if (!routeModule.clientAction) {
             if (isSpaMode) {
@@ -463,7 +463,7 @@ export function createClientRoutes(
           let routeModulePromise = loadRouteModuleWithBlockingLinks(
             route,
             routeModulesCache,
-            loadRouteModule
+            loadRouteModule,
           );
           prefetchRouteModuleChunks(route);
           return await routeModulePromise;
@@ -525,7 +525,7 @@ export function createClientRoutes(
                 : await getLazyRoute();
               invariant(
                 unstable_clientMiddleware,
-                "No `unstable_clientMiddleware` export found"
+                "No `unstable_clientMiddleware` export found",
               );
               return unstable_clientMiddleware;
             }
@@ -537,7 +537,7 @@ export function createClientRoutes(
             lazyRoute,
             route,
             ssr,
-            needsRevalidation
+            needsRevalidation,
           );
         },
         handle: async () => (await getLazyRoute()).handle,
@@ -559,7 +559,7 @@ export function createClientRoutes(
       loadRouteModule,
       route.id,
       routesByParentId,
-      needsRevalidation
+      needsRevalidation,
     );
     if (children.length > 0) dataRoute.children = children;
     return dataRoute;
@@ -571,14 +571,14 @@ function getShouldRevalidateFunction(
   route: Partial<DataRouteObject>,
   manifestRoute: Omit<EntryRoute, "children">,
   ssr: boolean,
-  needsRevalidation: Set<string> | undefined
+  needsRevalidation: Set<string> | undefined,
 ) {
   // During HDR we force revalidation for updated routes
   if (needsRevalidation) {
     return wrapShouldRevalidateForHdr(
       manifestRoute.id,
       route.shouldRevalidate,
-      needsRevalidation
+      needsRevalidation,
     );
   }
 
@@ -626,7 +626,7 @@ function getShouldRevalidateFunction(
 function wrapShouldRevalidateForHdr(
   routeId: string,
   routeShouldRevalidate: ShouldRevalidateFunction | undefined,
-  needsRevalidation: Set<string>
+  needsRevalidation: Set<string>,
 ): ShouldRevalidateFunction {
   let handledRevalidation = false;
   return (arg) => {
@@ -644,7 +644,7 @@ function wrapShouldRevalidateForHdr(
 async function loadRouteModuleWithBlockingLinks(
   route: EntryRoute,
   routeModules: RouteModules,
-  loadRouteModule: LoadRouteModuleFunction
+  loadRouteModule: LoadRouteModuleFunction,
 ) {
   // Ensure the route module and its static CSS links are loaded in parallel as
   // soon as possible before blocking on the route module
@@ -690,7 +690,7 @@ export function shouldHydrateRouteLoader(
   routeId: string,
   clientLoader: ClientLoaderFunction | undefined,
   hasLoader: boolean,
-  isSpaMode: boolean
+  isSpaMode: boolean,
 ) {
   return (
     (isSpaMode && routeId !== "root") ||

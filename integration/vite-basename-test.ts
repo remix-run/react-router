@@ -176,7 +176,7 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
     let proc = await viteDevCmd({ cwd });
     expect(proc.stderr.toString()).toMatch(
       "When using the React Router `basename` and the Vite `base` config, the " +
-        "`basename` config must begin with `base` for the default Vite dev server."
+        "`basename` config must begin with `base` for the default Vite dev server.",
     );
   });
 
@@ -332,7 +332,7 @@ async function workflowDev({
 
   // setup: hydration
   await expect(page.locator("#index [data-mounted]")).toHaveText(
-    "Mounted: yes"
+    "Mounted: yes",
   );
 
   // setup: browser state
@@ -345,7 +345,7 @@ async function workflowDev({
 
   // route: HMR
   await edit("app/routes/_index.tsx", (contents) =>
-    contents.replace("HMR updated: 0", "HMR updated: 1")
+    contents.replace("HMR updated: 0", "HMR updated: 1"),
   );
   await page.waitForLoadState("networkidle");
   await expect(hmrStatus).toHaveText("HMR updated: 1");
@@ -368,14 +368,14 @@ async function workflowDev({
   expect(
     requestUrls
       .filter((url) => isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${base}`))
+      .every((url) => url.startsWith(`http://localhost:${port}${base}`)),
   ).toBe(true);
 
   // verify client route requests are all under basename
   expect(
     requestUrls
       .filter((url) => !isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${basename}`))
+      .every((url) => url.startsWith(`http://localhost:${port}${basename}`)),
   ).toBe(true);
 }
 
@@ -527,8 +527,8 @@ test.describe("Vite base / React Router basename / express build", async () => {
     expect(
       requestUrls.length > 0 &&
         requestUrls.every((url) =>
-          url.startsWith("https://cdn.example.com/assets/")
-        )
+          url.startsWith("https://cdn.example.com/assets/"),
+        ),
     ).toBe(true);
   });
 });
@@ -563,7 +563,7 @@ async function workflowBuild({
 
   // setup: hydration
   await expect(page.locator("#index [data-mounted]")).toHaveText(
-    "Mounted: yes"
+    "Mounted: yes",
   );
 
   // client side navigation
@@ -578,13 +578,13 @@ async function workflowBuild({
   expect(
     requestUrls
       .filter((url) => isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${base}`))
+      .every((url) => url.startsWith(`http://localhost:${port}${base}`)),
   ).toBe(true);
 
   // verify client route requests are all under basename
   expect(
     requestUrls
       .filter((url) => !isAssetRequest(url))
-      .every((url) => url.startsWith(`http://localhost:${port}${basename}`))
+      .every((url) => url.startsWith(`http://localhost:${port}${basename}`)),
   ).toBe(true);
 }

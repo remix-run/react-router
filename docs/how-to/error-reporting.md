@@ -4,6 +4,11 @@ title: Error Reporting
 
 # Error Reporting
 
+[MODES: framework]
+
+<br/>
+<br/>
+
 React Router catches errors in your route modules and sends them to [error boundaries](./error-boundary) to prevent blank pages when errors occur. However, ErrorBoundary isn't sufficient for logging and reporting errors. To access these caught errors, use the handleError export of the server entry module.
 
 ## 1. Reveal the server entry
@@ -23,7 +28,7 @@ import { type HandleErrorFunction } from "react-router";
 
 export const handleError: HandleErrorFunction = (
   error,
-  { request }
+  { request },
 ) => {
   // React Router may abort some interrupted requests, don't log those
   if (!request.signal.aborted) {

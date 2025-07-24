@@ -28,7 +28,7 @@ export async function flatRoutes(
      * Defaults to `"./routes"`.
      */
     rootDirectory?: string;
-  } = {}
+  } = {},
 ): Promise<RouteConfigEntry[]> {
   let { ignoredRouteFiles = [], rootDirectory: userRootDirectory = "routes" } =
     options;

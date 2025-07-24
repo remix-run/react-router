@@ -6,7 +6,7 @@ import path from "node:path";
 const retry = async (
   callback: () => Promise<void>,
   times: number,
-  delayMs: number = 0
+  delayMs: number = 0,
 ) => {
   try {
     await callback();
@@ -18,11 +18,11 @@ const retry = async (
 
 export default async function withApp<Result>(
   fixture: string,
-  callback: (projectDir: string) => Promise<Result>
+  callback: (projectDir: string) => Promise<Result>,
 ): Promise<Result> {
   let TEMP_DIR = path.join(
     realpathSync(os.tmpdir()),
-    `remix-tests-${Math.random().toString(32).slice(2)}`
+    `remix-tests-${Math.random().toString(32).slice(2)}`,
   );
 
   let projectDir = path.join(TEMP_DIR);
@@ -40,7 +40,7 @@ export default async function withApp<Result>(
     await retry(
       async () => await rm(TEMP_DIR, { force: true, recursive: true }),
       3,
-      200
+      200,
     );
   }
 }

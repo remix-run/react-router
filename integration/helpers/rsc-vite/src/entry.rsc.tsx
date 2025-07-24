@@ -4,10 +4,12 @@ import {
   decodeReply,
   loadServerAction,
   renderToReadableStream,
-} from "@hiogawa/vite-rsc/rsc";
+} from "@vitejs/plugin-rsc/rsc";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
+import { basename } from "./config/basename";
 
 import { routes } from "./routes";
+import { requestContext } from "./config/request-context";
 
 export async function fetchServer(request: Request) {
   return await matchRSCServerRequest({
@@ -16,7 +18,9 @@ export async function fetchServer(request: Request) {
     decodeAction,
     loadServerAction,
     request,
+    requestContext,
     routes,
+    basename,
     generateResponse(match, options) {
       return new Response(renderToReadableStream(match.payload, options), {
         status: match.statusCode,

@@ -9,7 +9,7 @@ import { type SelectChoice } from "./prompts-select";
 import { color, strip, clear, type ActionKey } from "./utils";
 
 export interface MultiSelectPromptOptions<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends PromptOptions {
   hint?: string;
   message: string;
@@ -21,7 +21,7 @@ export interface MultiSelectPromptOptions<
 }
 
 export class MultiSelectPrompt<
-  Choices extends Readonly<Readonly<SelectChoice>[]>
+  Choices extends Readonly<Readonly<SelectChoice>[]>,
 > extends Prompt {
   choices: Readonly<Array<Choices[number] & { selected: boolean }>>;
   label: string;
@@ -161,10 +161,12 @@ export class MultiSelectPrompt<
       outputText.push(
         this.choices
           .map((choice) =>
-            choice.selected ? `${prefix} ${color.dim(`${choice.label}`)}\n` : ""
+            choice.selected
+              ? `${prefix} ${color.dim(`${choice.label}`)}\n`
+              : "",
           )
           .join("")
-          .trimEnd()
+          .trimEnd(),
       );
     } else {
       outputText.push(
@@ -179,13 +181,13 @@ export class MultiSelectPrompt<
               : color[choice.selected ? "reset" : "dim"](
                   `${prefix} ${choice.selected ? color.green("■") : "□"} ${
                     choice.label
-                  } `
-                )
+                  } `,
+                ),
           )
-          .join("\n")
+          .join("\n"),
       );
       outputText.push(
-        `\n\n${prefix} Press ${color.inverse(" C ")} to continue`
+        `\n\n${prefix} Press ${color.inverse(" C ")} to continue`,
       );
     }
     this.outputText = outputText.join("");

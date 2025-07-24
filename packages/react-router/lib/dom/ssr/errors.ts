@@ -2,7 +2,7 @@ import type { RouterState } from "../../router/router";
 import { ErrorResponseImpl } from "../../router/utils";
 
 export function deserializeErrors(
-  errors: RouterState["errors"]
+  errors: RouterState["errors"],
 ): RouterState["errors"] {
   if (!errors) return null;
   let entries = Object.entries(errors);
@@ -15,7 +15,7 @@ export function deserializeErrors(
         val.status,
         val.statusText,
         val.data,
-        val.internal === true
+        val.internal === true,
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)

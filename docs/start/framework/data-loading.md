@@ -113,7 +113,7 @@ export default {
   async prerender() {
     let products = await readProductsFromCSVFile();
     return products.map(
-      (product) => `/products/${product.id}`
+      (product) => `/products/${product.id}`,
     );
   },
 } satisfies Config;

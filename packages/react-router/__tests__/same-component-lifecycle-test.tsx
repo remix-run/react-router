@@ -23,7 +23,7 @@ describe("when the same component is mounted by two different routes", () => {
             <Route path="home" element={<Home />} />
             <Route path="another-home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -42,7 +42,7 @@ describe("when the same component is mounted by two different routes", () => {
             <Route path="home" element={<Home />} />
             <Route path="another-home" element={<Home />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

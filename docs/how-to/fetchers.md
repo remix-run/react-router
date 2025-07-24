@@ -4,6 +4,11 @@ title: Using Fetchers
 
 # Using Fetchers
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 Fetchers are useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
 
 Fetchers track their own, independent state and can be used to load data, mutate data, submit forms, and generally interact with loaders and actions.
@@ -190,7 +195,7 @@ export async function loader({ request }) {
   let url = new URL(request.url);
   let query = url.searchParams.get("q");
   return users.filter((user) =>
-    user.name.toLowerCase().includes(query.toLowerCase())
+    user.name.toLowerCase().includes(query.toLowerCase()),
   );
 }
 ```

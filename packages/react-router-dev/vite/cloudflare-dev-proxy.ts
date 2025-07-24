@@ -48,7 +48,7 @@ const PLUGIN_NAME = "react-router-cloudflare-vite-dev-proxy";
 export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
   options: {
     getLoadContext?: GetLoadContext<Env, Cf>;
-  } & GetPlatformProxyOptions = {}
+  } & GetPlatformProxyOptions = {},
 ): Plugin => {
   let { getLoadContext, ...restOptions } = options;
   const workerdConditions = ["workerd", "worker"];
@@ -59,7 +59,6 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
     name: PLUGIN_NAME,
     config: async (config, configEnv) => {
       await preloadVite();
-      const vite = getVite();
       // This is a compatibility layer for Vite 5. Default conditions were
       // automatically added to any custom conditions in Vite 5, but Vite 6
       // removed this behavior. Instead, the default conditions are overridden
@@ -68,9 +67,12 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       // conditions arrays exported from Vite. In Vite 5, these default
       // conditions arrays do not exist.
       // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
-      const serverConditions: string[] = [
-        ...(vite.defaultServerConditions ?? []),
-      ];
+      //
+      // In addition to that, these are external conditions (do not confuse them
+      // with server conditions) and there is no helpful export with the default
+      // external conditions (see https://github.com/vitejs/vite/pull/20279 for
+      // more details). So, for now, we are hardcording the default here.
+      const externalConditions: string[] = ["node"];
 
       let configResult = await loadConfig({
         rootDirectory: config.root ?? process.cwd(),
@@ -86,7 +88,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
       return {
         ssr: {
           resolve: {
-            externalConditions: [...workerdConditions, ...serverConditions],
+            externalConditions: [...workerdConditions, ...externalConditions],
           },
         },
       };
@@ -113,7 +115,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
         reactRouterPluginIndex < pluginIndex(PLUGIN_NAME)
       ) {
         throw new Error(
-          `The "${PLUGIN_NAME}" plugin should be placed before the React Router plugin in your Vite config file`
+          `The "${PLUGIN_NAME}" plugin should be placed before the React Router plugin in your Vite config file`,
         );
       }
     },
@@ -123,7 +125,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
         let { getPlatformProxy } = await importWrangler();
         // Do not include `dispose` in Cloudflare context
         let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
-          restOptions
+          restOptions,
         );
         return { cloudflare };
       };
@@ -132,7 +134,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
           viteDevServer.middlewares.use(async (nodeReq, nodeRes, next) => {
             try {
               let build = (await viteDevServer.ssrLoadModule(
-                serverBuildId
+                serverBuildId,
               )) as ServerBuild;
 
               let handler = createRequestHandler(build, "development");

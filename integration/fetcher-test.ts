@@ -362,7 +362,7 @@ test.describe("useFetcher", () => {
     await app.clickElement("#fetcher-load");
     await page.waitForSelector("#fetcher-idle");
     await page.getByText(
-      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"])
+      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"]),
     );
 
     await page.fill("#fetcher-input", "2");
@@ -375,7 +375,7 @@ test.describe("useFetcher", () => {
         "idle/LOADER 1",
         "loading/LOADER 1", // Preserves old data during reload
         "idle/LOADER 2",
-      ])
+      ]),
     );
   });
 
@@ -396,7 +396,7 @@ test.describe("useFetcher", () => {
         "submitting/undefined",
         "loading/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
-      ])
+      ]),
     );
 
     await page.fill("#fetcher-input", "2");
@@ -412,7 +412,7 @@ test.describe("useFetcher", () => {
         "submitting/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
         "loading/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
-      ])
+      ]),
     );
   });
 });

@@ -13,7 +13,7 @@ type HocName =
   | "UNSAFE_withErrorBoundaryProps";
 
 export const decorateComponentExportsWithProps = (
-  ast: ParseResult<Babel.File>
+  ast: ParseResult<Babel.File>,
 ) => {
   const hocs: Array<[string, Babel.Identifier]> = [];
   function getHocUid(path: NodePath, hocName: HocName) {
@@ -67,9 +67,9 @@ export const decorateComponentExportsWithProps = (
             t.variableDeclaration("const", [
               t.variableDeclarator(
                 t.identifier(name),
-                t.callExpression(uid, [toFunctionExpression(decl.node)])
+                t.callExpression(uid, [toFunctionExpression(decl.node)]),
               ),
-            ])
+            ]),
           );
         }
       }
@@ -80,10 +80,10 @@ export const decorateComponentExportsWithProps = (
     ast.program.body.unshift(
       t.importDeclaration(
         hocs.map(([name, identifier]) =>
-          t.importSpecifier(identifier, t.identifier(name))
+          t.importSpecifier(identifier, t.identifier(name)),
         ),
-        t.stringLiteral("react-router")
-      )
+        t.stringLiteral("react-router"),
+      ),
     );
   }
 };
@@ -94,6 +94,6 @@ function toFunctionExpression(decl: Babel.FunctionDeclaration) {
     decl.params,
     decl.body,
     decl.generator,
-    decl.async
+    decl.async,
   );
 }

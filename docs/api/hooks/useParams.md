@@ -4,13 +4,30 @@ title: useParams
 
 # useParams
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useParams.html)
 
-Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
+Returns an object of key/value-pairs of the dynamic params from the current
+URL that were matched by the routes. Child routes inherit all params from
+their parent routes.
+
+Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
+then `params.postId` will be `"123"`.
 
 ```tsx
 import { useParams } from "react-router";
@@ -21,7 +38,19 @@ function SomeComponent() {
 }
 ```
 
-Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+## Signature
+
+```tsx
+function useParams<
+  ParamsOrKey extends string | Record<string, string | undefined> = string,
+>(): Readonly<
+  [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
+>
+```
+
+## Returns
+
+An object containing the dynamic route parameters
 
 ## Examples
 
@@ -107,3 +136,4 @@ export default function File() {
   console.log(catchall);
 }
 ```
+

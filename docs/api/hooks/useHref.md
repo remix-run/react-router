@@ -4,13 +4,25 @@ title: useHref
 
 # useHref
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useHref.html)
 
-Resolves a URL against the current location.
+Resolves a URL against the current [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html).
 
 ```tsx
 import { useHref } from "react-router";
@@ -24,19 +36,28 @@ function SomeComponent() {
 ## Signature
 
 ```tsx
-useHref(to, __namedParameters): string
+function useHref(
+  to: To,
+  {
+    relative,
+  }: {
+    relative?: RelativeRoutingType;
+  } = ,
+): string {}
 ```
 
 ## Params
 
 ### to
 
-[modes: framework, data, declarative]
+The path to resolve
 
-_No documentation_
+### options.relative
 
-### \_\_namedParameters
+Defaults to `"route"` so routing is relative to the route tree.
+Set to `"path"` to make relative routing operate against path segments.
 
-[modes: framework, data, declarative]
+## Returns
 
-_No documentation_
+The resolved href string
+

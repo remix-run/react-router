@@ -425,12 +425,12 @@ test.describe("Prerendering", () => {
         buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
         buildStdio.on("error", (err) => reject(err));
         buildStdio.on("end", () =>
-          resolve(Buffer.concat(chunks).toString("utf8"))
+          resolve(Buffer.concat(chunks).toString("utf8")),
         );
       });
 
       expect(buildOutput).toContain(
-        "⚠️ Skipping prerendering for resource route without a loader: routes/action"
+        "⚠️ Skipping prerendering for resource route without a loader: routes/action",
       );
       // Only logs once
       expect(buildOutput.match(/routes\/action/g)?.length).toBe(1);
@@ -489,13 +489,13 @@ test.describe("Prerendering", () => {
       ]);
 
       expect(
-        await fs.promises.readFile(path.join(clientDir, "json.json"), "utf8")
+        await fs.promises.readFile(path.join(clientDir, "json.json"), "utf8"),
       ).toEqual('{"hello":"world"}');
       expect(
-        await fs.promises.readFile(path.join(clientDir, "text.txt"), "utf8")
+        await fs.promises.readFile(path.join(clientDir, "text.txt"), "utf8"),
       ).toEqual("Hello, world");
       expect(
-        await fs.promises.readFile(path.join(clientDir, "image.png"), "base64")
+        await fs.promises.readFile(path.join(clientDir, "image.png"), "base64"),
       ).toEqual(base64Png);
 
       let res = await fixture.requestResource("/json.json");
@@ -522,7 +522,7 @@ test.describe("Prerendering", () => {
 
       res = await fixture.requestResource("/image.png");
       expect(Buffer.from(await res.arrayBuffer()).toString("base64")).toBe(
-        base64Png
+        base64Png,
       );
     });
 
@@ -633,7 +633,7 @@ test.describe("Prerendering", () => {
       await app.goto("/not-prerendered");
       await page.waitForSelector("[data-mounted]");
       expect(await app.getHtml()).toContain(
-        "<span>NOT-PRERENDERED-false</span>"
+        "<span>NOT-PRERENDERED-false</span>",
       );
     });
 
@@ -686,7 +686,7 @@ test.describe("Prerendering", () => {
       expect(await app.getHtml("[data-title]")).toContain("Large loader");
       expect(await app.getHtml("[data-prerendered]")).toContain("yes");
       expect(await app.getHtml("[data-length]")).toBe(
-        '<p data-length="true">24999</p>'
+        '<p data-length="true">24999</p>',
       );
     });
 
@@ -760,18 +760,18 @@ test.describe("Prerendering", () => {
       expect(await app.getHtml("[data-title]")).toContain("UTF-8 Prerendered");
       expect(await app.getHtml("[data-prerendered]")).toContain("yes");
       expect(await app.getHtml("[data-content]")).toContain(
-        "한글 데이터 - UTF-8 문자"
+        "한글 데이터 - UTF-8 문자",
       );
 
       // Test non-prerendered route with UTF-8 characters
       await app.goto("/utf8-not-prerendered");
       await page.waitForSelector("[data-mounted]");
       expect(await app.getHtml("[data-title]")).toContain(
-        "UTF-8 Not Prerendered"
+        "UTF-8 Not Prerendered",
       );
       expect(await app.getHtml("[data-prerendered]")).toContain("no");
       expect(await app.getHtml("[data-content]")).toContain(
-        "非プリレンダリングデータ - UTF-8文字"
+        "非プリレンダリングデータ - UTF-8文字",
       );
     });
 
@@ -843,7 +843,7 @@ test.describe("Prerendering", () => {
       let res = await fixture.requestSingleFetchData("/_root.data", {
         headers: {
           "X-React-Router-Prerender-Data": encodeURI(
-            '[{"_1":2},"routes/_index",{"_3":4},"data","Hello World!"]'
+            '[{"_1":2},"routes/_index",{"_3":4},"data","Hello World!"]',
           ),
         },
       });
@@ -895,7 +895,7 @@ test.describe("Prerendering", () => {
       expect(stderr).toMatch(
         "Prerender: 2 invalid route export(s) in `routes/a` when pre-rendering " +
           "with `ssr:false`: `headers`, `action`.  " +
-          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
       );
     });
 
@@ -923,7 +923,7 @@ test.describe("Prerendering", () => {
       expect(stderr).toMatch(
         "Prerender: 1 invalid route export in `routes/b` when pre-rendering " +
           "with `ssr:false`: `loader`. " +
-          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
       );
     });
 
@@ -949,7 +949,7 @@ test.describe("Prerendering", () => {
       expect(stderr).toMatch(
         "Prerender: 1 invalid route export in `routes/a` when pre-rendering " +
           "with `ssr:false`: `loader`. " +
-          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information."
+          "See https://reactrouter.com/how-to/pre-rendering#invalid-exports for more information.",
       );
     });
 
@@ -987,7 +987,7 @@ test.describe("Prerendering", () => {
         buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
         buildStdio.on("error", (err) => reject(err));
         buildStdio.on("end", () =>
-          resolve(Buffer.concat(chunks).toString("utf8"))
+          resolve(Buffer.concat(chunks).toString("utf8")),
         );
       });
 
@@ -997,7 +997,7 @@ test.describe("Prerendering", () => {
             "You may want to use the `prerender()` API to prerender the following paths:",
           "  - :slug",
           "  - *",
-        ].join("\n")
+        ].join("\n"),
       );
       // Only logs once
       expect(buildOutput.match(/with dynamic\/splat params/g)?.length).toBe(1);
@@ -1121,7 +1121,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page2");
       await page.waitForSelector("[data-page2]");
       expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
-        "PAGE2 DATA"
+        "PAGE2 DATA",
       );
     });
 
@@ -1223,7 +1223,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1231,7 +1231,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 1"
+        "PAGE ACTION 1",
       );
       // No revalidation after submission to self
       expect(requests).toEqual([]);
@@ -1239,21 +1239,21 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page2");
       await page.waitForSelector("[data-page2]");
       expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
-        "PAGE2 DATA"
+        "PAGE2 DATA",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 1"
+        "PAGE2 ACTION 1",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 2"
+        "PAGE ACTION 2",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1261,7 +1261,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 2"
+        "PAGE2 ACTION 2",
       );
       expect(requests).toEqual([]);
     });
@@ -1364,7 +1364,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1372,7 +1372,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 1"
+        "PAGE ACTION 1",
       );
       // No revalidation after submission to self
       expect(requests).toEqual([]);
@@ -1380,21 +1380,21 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page2");
       await page.waitForSelector("[data-page2]");
       expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
-        "PAGE2 DATA"
+        "PAGE2 DATA",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 1"
+        "PAGE2 ACTION 1",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 2"
+        "PAGE ACTION 2",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1402,7 +1402,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 2"
+        "PAGE2 ACTION 2",
       );
       expect(requests).toEqual([]);
     });
@@ -1511,13 +1511,13 @@ test.describe("Prerendering", () => {
       await app.goto("/", true);
       await page.waitForSelector("[data-root]");
       expect(await (await page.$("[data-root]"))?.innerText()).toBe(
-        "ROOT DATA"
+        "ROOT DATA",
       );
 
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1525,7 +1525,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 1"
+        "PAGE ACTION 1",
       );
       // No revalidation after submission to self
       expect(requests).toEqual([]);
@@ -1533,21 +1533,21 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page2");
       await page.waitForSelector("[data-page2]");
       expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
-        "PAGE2 DATA"
+        "PAGE2 DATA",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 1"
+        "PAGE2 ACTION 1",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 2"
+        "PAGE ACTION 2",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1555,7 +1555,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 2"
+        "PAGE2 ACTION 2",
       );
       expect(requests).toEqual([]);
     });
@@ -1664,13 +1664,13 @@ test.describe("Prerendering", () => {
       await app.goto("/", true);
       await page.waitForSelector("[data-root]");
       expect(await (await page.$("[data-root]"))?.innerText()).toBe(
-        "ROOT DATA"
+        "ROOT DATA",
       );
 
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1678,7 +1678,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 1"
+        "PAGE ACTION 1",
       );
       // No revalidation after submission to self
       expect(requests).toEqual([]);
@@ -1686,21 +1686,21 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page2");
       await page.waitForSelector("[data-page2]");
       expect(await (await page.$("[data-page2]"))?.innerText()).toBe(
-        "PAGE2 DATA"
+        "PAGE2 DATA",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 1"
+        "PAGE2 ACTION 1",
       );
       expect(requests).toEqual([]);
 
       await app.clickSubmitButton("/page");
       await page.waitForSelector("[data-page-action]");
       expect(await (await page.$("[data-page-action]"))?.innerText()).toBe(
-        "PAGE ACTION 2"
+        "PAGE ACTION 2",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -1708,7 +1708,7 @@ test.describe("Prerendering", () => {
       await app.clickSubmitButton("/page2");
       await page.waitForSelector("[data-page2-action]");
       expect(await (await page.$("[data-page2-action]"))?.innerText()).toBe(
-        "PAGE2 ACTION 2"
+        "PAGE2 ACTION 2",
       );
       expect(requests).toEqual([]);
     });
@@ -2337,7 +2337,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -2345,7 +2345,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page");
       await page.waitForSelector("#navigation-idle");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       // No revalidation since page.data is static
       expect(requests).toEqual([]);
@@ -2365,7 +2365,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
     });
@@ -2437,7 +2437,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/page");
       await page.waitForSelector("[data-page]");
       expect(await (await page.$("[data-page]"))?.innerText()).toBe(
-        "PAGE DATA"
+        "PAGE DATA",
       );
       expect(requests).toEqual(["/page.data"]);
       clearRequests(requests);
@@ -2445,7 +2445,7 @@ test.describe("Prerendering", () => {
       await app.clickLink("/ページ");
       await page.waitForSelector("[data-multibyte-page]");
       expect(await (await page.$("[data-multibyte-page]"))?.innerText()).toBe(
-        "ページ データ"
+        "ページ データ",
       );
       expect(requests).toEqual([`/${encodedMultibytePath}.data`]);
     });

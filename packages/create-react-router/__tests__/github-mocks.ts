@@ -75,19 +75,19 @@ let githubHandlers: Array<RequestHandler> = [
     `https://github.com/remix-run/react-router/tree/main/:type/:name`,
     () => {
       return new Response();
-    }
+    },
   ),
   http.head(
     `https://github.com/remix-run/examples/tree/main/:type/:name`,
     () => {
       return new Response();
-    }
+    },
   ),
   http.head<{ status: string }>(
     `https://github.com/error-username/:status`,
     ({ params }) => {
       return new Response(null, { status: Number(params.status) });
-    }
+    },
   ),
   http.head(`https://github.com/:owner/:repo`, () => {
     return new Response();
@@ -96,7 +96,7 @@ let githubHandlers: Array<RequestHandler> = [
     `https://api.github.com/repos/error-username/:status`,
     ({ params }) => {
       return new Response(null, { status: Number(params.status) });
-    }
+    },
   ),
   http.head(
     `https://api.github.com/repos/private-org/private-repo`,
@@ -106,7 +106,7 @@ let githubHandlers: Array<RequestHandler> = [
           ? 200
           : 404;
       return new Response(null, { status });
-    }
+    },
   ),
   http.head(`https://api.github.com/repos/:owner/:repo`, () => {
     return new Response();
@@ -140,7 +140,7 @@ let githubHandlers: Array<RequestHandler> = [
           },
         ],
       });
-    }
+    },
   ),
   http.get<{ owner: string; repo: string; path: string }>(
     `https://api.github.com/repos/:owner/:repo/contents/:path`,
@@ -169,7 +169,7 @@ let githubHandlers: Array<RequestHandler> = [
             documentation_url:
               "https://docs.github.com/rest/reference/repos#get-repository-content",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -210,11 +210,11 @@ let githubHandlers: Array<RequestHandler> = [
               html: `https://github.com/${owner}/${repo}/tree/main/${contentsPath}`,
             },
           };
-        })
+        }),
       );
 
       return Response.json(contentDescriptions);
-    }
+    },
   ),
   http.get<{ owner: string; repo: string; sha: string }>(
     `https://api.github.com/repos/:owner/:repo/git/blobs/:sha`,
@@ -250,7 +250,7 @@ let githubHandlers: Array<RequestHandler> = [
       };
 
       return Response.json(resource);
-    }
+    },
   ),
   http.get<{ owner: string; repo: string; path?: string[] }>(
     `https://api.github.com/repos/:owner/:repo/contents{/*path}`,
@@ -277,7 +277,7 @@ let githubHandlers: Array<RequestHandler> = [
       };
 
       return Response.json(resource);
-    }
+    },
   ),
   http.get<{ branch: string }>(
     `https://codeload.github.com/private-org/private-repo/tar.gz/:branch`,
@@ -286,13 +286,13 @@ let githubHandlers: Array<RequestHandler> = [
         return new Response(null, { status: 404 });
       }
       return sendTarball({ owner: "private-org", repo: "private-repo" });
-    }
+    },
   ),
   http.get<{ owner: string; repo: string; branch: string }>(
     `https://codeload.github.com/:owner/:repo/tar.gz/:branch`,
     ({ params }) => {
       return sendTarball({ owner: params.owner, repo: params.repo });
-    }
+    },
   ),
   http.get(
     `https://api.github.com/repos/private-org/private-repo/tarball`,
@@ -301,7 +301,7 @@ let githubHandlers: Array<RequestHandler> = [
         return new Response(null, { status: 404 });
       }
       return sendTarball({ owner: "private-org", repo: "private-repo" });
-    }
+    },
   ),
   http.get<{ tag: string }>(
     `https://api.github.com/repos/private-org/private-repo/releases/tags/:tag`,
@@ -318,7 +318,7 @@ let githubHandlers: Array<RequestHandler> = [
           },
         ],
       });
-    }
+    },
   ),
   http.get(
     `https://api.github.com/repos/private-org/private-repo/releases/assets/working-asset-id`,
@@ -327,19 +327,19 @@ let githubHandlers: Array<RequestHandler> = [
         return new Response(null, { status: 404 });
       }
       return sendTarball({ owner: "private-org", repo: "private-repo" });
-    }
+    },
   ),
   http.get<{ status: string }>(
     `https://api.github.com/repos/error-username/:status/tarball`,
     ({ params }) => {
       return new Response(null, { status: Number(params.status) });
-    }
+    },
   ),
   http.get<{ owner: string; repo: string }>(
     `https://api.github.com/repos/:owner/:repo/tarball`,
     ({ params }) => {
       return sendTarball({ owner: params.owner, repo: params.repo });
-    }
+    },
   ),
   http.get(`https://api.github.com/repos/:repo*`, () => {
     return Response.json({ default_branch: "main" });

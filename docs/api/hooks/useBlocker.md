@@ -4,67 +4,78 @@ title: useBlocker
 
 # useBlocker
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/hooks.tsx
+-->
+
 [MODES: framework, data]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.useBlocker.html)
 
-Allow the application to block navigations within the SPA and present the user a confirmation dialog to confirm the navigation. Mostly used to avoid using half-filled form data. This does not handle hard-reloads or cross-origin navigations.
+Allow the application to block navigations within the SPA and present the
+user a confirmation dialog to confirm the navigation. Mostly used to avoid
+using half-filled form data. This does not handle hard-reloads or
+cross-origin navigations.
 
-## Signature
+The [`Blocker`](https://api.reactrouter.com/v7/types/react_router.Blocker.html) object returned by the hook has the following properties:
+
+- **`state`**
+  - `unblocked` - the blocker is idle and has not prevented any navigation
+  - `blocked` - the blocker has prevented a navigation
+  - `proceeding` - the blocker is proceeding through from a blocked navigation
+- **`location`**
+  - When in a `blocked` state, this represents the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to which
+    we blocked a navigation. When in a `proceeding` state, this is the
+    location being navigated to after a `blocker.proceed()` call.
+- **`proceed()`**
+  - When in a `blocked` state, you may call `blocker.proceed()` to proceed to
+    the blocked location.
+- **`reset()`**
+  - When in a `blocked` state, you may call `blocker.reset()` to return the
+    blocker to an `unblocked` state and leave the user at the current
+    location.
 
 ```tsx
-useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
-```
+// Boolean version
+let blocker = useBlocker(value !== "");
 
-## Params
-
-### shouldBlock
-
-[modes: framework, data]
-
-**boolean**
-
-Whether or not the navigation should be blocked. If `true`, the blocker will prevent the navigation. If `false`, the blocker will not prevent the navigation.
-
-[**BlockerFunction**](https://api.reactrouter.com/v7/types/react_router.BlockerFunction.html)
-
-A function that returns a boolean indicating whether the navigation should be blocked.
-
-```tsx
-const blocker = useBlocker(
+// Function version
+let blocker = useBlocker(
   ({ currentLocation, nextLocation, historyAction }) =>
     value !== "" &&
     currentLocation.pathname !== nextLocation.pathname
 );
 ```
 
-## Blocker
+## Signature
 
-The [Blocker](https://api.reactrouter.com/v7/types/react_router.Blocker.html) object returned by the hook. It has the following properties:
+```tsx
+function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker
+```
 
-### `state`
+## Params
 
-- `unblocked` - the blocker is idle and has not prevented any navigation
-- `blocked` - the blocker has prevented a navigation
-- `proceeding` - the blocker is proceeding through from a blocked navigation
+### shouldBlock
 
-### `location`
+Either a boolean or a function returning a boolean which indicates whether the navigation should be blocked. The function format
+receives a single object parameter containing the `currentLocation`,
+`nextLocation`, and `historyAction` of the potential navigation.
 
-When in a `blocked` state, this represents the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to which we blocked a navigation. When in a `proceeding` state, this is the location being navigated to after a `blocker.proceed()` call.
+## Returns
 
-### `proceed()`
-
-When in a `blocked` state, you may call `blocker.proceed()` to proceed to the blocked location.
-
-### `reset()`
-
-When in a `blocked` state, you may call `blocker.reset()` to return the blocker back to an `unblocked` state and leave the user at the current location.
+A [`Blocker`](https://api.reactrouter.com/v7/types/react_router.Blocker.html) object with state and reset functionality
 
 ## Examples
-
-### Basic
 
 ```tsx
 import { useCallback, useState } from "react";
@@ -128,3 +139,4 @@ export function ImportantForm() {
   );
 }
 ```
+

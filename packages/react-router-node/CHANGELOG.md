@@ -1,5 +1,12 @@
 # `@react-router/node`
 
+## 7.7.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.0`
+
 ## 7.6.3
 
 ### Patch Changes
@@ -148,7 +155,6 @@
 - Remove single fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
 
 - For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs. This means that the following APIs are provided from `react-router` rather than platform-specific packages: ([#11837](https://github.com/remix-run/react-router/pull/11837))
-
   - `createCookie`
   - `createCookieSessionStorage`
   - `createMemorySessionStorage`
@@ -157,7 +163,6 @@
   For consumers running older versions of Node, the `installGlobals` function from `@remix-run/node` has been updated to define `globalThis.crypto`, using [Node's `require('node:crypto').webcrypto` implementation.](https://nodejs.org/api/webcrypto.html)
 
   Since platform-specific packages no longer need to implement this API, the following low-level APIs have been removed:
-
   - `createCookieFactory`
   - `createSessionStorageFactory`
   - `createCookieSessionStorageFactory`
@@ -170,7 +175,6 @@
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
 
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
   - Remove `installGlobals()` as this should no longer be necessary
 
 ### Patch Changes
@@ -317,7 +321,6 @@
 - Stop exporting the `fetch` API in favor of using the version in the global scope - which can be polyfilled via `installGlobals` ([#7293](https://github.com/remix-run/remix/pull/7293))
 
 - Removed/adjusted types to prefer `unknown` over `any` and to align with underlying React Router types ([#7319](https://github.com/remix-run/remix/pull/7319), [#7354](https://github.com/remix-run/remix/pull/7354)):
-
   - Renamed the `useMatches()` return type from `RouteMatch` to `UIMatch`
   - Renamed `LoaderArgs`/`ActionArgs` to `LoaderFunctionArgs`/`ActionFunctionArgs`
   - `AppData` changed from `any` to `unknown`
@@ -329,11 +332,9 @@
   - `AppData`/`RouteHandle` are no longer exported as they are just aliases for `unknown`
 
 - The route `meta` API now defaults to the new "V2 Meta" API ([#6958](https://github.com/remix-run/remix/pull/6958))
-
   - Please refer to the ([docs](https://remix.run/docs/en/2.0.0/route/meta) and [Preparing for V2](https://remix.run/docs/en/2.0.0/start/v2#route-meta) guide for more information.
 
 - For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install the globals yourself
 
@@ -344,7 +345,6 @@
     ```
 
 - `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
 
@@ -478,7 +478,6 @@
 ### Minor Changes
 
 - We have made a few changes to the API for route module `meta` functions when using the `future.v2_meta` flag. **These changes are _only_ breaking for users who have opted in.** ([#5746](https://github.com/remix-run/remix/pull/5746))
-
   - `V2_HtmlMetaDescriptor` has been renamed to `V2_MetaDescriptor`
   - The `meta` function's arguments have been simplified
     - `parentsData` has been removed, as each route's loader data is available on the `data` property of its respective `match` object
@@ -571,12 +570,10 @@
 - Introduces the `defer()` API from `@remix-run/router` with support for server-rendering and HTTP streaming. This utility allows you to defer values returned from `loader` functions by returning promises instead of resolved values. This has been refered to as _"sending a promise over the wire"_. ([#4920](https://github.com/remix-run/remix/pull/4920))
 
   Informational Resources:
-
   - <https://gist.github.com/jacob-ebey/9bde9546c1aafaa6bc8c242054b1be26>
   - <https://github.com/remix-run/remix/blob/main/decisions/0004-streaming-apis.md>
 
   Documentation Resources (better docs specific to Remix are in the works):
-
   - <https://reactrouter.com/en/main/utils/defer>
   - <https://reactrouter.com/en/main/components/await>
   - <https://reactrouter.com/en/main/hooks/use-async-value>

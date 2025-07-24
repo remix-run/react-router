@@ -18,7 +18,7 @@ export interface ConfirmPromptOptions extends PromptOptions {
 
 export type ConfirmPromptChoices = [
   { value: true; label: string },
-  { value: false; label: string }
+  { value: false; label: string },
 ];
 
 export class ConfirmPrompt extends Prompt {
@@ -165,9 +165,9 @@ export class ConfirmPrompt extends Prompt {
           .map((choice, i) =>
             i === this.cursor
               ? `${color.green("●")} ${choice.label} `
-              : color.dim(`○ ${choice.label} `)
+              : color.dim(`○ ${choice.label} `),
           )
-          .join(color.dim(" "))
+          .join(color.dim(" ")),
       );
     }
     this.outputText = outputText.join("");

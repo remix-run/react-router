@@ -270,7 +270,7 @@ test.describe("Vite dev", () => {
 
         await expect(page.locator("#index [data-title]")).toHaveText("Index");
         await expect(page.locator("#index [data-defer]")).toHaveText(
-          "Defer finished: yes"
+          "Defer finished: yes",
         );
 
         let hmrStatus = page.locator("#index [data-hmr]");
@@ -282,12 +282,12 @@ test.describe("Vite dev", () => {
 
         let indexRouteContents = await fs.readFile(
           path.join(cwd, "app/routes/_index.tsx"),
-          "utf8"
+          "utf8",
         );
         await fs.writeFile(
           path.join(cwd, "app/routes/_index.tsx"),
           indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
-          "utf8"
+          "utf8",
         );
         await page.waitForLoadState("networkidle");
         await expect(hmrStatus).toHaveText("HMR updated: yes");
@@ -310,7 +310,7 @@ test.describe("Vite dev", () => {
         expect(new URL(page.url()).pathname).toBe("/get-cookies");
 
         await expect(page.locator("#get-cookies [data-cookies]")).toHaveText(
-          "first=one; second=two; third=three"
+          "first=one; second=two; third=three",
         );
       });
 
@@ -330,12 +330,12 @@ test.describe("Vite dev", () => {
 
         let indexRouteContents = await fs.readFile(
           path.join(cwd, "app/routes/jsx.jsx"),
-          "utf8"
+          "utf8",
         );
         await fs.writeFile(
           path.join(cwd, "app/routes/jsx.jsx"),
           indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
-          "utf8"
+          "utf8",
         );
         await page.waitForLoadState("networkidle");
         await expect(hmrStatus).toHaveText("HMR updated: yes");
@@ -369,7 +369,7 @@ test.describe("Vite dev", () => {
 
         let clientContent = page.locator("[data-dotenv-route-client-content]");
         await expect(clientContent).toHaveText(
-          "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+          "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
         );
 
         expect(page.errors).toEqual([]);
@@ -382,21 +382,21 @@ test.describe("Vite dev", () => {
         const { port } = await dev(files, templateName);
 
         await page.goto(
-          `http://localhost:${port}/error-stacktrace?crash-server-render`
+          `http://localhost:${port}/error-stacktrace?crash-server-render`,
         );
         await expect(page.locator("main")).toContainText(
-          "Error: crash-server-render"
+          "Error: crash-server-render",
         );
         await expect(page.locator("main")).toContainText(
-          "error-stacktrace.tsx:14:11"
+          "error-stacktrace.tsx:14:11",
         );
 
         await page.goto(
-          `http://localhost:${port}/error-stacktrace?crash-loader`
+          `http://localhost:${port}/error-stacktrace?crash-loader`,
         );
         await expect(page.locator("main")).toContainText("Error: crash-loader");
         await expect(page.locator("main")).toContainText(
-          "error-stacktrace.tsx:5:11"
+          "error-stacktrace.tsx:5:11",
         );
       });
 
@@ -423,14 +423,14 @@ test.describe("Vite dev", () => {
 
         // component
         await editFile((data) =>
-          data.replace("HMR component: 0", "HMR component: 1")
+          data.replace("HMR component: 0", "HMR component: 1"),
         );
         await expect(page.locator("[data-hmr]")).toHaveText("HMR component: 1");
         await expect(input).toHaveValue("stateful");
 
         // handle
         await editFile((data) =>
-          data.replace("HMR handle: 0", "HMR handle: 1")
+          data.replace("HMR handle: 0", "HMR handle: 1"),
         );
         await expect(page.locator("[data-handle]")).toHaveText("HMR handle: 1");
         await expect(input).toHaveValue("stateful");
@@ -444,7 +444,7 @@ test.describe("Vite dev", () => {
         await editFile((data) => data.replace("HMR links: 0", "HMR links: 1"));
         await expect(page.locator("[data-link]")).toHaveAttribute(
           "data-link",
-          "HMR links: 1"
+          "HMR links: 1",
         );
 
         expect(page.errors).toEqual([]);

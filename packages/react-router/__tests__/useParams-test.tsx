@@ -14,7 +14,7 @@ describe("useParams", () => {
         renderer = TestRenderer.create(
           <MemoryRouter initialEntries={["/home"]}>
             <ShowParams />
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -35,7 +35,7 @@ describe("useParams", () => {
             <Routes>
               <Route path="/home" element={<ShowParams />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -56,7 +56,7 @@ describe("useParams", () => {
             <Routes>
               <Route path="/blog/:slug" element={<ShowParams />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -89,7 +89,7 @@ describe("useParams", () => {
                   <Route path="courses/:course" element={<ShowParams />} />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -116,7 +116,7 @@ describe("useParams", () => {
             <Routes>
               <Route path="/blog/:slug" element={<ShowParams />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -137,7 +137,7 @@ describe("useParams", () => {
             <Routes>
               <Route path="/blog/:slug" element={<ShowParams />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -171,7 +171,7 @@ describe("useParams", () => {
             <Routes>
               <Route path="/blog/:slug" element={<ShowParams />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -182,7 +182,7 @@ describe("useParams", () => {
       `);
 
       expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringMatching("malformed URL segment")
+        expect.stringMatching("malformed URL segment"),
       );
     });
   });
@@ -198,7 +198,7 @@ describe("useParams", () => {
                 <Route path=":slug" element={null} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 

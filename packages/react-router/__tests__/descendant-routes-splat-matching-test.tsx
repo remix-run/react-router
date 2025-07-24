@@ -38,7 +38,7 @@ describe("Descendant <Routes> splat matching", () => {
                 <Route path="react/*" element={<ReactCourses />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -100,7 +100,7 @@ describe("Descendant <Routes> splat matching", () => {
                   <Route path="react/*" element={<ReactCourses />} />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
         return renderer;

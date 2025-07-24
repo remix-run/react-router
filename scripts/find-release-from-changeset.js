@@ -23,7 +23,7 @@ function findReleaseFromChangeset(publishedPackages, packageVersionToFollow) {
 
   if (!found) {
     throw new Error(
-      `${packageVersionToFollow} was not found in the published packages`
+      `${packageVersionToFollow} was not found in the published packages`,
     );
   }
 
@@ -33,5 +33,5 @@ function findReleaseFromChangeset(publishedPackages, packageVersionToFollow) {
 
 findReleaseFromChangeset(
   process.env.PUBLISHED_PACKAGES,
-  process.env.PACKAGE_VERSION_TO_FOLLOW
+  process.env.PACKAGE_VERSION_TO_FOLLOW,
 );

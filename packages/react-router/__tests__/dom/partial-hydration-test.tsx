@@ -84,11 +84,11 @@ describe("Partial Hydration Behavior", () => {
             }
           },
           initialEntries: ["/parent/child"],
-        }
+        },
       );
       let { container } = render(
         // eslint-disable-next-line react/jsx-pascal-case
-        <ReactRouter_RouterProvider router={router} />
+        <ReactRouter_RouterProvider router={router} />,
       );
 
       parentDfd.resolve("PARENT DATA");
@@ -173,11 +173,11 @@ describe("Partial Hydration Behavior", () => {
             }
           },
           initialEntries: ["/parent/child"],
-        }
+        },
       );
       let { container } = render(
         // eslint-disable-next-line react/jsx-pascal-case
-        <ReactRouter_RouterProvider router={router} />
+        <ReactRouter_RouterProvider router={router} />,
       );
 
       parentDfd.resolve("PARENT DATA");
@@ -215,7 +215,7 @@ function testPartialHydration(
     | typeof createMemoryRouter,
   RouterProvider:
     | typeof ReactRouterDom_RouterProvider
-    | typeof ReactRouter_RouterProvider
+    | typeof ReactRouter_RouterProvider,
 ) {
   let consoleWarn: jest.SpyInstance;
 
@@ -264,7 +264,7 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -330,7 +330,7 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -392,7 +392,7 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -404,7 +404,7 @@ function testPartialHydration(
       didAssertMissingHydrateFallback = true;
       // eslint-disable-next-line jest/no-conditional-expect
       expect(consoleWarn).toHaveBeenCalledWith(
-        "No `HydrateFallback` element provided to render during initial hydration"
+        "No `HydrateFallback` element provided to render during initial hydration",
       );
     }
 
@@ -466,7 +466,7 @@ function testPartialHydration(
             index: "INDEX ERROR",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -524,7 +524,7 @@ function testPartialHydration(
             index: "INDEX INITIAL",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -716,7 +716,7 @@ function testPartialHydration(
             index: "INDEX ERROR",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 

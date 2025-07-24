@@ -24,13 +24,10 @@ import {
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
+import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
-import type {
-  LoadRouteModuleFunction,
-} from "../dom/ssr/routeModules";
-import {
-  defaultLoadRouteModule,
-} from "../dom/ssr/routeModules";
+import type { LoadRouteModuleFunction } from "../dom/ssr/routeModules";
+import { defaultLoadRouteModule } from "../dom/ssr/routeModules";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -61,7 +58,7 @@ function initSsrInfo(): void {
       if (importMap?.textContent) {
         try {
           window.__reactRouterManifest.sri = JSON.parse(
-            importMap.textContent
+            importMap.textContent,
           ).integrity;
         } catch (err) {
           console.error("Failed to parse import map", err);
@@ -92,7 +89,7 @@ function createHydratedRouter({
   if (!ssrInfo) {
     throw new Error(
       "You must be using the SSR features of React Router in order to skip " +
-        "passing a `router` prop to `<RouterProvider>`"
+        "passing a `router` prop to `<RouterProvider>`",
     );
   }
 
@@ -130,7 +127,7 @@ function createHydratedRouter({
     ssrInfo.context.state,
     ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode,
-    loadRouteModule
+    loadRouteModule,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
@@ -160,7 +157,7 @@ function createHydratedRouter({
       }),
       window.location,
       window.__reactRouterContext?.basename,
-      ssrInfo.context.isSpaMode
+      ssrInfo.context.isSpaMode,
     );
 
     if (hydrationData && hydrationData.errors) {
@@ -188,7 +185,7 @@ function createHydratedRouter({
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
@@ -197,7 +194,7 @@ function createHydratedRouter({
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename,
-      loadRouteModule
+      loadRouteModule,
     ),
   });
   ssrInfo.router = router;
@@ -218,10 +215,17 @@ function createHydratedRouter({
   return router;
 }
 
-interface HydratedRouterProps {
+/**
+ * Props for the {@link HydratedRouter} component.
+ *
+ * @category Types
+ */
+export interface HydratedRouterProps {
   /**
-   * Context object to passed through to `createBrowserRouter` and made available
-   * to `clientLoader`/`clientActon` functions
+   * Context object to be passed through to {@link createBrowserRouter} and made
+   * available to
+   * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+   * functions
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
   /**
@@ -231,14 +235,25 @@ interface HydratedRouterProps {
   unstable_loadRouteModule?: LoadRouteModuleFunction;
 }
 
+// TODO: Reference `HydratedRouterProps` in the `HydratedRouter` JSDoc
+//  @param {HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
 /**
- * Framework-mode router component to be used in `entry.client.tsx` to hydrate a
- * router from a `ServerRouter`
+ * Framework-mode router component to be used to hydrate a router from a
+ * {@link ServerRouter}. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
  *
- * @category Component Routers
+ * @public
+ * @category Framework Routers
+ * @mode framework
+ * @param props Props
+ * @param props.unstable_getContext Context object to be passed through to
+ * {@link createBrowserRouter} and made available to
+ * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+ * functions
+ * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
-  let loadRouteModule = props.unstable_loadRouteModule ?? defaultLoadRouteModule;
+  let loadRouteModule =
+    props.unstable_loadRouteModule ?? defaultLoadRouteModule;
 
   if (!router) {
     router = createHydratedRouter({
@@ -247,19 +262,35 @@ export function HydratedRouter(props: HydratedRouterProps) {
     });
   }
 
-  // Critical CSS can become stale after code changes, e.g. styles might be
-  // removed from a component, but the styles will still be present in the
-  // server HTML. This allows our HMR logic to clear the critical CSS state.
+  // We only want to show critical CSS in dev for the initial server render to
+  // avoid a flash of unstyled content. Once the client-side JS kicks in, we can
+  // clear it to avoid duplicate styles.
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? ssrInfo?.context.criticalCss
-      : undefined
+      : undefined,
   );
-  if (process.env.NODE_ENV === "development") {
-    if (ssrInfo) {
-      window.__reactRouterClearCriticalCss = () => setCriticalCss(undefined);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      setCriticalCss(undefined);
     }
-  }
+  }, []);
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development" && criticalCss === undefined) {
+      // When there's a hydration mismatch, React 19 ignores the server HTML and
+      // re-renders from the root, but it doesn't remove any head tags that
+      // aren't present in the virtual DOM. This means that the original
+      // critical CSS elements are still in the document even though we cleared
+      // them in the effect above. To fix this, this effect is designed to clean
+      // up any leftover elements. If `criticalCss` is undefined in this effect,
+      // this means that React is no longer managing the critical CSS elements,
+      // so if there are any left in the document, these are stale elements from
+      // the original SSR pass and we can safely remove them.
+      document
+        .querySelectorAll(`[${CRITICAL_CSS_DATA_ATTRIBUTE}]`)
+        .forEach((element) => element.remove());
+    }
+  }, [criticalCss]);
 
   let [location, setLocation] = React.useState(router.state.location);
 
@@ -291,7 +322,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
-    loadRouteModule
+    loadRouteModule,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error

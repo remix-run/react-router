@@ -10,7 +10,7 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
 export async function prerender(
   request: Request,
   fetchServer: (request: Request) => Promise<Response>,
-  bootstrapScriptContent: string | undefined
+  bootstrapScriptContent: string | undefined,
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
@@ -30,7 +30,7 @@ export async function prerender(
         {
           bootstrapScriptContent,
           formState,
-        }
+        },
       );
     },
   });

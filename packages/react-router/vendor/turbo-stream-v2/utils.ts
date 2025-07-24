@@ -24,7 +24,7 @@ export type DecodePlugin = (
 ) => { value: unknown } | false | null | undefined;
 
 export type EncodePlugin = (
-  value: unknown
+  value: unknown,
 ) => [string, ...unknown[]] | false | null | undefined;
 
 export interface ThisDecode {

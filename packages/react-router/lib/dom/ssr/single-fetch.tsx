@@ -123,7 +123,7 @@ export function StreamTransfer({
       nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `window.__reactRouterContext.streamController.enqueue(${escapeHtml(
-          JSON.stringify(value)
+          JSON.stringify(value),
         )});`,
       }}
     />
@@ -171,7 +171,7 @@ export type FetchAndDecodeFunction = (
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
   targetRoutes?: string[],
-  shouldAllowOptOut?: ShouldAllowOptOutFunction
+  shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
 
 export function getTurboStreamSingleFetchDataStrategy(
@@ -179,7 +179,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
-  basename: string | undefined
+  basename: string | undefined,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -195,7 +195,7 @@ export function getTurboStreamSingleFetchDataStrategy(
     },
     fetchAndDecodeViaTurboStream,
     ssr,
-    basename
+    basename,
   );
   return async (args) => args.unstable_runClientMiddleware(dataStrategy);
 }
@@ -206,7 +206,7 @@ export function getSingleFetchDataStrategyImpl(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   basename: string | undefined,
-  shouldAllowOptOut: ShouldAllowOptOutFunction = () => true
+  shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -270,7 +270,7 @@ export function getSingleFetchDataStrategyImpl(
       fetchAndDecode,
       ssr,
       basename,
-      shouldAllowOptOut
+      shouldAllowOptOut,
     );
   };
 }
@@ -280,7 +280,7 @@ export function getSingleFetchDataStrategyImpl(
 async function singleFetchActionStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined
+  basename: string | undefined,
 ) {
   let actionMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
   invariant(actionMatch, "No action match found");
@@ -319,10 +319,10 @@ async function nonSsrStrategy(
   args: DataStrategyFunctionArgs,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined
+  basename: string | undefined,
 ) {
   let matchesToLoad = args.matches.filter((m) =>
-    m.unstable_shouldCallHandler()
+    m.unstable_shouldCallHandler(),
   );
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
@@ -344,8 +344,8 @@ async function nonSsrStrategy(
         } catch (e) {
           results[m.route.id] = { type: "error", result: e };
         }
-      })
-    )
+      }),
+    ),
   );
   return results;
 }
@@ -359,7 +359,7 @@ async function singleFetchLoaderNavigationStrategy(
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
   basename: string | undefined,
-  shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true
+  shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -433,8 +433,8 @@ async function singleFetchLoaderNavigationStrategy(
         } catch (e) {
           results[routeId] = { type: "error", result: e };
         }
-      })
-    )
+      }),
+    ),
   );
 
   // Wait for all routes to resolve above before we make the HTTP call
@@ -478,7 +478,7 @@ async function singleFetchLoaderNavigationStrategy(
     singleFetchDfd.promise,
     args.matches,
     routesParams,
-    results
+    results,
   );
 
   return results;
@@ -493,7 +493,7 @@ async function bubbleMiddlewareErrors(
   singleFetchPromise: Promise<DecodedSingleFetchResults>,
   matches: DataStrategyFunctionArgs["matches"],
   routesParams: Set<string>,
-  results: Record<string, DataStrategyResult>
+  results: Record<string, DataStrategyResult>,
 ) {
   try {
     let middlewareError: unknown;
@@ -528,7 +528,7 @@ async function bubbleMiddlewareErrors(
 async function singleFetchLoaderFetcherStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined
+  basename: string | undefined,
 ) {
   let fetcherMatch = args.matches.find((m) => m.unstable_shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
@@ -537,7 +537,7 @@ async function singleFetchLoaderFetcherStrategy(
     handler(async () => {
       let { data } = await fetchAndDecode(args, basename, [routeId]);
       return unwrapSingleFetchResult(data, routeId);
-    })
+    }),
   );
   return { [fetcherMatch.route.id]: result };
 }
@@ -561,7 +561,7 @@ export function stripIndexParam(url: URL) {
 export function singleFetchUrl(
   reqUrl: URL | string,
   basename: string | undefined,
-  extension: "data" | "rsc"
+  extension: "data" | "rsc",
 ) {
   let url =
     typeof reqUrl === "string"
@@ -571,7 +571,7 @@ export function singleFetchUrl(
           // don't assume window is available
           typeof window === "undefined"
             ? "server://singlefetch/"
-            : window.location.origin
+            : window.location.origin,
         )
       : reqUrl;
 
@@ -589,7 +589,7 @@ export function singleFetchUrl(
 async function fetchAndDecodeViaTurboStream(
   args: DataStrategyFunctionArgs,
   basename: string | undefined,
-  targetRoutes?: string[]
+  targetRoutes?: string[],
 ): Promise<{ status: number; data: DecodedSingleFetchResults }> {
   let { request } = args;
   let url = singleFetchUrl(request.url, basename, "data");
@@ -675,7 +675,7 @@ async function fetchAndDecodeViaTurboStream(
 // encodeViaTurboStream function in server-runtime
 export function decodeViaTurboStream(
   body: ReadableStream<Uint8Array>,
-  global: Window | typeof globalThis
+  global: Window | typeof globalThis,
 ) {
   return decode(body, {
     plugins: [
@@ -686,7 +686,7 @@ export function decodeViaTurboStream(
           let [name, message, stack] = rest as [
             string,
             string,
-            string | undefined
+            string | undefined,
           ];
           let Constructor = Error;
           // @ts-expect-error
@@ -703,7 +703,7 @@ export function decodeViaTurboStream(
           let [data, status, statusText] = rest as [
             unknown,
             number,
-            string | undefined
+            string | undefined,
           ];
           return {
             value: new ErrorResponseImpl(status, statusText, data),
@@ -728,7 +728,7 @@ export function decodeViaTurboStream(
 
 function unwrapSingleFetchResult(
   result: DecodedSingleFetchResults,
-  routeId: string
+  routeId: string,
 ) {
   if ("redirect" in result) {
     let {
@@ -752,7 +752,7 @@ function unwrapSingleFetchResult(
   let routeResult = result.routes[routeId];
   if (routeResult == null) {
     throw new SingleFetchNoResultError(
-      `No result found for routeId "${routeId}"`
+      `No result found for routeId "${routeId}"`,
     );
   } else if ("error" in routeResult) {
     throw routeResult.error;

@@ -18,7 +18,7 @@ import type {
 export function getKeyedLinksForMatches(
   matches: AgnosticDataRouteMatch[],
   routeModules: RouteModules,
-  manifest: AssetsManifest
+  manifest: AssetsManifest,
 ): KeyedLinkDescriptor[] {
   let descriptors = matches
     .map((match): LinkDescriptor[][] => {
@@ -50,7 +50,7 @@ export async function prefetchRouteCss(route: EntryRoute): Promise<void> {
 
 export async function prefetchStyleLinks(
   route: EntryRoute,
-  routeModule: RouteModule
+  routeModule: RouteModule,
 ): Promise<void> {
   if ((!route.css && !routeModule.links) || !isPreloadSupported()) return;
 
@@ -78,7 +78,7 @@ export async function prefetchStyleLinks(
 }
 
 async function prefetchStyleLink(
-  descriptor: HtmlLinkDescriptor
+  descriptor: HtmlLinkDescriptor,
 ): Promise<void> {
   return new Promise((resolve) => {
     // don't prefetch non-matching media queries, or stylesheets that are
@@ -86,7 +86,7 @@ async function prefetchStyleLink(
     if (
       (descriptor.media && !window.matchMedia(descriptor.media).matches) ||
       document.querySelector(
-        `link[rel="stylesheet"][href="${descriptor.href}"]`
+        `link[rel="stylesheet"][href="${descriptor.href}"]`,
       )
     ) {
       return resolve();
@@ -120,7 +120,7 @@ async function prefetchStyleLink(
 
 ////////////////////////////////////////////////////////////////////////////////
 export function isPageLinkDescriptor(
-  object: any
+  object: any,
 ): object is PageLinkDescriptor {
   return object != null && typeof object.page === "string";
 }
@@ -150,7 +150,7 @@ export async function getKeyedPrefetchLinks(
   matches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  loadRouteModule: LoadRouteModuleFunction
+  loadRouteModule: LoadRouteModuleFunction,
 ): Promise<KeyedHtmlLinkDescriptor[]> {
   let links = await Promise.all(
     matches.map(async (match) => {
@@ -160,7 +160,7 @@ export async function getKeyedPrefetchLinks(
         return mod.links ? mod.links() : [];
       }
       return [];
-    })
+    }),
   );
 
   return dedupeLinkDescriptors(
@@ -171,8 +171,8 @@ export async function getKeyedPrefetchLinks(
       .map((link) =>
         link.rel === "stylesheet"
           ? ({ ...link, rel: "prefetch", as: "style" } as HtmlLinkDescriptor)
-          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor)
-      )
+          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor),
+      ),
   );
 }
 
@@ -183,7 +183,7 @@ export function getNewMatchesForLinks(
   currentMatches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
   location: Location,
-  mode: "data" | "assets"
+  mode: "data" | "assets",
 ): AgnosticDataRouteMatch[] {
   let isNew = (match: AgnosticDataRouteMatch, index: number) => {
     if (!currentMatches[index]) return true;
@@ -203,7 +203,7 @@ export function getNewMatchesForLinks(
 
   if (mode === "assets") {
     return nextMatches.filter(
-      (match, index) => isNew(match, index) || matchPathChanged(match, index)
+      (match, index) => isNew(match, index) || matchPathChanged(match, index),
     );
   }
 
@@ -226,7 +226,7 @@ export function getNewMatchesForLinks(
         let routeChoice = match.route.shouldRevalidate({
           currentUrl: new URL(
             location.pathname + location.search + location.hash,
-            window.origin
+            window.origin,
           ),
           currentParams: currentMatches[0]?.params || {},
           nextUrl: new URL(page, window.origin),
@@ -247,7 +247,7 @@ export function getNewMatchesForLinks(
 export function getModuleLinkHrefs(
   matches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
-  { includeHydrateFallback }: { includeHydrateFallback?: boolean } = {}
+  { includeHydrateFallback }: { includeHydrateFallback?: boolean } = {},
 ): string[] {
   return dedupeHrefs(
     matches
@@ -269,7 +269,7 @@ export function getModuleLinkHrefs(
         }
         return hrefs;
       })
-      .flat(1)
+      .flat(1),
   );
 }
 
@@ -295,7 +295,7 @@ type KeyedLinkDescriptor<Descriptor extends LinkDescriptor = LinkDescriptor> = {
 
 function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
   descriptors: Descriptor[],
-  preloads?: string[]
+  preloads?: string[],
 ): KeyedLinkDescriptor<Descriptor>[] {
   let set = new Set();
   let preloadsSet = new Set(preloads);

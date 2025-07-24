@@ -5,7 +5,7 @@ import type {
 import { defaultLoadRouteModule } from "../../lib/dom/ssr/routeModules";
 
 export function mockFrameworkContext(
-  overrides?: Partial<FrameworkContextObject>
+  overrides?: Partial<FrameworkContextObject>,
 ): FrameworkContextObject {
   return {
     routeModules: { root: { default: () => null } },
@@ -46,7 +46,7 @@ export function mockFrameworkContext(
 }
 
 export function mockEntryContext(
-  overrides?: Partial<EntryContext>
+  overrides?: Partial<EntryContext>,
 ): EntryContext {
   return {
     ...mockFrameworkContext(overrides),

@@ -94,7 +94,7 @@ touch app/routes.js
 export default [];
 ```
 
-The existence of `routes.js` is required to build a React Router app; if you're using React Router we assume you'll want to do some routing eventually. You can read more about defining routes in our [Routing][routing] guide.
+The existence of `routes.js` is required to build a React Router app; if you're using React Router, we assume you'll want to do some routing eventually. You can read more about defining routes in our [Routing][routing] guide.
 
 ## Build and Run
 
@@ -173,7 +173,7 @@ app.use(
   createRequestHandler({
     // and the result of `react-router build` is "just a module"
     build: await import("./build/server/index.js"),
-  })
+  }),
 );
 
 app.listen(3000, () => {
@@ -205,8 +205,8 @@ First, as a convenience, add `dev` and `start` commands in `package.json` that w
 {
   "scripts": {
     "dev": "node ./server.js",
-    "start": "cross-env NODE_ENV=production node ./server.js"
-  }
+    "start": "cross-env NODE_ENV=production node ./server.js",
+  },
   // ...
 }
 ```
@@ -226,22 +226,22 @@ if (process.env.NODE_ENV === "production") {
   app.use(
     createRequestHandler({
       build: await import("./build/server/index.js"),
-    })
+    }),
   );
 } else {
   const viteDevServer = await import("vite").then((vite) =>
     vite.createServer({
       server: { middlewareMode: true },
-    })
+    }),
   );
   app.use(viteDevServer.middlewares);
   app.use(
     createRequestHandler({
       build: () =>
         viteDevServer.ssrLoadModule(
-          "virtual:react-router/server-build"
+          "virtual:react-router/server-build",
         ),
-    })
+    }),
   );
 }
 
@@ -292,7 +292,6 @@ What's next?
 [inspect]: https://nodejs.org/en/docs/guides/debugging-getting-started/
 [vite-config]: https://vite.dev/config
 [routing]: ../start/framework/routing
-[templates]: /resources?category=templates
 [http-localhost-3000]: http://localhost:3000
 [vite]: https://vitejs.dev
 [react-router-config]: https://api.reactrouter.com/v7/types/_react_router_dev.config.Config.html

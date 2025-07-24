@@ -15,5 +15,6 @@ app.get("/.well-known/appspecific/com.chrome.devtools.json", (_, res) => {
 
 app.use(createRequestListener(reactRouterRequestHandler));
 
-app.listen(3000);
-console.log("Server listening on port 3000 (http://localhost:3000)");
+const port = process.env.PORT || 3000;
+app.listen(port);
+console.log(`Server listening on port ${port} (http://localhost:${port})`);

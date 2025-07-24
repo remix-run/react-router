@@ -50,7 +50,7 @@ export interface ServerRouteModule extends RouteModule {
  * A function that handles data mutations for a route on the client
  */
 export type ClientActionFunction = (
-  args: ClientActionFunctionArgs
+  args: ClientActionFunctionArgs,
 ) => ReturnType<ActionFunction>;
 
 /**
@@ -64,7 +64,7 @@ export type ClientActionFunctionArgs = ActionFunctionArgs & {
  * A function that loads data for a route on the client
  */
 export type ClientLoaderFunction = ((
-  args: ClientLoaderFunctionArgs
+  args: ClientLoaderFunctionArgs,
 ) => ReturnType<LoaderFunction>) & {
   hydrate?: boolean;
 };
@@ -126,7 +126,7 @@ export interface LinksFunction {
 
 export interface MetaMatch<
   RouteId extends string = string,
-  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown
+  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
 > {
   id: RouteId;
   pathname: DataRouteMatch["pathname"];
@@ -143,7 +143,7 @@ export type MetaMatches<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > = Array<
   {
     [K in keyof MatchLoaders]: MetaMatch<
@@ -158,7 +158,7 @@ export interface MetaArgs<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
   data:
     | (Loader extends LoaderFunction | ClientLoaderFunction
@@ -226,7 +226,7 @@ export interface MetaFunction<
   MatchLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
-  > = Record<string, unknown>
+  > = Record<string, unknown>,
 > {
   (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
 }
@@ -262,12 +262,12 @@ export type RouteHandle = unknown;
 
 export type LoadRouteModuleFunction = (
   route: EntryRoute,
-  routeModulesCache: RouteModules
+  routeModulesCache: RouteModules,
 ) => Promise<RouteModule>;
 
 export const defaultLoadRouteModule: LoadRouteModuleFunction = async (
   route,
-  routeModulesCache
+  routeModulesCache,
 ) => {
   if (route.id in routeModulesCache) {
     return routeModulesCache[route.id] as RouteModule;
@@ -293,7 +293,7 @@ export const defaultLoadRouteModule: LoadRouteModuleFunction = async (
 
     // Log the error so it can be accessed via the `Preserve Log` setting
     console.error(
-      `Error loading route module \`${route.module}\`, reloading page...`
+      `Error loading route module \`${route.module}\`, reloading page...`,
     );
     console.error(error);
 

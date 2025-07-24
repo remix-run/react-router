@@ -30,7 +30,7 @@ export function mockServerBuild(
     future?: Partial<FutureConfig>;
     handleError?: HandleErrorFunction;
     handleDocumentRequest?: HandleDocumentRequestFunction;
-  } = {}
+  } = {},
 ): ServerBuild {
   return {
     ssr: true,
@@ -87,7 +87,7 @@ export function mockServerBuild(
               new Response(null, {
                 status: responseStatusCode,
                 headers: responseHeaders,
-              })
+              }),
           ),
         handleDataRequest: jest.fn(async (response) => response),
         handleError: opts.handleError,
@@ -113,7 +113,7 @@ export function mockServerBuild(
           [id]: route,
         };
       },
-      {}
+      {},
     ),
   };
 }
