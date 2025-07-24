@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["./index.ts"],
+  "entryPoints": ["./index.ts", "./dom-export.ts"],
   "categoryOrder": [
     "Components",
     "Hooks",
