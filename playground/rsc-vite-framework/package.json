@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --app",
+    "dev": "react-router dev",
+    "build": "react-router build",
     "start": "cross-env NODE_ENV=production node start.js",
     "typecheck": "react-router typegen && tsc"
   },
