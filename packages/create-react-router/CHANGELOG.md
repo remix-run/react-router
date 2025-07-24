@@ -2,6 +2,8 @@
 
 ## 7.7.1
 
+_No changes_
+
 ## 7.7.0
 
 ### Minor Changes
