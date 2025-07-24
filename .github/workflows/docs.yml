@@ -9,6 +9,11 @@ on:
       - "packages/**/*.ts"
       - "packages/**/*.tsx"
       - "scripts/docs.ts"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to generate docs for (usually dev)"
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.FORMAT_PAT }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
