@@ -26,6 +26,8 @@ import {
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
+import type { LoadRouteModuleFunction } from "../dom/ssr/routeModules";
+import { defaultLoadRouteModule } from "../dom/ssr/routeModules";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -76,8 +78,10 @@ function initSsrInfo(): void {
 }
 
 function createHydratedRouter({
+  loadRouteModule = defaultLoadRouteModule,
   unstable_getContext,
 }: {
+  loadRouteModule?: LoadRouteModuleFunction;
   unstable_getContext?: RouterInit["unstable_getContext"];
 }): DataRouter {
   initSsrInfo();
@@ -123,6 +127,7 @@ function createHydratedRouter({
     ssrInfo.context.state,
     ssrInfo.context.ssr,
     ssrInfo.context.isSpaMode,
+    loadRouteModule,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
@@ -189,6 +194,7 @@ function createHydratedRouter({
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename,
+      loadRouteModule,
     ),
   });
   ssrInfo.router = router;
@@ -222,10 +228,16 @@ export interface HydratedRouterProps {
    * functions
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
+  /**
+   * Optional function to take control over how route modules are loaded into
+   * the browser.  Primarily for use by bundler plugins.
+   */
+  unstable_loadRouteModule?: LoadRouteModuleFunction;
 }
 
 // TODO: Reference `HydratedRouterProps` in the `HydratedRouter` JSDoc
 //  @param {HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+
 /**
  * Framework-mode router component to be used to hydrate a router from a
  * {@link ServerRouter}. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
@@ -238,11 +250,17 @@ export interface HydratedRouterProps {
  * {@link createBrowserRouter} and made available to
  * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
  * functions
+ * @param props.unstable_loadRouteModule Optional function to take control over how route modules are loaded into
+ * the browser.  Primarily for use by bundler plugins.  Defaults to `import(routeModulePath)`.
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
+  let loadRouteModule =
+    props.unstable_loadRouteModule ?? defaultLoadRouteModule;
+
   if (!router) {
     router = createHydratedRouter({
+      loadRouteModule,
       unstable_getContext: props.unstable_getContext,
     });
   }
@@ -307,6 +325,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
+    loadRouteModule,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
@@ -325,6 +344,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
           criticalCss,
           ssr: ssrInfo.context.ssr,
           isSpaMode: ssrInfo.context.isSpaMode,
+          loadRouteModule,
           routeDiscovery: ssrInfo.context.routeDiscovery,
         }}
       >

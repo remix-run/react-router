@@ -34,6 +34,7 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
+import { defaultLoadRouteModule } from "../dom/ssr/routeModules";
 import type {
   SingleFetchResult,
   SingleFetchResults,
@@ -518,6 +519,7 @@ async function handleDocumentRequest(
       routeDiscovery: build.routeDiscovery,
       isSpaMode,
       serializeError: (err) => serializeError(err, serverMode),
+      loadRouteModule: defaultLoadRouteModule,
     };
 
     let handleDocumentRequestFunction = build.entry.module.default;

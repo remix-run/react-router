@@ -4,7 +4,7 @@ import type { AgnosticDataRouteMatch } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules, RouteModule } from "./routeModules";
 import type { EntryRoute } from "./routes";
-import { loadRouteModule } from "./routeModules";
+import type { LoadRouteModuleFunction } from "./routeModules";
 import type {
   HtmlLinkDescriptor,
   LinkDescriptor,
@@ -150,6 +150,7 @@ export async function getKeyedPrefetchLinks(
   matches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  loadRouteModule: LoadRouteModuleFunction,
 ): Promise<KeyedHtmlLinkDescriptor[]> {
   let links = await Promise.all(
     matches.map(async (match) => {

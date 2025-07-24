@@ -710,6 +710,9 @@ export function RSCHydratedRouter({
     },
     routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
     routeModules: {},
+    loadRouteModule: () => {
+      throw new Error("Not required in RSC Mode");
+    },
   };
 
   return (

@@ -4,7 +4,7 @@ import type { Router as DataRouter } from "../../router/router";
 import type { RouteManifest } from "../../router/utils";
 import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
-import type { RouteModules } from "./routeModules";
+import type { LoadRouteModuleFunction, RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
 import type { ServerBuild } from "../../server-runtime/build";
@@ -73,6 +73,7 @@ export function getPatchRoutesOnNavigationFunction(
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
   basename: string | undefined,
+  loadRouteModule: LoadRouteModuleFunction,
 ): PatchRoutesOnNavigationFunction | undefined {
   if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
@@ -89,6 +90,7 @@ export function getPatchRoutesOnNavigationFunction(
       routeModules,
       ssr,
       isSpaMode,
+      loadRouteModule,
       basename,
       routeDiscovery.manifestPath,
       patch,
@@ -104,6 +106,7 @@ export function useFogOFWarDiscovery(
   ssr: boolean,
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
+  loadRouteModule: LoadRouteModuleFunction,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
@@ -161,6 +164,7 @@ export function useFogOFWarDiscovery(
           routeModules,
           ssr,
           isSpaMode,
+          loadRouteModule,
           router.basename,
           routeDiscovery.manifestPath,
           router.patchRoutes,
@@ -187,7 +191,15 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
+  }, [
+    ssr,
+    isSpaMode,
+    manifest,
+    routeModules,
+    router,
+    routeDiscovery,
+    loadRouteModule,
+  ]);
 }
 
 export function getManifestPath(
@@ -212,6 +224,7 @@ export async function fetchAndApplyManifestPatches(
   routeModules: RouteModules,
   ssr: boolean,
   isSpaMode: boolean,
+  loadRouteModule: LoadRouteModuleFunction,
   basename: string | undefined,
   manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
@@ -316,7 +329,15 @@ export async function fetchAndApplyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+      createClientRoutes(
+        patches,
+        routeModules,
+        null,
+        ssr,
+        isSpaMode,
+        loadRouteModule,
+        parentId,
+      ),
     ),
   );
 }

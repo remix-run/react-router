@@ -260,10 +260,23 @@ export type RouteComponent = ComponentType<{}>;
  */
 export type RouteHandle = unknown;
 
-export async function loadRouteModule(
+/**
+ * A function to load a route module into the browser. Intended for bundler
+ * integration usage, not for application code.
+ * Defaults to `await import(route.module)`.
+ *
+ * @name unstable_LoadRouteModuleFunction
+ * @category Types
+ */
+export type LoadRouteModuleFunction = (
   route: EntryRoute,
   routeModulesCache: RouteModules,
-): Promise<RouteModule> {
+) => Promise<RouteModule>;
+
+export const defaultLoadRouteModule: LoadRouteModuleFunction = async (
+  route,
+  routeModulesCache,
+) => {
   if (route.id in routeModulesCache) {
     return routeModulesCache[route.id] as RouteModule;
   }
@@ -311,4 +324,4 @@ export async function loadRouteModule(
       // check out of this hook cause the DJs never gonna re[s]olve this
     });
   }
-}
+};

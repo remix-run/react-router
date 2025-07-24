@@ -14,7 +14,7 @@ import type {
   RouteModule,
   RouteModules,
 } from "./routeModules";
-import { loadRouteModule } from "./routeModules";
+import type { LoadRouteModuleFunction } from "./routeModules";
 import type { FutureConfig } from "./entry";
 import { prefetchRouteCss, prefetchStyleLinks } from "./links";
 import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
@@ -181,6 +181,7 @@ export function createClientRoutesWithHMRRevalidationOptOut(
   initialState: HydrationState,
   ssr: boolean,
   isSpaMode: boolean,
+  loadRouteModule: LoadRouteModuleFunction,
 ) {
   return createClientRoutes(
     manifest,
@@ -188,6 +189,7 @@ export function createClientRoutesWithHMRRevalidationOptOut(
     initialState,
     ssr,
     isSpaMode,
+    loadRouteModule,
     "",
     groupRoutesByParentId(manifest),
     needsRevalidation,
@@ -229,6 +231,7 @@ export function createClientRoutes(
   initialState: HydrationState | null,
   ssr: boolean,
   isSpaMode: boolean,
+  loadRouteModule: LoadRouteModuleFunction,
   parentId: string = "",
   routesByParentId: Record<
     string,
@@ -460,6 +463,7 @@ export function createClientRoutes(
           let routeModulePromise = loadRouteModuleWithBlockingLinks(
             route,
             routeModulesCache,
+            loadRouteModule,
           );
           prefetchRouteModuleChunks(route);
           return await routeModulePromise;
@@ -552,6 +556,7 @@ export function createClientRoutes(
       initialState,
       ssr,
       isSpaMode,
+      loadRouteModule,
       route.id,
       routesByParentId,
       needsRevalidation,
@@ -639,6 +644,7 @@ function wrapShouldRevalidateForHdr(
 async function loadRouteModuleWithBlockingLinks(
   route: EntryRoute,
   routeModules: RouteModules,
+  loadRouteModule: LoadRouteModuleFunction,
 ) {
   // Ensure the route module and its static CSS links are loaded in parallel as
   // soon as possible before blocking on the route module
