@@ -14,7 +14,7 @@ const config = {
 export default config;
 
 // Because we use `entryPointStrategy: "packages"`, the root config is not
-// inherited by the child packages so we can export hares stuff here for them
+// inherited by the child packages so we can export shared stuff here for them
 // to use. See https://typedoc.org/documents/Options.Input.html#entrypointstrategy
 export const blockTags = [
   ...OptionDefaults.blockTags,
