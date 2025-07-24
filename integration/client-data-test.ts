@@ -546,8 +546,8 @@ test.describe("Client Data", () => {
               page,
             }) => {
               test.skip(
-                templateName === "rsc-parcel-framework",
-                "RSC Data Mode doesn't need to provide a default root HydrateFallback since it doesn't need to ensure <Scripts /> is rendered, and you already get a console warning",
+                templateName.includes("rsc"),
+                "RSC Framework Mode doesn't need to provide a default root HydrateFallback since it doesn't need to ensure <Scripts /> is rendered, and you already get a console warning",
               );
 
               appFixture = await createAppFixture(
@@ -1185,8 +1185,8 @@ test.describe("Client Data", () => {
               browserName,
             }) => {
               test.skip(
-                templateName === "rsc-parcel-framework",
-                "This test is specific to non-RSC Data Mode",
+                templateName.includes("rsc"),
+                "This test is specific to non-RSC Framework Mode",
               );
 
               appFixture = await createAppFixture(
