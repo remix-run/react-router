@@ -17,7 +17,7 @@ We've done a lot of work since then to get us to a place where we could ship a m
 
 - Shipped [Single Fetch][single-fetch]
 - Shipped [`dataStrategy`][data-strategy] for DIY middleware in React Router SPAs
-- Iterated on middleware/context APIs in the [Remix the Web][remix-the-web] project
+- Iterated on middleware/context APIs in the [Remix 3][remix-3] project
 - Developed a non-invasive type-safe + composable [context][async-provider] API
 
 ## Decision
@@ -276,5 +276,5 @@ If `clientLoaders` do call `serverLoaders` it gets trickier since they make indi
 [client-context]: https://github.com/remix-run/react-router/discussions/9856
 [single-fetch]: https://remix.run/docs/en/main/guides/single-fetch
 [data-strategy]: https://reactrouter.com/v6/routers/create-browser-router#optsdatastrategy
-[remix-the-web]: https://github.com/mjackson/remix-the-web
+[remix-3]: https://github.com/remix-run/remix
 [async-provider]: https://github.com/ryanflorence/async-provider

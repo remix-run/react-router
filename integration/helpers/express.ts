@@ -44,7 +44,7 @@ export function server() {
 
 export function rsc() {
   return tsx`
-    import { createRequestListener } from "@mjackson/node-fetch-server";
+    import { createRequestListener } from "@remix-run/node-fetch-server";
     import express from "express";
 
     const port = process.env.PORT ?? 3000
