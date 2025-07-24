@@ -10,12 +10,12 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@vitejs/plugin-rsc": "0.4.11",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
+    "@vitejs/plugin-rsc": "0.4.11",
     "cross-env": "^7.0.3",
     "typescript": "^5.1.6",
     "vite": "^6.2.0"
