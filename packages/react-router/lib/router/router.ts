@@ -2902,14 +2902,14 @@ export function createRouter(init: RouterInit): Router {
 
     if (request.signal.aborted) {
       matches
-      .filter((m) => m.shouldLoad)
-      .forEach((m) => {
-        dataResults[m.route.id] = {
-          type: ResultType.error,
-          error: new Error("Data loading aborted"),
-        };
-      });
-      return dataResults
+        .filter((m) => m.shouldLoad)
+        .forEach((m) => {
+          dataResults[m.route.id] = {
+            type: ResultType.error,
+            error: new Error("Data loading aborted"),
+          };
+        });
+      return dataResults;
     }
 
     for (let [routeId, result] of Object.entries(results)) {
