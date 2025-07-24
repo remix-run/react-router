@@ -6,7 +6,7 @@ unstable: true
 # unstable_routeRSCServerRequest
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
 Thank you for helping improve our documentation!
 
@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 <br />
 <br />
 
-<docs-warning>This API is experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
+<docs-warning>This API is experimental and subject to breaking changes in 
+minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
@@ -54,7 +54,7 @@ routeRSCServerRequest({
       {
         bootstrapScriptContent,
         formState: await getFormState(payload),
-      },
+      }
     );
   },
 });
@@ -75,11 +75,9 @@ async function routeRSCServerRequest({
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
     getPayload: () => Promise<RSCPayload>,
-  ) =>
-    | ReadableStream<Uint8Array>
-    | Promise<ReadableStream<Uint8Array>>;
+  ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
-}): Promise<Response>;
+}): Promise<Response>
 ```
 
 ## Params
@@ -108,3 +106,4 @@ Whether to hydrate the server response with the RSC payload. Defaults to `true`.
 
 A `Response` that either contains the RSC payload for data requests, or
 renders the HTML for document requests.
+
