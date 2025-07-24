@@ -1,6 +1,6 @@
 # `react-router`
 
-## 7.7.1-pre.0
+## 7.7.1
 
 ### Patch Changes
 
@@ -604,6 +604,7 @@
   ```
 
   Similar to server-side requests, a fresh `context` will be created per navigation (or `fetcher` call). If you have initial data you'd like to populate in the context for every request, you can provide an `unstable_getContext` function at the root of your app:
+
   - Library mode - `createBrowserRouter(routes, { unstable_getContext })`
   - Framework mode - `<HydratedRouter unstable_getContext>`
 
@@ -791,6 +792,7 @@ _No changes_
 - Remove `future.v7_normalizeFormMethod` future flag ([#11697](https://github.com/remix-run/react-router/pull/11697))
 
 - For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs. This means that the following APIs are provided from `react-router` rather than platform-specific packages: ([#11837](https://github.com/remix-run/react-router/pull/11837))
+
   - `createCookie`
   - `createCookieSessionStorage`
   - `createMemorySessionStorage`
@@ -799,6 +801,7 @@ _No changes_
   For consumers running older versions of Node, the `installGlobals` function from `@remix-run/node` has been updated to define `globalThis.crypto`, using [Node's `require('node:crypto').webcrypto` implementation.](https://nodejs.org/api/webcrypto.html)
 
   Since platform-specific packages no longer need to implement this API, the following low-level APIs have been removed:
+
   - `createCookieFactory`
   - `createSessionStorageFactory`
   - `createCookieSessionStorageFactory`
@@ -954,6 +957,7 @@ _No changes_
   ```
 
   This initial implementation targets type inference for:
+
   - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
@@ -968,6 +972,7 @@ _No changes_
   ```
 
   Check out our docs for more:
+
   - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
   - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
