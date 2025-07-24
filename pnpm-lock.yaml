@@ -337,12 +337,12 @@ importers:
 
   integration/helpers/rsc-parcel:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -413,12 +413,12 @@ importers:
 
   integration/helpers/rsc-parcel-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -474,9 +474,9 @@ importers:
 
   integration/helpers/rsc-vite:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1258,9 +1258,9 @@ importers:
 
   packages/react-router-node:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: ^0.2.0
-        version: 0.2.0
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
     devDependencies:
       react-router:
         specifier: workspace:*
@@ -1675,12 +1675,12 @@ importers:
 
   playground/rsc-parcel:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -1748,12 +1748,12 @@ importers:
 
   playground/rsc-parcel-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -1803,9 +1803,9 @@ importers:
 
   playground/rsc-vite:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -3675,9 +3675,6 @@ packages:
     resolution: {integrity: sha512-iA7+tyVqfrATAIsIRWQG+a7ZLLD0VaOCKV2Wd/v4mqIU3J9c4jx9p7S0nw1XH3gJCKNBOOwACOPYYSUu9pgT+w==}
     engines: {node: '>=12.0.0'}
 
-  '@mjackson/node-fetch-server@0.2.0':
-    resolution: {integrity: sha512-EMlH1e30yzmTpGLQjlFmaDAjyOeZhng1/XCd7DExR8PNAnG/G1tyruZxEoUe11ClnwGhGrtsdnyyUx1frSzjng==}
-
   '@mjackson/node-fetch-server@0.6.1':
     resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
 
@@ -4276,6 +4273,9 @@ packages:
 
   '@remix-run/changelog-github@0.0.5':
     resolution: {integrity: sha512-43tqwUqWqirbv6D9uzo55ASPsCJ61Ein1k/M8qn+Qpros0MmbmuzjLVPmtaxfxfe2ANX0LefLvCD0pAgr1tp4g==}
+
+  '@remix-run/node-fetch-server@0.8.0':
+    resolution: {integrity: sha512-8/sKegb4HrM6IdcQeU0KPhj9VOHm5SUqswJDHuMCS3mwbr/NRx078QDbySmn0xslahvvZoOENd7EnK40kWKxkg==}
 
   '@remix-run/web-blob@3.1.0':
     resolution: {integrity: sha512-owGzFLbqPH9PlKb8KvpNJ0NO74HWE2euAn61eEiyCXX/oteoVzTVSN8mpLgDjaxBf2btj5/nUllSUgpyd6IH6g==}
@@ -11873,8 +11873,6 @@ snapshots:
       '@lezer/lr': 1.4.2
       json5: 2.2.3
 
-  '@mjackson/node-fetch-server@0.2.0': {}
-
   '@mjackson/node-fetch-server@0.6.1': {}
 
   '@mjackson/node-fetch-server@0.7.0': {}
@@ -12720,6 +12718,8 @@ snapshots:
       dotenv: 8.6.0
     transitivePeerDependencies:
       - encoding
+
+  '@remix-run/node-fetch-server@0.8.0': {}
 
   '@remix-run/web-blob@3.1.0':
     dependencies:
