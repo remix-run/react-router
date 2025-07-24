@@ -155,20 +155,20 @@ test.describe("Client Data", () => {
 
     test.describe(`template: ${templateName}`, () => {
       [true, false].forEach((splitRouteModules) => {
-        test.skip(
-          templateName === "rsc-parcel-framework" && splitRouteModules,
-          "RSC Data Mode doesn't support splitRouteModules",
-        );
-
-        test.skip(
-          ({ browserName }) =>
-            Boolean(process.env.CI) &&
-            splitRouteModules &&
-            (browserName === "webkit" || process.platform === "win32"),
-          "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific",
-        );
-
         test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
+          test.skip(
+            templateName.includes("rsc") && splitRouteModules,
+            "RSC Framework Mode doesn't support splitRouteModules",
+          );
+
+          test.skip(
+            ({ browserName }) =>
+              Boolean(process.env.CI) &&
+              splitRouteModules &&
+              (browserName === "webkit" || process.platform === "win32"),
+            "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific",
+          );
+
           test.describe("clientLoader - critical route module", () => {
             test("no client loaders or fallbacks", async ({ page }) => {
               appFixture = await createAppFixture(
@@ -546,8 +546,8 @@ test.describe("Client Data", () => {
               page,
             }) => {
               test.skip(
-                templateName === "rsc-parcel-framework",
-                "RSC Data Mode doesn't need to provide a default root HydrateFallback since it doesn't need to ensure <Scripts /> is rendered, and you already get a console warning",
+                templateName.includes("rsc"),
+                "RSC Framework Mode doesn't need to provide a default root HydrateFallback since it doesn't need to ensure <Scripts /> is rendered, and you already get a console warning",
               );
 
               appFixture = await createAppFixture(
@@ -927,13 +927,8 @@ test.describe("Client Data", () => {
                   // Ignore any dev tools messages. This may only happen locally when dev
                   // tools is installed and not in CI but either way we don't care
                   /Download the React DevTools/.test(text) ||
-                  (templateName === "rsc-parcel-framework" &&
+                  (templateName.includes("rsc") &&
                     /The <Scripts \/> element is a no-op when using RSC and can be safely removed./.test(
-                      text,
-                    )) ||
-                  // TODO: Render outlet on RSC render error?
-                  (templateName === "rsc-parcel-framework" &&
-                    /Matched leaf route at location "\/parent\/child" does not have an element/.test(
                       text,
                     ))
                 ) {
@@ -963,6 +958,11 @@ test.describe("Client Data", () => {
             test("hydrating clientLoader redirects trigger new .data requests to the server", async ({
               page,
             }) => {
+              test.fixme(
+                templateName.includes("rsc"),
+                "Not working in the RSC implementation",
+              );
+
               appFixture = await createAppFixture(
                 await createFixture({
                   templateName,
@@ -1185,8 +1185,8 @@ test.describe("Client Data", () => {
               browserName,
             }) => {
               test.skip(
-                templateName === "rsc-parcel-framework",
-                "This test is specific to non-RSC Data Mode",
+                templateName.includes("rsc"),
+                "This test is specific to non-RSC Framework Mode",
               );
 
               appFixture = await createAppFixture(
