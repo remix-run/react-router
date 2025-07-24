@@ -5,6 +5,7 @@
 ### Minor Changes
 
 - Unstable Vite support for Node-based Remix apps ([#7590](https://github.com/remix-run/remix/pull/7590))
+
   - `remix build` 👉 `vite build && vite build --ssr`
   - `remix dev` 👉 `vite dev`
 
