@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch to generate docs for (usually dev)"
+        description: "Branch to generate docs on"
         required: true
 
 concurrency:
