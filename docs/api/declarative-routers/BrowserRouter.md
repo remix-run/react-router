@@ -39,9 +39,10 @@ Application basename
 
 ### children
 
-[`<Route>`](../components/Route) components describing your route configuration
+``<Route>`` components describing your route configuration
 
 ### window
 
-[`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object override - defaults to the global `window` instance
+[`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
+override — defaults to the global `window` instance
 

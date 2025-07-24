@@ -22,9 +22,9 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.ServerRouter.html)
 
-The server entry point for a React Router app in Framework Mode. This component
-is used to generate the HTML in the response from the server.
-See [`entry.server.tsx`](../api/framework-conventions/entry.server.tsx).
+The server entry point for a React Router app in Framework Mode. This
+component is used to generate the HTML in the response from the server. See
+[`entry.server.tsx`](../framework-conventions/entry.server.tsx).
 
 ## Signature
 
@@ -40,13 +40,15 @@ function ServerRouter({
 
 ### context
 
-The entry context containing the manifest, route modules, and other data needed for rendering.
+The entry context containing the manifest, route modules, and other data
+needed for rendering.
+
+### nonce
+
+An optional `nonce` for [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)
+compliance, used to allow inline scripts to run safely.
 
 ### url
 
 The URL of the request being handled.
-
-### nonce
-
-An optional nonce for Content Security Policy (CSP) compliance, used to allow inline scripts to run safely.
 

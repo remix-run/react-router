@@ -61,8 +61,8 @@ function ScrollRestoration({
 
 A function that returns a key to use for scroll restoration. This is useful
 for custom scroll restoration logic, such as using only the pathname so
-that subsequent navigations to prior paths will restore the scroll. Defaults
-to `location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.GetScrollRestorationKeyFunction.html).
+that later navigations to prior paths will restore the scroll. Defaults to
+`location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrouter.com/v7/interfaces/react_router.GetScrollRestorationKeyFunction.html).
 
 ```tsx
 <ScrollRestoration
@@ -79,7 +79,8 @@ to `location.key`. See [`GetScrollRestorationKeyFunction`](https://api.reactrout
 ### nonce
 
 A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
-attribute to render on [the `<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
+attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+element
 
 ### storageKey
 

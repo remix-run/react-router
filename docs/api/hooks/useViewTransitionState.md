@@ -49,7 +49,8 @@ The [`To`](https://api.reactrouter.com/v7/types/react_router.To.html) location t
 
 ### options.relative
 
-The relative routing type to use when resolving the `to` location, defaults to `"route"`. See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html) for more details.
+The relative routing type to use when resolving the `to` location, defaults to `"route"`. See [`RelativeRoutingType`](https://api.reactrouter.com/v7/types/react_router.RelativeRoutingType.html) for
+more details.
 
 ## Returns
 

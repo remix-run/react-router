@@ -30,9 +30,10 @@ to release notes for relevant changes.</docs-warning>
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_routeRSCServerRequest.html)
 
-Routes the incoming request to the RSC server and appropriately proxies the
-server response for data / resource requests, or renders to HTML for a document
-request.
+Routes the incoming [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+to the [RSC](https://react.dev/reference/rsc/server-components) server and
+appropriately proxies the server response for data / resource requests, or
+renders to HTML for a document request.
 
 ```tsx
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
@@ -88,22 +89,24 @@ Your `react-server-dom-xyz/client`'s `createFromReadableStream` function, used t
 
 ### opts.fetchServer
 
-A function that forwards a `Request` to the RSC handler and returns a `Promise<Response>` containing a serialized `RSCPayload`.
-
-### opts.renderHTML
-
-A function that renders the `RSCPayload` to HTML, usually using a `<RSCStaticRouter>`.
-
-### opts.request
-
-The request to route.
+A function that forwards a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) to the [RSC](https://react.dev/reference/rsc/server-components) handler
+and returns a `Promise<Response>` containing a serialized [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html).
 
 ### opts.hydrate
 
 Whether to hydrate the server response with the RSC payload. Defaults to `true`.
 
+### opts.renderHTML
+
+A function that renders the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) to HTML, usually using a [`<RSCStaticRouter>`](https://api.reactrouter.com/v7/functions/react_router.unstable_RSCStaticRouter.html).
+
+### opts.request
+
+The request to route.
+
 ## Returns
 
-A `Response` that either contains the RSC payload for data requests, or
-renders the HTML for document requests.
+A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+that either contains the [RSC](https://react.dev/reference/rsc/server-components)
+payload for data requests, or renders the HTML for document requests.
 
