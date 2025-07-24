@@ -1,5 +1,12 @@
 # `react-router`
 
+## 7.7.1
+
+### Patch Changes
+
+- In RSC Data Mode, fix bug where routes with errors weren't forced to revalidate when `shouldRevalidate` returned false ([#14026](https://github.com/remix-run/react-router/pull/14026))
+- In RSC Data Mode, fix `Matched leaf route at location "/..." does not have an element or Component` warnings when error boundaries are rendered. ([#14021](https://github.com/remix-run/react-router/pull/14021))
+
 ## 7.7.0
 
 ### Minor Changes
@@ -173,7 +180,6 @@
 ### Minor Changes
 
 - Added a new `react-router.config.ts` `routeDiscovery` option to configure Lazy Route Discovery behavior. ([#13451](https://github.com/remix-run/react-router/pull/13451))
-
   - By default, Lazy Route Discovery is enabled and makes manifest requests to the `/__manifest` path:
     - `routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" }`
   - You can modify the manifest path used:
@@ -219,7 +225,6 @@
 - Preserve status code if a `clientAction` throws a `data()` result in framework mode ([#13522](https://github.com/remix-run/react-router/pull/13522))
 
 - Be defensive against leading double slashes in paths to avoid `Invalid URL` errors from the URL constructor ([#13510](https://github.com/remix-run/react-router/pull/13510))
-
   - Note we do not sanitize/normalize these paths - we only detect them so we can avoid the error that would be thrown by `new URL("//", window.location.origin)`
 
 - Remove `Navigator` declaration for `navigator.connection.saveData` to avoid messing with any other types beyond `saveData` in userland ([#13512](https://github.com/remix-run/react-router/pull/13512))
@@ -235,7 +240,6 @@
 - UNSTABLE: Fix a few bugs with error bubbling in middleware use-cases ([#13538](https://github.com/remix-run/react-router/pull/13538))
 
 - Short circuit post-processing on aborted `dataStrategy` requests ([#13521](https://github.com/remix-run/react-router/pull/13521))
-
   - This resolves non-user-facing console errors of the form `Cannot read properties of undefined (reading 'result')`
 
 ## 7.5.3
@@ -250,7 +254,6 @@
 ### Patch Changes
 
 - Update Single Fetch to also handle the 204 redirects used in `?_data` requests in Remix v2 ([#13364](https://github.com/remix-run/react-router/pull/13364))
-
   - This allows applications to return a redirect on `.data` requests from outside the scope of React Router (i.e., an `express`/`hono` middleware)
   - ⚠️ Please note that doing so relies on implementation details that are subject to change without a SemVer major release
   - This is primarily done to ease upgrading to Single Fetch for existing Remix v2 applications, but the recommended way to handle this is redirecting from a route middleware
@@ -288,7 +291,6 @@
 - UNSTABLE: Add better error messaging when `getLoadContext` is not updated to return a `Map`" ([#13242](https://github.com/remix-run/react-router/pull/13242))
 
 - Do not automatically add `null` to `staticHandler.query()` `context.loaderData` if routes do not have loaders ([#13223](https://github.com/remix-run/react-router/pull/13223))
-
   - This was a Remix v2 implementation detail inadvertently left in for React Router v7
   - Now that we allow returning `undefined` from loaders, our prior check of `loaderData[routeId] !== undefined` was no longer sufficient and was changed to a `routeId in loaderData` check - these `null` values can cause issues for this new check
   - ⚠️ This could be a "breaking bug fix" for you if you are doing manual SSR with `createStaticHandler()`/`<StaticRouterProvider>`, and using `context.loaderData` to control `<RouterProvider>` hydration behavior on the client
@@ -367,7 +369,6 @@
 ### Minor Changes
 
 - Add `fetcherKey` as a parameter to `patchRoutesOnNavigation` ([#13061](https://github.com/remix-run/react-router/pull/13061))
-
   - In framework mode, Lazy Route Discovery will now detect manifest version mismatches after a new deploy
   - On navigations to undiscovered routes, this mismatch will trigger a document reload of the destination path
   - On `fetcher` calls to undiscovered routes, this mismatch will trigger a document reload of the current path
@@ -425,7 +426,7 @@
   ```tsx
   const clientLogger: Route.unstable_ClientMiddlewareFunction = async (
     { request },
-    next
+    next,
   ) => {
     let start = performance.now();
 
@@ -444,7 +445,7 @@
   ```tsx
   const serverLogger: Route.unstable_MiddlewareFunction = async (
     { request, params, context },
-    next
+    next,
   ) => {
     let start = performance.now();
 
@@ -465,7 +466,7 @@
   import { sessionContext } from "../context";
   const serverAuth: Route.unstable_MiddlewareFunction = (
     { request, params, context },
-    next
+    next,
   ) => {
     let session = context.get(sessionContext);
     let user = session.get("user");
@@ -660,7 +661,6 @@
 - Don't apply Single Fetch revalidation de-optimization when in SPA mode since there is no server HTTP request ([#12948](https://github.com/remix-run/react-router/pull/12948))
 
 - Properly handle revalidations to across a prerender/SPA boundary ([#13021](https://github.com/remix-run/react-router/pull/13021))
-
   - In "hybrid" applications where some routes are pre-rendered and some are served from a SPA fallback, we need to avoid making `.data` requests if the path wasn't pre-rendered because the request will 404
   - We don't know all the pre-rendered paths client-side, however:
     - All `loader` data in `ssr:false` mode is static because it's generated at build time
@@ -670,7 +670,6 @@
     - This ensures that the route doesn't cause a `.data` request that would 404 after a submission
 
 - Error at build time in `ssr:false` + `prerender` apps for the edge case scenario of: ([#13021](https://github.com/remix-run/react-router/pull/13021))
-
   - A parent route has only a `loader` (does not have a `clientLoader`)
   - The parent route is pre-rendered
   - The parent route has children routes which are not prerendered
@@ -683,7 +682,6 @@
 - Add `unstable_SerializesTo` brand type for library authors to register types serializable by React Router's streaming format (`turbo-stream`) ([`ab5b05b02`](https://github.com/remix-run/react-router/commit/ab5b05b02f99f062edb3c536c392197c88eb6c77))
 
 - Align dev server behavior with static file server behavior when `ssr:false` is set ([#12948](https://github.com/remix-run/react-router/pull/12948))
-
   - When no `prerender` config exists, only SSR down to the root `HydrateFallback` (SPA Mode)
   - When a `prerender` config exists but the current path is not prerendered, only SSR down to the root `HydrateFallback` (SPA Fallback)
   - Return a 404 on `.data` requests to non-pre-rendered paths
@@ -691,7 +689,6 @@
 - Improve prefetch performance of CSS side effects in framework mode ([#12889](https://github.com/remix-run/react-router/pull/12889))
 
 - Disable Lazy Route Discovery for all `ssr:false` apps and not just "SPA Mode" because there is no runtime server to serve the search-param-configured `__manifest` requests ([#12894](https://github.com/remix-run/react-router/pull/12894))
-
   - We previously only disabled this for "SPA Mode" which is `ssr:false` and no `prerender` config but we realized it should apply to all `ssr:false` apps, including those prerendering multiple pages
   - In those `prerender` scenarios we would prerender the `/__manifest` file assuming the static file server would serve it but that makes some unneccesary assumptions about the static file server behaviors
 
@@ -768,7 +765,6 @@ _No changes_
 ### Major Changes
 
 - Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
-
   - `defer`
   - `AbortedDeferredError`
   - `type TypedDeferredData`
@@ -812,7 +808,6 @@ _No changes_
   - `createMemorySessionStorageFactory`
 
 - Imports/Exports cleanup ([#11840](https://github.com/remix-run/react-router/pull/11840))
-
   - Removed the following exports that were previously public API from `@remix-run/router`
     - types
       - `AgnosticDataIndexRouteObject`
@@ -849,7 +844,6 @@ _No changes_
 - Remove `future.v7_prependBasename` from the ionternalized `@remix-run/router` package ([#11726](https://github.com/remix-run/react-router/pull/11726))
 
 - Migrate Remix type generics to React Router ([#12180](https://github.com/remix-run/react-router/pull/12180))
-
   - These generics are provided for Remix v2 migration purposes
   - These generics and the APIs they exist on should be considered informally deprecated in favor of the new `Route.*` types
   - Anyone migrating from React Router v6 should probably not leverage these new generics and should migrate straight to the `Route.*` types
@@ -889,11 +883,9 @@ _No changes_
 - Remove `v7_relativeSplatPath` future flag ([#11695](https://github.com/remix-run/react-router/pull/11695))
 
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
   - Remove `installGlobals()` as this should no longer be necessary
 
 - Remove remaining future flags ([#11820](https://github.com/remix-run/react-router/pull/11820))
-
   - React Router `v7_skipActionErrorRevalidation`
   - Remix `v3_fetcherPersist`, `v3_relativeSplatPath`, `v3_throwAbortReason`
 
@@ -902,7 +894,6 @@ _No changes_
 - Remove `@remix-run/router` deprecated `detectErrorBoundary` option in favor of `mapRouteProperties` ([#11751](https://github.com/remix-run/react-router/pull/11751))
 
 - Add `react-router/dom` subpath export to properly enable `react-dom` as an optional `peerDependency` ([#11851](https://github.com/remix-run/react-router/pull/11851))
-
   - This ensures that we don't blindly `import ReactDOM from "react-dom"` in `<RouterProvider>` in order to access `ReactDOM.flushSync()`, since that would break `createMemoryRouter` use cases in non-DOM environments
   - DOM environments should import from `react-router/dom` to get the proper component that makes `ReactDOM.flushSync()` available:
     - If you are using the Vite plugin, use this in your `entry.client.tsx`:
@@ -1006,7 +997,6 @@ _No changes_
 - Replace `substr` with `substring` ([#12080](https://github.com/remix-run/react-router/pull/12080))
 
 - Remove the deprecated `json` utility ([#12146](https://github.com/remix-run/react-router/pull/12146))
-
   - You can use [`Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static) if you still need to construct JSON responses in your app
 
 - Remove unneeded dependency on source-map ([#12275](https://github.com/remix-run/react-router/pull/12275))
@@ -1360,7 +1350,6 @@ No significant changes to this package were made in this release. [See the repo 
 - Fix `useActionData` so it returns proper contextual action data and not _any_ action data in the tree ([#11023](https://github.com/remix-run/react-router/pull/11023))
 
 - Fix bug in `useResolvedPath` that would cause `useResolvedPath(".")` in a splat route to lose the splat portion of the URL path. ([#10983](https://github.com/remix-run/react-router/pull/10983))
-
   - ⚠️ This fixes a quite long-standing bug specifically for `"."` paths inside a splat route which incorrectly dropped the splat portion of the URL. If you are relative routing via `"."` inside a splat route in your application you should double check that your logic is not relying on this buggy behavior and update accordingly.
 
 - Updated dependencies:
@@ -1527,7 +1516,6 @@ No significant changes to this package were made in this release. [See the repo 
 ### Minor Changes
 
 - Added support for [**Future Flags**](https://reactrouter.com/v6/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
-
   - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
     - `useNavigation().formMethod` is lowercase
     - `useFetcher().formMethod` is lowercase
@@ -1600,7 +1588,7 @@ No significant changes to this package were made in this release. [See the repo 
       <Route index element={<Home />} />
       <Route path="a" lazy={() => import("./a")} />
       <Route path="b" lazy={() => import("./b")} />
-    </Route>
+    </Route>,
   );
   ```
 

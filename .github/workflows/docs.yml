@@ -11,10 +11,6 @@ on:
       branch:
         description: "Branch to generate docs for (usually dev)"
         required: true
-      api:
-        description: "API Names to generate docs for"
-        required: false
-        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -48,15 +44,10 @@ jobs:
         run: pnpm build
 
       - name: 📚 Generate Typedoc Docs
-        run: pnpm run docs
+        run: pnpm run docs:typedoc
 
-      - name: 📚 Generate Markdown Docs (for all APIs)
-        if: github.event.inputs.api == ''
-        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write
-
-      - name: 📚 Generate Markdown Docs (for specific APIs)
-        if: github.event.inputs.api != ''
-        run: node --experimental-strip-types scripts/docs.ts --path packages/react-router/lib/hooks.tsx --write --api ${{ github.event.inputs.api }}
+      - name: 📚 Generate Markdown Docs
+        run: pnpm run docs:jsdoc --write
 
       - name: 💪 Commit
         run: |

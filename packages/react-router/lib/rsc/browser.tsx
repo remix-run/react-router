@@ -46,12 +46,12 @@ export type BrowserCreateFromReadableStreamFunction = (
     temporaryReferences,
   }: {
     temporaryReferences: unknown;
-  }
+  },
 ) => Promise<unknown>;
 
 export type EncodeReplyFunction = (
   args: unknown[],
-  options: { temporaryReferences: unknown }
+  options: { temporaryReferences: unknown },
 ) => Promise<BodyInit>;
 
 type WindowWithRouterGlobals = Window &
@@ -61,6 +61,40 @@ type WindowWithRouterGlobals = Window &
     __routerActionID: number;
   };
 
+/**
+ * Create a React `callServer` implementation for React Router.
+ *
+ * @example
+ * import {
+ *   createFromReadableStream,
+ *   createTemporaryReferenceSet,
+ *   encodeReply,
+ *   setServerCallback,
+ * } from "@vitejs/plugin-rsc/browser";
+ * import { unstable_createCallServer as createCallServer } from "react-router";
+ *
+ * setServerCallback(
+ *   createCallServer({
+ *     createFromReadableStream,
+ *     createTemporaryReferenceSet,
+ *     encodeReply,
+ *   })
+ * );
+ *
+ * @name unstable_createCallServer
+ * @public
+ * @category RSC
+ * @mode data
+ * @param opts Options
+ * @param opts.createFromReadableStream Your `react-server-dom-xyz/client`'s
+ * `createFromReadableStream`. Used to decode payloads from the server.
+ * @param opts.createTemporaryReferenceSet A function that creates a temporary
+ * reference set for the RSC payload.
+ * @param opts.encodeReply Your `react-server-dom-xyz/client`'s `encodeReply`.
+ * Used when sending payloads to the server.
+ * @param opts.fetch Optional fetch implementation. Defaults to global `fetch`.
+ * @returns A function that can be used to call server actions.
+ */
 export function createCallServer({
   createFromReadableStream,
   createTemporaryReferenceSet,
@@ -88,7 +122,7 @@ export function createCallServer({
           Accept: "text/x-component",
           "rsc-action-id": id,
         },
-      })
+      }),
     );
     if (!response.body) {
       throw new Error("No response body");
@@ -143,7 +177,7 @@ export function createCallServer({
               globalVar.__router.patchRoutes(
                 lastMatch?.id ?? null,
                 [createRouteFromServerManifest(match)],
-                true
+                true,
               );
               lastMatch = match;
             }
@@ -158,19 +192,19 @@ export function createCallServer({
                 loaderData: Object.assign(
                   {},
                   globalVar.__router.state.loaderData,
-                  rerender.loaderData
+                  rerender.loaderData,
                 ),
                 errors: rerender.errors
                   ? Object.assign(
                       {},
                       globalVar.__router.state.errors,
-                      rerender.errors
+                      rerender.errors,
                     )
                   : null,
               });
             });
           }
-        }
+        },
       );
     }
 
@@ -206,14 +240,14 @@ function createRouterFromPayload({
   let routes = payload.matches.reduceRight((previous, match) => {
     const route: DataRouteObject = createRouteFromServerManifest(
       match,
-      payload
+      payload,
     );
     if (previous.length > 0) {
       route.children = previous;
       let childrenToPatch = patches.get(match.id);
       if (childrenToPatch) {
         route.children.push(
-          ...childrenToPatch.map((r) => createRouteFromServerManifest(r))
+          ...childrenToPatch.map((r) => createRouteFromServerManifest(r)),
         );
       }
     }
@@ -243,7 +277,7 @@ function createRouterFromPayload({
       },
       payload.location,
       undefined,
-      false
+      false,
     ),
     async patchRoutesOnNavigation({ path, signal }) {
       if (discoveredPaths.has(path)) {
@@ -253,7 +287,7 @@ function createRouterFromPayload({
         [path],
         createFromReadableStream,
         fetchImplementation,
-        signal
+        signal,
       );
     },
     // FIXME: Pass `build.ssr` into this function
@@ -262,7 +296,7 @@ function createRouterFromPayload({
       true,
       payload.basename,
       createFromReadableStream,
-      fetchImplementation
+      fetchImplementation,
     ),
   });
 
@@ -292,7 +326,7 @@ export function getRSCSingleFetchDataStrategy(
   ssr: boolean,
   basename: string | undefined,
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
-  fetchImplementation: (request: Request) => Promise<Response>
+  fetchImplementation: (request: Request) => Promise<Response>,
 ): DataStrategyFunction {
   // TODO: Clean this up with a shared type
   type RSCDataRouteMatch = DataRouteMatch & {
@@ -330,7 +364,7 @@ export function getRSCSingleFetchDataStrategy(
     (match) => {
       let M = match as RSCDataRouteMatch;
       return M.route.hasComponent && !M.route.element;
-    }
+    },
   );
   return async (args) =>
     args.unstable_runClientMiddleware(async () => {
@@ -365,7 +399,7 @@ export function getRSCSingleFetchDataStrategy(
             (window as WindowWithRouterGlobals).__router.patchRoutes(
               rendered.parentId ?? null,
               [createRouteFromServerManifest(rendered)],
-              true
+              true,
             );
           }
         }
@@ -376,12 +410,12 @@ export function getRSCSingleFetchDataStrategy(
 
 function getFetchAndDecodeViaRSC(
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
-  fetchImplementation: (request: Request) => Promise<Response>
+  fetchImplementation: (request: Request) => Promise<Response>,
 ): FetchAndDecodeFunction {
   return async (
     args: DataStrategyFunctionArgs<unknown>,
     basename: string | undefined,
-    targetRoutes?: string[]
+    targetRoutes?: string[],
   ) => {
     let { request, context } = args;
     let url = singleFetchUrl(request.url, basename, "rsc");
@@ -393,7 +427,7 @@ function getFetchAndDecodeViaRSC(
     }
 
     let res = await fetchImplementation(
-      new Request(url, await createRequestInit(request))
+      new Request(url, await createRequestInit(request)),
     );
 
     // If this 404'd without hitting the running server (most likely in a
@@ -460,19 +494,89 @@ function getFetchAndDecodeViaRSC(
   };
 }
 
+/**
+ * Props for the `unstable_RSCHydratedRouter` component.
+ * @name unstable_RSCHydratedRouterProps
+ */
+export interface RSCHydratedRouterProps {
+  /**
+   * Your `react-server-dom-xyz/client`'s `createFromReadableStream` function,
+   * used to decode payloads from the server.
+   */
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction;
+  /**
+   * Optional fetch implementation.  Defaults to global `fetch`.
+   */
+  fetch?: (request: Request) => Promise<Response>;
+  /**
+   * The decoded `RSCPayload` to hydrate.
+   */
+  payload: RSCPayload;
+  /**
+   * `eager` or `lazy` - Determines if links are eagerly discovered, or delayed
+   * until clicked.
+   */
+  routeDiscovery?: "eager" | "lazy";
+  /**
+   * A function that returns an `unstable_InitialContext` object
+   * (`Map<RouterContext, unknown>`), for use in client loaders, actions and
+   * middleware.
+   */
+  unstable_getContext?: RouterInit["unstable_getContext"];
+}
+
+/**
+ * Hydrates a server rendered `RSCPayload` in the browser.
+ *
+ * @example
+ * import { startTransition, StrictMode } from "react";
+ * import { hydrateRoot } from "react-dom/client";
+ * import {
+ *   unstable_getRSCStream as getRSCStream,
+ *   unstable_RSCHydratedRouter as RSCHydratedRouter,
+ * } from "react-router";
+ * import type { unstable_RSCPayload as RSCPayload } from "react-router";
+ *
+ * createFromReadableStream(getRSCStream()).then(
+ *   (payload: RSCServerPayload) => {
+ *     startTransition(async () => {
+ *       hydrateRoot(
+ *         document,
+ *         <StrictMode>
+ *           <RSCHydratedRouter
+ *             createFromReadableStream={
+ *               createFromReadableStream
+ *             }
+ *             payload={payload}
+ *           />
+ *         </StrictMode>,
+ *         {
+ *           formState: await getFormState(payload),
+ *         }
+ *       );
+ *     });
+ *   }
+ * );
+ *
+ * @name unstable_RSCHydratedRouter
+ * @public
+ * @category RSC
+ * @mode data
+ * @param props Props
+ * @param {unstable_RSCHydratedRouterProps.createFromReadableStream} props.createFromReadableStream n/a
+ * @param {unstable_RSCHydratedRouterProps.fetch} props.fetch n/a
+ * @param {unstable_RSCHydratedRouterProps.payload} props.payload n/a
+ * @param {unstable_RSCHydratedRouterProps.routeDiscovery} props.routeDiscovery n/a
+ * @param {unstable_RSCHydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @returns A hydrated router that can be used to navigate and render routes.
+ */
 export function RSCHydratedRouter({
   createFromReadableStream,
   fetch: fetchImplementation = fetch,
   payload,
   routeDiscovery = "eager",
   unstable_getContext,
-}: {
-  createFromReadableStream: BrowserCreateFromReadableStreamFunction;
-  fetch?: (request: Request) => Promise<Response>;
-  payload: RSCPayload;
-  routeDiscovery?: "eager" | "lazy";
-  unstable_getContext?: RouterInit["unstable_getContext"];
-}) {
+}: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let router = React.useMemo(
@@ -488,7 +592,7 @@ export function RSCHydratedRouter({
       payload,
       fetchImplementation,
       unstable_getContext,
-    ]
+    ],
   );
 
   React.useLayoutEffect(() => {
@@ -510,7 +614,7 @@ export function RSCHydratedRouter({
           setLocation(newState.location);
         }
       }),
-    [router, location]
+    [router, location],
   );
 
   React.useEffect(() => {
@@ -564,7 +668,7 @@ export function RSCHydratedRouter({
         await fetchAndApplyManifestPatches(
           paths,
           createFromReadableStream,
-          fetchImplementation
+          fetchImplementation,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -630,7 +734,7 @@ type DataRouteObjectWithManifestInfo = DataRouteObject & {
 
 function createRouteFromServerManifest(
   match: RSCRouteManifest,
-  payload?: RSCRenderPayload
+  payload?: RSCRenderPayload,
 ): DataRouteObjectWithManifestInfo {
   let hasInitialData = payload && match.id in payload.loaderData;
   let initialData = payload?.loaderData[match.id];
@@ -661,7 +765,7 @@ function createRouteFromServerManifest(
                 preventInvalidServerHandlerCall(
                   "loader",
                   match.id,
-                  match.hasLoader
+                  match.hasLoader,
                 );
                 // On the first call, resolve with the server result
                 if (isHydrationRequest) {
@@ -691,16 +795,16 @@ function createRouteFromServerManifest(
               preventInvalidServerHandlerCall(
                 "action",
                 match.id,
-                match.hasLoader
+                match.hasLoader,
               );
               return await callSingleFetch(singleFetch);
             },
           })
       : match.hasAction
-      ? (_, singleFetch) => callSingleFetch(singleFetch)
-      : () => {
-          throw noActionDefinedError("action", match.id);
-        },
+        ? (_, singleFetch) => callSingleFetch(singleFetch)
+        : () => {
+            throw noActionDefinedError("action", match.id);
+          },
     path: match.path,
     shouldRevalidate: match.shouldRevalidate,
     // We always have a "loader" in this RSC world since even if we don't
@@ -717,7 +821,7 @@ function createRouteFromServerManifest(
       match.id,
       match.clientLoader,
       match.hasLoader,
-      false
+      false,
     );
   }
 
@@ -732,7 +836,7 @@ function callSingleFetch(singleFetch: unknown) {
 function preventInvalidServerHandlerCall(
   type: "action" | "loader",
   routeId: string,
-  hasHandler: boolean
+  hasHandler: boolean,
 ) {
   if (!hasHandler) {
     let fn = type === "action" ? "serverAction()" : "serverLoader()";
@@ -777,7 +881,7 @@ async function fetchAndApplyManifestPatches(
   paths: string[],
   createFromReadableStream: BrowserCreateFromReadableStreamFunction,
   fetchImplementation: (request: Request) => Promise<Response>,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) {
   let url = getManifestUrl(paths);
   if (url == null) {
@@ -812,7 +916,7 @@ async function fetchAndApplyManifestPatches(
   payload.patches.forEach((p) => {
     (window as WindowWithRouterGlobals).__router.patchRoutes(
       p.parentId ?? null,
-      [createRouteFromServerManifest(p)]
+      [createRouteFromServerManifest(p)],
     );
   });
 }

@@ -127,7 +127,7 @@ describe("scroll restoration", () => {
       t.router.enableScrollRestoration(
         positions,
         () => activeScrollPosition,
-        (l) => l.pathname
+        (l) => l.pathname,
       );
 
       let nav1 = await t.navigate("/tasks");
@@ -157,7 +157,7 @@ describe("scroll restoration", () => {
         (l) => {
           pathname = l.pathname;
           return l.pathname;
-        }
+        },
       );
 
       let nav1 = await t.navigate("/tasks");
@@ -189,7 +189,7 @@ describe("scroll restoration", () => {
       t.router.enableScrollRestoration(
         positions,
         () => activeScrollPosition,
-        (l) => l.pathname
+        (l) => l.pathname,
       );
 
       let nav1 = await t.navigate("/tasks", {
@@ -223,7 +223,7 @@ describe("scroll restoration", () => {
       t.router.enableScrollRestoration(
         positions,
         () => activeScrollPosition,
-        (l) => l.pathname
+        (l) => l.pathname,
       );
 
       let nav1 = await t.navigate("/tasks", {

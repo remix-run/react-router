@@ -15,7 +15,7 @@ import {
 // Import the prerender function from the client environment
 import { prerender } from "./prerender" with { env: "react-client" };
 import { routes } from "./routes";
-import { assets } from "./parcel-entry-wrapper"
+import { assets } from "./parcel-entry-wrapper";
 import { basename } from "./config/basename";
 import { requestContext } from "./config/request-context";
 
@@ -51,7 +51,7 @@ app.use(
   express.static("dist/client", {
     immutable: true,
     maxAge: "1y",
-  })
+  }),
 );
 app.use(express.static("public"));
 
@@ -67,9 +67,9 @@ app.use(
     prerender(
       request,
       fetchServer,
-      (assets as unknown as { bootstrapScript?: string }).bootstrapScript
-    )
-  )
+      (assets as unknown as { bootstrapScript?: string }).bootstrapScript,
+    ),
+  ),
 );
 
 const { values } = parseArgs({

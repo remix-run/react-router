@@ -66,7 +66,7 @@ async function run() {
       console.log(`[react-router-serve] http://localhost:${port}`);
     } else {
       console.log(
-        `[react-router-serve] http://localhost:${port} (http://${address}:${port})`
+        `[react-router-serve] http://localhost:${port} (http://${address}:${port})`,
       );
     }
   };
@@ -79,7 +79,7 @@ async function run() {
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
-    })
+    }),
   );
   app.use(build.publicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
@@ -90,7 +90,7 @@ async function run() {
     createRequestHandler({
       build,
       mode: process.env.NODE_ENV,
-    })
+    }),
   );
 
   let server = process.env.HOST

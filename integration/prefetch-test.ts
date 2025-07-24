@@ -19,7 +19,7 @@ type PrefetchType = "intent" | "render" | "none" | "viewport";
 // Generate the test app using the given prefetch mode
 function fixtureFactory(
   mode: PrefetchType,
-  templateName: TemplateName
+  templateName: TemplateName,
 ): FixtureInit {
   return {
     templateName,
@@ -109,7 +109,7 @@ test.describe("prefetch", () => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
 
@@ -117,7 +117,7 @@ test.describe("prefetch", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
       });
@@ -139,7 +139,7 @@ test.describe("prefetch", () => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
 
@@ -150,17 +150,17 @@ test.describe("prefetch", () => {
           // Both data and asset fetch for /prefetch-with-loader
           await page.waitForSelector(
             "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
-            { state: "attached" }
+            { state: "attached" },
           );
 
           // Only asset fetch for /prefetch-without-loader
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
-            { state: "attached" }
+            { state: "attached" },
           );
 
           // These 2 are common and duped for both - but they've already loaded on
@@ -171,7 +171,7 @@ test.describe("prefetch", () => {
               "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
-            { state: "attached" }
+            { state: "attached" },
           );
 
           // Ensure no other links in the #nav element
@@ -196,7 +196,7 @@ test.describe("prefetch", () => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
 
@@ -204,7 +204,7 @@ test.describe("prefetch", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
 
@@ -214,12 +214,12 @@ test.describe("prefetch", () => {
           await page.hover("a[href='/prefetch-with-loader']");
           await page.waitForSelector(
             "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
-            { state: "attached" }
+            { state: "attached" },
           );
           // Check href prefix due to hashed filenames
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
@@ -227,14 +227,14 @@ test.describe("prefetch", () => {
               "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
-            { state: "attached" }
+            { state: "attached" },
           );
           expect(await page.locator("link").count()).toBe(3);
 
           await page.hover("a[href='/prefetch-without-loader']");
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
@@ -242,7 +242,7 @@ test.describe("prefetch", () => {
               "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
-            { state: "attached" }
+            { state: "attached" },
           );
           expect(await page.locator("link").count()).toBe(2);
         });
@@ -264,7 +264,7 @@ test.describe("prefetch", () => {
             state: "attached",
           });
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
 
           // Links stay removed upon navigating away from the page
@@ -273,7 +273,7 @@ test.describe("prefetch", () => {
             state: "attached",
           });
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
       });
@@ -295,7 +295,7 @@ test.describe("prefetch", () => {
           let res = await fixture.requestDocument("/");
           expect(res.status).toBe(200);
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
 
@@ -303,7 +303,7 @@ test.describe("prefetch", () => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto("/");
           expect(
-            await page.locator("link[href^='/assets/prefetch-']").count()
+            await page.locator("link[href^='/assets/prefetch-']").count(),
           ).toBe(0);
         });
 
@@ -316,11 +316,11 @@ test.describe("prefetch", () => {
           await page.focus("a[href='/prefetch-with-loader']");
           await page.waitForSelector(
             "link[rel='prefetch'][as='fetch'][href='/prefetch-with-loader.data']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/prefetch-with-loader-']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
@@ -328,14 +328,14 @@ test.describe("prefetch", () => {
               "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
-            { state: "attached" }
+            { state: "attached" },
           );
           expect(await page.locator("link").count()).toBe(3);
 
           await page.focus("a[href='/prefetch-without-loader']");
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/prefetch-without-loader-']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             // Look for either Rollup or Rolldown chunks
@@ -343,7 +343,7 @@ test.describe("prefetch", () => {
               "link[rel='modulepreload'][href^='/assets/chunk-']",
               "link[rel='modulepreload'][href^='/assets/jsx-runtime-']",
             ].join(","),
-            { state: "attached" }
+            { state: "attached" },
           );
           expect(await page.locator("link").count()).toBe(2);
         });
@@ -402,22 +402,22 @@ test.describe("prefetch", () => {
               [
                 "link[rel='prefetch'][as='fetch'][href='/test.data']",
                 "link[rel='modulepreload'][href^='/assets/test-']",
-              ].join(",")
-            )
+              ].join(","),
+            ),
           ).toHaveCount(0);
 
           // Preloads render on scroll down
           await page.evaluate(() =>
-            window.scrollTo(0, document.body.scrollHeight)
+            window.scrollTo(0, document.body.scrollHeight),
           );
 
           await page.waitForSelector(
             "link[rel='prefetch'][as='fetch'][href='/test.data']",
-            { state: "attached" }
+            { state: "attached" },
           );
           await page.waitForSelector(
             "link[rel='modulepreload'][href^='/assets/test-']",
-            { state: "attached" }
+            { state: "attached" },
           );
 
           // Preloads removed on scroll up
@@ -427,8 +427,8 @@ test.describe("prefetch", () => {
               [
                 "link[rel='prefetch'][as='fetch'][href='/test.data']",
                 "link[rel='modulepreload'][href^='/assets/test-']",
-              ].join(",")
-            )
+              ].join(","),
+            ),
           ).toHaveCount(0);
         });
       });
@@ -517,7 +517,8 @@ test.describe("prefetch", () => {
           // already been rendered in the DOM
           let stylesheets = requests.filter(
             (r) =>
-              r.type === "stylesheet" && /\/global-[a-z0-9-]+\.css/i.test(r.url)
+              r.type === "stylesheet" &&
+              /\/global-[a-z0-9-]+\.css/i.test(r.url),
           );
           expect(stylesheets.length).toBe(1);
         });
@@ -651,10 +652,10 @@ test.describe("prefetch", () => {
             state: "attached",
           });
           expect(
-            await page.locator("link[rel='prefetch'][as='style']").count()
+            await page.locator("link[rel='prefetch'][as='style']").count(),
           ).toBe(2);
           expect(
-            await page.locator("link[rel='prefetch'][as='image']").count()
+            await page.locator("link[rel='prefetch'][as='image']").count(),
           ).toBe(2);
         });
       });

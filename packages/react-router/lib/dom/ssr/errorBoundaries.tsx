@@ -31,7 +31,7 @@ export class RemixErrorBoundary extends React.Component<
 
   static getDerivedStateFromProps(
     props: RemixErrorBoundaryProps,
-    state: RemixErrorBoundaryState
+    state: RemixErrorBoundaryState,
   ) {
     // When we get into an error state, the user will likely click "back" to the
     // previous page that didn't have an error. Because this wraps the entire
@@ -110,8 +110,8 @@ export function RemixRootDefaultErrorBoundary({
       error == null
         ? "Unknown Error"
         : typeof error === "object" && "toString" in error
-        ? error.toString()
-        : JSON.stringify(error);
+          ? error.toString()
+          : JSON.stringify(error);
     errorInstance = new Error(errorString);
   }
 

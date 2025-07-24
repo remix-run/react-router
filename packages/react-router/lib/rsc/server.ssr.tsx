@@ -9,9 +9,56 @@ import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 
 export type SSRCreateFromReadableStreamFunction = (
-  body: ReadableStream<Uint8Array>
+  body: ReadableStream<Uint8Array>,
 ) => Promise<unknown>;
 
+/**
+ * Routes the incoming request to the RSC server and appropriately proxies the
+ * server response for data / resource requests, or renders to HTML for a document
+ * request.
+ *
+ * @example
+ * import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
+ * import * as ReactDomServer from "react-dom/server.edge";
+ * import {
+ *   unstable_RSCStaticRouter as RSCStaticRouter,
+ *   unstable_routeRSCServerRequest as routeRSCServerRequest,
+ * } from "react-router";
+ *
+ * routeRSCServerRequest({
+ *   request,
+ *   fetchServer,
+ *   createFromReadableStream,
+ *   async renderHTML(getPayload) {
+ *     const payload = await getPayload();
+ *
+ *     return await renderHTMLToReadableStream(
+ *       <RSCStaticRouter getPayload={getPayload} />,
+ *       {
+ *         bootstrapScriptContent,
+ *         formState: await getFormState(payload),
+ *       }
+ *     );
+ *   },
+ * });
+ *
+ * @name unstable_routeRSCServerRequest
+ * @public
+ * @category RSC
+ * @mode data
+ * @param opts Options
+ * @param opts.createFromReadableStream Your `react-server-dom-xyz/client`'s
+ * `createFromReadableStream` function, used to decode payloads from the server.
+ * @param opts.fetchServer A function that forwards a `Request` to the RSC handler
+ * and returns a `Promise<Response>` containing a serialized `RSCPayload`.
+ * @param opts.renderHTML A function that renders the `RSCPayload` to HTML, usually
+ * using a `<RSCStaticRouter>`.
+ * @param opts.request The request to route.
+ * @param opts.hydrate Whether to hydrate the server response with the RSC payload.
+ * Defaults to `true`.
+ * @returns A `Response` that either contains the RSC payload for data requests, or
+ * renders the HTML for document requests.
+ */
 export async function routeRSCServerRequest({
   request,
   fetchServer,
@@ -23,10 +70,10 @@ export async function routeRSCServerRequest({
   fetchServer: (request: Request) => Promise<Response>;
   createFromReadableStream: SSRCreateFromReadableStreamFunction;
   renderHTML: (
-    getPayload: () => Promise<RSCPayload>
+    getPayload: () => Promise<RSCPayload>,
   ) => ReadableStream<Uint8Array> | Promise<ReadableStream<Uint8Array>>;
   hydrate?: boolean;
-}) {
+}): Promise<Response> {
   const url = new URL(request.url);
   const isDataRequest = isReactServerRequest(url);
   const respondWithRSCPayload =
@@ -94,11 +141,56 @@ export async function routeRSCServerRequest({
   }
 }
 
-export function RSCStaticRouter({
-  getPayload,
-}: {
+/**
+ * Props for the `RSCStaticRouter` component.
+ * @name unstable_RSCStaticRouterProps
+ */
+export interface RSCStaticRouterProps {
+  /**
+   * A function that starts decoding of the `RSCPayload`. Usually passed through
+   * from `routeRSCServerRequest`'s `renderHTML`.
+   */
   getPayload: () => Promise<RSCPayload>;
-}) {
+}
+
+/**
+ * Pre-renders an `RSCPayload` to HTML. Usually used in `routeRSCServerRequest`'s
+ * `renderHTML` callback.
+ *
+ * @example
+ * import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
+ * import * as ReactDomServer from "react-dom/server.edge";
+ * import {
+ *   unstable_RSCStaticRouter as RSCStaticRouter,
+ *   unstable_routeRSCServerRequest as routeRSCServerRequest,
+ * } from "react-router";
+ *
+ * routeRSCServerRequest({
+ *   request,
+ *   fetchServer,
+ *   createFromReadableStream,
+ *   async renderHTML(getPayload) {
+ *     const payload = await getPayload();
+ *
+ *     return await renderHTMLToReadableStream(
+ *       <RSCStaticRouter getPayload={getPayload} />,
+ *       {
+ *         bootstrapScriptContent,
+ *         formState: await getFormState(payload),
+ *       }
+ *     );
+ *   },
+ * });
+ *
+ * @name unstable_RSCStaticRouter
+ * @public
+ * @category RSC
+ * @mode data
+ * @param props Props
+ * @param {unstable_RSCStaticRouterProps.getPayload} props.getPayload n/a
+ * @returns A React component that renders the `RSCPayload` as HTML.
+ */
+export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
   // @ts-expect-error - need to update the React types
   const payload = React.use(getPayload()) as RSCPayload;
 
@@ -124,7 +216,7 @@ export function RSCStaticRouter({
         match.id,
         match.clientLoader,
         match.hasLoader,
-        false
+        false,
       ) &&
       (match.hydrateFallbackElement || !match.hasLoader)
     ) {
@@ -178,7 +270,7 @@ export function RSCStaticRouter({
       }
       return [route];
     }, [] as DataRouteObject[]),
-    context
+    context,
   );
 
   const frameworkContext: FrameworkContextObject = {

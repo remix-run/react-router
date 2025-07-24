@@ -47,7 +47,7 @@ describe("Custom link with useLinkClickHandler", () => {
             />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -60,7 +60,7 @@ describe("Custom link with useLinkClickHandler", () => {
           view: window,
           bubbles: true,
           cancelable: true,
-        })
+        }),
       );
     });
 
@@ -86,7 +86,7 @@ describe("Custom link with useLinkClickHandler", () => {
               />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -102,7 +102,7 @@ describe("Custom link with useLinkClickHandler", () => {
             bubbles: true,
             cancelable: true,
             button: RightMouseButton,
-          })
+          }),
         );
       });
 
@@ -131,7 +131,7 @@ describe("Custom link with useLinkClickHandler", () => {
               />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -144,7 +144,7 @@ describe("Custom link with useLinkClickHandler", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
@@ -171,7 +171,7 @@ describe("Custom link with useLinkClickHandler", () => {
               />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -186,7 +186,7 @@ describe("Custom link with useLinkClickHandler", () => {
             cancelable: true,
             // The Ctrl key is pressed
             ctrlKey: true,
-          })
+          }),
         );
       });
 

@@ -391,7 +391,7 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge";
 export async function generateHTML(
   request: Request,
   fetchServer: (request: Request) => Promise<Response>,
-  bootstrapScriptContent: string | undefined
+  bootstrapScriptContent: string | undefined,
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
@@ -413,7 +413,7 @@ export async function generateHTML(
         {
           bootstrapScriptContent,
           formState,
-        }
+        },
       );
     },
   });
@@ -455,10 +455,13 @@ function fetchServer(request: Request) {
     routes: routes(),
     // Encode the match with the React Server implementation.
     generateResponse(match) {
-      return new Response(renderToReadableStream(match.payload), {
-        status: match.statusCode,
-        headers: match.headers,
-      });
+      return new Response(
+        renderToReadableStream(match.payload),
+        {
+          status: match.statusCode,
+          headers: match.headers,
+        },
+      );
     },
   });
 }
@@ -472,7 +475,7 @@ app.use(
   express.static("dist/client", {
     immutable: true,
     maxAge: "1y",
-  })
+  }),
 );
 // Hook up our application.
 app.use(
@@ -480,9 +483,10 @@ app.use(
     generateHTML(
       request,
       fetchServer,
-      (routes as unknown as { bootstrapScript?: string }).bootstrapScript
-    )
-  )
+      (routes as unknown as { bootstrapScript?: string })
+        .bootstrapScript,
+    ),
+  ),
 );
 
 app.listen(3000, () => {
@@ -516,7 +520,7 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 
 // Get and decode the initial server payload.
@@ -540,10 +544,10 @@ createFromReadableStream(getRSCStream()).then(
         </StrictMode>,
         {
           formState,
-        }
+        },
       );
     });
-  }
+  },
 );
 ```
 
@@ -620,7 +624,7 @@ import {
 
 export async function generateHTML(
   request: Request,
-  fetchServer: (request: Request) => Promise<Response>
+  fetchServer: (request: Request) => Promise<Response>,
 ): Promise<Response> {
   return await routeRSCServerRequest({
     // The incoming request.
@@ -639,7 +643,7 @@ export async function generateHTML(
 
       const bootstrapScriptContent =
         await import.meta.viteRsc.loadBootstrapScriptContent(
-          "index"
+          "index",
         );
 
       return await renderHTMLToReadableStream(
@@ -647,7 +651,7 @@ export async function generateHTML(
         {
           bootstrapScriptContent,
           formState,
-        }
+        },
       );
     },
   });
@@ -690,7 +694,7 @@ function fetchServer(request: Request) {
         {
           status: match.statusCode,
           headers: match.headers,
-        }
+        },
       );
     },
   });
@@ -730,12 +734,12 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 
 // Get and decode the initial server payload.
 createFromReadableStream<RSCServerPayload>(
-  getRSCStream()
+  getRSCStream(),
 ).then((payload) => {
   startTransition(async () => {
     const formState =
@@ -755,7 +759,7 @@ createFromReadableStream<RSCServerPayload>(
       </StrictMode>,
       {
         formState,
-      }
+      },
     );
   });
 });

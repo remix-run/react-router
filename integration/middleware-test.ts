@@ -101,13 +101,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -192,13 +192,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -267,14 +267,14 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty"
+        "Index: a,b - empty",
       );
 
       (await page.getByRole("button"))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       await page.waitForSelector('[data-route]:has-text("- a,b")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b"
+        "Index: a,b - a,b",
       );
 
       appFixture.close();
@@ -429,12 +429,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -496,12 +496,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -675,13 +675,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -763,13 +763,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -836,14 +836,14 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty"
+        "Index: a,b - empty",
       );
 
       (await page.getByRole("button"))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       await page.waitForSelector('[data-route]:has-text("- a,b")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b"
+        "Index: a,b - a,b",
       );
 
       appFixture.close();
@@ -993,12 +993,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1059,12 +1059,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1256,7 +1256,7 @@ test.describe("Middleware", () => {
       expect(requests.sort()).toEqual([
         expect.stringContaining("/parent/child.data?_routes=routes%2Fparent"),
         expect.stringContaining(
-          "/parent/child.data?_routes=routes%2Fparent.child"
+          "/parent/child.data?_routes=routes%2Fparent.child",
         ),
       ]);
 
@@ -1400,7 +1400,7 @@ test.describe("Middleware", () => {
       expect(await page.locator("[data-parent]").textContent()).toBe("PARENT");
       expect(await page.locator("[data-child]").textContent()).toBe("CHILD");
       expect(
-        JSON.parse((await page.locator("[data-index]").textContent())!)
+        JSON.parse((await page.locator("[data-index]").textContent())!),
       ).toEqual({
         serverData: "INDEX",
         context: {
@@ -1418,11 +1418,11 @@ test.describe("Middleware", () => {
       expect(requests.sort()).toEqual([
         // This is the normal request but only included parent.child because parent opted out
         expect.stringMatching(
-          /\/parent\/child\.data\?_routes=routes%2Fparent\.child$/
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child$/,
         ),
         // index gets it's own due to clientLoader
         expect.stringMatching(
-          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/,
         ),
       ]);
 
@@ -1430,7 +1430,7 @@ test.describe("Middleware", () => {
       expect(await page.locator("[data-parent]").textContent()).toBe("PARENT");
       expect(await page.locator("[data-child]").textContent()).toBe("CHILD");
       expect(
-        JSON.parse((await page.locator("[data-index]").textContent())!)
+        JSON.parse((await page.locator("[data-index]").textContent())!),
       ).toEqual({
         serverData: "INDEX",
         context: {
@@ -1518,13 +1518,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -1591,14 +1591,14 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty"
+        "Index: a,b - empty",
       );
 
       (await page.getByRole("button"))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       await page.waitForSelector('[data-route]:has-text("- a,b")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b"
+        "Index: a,b - a,b",
       );
 
       appFixture.close();
@@ -1755,12 +1755,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1811,12 +1811,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1876,12 +1876,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1939,12 +1939,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -2021,12 +2021,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -2100,12 +2100,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -2179,12 +2179,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -2276,12 +2276,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);

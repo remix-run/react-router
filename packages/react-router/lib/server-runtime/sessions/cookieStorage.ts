@@ -25,7 +25,7 @@ interface CookieSessionStorageOptions {
  */
 export function createCookieSessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({ cookie: cookieArg }: CookieSessionStorageOptions = {}): SessionStorage<
   Data,
   FlashData
@@ -39,7 +39,7 @@ export function createCookieSessionStorage<
   return {
     async getSession(cookieHeader, options) {
       return createSession(
-        (cookieHeader && (await cookie.parse(cookieHeader, options))) || {}
+        (cookieHeader && (await cookie.parse(cookieHeader, options))) || {},
       );
     },
     async commitSession(session, options) {
@@ -47,7 +47,7 @@ export function createCookieSessionStorage<
       if (serializedCookie.length > 4096) {
         throw new Error(
           "Cookie length will exceed browser maximum. Length: " +
-            serializedCookie.length
+            serializedCookie.length,
         );
       }
       return serializedCookie;

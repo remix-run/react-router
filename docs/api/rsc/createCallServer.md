@@ -5,6 +5,18 @@ unstable: true
 
 # unstable_createCallServer
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rsc/browser.tsx
+-->
+
 [MODES: data]
 
 <br />
@@ -16,9 +28,11 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_createCallServer.html)
+
 Create a React `callServer` implementation for React Router.
 
-```tsx filename=entry.browser.tsx
+```tsx
 import {
   createFromReadableStream,
   createTemporaryReferenceSet,
@@ -32,16 +46,44 @@ setServerCallback(
     createFromReadableStream,
     createTemporaryReferenceSet,
     encodeReply,
-  })
+  }),
 );
 ```
 
-## Options
+## Signature
 
-### createFromReadableStream
+```tsx
+function createCallServer({
+  createFromReadableStream,
+  createTemporaryReferenceSet,
+  encodeReply,
+  fetch: fetchImplementation = fetch,
+}: {
+  createFromReadableStream: BrowserCreateFromReadableStreamFunction;
+  createTemporaryReferenceSet: () => unknown;
+  encodeReply: EncodeReplyFunction;
+  fetch?: (request: Request) => Promise<Response>;
+});
+```
+
+## Params
+
+### opts.createFromReadableStream
 
 Your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode payloads from the server.
 
-### encodeReply
+### opts.createTemporaryReferenceSet
+
+A function that creates a temporary reference set for the RSC payload.
+
+### opts.encodeReply
 
 Your `react-server-dom-xyz/client`'s `encodeReply`. Used when sending payloads to the server.
+
+### opts.fetch
+
+Optional fetch implementation. Defaults to global `fetch`.
+
+## Returns
+
+A function that can be used to call server actions.

@@ -32,7 +32,7 @@ describe("useRevalidator", () => {
             loader={async () => `count=${++count}`}
             element={<Foo />}
           />
-        </Route>
+        </Route>,
       ),
       {
         initialEntries: ["/foo"],
@@ -41,7 +41,7 @@ describe("useRevalidator", () => {
             "0-0": "count=1",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -157,14 +157,14 @@ describe("useRevalidator", () => {
               );
             }}
           />
-        </Route>
-      )
+        </Route>,
+      ),
     );
 
     let { container } = render(
       <div>
         <RouterProvider router={router} />
-      </div>
+      </div>,
     );
 
     fireEvent.click(screen.getByText("/child"));
@@ -214,14 +214,14 @@ describe("useRevalidator", () => {
             }}
             Component={() => <p>{("Child:" + useLoaderData()) as string}</p>}
           />
-        </Route>
-      )
+        </Route>,
+      ),
     );
 
     let { container } = render(
       <div>
         <RouterProvider router={router} />
-      </div>
+      </div>,
     );
 
     fireEvent.click(screen.getByText("/child"));
@@ -312,7 +312,7 @@ describe("useRevalidator", () => {
         hydrationData: {
           loaderData: { root: 0 },
         },
-      }
+      },
     );
 
     render(<RouterProvider router={router} />);

@@ -16,7 +16,7 @@ import {
 async function clearRouteModuleAnnotations(ctx: Context) {
   await fs.rm(
     Path.join(typesDirectory(ctx), Path.basename(ctx.config.appDirectory)),
-    { recursive: true, force: true }
+    { recursive: true, force: true },
   );
 }
 
@@ -25,7 +25,7 @@ async function write(...files: Array<VirtualFile>) {
     files.map(async ({ filename, content }) => {
       await fs.mkdir(Path.dirname(filename), { recursive: true });
       await fs.writeFile(filename, content);
-    })
+    }),
   );
 }
 
@@ -35,7 +35,7 @@ export async function run(rootDirectory: string, { mode }: { mode: string }) {
   await write(
     generateFuture(ctx),
     generateServerBuild(ctx),
-    ...generateRoutes(ctx)
+    ...generateRoutes(ctx),
   );
 }
 
@@ -45,14 +45,14 @@ export type Watcher = {
 
 export async function watch(
   rootDirectory: string,
-  { mode, logger }: { mode: string; logger?: vite.Logger }
+  { mode, logger }: { mode: string; logger?: vite.Logger },
 ): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, mode, watch: true });
   await fs.rm(typesDirectory(ctx), { recursive: true, force: true });
   await write(
     generateFuture(ctx),
     generateServerBuild(ctx),
-    ...generateRoutes(ctx)
+    ...generateRoutes(ctx),
   );
   logger?.info(green("generated types"), { timestamp: true, clear: true });
 
@@ -80,7 +80,7 @@ export async function watch(
           clear: true,
         });
       }
-    }
+    },
   );
 
   return {

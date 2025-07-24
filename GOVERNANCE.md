@@ -18,6 +18,7 @@
 React Router has been around since 2014 largely under the development and oversight of [Michael Jackson](https://x.com/mjackson) and [Ryan Florence](https://x.com/ryanflorence). After the launch of [Remix](https://remix.run/) in 2021, the subsequent creation of the Remix team, and the merging of Remix v2 into React Router v7[^1][^2], the project shifted from a [Founder-Leader](https://www.redhat.com/en/blog/understanding-open-source-governance-models) model to a "Steering Committee" (SC) model that operates on a Request for Comments (RFC) process.
 
 [^1]: https://remix.run/blog/merging-remix-and-react-router
+
 [^2]: https://remix.run/blog/incremental-path-to-react-19
 
 This document will outline the process in which React Router will continue to evolve and how new features will make their way into the codebase. This is an evergreen document and will be updated as needed to reflect future changes in the process.

@@ -155,7 +155,7 @@ By defining this function, you opt out of the default behavior completely and ca
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
 function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs
+  arg: ShouldRevalidateFunctionArgs,
 ) {
   return true; // false
 }

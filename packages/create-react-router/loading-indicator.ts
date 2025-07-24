@@ -38,11 +38,11 @@ const MAX_FRAMES = 8;
 
 const LEADING_FRAMES = Array.from(
   { length: MAX_FRAMES * 2 },
-  () => GRADIENT_COLORS[0]
+  () => GRADIENT_COLORS[0],
 );
 const TRAILING_FRAMES = Array.from(
   { length: MAX_FRAMES * 2 },
-  () => GRADIENT_COLORS[GRADIENT_COLORS.length - 1]
+  () => GRADIENT_COLORS[GRADIENT_COLORS.length - 1],
 );
 const INDICATOR_FULL_FRAMES = [
   ...LEADING_FRAMES,
@@ -51,7 +51,7 @@ const INDICATOR_FULL_FRAMES = [
   ...reverse(GRADIENT_COLORS),
 ];
 const INDICATOR_GRADIENT = reverse(
-  INDICATOR_FULL_FRAMES.map((_, i) => loadingIndicatorFrame(i))
+  INDICATOR_FULL_FRAMES.map((_, i) => loadingIndicatorFrame(i)),
 );
 
 export async function renderLoadingIndicator({
@@ -88,7 +88,7 @@ function loadingIndicatorFrame(offset = 0) {
   let frames = INDICATOR_FULL_FRAMES.slice(offset, offset + (MAX_FRAMES - 2));
   if (frames.length < MAX_FRAMES - 2) {
     let filled = new Array(MAX_FRAMES - frames.length - 2).fill(
-      GRADIENT_COLORS[0]
+      GRADIENT_COLORS[0],
     );
     frames.push(...filled);
   }
@@ -97,13 +97,13 @@ function loadingIndicatorFrame(offset = 0) {
 
 function getGradientAnimationFrames() {
   return INDICATOR_GRADIENT.map(
-    (colors) => " " + colors.map((g, i) => color.hex(g)("█")).join("")
+    (colors) => " " + colors.map((g, i) => color.hex(g)("█")).join(""),
   );
 }
 
 async function gradient(
   text: string,
-  { stdin = process.stdin, stdout = process.stdout, noMotion = false } = {}
+  { stdin = process.stdin, stdout = process.stdout, noMotion = false } = {},
 ) {
   let { createLogUpdate } = await import("log-update");
   let logUpdate = createLogUpdate(stdout);
@@ -142,9 +142,9 @@ async function gradient(
           `${(noMotion
             ? getMotionlessFrame(frameIndex)
             : color.supportsColor
-            ? frame
-            : getColorlessFrame(frameIndex)
-          ).padEnd(MAX_FRAMES - 1, " ")}  ${text}`
+              ? frame
+              : getColorlessFrame(frameIndex)
+          ).padEnd(MAX_FRAMES - 1, " ")}  ${text}`,
         );
         if (!done) await sleep(20);
         loop();

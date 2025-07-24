@@ -7,7 +7,7 @@ function getHandler(
   routeModule = {},
   opts: {
     handleDocumentRequest?: HandleDocumentRequestFunction;
-  } = {}
+  } = {},
 ) {
   let handleErrorSpy = jest.fn();
   let build = mockServerBuild(
@@ -21,7 +21,7 @@ function getHandler(
     {
       handleError: handleErrorSpy,
       handleDocumentRequest: opts.handleDocumentRequest,
-    }
+    },
   );
 
   return {
@@ -57,15 +57,15 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.'
+            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
         {
           request,
           params: {},
           context: {},
-        }
+        },
       );
     });
 
@@ -89,7 +89,7 @@ describe("handleError", () => {
         loader() {
           throw Response.json(
             { message: "not found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
       });
@@ -127,15 +127,15 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.'
+            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
         {
           request,
           params: {},
           context: {},
-        }
+        },
       );
     });
 
@@ -144,7 +144,7 @@ describe("handleError", () => {
         loader() {
           throw Response.json(
             { message: "not found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
       });
@@ -178,7 +178,7 @@ describe("handleError", () => {
         },
         {
           handleError: handleErrorSpy,
-        }
+        },
       );
 
       let handler = createRequestHandler(build);
@@ -221,15 +221,15 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.'
+            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
         {
           request,
           params: {},
           context: {},
-        }
+        },
       );
     });
 
@@ -238,7 +238,7 @@ describe("handleError", () => {
         loader() {
           throw Response.json(
             { message: "not found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
         default: null,

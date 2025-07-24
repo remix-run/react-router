@@ -1,5 +1,12 @@
 # `@react-router/node`
 
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.7.1`
+
 ## 7.7.0
 
 ### Patch Changes
@@ -177,7 +184,6 @@
 - node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
 
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
   - Remove `installGlobals()` as this should no longer be necessary
 
 ### Patch Changes
@@ -324,7 +330,6 @@
 - Stop exporting the `fetch` API in favor of using the version in the global scope - which can be polyfilled via `installGlobals` ([#7293](https://github.com/remix-run/remix/pull/7293))
 
 - Removed/adjusted types to prefer `unknown` over `any` and to align with underlying React Router types ([#7319](https://github.com/remix-run/remix/pull/7319), [#7354](https://github.com/remix-run/remix/pull/7354)):
-
   - Renamed the `useMatches()` return type from `RouteMatch` to `UIMatch`
   - Renamed `LoaderArgs`/`ActionArgs` to `LoaderFunctionArgs`/`ActionFunctionArgs`
   - `AppData` changed from `any` to `unknown`
@@ -336,11 +341,9 @@
   - `AppData`/`RouteHandle` are no longer exported as they are just aliases for `unknown`
 
 - The route `meta` API now defaults to the new "V2 Meta" API ([#6958](https://github.com/remix-run/remix/pull/6958))
-
   - Please refer to the ([docs](https://remix.run/docs/en/2.0.0/route/meta) and [Preparing for V2](https://remix.run/docs/en/2.0.0/start/v2#route-meta) guide for more information.
 
 - For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install the globals yourself
 
@@ -351,7 +354,6 @@
     ```
 
 - `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
-
   - If you are using `remix-serve`, nothing is required
   - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
 
@@ -485,7 +487,6 @@
 ### Minor Changes
 
 - We have made a few changes to the API for route module `meta` functions when using the `future.v2_meta` flag. **These changes are _only_ breaking for users who have opted in.** ([#5746](https://github.com/remix-run/remix/pull/5746))
-
   - `V2_HtmlMetaDescriptor` has been renamed to `V2_MetaDescriptor`
   - The `meta` function's arguments have been simplified
     - `parentsData` has been removed, as each route's loader data is available on the `data` property of its respective `match` object

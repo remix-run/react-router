@@ -65,7 +65,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
 
   let buildDir = path.resolve(
     __dirname,
-    "../../../../build/node_modules/@react-router/dev"
+    "../../../../build/node_modules/@react-router/dev",
   );
   let builtJS = path.resolve(buildDir, "dist/cli/index.js");
   let buildModified = await mtimeDir(buildDir);
@@ -88,7 +88,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
     {
       ...options,
       env: { ...process.env, NO_COLOR: "1", ...(options?.env ?? {}) },
-    }
+    },
   );
   return result;
 };

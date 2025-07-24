@@ -23,14 +23,14 @@ const URL_LIMIT = 7680;
 
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
-  ssr: boolean
+  ssr: boolean,
 ) {
   return routeDiscovery.mode === "lazy" && ssr === true;
 }
 
 export function getPartialManifest(
   { sri, ...manifest }: AssetsManifest,
-  router: DataRouter
+  router: DataRouter,
 ) {
   // Start with our matches for this pathname
   let routeIds = new Set(router.state.matches.map((m) => m.route.id));
@@ -57,7 +57,7 @@ export function getPartialManifest(
 
   let initialRoutes = [...routeIds].reduce(
     (acc, id) => Object.assign(acc, { [id]: manifest.routes[id] }),
-    {}
+    {},
   );
   return {
     ...manifest,
@@ -72,7 +72,7 @@ export function getPatchRoutesOnNavigationFunction(
   ssr: boolean,
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
-  basename: string | undefined
+  basename: string | undefined,
 ): PatchRoutesOnNavigationFunction | undefined {
   if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
@@ -92,7 +92,7 @@ export function getPatchRoutesOnNavigationFunction(
       basename,
       routeDiscovery.manifestPath,
       patch,
-      signal
+      signal,
     );
   };
 }
@@ -103,7 +103,7 @@ export function useFogOFWarDiscovery(
   routeModules: RouteModules,
   ssr: boolean,
   routeDiscovery: ServerBuild["routeDiscovery"],
-  isSpaMode: boolean
+  isSpaMode: boolean,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
@@ -163,7 +163,7 @@ export function useFogOFWarDiscovery(
           isSpaMode,
           router.basename,
           routeDiscovery.manifestPath,
-          router.patchRoutes
+          router.patchRoutes,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -192,7 +192,7 @@ export function useFogOFWarDiscovery(
 
 export function getManifestPath(
   _manifestPath: string | undefined,
-  basename: string | undefined
+  basename: string | undefined,
 ) {
   let manifestPath = _manifestPath || "/__manifest";
 
@@ -215,11 +215,11 @@ export async function fetchAndApplyManifestPatches(
   basename: string | undefined,
   manifestPath: string,
   patchRoutes: DataRouter["patchRoutes"],
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<void> {
   let url = new URL(
     getManifestPath(manifestPath, basename),
-    window.location.origin
+    window.location.origin,
   );
   paths.sort().forEach((path) => url.searchParams.append("p", path));
   url.searchParams.set("version", manifest.version);
@@ -252,7 +252,7 @@ export async function fetchAndApplyManifestPatches(
         console.warn(
           "Detected a manifest version mismatch during eager route discovery. " +
             "The next navigation/fetch to an undiscovered route will result in " +
-            "a new document navigation to sync up with the latest manifest."
+            "a new document navigation to sync up with the latest manifest.",
         );
         return;
       }
@@ -266,7 +266,7 @@ export async function fetchAndApplyManifestPatches(
         // We've already tried fixing for this version, don' try again to
         // avoid loops - just let this navigation/fetch 404
         console.error(
-          "Unable to discover routes due to manifest version mismatch."
+          "Unable to discover routes due to manifest version mismatch.",
         );
         return;
       }
@@ -316,8 +316,8 @@ export async function fetchAndApplyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId)
-    )
+      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+    ),
   );
 }
 

@@ -23,11 +23,11 @@ import type { Route } from "./+types/my-route";
 export async function loader({}: Route.LoaderArgs) {
   // note this is NOT awaited
   let nonCriticalData = new Promise((res) =>
-    setTimeout(() => res("non-critical"), 5000)
+    setTimeout(() => res("non-critical"), 5000),
   );
 
   let criticalData = await new Promise((res) =>
-    setTimeout(() => res("critical"), 300)
+    setTimeout(() => res("critical"), 300),
   );
 
   return { nonCriticalData, criticalData };

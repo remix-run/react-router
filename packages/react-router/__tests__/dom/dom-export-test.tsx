@@ -20,7 +20,7 @@ describe("react-router/dom", () => {
         ],
         {
           initialEntries: ["/blog/react-router"],
-        }
+        },
       );
 
       // When react-router was bundled in CJS scenarios, this `react-router/dom`

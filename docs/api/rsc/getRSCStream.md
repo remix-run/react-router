@@ -5,6 +5,18 @@ unstable: true
 
 # unstable_getRSCStream
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rsc/html-stream/browser.ts
+-->
+
 [MODES: data]
 
 <br />
@@ -16,9 +28,12 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-Get the prerendered RSC stream for hydration. Usually passed directly to your `react-server-dom-xyz/client`'s `createFromReadableStream`.
+[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_getRSCStream.html)
 
-```tsx filename=entry.browser.ts
+Get the prerendered RSC stream for hydration. Usually passed directly to your
+`react-server-dom-xyz/client`'s `createFromReadableStream`.
+
+```tsx
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
@@ -33,13 +48,23 @@ createFromReadableStream(getRSCStream()).then(
       hydrateRoot(
         document,
         <StrictMode>
-          <RSCHydratedRouter /* props */ />
+          <RSCHydratedRouter ...props />
         </StrictMode>,
         {
-          /* ... */
+          // Options
         }
       );
     });
   }
 );
 ```
+
+## Signature
+
+```tsx
+function getRSCStream(): ReadableStream<any>;
+```
+
+## Returns
+
+A `ReadableStream` that contains the RSC data for hydration.

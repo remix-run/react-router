@@ -175,7 +175,7 @@ test.describe("loader in an app", async () => {
       let res = await app.goto("/throw-error");
       expect(res.status()).toBe(500);
       expect(await res.text()).toEqual(
-        "Unexpected Server Error\n\nError: Oh noes!"
+        "Unexpected Server Error\n\nError: Oh noes!",
       );
     });
 
@@ -242,7 +242,7 @@ test.describe("loader in an app", async () => {
     let res = await app.goto("/throw-object");
     expect(res.status()).toBe(500);
     expect(await res.text()).toEqual(
-      "Unexpected Server Error\n\n[object Object]"
+      "Unexpected Server Error\n\n[object Object]",
     );
   });
 
@@ -264,7 +264,7 @@ test.describe("loader in an app", async () => {
     let html = await app.getHtml();
     expect(html).toMatch("405 Method Not Allowed");
     expect(logs[0]).toContain(
-      'Route "routes/no-action" does not have an action'
+      'Route "routes/no-action" does not have an action',
     );
   });
 });
@@ -298,7 +298,7 @@ test.describe("Development server", async () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
     appFixture = await createAppFixture(fixture, ServerMode.Development);
   });

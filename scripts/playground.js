@@ -32,7 +32,7 @@ async function copyPlayground() {
 
   if (existsSync(destDir)) {
     throw new Error(
-      `A local playground with the name "${playgroundName}" already exists. Delete it first or use a different name.`
+      `A local playground with the name "${playgroundName}" already exists. Delete it first or use a different name.`,
     );
   }
   await cp(srcDir, destDir, { recursive: true });
@@ -45,6 +45,6 @@ async function copyPlayground() {
       "",
       `cd ${relativeDestDir}`,
       "pnpm dev",
-    ].join("\n")
+    ].join("\n"),
   );
 }

@@ -49,12 +49,12 @@ export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
     ? unstable_InitialContext
-    : AppLoadContext
+    : AppLoadContext,
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>),
-  mode?: string
+  mode?: string,
 ) => RequestHandler;
 
 function derive(build: ServerBuild, mode?: string) {
@@ -71,7 +71,7 @@ function derive(build: ServerBuild, mode?: string) {
       if (serverMode !== ServerMode.Test && !request.signal.aborted) {
         console.error(
           // @ts-expect-error This is "private" from users but intended for internal use
-          isRouteErrorResponse(error) && error.error ? error.error : error
+          isRouteErrorResponse(error) && error.error ? error.error : error,
         );
       }
     });
@@ -86,7 +86,7 @@ function derive(build: ServerBuild, mode?: string) {
 
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
-  mode
+  mode,
 ) => {
   let _build: ServerBuild;
   let routes: ServerRoute[];
@@ -132,14 +132,14 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       } else {
         try {
           loadContext = new unstable_RouterContextProvider(
-            initialContext as unknown as unstable_InitialContext
+            initialContext as unknown as unstable_InitialContext,
           );
         } catch (e) {
           let error = new Error(
             "Unable to create initial `unstable_RouterContextProvider` instance. " +
               "Please confirm you are returning an instance of " +
               "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
-              `\n\nError: ${e instanceof Error ? e.toString() : e}`
+              `\n\nError: ${e instanceof Error ? e.toString() : e}`,
           );
           handleError(error);
           return returnLastResortErrorResponse(error, serverMode);
@@ -190,13 +190,13 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
             new ErrorResponseImpl(
               404,
               "Not Found",
-              `Refusing to SSR the path \`${decodedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`
+              `Refusing to SSR the path \`${decodedPath}\` because \`ssr:false\` is set and the path is not included in the \`prerender\` config, so in production the path will be a 404.`,
             ),
             {
               context: loadContext,
               params,
               request,
-            }
+            },
           );
           return new Response("Not Found", {
             status: 404,
@@ -212,7 +212,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     // Manifest request for fog of war
     let manifestUrl = getManifestPath(
       _build.routeDiscovery.manifestPath,
-      normalizedBasename
+      normalizedBasename,
     );
     if (url.pathname === manifestUrl) {
       try {
@@ -237,7 +237,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       let singleFetchMatches = matchServerRoutes(
         routes,
         handlerUrl.pathname,
-        _build.basename
+        _build.basename,
       );
 
       response = await handleSingleFetchRequest(
@@ -247,7 +247,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
         handlerUrl,
         loadContext,
-        handleError
+        handleError,
       );
 
       if (_build.entry.module.handleDataRequest) {
@@ -262,7 +262,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
             getSingleFetchRedirect(
               response.status,
               response.headers,
-              _build.basename
+              _build.basename,
             );
 
           if (request.method === "GET") {
@@ -278,12 +278,12 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
               result,
               request.signal,
               _build.entry.module.streamTimeout,
-              serverMode
+              serverMode,
             ),
             {
               status: SINGLE_FETCH_REDIRECT_STATUS,
               headers,
-            }
+            },
           );
         }
       }
@@ -300,7 +300,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         matches.slice(-1)[0].route.id,
         request,
         loadContext,
-        handleError
+        handleError,
       );
     } else {
       let { pathname } = url;
@@ -323,7 +323,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         loadContext,
         handleError,
         isSpaMode,
-        criticalCss
+        criticalCss,
       );
     }
 
@@ -342,7 +342,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 async function handleManifestRequest(
   build: ServerBuild,
   routes: ServerRoute[],
-  url: URL
+  url: URL,
 ) {
   if (build.assets.version !== url.searchParams.get("version")) {
     return new Response(null, {
@@ -407,7 +407,7 @@ async function handleSingleFetchRequest(
   request: Request,
   handlerUrl: URL,
   loadContext: AppLoadContext | unstable_RouterContextProvider,
-  handleError: (err: unknown) => void
+  handleError: (err: unknown) => void,
 ): Promise<Response> {
   let response =
     request.method !== "GET"
@@ -418,7 +418,7 @@ async function handleSingleFetchRequest(
           request,
           handlerUrl,
           loadContext,
-          handleError
+          handleError,
         )
       : await singleFetchLoaders(
           build,
@@ -427,7 +427,7 @@ async function handleSingleFetchRequest(
           request,
           handlerUrl,
           loadContext,
-          handleError
+          handleError,
         );
 
   return response;
@@ -441,7 +441,7 @@ async function handleDocumentRequest(
   loadContext: AppLoadContext | unstable_RouterContextProvider,
   handleError: (err: unknown) => void,
   isSpaMode: boolean,
-  criticalCss?: CriticalCss
+  criticalCss?: CriticalCss,
 ) {
   try {
     let response = await staticHandler.query(request, {
@@ -510,7 +510,7 @@ async function handleDocumentRequest(
         state,
         request.signal,
         build.entry.module.streamTimeout,
-        serverMode
+        serverMode,
       ),
       renderMeta: {},
       future: build.future,
@@ -529,7 +529,7 @@ async function handleDocumentRequest(
         entryContext,
         loadContext as MiddlewareEnabled extends true
           ? unstable_RouterContextProvider
-          : AppLoadContext
+          : AppLoadContext,
       );
     } catch (error: unknown) {
       handleError(error);
@@ -544,7 +544,7 @@ async function handleDocumentRequest(
           errorForSecondRender = new ErrorResponseImpl(
             error.status,
             error.statusText,
-            data
+            data,
           );
         } catch (e) {
           // If we can't unwrap the response - just leave it as-is
@@ -555,7 +555,7 @@ async function handleDocumentRequest(
       context = getStaticContextFromError(
         staticHandler.dataRoutes,
         context,
-        errorForSecondRender
+        errorForSecondRender,
       );
 
       // Sanitize errors outside of development environments
@@ -580,7 +580,7 @@ async function handleDocumentRequest(
           state,
           request.signal,
           build.entry.module.streamTimeout,
-          serverMode
+          serverMode,
         ),
         renderMeta: {},
       };
@@ -593,7 +593,7 @@ async function handleDocumentRequest(
           entryContext,
           loadContext as MiddlewareEnabled extends true
             ? unstable_RouterContextProvider
-            : AppLoadContext
+            : AppLoadContext,
         );
       } catch (error: any) {
         handleError(error);
@@ -610,7 +610,7 @@ async function handleResourceRequest(
   routeId: string,
   request: Request,
   loadContext: AppLoadContext | unstable_RouterContextProvider,
-  handleError: (err: unknown) => void
+  handleError: (err: unknown) => void,
 ) {
   try {
     // Note we keep the routeId here to align with the Remix handling of
@@ -653,7 +653,7 @@ async function handleResourceRequest(
       error.message === "Expected a response from queryRoute"
     ) {
       let newError = new Error(
-        "Expected a Response to be returned from resource route handler"
+        "Expected a Response to be returned from resource route handler",
       );
       handleError(newError);
       return returnLastResortErrorResponse(newError, serverMode);
@@ -666,13 +666,13 @@ async function handleResourceRequest(
 
 function errorResponseToJson(
   errorResponse: ErrorResponse,
-  serverMode: ServerMode
+  serverMode: ServerMode,
 ): Response {
   return Response.json(
     serializeError(
       // @ts-expect-error This is "private" from users but intended for internal use
       errorResponse.error || new Error("Unexpected Server Error"),
-      serverMode
+      serverMode,
     ),
     {
       status: errorResponse.status,
@@ -680,7 +680,7 @@ function errorResponseToJson(
       headers: {
         "X-Remix-Error": "yes",
       },
-    }
+    },
   );
 }
 

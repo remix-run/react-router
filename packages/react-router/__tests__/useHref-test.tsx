@@ -19,7 +19,7 @@ describe("useHref", () => {
                 element={<ShowHref to="advanced-react" />}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -42,7 +42,7 @@ describe("useHref", () => {
                   element={<ShowHref to="advanced-react" />}
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -66,7 +66,7 @@ describe("useHref", () => {
                   element={<ShowHref to="advanced-react/" />}
                 />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -88,7 +88,7 @@ describe("useHref", () => {
             <Routes>
               <Route path="courses" element={<ShowHref to="../about" />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -108,7 +108,7 @@ describe("useHref", () => {
               <Routes>
                 <Route path="/courses/" element={<ShowHref to="../about" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -129,7 +129,7 @@ describe("useHref", () => {
               <Routes>
                 <Route path="courses" element={<ShowHref to="../about/" />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -153,7 +153,7 @@ describe("useHref", () => {
                 <Route path="advanced-react" element={<ShowHref to=".." />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -175,7 +175,7 @@ describe("useHref", () => {
                   <Route path="advanced-react" element={<ShowHref to=".." />} />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -201,7 +201,7 @@ describe("useHref", () => {
                   />
                 </Route>
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 
@@ -226,7 +226,7 @@ describe("useHref", () => {
                 element={<ShowHref to="/users" />}
               />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -252,7 +252,7 @@ describe("useHref", () => {
                 />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -272,7 +272,7 @@ describe("useHref", () => {
               <Routes>
                 <Route path="/home" element={<ShowHref to="../../.." />} />
               </Routes>
-            </MemoryRouter>
+            </MemoryRouter>,
           );
         });
 

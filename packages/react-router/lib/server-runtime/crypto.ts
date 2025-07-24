@@ -6,7 +6,7 @@ export const sign = async (value: string, secret: string): Promise<string> => {
   let signature = await crypto.subtle.sign("HMAC", key, data);
   let hash = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(
     /=+$/,
-    ""
+    "",
   );
 
   return value + "." + hash;
@@ -14,7 +14,7 @@ export const sign = async (value: string, secret: string): Promise<string> => {
 
 export const unsign = async (
   cookie: string,
-  secret: string
+  secret: string,
 ): Promise<string | false> => {
   let index = cookie.lastIndexOf(".");
   let value = cookie.slice(0, index);
@@ -38,14 +38,14 @@ export const unsign = async (
 
 const createKey = async (
   secret: string,
-  usages: CryptoKey["usages"]
+  usages: CryptoKey["usages"],
 ): Promise<CryptoKey> =>
   crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    usages
+    usages,
   );
 
 function byteStringToUint8Array(byteString: string): Uint8Array {

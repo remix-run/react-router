@@ -73,7 +73,7 @@ export function isInteractive() {
   return Boolean(
     process.stdout.isTTY &&
       process.env.TERM !== "dumb" &&
-      !("CI" in process.env)
+      !("CI" in process.env),
   );
 }
 
@@ -97,7 +97,7 @@ function logBullet(
   colorizeText: <V>(v: V) => V,
   symbol: string,
   prefix: string,
-  text?: string | string[]
+  text?: string | string[],
 ) {
   let textParts = Array.isArray(text) ? text : [text || ""].filter(Boolean);
   let formattedText = textParts
@@ -106,14 +106,14 @@ function logBullet(
 
   if (process.stdout.columns < 80) {
     logger(
-      `${" ".repeat(5)} ${colorizePrefix(symbol)}  ${colorizePrefix(prefix)}`
+      `${" ".repeat(5)} ${colorizePrefix(symbol)}  ${colorizePrefix(prefix)}`,
     );
     logger(`${" ".repeat(9)}${formattedText}`);
   } else {
     logger(
       `${" ".repeat(5)} ${colorizePrefix(symbol)}  ${colorizePrefix(
-        prefix
-      )} ${formattedText}`
+        prefix,
+      )} ${formattedText}`,
     );
   }
 }
@@ -155,7 +155,7 @@ export function toValidProjectName(projectName: string) {
 
 function isValidProjectName(projectName: string) {
   return /^(?:@[a-z\d\-*~][a-z\d\-*._~]*\/)?[a-z\d\-~][a-z\d\-._~]*$/.test(
-    projectName
+    projectName,
   );
 }
 

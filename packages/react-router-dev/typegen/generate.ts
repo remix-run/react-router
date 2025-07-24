@@ -118,7 +118,7 @@ export function generateRoutes(ctx: Context): Array<VirtualFile> {
   const allAnnotations: Array<VirtualFile> = Array.from(fileToRoutes.entries())
     .filter(([file]) => isInAppDirectory(ctx, file))
     .map(([file, routeIds]) =>
-      getRouteAnnotations({ ctx, file, routeIds, lineages })
+      getRouteAnnotations({ ctx, file, routeIds, lineages }),
     );
 
   return [routesTs, ...allAnnotations];
@@ -136,13 +136,13 @@ function pagesType(pages: Set<string>) {
             t.tsTypeLiteral([
               t.tsPropertySignature(
                 t.identifier("params"),
-                t.tsTypeAnnotation(paramsType(page))
+                t.tsTypeAnnotation(paramsType(page)),
               ),
-            ])
-          )
+            ]),
+          ),
         );
-      })
-    )
+      }),
+    ),
   );
 }
 
@@ -168,8 +168,8 @@ function routeFilesType({
                   t.tsPropertySignature(
                     t.identifier("id"),
                     t.tsTypeAnnotation(
-                      t.tsLiteralType(t.stringLiteral(routeId))
-                    )
+                      t.tsLiteralType(t.stringLiteral(routeId)),
+                    ),
                   ),
                   t.tsPropertySignature(
                     t.identifier("page"),
@@ -177,19 +177,19 @@ function routeFilesType({
                       pages
                         ? t.tsUnionType(
                             Array.from(pages).map((page) =>
-                              t.tsLiteralType(t.stringLiteral(page))
-                            )
+                              t.tsLiteralType(t.stringLiteral(page)),
+                            ),
                           )
-                        : t.tsNeverKeyword()
-                    )
+                        : t.tsNeverKeyword(),
+                    ),
                   ),
                 ]);
-              })
-            )
-          )
-        )
-      )
-    )
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }
 
@@ -214,7 +214,7 @@ function getRouteAnnotations({
     Path.relative(ctx.rootDirectory, ctx.config.appDirectory),
     Path.dirname(file),
     "+types",
-    Pathe.filename(file) + ".ts"
+    Pathe.filename(file) + ".ts",
   );
 
   const matchesType = t.tsTypeAliasDeclaration(
@@ -228,7 +228,7 @@ function getRouteAnnotations({
             t.tsTypeLiteral([
               t.tsPropertySignature(
                 t.identifier("id"),
-                t.tsTypeAnnotation(t.tsLiteralType(t.stringLiteral(route.id)))
+                t.tsTypeAnnotation(t.tsLiteralType(t.stringLiteral(route.id))),
               ),
               t.tsPropertySignature(
                 t.identifier("module"),
@@ -238,23 +238,23 @@ function getRouteAnnotations({
                       t.stringLiteral(
                         relativeImportSource(
                           rootDirsPath(ctx, filename),
-                          Path.resolve(ctx.config.appDirectory, route.file)
-                        )
-                      )
-                    )
-                  )
-                )
+                          Path.resolve(ctx.config.appDirectory, route.file),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ])
-          )
+            ]),
+          ),
         );
-      })
-    )
+      }),
+    ),
   );
 
   const routeImportSource = relativeImportSource(
     rootDirsPath(ctx, filename),
-    Path.resolve(ctx.config.appDirectory, file)
+    Path.resolve(ctx.config.appDirectory, file),
   );
 
   const content =
@@ -350,11 +350,11 @@ function paramsType(path: string) {
     Object.entries(params).map(([param, isRequired]) => {
       const property = t.tsPropertySignature(
         t.stringLiteral(param),
-        t.tsTypeAnnotation(t.tsStringKeyword())
+        t.tsTypeAnnotation(t.tsStringKeyword()),
       );
       property.optional = !isRequired;
       return property;
-    })
+    }),
   );
 }
 

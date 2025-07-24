@@ -4,25 +4,40 @@ title: NavLink
 
 # NavLink
 
+<!--
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
+
+Thank you for helping improve our documentation!
+
+This file is auto-generated from the JSDoc comments in the source
+code, so please edit the JSDoc comments in the file below and this
+file will be re-generated once those changes are merged.
+
+https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/dom/lib.tsx
+-->
+
 [MODES: framework, data, declarative]
 
 ## Summary
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.NavLink.html)
 
-Wraps [Link](../components/Link) with additional props for styling active and pending states.
+Wraps [`<Link>`](../components/Link) with additional props for styling active and
+pending states.
 
-- Automatically applies classes to the link based on its active and pending states, see NavLinkProps.className.
-- Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
+- Automatically applies classes to the link based on its `active` and `pending`
+states, see [`NavLinkProps.className`](https://api.reactrouter.com/v7/interfaces/react_router.NavLinkProps.html#className)
+  - Note that `pending` is only available with Framework and Data modes.
+- Automatically applies `aria-current="page"` to the link when the link is active.
+See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current)
+on MDN.
+- States are additionally available through the className, style, and children
+render props. See [`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps.html).
 
 ```tsx
-import { NavLink } from "react-router";
-<NavLink to="/message" />;
-```
+<NavLink to="/message">Messages</NavLink>
 
-States are available through the className, style, and children render props. See [NavLinkRenderProps](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps).
-
-```tsx
+// Using render props
 <NavLink
   to="/messages"
   className={({ isActive, isPending }) =>
@@ -50,21 +65,22 @@ Changes the matching logic to make it case-sensitive:
 
 [modes: framework, data, declarative]
 
-Can be regular React children or a function that receives an object with the active and pending states of the link.
+Can be regular React children or a function that receives an object with the
+`active` and `pending` states of the link.
 
-```tsx
-<NavLink to="/tasks">
-  {({ isActive }) => (
-    <span className={isActive ? "active" : ""}>Tasks</span>
-  )}
-</NavLink>
-```
+ ```tsx
+ <NavLink to="/tasks">
+   {({ isActive }) => (
+     <span className={isActive ? "active" : ""}>Tasks</span>
+   )}
+ </NavLink>
+ ```
 
 ### className
 
 [modes: framework, data, declarative]
 
-Classes are automatically applied to NavLink that correspond to the state.
+Classes are automatically applied to `NavLink` that correspond to the state.
 
 ```css
 a.active {
@@ -78,7 +94,16 @@ a.transitioning {
 }
 ```
 
-Note that `pending` is only available with Framework and Data modes.
+Or you can specify a function that receives [`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps.html) and
+returns the `className`:
+
+```tsx
+<NavLink className={({ isActive, isPending }) => (
+  isActive ? "my-active-class" :
+  isPending ? "my-pending-class" :
+  ""
+)} />
+```
 
 ### discover
 
@@ -87,7 +112,9 @@ Note that `pending` is only available with Framework and Data modes.
 Defines the link discovery behavior
 
 ```tsx
+<Link /> // default ("render")
 <Link discover="render" />
+<Link discover="none" />
 ```
 
 - **render** - default, discover the route when the link renders
@@ -97,7 +124,9 @@ Defines the link discovery behavior
 
 [modes: framework, data, declarative]
 
-Changes the matching logic for the `active` and `pending` states to only match to the "end" of the NavLinkProps.to. If the URL is longer, it will no longer be considered active.
+Changes the matching logic for the `active` and `pending` states to only match
+to the "end" of the [`NavLinkProps.to`](https://api.reactrouter.com/v7/interfaces/react_router.NavLinkProps.html#to). If the URL is longer, it will no
+longer be considered active.
 
 | Link                          | URL          | isActive |
 | ----------------------------- | ------------ | -------- |
@@ -106,7 +135,9 @@ Changes the matching logic for the `active` and `pending` states to only match t
 | `<NavLink to="/tasks" end />` | `/tasks`     | true     |
 | `<NavLink to="/tasks" end />` | `/tasks/123` | false    |
 
-`<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the root route.
+`<NavLink to="/">` is an exceptional case because _every_ URL matches `/`.
+To avoid this matching every single route by default, it effectively ignores
+the `end` prop and only matches when you're at the root route.
 
 ### prefetch
 
@@ -115,7 +146,11 @@ Changes the matching logic for the `active` and `pending` states to only match t
 Defines the data and module prefetching behavior for the link.
 
 ```tsx
+<Link /> // default
+<Link prefetch="none" />
 <Link prefetch="intent" />
+<Link prefetch="render" />
+<Link prefetch="viewport" />
 ```
 
 - **none** - default, no prefetching
@@ -123,7 +158,8 @@ Defines the data and module prefetching behavior for the link.
 - **render** - prefetches when the link renders
 - **viewport** - prefetches when the link is in the viewport, very useful for mobile
 
-Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted after the link.
+Prefetching is done with HTML [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+tags. They are inserted after the link.
 
 ```tsx
 <a href="..." />
@@ -131,13 +167,18 @@ Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted af
 <link rel="prefetch" /> // might conditionally render
 ```
 
-Because of this, if you are using `nav :last-child` you will need to use `nav :last-of-type` so the styles don't conditionally fall off your last link (and any other similar selectors).
+Because of this, if you are using `nav :last-child` you will need to use
+`nav :last-of-type` so the styles don't conditionally fall off your last link
+(and any other similar selectors).
 
 ### preventScrollReset
 
 [modes: framework, data]
 
-Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using [ScrollRestoration](../components/ScrollRestoration). This only prevents new locations reseting scroll to the top, scroll position will be restored for back/forward button navigation.
+Prevents the scroll position from being reset to the top of the window when
+the link is clicked and the app is using [`ScrollRestoration`](../components/ScrollRestoration). This only
+prevents new locations resetting scroll to the top, scroll position will be
+restored for back/forward button navigation.
 
 ```tsx
 <Link to="?tab=one" preventScrollReset />
@@ -155,16 +196,25 @@ Defines the relative path behavior for the link.
 <Link relative="path" />
 ```
 
-Consider a route hierarchy where a parent route pattern is "blog" and a child route pattern is "blog/:slug/edit".
+Consider a route hierarchy where a parent route pattern is `"blog"` and a child
+route pattern is `"blog/:slug/edit"`.
 
-- **route** - default, resolves the link relative to the route pattern. In the example above a relative link of `".."` will remove both `:slug/edit` segments back to "/blog".
-- **path** - relative to the path so `..` will only remove one URL segment up to "/blog/:slug"
+- **route** - default, resolves the link relative to the route pattern. In the
+example above, a relative link of `".."` will remove both `:slug/edit` segments
+back to `"/blog"`.
+- **path** - relative to the path so `".."` will only remove one URL segment up
+to `"/blog/:slug"`
+
+Note that index routes and layout routes do not have paths so they are not
+included in the relative path calculation.
 
 ### reloadDocument
 
 [modes: framework, data, declarative]
 
-Will use document navigation instead of client side routing when the link is clicked: the browser will handle the transition normally (as if it were an `<a href>`).
+Will use document navigation instead of client side routing when the link is
+clicked: the browser will handle the transition normally (as if it were an
+[`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)).
 
 ```tsx
 <Link to="/logout" reloadDocument />
@@ -174,7 +224,8 @@ Will use document navigation instead of client side routing when the link is cli
 
 [modes: framework, data, declarative]
 
-Replaces the current entry in the history stack instead of pushing a new one onto it.
+Replaces the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+stack instead of pushing a new one  onto it.
 
 ```tsx
 <Link replace />
@@ -210,13 +261,15 @@ function SomeComp() {
 }
 ```
 
-This state is inaccessible on the server as it is implemented on top of [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
+This state is inaccessible on the server as it is implemented on top of
+[`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
 
 ### style
 
 [modes: framework, data, declarative]
 
-Regular React style object or a function that receives an object with the active and pending states of the link.
+Styles can also be applied dynamically via a function that receives
+[`NavLinkRenderProps`](https://api.reactrouter.com/v7/types/react_router.NavLinkRenderProps.html) and returns the styles:
 
 ```tsx
 <NavLink to="/tasks" style={{ color: "red" }} />
@@ -227,13 +280,11 @@ Regular React style object or a function that receives an object with the active
 })} />
 ```
 
-Note that `pending` is only available with Framework and Data modes.
-
 ### to
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [Path](https://api.reactrouter.com/v7/interfaces/react_router.Path):
+Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html):
 
 ```tsx
 <Link to="/some/path" />
@@ -249,9 +300,10 @@ Can be a string or a partial [Path](https://api.reactrouter.com/v7/interfaces/re
 
 ### viewTransition
 
-[modes: framework, data, declarative]
+[modes: framework, data]
 
-Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation.
+Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+for this navigation.
 
 ```jsx
 <Link to={to} viewTransition>
@@ -259,4 +311,5 @@ Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/Vie
 </Link>
 ```
 
-To apply specific styles for the transition, see [useViewTransitionState](../hooks/useViewTransitionState)
+To apply specific styles for the transition, see [`useViewTransitionState`](../hooks/useViewTransitionState)
+

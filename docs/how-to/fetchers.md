@@ -195,7 +195,7 @@ export async function loader({ request }) {
   let url = new URL(request.url);
   let query = url.searchParams.get("q");
   return users.filter((user) =>
-    user.name.toLowerCase().includes(query.toLowerCase())
+    user.name.toLowerCase().includes(query.toLowerCase()),
   );
 }
 ```

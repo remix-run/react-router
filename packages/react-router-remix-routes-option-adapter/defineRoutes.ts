@@ -2,7 +2,7 @@ import type { RouteManifest, RouteManifestEntry } from "./manifest";
 import { normalizeSlashes } from "./normalizeSlashes";
 
 export type DefineRoutesFunction = (
-  callback: (defineRoute: DefineRouteFunction) => void
+  callback: (defineRoute: DefineRouteFunction) => void,
 ) => RouteManifest;
 
 interface DefineRouteOptions {
@@ -49,7 +49,7 @@ export interface DefineRouteFunction {
     /**
      * A function for defining child routes.
      */
-    children?: DefineRouteChildren
+    children?: DefineRouteChildren,
   ): void;
 }
 
@@ -66,13 +66,13 @@ export const defineRoutes: DefineRoutesFunction = (callback) => {
     path,
     file,
     optionsOrChildren,
-    children
+    children,
   ) => {
     if (alreadyReturned) {
       throw new Error(
         "You tried to define routes asynchronously but started defining " +
           "routes before the async work was done. Please await all async " +
-          "data before calling `defineRoutes()`"
+          "data before calling `defineRoutes()`",
       );
     }
 
@@ -101,7 +101,7 @@ export const defineRoutes: DefineRoutesFunction = (callback) => {
 
     if (route.id in routes) {
       throw new Error(
-        `Unable to define routes with duplicate route id: "${route.id}"`
+        `Unable to define routes with duplicate route id: "${route.id}"`,
       );
     }
 

@@ -117,7 +117,7 @@ export interface RoutesTestStubProps {
  */
 export function createRoutesStub(
   routes: StubRouteObject[],
-  _context?: AppLoadContext | unstable_RouterContextProvider
+  _context?: AppLoadContext | unstable_RouterContextProvider,
 ) {
   return function RoutesTestStub({
     initialEntries,
@@ -156,10 +156,10 @@ export function createRoutesStub(
         _context !== undefined
           ? _context
           : future?.unstable_middleware
-          ? new unstable_RouterContextProvider()
-          : {},
+            ? new unstable_RouterContextProvider()
+            : {},
         frameworkContextRef.current.manifest,
-        frameworkContextRef.current.routeModules
+        frameworkContextRef.current.routeModules,
       );
       routerRef.current = createMemoryRouter(patched, {
         initialEntries,
@@ -181,12 +181,12 @@ function processRoutes(
   context: unknown,
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  parentId?: string
+  parentId?: string,
 ): DataRouteObject[] {
   return routes.map((route) => {
     if (!route.id) {
       throw new Error(
-        "Expected a route.id in react-router processRoutes() function"
+        "Expected a route.id in react-router processRoutes() function",
       );
     }
 
@@ -253,7 +253,7 @@ function processRoutes(
         context,
         manifest,
         routeModules,
-        newRoute.id
+        newRoute.id,
       );
     }
 

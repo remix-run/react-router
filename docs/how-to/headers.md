@@ -39,7 +39,7 @@ import { data } from "react-router";
 
 export async function loader({ params }: LoaderArgs) {
   let [page, ms] = await fakeTimeCall(
-    await getPage(params.id)
+    await getPage(params.id),
   );
 
   return data(page, {
@@ -86,7 +86,7 @@ The easiest way is to simply append to the parent headers. This avoids overwriti
 ```tsx
 export function headers({ parentHeaders }: HeadersArgs) {
   parentHeaders.append(
-    "Permissions-Policy: geolocation=()"
+    "Permissions-Policy: geolocation=()",
   );
   return parentHeaders;
 }
@@ -100,7 +100,7 @@ Sometimes it's important to overwrite the parent header. Do this with `set` inst
 export function headers({ parentHeaders }: HeadersArgs) {
   parentHeaders.set(
     "Cache-Control",
-    "max-age=3600, s-maxage=86400"
+    "max-age=3600, s-maxage=86400",
   );
   return parentHeaders;
 }
@@ -113,17 +113,17 @@ You can avoid the need to merge headers by only defining headers in "leaf routes
 The `handleRequest` export receives the headers from the route module as an argument. You can append global headers here.
 
 ```tsx
-export default function handleRequest(
+export default async function handleRequest(
   request,
   responseStatusCode,
   responseHeaders,
   routerContext,
-  loadContext
+  loadContext,
 ) {
   // set, append global headers
   responseHeaders.set(
     "X-App-Version",
-    routerContext.manifest.version
+    routerContext.manifest.version,
   );
 
   return new Response(await getStream(), {

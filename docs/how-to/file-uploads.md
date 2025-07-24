@@ -70,7 +70,7 @@ export async function action({
 
   const formData = await parseFormData(
     request,
-    uploadHandler
+    uploadHandler,
   );
   // 'avatar' has already been processed at this point
   const file = formData.get("avatar");
@@ -106,7 +106,7 @@ Create a file that exports a `LocalFileStorage` instance to be used by different
 import { LocalFileStorage } from "@mjackson/file-storage/local";
 
 export const fileStorage = new LocalFileStorage(
-  "./uploads/avatars"
+  "./uploads/avatars",
 );
 
 export function getStorageKey(userId: string) {
@@ -153,7 +153,7 @@ export async function action({
 
   const formData = await parseFormData(
     request,
-    uploadHandler
+    uploadHandler,
   );
 }
 

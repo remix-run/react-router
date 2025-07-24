@@ -56,7 +56,7 @@ function initSsrInfo(): void {
       if (importMap?.textContent) {
         try {
           window.__reactRouterManifest.sri = JSON.parse(
-            importMap.textContent
+            importMap.textContent,
           ).integrity;
         } catch (err) {
           console.error("Failed to parse import map", err);
@@ -85,7 +85,7 @@ function createHydratedRouter({
   if (!ssrInfo) {
     throw new Error(
       "You must be using the SSR features of React Router in order to skip " +
-        "passing a `router` prop to `<RouterProvider>`"
+        "passing a `router` prop to `<RouterProvider>`",
     );
   }
 
@@ -122,7 +122,7 @@ function createHydratedRouter({
     ssrInfo.routeModules,
     ssrInfo.context.state,
     ssrInfo.context.ssr,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
   );
 
   let hydrationData: HydrationState | undefined = undefined;
@@ -152,7 +152,7 @@ function createHydratedRouter({
       }),
       window.location,
       window.__reactRouterContext?.basename,
-      ssrInfo.context.isSpaMode
+      ssrInfo.context.isSpaMode,
     );
 
     if (hydrationData && hydrationData.errors) {
@@ -180,7 +180,7 @@ function createHydratedRouter({
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.ssr,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
     ),
     patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
@@ -188,7 +188,7 @@ function createHydratedRouter({
       ssrInfo.context.ssr,
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
-      ssrInfo.context.basename
+      ssrInfo.context.basename,
     ),
   });
   ssrInfo.router = router;
@@ -218,10 +218,17 @@ interface HydratedRouterProps {
 }
 
 /**
- * Framework-mode router component to be used in `entry.client.tsx` to hydrate a
- * router from a `ServerRouter`
+ * Framework-mode router component to be used to to hydrate a router from a
+ * `ServerRouter`. See [`entry.client.tsx`](../api/framework-conventions/entry.client.tsx).
  *
- * @category Component Routers
+ * @public
+ * @category Framework Routers
+ * @mode framework
+ * @param props Props
+ * @param props.unstable_getContext Context object to passed through to
+ * {@link createBrowserRouter} and made available to `clientLoader`/`clientAction`
+ * functions
+ * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
@@ -236,7 +243,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? ssrInfo?.context.criticalCss
-      : undefined
+      : undefined,
   );
   React.useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -289,7 +296,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssrInfo.routeModules,
     ssrInfo.context.ssr,
     ssrInfo.context.routeDiscovery,
-    ssrInfo.context.isSpaMode
+    ssrInfo.context.isSpaMode,
   );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error

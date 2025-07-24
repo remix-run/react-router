@@ -25,7 +25,7 @@ import { BrowserRouter } from "react-router";
 ReactDOM.createRoot(root).render(
   <BrowserRouter>
     <App />
-  </BrowserRouter>
+  </BrowserRouter>,
 );
 ```
 
@@ -48,7 +48,7 @@ let router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(root).render(
-  <RouterProvider router={router} />
+  <RouterProvider router={router} />,
 );
 ```
 

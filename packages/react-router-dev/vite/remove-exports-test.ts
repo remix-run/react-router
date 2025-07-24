@@ -17,7 +17,7 @@ describe("transform", () => {
       export const clientExport_1 = () => {}
       export const clientExport_2 = () => {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = () => {};
@@ -45,7 +45,7 @@ describe("transform", () => {
       export const clientExport_1 = () => clientUtil()
       export const clientExport_2 = () => clientUtil()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientLib } from 'client-lib';
@@ -67,7 +67,7 @@ describe("transform", () => {
       export function clientExport_1(){}
       export function clientExport_2(){}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export function clientExport_1() {}
@@ -95,7 +95,7 @@ describe("transform", () => {
       export function clientExport_1() { return clientUtil() }
       export function clientExport_2() { return clientUtil() }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientLib } from 'client-lib';
@@ -125,7 +125,7 @@ describe("transform", () => {
       export const clientExport_1 = {}
       export const clientExport_2 = {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = {};
@@ -153,7 +153,7 @@ describe("transform", () => {
       export const clientExport_1 = { value: clientUtil() }
       export const clientExport_2 = { value: clientUtil() }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientLib } from 'client-lib';
@@ -179,7 +179,7 @@ describe("transform", () => {
       export class clientExport_1 {}
       export class clientExport_2 {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export class clientExport_1 {}
@@ -215,7 +215,7 @@ describe("transform", () => {
         static util = clientUtil()
       }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientLib } from 'client-lib';
@@ -241,7 +241,7 @@ describe("transform", () => {
       export const clientExport_1 = globalFunction()
       export const clientExport_2 = globalFunction()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = globalFunction();
@@ -269,7 +269,7 @@ describe("transform", () => {
       export const clientExport_1 = clientUtil()
       export const clientExport_2 = clientUtil()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientLib } from 'client-lib';
@@ -291,7 +291,7 @@ describe("transform", () => {
       export const clientExport_1 = (() => {})()
       export const clientExport_2 = (() => {})()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = (() => {})();
@@ -319,7 +319,7 @@ describe("transform", () => {
       export const clientExport_1 = (() => clientUtil())()
       export const clientExport_2 = (() => clientUtil())()
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientLib } from 'client-lib';
@@ -347,7 +347,7 @@ describe("transform", () => {
       export { clientExport_1 }
       export { clientExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "const clientExport_1 = 123;
@@ -370,7 +370,7 @@ describe("transform", () => {
       export { serverExport_1, serverExport_2 }
       export { clientExport_1, clientExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "const clientExport_1 = 123;
@@ -392,7 +392,7 @@ describe("transform", () => {
       export { removeMe_1, keepMe_1 }
       export { removeMe_2, keepMe_2 }
     `,
-      ["removeMe_1", "removeMe_2"]
+      ["removeMe_1", "removeMe_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "const keepMe_1 = 123;
@@ -412,7 +412,7 @@ describe("transform", () => {
       export { clientExport_1 } from './client/1'
       export { clientExport_2 } from './client/2'
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export { clientExport_1 } from './client/1';
@@ -427,10 +427,10 @@ describe("transform", () => {
       export { serverExport_1, serverExport_2 } from './server'
       export { clientExport_1, clientExport_2 } from './client'
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(
-      "\"export { clientExport_1, clientExport_2 } from './client';\""
+      "\"export { clientExport_1, clientExport_2 } from './client';\"",
     );
     expect(result.code).not.toMatch(/server/i);
   });
@@ -441,7 +441,7 @@ describe("transform", () => {
       export { removeMe_1, keepMe_1 } from './1'
       export { removeMe_2, keepMe_2 } from './2'
     `,
-      ["removeMe_1", "removeMe_2"]
+      ["removeMe_1", "removeMe_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export { keepMe_1 } from './1';
@@ -464,7 +464,7 @@ describe("transform", () => {
       export { clientExport_1 }
       export { clientExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientExport_1 } from './client/1';
@@ -484,7 +484,7 @@ describe("transform", () => {
       export { serverExport_1, serverExport_2 }
       export { clientExport_1, clientExport_2 }
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { clientExport_1, clientExport_2 } from './client';
@@ -502,7 +502,7 @@ describe("transform", () => {
       export { removeMe_1, keepMe_1 }
       export { removeMe_2, keepMe_2 }
     `,
-      ["removeMe_1", "removeMe_2"]
+      ["removeMe_1", "removeMe_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "import { keepMe_1 } from './1';
@@ -522,7 +522,7 @@ describe("transform", () => {
       export const clientExport_1 = 123
       export const clientExport_2 = 123
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = 123;
@@ -540,7 +540,7 @@ describe("transform", () => {
       export const clientExport_1 = 'string'
       export const clientExport_2 = 'string'
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = 'string';
@@ -561,7 +561,7 @@ describe("transform", () => {
       export const clientExport_1 = CLIENT_STRING
       export const clientExport_2 = CLIENT_STRING
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "const CLIENT_STRING = 'CLIENT_STRING';
@@ -580,7 +580,7 @@ describe("transform", () => {
       export const clientExport_1 = null
       export const clientExport_2 = null
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = null;
@@ -598,7 +598,7 @@ describe("transform", () => {
       export const clientExport_1 = null,
         clientExport_2 = null
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = null,
@@ -616,7 +616,7 @@ describe("transform", () => {
       export const clientExport_2 = null,
         serverExport_2 = null
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = null;
@@ -633,10 +633,10 @@ describe("transform", () => {
 
         export const [clientExport_1, clientExport_2] = [null, null]
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
+        ["serverExport_1", "serverExport_2"],
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
+      `"Cannot remove destructured export "serverExport_1""`,
     );
   });
 
@@ -648,10 +648,10 @@ describe("transform", () => {
 
         export const [clientExport_1, clientExport_2] = [null, null]
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
+        ["serverExport_1", "serverExport_2"],
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
+      `"Cannot remove destructured export "serverExport_1""`,
     );
   });
 
@@ -661,10 +661,10 @@ describe("transform", () => {
         `
         export const [keepMe_1, [{ nested: [ { nested: [serverExport_2] } ] }] ] = nested;
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
+        ["serverExport_1", "serverExport_2"],
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_2""`
+      `"Cannot remove destructured export "serverExport_2""`,
     );
   });
 
@@ -673,10 +673,10 @@ describe("transform", () => {
       `
       export const [clientExport_1, clientExport_2] = [null, null]
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(
-      `"export const [clientExport_1, clientExport_2] = [null, null];"`
+      `"export const [clientExport_1, clientExport_2] = [null, null];"`,
     );
     expect(result.code).not.toMatch(/server/i);
   });
@@ -689,10 +689,10 @@ describe("transform", () => {
 
         export const { clientExport_1, clientExport_2 } = {}
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
+        ["serverExport_1", "serverExport_2"],
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
+      `"Cannot remove destructured export "serverExport_1""`,
     );
   });
 
@@ -704,10 +704,10 @@ describe("transform", () => {
 
         export const { ...clientExport_1 } = {}
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
+        ["serverExport_1", "serverExport_2"],
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_1""`
+      `"Cannot remove destructured export "serverExport_1""`,
     );
   });
 
@@ -717,10 +717,10 @@ describe("transform", () => {
         `
         export const [keepMe_1, [{ nested: [ { nested: { serverExport_2 } } ] }]] = nested;
       `,
-        ["serverExport_1", "serverExport_2"]
-      )
+        ["serverExport_1", "serverExport_2"],
+      ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot remove destructured export "serverExport_2""`
+      `"Cannot remove destructured export "serverExport_2""`,
     );
   });
 
@@ -729,7 +729,7 @@ describe("transform", () => {
       `
       export const { clientExport_1, clientExport_2 } = {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const {
@@ -749,7 +749,7 @@ describe("transform", () => {
 
       export default removeMe;
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(`"export const keepMe = null;"`);
     expect(result.code).not.toMatch(/default/i);
@@ -764,7 +764,7 @@ describe("transform", () => {
 
       export { removeMe as default };
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(`"export const keepMe = null;"`);
     expect(result.code).not.toMatch(/default/i);
@@ -779,7 +779,7 @@ describe("transform", () => {
 
       export { removeMe as default, keepMe };
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "const keepMe = null;
@@ -795,7 +795,7 @@ describe("transform", () => {
 
       export { default } from "./module";
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(`"export const keepMe = null;"`);
     expect(result.code).not.toMatch(/default/i);
@@ -806,10 +806,10 @@ describe("transform", () => {
       `
       export { default, keepMe } from "./module";
     `,
-      ["default"]
+      ["default"],
     );
     expect(result.code).toMatchInlineSnapshot(
-      `"export { keepMe } from "./module";"`
+      `"export { keepMe } from "./module";"`,
     );
     expect(result.code).not.toMatch(/default/i);
   });
@@ -820,7 +820,7 @@ describe("transform", () => {
       export const clientExport_1 = () => {}
       export const clientExport_2 = () => {}
     `,
-      ["serverExport_1", "serverExport_2"]
+      ["serverExport_1", "serverExport_2"],
     );
     expect(result.code).toMatchInlineSnapshot(`
       "export const clientExport_1 = () => {};

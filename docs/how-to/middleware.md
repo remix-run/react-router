@@ -212,13 +212,13 @@ import { requestIdContext } from "~/context";
 
 export const loggingMiddleware = async (
   { request, context },
-  next
+  next,
 ) => {
   const requestId = crypto.randomUUID();
   context.set(requestIdContext, requestId);
 
   console.log(
-    `[${requestId}] ${request.method} ${request.url}`
+    `[${requestId}] ${request.method} ${request.url}`,
   );
 
   const start = performance.now();
@@ -226,7 +226,7 @@ export const loggingMiddleware = async (
   const duration = performance.now() - start;
 
   console.log(
-    `[${requestId}] Response ${response.status} (${duration}ms)`
+    `[${requestId}] Response ${response.status} (${duration}ms)`,
   );
 
   return response;
@@ -238,7 +238,7 @@ export const loggingMiddleware = async (
 ```tsx filename=app/middleware/error-handling.ts
 export const errorMiddleware = async (
   { context },
-  next
+  next,
 ) => {
   try {
     return await next();
@@ -257,7 +257,7 @@ export const errorMiddleware = async (
 ```tsx filename=app/middleware/cms-fallback.ts
 export const cmsFallbackMiddleware = async (
   { request },
-  next
+  next,
 ) => {
   const response = await next();
 
@@ -265,7 +265,7 @@ export const cmsFallbackMiddleware = async (
   if (response.status === 404) {
     // Check CMS for a redirect
     const cmsRedirect = await checkCMSRedirects(
-      request.url
+      request.url,
     );
     if (cmsRedirect) {
       throw redirect(cmsRedirect, 302);
@@ -281,7 +281,7 @@ export const cmsFallbackMiddleware = async (
 ```tsx filename=app/middleware/headers.ts
 export const headersMiddleware = async (
   { context },
-  next
+  next,
 ) => {
   const response = await next();
 
@@ -349,7 +349,7 @@ export const unstable_middleware = [
       // Set data during action phase
       context.set(
         sharedDataContext,
-        await getExpensiveData()
+        await getExpensiveData(),
       );
     }
     return next();

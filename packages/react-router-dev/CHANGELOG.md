@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.7.1
+
+### Patch Changes
+
+- Update to Prettier v3 for formatting when running `react-router reveal --no-typescript` ([#14049](https://github.com/remix-run/react-router/pull/14049))
+- Updated dependencies:
+  - `react-router@7.7.1`
+  - `@react-router/node@7.7.1`
+  - `@react-router/serve@7.7.1`
+
 ## 7.7.0
 
 ### Patch Changes
@@ -211,7 +221,6 @@
 ### Minor Changes
 
 - Added a new `react-router.config.ts` `routeDiscovery` option to configure Lazy Route Discovery behavior. ([#13451](https://github.com/remix-run/react-router/pull/13451))
-
   - By default, Lazy Route Discovery is enabled and makes manifest requests to the `/__manifest` path:
     - `routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" }`
   - You can modify the manifest path used:
@@ -410,7 +419,6 @@
 ### Minor Changes
 
 - Generate a "SPA fallback" HTML file for scenarios where applications are prerendering the `/` route with `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
-
   - If you specify `ssr:false` without a `prerender` config, this is considered "SPA Mode" and the generated `index.html` file will only render down to the root route and will be able to hydrate for any valid application path
   - If you specify `ssr:false` with a `prerender` config but _do not_ include the `/` path (i.e., `prerender: ['/blog/post']`), then we still generate a "SPA Mode" `index.html` file that can hydrate for any path in the application
   - However, previously if you specified `ssr:false` and included the `/` path in your `prerender` config, we would prerender the `/` route into `index.html` as a non-SPA page
@@ -420,7 +428,6 @@
     - `npx sirv-cli build/client --single __spa-fallback.html`
 
 - Allow a `loader` in the root route in SPA mode because it can be called/server-rendered at build time ([#12948](https://github.com/remix-run/react-router/pull/12948))
-
   - `Route.HydrateFallbackProps` now also receives `loaderData`
     - This will be defined so long as the `HydrateFallback` is rendering while _children_ routes are loading
     - This will be `undefined` if the `HydrateFallback` is rendering because the route has it's own hydrating `clientLoader`
@@ -465,7 +472,6 @@
 - Skip action-only resource routes when using `prerender:true` ([#13004](https://github.com/remix-run/react-router/pull/13004))
 
 - Enhance invalid export detection when using `ssr:false` ([#12948](https://github.com/remix-run/react-router/pull/12948))
-
   - `headers`/`action` are prohibited in all routes with `ssr:false` because there will be no runtime server on which to run them
   - `loader` functions are more nuanced and depend on whether a given route is prerendered
     - When using `ssr:false` without a `prerender` config, only the `root` route can have a `loader`
@@ -482,7 +488,6 @@
 - Add `future.unstable_viteEnvironmentApi` flag to enable experimental Vite Environment API support ([#12936](https://github.com/remix-run/react-router/pull/12936))
 
 - Disable Lazy Route Discovery for all `ssr:false` apps and not just "SPA Mode" because there is no runtime server to serve the search-param-configured `__manifest` requests ([#12894](https://github.com/remix-run/react-router/pull/12894))
-
   - We previously only disabled this for "SPA Mode" which is `ssr:false` and no `prerender` config but we realized it should apply to all `ssr:false` apps, including those prerendering multiple pages
   - In those `prerender` scenarios we would prerender the `/__manifest` file assuming the static file server would serve it but that makes some unneccesary assumptions about the static file server behaviors
 
@@ -555,7 +560,6 @@
 - Properly initialize `NODE_ENV` if not already set for compatibility with React 19 ([#12578](https://github.com/remix-run/react-router/pull/12578))
 
 - Remove the leftover/unused `abortDelay` prop from `ServerRouter` and update the default `entry.server.tsx` to use the new `streamTimeout` value for Single Fetch ([#12478](https://github.com/remix-run/react-router/pull/12478))
-
   - The `abortDelay` functionality was removed in v7 as it was coupled to the `defer` implementation from Remix v2, but this removal of this prop was missed
   - If you were still using this prop in your `entry.server` file, it's likely your app is not aborting streams as you would expect and you will need to adopt the new [`streamTimeout`](https://reactrouter.com/explanation/special-files#streamtimeout) value introduced with Single Fetch
 
@@ -634,14 +638,13 @@
       await writeFile(
         "build/manifest.json",
         JSON.stringify(buildManifest, null, 2),
-        "utf-8"
+        "utf-8",
       );
     },
   } satisfies Config;
   ```
 
 - Consolidate types previously duplicated across `@remix-run/router`, `@remix-run/server-runtime`, and `@remix-run/react` now that they all live in `react-router` ([#12177](https://github.com/remix-run/react-router/pull/12177))
-
   - Examples: `LoaderFunction`, `LoaderFunctionArgs`, `ActionFunction`, `ActionFunctionArgs`, `DataFunctionArgs`, `RouteManifest`, `LinksFunction`, `Route`, `EntryRoute`
   - The `RouteManifest` type used by the "remix" code is now slightly stricter because it is using the former `@remix-run/router` `RouteManifest`
     - `Record<string, Route> -> Record<string, Route | undefined>`
@@ -649,7 +652,6 @@
   - Removed `ServerRuntimeMeta*` types in favor of the `Meta*` types they were duplicated from
 
 - Update default `isbot` version to v5 and drop support for `isbot@3` ([#11770](https://github.com/remix-run/react-router/pull/11770))
-
   - If you have `isbot@4` or `isbot@5` in your `package.json`:
     - You do not need to make any changes
   - If you have `isbot@3` in your `package.json` and you have your own `entry.server.tsx` file in your repo
@@ -659,7 +661,6 @@
     - You are using the internal default entry provided by React Router v7 and you will need to upgrade to `isbot@5` in your `package.json`
 
 - Drop support for Node 18, update minimum Node vestion to 20 ([#12171](https://github.com/remix-run/react-router/pull/12171))
-
   - Remove `installGlobals()` as this should no longer be necessary
 
 - For Remix consumers migrating to React Router, Vite manifests (i.e. `.vite/manifest.json`) are now written within each build subdirectory, e.g. `build/client/.vite/manifest.json` and `build/server/.vite/manifest.json` instead of `build/.vite/client-manifest.json` and `build/.vite/server-manifest.json`. This means that the build output is now much closer to what you'd expect from a typical Vite project. ([#11573](https://github.com/remix-run/react-router/pull/11573))
@@ -735,7 +736,6 @@
 ### Minor Changes
 
 - New `future.unstable_singleFetch` flag ([#8773](https://github.com/remix-run/remix/pull/8773))
-
   - Naked objects returned from loaders/actions are no longer automatically converted to JSON responses. They'll be streamed as-is via `turbo-stream` so `Date`'s will become `Date` through `useLoaderData()`
   - You can return naked objects with `Promise`'s without needing to use `defer()` - including nested `Promise`'s
     - If you need to return a custom status code or custom response headers, you can still use the `defer` utility
@@ -882,11 +882,9 @@
 - Always ignore route files starting with `.` ([#8801](https://github.com/remix-run/remix/pull/8801))
 
 - Vite: Enable use of [`vite preview`](https://main.vitejs.dev/guide/static-deploy.html#deploying-a-static-site) to preview Remix SPA applications ([#8624](https://github.com/remix-run/remix/pull/8624))
-
   - In the SPA template, `npm run start` has been renamed to `npm run preview` which uses `vite preview` instead of a standalone HTTP server such as `http-server` or `serv-cli`
 
 - Vite: Remove the ability to pass `publicPath` as an option to the Remix vite plugin ([#8145](https://github.com/remix-run/remix/pull/8145))
-
   - ⚠️ **This is a breaking change for projects using the unstable Vite plugin with a `publicPath`**
   - This is already handled in Vite via the [`base`](https://vitejs.dev/guide/build.html#public-base-path) config so we now set the Remix `publicPath` from the Vite `base` config
 
@@ -1142,7 +1140,7 @@
       remix({
         unstable_serverBundles: ({ branch }) => {
           const isAuthenticatedRoute = branch.some(
-            (route) => route.id === "routes/_authenticated"
+            (route) => route.id === "routes/_authenticated",
           );
 
           return isAuthenticatedRoute ? "authenticated" : "unauthenticated";
@@ -1155,7 +1153,6 @@
 ### Patch Changes
 
 - Fix issue with `isbot` v4 released on 1/1/2024 ([#8415](https://github.com/remix-run/remix/pull/8415))
-
   - `remix dev` will now add `"isbot": "^4"` to `package.json` instead of using `latest`
   - Update built-in `entry.server` files to work with both `isbot@3` and `isbot@4` for backwards-compatibility with Remix apps that have pinned `isbot` to v3
   - Templates are updated to use `isbot@4` moving forward via `create-remix`
@@ -1177,7 +1174,6 @@
 ### Patch Changes
 
 - Vite: Error messages when `.server` files are referenced by client ([#8267](https://github.com/remix-run/remix/pull/8267))
-
   - Previously, referencing a `.server` module from client code resulted in an error message like:
     - `The requested module '/app/models/answer.server.ts' does not provide an export named 'isDateType'`
   - This was confusing because `answer.server.ts` _does_ provide the `isDateType` export, but Remix was replacing `.server` modules with empty modules (`export {}`) for the client build
@@ -1363,7 +1359,6 @@
 - Add `@remix-run/node` to Vite's `optimizeDeps.include` array ([#8177](https://github.com/remix-run/remix/pull/8177))
 
 - Improve Vite plugin performance ([#8121](https://github.com/remix-run/remix/pull/8121))
-
   - Parallelize detection of route module exports
   - Disable `server.preTransformRequests` in Vite child compiler since it's only used to process route modules
 
@@ -1533,7 +1528,6 @@
   - Additionally, all runtimes (including non-Node runtimes) can use `build.mode` to determine if HMR should be performed
 - Support `bun` package manager ([#7074](https://github.com/remix-run/remix/pull/7074))
 - The `serverNodeBuiltinsPolyfill` option (along with the newly added `browserNodeBuiltinsPolyfill`) now supports defining global polyfills in addition to module polyfills ([#7269](https://github.com/remix-run/remix/pull/7269))
-
   - For example, to polyfill Node's `Buffer` global:
 
     ```js
@@ -1556,7 +1550,6 @@
 - Fix importing of PNGs, SVGs, and other assets from packages in `node_modules` ([#6813](https://github.com/remix-run/remix/pull/6813), [#7182](https://github.com/remix-run/remix/pull/7182))
 
 - Decouple the `@remix-run/dev` package from the contents of the `@remix-run/css-bundle` package. ([#6982](https://github.com/remix-run/remix/pull/6982))
-
   - The contents of the `@remix-run/css-bundle` package are now entirely managed by the Remix compiler
   - Even though it's still recommended that your Remix dependencies all share the same version, this change ensures that there are no runtime errors when upgrading `@remix-run/dev` without upgrading `@remix-run/css-bundle`
 
@@ -1565,7 +1558,6 @@
 - Stop `remix dev` when `esbuild` is not running ([#7158](https://github.com/remix-run/remix/pull/7158))
 
 - Do not interpret JSX in `.ts` files ([#7306](https://github.com/remix-run/remix/pull/7306))
-
   - While JSX is supported in `.js` files for compatibility with existing apps and libraries,
     `.ts` files should not contain JSX. By not interpreting `.ts` files as JSX, `.ts` files
     can contain single-argument type generics without needing a comma to disambiguate from JSX:
@@ -1599,7 +1591,6 @@
 - Kill app server when remix dev terminates ([#7280](https://github.com/remix-run/remix/pull/7280))
 
 - Support dependencies that import polyfill packages for Node built-ins via a trailing slash (e.g. importing the `buffer` package with `var Buffer = require('buffer/').Buffer` as recommended in their README) ([#7198](https://github.com/remix-run/remix/pull/7198))
-
   - These imports were previously marked as external
   - This meant that they were left as dynamic imports in the client bundle and would throw a runtime error in the browser (e.g. `Dynamic require of "buffer/" is not supported`)
 
@@ -1608,14 +1599,12 @@
 - Restart dev server when Remix config changes ([#7269](https://github.com/remix-run/remix/pull/7269))
 
 - Remove outdated ESM import warnings ([#6916](https://github.com/remix-run/remix/pull/6916))
-
   - Most of the time these warnings were false positives.
   - Instead, we now rely on built-in Node warnings for ESM imports.
 
 - Do not trigger rebuilds when `.DS_Store` changes ([#7172](https://github.com/remix-run/remix/pull/7172))
 
 - Remove warnings for stabilized flags: ([#6905](https://github.com/remix-run/remix/pull/6905))
-
   - `unstable_cssSideEffectImports`
   - `unstable_cssModules`
   - `unstable_vanillaExtract`
@@ -1834,7 +1823,7 @@
       key: fs.readFileSync("key.pem"),
       cert: fs.readFileSync("cert.pem"),
     },
-    app
+    app,
   );
 
   appServer.listen(3000, () => {
@@ -1897,7 +1886,6 @@
 - restore color for app server output ([#6485](https://github.com/remix-run/remix/pull/6485))
 
 - Fix route ranking bug with pathless layout route next to a sibling index route ([#4421](https://github.com/remix-run/remix/pull/4421))
-
   - Under the hood this is done by removing the trailing slash from all generated `path` values since the number of slash-delimited segments counts towards route ranking so the trailing slash incorrectly increases the score for routes
 
 - Support sibling pathless layout routes by removing pathless layout routes from the unique route path checks in conventional route generation since they inherently trigger duplicate paths ([#4421](https://github.com/remix-run/remix/pull/4421))
@@ -2165,7 +2153,6 @@
 - Added deprecation warning for `v2_normalizeFormMethod` ([#5863](https://github.com/remix-run/remix/pull/5863))
 
 - Added a new `future.v2_normalizeFormMethod` flag to normalize the exposed `useNavigation().formMethod` as an uppercase HTTP method to align with the previous `useTransition` behavior as well as the `fetch()` behavior of normalizing to uppercase HTTP methods. ([#5815](https://github.com/remix-run/remix/pull/5815))
-
   - When `future.v2_normalizeFormMethod === false`,
     - `useNavigation().formMethod` is lowercase
     - `useFetcher().formMethod` is uppercase
@@ -2240,7 +2227,6 @@
 ### Patch Changes
 
 - Fixes flat route inconsistencies where `route.{ext}` wasn't always being treated like `index.{ext}` when used in a folder ([#5459](https://github.com/remix-run/remix/pull/5459))
-
   - Route conflict no longer throw errors and instead display a helpful warning that we're using the first one we found.
 
     ```log

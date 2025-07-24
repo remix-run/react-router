@@ -54,7 +54,7 @@ type BranchRoute = Pick<
 >;
 
 export const configRouteToBranchRoute = (
-  configRoute: RouteManifestEntry
+  configRoute: RouteManifestEntry,
 ): BranchRoute => pick(configRoute, branchRouteProperties);
 
 export type ServerBundlesFunction = (args: {
@@ -268,7 +268,7 @@ let mergeReactRouterConfig = (
 ): ReactRouterConfig => {
   let reducer = (
     configA: ReactRouterConfig,
-    configB: ReactRouterConfig
+    configB: ReactRouterConfig,
   ): ReactRouterConfig => {
     let mergeRequired = (key: keyof ReactRouterConfig) =>
       configA[key] !== undefined && configB[key] !== undefined;
@@ -366,7 +366,7 @@ async function resolveConfig({
       }
 
       let configModule = await viteNodeContext.runner.executeFile(
-        reactRouterConfigFile
+        reactRouterConfigFile,
       );
 
       if (configModule.default === undefined) {
@@ -391,7 +391,7 @@ async function resolveConfig({
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
         if (!preset.name) {
           throw new Error(
-            "React Router presets must have a `name` property defined."
+            "React Router presets must have a `name` property defined.",
           );
         }
 
@@ -401,11 +401,11 @@ async function resolveConfig({
 
         let configPreset: ReactRouterConfig = omit(
           await preset.reactRouterConfig({ reactRouterUserConfig }),
-          excludedConfigPresetKeys
+          excludedConfigPresetKeys,
         );
 
         return configPreset;
-      })
+      }),
     )
   ).filter(function isNotNull<T>(value: T | null): value is T {
     return value !== null;
@@ -421,7 +421,7 @@ async function resolveConfig({
 
   let userAndPresetConfigs = mergeReactRouterConfig(
     ...presets,
-    reactRouterUserConfig
+    reactRouterUserConfig,
   );
 
   let {
@@ -453,7 +453,7 @@ async function resolveConfig({
   if (!isValidPrerenderConfig) {
     return err(
       "The `prerender` config must be a boolean, an array of string paths, " +
-        "or a function returning a boolean or array of string paths"
+        "or a function returning a boolean or array of string paths",
     );
   }
 
@@ -472,7 +472,7 @@ async function resolveConfig({
   } else if (userRouteDiscovery.mode === "lazy") {
     if (!ssr) {
       return err(
-        'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`'
+        'The `routeDiscovery.mode` config cannot be set to "lazy" when setting `ssr:false`',
       );
     }
 
@@ -480,7 +480,7 @@ async function resolveConfig({
     if (manifestPath != null && !manifestPath.startsWith("/")) {
       return err(
         "The `routeDiscovery.manifestPath` config must be a root-relative " +
-          'pathname beginning with a slash (i.e., "/__manifest")'
+          'pathname beginning with a slash (i.e., "/__manifest")',
       );
     }
 
@@ -494,10 +494,10 @@ async function resolveConfig({
   if (!rootRouteFile) {
     let rootRouteDisplayPath = Path.relative(
       root,
-      Path.join(appDirectory, "root.tsx")
+      Path.join(appDirectory, "root.tsx"),
     );
     return err(
-      `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
+      `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`,
     );
   }
 
@@ -514,17 +514,17 @@ async function resolveConfig({
       if (!routeConfigFile) {
         let routeConfigDisplayPath = Path.relative(
           root,
-          Path.join(appDirectory, "routes.ts")
+          Path.join(appDirectory, "routes.ts"),
         );
         return err(
-          `Route config file not found at "${routeConfigDisplayPath}".`
+          `Route config file not found at "${routeConfigDisplayPath}".`,
         );
       }
 
       setAppDirectory(appDirectory);
       let routeConfigExport = (
         await viteNodeContext.runner.executeFile(
-          Path.join(appDirectory, routeConfigFile)
+          Path.join(appDirectory, routeConfigFile),
         )
       ).default;
       let routeConfig = await routeConfigExport;
@@ -559,7 +559,7 @@ async function resolveConfig({
             : error.stack,
         ]
           .flat()
-          .join("\n")
+          .join("\n"),
       );
     }
   }
@@ -673,7 +673,7 @@ export async function createConfigLoader({
     onChange: (handler: ChangeHandler) => {
       if (!watch) {
         throw new Error(
-          "onChange is not supported when watch mode is disabled"
+          "onChange is not supported when watch mode is disabled",
         );
       }
 
@@ -718,7 +718,7 @@ export async function createConfigLoader({
           let moduleGraphChanged =
             configFileAddedOrRemoved ||
             Boolean(
-              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath)
+              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath),
             );
 
           // Bail out if no relevant changes detected
@@ -733,7 +733,7 @@ export async function createConfigLoader({
 
           let prevAppDirectory = appDirectory;
           appDirectory = Path.normalize(
-            (result.value ?? currentConfig).appDirectory
+            (result.value ?? currentConfig).appDirectory,
           );
 
           if (appDirectory !== prevAppDirectory) {
@@ -747,7 +747,7 @@ export async function createConfigLoader({
               isEntryFileDependency(
                 viteNodeContext.devServer.moduleGraph,
                 reactRouterConfigFile,
-                filepath
+                filepath,
               ));
 
           let routeConfigFile = !skipRoutes
@@ -760,7 +760,7 @@ export async function createConfigLoader({
             isEntryFileDependency(
               viteNodeContext.devServer.moduleGraph,
               routeConfigFile,
-              filepath
+              filepath,
             );
 
           let configChanged =
@@ -790,7 +790,7 @@ export async function createConfigLoader({
 
       return () => {
         changeHandlers = changeHandlers.filter(
-          (changeHandler) => changeHandler !== handler
+          (changeHandler) => changeHandler !== handler,
         );
       };
     },
@@ -835,7 +835,7 @@ export async function resolveEntryFiles({
     Path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
-    "defaults"
+    "defaults",
   );
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
@@ -855,7 +855,7 @@ export async function resolveEntryFiles({
 
     if (!packageJsonPath) {
       throw new Error(
-        `Could not find package.json in ${rootDirectory} or any of its parent directories. Please add a package.json, or provide a custom entry.server.tsx/jsx file in your app directory.`
+        `Could not find package.json in ${rootDirectory} or any of its parent directories. Please add a package.json, or provide a custom entry.server.tsx/jsx file in your app directory.`,
       );
     }
 
@@ -865,13 +865,13 @@ export async function resolveEntryFiles({
 
     if (!deps["@react-router/node"]) {
       throw new Error(
-        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`
+        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
       );
     }
 
     if (!deps["isbot"]) {
       console.log(
-        "adding `isbot@5` to your package.json, you should commit this change"
+        "adding `isbot@5` to your package.json, you should commit this change",
       );
 
       pkgJson.update({
@@ -906,7 +906,7 @@ export async function resolveEntryFiles({
 }
 
 function omitRoutes(
-  config: ResolvedReactRouterConfig
+  config: ResolvedReactRouterConfig,
 ): ResolvedReactRouterConfig {
   return {
     ...config,
@@ -927,7 +927,7 @@ function findEntry(
     absolute?: boolean;
     extensions?: string[];
     walkParents?: boolean;
-  }
+  },
 ): string | undefined {
   let currentDir = Path.resolve(dir);
   let { root } = Path.parse(currentDir);
@@ -936,7 +936,7 @@ function findEntry(
     for (let ext of options?.extensions ?? entryExts) {
       let file = Path.resolve(currentDir, basename + ext);
       if (fs.existsSync(file)) {
-        return options?.absolute ?? false ? file : Path.relative(dir, file);
+        return (options?.absolute ?? false) ? file : Path.relative(dir, file);
       }
     }
 
@@ -959,7 +959,7 @@ function isEntryFileDependency(
   moduleGraph: Vite.ModuleGraph,
   entryFilepath: string,
   filepath: string,
-  visited = new Set<string>()
+  visited = new Set<string>(),
 ): boolean {
   // Ensure normalized paths
   entryFilepath = Path.normalize(entryFilepath);

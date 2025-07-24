@@ -69,7 +69,7 @@ function Layout() {
 
       return location.key;
     },
-    []
+    [],
   );
 
   return (
