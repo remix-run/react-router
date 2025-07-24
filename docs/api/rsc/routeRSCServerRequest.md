@@ -98,7 +98,7 @@ Whether to hydrate the server response with the RSC payload. Defaults to `true`.
 
 ### opts.renderHTML
 
-A function that renders the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) to HTML, usually using a [`<RSCStaticRouter>`](https://api.reactrouter.com/v7/functions/react_router.unstable_RSCStaticRouter.html).
+A function that renders the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) to HTML, usually using a [`<RSCStaticRouter>`](../rsc/RSCStaticRouter).
 
 ### opts.request
 

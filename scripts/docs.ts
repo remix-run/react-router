@@ -699,20 +699,27 @@ async function getSignature(code: string) {
  * @returns Text with {@link ...} tags replaced by markdown links
  */
 function resolveLinkTags(text: string): string {
-  // Match {@link ApiName} or {@link ApiName description}
+  // Match {@link ApiName} as well as {@link ApiName | description}
   const linkPattern = /\{@link\s+([^}]+)\}/g;
 
   return text.replace(linkPattern, (match, linkContent) => {
-    const parts = linkContent
-      .replace("@link", "")
-      .trim()
-      .split("|")
-      .map((p) => p.trim());
+    // Split on the pipe in case a different link text is specified after.
+    // This is not standard JSDoc syntax but instead something typedoc picks up
+    // from TSDoc. See:
+    //  - https://jsdoc.app/tags-inline-link
+    //  - https://typedoc.org/documents/Tags.__link_.html
+    const parts = linkContent.split("|").map((p) => p.trim());
     const apiName = parts[0];
     const description = parts[1] || `\`${apiName}\``;
 
-    // Look up the API in the lookup tables
-    let href = repoApiLookup.get(apiName) || typedocLookup.get(apiName)?.href;
+    // Find a proper href for the @link
+    let href =
+      // Prefer exact docs for unstable APIs if they exist (they usually shouldn't)
+      repoApiLookup.get(apiName) ||
+      // But normally we don't include the `unstable_` prefix in the filename/URL
+      repoApiLookup.get(apiName.replace(/^unstable_/, "")) ||
+      // Fall through to typedocs if a repo doc doesn't exist
+      typedocLookup.get(apiName)?.href;
 
     if (!href) {
       // If not found, return as plain text with a warning

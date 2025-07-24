@@ -701,7 +701,7 @@ export interface DOMRouterOpts {
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
-   * override — defaults to the global `window` instance.
+   * override. Defaults to the global `window` instance.
    */
   window?: Window;
 }
@@ -860,7 +860,7 @@ export interface BrowserRouterProps {
   children?: React.ReactNode;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
-   * override — defaults to the global `window` instance
+   * override. Defaults to the global `window` instance
    */
   window?: Window;
 }
@@ -928,7 +928,7 @@ export interface HashRouterProps {
   children?: React.ReactNode;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
-   * override — defaults to the global `window` instance
+   * override. Defaults to the global `window` instance
    */
   window?: Window;
 }
