@@ -6,7 +6,7 @@ unstable: true
 # unstable_matchRSCServerRequest
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
 Thank you for helping improve our documentation!
 
@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 <br />
 <br />
 
-<docs-warning>This API is experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
+<docs-warning>This API is experimental and subject to breaking changes in 
+minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
@@ -60,7 +60,7 @@ matchRSCServerRequest({
       {
         status: match.statusCode,
         headers: match.headers,
-      },
+      }
     );
   },
 });
@@ -100,7 +100,7 @@ async function matchRSCServerRequest({
       temporaryReferences: unknown;
     },
   ) => Response;
-}): Promise<Response>;
+}): Promise<Response>
 ```
 
 ## Params
@@ -159,3 +159,4 @@ Your [route definitions](https://api.reactrouter.com/v7/types/react_router.unsta
 A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 that contains the [RSC](https://react.dev/reference/rsc/server-components)
 data for hydration.
+

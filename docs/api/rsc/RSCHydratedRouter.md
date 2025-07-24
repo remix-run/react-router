@@ -6,7 +6,7 @@ unstable: true
 # unstable_RSCHydratedRouter
 
 <!--
-⚠️ ⚠️ IMPORTANT ⚠️ ⚠️
+⚠️ ⚠️ IMPORTANT ⚠️ ⚠️ 
 
 Thank you for helping improve our documentation!
 
@@ -22,8 +22,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 <br />
 <br />
 
-<docs-warning>This API is experimental and subject to breaking changes in
-minor/patch releases. Please use with caution and pay **very** close attention
+<docs-warning>This API is experimental and subject to breaking changes in 
+minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
@@ -41,25 +41,19 @@ import {
 } from "react-router";
 import type { unstable_RSCPayload as RSCPayload } from "react-router";
 
-createFromReadableStream(getRSCStream()).then(
-  (payload: RSCServerPayload) => {
-    startTransition(async () => {
-      hydrateRoot(
-        document,
-        <StrictMode>
-          <RSCHydratedRouter
-            createFromReadableStream={
-              createFromReadableStream
-            }
-            payload={payload}
-          />
-        </StrictMode>,
-        {
-          formState: await getFormState(payload),
-        },
-      );
-    });
-  },
+createFromReadableStream(getRSCStream()).then((payload) =>
+  startTransition(async () => {
+    hydrateRoot(
+      document,
+      <StrictMode>
+        <RSCHydratedRouter
+          createFromReadableStream={createFromReadableStream}
+          payload={payload}
+        />
+      </StrictMode>,
+      { formState: await getFormState(payload) },
+    );
+  }),
 );
 ```
 
@@ -72,7 +66,7 @@ function RSCHydratedRouter({
   payload,
   routeDiscovery = "eager",
   unstable_getContext,
-}: RSCHydratedRouterProps);
+}: RSCHydratedRouterProps)
 ```
 
 ## Props
@@ -100,3 +94,4 @@ The decoded [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_r
 
 `"eager"` or `"lazy"` - Determines if links are eagerly discovered, or
 delayed until clicked.
+
