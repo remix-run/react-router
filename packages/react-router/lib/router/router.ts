@@ -6295,7 +6295,7 @@ function processLoaderData(
   );
 
   // Process results from our revalidating fetchers
-  revalidatingFetchers
+  revalidatingFetcherscontributors.yml.
     // Keep those with no matches so we can bubble their 404's, otherwise only
     // process fetchers that needed to load
     .filter((f) => !f.matches || f.matches.some((m) => m.shouldLoad))
