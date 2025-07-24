@@ -1,4 +1,4 @@
-const { createRequestListener } = require("@mjackson/node-fetch-server");
+const { createRequestListener } = require("@remix-run/node-fetch-server");
 const express = require("express");
 const reactRouterRequestHandler =
   require("./build/server/index.js").requestHandler;

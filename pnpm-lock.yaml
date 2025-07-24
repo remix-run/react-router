@@ -110,7 +110,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-19baee81-20250725(eslint@8.57.0)
+        version: 6.1.0-canary-be11cb5c-20250804(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -337,12 +337,12 @@ importers:
 
   integration/helpers/rsc-parcel:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -413,12 +413,12 @@ importers:
 
   integration/helpers/rsc-parcel-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -474,9 +474,9 @@ importers:
 
   integration/helpers/rsc-vite:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -523,9 +523,9 @@ importers:
 
   integration/helpers/rsc-vite-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1325,9 +1325,9 @@ importers:
 
   packages/react-router-node:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: ^0.2.0
-        version: 0.2.0
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
     devDependencies:
       react-router:
         specifier: workspace:*
@@ -1742,12 +1742,12 @@ importers:
 
   playground/rsc-parcel:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -1815,12 +1815,12 @@ importers:
 
   playground/rsc-parcel-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
       '@parcel/runtime-rsc':
         specifier: 2.15.0
         version: 2.15.0(@parcel/core@2.15.0)
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -1870,9 +1870,9 @@ importers:
 
   playground/rsc-vite:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1919,9 +1919,9 @@ importers:
 
   playground/rsc-vite-framework:
     dependencies:
-      '@mjackson/node-fetch-server':
-        specifier: 0.6.1
-        version: 0.6.1
+      '@remix-run/node-fetch-server':
+        specifier: ^0.8.0
+        version: 0.8.0
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -3800,9 +3800,6 @@ packages:
     resolution: {integrity: sha512-iA7+tyVqfrATAIsIRWQG+a7ZLLD0VaOCKV2Wd/v4mqIU3J9c4jx9p7S0nw1XH3gJCKNBOOwACOPYYSUu9pgT+w==}
     engines: {node: '>=12.0.0'}
 
-  '@mjackson/node-fetch-server@0.2.0':
-    resolution: {integrity: sha512-EMlH1e30yzmTpGLQjlFmaDAjyOeZhng1/XCd7DExR8PNAnG/G1tyruZxEoUe11ClnwGhGrtsdnyyUx1frSzjng==}
-
   '@mjackson/node-fetch-server@0.6.1':
     resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
 
@@ -4401,6 +4398,9 @@ packages:
 
   '@remix-run/changelog-github@0.0.5':
     resolution: {integrity: sha512-43tqwUqWqirbv6D9uzo55ASPsCJ61Ein1k/M8qn+Qpros0MmbmuzjLVPmtaxfxfe2ANX0LefLvCD0pAgr1tp4g==}
+
+  '@remix-run/node-fetch-server@0.8.0':
+    resolution: {integrity: sha512-8/sKegb4HrM6IdcQeU0KPhj9VOHm5SUqswJDHuMCS3mwbr/NRx078QDbySmn0xslahvvZoOENd7EnK40kWKxkg==}
 
   '@remix-run/web-blob@3.1.0':
     resolution: {integrity: sha512-owGzFLbqPH9PlKb8KvpNJ0NO74HWE2euAn61eEiyCXX/oteoVzTVSN8mpLgDjaxBf2btj5/nUllSUgpyd6IH6g==}
@@ -6375,8 +6375,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-19baee81-20250725:
-    resolution: {integrity: sha512-ryYWKqWvR3I/nRITbbupJxlajWqK8CthGw1yMomw5BUfAVb0MpqD2b2fk7ZmCqQDpPz0I91gmqhH2/FTrjeKWQ==}
+  eslint-plugin-react-hooks@6.1.0-canary-be11cb5c-20250804:
+    resolution: {integrity: sha512-1OEkOyYzJdlfaxQzetiIeNjkAYAnrGSeT0pTgzIPowaiywcsktoiTccyThHXDML+aCYEQoghr2lqfYAVHe04ZQ==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9181,6 +9181,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
@@ -11998,8 +11999,6 @@ snapshots:
       '@lezer/lr': 1.4.2
       json5: 2.2.3
 
-  '@mjackson/node-fetch-server@0.2.0': {}
-
   '@mjackson/node-fetch-server@0.6.1': {}
 
   '@mjackson/node-fetch-server@0.7.0': {}
@@ -12845,6 +12844,8 @@ snapshots:
       dotenv: 8.6.0
     transitivePeerDependencies:
       - encoding
+
+  '@remix-run/node-fetch-server@0.8.0': {}
 
   '@remix-run/web-blob@3.1.0':
     dependencies:
@@ -15264,7 +15265,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-19baee81-20250725(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-be11cb5c-20250804(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
