@@ -237,6 +237,7 @@ export interface HydratedRouterProps {
 
 // TODO: Reference `HydratedRouterProps` in the `HydratedRouter` JSDoc
 //  @param {HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+
 /**
  * Framework-mode router component to be used to hydrate a router from a
  * {@link ServerRouter}. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
@@ -249,6 +250,8 @@ export interface HydratedRouterProps {
  * {@link createBrowserRouter} and made available to
  * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
  * functions
+ * @param props.unstable_loadRouteModule Optional function to take control over how route modules are loaded into
+ * the browser.  Primarily for use by bundler plugins.  Defaults to `import(routeModulePath)`.
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {

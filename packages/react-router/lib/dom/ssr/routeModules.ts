@@ -260,6 +260,14 @@ export type RouteComponent = ComponentType<{}>;
  */
 export type RouteHandle = unknown;
 
+/**
+ * A function to load a route module into the browser. Intended for bundler
+ * integration usage, not for application code.
+ * Defaults to `await import(route.module)`.
+ *
+ * @name unstable_LoadRouteModuleFunction
+ * @category Types
+ */
 export type LoadRouteModuleFunction = (
   route: EntryRoute,
   routeModulesCache: RouteModules,
