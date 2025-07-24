@@ -209,24 +209,34 @@ function createHydratedRouter({
   return router;
 }
 
-interface HydratedRouterProps {
+/**
+ * Props for the {@link HydratedRouter} component.
+ *
+ * @category Types
+ */
+export interface HydratedRouterProps {
   /**
-   * Context object to passed through to `createBrowserRouter` and made available
-   * to `clientLoader`/`clientActon` functions
+   * Context object to be passed through to {@link createBrowserRouter} and made
+   * available to
+   * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+   * functions
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
 }
 
+// TODO: Reference `HydratedRouterProps` in the `HydratedRouter` JSDoc
+//  @param {HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
 /**
- * Framework-mode router component to be used to to hydrate a router from a
- * `ServerRouter`. See [`entry.client.tsx`](../api/framework-conventions/entry.client.tsx).
+ * Framework-mode router component to be used to hydrate a router from a
+ * {@link ServerRouter}. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
  *
  * @public
  * @category Framework Routers
  * @mode framework
  * @param props Props
- * @param props.unstable_getContext Context object to passed through to
- * {@link createBrowserRouter} and made available to `clientLoader`/`clientAction`
+ * @param props.unstable_getContext Context object to be passed through to
+ * {@link createBrowserRouter} and made available to
+ * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
  * functions
  * @returns A React element that represents the hydrated application.
  */

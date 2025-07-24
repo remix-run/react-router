@@ -345,25 +345,29 @@ export interface DataStrategyMatch
     route: Promise<void> | undefined;
   };
   /**
-   * A boolean value indicating whether this route handler should be called in this pass.
+   * A boolean value indicating whether this route handler should be called in
+   * this pass.
    *
-   * The `matches` array always includes _all_ matched routes even when only _some_
-   * route handlers need to be called so that things like middleware can be implemented.
+   * The `matches` array always includes _all_ matched routes even when only
+   * _some_ route handlers need to be called so that things like middleware can
+   * be implemented.
    *
-   * `shouldLoad` is usually only interesting if you are skipping the route handler
-   * entirely and implementing custom handler logic - since it lets you determine
-   * if that custom logic should run for this route or not.
+   * `shouldLoad` is usually only interesting if you are skipping the route
+   * handler entirely and implementing custom handler logic - since it lets you
+   * determine if that custom logic should run for this route or not.
    *
    * For example:
    *  - If you are on `/parent/child/a` and you navigate to `/parent/child/b` -
    *    you'll get an array of three matches (`[parent, child, b]`), but only `b`
    *    will have `shouldLoad=true` because the data for `parent` and `child` is
    *    already loaded
-   *  - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only
-   *    `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
-   *  - After the `action`, `dataStrategy` will be called again for the `loader`
-   *    revalidation, and all matches will have `shouldLoad=true` (assuming no custom
-   *   `shouldRevalidate` implementations)
+   *  - If you are on `/parent/child/a` and you submit to `a`'s [`action`](https://reactrouter.com/docs/start/data/route-object#action),
+   *    then only `a` will have `shouldLoad=true` for the action execution of
+   *    `dataStrategy`
+   *  - After the [`action`](https://reactrouter.com/docs/start/data/route-object#action),
+   *    `dataStrategy` will be called again for the [`loader`](https://reactrouter.com/docs/start/data/route-object#loader)
+   *    revalidation, and all matches will have `shouldLoad=true` (assuming no
+   *    custom `shouldRevalidate` implementations)
    */
   shouldLoad: boolean;
   // This can be null for actions calls and for initial hydration calls
@@ -374,9 +378,10 @@ export interface DataStrategyMatch
   unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
   /**
    * An async function that will resolve any `route.lazy` implementations and
-   * execute the route's handler (if necessary), returning a `DataStrategyResult`
+   * execute the route's handler (if necessary), returning a {@link DataStrategyResult}
    *
-   * - Calling `match.resolve` does not mean you're calling the `loader`/`action`
+   * - Calling `match.resolve` does not mean you're calling the
+   *   [`action`](https://reactrouter.com/docs/start/data/route-object#action)/[`loader`](https://reactrouter.com/docs/start/data/route-object#loader)
    *   (the "handler") - `resolve` will only call the `handler` internally if
    *   needed _and_ if you don't pass your own `handlerOverride` function parameter
    * - It is safe to call `match.resolve` for all matches, even if they have

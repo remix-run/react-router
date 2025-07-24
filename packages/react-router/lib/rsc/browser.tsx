@@ -89,10 +89,12 @@ type WindowWithRouterGlobals = Window &
  * @param opts.createFromReadableStream Your `react-server-dom-xyz/client`'s
  * `createFromReadableStream`. Used to decode payloads from the server.
  * @param opts.createTemporaryReferenceSet A function that creates a temporary
- * reference set for the RSC payload.
+ * reference set for the [RSC](https://react.dev/reference/rsc/server-components)
+ * payload.
  * @param opts.encodeReply Your `react-server-dom-xyz/client`'s `encodeReply`.
  * Used when sending payloads to the server.
- * @param opts.fetch Optional fetch implementation. Defaults to global `fetch`.
+ * @param opts.fetch Optional [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+ * implementation. Defaults to global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
  * @returns A function that can be used to call server actions.
  */
 export function createCallServer({
@@ -495,8 +497,10 @@ function getFetchAndDecodeViaRSC(
 }
 
 /**
- * Props for the `unstable_RSCHydratedRouter` component.
+ * Props for the {@link unstable_RSCHydratedRouter} component.
+ *
  * @name unstable_RSCHydratedRouterProps
+ * @category Types
  */
 export interface RSCHydratedRouterProps {
   /**
@@ -505,28 +509,28 @@ export interface RSCHydratedRouterProps {
    */
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   /**
-   * Optional fetch implementation.  Defaults to global `fetch`.
+   * Optional fetch implementation. Defaults to global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
    */
   fetch?: (request: Request) => Promise<Response>;
   /**
-   * The decoded `RSCPayload` to hydrate.
+   * The decoded {@link unstable_RSCPayload} to hydrate.
    */
   payload: RSCPayload;
   /**
-   * `eager` or `lazy` - Determines if links are eagerly discovered, or delayed
-   * until clicked.
+   * `"eager"` or `"lazy"` - Determines if links are eagerly discovered, or
+   * delayed until clicked.
    */
   routeDiscovery?: "eager" | "lazy";
   /**
-   * A function that returns an `unstable_InitialContext` object
-   * (`Map<RouterContext, unknown>`), for use in client loaders, actions and
-   * middleware.
+   * A function that returns an {@link unstable_InitialContext} object
+   * (`Map<RouterContext, unknown>`), for use in client [`action`](../../start/data/route-object#action)s,
+   * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
 }
 
 /**
- * Hydrates a server rendered `RSCPayload` in the browser.
+ * Hydrates a server rendered {@link unstable_RSCPayload} in the browser.
  *
  * @example
  * import { startTransition, StrictMode } from "react";
@@ -537,25 +541,19 @@ export interface RSCHydratedRouterProps {
  * } from "react-router";
  * import type { unstable_RSCPayload as RSCPayload } from "react-router";
  *
- * createFromReadableStream(getRSCStream()).then(
- *   (payload: RSCServerPayload) => {
- *     startTransition(async () => {
- *       hydrateRoot(
- *         document,
- *         <StrictMode>
- *           <RSCHydratedRouter
- *             createFromReadableStream={
- *               createFromReadableStream
- *             }
- *             payload={payload}
- *           />
- *         </StrictMode>,
- *         {
- *           formState: await getFormState(payload),
- *         }
- *       );
- *     });
- *   }
+ * createFromReadableStream(getRSCStream()).then((payload) =>
+ *   startTransition(async () => {
+ *     hydrateRoot(
+ *       document,
+ *       <StrictMode>
+ *         <RSCHydratedRouter
+ *           createFromReadableStream={createFromReadableStream}
+ *           payload={payload}
+ *         />
+ *       </StrictMode>,
+ *       { formState: await getFormState(payload) },
+ *     );
+ *   }),
  * );
  *
  * @name unstable_RSCHydratedRouter
@@ -565,10 +563,11 @@ export interface RSCHydratedRouterProps {
  * @param props Props
  * @param {unstable_RSCHydratedRouterProps.createFromReadableStream} props.createFromReadableStream n/a
  * @param {unstable_RSCHydratedRouterProps.fetch} props.fetch n/a
+ * @param {unstable_RSCHydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
  * @param {unstable_RSCHydratedRouterProps.payload} props.payload n/a
  * @param {unstable_RSCHydratedRouterProps.routeDiscovery} props.routeDiscovery n/a
- * @param {unstable_RSCHydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
- * @returns A hydrated router that can be used to navigate and render routes.
+ * @returns A hydrated {@link DataRouter} that can be used to navigate and
+ * render routes.
  */
 export function RSCHydratedRouter({
   createFromReadableStream,

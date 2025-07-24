@@ -215,9 +215,10 @@ function getActiveMatches(
 export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
 
 /**
- * Renders all of the `<link>` tags created by the route module
- * [`links`](../../start/framework/route-module#links) export. You should render
- * it inside the `<head>` of your document.
+ * Renders all the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags created by the route module's [`links`](../../start/framework/route-module#links)
+ * export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
+ * of your document.
  *
  * @example
  * import { Links } from "react-router";
@@ -236,7 +237,8 @@ export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
  * @public
  * @category Components
  * @mode framework
- * @returns A collection of React elements for `<link>` tags
+ * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags
  */
 export function Links(): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
@@ -277,10 +279,10 @@ export function Links(): React.JSX.Element {
 }
 
 /**
- * Renders `<link rel=prefetch|modulepreload>` tags for modules and data of
- * another page to enable an instant navigation to that page.
- * [`<Link prefetch>`](../../components/Link#prefetch) uses this internally, but
- * you can render it to prefetch a page for any other reason.
+ * Renders [`<link rel=prefetch|modulepreload>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rel)
+ * tags for modules and data of another page to enable an instant navigation to
+ * that page. [`<Link prefetch>`](./Link#prefetch) uses this internally, but you
+ * can render it to prefetch a page for any other reason.
  *
  * For example, you may render one of this as the user types into a search field
  * to prefetch search results before they click through to their selection.
@@ -294,11 +296,14 @@ export function Links(): React.JSX.Element {
  * @category Components
  * @mode framework
  * @param props Props
- * @param props.page The absolute path of the page to prefetch, e.g. `/absolute/path`.
- * @param props.linkProps Additional props to spread onto the
- * [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link)
- * tags, such as `crossOrigin`, `integrity`, `rel`, etc.
- * @returns A collection of React elements for `<link>` tags
+ * @param {PageLinkDescriptor.page} props.page n/a
+ * @param props.linkProps Additional props to spread onto the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags, such as [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/crossOrigin),
+ * [`integrity`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/integrity),
+ * [`rel`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rel),
+ * etc.
+ * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags
  */
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let { router } = useDataRouterContext();
@@ -465,9 +470,10 @@ function PrefetchPageLinksImpl({
 }
 
 /**
- * Renders all the `<meta>` tags created by the route module
- * [`meta`](../../start/framework/route-module#meta) exports. You should render
- * it inside the `<head>` of your HTML.
+ * Renders all the [`<meta>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta)
+ * tags created by the route module's [`meta`](../../start/framework/route-module#meta)
+ * export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
+ * of your document.
  *
  * @example
  * import { Meta } from "react-router";
@@ -485,7 +491,8 @@ function PrefetchPageLinksImpl({
  * @public
  * @category Components
  * @mode framework
- * @returns A collection of React elements for `<meta>` tags
+ * @returns A collection of React elements for [`<meta>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta)
+ * tags
  */
 export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
@@ -629,10 +636,19 @@ let isHydrated = false;
 /**
  * A couple common attributes:
  *
- * - `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
- * - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
+ * - `<Scripts crossOrigin>` for hosting your static assets on a different
+ *   server than your app.
+ * - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src)
+ * with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources)
+ * for your [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags.
  *
- * You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
+ * You cannot pass through attributes such as [`async`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/async),
+ * [`defer`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/defer),
+ * [`noModule`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/noModule),
+ * [`src`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/src),
+ * or [`type`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/type),
+ * because they are managed by React Router internally.
  *
  * @category Types
  */
@@ -642,21 +658,22 @@ export type ScriptsProps = Omit<
   | "children"
   | "dangerouslySetInnerHTML"
   | "defer"
-  | "src"
-  | "type"
   | "noModule"
+  | "src"
   | "suppressHydrationWarning"
+  | "type"
 > & {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
-   * attribute to render on [the `<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
+   * attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+   * element
    */
   nonce?: string | undefined;
 };
 
 /**
  * Renders the client runtime of your app. It should be rendered inside the
- * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/body)
+ * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body)
  *  of the document.
  *
  * If server rendering, you can omit `<Scripts/>` and the app will work as a
@@ -680,10 +697,12 @@ export type ScriptsProps = Omit<
  * @public
  * @category Components
  * @mode framework
- * @param scriptProps Additional props to spread onto the
- * [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script)
- * tag, such as `crossOrigin`, `nonce`, etc.
- * @returns A collection of React elements for `<script>` tags
+ * @param scriptProps Additional props to spread onto the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags, such as [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/crossOrigin),
+ * [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce),
+ * etc.
+ * @returns A collection of React elements for [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags
  */
 export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   let {
