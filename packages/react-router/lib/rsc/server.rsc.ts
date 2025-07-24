@@ -69,13 +69,9 @@ type ServerContext = {
   redirect?: Response;
 };
 
-declare global {
-  var ___reactRouterServerStorage___:
-    | AsyncLocalStorage<ServerContext>
-    | undefined;
-}
-
-const globalVar = typeof globalThis !== "undefined" ? globalThis : global;
+const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
+  ___reactRouterServerStorage___?: AsyncLocalStorage<ServerContext>;
+};
 
 const ServerStorage = (globalVar.___reactRouterServerStorage___ ??=
   new AsyncLocalStorage<ServerContext>());
