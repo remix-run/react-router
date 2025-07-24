@@ -56,8 +56,8 @@ ReactDOM.createRoot(root).render(
 
 Framework Mode wraps Data Mode with a Vite plugin to add the full React Router experience with:
 
-- typesafe `href`
-- typesafe Route Module API
+- type-safe `href`
+- type-safe Route Module API
 - intelligent code splitting
 - SPA, SSR, and static rendering strategies
 - and more
@@ -71,7 +71,7 @@ export default [
 ];
 ```
 
-You'll then have access to the Route Module API with typesafe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
+You'll then have access to the Route Module API with type-safe params, loaderData, code splitting, SPA/SSR/SSG strategies, and more.
 
 ```ts filename=product.tsx
 import { Route } from "+./types/product.tsx";
@@ -182,6 +182,7 @@ This is mostly for the LLMs, but knock yourself out:
 | createCookieSessionStorage     | ✅        | ✅   |             |
 | createMemorySessionStorage     | ✅        | ✅   |             |
 | createPath                     | ✅        | ✅   | ✅          |
+| createRoutesFromElements       |           | ✅   |             |
 | createRoutesStub               | ✅        | ✅   |             |
 | createSearchParams             | ✅        | ✅   | ✅          |
 | data                           | ✅        | ✅   |             |

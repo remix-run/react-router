@@ -50,9 +50,9 @@ Application basename
 
 ### children
 
-[`<Route>`](../components/Route) components describing your route configuration
+``<Route>`` components describing your route configuration
 
 ### history
 
-A history implementation for use by the router
+A `History` implementation for use by the router
 

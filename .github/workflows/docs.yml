@@ -3,13 +3,16 @@ name: 📚 Docs
 on:
   push:
     branches:
-      # Enable main after the next release beyond `7.7.0`
-      # - main
+      - main
       - dev
+    paths:
+      - "packages/**/*.ts"
+      - "packages/**/*.tsx"
+      - "scripts/docs.ts"
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch to generate docs for (usually dev)"
+        description: "Branch to generate docs on"
         required: true
 
 concurrency:

@@ -138,7 +138,8 @@ export interface DOMRouterOpts {
    */
   basename?: string;
   /**
-   * Function to provide the initial `context` values for all client side navigations/fetches
+   * Function to provide the initial `context` values for all client-side
+   * navigations/fetches
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
   /**
@@ -146,10 +147,11 @@ export interface DOMRouterOpts {
    */
   future?: Partial<FutureConfig>;
   /**
-   * When Server-Rendering and opting-out of automatic hydration, the `hydrationData`
-   * option allows you to pass in hydration data from your server-render. This will
-   * almost always be a subset of data from the {@link StaticHandlerContext} value you
-   * get back from the `{@link StaticHandler} `query()` method:
+   * When Server-Rendering and opting-out of automatic hydration, the
+   * `hydrationData` option allows you to pass in hydration data from your
+   * server-render. This will almost always be a subset of data from the
+   * {@link StaticHandlerContext} value you get back from {@link StaticHandler}'s
+   * `query` method:
    *
    * ```tsx
    * const router = createBrowserRouter(routes, {
@@ -166,18 +168,23 @@ export interface DOMRouterOpts {
    *
    * You will almost always include a complete set of `loaderData` to hydrate a
    * server-rendered app. But in advanced use-cases (such as Framework Mode's
-   * `clientLoader`), you may want to include `loaderData` for only some routes
-   * that were loaded/rendered on the server. This allows you to hydrate _some_
-   * of the routes (such as the app layout/shell) while showing a `HydrateFallback`
-   * and running the loaders for other routes during hydration.
+   * [`clientLoader`](../../start/framework/route-module#clientLoader)), you may
+   * want to include `loaderData` for only some routes that were loaded/rendered
+   * on the server. This allows you to hydrate _some_ of the routes (such as the
+   * app layout/shell) while showing a {@link PathRouteProps.HydrateFallback | `HydrateFallback`}
+   * component and running the [`loader`](../../start/data/route-object#loader)s
+   * for other routes during hydration.
    *
-   * A route `loader` will run during hydration in 2 scenarios:
+   * A route [`loader`](../../start/data/route-object#loader) will run during
+   * hydration in two scenarios:
    *
-   *  - No hydration data is provided
-   *    - In these cases the `HydrateFallback` component will render on initial hydration
-   *  - The `loader.hydrate` property is set to true
-   *    - This allows you to run the loader even if you did not render a fallback
-   *      on initial hydration (i.e., to prime a cache with hydration data)
+   *  1. No hydration data is provided
+   *     In these cases the {@link PathRouteProps.HydrateFallback | `HydrateFallback`}
+   *     component will render on initial hydration
+   *  2. The `loader.hydrate` property is set to `true`
+   *     This allows you to run the [`loader`](../../start/data/route-object#loader)
+   *     even if you did not render a fallback on initial hydration (i.e., to
+   *     prime a cache with hydration data)
    *
    * ```tsx
    * const router = createBrowserRouter(
@@ -213,31 +220,36 @@ export interface DOMRouterOpts {
    * See {@link DataStrategyFunction}.
    *
    * <docs-warning>This is a low-level API intended for advanced use-cases. This
-   * overrides React Router's internal handling of `loader`/`action` execution,
-   * and if done incorrectly will break your app code. Please use with caution
-   * and perform the appropriate testing.</docs-warning>
+   * overrides React Router's internal handling of
+   * [`action`](../../start/data/route-object#action)/[`loader`](../../start/data/route-object#loader)
+   * execution, and if done incorrectly will break your app code. Please use
+   * with caution and perform the appropriate testing.</docs-warning>
    *
    * By default, React Router is opinionated about how your data is loaded/submitted -
-   * and most notably, executes all of your loaders in parallel for optimal data
-   * fetching. While we think this is the right behavior for most use-cases, we
-   * realize that there is no "one size fits all" solution when it comes to data
-   * fetching for the wide landscape of application requirements.
+   * and most notably, executes all of your [`loader`](../../start/data/route-object#loader)s
+   * in parallel for optimal data fetching. While we think this is the right
+   * behavior for most use-cases, we realize that there is no "one size fits all"
+   * solution when it comes to data fetching for the wide landscape of
+   * application requirements.
    *
-   * The `dataStrategy` option gives you full control over how your loaders and
-   * actions are executed and lays the foundation to build in more advanced APIs
-   * such as middleware, context, and caching layers. Over time, we expect that
-   * we'll leverage this API internally to bring more first class APIs to React
-   * Router, but until then (and beyond), this is your way to add more advanced
-   * functionality for your applications data needs.
+   * The `dataStrategy` option gives you full control over how your [`action`](../../start/data/route-object#action)s
+   * and [`loader`](../../start/data/route-object#loader)s are executed and lays
+   * the foundation to build in more advanced APIs such as middleware, context,
+   * and caching layers. Over time, we expect that we'll leverage this API
+   * internally to bring more first class APIs to React Router, but until then
+   * (and beyond), this is your way to add more advanced functionality for your
+   * application's data needs.
    *
-   * The `dataStrategy` function should return a key/value object of
-   * `routeId` -> {@link DataStrategyResult} and should include entries for any routes
-   * where a handler was executed. A `DataStrategyResult` indicates if the handler
-   * was successful or not based on the `DataStrategyResult.type` field. If the
-   * returned `DataStrategyResult["result"]` is a `Response`, React Router will
-   * unwrap it for you (via `res.json` or `res.text`). If you need to do custom
-   * decoding of a `Response` but want to preserve the status code, you can use
-   * the `data` utility to return your decoded data along with a `ResponseInit`.
+   * The `dataStrategy` function should return a key/value-object of
+   * `routeId` -> {@link DataStrategyResult} and should include entries for any
+   * routes where a handler was executed. A {@link DataStrategyResult} indicates
+   * if the handler was successful or not based on the {@link DataStrategyResult.type}
+   * field. If the returned {@link DataStrategyResult.result} is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
+   * React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
+   * or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
+   * If you need to do custom decoding of a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+   * but want to preserve the status code, you can use the `data` utility to
+   * return your decoded data along with a `ResponseInit`.
    *
    * <details>
    * <summary><b>Example <code>dataStrategy</code> Use Cases</b></summary>
@@ -245,11 +257,12 @@ export interface DOMRouterOpts {
    * **Adding logging**
    *
    * In the simplest case, let's look at hooking into this API to add some logging
-   * for when our route loaders/actions execute:
+   * for when our route [`action`](../../start/data/route-object#action)s/[`loader`](../../start/data/route-object#loader)s
+   * execute:
    *
-   * ```ts
+   * ```tsx
    * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ request, matches }) {
+   *   async dataStrategy({ matches, request }) {
    *     const matchesToLoad = matches.filter((m) => m.shouldLoad);
    *     const results = {};
    *     await Promise.all(
@@ -265,9 +278,10 @@ export interface DOMRouterOpts {
    *
    * **Middleware**
    *
-   * Let's define a middleware on each route via `handle` and call middleware
-   * sequentially first, then call all loaders in parallel - providing any data
-   * made available via the middleware:
+   * Let's define a middleware on each route via [`handle`](../../start/data/route-object#handle)
+   * and call middleware sequentially first, then call all
+   * [`loader`](../../start/data/route-object#loader)s in parallel - providing
+   * any data made available via the middleware:
    *
    * ```ts
    * const routes = [
@@ -300,7 +314,7 @@ export interface DOMRouterOpts {
    * ];
    *
    * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ request, params, matches }) {
+   *   async dataStrategy({ matches, params, request }) {
    *     // Run middleware sequentially and let them add data to `context`
    *     let context = {};
    *     for (const match of matches) {
@@ -336,11 +350,11 @@ export interface DOMRouterOpts {
    *
    * **Custom Handler**
    *
-   * It's also possible you don't even want to define a loader implementation at
-   * the route level. Maybe you want to just determine the routes and issue a single
-   * GraphQL request for all of your data? You can do that by setting your
-   * `route.loader=true` so it qualifies as "having a loader", and then store GQL
-   * fragments on `route.handle`:
+   * It's also possible you don't even want to define a [`loader`](../../start/data/route-object#loader)
+   * implementation at the route level. Maybe you want to just determine the
+   * routes and issue a single GraphQL request for all of your data? You can do
+   * that by setting your `route.loader=true` so it qualifies as "having a
+   * loader", and then store GQL fragments on `route.handle`:
    *
    * ```ts
    * const routes = [
@@ -373,7 +387,7 @@ export interface DOMRouterOpts {
    * ];
    *
    * let router = createBrowserRouter(routes, {
-   *   async dataStrategy({ request, params, matches }) {
+   *   async dataStrategy({ matches, params, request }) {
    *     // Compose route fragments into a single GQL payload
    *     let gql = getFragmentsFromRouteHandles(matches);
    *     let data = await fetchGql(gql);
@@ -395,37 +409,39 @@ export interface DOMRouterOpts {
    * `createBrowserRouter(routes)`. This allows React Router to perform synchronous
    * route matching, execute loaders, and then render route components in the most
    * optimistic manner without introducing waterfalls. The tradeoff is that your
-   * initial JS bundle is larger by definition - which may slow down application
+   * initial JS bundle is larger by definition — which may slow down application
    * start-up times as your application grows.
    *
-   * To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0]
-   * which let's you lazily load the route _implementation_ (`loader`, `Component`,
-   * etc.) while still providing the route _definition_ aspects up front (`path`,
-   * `index`, etc.). This is a good middle ground because React Router still knows
-   * about your route definitions (the lightweight part) up front and can perform
-   * synchronous route matching, but then delay loading any of the route implementation
+   * To combat this, we introduced [`route.lazy`](../../start/data/route-object#lazy)
+   * in [v6.9.0](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v690)
+   * which lets you lazily load the route _implementation_ ([`loader`](../../start/data/route-object#loader),
+   * [`Component`](../../start/data/route-object#Component), etc.) while still
+   * providing the route _definition_ aspects up front (`path`, `index`, etc.).
+   * This is a good middle ground. React Router still knows about your route
+   * definitions (the lightweight part) up front and can perform synchronous
+   * route matching, but then delay loading any of the route implementation
    * aspects (the heavier part) until the route is actually navigated to.
    *
-   * In some cases, even this doesn't go far enough. For very large applications,
+   * In some cases, even this doesn't go far enough. For huge applications,
    * providing all route definitions up front can be prohibitively expensive.
    * Additionally, it might not even be possible to provide all route definitions
    * up front in certain Micro-Frontend or Module-Federation architectures.
    *
-   * This is where `patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]).
+   * This is where `patchRoutesOnNavigation` comes in ([RFC](https://github.com/remix-run/react-router/discussions/11113)).
    * This API is for advanced use-cases where you are unable to provide the full
    * route tree up-front and need a way to lazily "discover" portions of the route
-   * tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war]
+   * tree at runtime. This feature is often referred to as ["Fog of War"](https://en.wikipedia.org/wiki/Fog_of_war),
    * because similar to how video games expand the "world" as you move around -
    * the router would be expanding its routing tree as the user navigated around
    * the app - but would only ever end up loading portions of the tree that the
    * user visited.
    *
    * `patchRoutesOnNavigation` will be called anytime React Router is unable to
-   * match a `path`. The arguments include the `path`, any partial `matches`, and
-   * a `patch` function you can call to patch new routes into the tree at a
-   * specific location. This method is executed during the `loading` portion of
-   * the navigation for `GET` requests and during the `submitting` portion of the
-   * navigation for non-`GET` requests.
+   * match a `path`. The arguments include the `path`, any partial
+   * {@link RouteMatch | `matches`}, and a `patch` function you can call to patch
+   * new routes into the tree at a specific location. This method is executed
+   * during the `loading` portion of the navigation for `GET` requests and during
+   * the `submitting` portion of the navigation for non-`GET` requests.
    *
    * <details>
    *   <summary><b>Example <code>patchRoutesOnNavigation</code> Use Cases</b></summary>
@@ -442,7 +458,7 @@ export interface DOMRouterOpts {
    *       },
    *     ],
    *     {
-   *       async patchRoutesOnNavigation({ path, patch }) {
+   *       async patchRoutesOnNavigation({ patch, path }) {
    *         if (path === "/a") {
    *           // Load/patch the `a` route as a child of the route with id `root`
    *           let route = await getARoute();
@@ -454,13 +470,13 @@ export interface DOMRouterOpts {
    *   );
    *   ```
    *
-   *   In the above example, if the user clicks a link to `/a`, React Router won't
-   *   match any routes initially and will call `patchRoutesOnNavigation` with a
-   *   `path = "/a"` and a `matches` array containing the root route match. By calling
-   *   `patch('root', [route])`, the new route will be added to the route tree as a
-   *   child of the `root` route and React Router will perform matching on the updated
-   *   routes. This time it will successfully match the `/a` path and the navigation
-   *   will complete successfully.
+   *   In the above example, if the user clicks a link to `/a`, React Router
+   *   won't match any routes initially and will call `patchRoutesOnNavigation`
+   *   with a `path = "/a"` and a `matches` array containing the root route
+   *   match. By calling `patch('root', [route])`, the new route will be added
+   *   to the route tree as a child of the `root` route and React Router will
+   *   perform matching on the updated routes. This time it will successfully
+   *   match the `/a` path and the navigation will complete successfully.
    *
    *   **Patching new root-level routes**
    *
@@ -477,7 +493,7 @@ export interface DOMRouterOpts {
    *       },
    *     ],
    *     {
-   *       async patchRoutesOnNavigation({ path, patch }) {
+   *       async patchRoutesOnNavigation({ patch, path }) {
    *         if (path === "/root-sibling") {
    *           // Load/patch the `/root-sibling` route as a sibling of the root route
    *           let route = await getRootSiblingRoute();
@@ -489,12 +505,12 @@ export interface DOMRouterOpts {
    *   );
    *   ```
    *
-   *   **Patching sub-trees asynchronously**
+   *   **Patching subtrees asynchronously**
    *
    *   You can also perform asynchronous matching to lazily fetch entire sections
-   * of your application:
+   *   of your application:
    *
-   *   ```jsx
+   *   ```tsx
    *   let router = createBrowserRouter(
    *     [
    *       {
@@ -503,7 +519,7 @@ export interface DOMRouterOpts {
    *       },
    *     ],
    *     {
-   *       async patchRoutesOnNavigation({ path, patch }) {
+   *       async patchRoutesOnNavigation({ patch, path }) {
    *         if (path.startsWith("/dashboard")) {
    *           let children = await import("./dashboard");
    *           patch(null, children);
@@ -518,17 +534,17 @@ export interface DOMRouterOpts {
    *   ```
    *
    *   <docs-info>If in-progress execution of `patchRoutesOnNavigation` is
-   *   interrupted by a subsequent navigation, then any remaining `patch` calls
-   *   in the interrupted execution will not update the route tree because the
+   *   interrupted by a later navigation, then any remaining `patch` calls in
+   *   the interrupted execution will not update the route tree because the
    *   operation was cancelled.</docs-info>
    *
    *   **Co-locating route discovery with route definition**
    *
-   *   If you don't wish to perform your own pseudo-matching, you can leverage the
-   * partial `matches` array and the `handle` field on a route to keep the children
-   * definitions co-located:
+   *   If you don't wish to perform your own pseudo-matching, you can leverage
+   *   the partial {@link RouteMatch | `matches`} array and the [`handle`](../../start/data/route-object#handle)
+   *   field on a route to keep the children definitions co-located:
    *
-   *   ```jsx
+   *   ```tsx
    *   let router = createBrowserRouter(
    *     [
    *       {
@@ -579,18 +595,19 @@ export interface DOMRouterOpts {
    *
    *   **A note on routes with parameters**
    *
-   *   Because React Router uses ranked routes to find the best match for a given
-   *   path, there is an interesting ambiguity introduced when only a partial route
-   *   tree is known at any given point in time. If we match a fully static route
-   *   such as `path: "/about/contact-us"` then we know we've found the right match
-   *   since it's composed entirely of static URL segments, and thus we do not need
-   *   to bother asking for any other potentially higher-scoring routes.
+   *   Because React Router uses ranked routes to find the best match for a
+   *   given path, there is an interesting ambiguity introduced when only a
+   *   partial route tree is known at any given point in time. If we match a
+   *   fully static route such as `path: "/about/contact-us"` then we know we've
+   *   found the right match since it's composed entirely of static URL segments.
+   *   Thus, we do not need to bother asking for any other potentially
+   *   higher-scoring routes.
    *
-   *   However, routes with parameters (dynamic or splat) can't make this assumption
-   *   because there might be a not-yet-discovered route tht scores higher. Consider
-   *   a full route tree such as:
+   *   However, routes with parameters (dynamic or splat) can't make this
+   *   assumption because there might be a not-yet-discovered route that scores
+   *   higher. Consider a full route tree such as:
    *
-   *   ```js
+   *   ```tsx
    *   // Assume this is the full route tree for your app
    *   const routes = [
    *     {
@@ -612,7 +629,7 @@ export interface DOMRouterOpts {
    *   And then assume we want to use `patchRoutesOnNavigation` to fill this in
    *   as the user navigates around:
    *
-   *   ```js
+   *   ```tsx
    *   // Start with only the index route
    *   const router = createBrowserRouter(
    *     [
@@ -622,7 +639,7 @@ export interface DOMRouterOpts {
    *       },
    *     ],
    *     {
-   *       patchRoutesOnNavigation({ path, patch }) {
+   *       async patchRoutesOnNavigation({ patch, path }) {
    *         if (path === "/blog/new") {
    *           patch("blog", [
    *             {
@@ -643,28 +660,30 @@ export interface DOMRouterOpts {
    *   );
    *   ```
    *
-   *   If the user were to a blog post first (i.e., `/blog/my-post`) we would patch
-   *   in the `:slug` route. Then if the user navigated to `/blog/new` to write a
-   *   new post, we'd match `/blog/:slug` but it wouldn't be the _right_ match!
-   *   We need to call `patchRoutesOnNavigation` just in case there exists a
-   *   higher-scoring route we've not yet discovered, which in this case there is.
+   *   If the user were to a blog post first (i.e., `/blog/my-post`) we would
+   *   patch in the `:slug` route. Then, if the user navigated to `/blog/new` to
+   *   write a new post, we'd match `/blog/:slug` but it wouldn't be the _right_
+   *   match! We need to call `patchRoutesOnNavigation` just in case there
+   *   exists a higher-scoring route we've not yet discovered, which in this
+   *   case there is.
    *
    *   So, anytime React Router matches a path that contains at least one param,
    *   it will call `patchRoutesOnNavigation` and match routes again just to
    *   confirm it has found the best match.
    *
    *   If your `patchRoutesOnNavigation` implementation is expensive or making
-   *   side-effect `fetch` calls to a backend server, you may want to consider
-   *   tracking previously seen routes to avoid over-fetching in cases where you
-   *   know the proper route has already been found. This can usually be as simple
-   *   as maintaining a small cache of prior `path` values for which you've already
+   *   side effect [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
+   *   calls to a backend server, you may want to consider tracking previously
+   *   seen routes to avoid over-fetching in cases where you know the proper
+   *   route has already been found. This can usually be as simple as
+   *   maintaining a small cache of prior `path` values for which you've already
    *   patched in the right routes:
    *
-   *   ```js
+   *   ```tsx
    *   let discoveredRoutes = new Set();
    *
    *   const router = createBrowserRouter(routes, {
-   *     patchRoutesOnNavigation({ path, patch }) {
+   *     async patchRoutesOnNavigation({ patch, path }) {
    *       if (discoveredRoutes.has(path)) {
    *         // We've seen this before so nothing to patch in and we can let the router
    *         // use the routes it already knows about
@@ -682,7 +701,7 @@ export interface DOMRouterOpts {
   patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   /**
    * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
-   * override - defaults to the global `window` instance.
+   * override. Defaults to the global `window` instance.
    */
   window?: Window;
 }
@@ -831,8 +850,18 @@ function deserializeErrors(
  * @category Types
  */
 export interface BrowserRouterProps {
+  /**
+   * Application basename
+   */
   basename?: string;
+  /**
+   * {@link Route | `<Route>`} components describing your route configuration
+   */
   children?: React.ReactNode;
+  /**
+   * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
+   * override. Defaults to the global `window` instance
+   */
   window?: Window;
 }
 
@@ -844,10 +873,9 @@ export interface BrowserRouterProps {
  * @category Declarative Routers
  * @mode declarative
  * @param props Props
- * @param props.basename Application basename
- * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.window [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window)
- * object override - defaults to the global `window` instance
+ * @param {BrowserRouterProps.basename} props.basename n/a
+ * @param {BrowserRouterProps.children} props.children n/a
+ * @param {BrowserRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * API for client-side routing.
  */
@@ -890,8 +918,18 @@ export function BrowserRouter({
  * @category Types
  */
 export interface HashRouterProps {
+  /**
+   * Application basename
+   */
   basename?: string;
+  /**
+   * {@link Route | `<Route>`} components describing your route configuration
+   */
   children?: React.ReactNode;
+  /**
+   * [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window) object
+   * override. Defaults to the global `window` instance
+   */
   window?: Window;
 }
 
@@ -904,10 +942,9 @@ export interface HashRouterProps {
  * @category Declarative Routers
  * @mode declarative
  * @param props Props
- * @param props.basename Application basename
- * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.window [`Window`](https://developer.mozilla.org/en-US/docs/Web/API/Window)
- * object override - defaults to the global `window` instance
+ * @param {HashRouterProps.basename} props.basename n/a
+ * @param {HashRouterProps.children} props.children n/a
+ * @param {HashRouterProps.window} props.window n/a
  * @returns A declarative {@link Router | `<Router>`} using the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash)
  * for client-side routing.
  */
@@ -946,8 +983,17 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
  * @category Types
  */
 export interface HistoryRouterProps {
+  /**
+   * Application basename
+   */
   basename?: string;
+  /**
+   * {@link Route | `<Route>`} components describing your route configuration
+   */
   children?: React.ReactNode;
+  /**
+   *  A {@link History} implementation for use by the router
+   */
   history: History;
 }
 
@@ -963,10 +1009,11 @@ export interface HistoryRouterProps {
  * @category Declarative Routers
  * @mode declarative
  * @param props Props
- * @param props.basename Application basename
- * @param props.children {@link Route | `<Route>`} components describing your route configuration
- * @param props.history A history implementation for use by the router
- * @returns A declarative router using the provided history implementation for client-side routing.
+ * @param {HistoryRouterProps.basename} props.basename n/a
+ * @param {HistoryRouterProps.children} props.children n/a
+ * @param {HistoryRouterProps.history} props.history n/a
+ * @returns A declarative {@link Router | `<Router>`} using the provided history
+ * implementation for client-side routing.
  */
 export function HistoryRouter({
   basename,
@@ -1012,8 +1059,8 @@ export interface LinkProps
    * <Link discover="none" />
    * ```
    *
-   * - **render** - default, discover the route when the link renders
-   * - **none** - don't eagerly discover, only discover if the link is clicked
+   * - **render** — default, discover the route when the link renders
+   * - **none** — don't eagerly discover, only discover if the link is clicked
    */
   discover?: DiscoverBehavior;
 
@@ -1028,10 +1075,10 @@ export interface LinkProps
    * <Link prefetch="viewport" />
    * ```
    *
-   * - **none** - default, no prefetching
-   * - **intent** - prefetches when the user hovers or focuses the link
-   * - **render** - prefetches when the link renders
-   * - **viewport** - prefetches when the link is in the viewport, very useful for mobile
+   * - **none** — default, no prefetching
+   * - **intent** — prefetches when the user hovers or focuses the link
+   * - **render** — prefetches when the link renders
+   * - **viewport** — prefetches when the link is in the viewport, very useful for mobile
    *
    * Prefetching is done with HTML [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
    * tags. They are inserted after the link.
@@ -1061,7 +1108,7 @@ export interface LinkProps
 
   /**
    * Replaces the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-   * stack instead of pushing a new one  onto it.
+   * stack instead of pushing a new one onto it.
    *
    * ```tsx
    * <Link replace />
@@ -1125,10 +1172,10 @@ export interface LinkProps
    * Consider a route hierarchy where a parent route pattern is `"blog"` and a child
    * route pattern is `"blog/:slug/edit"`.
    *
-   * - **route** - default, resolves the link relative to the route pattern. In the
-   * example above, a relative link of `".."` will remove both `:slug/edit` segments
+   * - **route** — default, resolves the link relative to the route pattern. In the
+   * example above, a relative link of `"..."` will remove both `:slug/edit` segments
    * back to `"/blog"`.
-   * - **path** - relative to the path so `".."` will only remove one URL segment up
+   * - **path** — relative to the path so `"..."` will only remove one URL segment up
    * to `"/blog/:slug"`
    *
    * Note that index routes and layout routes do not have paths so they are not
@@ -1617,11 +1664,11 @@ NavLink.displayName = "NavLink";
  */
 interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
-   * The HTTP verb to use when the form is submitted. Supports "get", "post",
-   * "put", "delete", and "patch".
+   * The HTTP verb to use when the form is submitted. Supports `"delete"`,
+   * `"get"`, `"patch"`, `"post"`, and `"put"`.
    *
    * Native [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
-   * only supports `get` and `post`, avoid the other verbs if you'd like to
+   * only supports `"get"` and `"post"`, avoid the other verbs if you'd like to
    * support progressive enhancement
    */
   method?: HTMLFormMethod;
@@ -1689,8 +1736,8 @@ export interface FormProps extends SharedFormProps {
    * <Link discover="none" />
    * ```
    *
-   * - **render** - default, discover the route when the link renders
-   * - **none** - don't eagerly discover, only discover if the link is clicked
+   * - **render** — default, discover the route when the link renders
+   * - **none** — don't eagerly discover, only discover if the link is clicked
    */
   discover?: DiscoverBehavior;
 
@@ -1744,7 +1791,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 /**
  * A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
- * that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API),
+ * that submits data to actions via [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch),
  * activating pending states in {@link useNavigation} which enables advanced
  * user interfaces beyond a basic HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form).
  * After a form's `action` completes, all data on the page is automatically
@@ -1758,7 +1805,8 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  *
  * `Form` is most useful for submissions that should also change the URL or
  * otherwise add an entry to the browser history stack. For forms that shouldn't
- * manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
+ * manipulate the browser [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * stack, use {@link FetcherWithComponents.Form | `<fetcher.Form>`}.
  *
  * @example
  * import { Form } from "react-router";
@@ -1861,8 +1909,8 @@ export type ScrollRestorationProps = ScriptsProps & {
   /**
    * A function that returns a key to use for scroll restoration. This is useful
    * for custom scroll restoration logic, such as using only the pathname so
-   * that subsequent navigations to prior paths will restore the scroll. Defaults
-   * to `location.key`. See {@link GetScrollRestorationKeyFunction}.
+   * that later navigations to prior paths will restore the scroll. Defaults to
+   * `location.key`. See {@link GetScrollRestorationKeyFunction}.
    *
    * ```tsx
    * <ScrollRestoration
@@ -1917,7 +1965,7 @@ export type ScrollRestorationProps = ScriptsProps & {
  * @param {ScrollRestorationProps.getKey} props.getKey n/a
  * @param {ScriptsProps.nonce} props.nonce n/a
  * @param {ScrollRestorationProps.storageKey} props.storageKey n/a
- * @returns A [`script`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * @returns A [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
  * tag that restores scroll positions on navigation.
  */
 export function ScrollRestoration({
@@ -2129,8 +2177,8 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * ### `setSearchParams` function
  *
  * The second element of the tuple is a function that can be used to update the
- * search params. It accepts the same types as `defaultInit` and will
- * cause a navigation to the new URL.
+ * search params. It accepts the same types as `defaultInit` and will cause a
+ * navigation to the new URL.
  *
  * ```tsx
  * let [searchParams, setSearchParams] = useSearchParams();
@@ -2679,6 +2727,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  * @param options Options
  * @param options.key A unique key to identify the fetcher.
  *
+ *
  * By default, `useFetcher` generates a unique fetcher scoped to that component.
  * If you want to identify a fetcher with your own key such that you can access
  * it from elsewhere in your app, you can do that with the `key` option:
@@ -3122,7 +3171,8 @@ export function usePrompt({
  * @param to The {@link To} location to check for an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).
  * @param options Options
  * @param options.relative The relative routing type to use when resolving the
- * `to` location, defaults to `"route"`. See {@link RelativeRoutingType} for more details.
+ * `to` location, defaults to `"route"`. See {@link RelativeRoutingType} for
+ * more details.
  * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * to the specified {@link Location}, otherwise `false`.
  */

@@ -58,7 +58,7 @@ This can be a string or a [`Location`](https://api.reactrouter.com/v7/interfaces
 
 ### navigationType
 
-The type of navigation that triggered this location change.
+The type of navigation that triggered this `location` change.
 Defaults to `NavigationType.Pop`.
 
 ### navigator

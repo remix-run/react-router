@@ -34,22 +34,23 @@ The [`Blocker`](https://api.reactrouter.com/v7/types/react_router.Blocker.html) 
   - `blocked` - the blocker has prevented a navigation
   - `proceeding` - the blocker is proceeding through from a blocked navigation
 - **`location`**
-  - When in a `blocked` state, this represents the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to which we
-    blocked a navigation. When in a `proceeding` state, this is the location
-    being navigated to after a `blocker.proceed()` call.
+  - When in a `blocked` state, this represents the [`Location`](https://api.reactrouter.com/v7/interfaces/react_router.Location.html) to which
+    we blocked a navigation. When in a `proceeding` state, this is the
+    location being navigated to after a `blocker.proceed()` call.
 - **`proceed()`**
-  - When in a `blocked` state, you may call `blocker.proceed()` to proceed to the
-    blocked location.
+  - When in a `blocked` state, you may call `blocker.proceed()` to proceed to
+    the blocked location.
 - **`reset()`**
-  - When in a `blocked` state, you may call `blocker.reset()` to return the blocker
-    back to an `unblocked` state and leave the user at the current location.
+  - When in a `blocked` state, you may call `blocker.reset()` to return the
+    blocker to an `unblocked` state and leave the user at the current
+    location.
 
 ```tsx
 // Boolean version
-const blocker = useBlocker(value !== "");
+let blocker = useBlocker(value !== "");
 
 // Function version
-const blocker = useBlocker(
+let blocker = useBlocker(
   ({ currentLocation, nextLocation, historyAction }) =>
     value !== "" &&
     currentLocation.pathname !== nextLocation.pathname

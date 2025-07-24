@@ -34,5 +34,5 @@ function useNavigationType(): NavigationType
 
 ## Returns
 
-The current [`NavigationType`](https://api.reactrouter.com/v7/enums/react_router.NavigationType.html) type (`"PUSH"`, `"REPLACE"`, or `"POP"`)
+The current [`NavigationType`](https://api.reactrouter.com/v7/enums/react_router.NavigationType.html) (`"POP"`, `"PUSH"`, or `"REPLACE"`)
 

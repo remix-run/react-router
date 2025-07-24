@@ -1,5 +1,12 @@
 # `react-router`
 
+## 7.7.1
+
+### Patch Changes
+
+- In RSC Data Mode, fix bug where routes with errors weren't forced to revalidate when `shouldRevalidate` returned false ([#14026](https://github.com/remix-run/react-router/pull/14026))
+- In RSC Data Mode, fix `Matched leaf route at location "/..." does not have an element or Component` warnings when error boundaries are rendered. ([#14021](https://github.com/remix-run/react-router/pull/14021))
+
 ## 7.7.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # `@react-router/remix-config-routes-adapter`
 
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/dev@7.7.1`
+
 ## 7.7.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.7.1
+
+### Patch Changes
+
+- Update to Prettier v3 for formatting when running `react-router reveal --no-typescript` ([#14049](https://github.com/remix-run/react-router/pull/14049))
+- Updated dependencies:
+  - `react-router@7.7.1`
+  - `@react-router/node@7.7.1`
+  - `@react-router/serve@7.7.1`
+
 ## 7.7.0
 
 ### Patch Changes

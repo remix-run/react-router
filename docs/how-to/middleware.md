@@ -41,21 +41,7 @@ export default {
 
 <docs-warning>By enabling the middleware feature, you change the type of the `context` parameter to your loaders and actions. Please pay attention to the section on [getLoadContext](#custom-server-with-getloadcontext) below if you are actively using `context` today.</docs-warning>
 
-### 2. Add type support
-
-Update your `app/types/global.d.ts` to enable middleware types:
-
-```ts filename=app/types/global.d.ts
-declare module "@react-router/dev/routes" {
-  interface AppConfig {
-    future: {
-      unstable_middleware: true;
-    };
-  }
-}
-```
-
-### 3. Create a context
+### 2. Create a context
 
 Create type-safe context objects using `unstable_createContext`:
 
@@ -67,7 +53,7 @@ export const userContext =
   unstable_createContext<User | null>(null);
 ```
 
-### 4. Export middleware from your routes
+### 3. Export middleware from your routes
 
 ```tsx filename=app/routes/dashboard.tsx
 import { redirect } from "react-router";

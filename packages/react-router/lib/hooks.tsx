@@ -157,7 +157,7 @@ export function useLocation(): Location {
  *
  * @public
  * @category Hooks
- * @returns The current {@link NavigationType} type (`"PUSH"`, `"REPLACE"`, or `"POP"`)
+ * @returns The current {@link NavigationType} (`"POP"`, `"PUSH"`, or `"REPLACE"`)
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
@@ -408,7 +408,7 @@ const OutletContext = React.createContext<unknown>(null);
  * Often parent routes manage state or other values you want shared with child
  * routes. You can create your own [context provider](https://react.dev/learn/passing-data-deeply-with-context)
  * if you like, but this is such a common situation that it's built-into
- * `<Outlet />`.
+ * {@link Outlet | `<Outlet>`}.
  *
  * ```tsx
  * // Parent route
@@ -420,7 +420,7 @@ const OutletContext = React.createContext<unknown>(null);
  *
  * ```tsx
  * // Child route
- * import { useOutletContext } from "react-router-dom";
+ * import { useOutletContext } from "react-router";
  *
  * function Child() {
  *   const [count, setCount] = useOutletContext();
@@ -429,21 +429,23 @@ const OutletContext = React.createContext<unknown>(null);
  * }
  * ```
  *
- * If you're using TypeScript, we recommend the parent component provide a custom
- * hook for accessing the context value. This makes it easier for consumers to
- * get nice typings, control consumers, and know who's consuming the context value.
+ * If you're using TypeScript, we recommend the parent component provide a
+ * custom hook for accessing the context value. This makes it easier for
+ * consumers to get nice typings, control consumers, and know who's consuming
+ * the context value.
  *
  * Here's a more realistic example:
  *
- * ```tsx filename=src/routes/dashboard.tsx lines=[13,19]
- * import * as React from "react";
+ * ```tsx filename=src/routes/dashboard.tsx lines=[14,20]
+ * import { useState } from "react";
+ * import { Outlet, useOutletContext } from "react-router";
+ *
  * import type { User } from "./types";
- * import { Outlet, useOutletContext } from "react-router-dom";
  *
  * type ContextType = { user: User | null };
  *
  * export default function Dashboard() {
- *   const [user, setUser] = React.useState<User | null>(null);
+ *   const [user, setUser] = useState<User | null>(null);
  *
  *   return (
  *     <div>
@@ -1577,22 +1579,23 @@ let blockerId = 0;
  *   - `blocked` - the blocker has prevented a navigation
  *   - `proceeding` - the blocker is proceeding through from a blocked navigation
  * - **`location`**
- *   - When in a `blocked` state, this represents the {@link Location} to which we
- *     blocked a navigation. When in a `proceeding` state, this is the location
- *     being navigated to after a `blocker.proceed()` call.
+ *   - When in a `blocked` state, this represents the {@link Location} to which
+ *     we blocked a navigation. When in a `proceeding` state, this is the
+ *     location being navigated to after a `blocker.proceed()` call.
  * - **`proceed()`**
- *   - When in a `blocked` state, you may call `blocker.proceed()` to proceed to the
- *     blocked location.
+ *   - When in a `blocked` state, you may call `blocker.proceed()` to proceed to
+ *     the blocked location.
  * - **`reset()`**
- *   - When in a `blocked` state, you may call `blocker.reset()` to return the blocker
- *     back to an `unblocked` state and leave the user at the current location.
+ *   - When in a `blocked` state, you may call `blocker.reset()` to return the
+ *     blocker to an `unblocked` state and leave the user at the current
+ *     location.
  *
  * @example
  * // Boolean version
- * const blocker = useBlocker(value !== "");
+ * let blocker = useBlocker(value !== "");
  *
  * // Function version
- * const blocker = useBlocker(
+ * let blocker = useBlocker(
  *   ({ currentLocation, nextLocation, historyAction }) =>
  *     value !== "" &&
  *     currentLocation.pathname !== nextLocation.pathname

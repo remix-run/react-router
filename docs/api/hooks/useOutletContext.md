@@ -27,7 +27,7 @@ Returns the parent route [`<Outlet context>`](../components/Outlet).
 Often parent routes manage state or other values you want shared with child
 routes. You can create your own [context provider](https://react.dev/learn/passing-data-deeply-with-context)
 if you like, but this is such a common situation that it's built-into
-`<Outlet />`.
+[`<Outlet>`](../components/Outlet).
 
 ```tsx
 // Parent route
@@ -39,7 +39,7 @@ function Parent() {
 
 ```tsx
 // Child route
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router";
 
 function Child() {
   const [count, setCount] = useOutletContext();
@@ -48,21 +48,23 @@ function Child() {
 }
 ```
 
-If you're using TypeScript, we recommend the parent component provide a custom
-hook for accessing the context value. This makes it easier for consumers to
-get nice typings, control consumers, and know who's consuming the context value.
+If you're using TypeScript, we recommend the parent component provide a
+custom hook for accessing the context value. This makes it easier for
+consumers to get nice typings, control consumers, and know who's consuming
+the context value.
 
 Here's a more realistic example:
 
-```tsx filename=src/routes/dashboard.tsx lines=[13,19]
-import * as React from "react";
+```tsx filename=src/routes/dashboard.tsx lines=[14,20]
+import { useState } from "react";
+import { Outlet, useOutletContext } from "react-router";
+
 import type { User } from "./types";
-import { Outlet, useOutletContext } from "react-router-dom";
 
 type ContextType = { user: User | null };
 
 export default function Dashboard() {
-  const [user, setUser] = React.useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   return (
     <div>

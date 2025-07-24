@@ -184,7 +184,7 @@ export interface PageLinkDescriptor
     | "title"
   > {
   /**
-   * The absolute path of the page to prefetch.
+   * The absolute path of the page to prefetch, e.g. `/absolute/path`.
    */
   page: string;
 }
