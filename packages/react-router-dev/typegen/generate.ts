@@ -50,12 +50,6 @@ export function generateServerBuild(ctx: Context): VirtualFile {
       export const ssr: ServerBuild["ssr"];
       export const unstable_getCriticalCss: ServerBuild["unstable_getCriticalCss"];
     }
-
-    declare module "virtual:react-router/unstable_rsc/routes" {
-      import { unstable_RSCRouteConfig } from "react-router";
-      const routes: unstable_RSCRouteConfig;
-      export default routes;
-    }
   `;
   return { filename, content };
 }
