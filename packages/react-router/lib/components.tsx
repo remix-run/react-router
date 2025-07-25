@@ -277,11 +277,11 @@ export interface RouterProviderProps {
  * );
  * ```
  *
- * <docs-info>Please note that this component is exported both from `react-router` and
- * `react-router/dom` with the only difference being that the latter automatically
- * wires up the `react-dom` `flushSync` implementation. You _almost always_ want
- * to use the version from `react-router/dom` unless you're running in a non-DOM
- * environment.</docs-info>
+ * <docs-info>Please note that this component is exported both from
+ * `react-router` and `react-router/dom` with the only difference being that the
+ * latter automatically wires up `react-dom`'s [`flushSync`](https://react.dev/reference/react-dom/flushSync)
+ * implementation. You _almost always_ want to use the version from
+ * `react-router/dom` unless you're running in a non-DOM environment.</docs-info>
  *
  *
  * @public
