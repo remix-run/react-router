@@ -28,7 +28,7 @@ to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_matchRSCServerRequest.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.unstable_matchRSCServerRequest.html)
 
 Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 and returns an [RSC](https://react.dev/reference/rsc/server-components)
