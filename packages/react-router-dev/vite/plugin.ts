@@ -3650,7 +3650,9 @@ export async function getEnvironmentOptionsResolvers(
                   let isRootRoute =
                     route.file === ctx.reactRouterConfig.routes.root.file;
 
-                  let code = readFileSync(routeFilePath, "utf-8");
+                  let cleanPath = path.normalize(decodeURIComponent(routeFilePath));
+                  let code = readFileSync(cleanPath, "utf-8");
+
 
                   return [
                     `${routeFilePath}${BUILD_CLIENT_ROUTE_QUERY_STRING}`,
