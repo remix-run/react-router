@@ -244,7 +244,6 @@ function processTypedocModule(
       /^react-router\./,
       "",
     );
-    console.log("Processing API:", apiName);
     if (lookup.has(apiName)) {
       warn(`Skipping duplicate ${apiName} in typedoc JSON`);
       return;
