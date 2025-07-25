@@ -1,5 +1,5 @@
-import type { PluginOption } from "vite";
-import rsc from "@vitejs/plugin-rsc";
+import type * as Vite from "vite";
+import rsc, { type RscPluginOptions } from "@vitejs/plugin-rsc";
 import react from "@vitejs/plugin-react";
 import { init as initEsModuleLexer } from "es-module-lexer";
 
@@ -15,67 +15,25 @@ import {
 import { createVirtualRouteConfigCode } from "./virtual-route-config";
 import { transformVirtualRouteModules } from "./virtual-route-modules";
 
-const virtual = {
-  routeConfig: create("unstable_rsc/routes"),
-};
-
-function getEntriesDir(): string {
-  const currentDir = dirname(__dirname);
-  let dir = currentDir;
-  while (dir !== dirname(dir)) {
-    try {
-      const packageJsonPath = join(dir, "package.json");
-      readFileSync(packageJsonPath, "utf-8");
-      return join(dir, "dist", "config", "default-rsc-entries");
-    } catch {
-      dir = dirname(dir);
-    }
-  }
-  throw new Error("Could not find package.json");
-}
-
-export async function reactRouterRSCVitePlugin(): Promise<PluginOption[]> {
-  // TODO: support custom entries
-  const entriesDir = getEntriesDir();
-  const clientEntryPath = join(entriesDir, "entry.client.tsx");
-  const rscEntryPath = join(entriesDir, "entry.rsc.tsx");
-  const ssrEntryPath = join(entriesDir, "entry.ssr.tsx");
-
-  let rootDirectory: string;
+export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
-  let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
   let config: ResolvedReactRouterConfig;
+  let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
 
   return [
     {
       name: "react-router/rsc/config",
-      config: async (viteUserConfig, { command, mode }) => {
+      async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
+        const rootDirectory = getRootDirectory(viteUserConfig);
+        const watch = command === "serve";
 
-        rootDirectory =
-          viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
-        configLoader = await createConfigLoader({
-          rootDirectory,
-          mode,
-          watch: command === "serve",
-        });
+        configLoader = await createConfigLoader({ rootDirectory, mode, watch });
+
         const configResult = await configLoader.getConfig();
-        if (!configResult.ok) {
-          throw new Error(configResult.error);
-        }
+        if (!configResult.ok) throw new Error(configResult.error);
         config = configResult.value;
 
-        if (command === "serve") {
-          const vite = await import("vite");
-          typegenWatcherPromise = Typegen.watch(rootDirectory, {
-            mode,
-            // ignore `info` logs from typegen since they are redundant when
-            // Vite plugin logs are active
-            logger: vite.createLogger("warn", {
-              prefix: "[react-router]",
-            }),
-          });
-        }
         return {
           environments: {
             client: { build: { outDir: "build/client" } },
@@ -86,6 +44,27 @@ export async function reactRouterRSCVitePlugin(): Promise<PluginOption[]> {
       },
       async buildEnd() {
         await configLoader.close();
+      },
+    },
+    {
+      name: "react-router/rsc/typegen",
+      async config(viteUserConfig, { command, mode }) {
+        if (command === "serve") {
+          const vite = await import("vite");
+          typegenWatcherPromise = Typegen.watch(
+            getRootDirectory(viteUserConfig),
+            {
+              mode,
+              // ignore `info` logs from typegen since they are
+              // redundant when Vite plugin logs are active
+              logger: vite.createLogger("warn", {
+                prefix: "[react-router]",
+              }),
+            },
+          );
+        }
+      },
+      async buildEnd() {
         (await typegenWatcherPromise)?.close();
       },
     },
@@ -112,12 +91,43 @@ export async function reactRouterRSCVitePlugin(): Promise<PluginOption[]> {
       },
     },
     react(),
-    rsc({
-      entries: {
-        client: clientEntryPath,
-        rsc: rscEntryPath,
-        ssr: ssrEntryPath,
-      },
-    }),
+    rsc({ entries: getRscEntries() }),
   ];
+}
+
+const virtual = {
+  routeConfig: create("unstable_rsc/routes"),
+};
+
+function getRootDirectory(viteUserConfig: Vite.UserConfig) {
+  return viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
+}
+
+function getRscEntries(): NonNullable<RscPluginOptions["entries"]> {
+  const entriesDir = join(
+    getDevPackageRoot(),
+    "dist",
+    "config",
+    "default-rsc-entries",
+  );
+  return {
+    client: join(entriesDir, "entry.client.tsx"),
+    rsc: join(entriesDir, "entry.rsc.tsx"),
+    ssr: join(entriesDir, "entry.ssr.tsx"),
+  };
+}
+
+function getDevPackageRoot(): string {
+  const currentDir = dirname(__dirname);
+  let dir = currentDir;
+  while (dir !== dirname(dir)) {
+    try {
+      const packageJsonPath = join(dir, "package.json");
+      readFileSync(packageJsonPath, "utf-8");
+      return dir;
+    } catch {
+      dir = dirname(dir);
+    }
+  }
+  throw new Error("Could not find package.json");
 }
