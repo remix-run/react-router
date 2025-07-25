@@ -3429,6 +3429,86 @@ test.describe("single-fetch", () => {
       await page.waitForSelector("#other");
       expect(msgs).toEqual([]);
     });
+
+    test("Aborted loaders don't cause corresponding result not found errors", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { useEffect } from "react";
+            import { Form, redirect, useFetcher, NavLink } from "react-router";
+
+            export default function Index() {
+              return (
+                <>
+                  <NavLink id="linkA" to="/a" end>
+                    Link
+                  </NavLink>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { useEffect } from "react";
+            import { useFetcher, NavLink, Outlet } from "react-router";
+
+            export default function Comp() {
+              const loaderFetcher = useFetcher();
+              const actionFetcher = useFetcher();
+
+              useEffect(() => {
+                if (loaderFetcher.state === 'idle' && !loaderFetcher.data) {
+                  loaderFetcher.load('/loader');
+                }
+              }, [loaderFetcher]);
+
+              return (
+                <>
+                  <p id="a">A</p>
+                  <button id="action" onClick={() => actionFetcher.submit(null, { method: "post", action: "/action" })}>
+                    Action
+                  </button>
+                  <NavLink id="linkB" to="/a/b" end>
+                    Link
+                  </NavLink>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            export default function Comp() {
+              return <p id="b">B</p>;
+            }
+          `,
+          "app/routes/loader.tsx": js`
+            export async function loader() {
+              await new Promise((r) => setTimeout(r, 500));
+              return 'nope';
+            }
+          `,
+          "app/routes/action.tsx": js`
+            export async function action() {
+              await new Promise((r) => setTimeout(r, 500));
+              return 'nope';
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      // Capture console logs and uncaught errors
+      let msgs: string[] = [];
+      page.on("console", (msg) => msgs.push(msg.text()));
+      page.on("pageerror", (error) => msgs.push(error.message));
+
+      await app.goto("/a", true);
+      await page.locator("#action").click();
+      await page.locator("#linkB").click();
+      await page.waitForSelector("#b");
+      expect(msgs).toEqual([]);
+    });
   });
 
   test.describe("prefetching", () => {
