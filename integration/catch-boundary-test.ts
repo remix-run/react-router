@@ -255,7 +255,13 @@ test.describe("ErrorBoundary (thrown responses)", () => {
 
     // Root loader data sticks around from previous load
     let expected = JSON.stringify([
-      { id: "root", pathname: "", params: {}, data: { data: "ROOT LOADER" } },
+      {
+        id: "root",
+        pathname: "",
+        params: {},
+        data: { data: "ROOT LOADER" },
+        loaderData: { data: "ROOT LOADER" },
+      },
     ]);
     expect(await app.getHtml("#matches")).toContain(expected);
   });
