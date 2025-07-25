@@ -20,6 +20,12 @@
       }
     },
     {
+      "files": ["packages/react-router-dev/config/default-rsc-entries/*"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": "off"
+      }
+    },
+    {
       // Only apply JSDoc lint rules to files we auto-generate docs for
       "files": [
         "packages/react-router/lib/components.tsx",

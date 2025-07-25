@@ -22,14 +22,18 @@ const cleanPathsForSnapshot = (obj: any): any =>
 describe("route config", () => {
   describe("validateRouteConfig", () => {
     it("validates a route config", () => {
+      const routeConfig = prefix("prefix", [
+        route("parent", "parent.tsx", [route("child", "child.tsx")]),
+      ]);
       expect(
         validateRouteConfig({
           routeConfigFile: "routes.ts",
-          routeConfig: prefix("prefix", [
-            route("parent", "parent.tsx", [route("child", "child.tsx")]),
-          ]),
-        }).valid,
-      ).toBe(true);
+          routeConfig,
+        }),
+      ).toEqual({
+        valid: true,
+        routeConfig,
+      });
     });
 
     it("is invalid when not an array", () => {

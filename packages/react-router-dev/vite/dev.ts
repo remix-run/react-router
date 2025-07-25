@@ -48,7 +48,13 @@ export async function dev(
     logLevel,
   });
 
-  if (!server.config.plugins.find((plugin) => plugin.name === "react-router")) {
+  if (
+    !server.config.plugins.find(
+      (plugin) =>
+        plugin.name === "react-router" ||
+        plugin.name === "react-router/rsc/config",
+    )
+  ) {
     console.error(
       colors.red("React Router Vite plugin not found in Vite config"),
     );

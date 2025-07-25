@@ -140,7 +140,9 @@ export function validateRouteConfig({
 }: {
   routeConfigFile: string;
   routeConfig: unknown;
-}): { valid: false; message: string } | { valid: true } {
+}):
+  | { valid: false; message: string }
+  | { valid: true; routeConfig: RouteConfigEntry[] } {
   if (!routeConfig) {
     return {
       valid: false,
@@ -175,7 +177,10 @@ export function validateRouteConfig({
     };
   }
 
-  return { valid: true };
+  return {
+    valid: true,
+    routeConfig: routeConfig as RouteConfigEntry[],
+  };
 }
 
 const createConfigRouteOptionKeys = [
@@ -351,11 +356,10 @@ export function relative(directory: string): typeof helpers {
 export function configRoutesToRouteManifest(
   appDirectory: string,
   routes: RouteConfigEntry[],
-  rootId = "root",
 ): RouteManifest {
   let routeManifest: RouteManifest = {};
 
-  function walk(route: RouteConfigEntry, parentId: string) {
+  function walk(route: RouteConfigEntry, parentId?: string) {
     let id = route.id || createRouteId(route.file);
     let manifestItem: RouteManifestEntry = {
       id,
@@ -383,7 +387,7 @@ export function configRoutesToRouteManifest(
   }
 
   for (let route of routes) {
-    walk(route, rootId);
+    walk(route);
   }
 
   return routeManifest;

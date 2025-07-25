@@ -10,6 +10,7 @@ import pkg from "./package.json";
 const entry = [
   "cli/index.ts",
   "config.ts",
+  "internal.ts",
   "routes.ts",
   "vite.ts",
   "vite/cloudflare.ts",
@@ -44,6 +45,17 @@ export default defineConfig([
             await fsp.copyFile(
               `config/defaults/${file}`,
               `dist/config/defaults/${file}`,
+            );
+          }
+
+          await fsp.mkdir("dist/config/default-rsc-entries", {
+            recursive: true,
+          });
+          const rscFiles = await fsp.readdir("config/default-rsc-entries");
+          for (const file of rscFiles) {
+            await fsp.copyFile(
+              `config/default-rsc-entries/${file}`,
+              `dist/config/default-rsc-entries/${file}`,
             );
           }
         },
