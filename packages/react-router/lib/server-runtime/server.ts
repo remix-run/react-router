@@ -619,8 +619,44 @@ async function handleResourceRequest(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_respond: build.future.unstable_middleware
-        ? (ctx) => ctx
+      unstable_stream: build.future.unstable_middleware
+        ? async (_, queryRoute) => {
+            try {
+              let result = await queryRoute(request);
+              if (isResponse(result)) {
+                return result;
+              }
+
+              if (typeof result === "string") {
+                return new Response(result);
+              }
+
+              return Response.json(result);
+            } catch (error) {
+              if (isResponse(error)) {
+                return error;
+              }
+
+              if (isRouteErrorResponse(error)) {
+                handleError(error);
+                return errorResponseToJson(error, serverMode);
+              }
+
+              if (
+                error instanceof Error &&
+                error.message === "Expected a response from queryRoute"
+              ) {
+                let newError = new Error(
+                  "Expected a Response to be returned from resource route handler",
+                );
+                handleError(newError);
+                return returnLastResortErrorResponse(newError, serverMode);
+              }
+
+              handleError(error);
+              return returnLastResortErrorResponse(error, serverMode);
+            }
+          }
         : undefined,
     });
 

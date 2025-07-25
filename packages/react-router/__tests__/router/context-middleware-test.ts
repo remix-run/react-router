@@ -2704,16 +2704,11 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/"),
-          {
+        await expect(
+          handler.queryRoute(new Request("http://localhost/parent/"), {
             unstable_respond: (v) => v,
-          },
-        );
-
-        expect(await res.text()).toBe(
-          "Error: You may only call `next()` once per middleware",
-        );
+          }),
+        ).rejects.toThrow("You may only call `next()` once per middleware");
       });
     });
 
@@ -2756,14 +2751,12 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/child"),
-          {
+        await expect(
+          handler.queryRoute(new Request("http://localhost/parent/child"), {
             requestContext,
             unstable_respond: (v) => v,
-          },
-        );
-        expect(await res.text()).toBe("Error: PARENT 2");
+          }),
+        ).rejects.toThrow("PARENT 2");
 
         expect(requestContext.get(parentContext)).toEqual("PARENT 1");
         expect(requestContext.get(childContext)).toEqual("empty");
@@ -2808,14 +2801,12 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/child"),
-          {
+        await expect(
+          handler.queryRoute(new Request("http://localhost/parent/child"), {
             requestContext,
             unstable_respond: (v) => v,
-          },
-        );
-        expect(await res.text()).toBe("Error: CHILD UP");
+          }),
+        ).rejects.toThrow("CHILD UP");
 
         expect(requestContext.get(parentContext)).toEqual("PARENT DOWN");
         expect(requestContext.get(childContext)).toEqual("CHILD DOWN");
@@ -2883,14 +2874,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: (v) => v },
-        );
-        expect(await res.text()).toEqual("Error: child 1 error");
+        await expect(
+          handler.queryRoute(
+            new Request("http://localhost/parent/child", {
+              method: "post",
+              body: createFormData({}),
+            }),
+            { requestContext, unstable_respond: (v) => v },
+          ),
+        ).rejects.toThrow("child 1 error");
 
         expect(requestContext.get(orderContext)).toEqual([
           "parent start",
@@ -2966,14 +2958,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: (v) => v },
-        );
-        expect(await res.text()).toEqual("Error: child 2 error");
+        await expect(
+          handler.queryRoute(
+            new Request("http://localhost/parent/child", {
+              method: "post",
+              body: createFormData({}),
+            }),
+            { requestContext, unstable_respond: (v) => v },
+          ),
+        ).rejects.toThrow("child 2 error");
 
         expect(requestContext.get(orderContext)).toEqual([
           "parent start",
@@ -3046,14 +3039,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: (v) => v },
-        );
-        expect(await res.text()).toEqual("Error: child 1 action error");
+        await expect(
+          handler.queryRoute(
+            new Request("http://localhost/parent/child", {
+              method: "post",
+              body: createFormData({}),
+            }),
+            { requestContext, unstable_respond: (v) => v },
+          ),
+        ).rejects.toThrow("child 1 action error");
 
         expect(requestContext.get(orderContext)).toEqual([
           "parent action start",
@@ -3129,14 +3123,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = await handler.queryRoute(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: (v) => v },
-        );
-        expect(await res.text()).toEqual("Error: child 2 error");
+        await expect(
+          handler.queryRoute(
+            new Request("http://localhost/parent/child", {
+              method: "post",
+              body: createFormData({}),
+            }),
+            { requestContext, unstable_respond: (v) => v },
+          ),
+        ).rejects.toThrow("child 2 error");
 
         expect(requestContext.get(orderContext)).toEqual([
           "parent start",
