@@ -980,22 +980,15 @@ async function getRenderPayload(
 
   let matchesPromise = Promise.all(
     staticContext.matches.map((match, i) => {
-      // Only bother rendering Server Components for routes that we're surfacing,
-      // so nothing at/below an error boundary and prune routes if included in
-      // `routeIdsToLoad`.  This is specifically important when a middleware
-      // or loader throws and we don't have any `loaderData` to pass through as
-      // props leading to render-time errors of the server component
-      let shouldRenderComponent =
-        i <= deepestRenderedRouteIdx &&
-        (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
-        (!staticContext.errors || !(match.route.id in staticContext.errors));
-
-      return getRSCRouteMatch(
+      let isBelowErrorBoundary = i > deepestRenderedRouteIdx;
+      let parentId = parentIds[match.route.id];
+      return getRSCRouteMatch({
         staticContext,
         match,
-        shouldRenderComponent,
-        parentIds[match.route.id],
-      );
+        routeIdsToLoad,
+        isBelowErrorBoundary,
+        parentId,
+      });
     }),
   );
 
@@ -1015,12 +1008,19 @@ async function getRenderPayload(
   };
 }
 
-async function getRSCRouteMatch(
-  staticContext: StaticHandlerContext,
-  match: AgnosticDataRouteMatch,
-  shouldRenderComponent: boolean,
-  parentId: string | undefined,
-) {
+async function getRSCRouteMatch({
+  staticContext,
+  match,
+  isBelowErrorBoundary,
+  routeIdsToLoad,
+  parentId,
+}: {
+  staticContext: StaticHandlerContext;
+  match: AgnosticDataRouteMatch;
+  isBelowErrorBoundary: boolean;
+  routeIdsToLoad: string[] | null;
+  parentId: string | undefined;
+}) {
   // @ts-expect-error - FIXME: Fix the types here
   await explodeLazyRoute(match.route);
   const Layout = (match.route as any).Layout || React.Fragment;
@@ -1032,8 +1032,15 @@ async function getRSCRouteMatch(
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
-  if (Component) {
-    element = shouldRenderComponent
+  let shouldLoadRoute =
+    !routeIdsToLoad || routeIdsToLoad.includes(match.route.id);
+  // Only bother rendering Server Components for routes that we're surfacing,
+  // so nothing at/below an error boundary and prune routes if included in
+  // `routeIdsToLoad`.  This is specifically important when a middleware
+  // or loader throws and we don't have any `loaderData` to pass through as
+  // props leading to render-time errors of the server component
+  if (Component && shouldLoadRoute) {
+    element = !isBelowErrorBoundary
       ? React.createElement(
           Layout,
           null,
