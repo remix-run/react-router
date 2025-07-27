@@ -1,3 +1,7 @@
+/**
+ * @module dom
+ */
+
 "use client";
 
 export type { RouterProviderProps } from "./lib/dom-export/dom-router-provider";

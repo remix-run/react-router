@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @mergeModuleWith react-router
+ */
+
 "use client";
 
 // Expose old @remix-run/router API

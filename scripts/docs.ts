@@ -169,6 +169,8 @@ async function run() {
   }
 }
 
+const warn = (...args: any[]) => console.warn("⚠️ Warning:", ...args);
+
 function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   const lookup = new Map<string, string>();
 
@@ -211,8 +213,9 @@ function buildTypedocLinks(outputDir: string) {
       ?.filter((c) => c.kind === ReflectionKind.Module)
       .forEach((child) => processTypedocModule(child, lookup));
   } else {
-    console.warn(
-      '⚠️ Typedoc API data not found at "public/dev/api.json", will not automatically cross-link to Reference Docs',
+    warn(
+      'Typedoc API data not found at "public/dev/api.json", will not ' +
+        "automatically cross-link to Reference Docs",
     );
   }
 
@@ -233,12 +236,19 @@ function processTypedocModule(
       return;
     }
 
-    // Prefer linking to repo docs over typedoc docs
-    if (lookup.has(subChild.name)) {
+    // The majority of documented APIs are from `react-router` so we filter it
+    // (and it's index export) out from module names so we can do:
+    //  - `{@link Form}` instead of `{@link react-router.Form}`
+    //  - `{@link dom.RouterProvider}` instead of `{@link react-router.dom.RouterProvider}`
+    let apiName = `${moduleName}.${subChild.name}`.replace(
+      /^react-router\./,
+      "",
+    );
+    if (lookup.has(apiName)) {
+      warn(`Skipping duplicate ${apiName} in typedoc JSON`);
       return;
     }
 
-    let apiName = `${moduleName}.${subChild.name}`;
     let type =
       subChild.kind === ReflectionKind.Enum
         ? "enums"
@@ -255,7 +265,7 @@ function processTypedocModule(
                   : undefined;
 
     if (!type) {
-      console.warn(
+      warn(
         `Skipping ${apiName} because it is not a function, class, enum, interface, or type`,
       );
       return;
@@ -264,7 +274,7 @@ function processTypedocModule(
     let modulePath = moduleName.replace(/[@\-/]/g, "_");
     let path = `${type}/${modulePath}.${subChild.name}.html`;
     let url = `https://api.reactrouter.com/v7/${path}`;
-    lookup.set(subChild.name, { href: url });
+    lookup.set(apiName, { href: url });
 
     // When this is an interface, also include it's child properties in the lookup
     // table for use in cross-referencing param types.  We often document a property
@@ -282,7 +292,7 @@ function processTypedocModule(
           grandChild.comment &&
           !grandChild.flags.isExternal
         ) {
-          lookup.set(`${subChild.name}.${grandChild.name}`, {
+          lookup.set(`${apiName}.${grandChild.name}`, {
             href: `${url}#${grandChild.name}`,
             description: getDeclarationDescription(grandChild),
           });
@@ -300,7 +310,7 @@ function processTypedocModule(
                 c.comment &&
                 !c.flags.isExternal
               ) {
-                lookup.set(`${subChild.name}.${c.name}`, {
+                lookup.set(`${apiName}.${c.name}`, {
                   href: `${url}#${c.name}`,
                   description: getDeclarationDescription(c),
                 });
@@ -315,7 +325,7 @@ function processTypedocModule(
             // just point to the base type in our JSDoc comment
             return;
           } else {
-            console.log(`Warning: Unhandled TypeAlias type: ${t.type}`);
+            warn(`Unhandled TypeAlias type: ${t.type}`);
           }
         });
       }
@@ -578,8 +588,8 @@ async function simplifyComment(
 
   let reference = typedocLookup.get(name)?.href;
   if (!reference) {
-    console.warn(
-      `Warning: Could not find API in typedoc reference docs, skipping reference link: ${name}`,
+    warn(
+      `Could not find API in typedoc reference docs, skipping reference link: ${name}`,
     );
   }
 
@@ -684,8 +694,8 @@ async function getSignature(code: string) {
   // TODO: Handle variable statements for forwardRef components
   if (ts.isVariableStatement(ast.statements[0])) {
     let api = code.match(/export const (\w+)/);
-    console.log(
-      `Warning: Skipping signature section for \`export const\` component: ${api?.[1]}`,
+    warn(
+      `Skipping signature section for \`export const\` component: ${api?.[1]}`,
     );
     return;
   }
@@ -723,9 +733,7 @@ function resolveLinkTags(text: string): string {
 
     if (!href) {
       // If not found, return as plain text with a warning
-      console.warn(
-        `Warning: Could not resolve {@link ${apiName}} in documentation (${text})`,
-      );
+      warn(`Could not resolve {@link ${apiName}} in documentation (${text})`);
       return description;
     }
 

@@ -266,7 +266,7 @@ export interface RouterProviderProps {
  * Render the UI for the given {@link DataRouter}. This component should
  * typically be at the top of an app's element tree.
  *
- * @example
+ * ```tsx
  * import { createBrowserRouter } from "react-router";
  * import { RouterProvider } from "react-router/dom";
  * import { createRoot } from "react-dom/client";
@@ -275,6 +275,14 @@ export interface RouterProviderProps {
  * createRoot(document.getElementById("root")).render(
  *   <RouterProvider router={router} />
  * );
+ * ```
+ *
+ * <docs-info>Please note that this component is exported both from `react-router` and
+ * `react-router/dom` with the only difference being that the latter automatically
+ * wires up the `react-dom` `flushSync` implementation. You _almost always_ want
+ * to use the version from `react-router/dom` unless you're running in a non-DOM
+ * environment.</docs-info>
+ *
  *
  * @public
  * @category Data Routers
