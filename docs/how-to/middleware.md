@@ -193,7 +193,7 @@ const authMiddleware = async ({ request, context }) => {
 
 `next()` is not designed to throw errors under normal conditions, so you generally shouldn't find yourself wrapping `next` in a `try`/`catch`. The responsibility of the `next()` function is to return a `Response` for the current `Request`, so as long as that can be completed, `next()` will return the Response and won't `throw`. Even if a `loader` throws an error, or a component fails to render, React Router already handles those by rendering the nearest `ErrorBoundary`, so a Response is still generated without issue.
 
-This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error caused that to throw, we'd miss the execution of ancestor middleware son thew way out and those required headers wouldn't be set.
+This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error caused that to throw, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
 The only cases in which `next()` _should_ throw are if we fail to generate a Response. There's a few ways in which this could happen:
 
