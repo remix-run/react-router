@@ -1631,6 +1631,31 @@ describe("context/middleware", () => {
       expect(res.headers.get("parent")).toEqual("yes");
     });
 
+    it("propagates a returned response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              return new Response("test");
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.query(new Request("http://localhost/parent"), {
+        unstable_respond: respondWithJson,
+      })) as Response;
+      await expect(res.text()).resolves.toEqual("test");
+    });
+
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
         let handler = createStaticHandler([
@@ -2510,6 +2535,70 @@ describe("context/middleware", () => {
       expect(res.headers.get("parent2")).toEqual("yes");
       expect(res.headers.get("child1")).toEqual("yes");
       expect(res.headers.get("child2")).toEqual("yes");
+    });
+
+    it("propagates the response even if you call next and forget to return it", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let res = (await next()) as Response;
+              res.headers.set("parent", "yes");
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.query(new Request("http://localhost/parent"), {
+        unstable_respond: respondWithJson,
+      })) as Response;
+      let staticContext = (await res.json()) as StaticHandlerContext;
+
+      expect(staticContext).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        statusCode: 200,
+        loaderData: {
+          parent: "PARENT",
+        },
+        actionData: null,
+        errors: null,
+      });
+      expect(res.headers.get("parent")).toEqual("yes");
+    });
+
+    it("propagates a returned response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              return new Response("test");
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.query(new Request("http://localhost/parent"), {
+        unstable_respond: respondWithJson,
+      })) as Response;
+      await expect(res.text()).resolves.toEqual("test");
     });
 
     describe("ordering", () => {

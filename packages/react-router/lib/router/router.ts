@@ -3544,7 +3544,7 @@ export function createStaticHandler(
         ? requestContext
         : new unstable_RouterContextProvider();
 
-    let respondOrStreamStaticContext = (
+    let shortCircuitResult = (
       ctx: StaticHandlerContext,
     ): MaybePromise<Response> | StaticHandlerContext => {
       return stream
@@ -3574,7 +3574,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext);
+      return shortCircuitResult(staticContext);
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3592,7 +3592,7 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext);
+      return shortCircuitResult(staticContext);
     }
 
     if (
@@ -3749,7 +3749,9 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id,
               );
-              return respondOrStreamStaticContext(staticContext);
+              return stream
+                ? stream(requestContext, () => Promise.resolve(staticContext))
+                : respond!(staticContext);
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3779,7 +3781,9 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return respondOrStreamStaticContext(staticContext);
+              return stream
+                ? stream(requestContext, () => Promise.resolve(staticContext))
+                : respond!(staticContext);
             }
           },
         );
@@ -5543,7 +5547,12 @@ export async function runMiddlewarePipeline<T extends boolean>(
   handler: () => T extends true
     ? MaybePromise<Response>
     : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (error: unknown, routeId: string) => unknown,
+  errorHandler: (
+    error: unknown,
+    routeId: string,
+  ) => T extends true
+    ? MaybePromise<Response>
+    : Record<string, DataStrategyResult>,
 ): Promise<unknown> {
   let { matches, request, params, context } = args;
   let middlewareState: MutableMiddlewareState = {
@@ -5638,18 +5647,33 @@ async function callRouteMiddleware(
       },
       next,
     );
-    if (nextCalled) {
-      if (result === undefined) {
+
+    if (propagateResult) {
+      // On the server, handle calling next() if needed and returning the proper result
+      if (nextCalled) {
         // If they called next() but didn't return the response, we can bubble
-        // it for them. This lets folks do things like grab the response and
-        // add a header without then re-returning it
-        return nextResult;
-      } else {
+        // it for them. This allows some minor syntactic sugar (or forgetfulness)
+        // where you can grab the response to add a header without re-returning it
+        return typeof result === "undefined" ? nextResult : result;
+      } else if (isResponse(result)) {
+        // If they short-circuited with a response without calling next() - use it
         return result;
+      } else {
+        // Otherwise call next() for them
+        nextResult = await next();
+        return nextResult;
       }
     } else {
-      result = await next();
-      return result;
+      // On the client, just call next if they didn't
+      if (typeof result !== "undefined") {
+        console.warn(
+          "client middlewares are not intended to return values, the value will be ignored",
+          result,
+        );
+      }
+      if (!nextCalled) {
+        await next();
+      }
     }
   } catch (error) {
     if (!middlewareState.middlewareError) {
