@@ -56,11 +56,11 @@ ReactDOM.createRoot(root).render(
 
 Framework Mode wraps Data Mode with a Vite plugin to add the full React Router experience with:
 
-- type-safe `href`
-- type-safe Route Module API
-- intelligent code splitting
+- Type-safe `href`
+- Type-safe Route Module API
+- Intelligent code splitting
 - SPA, SSR, and static rendering strategies
-- and more
+- And more
 
 ```ts filename=routes.ts
 import { index, route } from "@react-router/dev/routes";
@@ -94,28 +94,28 @@ Every mode supports any architecture and deployment target, so the question isn'
 
 **Use Framework Mode if you:**
 
-- are too new to have an opinion
-- are considering Next.js, Solid Start, SvelteKit, Astro, TanStack Start, etc. and want to compare
-- just want to build something with React
-- might want to server render, might not
-- are coming from Remix (React Router v7 is the "next version" after Remix v2)
-- are migrating from Next.js
+- Are too new to have an opinion
+- Are considering Next.js, Solid Start, SvelteKit, Astro, TanStack Start, etc. and want to compare
+- Just want to build something with React
+- Might want to server render, might not
+- Are coming from Remix (React Router v7 is the "next version" after Remix v2)
+- Are migrating from Next.js
 
 [→ Get Started with Framework Mode](./framework/installation).
 
 **Use Data Mode if you:**
 
-- want data features but also want to have control over bundling, data, and server abstractions
-- started a data router in v6.4 and are happy with it
+- Want data features but also want to have control over bundling, data, and server abstractions
+- Started a data router in v6.4 and are happy with it
 
 [→ Get Started with Data Mode](./data/custom).
 
 **Use Declarative Mode if you:**
 
-- want to use React Router as simply as possible
-- are coming from v6 and are happy with the `<BrowserRouter>`
-- have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
-- are coming from Create React App (you may want to consider framework mode though)
+- Want to use React Router as simply as possible
+- Are coming from v6 and are happy with the `<BrowserRouter>`
+- Have a data layer that either skips pending states (like local first, background data replication/sync) or has its own abstractions for them
+- Are coming from Create React App (you may want to consider framework mode though)
 
 [→ Get Started with Declarative Mode](./declarative/installation).
 

@@ -23,10 +23,10 @@ Unstable flags are for features still being designed and developed and made avai
 
 Unstable flags are not recommended for production:
 
-- they will change without warning and without upgrade paths
-- they will have bugs
-- they aren't documented
-- they may be scrapped completely
+- They will change without warning and without upgrade paths
+- They will have bugs
+- They aren't documented
+- They may be scrapped completely
 
 When you opt-in to an unstable flag you are becoming a contributor to the project, rather than a user. We appreciate your help, but please be aware of the new role!
 

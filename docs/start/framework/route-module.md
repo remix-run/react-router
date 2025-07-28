@@ -18,12 +18,12 @@ route("teams/:teamId", "./team.tsx"),
 
 Route modules are the foundation of React Router's framework features, they define:
 
-- automatic code-splitting
-- data loading
-- actions
-- revalidation
-- error boundaries
-- and more
+- Automatic code-splitting
+- Data loading
+- Actions
+- Revalidation
+- Error boundaries
+- And more
 
 This guide is a quick overview of every route module feature. The rest of the getting started guides will cover these features in more detail.
 

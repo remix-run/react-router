@@ -22,11 +22,11 @@ createBrowserRouter([
 
 Route modules are the foundation of React Router's data features, they define:
 
-- data loading
-- actions
-- revalidation
-- error boundaries
-- and more
+- Data loading
+- Actions
+- Revalidation
+- Error boundaries
+- And more
 
 This guide is a quick overview of every route object feature.
 
@@ -145,9 +145,9 @@ This hook enables you to opt in or out of the default revalidation behavior. The
 
 A route loader is revalidated when:
 
-- its own route params change
-- any change to URL search params
-- after an action is called and returns a non-error status code
+- Its own route params change
+- Any change to URL search params
+- After an action is called and returns a non-error status code
 
 By defining this function, you opt out of the default behavior completely and can manually control when loader data is revalidated for navigations and form submissions.
 
