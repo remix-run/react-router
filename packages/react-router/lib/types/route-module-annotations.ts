@@ -35,7 +35,9 @@ type MetaMatch<T extends MatchInfo> = Pretty<{
   params: Record<string, string | undefined>;
   pathname: string;
   meta: MetaDescriptor[];
+  /** @deprecated Use `MetaMatch.loaderData` instead */
   data: GetLoaderData<T["module"]>;
+  loaderData: GetLoaderData<T["module"]>;
   handle?: unknown;
   error?: unknown;
 }>;
@@ -51,8 +53,14 @@ type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
   /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
   params: T["params"];
-  /** The return value for this route's server loader function */
+  /**
+   * The return value for this route's server loader function
+   *
+   * @deprecated Use `Route.MetaArgs.loaderData` instead
+   */
   data: T["loaderData"] | undefined;
+  /** The return value for this route's server loader function */
+  loaderData: T["loaderData"] | undefined;
   /** Thrown errors that trigger error boundaries will be passed to the meta function. This is useful for generating metadata for error pages. */
   error?: unknown;
   /** An array of the current {@link https://api.reactrouter.com/v7/interfaces/react_router.UIMatch.html route matches}, including parent route matches. */
@@ -109,7 +117,9 @@ type Match<T extends MatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
+  /** @deprecated Use `Match.loaderData` instead */
   data: GetLoaderData<T["module"]>;
+  loaderData: GetLoaderData<T["module"]>;
   handle: unknown;
 }>;
 
