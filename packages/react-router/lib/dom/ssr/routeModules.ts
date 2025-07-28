@@ -172,8 +172,8 @@ export interface MetaArgs<
     | undefined;
   loaderData:
     | (Loader extends LoaderFunction | ClientLoaderFunction
-    ? SerializeFrom<Loader>
-    : unknown)
+        ? SerializeFrom<Loader>
+        : unknown)
     | undefined;
   params: Params;
   location: Location;
