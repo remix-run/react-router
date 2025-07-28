@@ -35,7 +35,7 @@ type MetaMatch<T extends MatchInfo> = Pretty<{
   params: Record<string, string | undefined>;
   pathname: string;
   meta: MetaDescriptor[];
-  /** @deprecated Use `loaderData` instead */
+  /** @deprecated Use `MetaMatch.loaderData` instead */
   data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
   handle?: unknown;
@@ -56,7 +56,7 @@ type CreateMetaArgs<T extends RouteInfo> = {
   /**
    * The return value for this route's server loader function
    *
-   * @deprecated Use `loaderData` instead
+   * @deprecated Use `Route.MetaArgs.loaderData` instead
    */
   data: T["loaderData"] | undefined;
   /** The return value for this route's server loader function */
@@ -117,7 +117,7 @@ type Match<T extends MatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
-  /** @deprecated Use `loaderData` instead */
+  /** @deprecated Use `Match.loaderData` instead */
   data: GetLoaderData<T["module"]>;
   loaderData: GetLoaderData<T["module"]>;
   handle: unknown;

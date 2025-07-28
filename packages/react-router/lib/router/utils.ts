@@ -817,7 +817,7 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
   /**
    * The return value from the matched route's loader or clientLoader
    *
-   * @deprecated Use `loaderData` instead
+   * @deprecated Use `UIMatch.loaderData` instead
    */
   data: Data;
   /** The return value from the matched route's loader or clientLoader */
