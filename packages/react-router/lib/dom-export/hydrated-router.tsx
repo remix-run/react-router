@@ -217,7 +217,8 @@ function createHydratedRouter({
 export interface HydratedRouterProps {
   /**
    * Context object to be passed through to {@link createBrowserRouter} and made
-   * available to [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+   * available to
+   * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
    * functions
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
