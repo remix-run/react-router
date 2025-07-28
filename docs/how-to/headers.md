@@ -63,7 +63,9 @@ export function headers({
   actionHeaders,
   loaderHeaders,
 }: HeadersArgs) {
-  return hasAnyHeaders(actionHeaders) ? actionHeaders : loaderHeaders;
+  return hasAnyHeaders(actionHeaders)
+    ? actionHeaders
+    : loaderHeaders;
 }
 ```
 
