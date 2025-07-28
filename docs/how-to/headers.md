@@ -55,11 +55,15 @@ export async function loader({ params }: LoaderArgs) {
 Headers from loaders and actions are not sent automatically. You must explicitly return them from the `headers` export.
 
 ```tsx
+function hasAnyHeaders(headers: Headers): boolean {
+  return [...headers].length > 0;
+}
+
 export function headers({
   actionHeaders,
   loaderHeaders,
 }: HeadersArgs) {
-  return actionHeaders ? actionHeaders : loaderHeaders;
+  return hasAnyHeaders(actionHeaders) ? actionHeaders : loaderHeaders;
 }
 ```
 
