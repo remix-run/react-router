@@ -29,6 +29,10 @@
       "types": "./dist/vite/cloudflare.d.ts",
       "default": "./dist/vite/cloudflare.js"
     },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    },
     "./package.json": "./package.json"
   },
   "imports": {
@@ -74,6 +78,8 @@
     "@babel/types": "^7.27.7",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
+    "@vitejs/plugin-react": "^4.5.2",
+    "@vitejs/plugin-rsc": "0.4.11",
     "arg": "^5.0.1",
     "babel-dead-code-elimination": "^1.0.6",
     "chokidar": "^4.0.0",

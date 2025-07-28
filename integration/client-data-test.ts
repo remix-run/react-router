@@ -12,141 +12,144 @@ import { type TemplateName, reactRouterConfig } from "./helpers/vite.js";
 
 const templateNames = [
   "vite-5-template",
-  "rsc-parcel-framework",
+  "rsc-vite-framework",
 ] as const satisfies TemplateName[];
-
-function getFiles({
-  splitRouteModules,
-  parentClientLoader,
-  parentClientLoaderHydrate,
-  parentAdditions,
-  childClientLoader,
-  childClientLoaderHydrate,
-  childAdditions,
-}: {
-  splitRouteModules: boolean;
-  parentClientLoader: boolean;
-  parentClientLoaderHydrate: boolean;
-  parentAdditions?: string;
-  childClientLoader: boolean;
-  childClientLoaderHydrate: boolean;
-  childAdditions?: string;
-}) {
-  return {
-    "react-router.config.ts": reactRouterConfig({ splitRouteModules }),
-    "app/root.tsx": js`
-      import { Outlet, Scripts } from "react-router"
-
-      export default function Root() {
-        return (
-          <html>
-            <head></head>
-            <body>
-              <main>
-                <Outlet />
-              </main>
-              <Scripts />
-            </body>
-          </html>
-        );
-      }
-    `,
-    "app/routes/_index.tsx": js`
-      import { Link } from "react-router"
-      export default function Component() {
-        return <Link to="/parent/child">Go to /parent/child</Link>
-      }
-    `,
-    "app/routes/parent.tsx": js`
-      import { Outlet, useLoaderData } from "react-router"
-      export function loader() {
-        return { message: 'Parent Server Loader' };
-      }
-      ${
-        parentClientLoader
-          ? js`
-              export async function clientLoader({ serverLoader }) {
-                // Need a small delay to ensure we capture the server-rendered
-                // fallbacks for assertions
-                await new Promise(r => setTimeout(r, 100))
-                let data = await serverLoader();
-                return { message: data.message + " (mutated by client)" };
-              }
-            `
-          : ""
-      }
-      ${
-        parentClientLoaderHydrate
-          ? js`
-              clientLoader.hydrate = true;
-              export function HydrateFallback() {
-                return <p>Parent Fallback</p>
-              }
-            `
-          : ""
-      }
-      ${parentAdditions || ""}
-      export default function Component() {
-        let data = useLoaderData();
-        return (
-          <>
-            <p id="parent-data">{data.message}</p>
-            <Outlet/>
-          </>
-        );
-      }
-    `,
-    "app/routes/parent.child.tsx": js`
-      import { Form, Outlet, useActionData, useLoaderData } from "react-router"
-      export function loader() {
-        return { message: 'Child Server Loader' };
-      }
-      export function action() {
-        return { message: 'Child Server Action' };
-      }
-      ${
-        childClientLoader
-          ? js`
-              export async function clientLoader({ serverLoader }) {
-                // Need a small delay to ensure we capture the server-rendered
-                // fallbacks for assertions
-                await new Promise(r => setTimeout(r, 100))
-                let data = await serverLoader();
-                return { message: data.message + " (mutated by client)" };
-              }
-            `
-          : ""
-      }
-      ${
-        childClientLoaderHydrate
-          ? js`
-              clientLoader.hydrate = true;
-              export function HydrateFallback() {
-                return <p>Child Fallback</p>
-              }
-            `
-          : ""
-      }
-      ${childAdditions || ""}
-      export default function Component() {
-        let data = useLoaderData();
-        let actionData = useActionData();
-        return (
-          <>
-            <p id="child-data">{data.message}</p>
-            <Form method="post">
-              <button type="submit">Submit</button>
-              {actionData ? <p id="child-action-data">{actionData.message}</p> : null}
-            </Form>
-          </>
-        );
-      }
-    `,
-  };
-}
 
 test.describe("Client Data", () => {
   for (const templateName of templateNames) {
+    function getFiles({
+      splitRouteModules,
+      parentClientLoader,
+      parentClientLoaderHydrate,
+      parentAdditions,
+      childClientLoader,
+      childClientLoaderHydrate,
+      childAdditions,
+    }: {
+      splitRouteModules: boolean;
+      parentClientLoader: boolean;
+      parentClientLoaderHydrate: boolean;
+      parentAdditions?: string;
+      childClientLoader: boolean;
+      childClientLoaderHydrate: boolean;
+      childAdditions?: string;
+    }) {
+      return {
+        "react-router.config.ts": reactRouterConfig({
+          splitRouteModules,
+          viteEnvironmentApi: templateName.includes("rsc"),
+        }),
+        "app/root.tsx": js`
+          import { Outlet, Scripts } from "react-router"
+    
+          export default function Root() {
+            return (
+              <html>
+                <head></head>
+                <body>
+                  <main>
+                    <Outlet />
+                  </main>
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router"
+          export default function Component() {
+            return <Link to="/parent/child">Go to /parent/child</Link>
+          }
+        `,
+        "app/routes/parent.tsx": js`
+          import { Outlet, useLoaderData } from "react-router"
+          export function loader() {
+            return { message: 'Parent Server Loader' };
+          }
+          ${
+            parentClientLoader
+              ? js`
+                  export async function clientLoader({ serverLoader }) {
+                    // Need a small delay to ensure we capture the server-rendered
+                    // fallbacks for assertions
+                    await new Promise(r => setTimeout(r, 100))
+                    let data = await serverLoader();
+                    return { message: data.message + " (mutated by client)" };
+                  }
+                `
+              : ""
+          }
+          ${
+            parentClientLoaderHydrate
+              ? js`
+                  clientLoader.hydrate = true;
+                  export function HydrateFallback() {
+                    return <p>Parent Fallback</p>
+                  }
+                `
+              : ""
+          }
+          ${parentAdditions || ""}
+          export default function Component() {
+            let data = useLoaderData();
+            return (
+              <>
+                <p id="parent-data">{data.message}</p>
+                <Outlet/>
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.child.tsx": js`
+          import { Form, Outlet, useActionData, useLoaderData } from "react-router"
+          export function loader() {
+            return { message: 'Child Server Loader' };
+          }
+          export function action() {
+            return { message: 'Child Server Action' };
+          }
+          ${
+            childClientLoader
+              ? js`
+                  export async function clientLoader({ serverLoader }) {
+                    // Need a small delay to ensure we capture the server-rendered
+                    // fallbacks for assertions
+                    await new Promise(r => setTimeout(r, 100))
+                    let data = await serverLoader();
+                    return { message: data.message + " (mutated by client)" };
+                  }
+                `
+              : ""
+          }
+          ${
+            childClientLoaderHydrate
+              ? js`
+                  clientLoader.hydrate = true;
+                  export function HydrateFallback() {
+                    return <p>Child Fallback</p>
+                  }
+                `
+              : ""
+          }
+          ${childAdditions || ""}
+          export default function Component() {
+            let data = useLoaderData();
+            let actionData = useActionData();
+            return (
+              <>
+                <p id="child-data">{data.message}</p>
+                <Form method="post">
+                  <button type="submit">Submit</button>
+                  {actionData ? <p id="child-action-data">{actionData.message}</p> : null}
+                </Form>
+              </>
+            );
+          }
+        `,
+      };
+    }
+
     let appFixture: AppFixture;
 
     test.afterEach(async () => {

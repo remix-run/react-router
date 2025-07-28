@@ -76,6 +76,7 @@ type ViteConfigBuildArgs = {
 };
 
 type ViteConfigBaseArgs = {
+  templateName?: TemplateName;
   envDir?: string;
 };
 
@@ -129,7 +130,14 @@ export const viteConfig = {
   },
   basic: async (args: ViteConfigArgs) => {
     return dedent`
-      import { reactRouter } from "@react-router/dev/vite";
+      ${
+        !args.templateName?.includes("rsc")
+          ? "import { reactRouter } from '@react-router/dev/vite';"
+          : [
+              "import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from '@react-router/dev/internal';",
+              "const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;",
+            ].join("\n")
+      }
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -201,7 +209,9 @@ type FrameworkModeViteMajorTemplateName =
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
 
-type FrameworkModeRscTemplateName = "rsc-parcel-framework";
+type FrameworkModeRscTemplateName =
+  | "rsc-parcel-framework"
+  | "rsc-vite-framework";
 
 type FrameworkModeCloudflareTemplateName =
   | "cloudflare-dev-proxy-template"
