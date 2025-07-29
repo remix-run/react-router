@@ -1,6 +1,10 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import type { Router, StaticHandlerContext } from "../../lib/router/router";
-import { createRouter, createStaticHandler } from "../../lib/router/router";
+import {
+  createRouter,
+  createStaticHandler,
+  isDataWithResponseInit,
+} from "../../lib/router/router";
 import type {
   DataStrategyResult,
   unstable_MiddlewareFunction,
@@ -10,6 +14,7 @@ import {
   unstable_createContext,
   redirect,
   unstable_RouterContextProvider,
+  data,
 } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
@@ -358,6 +363,9 @@ describe("context/middleware", () => {
 
       it("does not return result of middleware in client side routers", async () => {
         let values: unknown[] = [];
+        let consoleSpy = jest
+          .spyOn(console, "warn")
+          .mockImplementation(() => {});
         router = createRouter({
           history: createMemoryHistory(),
           routes: [
@@ -409,6 +417,8 @@ describe("context/middleware", () => {
           parent: "PARENT",
           child: [undefined, undefined, undefined, undefined],
         });
+
+        consoleSpy.mockRestore();
       });
 
       it("does not require that you call next()", async () => {
@@ -1631,6 +1641,62 @@ describe("context/middleware", () => {
       expect(res.headers.get("parent")).toEqual("yes");
     });
 
+    it("propagates a returned response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              return new Response("test");
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.query(new Request("http://localhost/parent"), {
+        unstable_respond: respondWithJson,
+      })) as Response;
+      await expect(res.text()).resolves.toEqual("test");
+    });
+
+    it("propagates a returned data() response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              return data("not found", { status: 404 });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.query(new Request("http://localhost/parent"), {
+        unstable_respond: respondWithJson,
+      })) as Response;
+      expect(res.status).toBe(404);
+      await expect(res.text()).resolves.toEqual("not found");
+    });
+
     describe("ordering", () => {
       it("runs middleware sequentially before and after loaders", async () => {
         let handler = createStaticHandler([
@@ -2510,6 +2576,99 @@ describe("context/middleware", () => {
       expect(res.headers.get("parent2")).toEqual("yes");
       expect(res.headers.get("child1")).toEqual("yes");
       expect(res.headers.get("child2")).toEqual("yes");
+    });
+
+    it("propagates the response even if you call next and forget to return it", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let res = (await next()) as Response;
+              res.headers.set("parent", "yes");
+            },
+          ],
+          loader() {
+            return new Response("PARENT");
+          },
+        },
+      ]);
+
+      let res = (await handler.queryRoute(
+        new Request("http://localhost/parent"),
+        {
+          unstable_respond: (v) => v,
+        },
+      )) as Response;
+
+      expect(await res.text()).toBe("PARENT");
+      expect(res.headers.get("parent")).toEqual("yes");
+    });
+
+    it("propagates a returned response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              return new Response("test");
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.queryRoute(
+        new Request("http://localhost/parent"),
+        {
+          unstable_respond: (v) => v,
+        },
+      )) as Response;
+      await expect(res.text()).resolves.toEqual("test");
+    });
+
+    it("propagates a returned data() response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              return data("not found", { status: 404 });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let res = (await handler.queryRoute(
+        new Request("http://localhost/parent"),
+        {
+          unstable_respond: (v) => v,
+        },
+      )) as Response;
+      expect(res.status).toBe(404);
+      await expect(res.text()).resolves.toEqual("not found");
     });
 
     describe("ordering", () => {
