@@ -177,11 +177,11 @@ describe("server", () => {
       expect(response.status).toBe(500);
       expect(await response.text()).toContain("Unexpected Server Error");
       expect(handleErrorSpy).toHaveBeenCalledTimes(1);
-      expect(handleErrorSpy.mock.calls[0][0]).toMatchInlineSnapshot(`
-        [Error: Unable to create initial \`unstable_RouterContextProvider\` instance. Please confirm you are returning an instance of \`Map<unstable_routerContext, unknown>\` from your \`getLoadContext\` function.
-
-        Error: TypeError: init is not iterable]
-      `);
+      expect(handleErrorSpy.mock.calls[0][0].message).toBe(
+        "Invalid `context` value provided to `handleRequest`. When middleware is " +
+          "enabled you must return an instance of `unstable_RouterContextProvider` " +
+          "from your `getLoadContext` function.",
+      );
       handleErrorSpy.mockRestore();
     });
   });

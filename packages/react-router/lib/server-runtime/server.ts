@@ -44,6 +44,7 @@ import {
 } from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
 import { getManifestPath } from "../dom/ssr/fog-of-war";
+import invariant from "./invariant";
 
 export type RequestHandler = (
   request: Request,
@@ -112,9 +113,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     }
 
     let params: RouteMatch<ServerRoute>["params"] = {};
-    let loadContext = _build.future.unstable_middleware
-      ? initialContext || new unstable_RouterContextProvider()
-      : initialContext || {};
+    let loadContext: AppLoadContext | unstable_RouterContextProvider;
 
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
@@ -127,6 +126,24 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
       });
     };
+
+    if (_build.future.unstable_middleware) {
+      if (
+        initialContext &&
+        !(initialContext instanceof unstable_RouterContextProvider)
+      ) {
+        let error = new Error(
+          "Invalid `context` value provided to `handleRequest`. When middleware " +
+            "is enabled you must return an instance of `unstable_RouterContextProvider` " +
+            "from your `getLoadContext` function.",
+        );
+        handleError(error);
+        return returnLastResortErrorResponse(error, serverMode);
+      }
+      loadContext = initialContext || new unstable_RouterContextProvider();
+    } else {
+      loadContext = initialContext || {};
+    }
 
     let url = new URL(request.url);
 
