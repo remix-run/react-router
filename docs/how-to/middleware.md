@@ -274,6 +274,8 @@ This allows you to leave your loaders/actions untouched during initial adoption 
 
 <docs-warning>This approach is only intended to be used as a migration strategy when adopting middleware in React Router v7, allowing you to incrementally migrate to `context.set`/`context.get`. It is not safe to assume this approach will work in the next major version of React Router.</docs-warning>
 
+<docs-warning>The `unstable_RouterContextProvider` class is also used for the client-side `context` parameter via `<HydratedRouter unstable_getContext>` and `<RouterProvider unstable_getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `unstable_getContext` on the client).</docs-warning>
+
 ## Common Patterns
 
 ### Authentication

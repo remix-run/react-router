@@ -168,7 +168,7 @@ export class unstable_RouterContextProvider {
 }
 
 type DefaultContext = MiddlewareEnabled extends true
-  ? unstable_RouterContextProvider
+  ? Readonly<unstable_RouterContextProvider>
   : any;
 
 /**
@@ -217,7 +217,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  * and then complete middlewares from the bottom-up
  */
 export type unstable_MiddlewareFunction<Result = unknown> = (
-  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
   next: unstable_MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 
