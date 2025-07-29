@@ -191,14 +191,19 @@ const authMiddleware = async ({ request, context }) => {
 
 ### `next()` and Error Handling
 
-`next()` is not designed to throw errors under normal conditions, so you generally shouldn't find yourself wrapping `next` in a `try`/`catch`. The responsibility of the `next()` function is to return a `Response` for the current `Request`, so as long as that can be completed, `next()` will return the Response and won't `throw`. Even if a `loader` throws an error, or a component fails to render, React Router already handles those by rendering the nearest `ErrorBoundary`, so a Response is still generated without issue.
+`next()` is not designed to throw errors under normal conditions, so you generally shouldn't find yourself wrapping `next` in a `try`/`catch`. The responsibility of the `next()` function is to return a `Response` for the current `Request`, so as long as that can be completed, `next()` will return the `Response` and won't `throw`. Even if a `loader` throws an error, or a component fails to render, React Router already handles those by rendering the nearest `ErrorBoundary`, so a `Response` is still generated without issue and propagated up through `next()`.
 
-This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error caused that to throw, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
+This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error from a loader/action/render caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
-The only cases in which `next()` _should_ throw are if we fail to generate a Response. There's a few ways in which this could happen:
+The only cases in which `next()` _should_ throw are if we fail to generate a `Response`. There's a few ways in which this could happen:
 
 - A middleware can short circuit the rest of the request and throw a `Response` (usually a `redirect`)
 - If the logic directly inside of a middleware function throws, that will cause the ancestor `next()` function to throw
+
+If a middleware _does_ throw (and is not caught by an ancestor middleware), then ancestor middlewares will be skipped, but React Router will still attempt to render that error in an `ErrorBoundary`.
+
+- If the error threw before `next()` was called, then we don't have `loaderData` for any routes so we'll bubble to the first `ErrorBoundary` at or above all `loader` functions
+- If the error threw after `next()` was called, then we will bubble to the nearest `ErrorBoundary` from the throwing route
 
 ## Changes to `getLoadContext`/`AppLoadContext`
 
