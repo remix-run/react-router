@@ -450,6 +450,10 @@ export interface StaticHandler {
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_respond?: (res: Response) => MaybePromise<Response>;
+      unstable_stream?: (
+        context: unstable_RouterContextProvider,
+        queryRoute: (r: Request) => Promise<Response>,
+      ) => MaybePromise<Response>;
     },
   ): Promise<any>;
 }
@@ -3845,6 +3849,7 @@ export function createStaticHandler(
       requestContext,
       dataStrategy,
       unstable_respond: respond,
+      unstable_stream: stream,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3878,13 +3883,14 @@ export function createStaticHandler(
     }
 
     if (
-      respond &&
-      matches.some(
-        (m) =>
-          m.route.unstable_middleware ||
-          (typeof m.route.lazy === "object" &&
-            m.route.lazy.unstable_middleware),
-      )
+      stream ||
+      (respond &&
+        matches.some(
+          (m) =>
+            m.route.unstable_middleware ||
+            (typeof m.route.lazy === "object" &&
+              m.route.lazy.unstable_middleware),
+        ))
     ) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
@@ -3903,6 +3909,54 @@ export function createStaticHandler(
         },
         true,
         async () => {
+          if (stream) {
+            let res = await stream(
+              requestContext as unstable_RouterContextProvider,
+              async (revalidationRequest: Request) => {
+                let result = await queryImpl(
+                  revalidationRequest,
+                  location,
+                  matches!,
+                  requestContext,
+                  dataStrategy || null,
+                  false,
+                  match!,
+                  null,
+                  false,
+                );
+
+                if (isResponse(result)) {
+                  return result;
+                }
+
+                let error = result.errors
+                  ? Object.values(result.errors)[0]
+                  : undefined;
+
+                if (error !== undefined) {
+                  // If we got back result.errors, that means the loader/action threw
+                  // _something_ that wasn't a Response, but it's not guaranteed/required
+                  // to be an `instanceof Error` either, so we have to use throw here to
+                  // preserve the "error" state outside of queryImpl.
+                  throw error;
+                }
+
+                // Pick off the right state value to return
+                let value = result.actionData
+                  ? Object.values(result.actionData)[0]
+                  : Object.values(result.loaderData)[0];
+
+                return typeof value === "string"
+                  ? new Response(value)
+                  : Response.json(value);
+              },
+            );
+            return res;
+          }
+
+          // Should always be true given the if statement above
+          invariant(respond, "Expected respond to be defined");
+
           let result = await queryImpl(
             request,
             location,
@@ -3936,18 +3990,17 @@ export function createStaticHandler(
             ? Object.values(result.actionData)[0]
             : Object.values(result.loaderData)[0];
 
-          return typeof value === "string"
-            ? new Response(value)
-            : Response.json(value);
+          return respond(
+            typeof value === "string"
+              ? new Response(value)
+              : Response.json(value),
+          );
         },
         (error) => {
           if (isResponse(error)) {
-            return respond(error);
+            return respond ? respond(error) : error;
           }
-          return new Response(String(error), {
-            status: 500,
-            statusText: "Unexpected Server Error",
-          });
+          throw error;
         },
       );
       return response;
@@ -5595,7 +5648,8 @@ async function callRouteMiddleware(
         return result;
       }
     } else {
-      return next();
+      result = await next();
+      return result;
     }
   } catch (error) {
     if (!middlewareState.middlewareError) {
