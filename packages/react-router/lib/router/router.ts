@@ -5571,7 +5571,26 @@ export async function runMiddlewarePipeline<T extends boolean>(
       middlewareState,
       handler,
     );
-    return propagateResult ? result : middlewareState.handlerResult;
+
+    if (propagateResult) {
+      invariant(
+        isResponse(result) || isDataWithResponseInit(result),
+        `Expected a Response to be returned from route middleware`,
+      );
+      // Upgrade returned data() calls to real Responses
+      if (isDataWithResponseInit(result)) {
+        return new Response(
+          typeof result.data === "string"
+            ? result.data
+            : JSON.stringify(result.data),
+          { ...result.init },
+        );
+      } else {
+        return result;
+      }
+    } else {
+      return middlewareState.handlerResult;
+    }
   } catch (e) {
     if (!middlewareState.middlewareError) {
       // This shouldn't happen?  This would have to come from a bug in our
@@ -5655,8 +5674,8 @@ async function callRouteMiddleware(
         // it for them. This allows some minor syntactic sugar (or forgetfulness)
         // where you can grab the response to add a header without re-returning it
         return typeof result === "undefined" ? nextResult : result;
-      } else if (isResponse(result)) {
-        // If they short-circuited with a response without calling next() - use it
+      } else if (isResponse(result) || isDataWithResponseInit(result)) {
+        // Use short circuit Response/data() values without having called next()
         return result;
       } else {
         // Otherwise call next() for them
