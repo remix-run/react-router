@@ -1,5 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse, unstable_InitialContext } from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
@@ -44,7 +44,6 @@ import {
 } from "../dom/ssr/single-fetch";
 import type { MiddlewareEnabled } from "../types/future";
 import { getManifestPath } from "../dom/ssr/fog-of-war";
-import invariant from "./invariant";
 
 export type RequestHandler = (
   request: Request,
