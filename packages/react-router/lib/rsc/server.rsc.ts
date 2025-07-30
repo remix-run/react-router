@@ -611,7 +611,7 @@ async function generateResourceResponse(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext,
-      async unstable_stream(queryRoute) {
+      async unstable_generateMiddlewareResponse(queryRoute) {
         try {
           let response = await queryRoute(request);
           return generateResourceResponse(response);
@@ -706,7 +706,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
-      async unstable_stream(query) {
+      async unstable_generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the

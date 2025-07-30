@@ -446,7 +446,7 @@ async function handleDocumentRequest(
   try {
     let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_stream: build.future.unstable_middleware
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (query) => {
             try {
               let streamResult = await query(request);
@@ -627,7 +627,7 @@ async function handleResourceRequest(
     let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_stream: build.future.unstable_middleware
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (queryRoute) => {
             try {
               let streamResult = await queryRoute(request);

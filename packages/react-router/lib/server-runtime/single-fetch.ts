@@ -58,7 +58,7 @@ export async function singleFetchAction(
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
       skipRevalidation: true,
-      unstable_stream: build.future.unstable_middleware
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (query) => {
             try {
               let streamResult = await query(handlerRequest);
@@ -174,7 +174,7 @@ export async function singleFetchLoaders(
       requestContext: loadContext,
       filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
-      unstable_stream: build.future.unstable_middleware
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (query) => {
             try {
               let streamResult = await query(handlerRequest);

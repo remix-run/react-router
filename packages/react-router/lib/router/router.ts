@@ -434,7 +434,7 @@ export interface StaticHandler {
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_stream?: (
+      unstable_generateMiddlewareResponse?: (
         query: (r: Request) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
     },
@@ -445,7 +445,7 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_stream?: (
+      unstable_generateMiddlewareResponse?: (
         queryRoute: (r: Request) => Promise<Response>,
       ) => MaybePromise<Response>;
     },
@@ -3525,7 +3525,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      unstable_stream: stream,
+      unstable_generateMiddlewareResponse,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3555,8 +3555,10 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return stream
-        ? stream(() => Promise.resolve(staticContext))
+      return unstable_generateMiddlewareResponse
+        ? unstable_generateMiddlewareResponse(() =>
+            Promise.resolve(staticContext),
+          )
         : staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
@@ -3575,8 +3577,10 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return stream
-        ? stream(() => Promise.resolve(staticContext))
+      return unstable_generateMiddlewareResponse
+        ? unstable_generateMiddlewareResponse(() =>
+            Promise.resolve(staticContext),
+          )
         : staticContext;
     }
 
@@ -3595,7 +3599,7 @@ export function createStaticHandler(
     //    redirects from loaders after a server action, etc.
     //    - If we decide this isn't warranted than the stream implementation
     //      can simplify and potentially even collapse back into respond()
-    if (stream) {
+    if (unstable_generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
@@ -3619,28 +3623,30 @@ export function createStaticHandler(
           },
           true,
           async () => {
-            let res = await stream(async (revalidationRequest: Request) => {
-              let result = await queryImpl(
-                revalidationRequest,
-                location,
-                matches!,
-                requestContext,
-                dataStrategy || null,
-                skipLoaderErrorBubbling === true,
-                null,
-                filterMatchesToLoad || null,
-                skipRevalidation === true,
-              );
+            let res = await unstable_generateMiddlewareResponse(
+              async (revalidationRequest: Request) => {
+                let result = await queryImpl(
+                  revalidationRequest,
+                  location,
+                  matches!,
+                  requestContext,
+                  dataStrategy || null,
+                  skipLoaderErrorBubbling === true,
+                  null,
+                  filterMatchesToLoad || null,
+                  skipRevalidation === true,
+                );
 
-              if (isResponse(result)) {
-                return result;
-              }
-              // When returning StaticHandlerContext, we patch back in the location here
-              // since we need it for React Context.  But this helps keep our submit and
-              // loadRouteData operating on a Request instead of a Location
-              renderedStaticContext = { location, basename, ...result };
-              return renderedStaticContext;
-            });
+                if (isResponse(result)) {
+                  return result;
+                }
+                // When returning StaticHandlerContext, we patch back in the location here
+                // since we need it for React Context.  But this helps keep our submit and
+                // loadRouteData operating on a Request instead of a Location
+                renderedStaticContext = { location, basename, ...result };
+                return renderedStaticContext;
+              },
+            );
             return res;
           },
           async (error, routeId) => {
@@ -3668,7 +3674,9 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id,
               );
-              return stream(() => Promise.resolve(staticContext));
+              return unstable_generateMiddlewareResponse(() =>
+                Promise.resolve(staticContext),
+              );
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3698,7 +3706,9 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return stream(() => Promise.resolve(staticContext));
+              return unstable_generateMiddlewareResponse(() =>
+                Promise.resolve(staticContext),
+              );
             }
           },
         );
@@ -3767,7 +3777,7 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      unstable_stream: stream,
+      unstable_generateMiddlewareResponse,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3800,7 +3810,7 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (stream) {
+    if (unstable_generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
@@ -3818,27 +3828,29 @@ export function createStaticHandler(
         },
         true,
         async () => {
-          let res = await stream(async (revalidationRequest: Request) => {
-            let result = await queryImpl(
-              revalidationRequest,
-              location,
-              matches!,
-              requestContext,
-              dataStrategy || null,
-              false,
-              match!,
-              null,
-              false,
-            );
+          let res = await unstable_generateMiddlewareResponse(
+            async (revalidationRequest: Request) => {
+              let result = await queryImpl(
+                revalidationRequest,
+                location,
+                matches!,
+                requestContext,
+                dataStrategy || null,
+                false,
+                match!,
+                null,
+                false,
+              );
 
-            let processed = handleQueryResult(result);
+              let processed = handleQueryResult(result);
 
-            return isResponse(processed)
-              ? processed
-              : typeof processed === "string"
-                ? new Response(processed)
-                : Response.json(processed);
-          });
+              return isResponse(processed)
+                ? processed
+                : typeof processed === "string"
+                  ? new Response(processed)
+                  : Response.json(processed);
+            },
+          );
           return res;
         },
         (error) => {
