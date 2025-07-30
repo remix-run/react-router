@@ -8,4 +8,6 @@ title: IsCookieFunction
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.IsCookieFunction.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/types/react_router.IsCookieFunction.html)
+
+

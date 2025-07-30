@@ -24,7 +24,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 The server entry point for a React Router app in Framework Mode. This component
 is used to generate the HTML in the response from the server.
-See [`entry.server.tsx`](../api/framework-conventions/entry.server.tsx).
+See [`entry.server.tsx`](../framework-conventions/entry.server.tsx).
 
 ## Signature
 

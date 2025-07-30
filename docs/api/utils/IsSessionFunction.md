@@ -8,4 +8,4 @@ title: IsSessionFunction
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.IsSessionFunction.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/types/react_router.IsSessionFunction.html)
