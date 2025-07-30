@@ -434,9 +434,6 @@ export interface StaticHandler {
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (
-        staticContext: StaticHandlerContext,
-      ) => MaybePromise<Response>;
       unstable_stream?: (
         query: (r: Request) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
@@ -448,7 +445,6 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (res: Response) => MaybePromise<Response>;
       unstable_stream?: (
         queryRoute: (r: Request) => Promise<Response>,
       ) => MaybePromise<Response>;
@@ -3530,7 +3526,6 @@ export function createStaticHandler(
       skipRevalidation,
       dataStrategy,
       unstable_stream: stream,
-      unstable_respond: respond,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3541,16 +3536,6 @@ export function createStaticHandler(
       requestContext != null
         ? requestContext
         : new unstable_RouterContextProvider();
-
-    let shortCircuitResult = (
-      ctx: StaticHandlerContext,
-    ): MaybePromise<Response> | StaticHandlerContext => {
-      return stream
-        ? stream(() => Promise.resolve(ctx))
-        : respond
-          ? respond(ctx)
-          : ctx;
-    };
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD") {
@@ -3570,7 +3555,9 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return shortCircuitResult(staticContext);
+      return stream
+        ? stream(() => Promise.resolve(staticContext))
+        : staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3588,19 +3575,27 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return shortCircuitResult(staticContext);
+      return stream
+        ? stream(() => Promise.resolve(staticContext))
+        : staticContext;
     }
 
-    if (
-      stream ||
-      (respond &&
-        matches.some(
-          (m) =>
-            m.route.unstable_middleware ||
-            (typeof m.route.lazy === "object" &&
-              m.route.lazy.unstable_middleware),
-        ))
-    ) {
+    // The `stream` API is what enables middleware execution and makes 3 changes
+    // from the original `respond` API:
+    //  - It _always_ runs the middleware pipeline down to the `stream()`
+    //    function even if middleware doesn't exist
+    //  - We can now insert arbitrary logic at the end of the middleware
+    //    chain (inside the leaf `next()` call) such as running a server
+    //    action and let route middlewares apply to that action.
+    //  - We have control over the calling/awaiting of query() which
+    //    theoretically would allow us to send down the `actionResult`
+    //    immediately and then stream the entirety of the `query`/`staticContext`
+    //    info.  That has other implications though which we may not want,
+    //    such as not being able to leverage `headers()`, or respect
+    //    redirects from loaders after a server action, etc.
+    //    - If we decide this isn't warranted than the stream implementation
+    //      can simplify and potentially even collapse back into respond()
+    if (stream) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
@@ -3624,102 +3619,28 @@ export function createStaticHandler(
           },
           true,
           async () => {
-            /**
-             * TODO: stream() is a potential breaking change to the unstable_respond()
-             * API, implemented as a sibling option for now so as not to break
-             * any existing middleware logic.
-             *
-             * stream() gives us 3 things:
-             *  - It _always_ runs the middleware pipeline down to the stream()
-             *    function even if middleware doesn't exist
-             *  - we can now insert arbitrary logic at the end of the middleware
-             *    chain (inside the leaf next() call) such as running a server
-             *    action and let route middlewares apply to that action.
-             *  - We have control over the calling./awaiting of query() which
-             *    theoretically would allow us to send down the actionResult
-             *    immediately and then stream the entirety of the query/staticContext
-             *    info.  That has other implications though which we may not want,
-             *    such as not being able to leverage headers(), or respect
-             *    redirects from loaders after a server action, etc.
-             *    - If we decide this isn't warranted than the stream implementation
-             *      can simplify and potentially even collapse back into respond()
-             *
-             * Another totally different approach (larger LOE) would be to extract
-             * static handler middleware to be fully composable:
-             *
-             * // Current behavior
-             * let res = handler.middleware(request, (context) => {
-             *   let results = handler.query(request, context);
-             *   return generateResponse({
-             *     type: 'render',
-             *     payload: results
-             *   });
-             * })
-             *
-             * // RSC Server Action behavior
-             * let res = handler.middleware(request, (context) => {
-             *   let actionResult = serverAction(request);
-             *   let revalidationRequest = new Request(...)
-             *   let payloadPromise = handler.query(revalidationRequest, context)
-             *                               .then(context => getPayload(context));
-             *   return generateResponse({
-             *     type: 'action',
-             *     actionResult,,
-             *     rerender: payloadPromise
-             *   });
-             * })
-             **/
-            if (stream) {
-              let res = await stream(async (revalidationRequest: Request) => {
-                let result = await queryImpl(
-                  revalidationRequest,
-                  location,
-                  matches!,
-                  requestContext,
-                  dataStrategy || null,
-                  skipLoaderErrorBubbling === true,
-                  null,
-                  filterMatchesToLoad || null,
-                  skipRevalidation === true,
-                );
+            let res = await stream(async (revalidationRequest: Request) => {
+              let result = await queryImpl(
+                revalidationRequest,
+                location,
+                matches!,
+                requestContext,
+                dataStrategy || null,
+                skipLoaderErrorBubbling === true,
+                null,
+                filterMatchesToLoad || null,
+                skipRevalidation === true,
+              );
 
-                if (isResponse(result)) {
-                  return result;
-                }
-                // When returning StaticHandlerContext, we patch back in the location here
-                // since we need it for React Context.  But this helps keep our submit and
-                // loadRouteData operating on a Request instead of a Location
-                renderedStaticContext = { location, basename, ...result };
-                return renderedStaticContext;
-              });
-              return res;
-            }
-
-            // Should always be true given the if statement above
-            invariant(respond, "Expected respond to be defined");
-
-            let result = await queryImpl(
-              request,
-              location,
-              matches!,
-              requestContext,
-              dataStrategy || null,
-              skipLoaderErrorBubbling === true,
-              null,
-              filterMatchesToLoad || null,
-              skipRevalidation === true,
-            );
-
-            if (isResponse(result)) {
-              return result;
-            }
-
-            // When returning StaticHandlerContext, we patch back in the location here
-            // since we need it for React Context.  But this helps keep our submit and
-            // loadRouteData operating on a Request instead of a Location
-            renderedStaticContext = { location, basename, ...result };
-            let res = await respond(renderedStaticContext);
-
+              if (isResponse(result)) {
+                return result;
+              }
+              // When returning StaticHandlerContext, we patch back in the location here
+              // since we need it for React Context.  But this helps keep our submit and
+              // loadRouteData operating on a Request instead of a Location
+              renderedStaticContext = { location, basename, ...result };
+              return renderedStaticContext;
+            });
             return res;
           },
           async (error, routeId) => {
@@ -3747,9 +3668,7 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id,
               );
-              return stream
-                ? stream(() => Promise.resolve(staticContext))
-                : respond!(staticContext);
+              return stream(() => Promise.resolve(staticContext));
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3779,9 +3698,7 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return stream
-                ? stream(() => Promise.resolve(staticContext))
-                : respond!(staticContext);
+              return stream(() => Promise.resolve(staticContext));
             }
           },
         );
@@ -3850,7 +3767,6 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      unstable_respond: respond,
       unstable_stream: stream,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
@@ -3884,16 +3800,7 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (
-      stream ||
-      (respond &&
-        matches.some(
-          (m) =>
-            m.route.unstable_middleware ||
-            (typeof m.route.lazy === "object" &&
-              m.route.lazy.unstable_middleware),
-        ))
-    ) {
+    if (stream) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
@@ -3911,76 +3818,32 @@ export function createStaticHandler(
         },
         true,
         async () => {
-          if (stream) {
-            let res = await stream(async (revalidationRequest: Request) => {
-              let result = await queryImpl(
-                revalidationRequest,
-                location,
-                matches!,
-                requestContext,
-                dataStrategy || null,
-                false,
-                match!,
-                null,
-                false,
-              );
+          let res = await stream(async (revalidationRequest: Request) => {
+            let result = await queryImpl(
+              revalidationRequest,
+              location,
+              matches!,
+              requestContext,
+              dataStrategy || null,
+              false,
+              match!,
+              null,
+              false,
+            );
 
-              let processed = handleQueryResult(result);
+            let processed = handleQueryResult(result);
 
-              return isResponse(processed)
-                ? processed
-                : typeof processed === "string"
-                  ? new Response(processed)
-                  : Response.json(processed);
-            });
-            return res;
-          }
-
-          // Should always be true given the if statement above
-          invariant(respond, "Expected respond to be defined");
-
-          let result = await queryImpl(
-            request,
-            location,
-            matches!,
-            requestContext,
-            dataStrategy || null,
-            false,
-            match!,
-            null,
-            false,
-          );
-
-          if (isResponse(result)) {
-            return respond(result);
-          }
-
-          let error = result.errors
-            ? Object.values(result.errors)[0]
-            : undefined;
-
-          if (error !== undefined) {
-            // If we got back result.errors, that means the loader/action threw
-            // _something_ that wasn't a Response, but it's not guaranteed/required
-            // to be an `instanceof Error` either, so we have to use throw here to
-            // preserve the "error" state outside of queryImpl.
-            throw error;
-          }
-
-          // Pick off the right state value to return
-          let value = result.actionData
-            ? Object.values(result.actionData)[0]
-            : Object.values(result.loaderData)[0];
-
-          return respond(
-            typeof value === "string"
-              ? new Response(value)
-              : Response.json(value),
-          );
+            return isResponse(processed)
+              ? processed
+              : typeof processed === "string"
+                ? new Response(processed)
+                : Response.json(processed);
+          });
+          return res;
         },
         (error) => {
           if (isResponse(error)) {
-            return respond ? respond(error) : error;
+            return error;
           }
           throw error;
         },
