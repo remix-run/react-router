@@ -219,7 +219,7 @@ interface HydratedRouterProps {
 
 /**
  * Framework-mode router component to be used to to hydrate a router from a
- * `ServerRouter`. See [`entry.client.tsx`](../api/framework-conventions/entry.client.tsx).
+ * `ServerRouter`. See [`entry.client.tsx`](../framework-conventions/entry.client.tsx).
  *
  * @public
  * @category Framework Routers
