@@ -42,3 +42,4 @@ jobs:
       os: "macos-latest"
       node_version: "[22]"
       browser: '["webkit"]'
+      timeout: 40
