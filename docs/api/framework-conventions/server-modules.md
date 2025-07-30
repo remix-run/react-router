@@ -11,7 +11,7 @@ title: .server modules
 Server-only modules that are excluded from client bundles and only run on the server.
 
 ```ts filename=auth.server.ts
-// This would expose secrets on the client
+// This would expose secrets on the client if not exported from a server-only module
 export const JWT_SECRET = process.env.JWT_SECRET;
 
 export function validateToken(token: string) {
