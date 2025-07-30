@@ -264,7 +264,7 @@ export interface DOMRouterOpts {
    * let router = createBrowserRouter(routes, {
    *   async dataStrategy({ matches, request }) {
    *     const matchesToLoad = matches.filter((m) => m.shouldLoad);
-   *     const results = {};
+   *     const results: Record<string, DataStrategyResult> = {};
    *     await Promise.all(
    *       matchesToLoad.map(async (match) => {
    *         console.log(`Processing ${match.route.id}`);

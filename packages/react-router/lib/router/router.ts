@@ -438,7 +438,6 @@ export interface StaticHandler {
         staticContext: StaticHandlerContext,
       ) => MaybePromise<Response>;
       unstable_stream?: (
-        context: unstable_RouterContextProvider,
         query: (r: Request) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
     },
@@ -451,7 +450,6 @@ export interface StaticHandler {
       dataStrategy?: DataStrategyFunction<unknown>;
       unstable_respond?: (res: Response) => MaybePromise<Response>;
       unstable_stream?: (
-        context: unstable_RouterContextProvider,
         queryRoute: (r: Request) => Promise<Response>,
       ) => MaybePromise<Response>;
     },
@@ -3548,9 +3546,7 @@ export function createStaticHandler(
       ctx: StaticHandlerContext,
     ): MaybePromise<Response> | StaticHandlerContext => {
       return stream
-        ? stream(requestContext as unstable_RouterContextProvider, () =>
-            Promise.resolve(ctx),
-          )
+        ? stream(() => Promise.resolve(ctx))
         : respond
           ? respond(ctx)
           : ctx;
@@ -3674,26 +3670,28 @@ export function createStaticHandler(
              * })
              **/
             if (stream) {
-              let res = await stream(
-                requestContext as unstable_RouterContextProvider,
-                async (revalidationRequest: Request) => {
-                  let result = await queryImpl(
-                    revalidationRequest,
-                    location,
-                    matches!,
-                    requestContext,
-                    dataStrategy || null,
-                    skipLoaderErrorBubbling === true,
-                    null,
-                    filterMatchesToLoad || null,
-                    skipRevalidation === true,
-                  );
+              let res = await stream(async (revalidationRequest: Request) => {
+                let result = await queryImpl(
+                  revalidationRequest,
+                  location,
+                  matches!,
+                  requestContext,
+                  dataStrategy || null,
+                  skipLoaderErrorBubbling === true,
+                  null,
+                  filterMatchesToLoad || null,
+                  skipRevalidation === true,
+                );
 
-                  return isResponse(result)
-                    ? result
-                    : { location, basename, ...result };
-                },
-              );
+                if (isResponse(result)) {
+                  return result;
+                }
+                // When returning StaticHandlerContext, we patch back in the location here
+                // since we need it for React Context.  But this helps keep our submit and
+                // loadRouteData operating on a Request instead of a Location
+                renderedStaticContext = { location, basename, ...result };
+                return renderedStaticContext;
+              });
               return res;
             }
 
@@ -3750,7 +3748,7 @@ export function createStaticHandler(
                   : findNearestBoundary(matches, routeId).route.id,
               );
               return stream
-                ? stream(requestContext, () => Promise.resolve(staticContext))
+                ? stream(() => Promise.resolve(staticContext))
                 : respond!(staticContext);
             } else {
               // We never even got to the handlers, so we've got no data -
@@ -3782,7 +3780,7 @@ export function createStaticHandler(
                 loaderHeaders: {},
               };
               return stream
-                ? stream(requestContext, () => Promise.resolve(staticContext))
+                ? stream(() => Promise.resolve(staticContext))
                 : respond!(staticContext);
             }
           },
@@ -3914,47 +3912,27 @@ export function createStaticHandler(
         true,
         async () => {
           if (stream) {
-            let res = await stream(
-              requestContext as unstable_RouterContextProvider,
-              async (revalidationRequest: Request) => {
-                let result = await queryImpl(
-                  revalidationRequest,
-                  location,
-                  matches!,
-                  requestContext,
-                  dataStrategy || null,
-                  false,
-                  match!,
-                  null,
-                  false,
-                );
+            let res = await stream(async (revalidationRequest: Request) => {
+              let result = await queryImpl(
+                revalidationRequest,
+                location,
+                matches!,
+                requestContext,
+                dataStrategy || null,
+                false,
+                match!,
+                null,
+                false,
+              );
 
-                if (isResponse(result)) {
-                  return result;
-                }
+              let processed = handleQueryResult(result);
 
-                let error = result.errors
-                  ? Object.values(result.errors)[0]
-                  : undefined;
-
-                if (error !== undefined) {
-                  // If we got back result.errors, that means the loader/action threw
-                  // _something_ that wasn't a Response, but it's not guaranteed/required
-                  // to be an `instanceof Error` either, so we have to use throw here to
-                  // preserve the "error" state outside of queryImpl.
-                  throw error;
-                }
-
-                // Pick off the right state value to return
-                let value = result.actionData
-                  ? Object.values(result.actionData)[0]
-                  : Object.values(result.loaderData)[0];
-
-                return typeof value === "string"
-                  ? new Response(value)
-                  : Response.json(value);
-              },
-            );
+              return isResponse(processed)
+                ? processed
+                : typeof processed === "string"
+                  ? new Response(processed)
+                  : Response.json(processed);
+            });
             return res;
           }
 
@@ -4022,29 +4000,33 @@ export function createStaticHandler(
       false,
     );
 
-    if (isResponse(result)) {
-      return result;
-    }
+    return handleQueryResult(result);
 
-    let error = result.errors ? Object.values(result.errors)[0] : undefined;
-    if (error !== undefined) {
-      // If we got back result.errors, that means the loader/action threw
-      // _something_ that wasn't a Response, but it's not guaranteed/required
-      // to be an `instanceof Error` either, so we have to use throw here to
-      // preserve the "error" state outside of queryImpl.
-      throw error;
-    }
+    function handleQueryResult(result: Awaited<ReturnType<typeof queryImpl>>) {
+      if (isResponse(result)) {
+        return result;
+      }
 
-    // Pick off the right state value to return
-    if (result.actionData) {
-      return Object.values(result.actionData)[0];
-    }
+      let error = result.errors ? Object.values(result.errors)[0] : undefined;
+      if (error !== undefined) {
+        // If we got back result.errors, that means the loader/action threw
+        // _something_ that wasn't a Response, but it's not guaranteed/required
+        // to be an `instanceof Error` either, so we have to use throw here to
+        // preserve the "error" state outside of queryImpl.
+        throw error;
+      }
 
-    if (result.loaderData) {
-      return Object.values(result.loaderData)[0];
-    }
+      // Pick off the right state value to return
+      if (result.actionData) {
+        return Object.values(result.actionData)[0];
+      }
 
-    return undefined;
+      if (result.loaderData) {
+        return Object.values(result.loaderData)[0];
+      }
+
+      return undefined;
+    }
   }
 
   async function queryImpl(

@@ -444,26 +444,34 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
-    let response = await staticHandler.query(request, {
+    let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_respond: build.future.unstable_middleware
-        ? (ctx) => renderHtml(ctx, isSpaMode)
+      unstable_stream: build.future.unstable_middleware
+        ? async (query) => {
+            try {
+              let streamResult = await query(request);
+              if (!isResponse(streamResult)) {
+                streamResult = await renderHtml(streamResult, isSpaMode);
+              }
+              return streamResult;
+            } catch (error: unknown) {
+              handleError(error);
+              return new Response(null, { status: 500 });
+            }
+          }
         : undefined,
     });
-    // while middleware is still unstable, we don't run the middleware pipeline
-    // if no routes have middleware, so we still might need to convert context
-    // to a response here
-    return isResponse(response) ? response : renderHtml(response, isSpaMode);
+
+    if (!isResponse(result)) {
+      result = await renderHtml(result, isSpaMode);
+    }
+    return result;
   } catch (error: unknown) {
     handleError(error);
     return new Response(null, { status: 500 });
   }
 
   async function renderHtml(context: StaticHandlerContext, isSpaMode: boolean) {
-    if (isResponse(context)) {
-      return context;
-    }
-
     let headers = getDocumentHeaders(context, build);
 
     // Skip response body for unsupported status codes
@@ -616,60 +624,41 @@ async function handleResourceRequest(
     // Note we keep the routeId here to align with the Remix handling of
     // resource routes which doesn't take ?index into account and just takes
     // the leaf match
-    let response = await staticHandler.queryRoute(request, {
+    let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
       unstable_stream: build.future.unstable_middleware
-        ? async (_, queryRoute) => {
+        ? async (queryRoute) => {
             try {
-              let result = await queryRoute(request);
-              if (isResponse(result)) {
-                return result;
-              }
-
-              if (typeof result === "string") {
-                return new Response(result);
-              }
-
-              return Response.json(result);
+              let streamResult = await queryRoute(request);
+              return handleQueryRouteResult(streamResult);
             } catch (error) {
-              if (isResponse(error)) {
-                return error;
-              }
-
-              if (isRouteErrorResponse(error)) {
-                handleError(error);
-                return errorResponseToJson(error, serverMode);
-              }
-
-              if (
-                error instanceof Error &&
-                error.message === "Expected a response from queryRoute"
-              ) {
-                let newError = new Error(
-                  "Expected a Response to be returned from resource route handler",
-                );
-                handleError(newError);
-                return returnLastResortErrorResponse(newError, serverMode);
-              }
-
-              handleError(error);
-              return returnLastResortErrorResponse(error, serverMode);
+              return handleQueryRouteError(error);
             }
           }
         : undefined,
     });
 
-    if (isResponse(response)) {
-      return response;
-    }
-
-    if (typeof response === "string") {
-      return new Response(response);
-    }
-
-    return Response.json(response);
+    return handleQueryRouteResult(result);
   } catch (error: unknown) {
+    return handleQueryRouteError(error);
+  }
+
+  function handleQueryRouteResult(
+    result: Awaited<ReturnType<StaticHandler["queryRoute"]>>,
+  ) {
+    if (isResponse(result)) {
+      return result;
+    }
+
+    if (typeof result === "string") {
+      return new Response(result);
+    }
+
+    return Response.json(result);
+  }
+
+  function handleQueryRouteError(error: unknown) {
     if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers
       // match identically to what Remix returns
@@ -678,9 +667,7 @@ async function handleResourceRequest(
     }
 
     if (isRouteErrorResponse(error)) {
-      if (error) {
-        handleError(error);
-      }
+      handleError(error);
       return errorResponseToJson(error, serverMode);
     }
 
