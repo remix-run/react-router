@@ -1751,6 +1751,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
             if (!userSsrEmitAssets) {
               if (!existsSync(dest)) {
+                await mkdir(path.dirname(dest), { recursive: true });
                 await rename(src, dest);
                 movedAssetPaths.push(dest);
               } else {
