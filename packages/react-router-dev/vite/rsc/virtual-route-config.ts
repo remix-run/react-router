@@ -1,4 +1,4 @@
-import path from "node:path";
+import path from "pathe";
 import type { RouteConfigEntry } from "../../routes";
 
 export function createVirtualRouteConfig({

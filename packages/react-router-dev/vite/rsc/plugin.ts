@@ -7,7 +7,7 @@ import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
 import { readFileSync } from "fs";
 import { readFile } from "fs/promises";
-import path, { join, dirname } from "path";
+import path, { join, dirname } from "pathe";
 import {
   type ConfigLoader,
   type ResolvedReactRouterConfig,
@@ -196,55 +196,50 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     {
       name: "react-router/rsc/hmr/updates",
-      async handleHotUpdate({ server, file, modules, read }) {
-        const routeId = routeIdByFile?.get(file);
+      async hotUpdate(this, { server, file, modules }) {
+        if (this.environment.name !== "rsc") return;
 
-        if (routeId !== undefined) {
-          const vite = await import("vite");
+        const isServerOnlyChange =
+          (server.environments.client.moduleGraph.getModulesByFile(file)
+            ?.size ?? 0) === 0;
 
-          const source = await read();
+        for (const mod of getModulesWithImporters(modules)) {
+          if (!mod.file) continue;
 
-          const virtualRouteModuleCode = (
-            await server.environments.rsc.pluginContainer.transform(
-              source,
-              `${vite.normalizePath(file)}?route-module`,
-            )
-          ).code;
-          const { staticExports } = parseRouteExports(virtualRouteModuleCode);
+          const normalizedPath = path.normalize(mod.file);
+          const routeId = routeIdByFile?.get(normalizedPath);
+          if (routeId !== undefined) {
+            const routeSource = await readFile(normalizedPath, "utf8");
+            const virtualRouteModuleCode = (
+              await server.environments.rsc.pluginContainer.transform(
+                routeSource,
+                `${normalizedPath}?route-module`,
+              )
+            ).code;
+            const { staticExports } = parseRouteExports(virtualRouteModuleCode);
+            const hasAction = staticExports.includes("action");
+            const hasComponent = staticExports.includes("default");
+            const hasErrorBoundary = staticExports.includes("ErrorBoundary");
+            const hasLoader = staticExports.includes("loader");
 
-          const virtualServerRouteModuleCode = (
-            await server.environments.rsc.pluginContainer.transform(
-              source,
-              `${vite.normalizePath(file)}?server-route-module`,
-            )
-          ).code;
-          const { isServerFirstRoute } = parseRouteExports(
-            virtualServerRouteModuleCode,
-          );
-
-          const hasAction = staticExports.includes("action");
-          const hasComponent = staticExports.includes("default");
-          const hasErrorBoundary = staticExports.includes("ErrorBoundary");
-          const hasLoader = staticExports.includes("loader");
-
-          server.hot.send({
-            type: "custom",
-            event: "react-router:hmr",
-            data: {
-              routeId,
-              isServerFirstRoute,
-              hasAction,
-              hasComponent,
-              hasErrorBoundary,
-              hasLoader,
-            },
-          });
+            server.hot.send({
+              type: "custom",
+              event: "react-router:hmr",
+              data: {
+                routeId,
+                isServerOnlyChange,
+                hasAction,
+                hasComponent,
+                hasErrorBoundary,
+                hasLoader,
+              },
+            });
+          }
         }
 
         return modules;
       },
     },
-    // TODO: server-change-trigger-client-hmr?
     rsc({ entries: getRscEntries() }),
   ];
 }
@@ -286,6 +281,30 @@ function getDevPackageRoot(): string {
     }
   }
   throw new Error("Could not find package.json");
+}
+
+function getModulesWithImporters(
+  modules: Vite.EnvironmentModuleNode[],
+): Set<Vite.EnvironmentModuleNode> {
+  const visited = new Set<Vite.EnvironmentModuleNode>();
+  const result = new Set<Vite.EnvironmentModuleNode>();
+
+  function walk(module: Vite.EnvironmentModuleNode) {
+    if (visited.has(module)) return;
+
+    visited.add(module);
+    result.add(module);
+
+    for (const importer of module.importers) {
+      walk(importer);
+    }
+  }
+
+  for (const module of modules) {
+    walk(module);
+  }
+
+  return result;
 }
 
 function addRefreshWrapper({

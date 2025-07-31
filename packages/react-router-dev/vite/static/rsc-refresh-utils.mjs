@@ -16,12 +16,9 @@ const enqueueUpdate = debounce(async () => {
     for (const routeUpdate of routeUpdates) {
       const routeId = routeUpdate.routeId;
       const routeModule = window.__reactRouterRouteModuleUpdates.get(routeId);
-      if (!routeModule) {
-        throw Error(
-          `[react-router:hmr] No module update found for route ${routeId}`,
-        );
+      if (routeModule) {
+        routeUpdateByRouteId.set(routeId, { routeModule, ...routeUpdate });
       }
-      routeUpdateByRouteId.set(routeId, { routeModule, ...routeUpdate });
     }
     routeUpdates.clear();
     __reactRouterDataRouter._updateRoutesForHMR(routeUpdateByRouteId);
@@ -117,7 +114,7 @@ window.__reactRouterRouteModuleUpdates = new Map();
 
 import.meta.hot.on("react-router:hmr", async (routeUpdate) => {
   routeUpdates.add(routeUpdate);
-  if (routeUpdate.isServerFirstRoute) {
+  if (routeUpdate.isServerOnlyChange) {
     enqueueUpdate();
   }
 });
