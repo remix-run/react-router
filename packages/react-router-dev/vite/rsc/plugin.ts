@@ -45,6 +45,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return {
           esbuild: {
             jsx: "automatic",
+            jsxDev: viteCommand !== "build",
           },
           environments: {
             client: { build: { outDir: "build/client" } },
