@@ -21,7 +21,7 @@ setServerCallback(
   }),
 );
 
-const injectHmrPromise: Promise<void> = import.meta.env.DEV
+const injectHmrPromise: Promise<void> = import.meta.hot
   ? import("virtual:react-router/unstable_rsc/inject-hmr-runtime")
   : Promise.resolve();
 
