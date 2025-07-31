@@ -288,6 +288,54 @@ describe("context/middleware", () => {
         ]);
       });
 
+      it("runs middleware even if no loaders exist", async () => {
+        let snapshot;
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              unstable_middleware: [
+                async ({ context }, next) => {
+                  await next();
+                  // Grab a snapshot at the end of the upwards middleware chain
+                  snapshot = context.get(orderContext);
+                },
+                getOrderMiddleware(orderContext, "a"),
+                getOrderMiddleware(orderContext, "b"),
+              ],
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  unstable_middleware: [
+                    getOrderMiddleware(orderContext, "c"),
+                    getOrderMiddleware(orderContext, "d"),
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/parent/child");
+
+        expect(snapshot).toEqual([
+          "a middleware - before next()",
+          "b middleware - before next()",
+          "c middleware - before next()",
+          "d middleware - before next()",
+          "d middleware - after next()",
+          "c middleware - after next()",
+          "b middleware - after next()",
+          "a middleware - after next()",
+        ]);
+      });
+
       it("runs middleware sequentially before and after actions", async () => {
         let snapshot;
         router = createRouter({
