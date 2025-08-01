@@ -39,7 +39,6 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
-  unstable_InitialContext,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,

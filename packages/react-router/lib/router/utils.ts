@@ -186,12 +186,6 @@ export function unstable_createContext<T>(
 }
 
 /**
- * A Map of RouterContext objects to their initial values - used to populate a
- * fresh `context` value per request/navigation/fetch
- */
-export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
-
-/**
  * Provides methods for writing/reading values in application context in a
  * type-safe way.  Primarily for usage with [Middleware](../../how-to/middleware).
  *
@@ -219,7 +213,7 @@ export class unstable_RouterContextProvider {
    * Create a new `unstable_RouterContextProvider` instance
    * @param init An optional initial context map to populate the provider with
    */
-  constructor(init?: unstable_InitialContext) {
+  constructor(init?: Map<unstable_RouterContext, unknown>) {
     if (init) {
       for (let [context, value] of init) {
         this.set(context, value);
@@ -264,7 +258,7 @@ export class unstable_RouterContextProvider {
 }
 
 type DefaultContext = MiddlewareEnabled extends true
-  ? unstable_RouterContextProvider
+  ? Readonly<unstable_RouterContextProvider>
   : any;
 
 /**
@@ -313,7 +307,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  * and then complete middlewares from the bottom-up
  */
 export type unstable_MiddlewareFunction<Result = unknown> = (
-  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
   next: unstable_MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 

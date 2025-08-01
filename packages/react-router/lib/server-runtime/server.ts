@@ -1,5 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse, unstable_InitialContext } from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
@@ -48,7 +48,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
-    ? unstable_InitialContext
+    ? unstable_RouterContextProvider
     : AppLoadContext,
 ) => Promise<Response>;
 
@@ -127,24 +127,19 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     };
 
     if (_build.future.unstable_middleware) {
-      if (initialContext == null) {
-        loadContext = new unstable_RouterContextProvider();
-      } else {
-        try {
-          loadContext = new unstable_RouterContextProvider(
-            initialContext as unknown as unstable_InitialContext,
-          );
-        } catch (e) {
-          let error = new Error(
-            "Unable to create initial `unstable_RouterContextProvider` instance. " +
-              "Please confirm you are returning an instance of " +
-              "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
-              `\n\nError: ${e instanceof Error ? e.toString() : e}`,
-          );
-          handleError(error);
-          return returnLastResortErrorResponse(error, serverMode);
-        }
+      if (
+        initialContext &&
+        !(initialContext instanceof unstable_RouterContextProvider)
+      ) {
+        let error = new Error(
+          "Invalid `context` value provided to `handleRequest`. When middleware " +
+            "is enabled you must return an instance of `unstable_RouterContextProvider` " +
+            "from your `getLoadContext` function.",
+        );
+        handleError(error);
+        return returnLastResortErrorResponse(error, serverMode);
       }
+      loadContext = initialContext || new unstable_RouterContextProvider();
     } else {
       loadContext = initialContext || {};
     }

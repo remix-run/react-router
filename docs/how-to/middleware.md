@@ -107,17 +107,22 @@ export default function Dashboard({
 
 #### 4. Update your `getLoadContext` function (if applicable)
 
-If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return a Map of contexts and values, instead of a JavaScript object:
+If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of `unstable_RouterContextProvider`, instead of a JavaScript object:
 
 ```diff
-+import { unstable_createContext } from "react-router";
++import {
++  unstable_createContext,
++  unstable_RouterContextProvider,
++} from "react-router";
 import { createDb } from "./db";
-+
+
 +const dbContext = unstable_createContext<Database>();
 
 function getLoadContext(req, res) {
 -  return { db: createDb() };
-+  const map = new Map([[dbContext, createDb()]]);
++  return new unstable_RouterContextProvider(
++    new Map([[dbContext, createDb()]])
++  );
 }
 ```
 
@@ -224,58 +229,52 @@ let db = context.get(dbContext);
 //  ^ Database
 ```
 
-If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return a `Map` of contexts and values, instead of a JavaScript object:
+If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of `unstable_RouterContextProvider`, instead of a plain JavaScript object:
 
 ```diff
-+import { unstable_createContext } from "react-router";
++import {
++  unstable_createContext,
++  unstable_RouterContextProvider,
++} from "react-router";
 import { createDb } from "./db";
-+
+
 +const dbContext = unstable_createContext<Database>();
 
 function getLoadContext(req, res) {
 -  return { db: createDb() };
-+  const map = new Map([[dbContext, createDb()]]);
++  return new unstable_RouterContextProvider(
++    new Map([[dbContext, createDb()]])
++  );
 }
 ```
 
 ### Migration from `AppLoadContext`
 
-If you're currently using `AppLoadContext`, you can migrate most easily by creating a context for your existing object:
+If you're currently using `AppLoadContext`, you can migrate incrementally by using your existing module augmentation to augment `unstable_RouterContextProvider` instead of `AppLoadContext`. Then, update your `getLoadContext` function to return an instance of `unstable_RouterContextProvider`:
 
-```ts filename=app/context.ts
-import { unstable_createContext } from "react-router";
-
-declare module "@react-router/server-runtime" {
-  interface AppLoadContext {
+```diff
+declare module "react-router" {
+-  interface AppLoadContext {
++  interface unstable_RouterContextProvider {
     db: Database;
     user: User;
   }
 }
 
-const myLoadContext =
-  unstable_createContext<AppLoadContext>();
-```
-
-Update your `getLoadContext` function to return a Map with the context initial value:
-
-```diff filename=server.ts
 function getLoadContext() {
   const loadContext = {...};
 -  return loadContext;
-+  return new Map([
-+    [myLoadContext, loadContext]]
-+  );
++  let context = new unstable_RouterContextProvider();
++  Object.assign(context, loadContext);
++  return context;
 }
 ```
 
-Update your loaders/actions to read from the new context instance:
+This allows you to leave your loaders/actions untouched during initial adoption of middleware, since they can still read values directly (i.e., `context.db`).
 
-```diff filename=app/routes/example.tsx
-export function loader({ context }: Route.LoaderArgs) {
--  const { db, user } = context;
-+  const { db, user } = context.get(myLoadContext);
-}
-```
+<docs-warning>This approach is only intended to be used as a migration strategy when adopting middleware in React Router v7, allowing you to incrementally migrate to `context.set`/`context.get`. It is not safe to assume this approach will work in the next major version of React Router.</docs-warning>
+
+<docs-warning>The `unstable_RouterContextProvider` class is also used for the client-side `context` parameter via `<HydratedRouter unstable_getContext>` and `<RouterProvider unstable_getContext>`. Since `AppLoadContext` is primarily intended as a hand-off from your HTTP server into the React Router handlers, you need to be aware that these augmented fields will not be available in `clientMiddleware`, `clientLoader`, or `clientAction` functions even thought TypeScript will tell you they are (unless, of course, you provide the fields via `unstable_getContext` on the client).</docs-warning>
 
 ## Common Patterns
 

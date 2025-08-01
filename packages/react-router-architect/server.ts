@@ -2,7 +2,7 @@ import type {
   AppLoadContext,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
   ServerBuild,
-  unstable_InitialContext,
+  unstable_RouterContextProvider,
 } from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { readableStreamToString } from "@react-router/node";
@@ -27,7 +27,7 @@ type MaybePromise<T> = T | Promise<T>;
 export type GetLoadContextFunction = (
   event: APIGatewayProxyEventV2,
 ) => MiddlewareEnabled extends true
-  ? MaybePromise<unstable_InitialContext>
+  ? MaybePromise<unstable_RouterContextProvider>
   : MaybePromise<AppLoadContext>;
 
 export type RequestHandler = APIGatewayProxyHandlerV2;

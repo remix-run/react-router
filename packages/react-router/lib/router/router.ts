@@ -40,7 +40,6 @@ import type {
   ActionFunction,
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
-  unstable_InitialContext,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -395,7 +394,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  unstable_getContext?: () => MaybePromise<unstable_InitialContext>;
+  unstable_getContext?: () => MaybePromise<unstable_RouterContextProvider>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -1671,9 +1670,9 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
     );
     // Create a new context per navigation
-    let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined,
-    );
+    let scopedContext = init.unstable_getContext
+      ? await init.unstable_getContext()
+      : new unstable_RouterContextProvider();
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -2270,9 +2269,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Create a new context per fetch
-    let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined,
-    );
+    let scopedContext = init.unstable_getContext
+      ? await init.unstable_getContext()
+      : new unstable_RouterContextProvider();
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
