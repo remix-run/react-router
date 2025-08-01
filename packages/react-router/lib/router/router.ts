@@ -2046,11 +2046,13 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
-    // since they may have different revalidation rules (i.e., single fetch)
+    // Short circuit if we have no loaders/middlewares to run, unless there's a
+    // custom dataStrategy since they may have different revalidation rules
+    // (i.e., single fetch)
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
+      !dsMatches.some((m) => m.route.unstable_middleware) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();

@@ -841,6 +841,79 @@ test.describe("Middleware", () => {
       appFixture.close();
     });
 
+    test("calls clientMiddleware when no loaders exist", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            middleware: true,
+          }),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router'
+
+            export const unstable_clientMiddleware = [
+              ({ context }) => {
+                console.log('running index middleware')
+              },
+            ];
+
+            export default function Component() {
+              return (
+                <>
+                  <h2 data-route>Index</h2>
+                  <Link to="/about">Go to about</Link>
+                </>
+               );
+            }
+          `,
+          "app/routes/about.tsx": js`
+            import { Link } from 'react-router'
+            export const unstable_clientMiddleware = [
+              ({ context }) => {
+                console.log('running about middleware')
+              },
+            ];
+
+            export default function Component() {
+              return (
+                <>
+                  <h2 data-route>About</h2>
+                  <Link to="/">Go to index</Link>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let logs: string[] = [];
+      page.on("console", (msg) => logs.push(msg.text()));
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      (await page.$('a[href="/about"]'))?.click();
+      await page.waitForSelector('[data-route]:has-text("About")');
+      expect(logs).toEqual(["running about middleware"]);
+      logs.splice(0);
+
+      (await page.$('a[href="/"]'))?.click();
+      await page.waitForSelector('[data-route]:has-text("Index")');
+      expect(logs).toEqual(["running index middleware"]);
+
+      appFixture.close();
+    });
+
     test("calls clientMiddleware before/after actions", async ({ page }) => {
       let fixture = await createFixture({
         files: {
@@ -1594,6 +1667,94 @@ test.describe("Middleware", () => {
       );
 
       appFixture.close();
+    });
+
+    test("calls middleware when no loaders exist on document, but not data requests", async ({
+      page,
+    }) => {
+      let oldConsoleLog = console.log;
+      let logs: any[] = [];
+      console.log = (...args) => logs.push(args);
+
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            middleware: true,
+          }),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet } from 'react-router'
+
+            export const unstable_middleware = [
+              ({ request }) => {
+                console.log('Running parent middleware', new URL(request.url).pathname)
+              },
+            ];
+
+            export default function Component() {
+              return (
+                <>
+                  <h2>Parent</h2>
+                  <Link to="/parent/a">Go to A</Link>
+                  <Link to="/parent/b">Go to B</Link>
+                  <Outlet/>
+                </>
+               );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            export const unstable_middleware = [
+              ({ request }) => {
+                console.log('Running A middleware', new URL(request.url).pathname)
+              },
+            ];
+
+            export default function Component() {
+              return <h3>A</h3>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            export const unstable_middleware = [
+              ({ request }) => {
+                console.log('Running B middleware', new URL(request.url).pathname)
+              },
+            ];
+
+            export default function Component() {
+              return <h3>B</h3>;
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/parent/a");
+      await page.waitForSelector('h2:has-text("Parent")');
+      await page.waitForSelector('h3:has-text("A")');
+      expect(logs).toEqual([
+        ["Running parent middleware", "/parent/a"],
+        ["Running A middleware", "/parent/a"],
+      ]);
+
+      (await page.$('a[href="/parent/b"]'))?.click();
+      await page.waitForSelector('h3:has-text("B")');
+      expect(logs).toEqual([
+        ["Running parent middleware", "/parent/a"],
+        ["Running A middleware", "/parent/a"],
+      ]);
+
+      appFixture.close();
+      console.log = oldConsoleLog;
     });
 
     test("calls middleware before/after actions", async ({ page }) => {
