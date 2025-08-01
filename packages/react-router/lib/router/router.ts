@@ -2053,11 +2053,13 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
-    // since they may have different revalidation rules (i.e., single fetch)
+    // Short circuit if we have no loaders/middlewares to run, unless there's a
+    // custom dataStrategy since they may have different revalidation rules
+    // (i.e., single fetch)
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
+      !dsMatches.some((m) => m.route.unstable_middleware) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -4826,9 +4828,6 @@ function getMatchesToLoad(
       forceShouldLoad = false;
     } else if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
-      forceShouldLoad = true;
-    } else if (route.unstable_middleware) {
-      // We always run client-side middlewares on navigations
       forceShouldLoad = true;
     } else if (route.loader == null) {
       // Nothing to load!
