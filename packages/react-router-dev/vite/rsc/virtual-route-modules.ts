@@ -17,7 +17,7 @@ const COMPONENT_EXPORTS = [
   "Layout",
 ] as const;
 
-const CLIENT_NON_COMPONENT_EXPORTS = [
+export const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
   "clientLoader",
   "unstable_clientMiddleware",
@@ -171,7 +171,7 @@ function createVirtualClientRouteModuleCode({
   return generatorResult;
 }
 
-function parseRouteExports(code: string) {
+export function parseRouteExports(code: string) {
   const [, exportSpecifiers] = esModuleLexer(code);
   const staticExports = exportSpecifiers.map(({ n: name }) => name);
   return {
