@@ -92,13 +92,13 @@ async function loggingMiddleware(
   next,
 ) {
   console.log(
-    `${new Date.toISOString()} ${request.method} ${request.url}`,
+    `${new Date().toISOString()} ${request.method} ${request.url}`,
   );
   const start = performance.now();
   const response = await next();
   const duration = performance.now() - start;
   console.log(
-    `${new Date.toISOString()} Response ${response.status} (${duration}ms)`,
+    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
   );
   return response;
 }
@@ -147,13 +147,13 @@ async function loggingMiddleware(
   next,
 ) {
   console.log(
-    `${new Date.toISOString()} ${request.method} ${request.url}`,
+    `${new Date().toISOString()} ${request.method} ${request.url}`,
   );
   const start = performance.now();
   await next(); // 👈 No Response returned
   const duration = performance.now() - start;
   console.log(
-    `${new Date.toISOString()} Response ${response.status} (${duration}ms)`,
+    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
   );
   // ✅ No need to return anything
 }
