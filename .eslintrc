@@ -35,6 +35,7 @@
         "packages/react-router/lib/dom/ssr/server.tsx",
         "packages/react-router/lib/dom-export/hydrated-router.tsx",
         "packages/react-router/lib/dom/server.tsx",
+        "packages/react-router/lib/router/utils.ts",
         "packages/react-router/lib/rsc/browser.tsx",
         "packages/react-router/lib/rsc/server.rsc.ts",
         "packages/react-router/lib/rsc/server.ssr.tsx",
