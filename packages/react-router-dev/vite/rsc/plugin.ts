@@ -43,6 +43,33 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         config = configResult.value;
 
         return {
+          resolve: {
+            dedupe: [
+              // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+              "react",
+              "react-dom",
+              // Avoid router duplicates since mismatching routers cause `Error:
+              // You must render this element inside a <Remix> element`.
+              "react-router",
+              "react-router/dom",
+              "react-router-dom",
+            ],
+          },
+          optimizeDeps: {
+            esbuildOptions: {
+              jsx: "automatic",
+            },
+            include: [
+              // Pre-bundle React dependencies to avoid React duplicates,
+              // even if React dependencies are not direct dependencies.
+              // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+              "react",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
+              "react-dom",
+              "react-dom/client",
+            ],
+          },
           esbuild: {
             jsx: "automatic",
             jsxDev: viteCommand !== "build",
