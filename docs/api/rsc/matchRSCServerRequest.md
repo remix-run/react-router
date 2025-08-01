@@ -147,7 +147,7 @@ The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) to mat
 
 ### opts.requestContext
 
-An instance of [`unstable_RouterContextProvider`](https://api.reactrouter.com/v7/classes/react_router.unstable_RouterContextProvider.html) that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
+An instance of [`unstable_RouterContextProvider`](../utils/RouterContextProvider) that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
 [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
 
 ### opts.routes

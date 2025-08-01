@@ -95,7 +95,7 @@ execute:
 let router = createBrowserRouter(routes, {
   async dataStrategy({ matches, request }) {
     const matchesToLoad = matches.filter((m) => m.shouldLoad);
-    const results = {};
+    const results: Record<string, DataStrategyResult> = {};
     await Promise.all(
       matchesToLoad.map(async (match) => {
         console.log(`Processing ${match.route.id}`);
@@ -237,8 +237,12 @@ Future flags to enable for the router.
 
 ### opts.unstable_getContext
 
-Function to provide the initial `context` values for all client-side
-navigations/fetches
+A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+which is provided as the `context` argument to client
+[`action`](../../start/data/route-object#action)s,
+[`loader`](../../start/data/route-object#loader)s and
+[`middleware`](../../how-to/middleware)s. This function is called to
+generate a fresh `context` instance on each navigation or fetcher call.
 
 ### opts.hydrationData
 

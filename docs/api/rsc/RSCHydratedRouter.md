@@ -82,9 +82,12 @@ Optional fetch implementation. Defaults to global [`fetch`](https://developer.mo
 
 ### unstable_getContext
 
-A function that returns an [`unstable_InitialContext`](https://api.reactrouter.com/v7/types/react_router.unstable_InitialContext.html) object
-(`Map<RouterContext, unknown>`), for use in client [`action`](../../start/data/route-object#action)s,
-[`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+which is provided as the `context` argument to client
+[`action`](../../start/data/route-object#action)s,
+[`loader`](../../start/data/route-object#loader)s and
+[`middleware`](../../how-to/middleware)s. This function is called to
+generate a fresh `context` instance on each navigation or fetcher call.
 
 ### payload
 
