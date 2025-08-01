@@ -1,8 +1,4 @@
 ---
-"@react-router/cloudflare": patch
-"@react-router/architect": patch
-"@react-router/express": patch
-"@react-router/node": patch
 "react-router": patch
 ---
 
