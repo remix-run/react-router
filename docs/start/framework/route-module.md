@@ -133,6 +133,7 @@ export const unstable_middleware = [authMiddleware];
 See also:
 
 - [`unstable_middleware` params][middleware-params]
+- [Middleware][middleware]
 
 ## `unstable_clientMiddleware`
 
@@ -161,6 +162,10 @@ export const unstable_clientMiddleware = [
   loggingMiddleware,
 ];
 ```
+
+See also:
+
+- [Middleware][middleware]
 
 ## `loader`
 
@@ -498,6 +503,7 @@ export function shouldRevalidate(
 Next: [Rendering Strategies](./rendering)
 
 [middleware-params]: https://api.reactrouter.com/v7/types/react_router.unstable_MiddlewareFunction.html
+[middleware]: ../../how-to/middleware
 [when-middleware-runs]: ../../how-to/middleware#when-middleware-runs
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
 [client-loader-params]: https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunctionArgs
