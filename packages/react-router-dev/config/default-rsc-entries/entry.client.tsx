@@ -1,3 +1,5 @@
+import "virtual:react-router/unstable_rsc/inject-hmr-runtime";
+
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
@@ -21,22 +23,16 @@ setServerCallback(
   }),
 );
 
-const injectHmrPromise: Promise<void> = import.meta.hot
-  ? import("virtual:react-router/unstable_rsc/inject-hmr-runtime")
-  : Promise.resolve();
-
-injectHmrPromise
-  .then(() => createFromReadableStream<RSCPayload>(getRSCStream()))
-  .then((payload) => {
-    startTransition(() => {
-      hydrateRoot(
-        document,
-        <StrictMode>
-          <RSCHydratedRouter
-            payload={payload}
-            createFromReadableStream={createFromReadableStream}
-          />
-        </StrictMode>,
-      );
-    });
+createFromReadableStream<RSCPayload>(getRSCStream()).then((payload) => {
+  startTransition(() => {
+    hydrateRoot(
+      document,
+      <StrictMode>
+        <RSCHydratedRouter
+          payload={payload}
+          createFromReadableStream={createFromReadableStream}
+        />
+      </StrictMode>,
+    );
   });
+});

@@ -172,13 +172,15 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       async load(id) {
         if (id !== virtual.injectHmrRuntime.resolvedId) return;
 
-        return [
-          `import RefreshRuntime from "${virtual.hmrRuntime.id}"`,
-          "RefreshRuntime.injectIntoGlobalHook(window)",
-          "window.$RefreshReg$ = () => {}",
-          "window.$RefreshSig$ = () => (type) => type",
-          "window.__vite_plugin_react_preamble_installed__ = true",
-        ].join("\n");
+        return viteCommand === "serve"
+          ? [
+              `import RefreshRuntime from "${virtual.hmrRuntime.id}"`,
+              "RefreshRuntime.injectIntoGlobalHook(window)",
+              "window.$RefreshReg$ = () => {}",
+              "window.$RefreshSig$ = () => (type) => type",
+              "window.__vite_plugin_react_preamble_installed__ = true",
+            ].join("\n")
+          : "";
       },
     },
     {
