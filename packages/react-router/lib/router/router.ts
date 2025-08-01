@@ -3525,7 +3525,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      unstable_generateMiddlewareResponse,
+      unstable_generateMiddlewareResponse: generateMiddlewareResponse,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3555,10 +3555,8 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return unstable_generateMiddlewareResponse
-        ? unstable_generateMiddlewareResponse(() =>
-            Promise.resolve(staticContext),
-          )
+      return generateMiddlewareResponse
+        ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
         : staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
@@ -3577,10 +3575,8 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return unstable_generateMiddlewareResponse
-        ? unstable_generateMiddlewareResponse(() =>
-            Promise.resolve(staticContext),
-          )
+      return generateMiddlewareResponse
+        ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
         : staticContext;
     }
 
@@ -3599,7 +3595,7 @@ export function createStaticHandler(
     //    redirects from loaders after a server action, etc.
     //    - If we decide this isn't warranted than the stream implementation
     //      can simplify and potentially even collapse back into respond()
-    if (unstable_generateMiddlewareResponse) {
+    if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
@@ -3623,7 +3619,7 @@ export function createStaticHandler(
           },
           true,
           async () => {
-            let res = await unstable_generateMiddlewareResponse(
+            let res = await generateMiddlewareResponse(
               async (revalidationRequest: Request) => {
                 let result = await queryImpl(
                   revalidationRequest,
@@ -3674,7 +3670,7 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id,
               );
-              return unstable_generateMiddlewareResponse(() =>
+              return generateMiddlewareResponse(() =>
                 Promise.resolve(staticContext),
               );
             } else {
@@ -3706,7 +3702,7 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return unstable_generateMiddlewareResponse(() =>
+              return generateMiddlewareResponse(() =>
                 Promise.resolve(staticContext),
               );
             }
@@ -3777,7 +3773,7 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      unstable_generateMiddlewareResponse,
+      unstable_generateMiddlewareResponse: generateMiddlewareResponse,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3810,7 +3806,7 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (unstable_generateMiddlewareResponse) {
+    if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
@@ -3828,10 +3824,10 @@ export function createStaticHandler(
         },
         true,
         async () => {
-          let res = await unstable_generateMiddlewareResponse(
-            async (revalidationRequest: Request) => {
+          let res = await generateMiddlewareResponse(
+            async (innerRequest: Request) => {
               let result = await queryImpl(
-                revalidationRequest,
+                innerRequest,
                 location,
                 matches!,
                 requestContext,

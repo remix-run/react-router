@@ -449,11 +449,11 @@ async function handleDocumentRequest(
       unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (query) => {
             try {
-              let streamResult = await query(request);
-              if (!isResponse(streamResult)) {
-                streamResult = await renderHtml(streamResult, isSpaMode);
+              let innerResult = await query(request);
+              if (!isResponse(innerResult)) {
+                innerResult = await renderHtml(innerResult, isSpaMode);
               }
-              return streamResult;
+              return innerResult;
             } catch (error: unknown) {
               handleError(error);
               return new Response(null, { status: 500 });
@@ -630,8 +630,8 @@ async function handleResourceRequest(
       unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (queryRoute) => {
             try {
-              let streamResult = await queryRoute(request);
-              return handleQueryRouteResult(streamResult);
+              let innerResult = await queryRoute(request);
+              return handleQueryRouteResult(innerResult);
             } catch (error) {
               return handleQueryRouteError(error);
             }

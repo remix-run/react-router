@@ -61,8 +61,8 @@ export async function singleFetchAction(
       unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (query) => {
             try {
-              let streamResult = await query(handlerRequest);
-              return handleQueryResult(streamResult);
+              let innerResult = await query(handlerRequest);
+              return handleQueryResult(innerResult);
             } catch (error) {
               return handleQueryError(error);
             }
@@ -177,8 +177,8 @@ export async function singleFetchLoaders(
       unstable_generateMiddlewareResponse: build.future.unstable_middleware
         ? async (query) => {
             try {
-              let streamResult = await query(handlerRequest);
-              return handleQueryResult(streamResult);
+              let innerResult = await query(handlerRequest);
+              return handleQueryResult(innerResult);
             } catch (error) {
               return handleQueryError(error);
             }
