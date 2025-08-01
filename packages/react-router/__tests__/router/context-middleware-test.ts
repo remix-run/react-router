@@ -4,6 +4,7 @@ import {
   createRouter,
   createStaticHandler,
   isDataWithResponseInit,
+  isResponse,
 } from "../../lib/router/router";
 import type {
   DataStrategyResult,
@@ -17,7 +18,7 @@ import {
   data,
 } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
-import { createFormData, tick } from "./utils/utils";
+import { createFormData, invariant, tick } from "./utils/utils";
 
 let router: Router;
 
@@ -30,7 +31,8 @@ declare module "../../lib/router/utils" {
   }
 }
 
-function respondWithJson(staticContext: StaticHandlerContext) {
+function respondWithJson(staticContext: StaticHandlerContext | Response) {
+  invariant(!isResponse(staticContext), "Expected a StaticHandlerContext");
   return new Response(
     JSON.stringify(staticContext, (key, value) =>
       value instanceof Error ? `ERROR: ${value.message}` : value,
@@ -1503,10 +1505,11 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.query(
-        new Request("http://localhost/parent/child"),
-        { unstable_respond: respondWithJson },
-      )) as Response;
+      let request = new Request("http://localhost/parent/child");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
+      })) as Response;
       let staticContext = (await res.json()) as StaticHandlerContext;
 
       expect(staticContext).toMatchObject({
@@ -1578,10 +1581,11 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.query(
-        new Request("http://localhost/parent/child"),
-        { unstable_respond: respondWithJson },
-      )) as Response;
+      let request = new Request("http://localhost/parent/child");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
+      })) as Response;
       let staticContext = (await res.json()) as StaticHandlerContext;
 
       expect(staticContext).toMatchObject({
@@ -1622,8 +1626,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.query(new Request("http://localhost/parent"), {
-        unstable_respond: respondWithJson,
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
       })) as Response;
       let staticContext = (await res.json()) as StaticHandlerContext;
 
@@ -1660,8 +1666,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.query(new Request("http://localhost/parent"), {
-        unstable_respond: respondWithJson,
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
       })) as Response;
       await expect(res.text()).resolves.toEqual("test");
     });
@@ -1690,8 +1698,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.query(new Request("http://localhost/parent"), {
-        unstable_respond: respondWithJson,
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
       })) as Response;
       expect(res.status).toBe(404);
       await expect(res.text()).resolves.toEqual("not found");
@@ -1736,9 +1746,11 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        await handler.query(new Request("http://localhost/parent/child"), {
+        let request = new Request("http://localhost/parent/child");
+        await handler.query(request, {
           requestContext,
-          unstable_respond: respondWithJson,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
         });
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -1799,13 +1811,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        await handler.query(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: respondWithJson },
-        );
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
+        await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        });
 
         expect(requestContext.get(orderContext)).toEqual([
           // Action
@@ -1857,10 +1871,12 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child"),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child");
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(parentContext)).toEqual("PARENT MIDDLEWARE");
@@ -1894,8 +1910,10 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let res = (await handler.query(new Request("http://localhost/parent"), {
-          unstable_respond: respondWithJson,
+        let request = new Request("http://localhost/parent");
+        let res = (await handler.query(request, {
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
         })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
         expect(staticContext).toMatchObject({
@@ -1954,10 +1972,12 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child"),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child");
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(parentContext)).toEqual("PARENT 1");
@@ -2009,10 +2029,12 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child"),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child");
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(parentContext)).toEqual("PARENT DOWN");
@@ -2088,13 +2110,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -2175,13 +2199,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -2261,13 +2287,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -2348,13 +2376,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let res = (await handler.query(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          { requestContext, unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
+        let res = (await handler.query(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
         let staticContext = (await res.json()) as StaticHandlerContext;
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -2392,10 +2422,11 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let response = (await handler.query(
-          new Request("http://localhost/parent"),
-          { unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent");
+        let response = (await handler.query(request, {
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
 
         expect(response.status).toBe(302);
         expect(response.headers.get("Location")).toBe("/target");
@@ -2423,10 +2454,11 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let response = (await handler.query(
-          new Request("http://localhost/parent"),
-          { unstable_respond: respondWithJson },
-        )) as Response;
+        let request = new Request("http://localhost/parent");
+        let response = (await handler.query(request, {
+          unstable_generateMiddlewareResponse: async (q) =>
+            respondWithJson(await q(request)),
+        })) as Response;
 
         expect(response.status).toBe(302);
         expect(response.headers.get("Location")).toBe("/target");
@@ -2499,12 +2531,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.queryRoute(
-        new Request("http://localhost/parent/child"),
-        {
-          unstable_respond: (v) => v,
-        },
-      )) as Response;
+      let request = new Request("http://localhost/parent/child");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
 
       expect(await res.text()).toBe("CHILD");
       expect(res.headers.get("parent1")).toEqual("yes");
@@ -2564,12 +2594,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.queryRoute(
-        new Request("http://localhost/parent/child"),
-        {
-          unstable_respond: (v) => v,
-        },
-      )) as Response;
+      let request = new Request("http://localhost/parent/child");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
 
       expect(await res.text()).toBe("CHILD");
       expect(res.headers.get("parent1")).toEqual("yes");
@@ -2598,12 +2626,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.queryRoute(
-        new Request("http://localhost/parent"),
-        {
-          unstable_respond: (v) => v,
-        },
-      )) as Response;
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
 
       expect(await res.text()).toBe("PARENT");
       expect(res.headers.get("parent")).toEqual("yes");
@@ -2628,12 +2654,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.queryRoute(
-        new Request("http://localhost/parent"),
-        {
-          unstable_respond: (v) => v,
-        },
-      )) as Response;
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
       await expect(res.text()).resolves.toEqual("test");
     });
 
@@ -2661,12 +2685,10 @@ describe("context/middleware", () => {
         },
       ]);
 
-      let res = (await handler.queryRoute(
-        new Request("http://localhost/parent"),
-        {
-          unstable_respond: (v) => v,
-        },
-      )) as Response;
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
       expect(res.status).toBe(404);
       await expect(res.text()).resolves.toEqual("not found");
     });
@@ -2711,9 +2733,10 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        await handler.queryRoute(new Request("http://localhost/parent/child"), {
+        let request = new Request("http://localhost/parent/child");
+        await handler.queryRoute(request, {
           requestContext,
-          unstable_respond: (v) => v,
+          unstable_generateMiddlewareResponse: (q) => q(request),
         });
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -2775,16 +2798,14 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        await handler.queryRoute(
-          new Request("http://localhost/parent/child", {
-            method: "post",
-            body: createFormData({}),
-          }),
-          {
-            requestContext,
-            unstable_respond: (v) => v,
-          },
-        );
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
+        await handler.queryRoute(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: (q) => q(request),
+        });
 
         expect(requestContext.get(orderContext)).toEqual([
           "a middleware - before next()",
@@ -2833,10 +2854,11 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
-        let response = (await handler.queryRoute(
-          new Request("http://localhost/parent/child"),
-          { requestContext, unstable_respond: (v) => v },
-        )) as Response;
+        let request = new Request("http://localhost/parent/child");
+        let response = (await handler.queryRoute(request, {
+          requestContext,
+          unstable_generateMiddlewareResponse: (q) => q(request),
+        })) as Response;
 
         expect(requestContext.get(parentContext)).toEqual("PARENT MIDDLEWARE");
         expect(requestContext.get(childContext)).toBe("CHILD MIDDLEWARE");
@@ -2863,9 +2885,10 @@ describe("context/middleware", () => {
           },
         ]);
 
+        let request = new Request("http://localhost/parent/");
         await expect(
-          handler.queryRoute(new Request("http://localhost/parent/"), {
-            unstable_respond: (v) => v,
+          handler.queryRoute(request, {
+            unstable_generateMiddlewareResponse: (q) => q(request),
           }),
         ).rejects.toThrow("You may only call `next()` once per middleware");
       });
@@ -2910,10 +2933,11 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
+        let request = new Request("http://localhost/parent/child");
         await expect(
-          handler.queryRoute(new Request("http://localhost/parent/child"), {
+          handler.queryRoute(request, {
             requestContext,
-            unstable_respond: (v) => v,
+            unstable_generateMiddlewareResponse: (q) => q(request),
           }),
         ).rejects.toThrow("PARENT 2");
 
@@ -2960,10 +2984,11 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
+        let request = new Request("http://localhost/parent/child");
         await expect(
-          handler.queryRoute(new Request("http://localhost/parent/child"), {
+          handler.queryRoute(request, {
             requestContext,
-            unstable_respond: (v) => v,
+            unstable_generateMiddlewareResponse: (q) => q(request),
           }),
         ).rejects.toThrow("CHILD UP");
 
@@ -3033,14 +3058,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
         await expect(
-          handler.queryRoute(
-            new Request("http://localhost/parent/child", {
-              method: "post",
-              body: createFormData({}),
-            }),
-            { requestContext, unstable_respond: (v) => v },
-          ),
+          handler.queryRoute(request, {
+            requestContext,
+            unstable_generateMiddlewareResponse: (q) => q(request),
+          }),
         ).rejects.toThrow("child 1 error");
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -3117,14 +3143,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
         await expect(
-          handler.queryRoute(
-            new Request("http://localhost/parent/child", {
-              method: "post",
-              body: createFormData({}),
-            }),
-            { requestContext, unstable_respond: (v) => v },
-          ),
+          handler.queryRoute(request, {
+            requestContext,
+            unstable_generateMiddlewareResponse: (q) => q(request),
+          }),
         ).rejects.toThrow("child 2 error");
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -3198,14 +3225,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
         await expect(
-          handler.queryRoute(
-            new Request("http://localhost/parent/child", {
-              method: "post",
-              body: createFormData({}),
-            }),
-            { requestContext, unstable_respond: (v) => v },
-          ),
+          handler.queryRoute(request, {
+            requestContext,
+            unstable_generateMiddlewareResponse: (q) => q(request),
+          }),
         ).rejects.toThrow("child 1 action error");
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -3282,14 +3310,15 @@ describe("context/middleware", () => {
         ]);
 
         let requestContext = new unstable_RouterContextProvider();
+        let request = new Request("http://localhost/parent/child", {
+          method: "post",
+          body: createFormData({}),
+        });
         await expect(
-          handler.queryRoute(
-            new Request("http://localhost/parent/child", {
-              method: "post",
-              body: createFormData({}),
-            }),
-            { requestContext, unstable_respond: (v) => v },
-          ),
+          handler.queryRoute(request, {
+            requestContext,
+            unstable_generateMiddlewareResponse: (q) => q(request),
+          }),
         ).rejects.toThrow("child 2 error");
 
         expect(requestContext.get(orderContext)).toEqual([
@@ -3321,10 +3350,10 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let response = (await handler.queryRoute(
-          new Request("http://localhost/parent"),
-          { unstable_respond: (v) => v },
-        )) as Response;
+        let request = new Request("http://localhost/parent");
+        let response = (await handler.queryRoute(request, {
+          unstable_generateMiddlewareResponse: (q) => q(request),
+        })) as Response;
 
         expect(response.status).toBe(302);
         expect(response.headers.get("Location")).toBe("/target");
@@ -3352,10 +3381,10 @@ describe("context/middleware", () => {
           },
         ]);
 
-        let response = (await handler.queryRoute(
-          new Request("http://localhost/parent"),
-          { unstable_respond: (v) => v },
-        )) as Response;
+        let request = new Request("http://localhost/parent");
+        let response = (await handler.queryRoute(request, {
+          unstable_generateMiddlewareResponse: (q) => q(request),
+        })) as Response;
 
         expect(response.status).toBe(302);
         expect(response.headers.get("Location")).toBe("/target");
