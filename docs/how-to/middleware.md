@@ -134,6 +134,62 @@ function getLoadContext(req, res) {
 
 - Client-side navigations and fetcher calls
 
+### When Middleware Runs
+
+It is very important to understand _when_ your middlewares will run to make sure your application is behaving as you intend.
+
+#### Server Middleware
+
+Server middleware is designed such that middleware does not create new network activity. Just like in `express` and other middleware-enabled HTTP servers, middleware wraps _existing_ requests. Said another way, middleware only runs when you _need_ to hit the server.
+
+This raises the question of what is a "handler" in React Router? Is it the route? Or the loader? We think "it depends":
+
+- On document requests (`GET /route`), the handler is the route - because the response encompasses both the loader and the route component
+- On data requests (`GET /route.data`) for client-side navigations, the handler is the `loader`/`action`, because that's all that is included in the response
+
+Therefore:
+
+- Document requests run server middleware whether loaders exist or not because we're still in a "handler" to render the UI
+- Client-side navigations will only run server middleware if a `.data` request is made to the server for a `loader`/`action`
+
+This is important behavior for request-annotation middlewares such as logging request durations, checking/setting sessions, setting outgoing caching headers, etc. It would be useless to go to the server and run those types of middlewares when there was no reason to go to the server in the first place. This would result in increased server load and noisy server logs.
+
+```tsx filename=app/root.tsx
+// This middleware won't run on client-side navigations without a `.data` request
+function loggingMiddleware({ request }, next) {
+  console.log(`Request: ${request.method} ${request.url}`);
+  let res = await next();
+  console.log(
+    `Response: ${res.status} ${request.method} ${request.url}`,
+  );
+  return res;
+}
+
+export const unstable_middleware = [loggingMiddleware];
+```
+
+However, there may be cases where you _want_ to run certain middlewares on _every_ client-navigation - even if no loader exists. For example, a form in the authenticated section of your site that doesn't require a `loader` but you'd rather use auth middleware to redirect users away before they fill out the form - rather then when they submit to the `action`. If your middleware meets this criteria, then you can put a loader on the route that contains the middleware to force it to always call the server for client side navigations involving that route.
+
+```tsx filename=app/_auth.tsx
+function authMiddleware({ request }, next) {
+  if (!isLoggedIn(request)) {
+    throw redirect("/login");
+  }
+}
+
+export const unstable_middleware = [authMiddleware];
+
+// By adding a loader, we force the authMiddleware to run on every client-side
+// navigation involving this route.
+export function loader() {
+  return null;
+}
+```
+
+#### Client Middleware
+
+Client middleware is simpler because since we are already on the client and are always making a "request" to the router when navigating, client middlewares will run on every client navigation, regardless of whether or not there are loaders to run.
+
 ### Context API
 
 The new context system provides type safety and prevents naming conflicts:
