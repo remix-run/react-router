@@ -52,6 +52,36 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             rsc: { build: { outDir: "build/server" } },
             ssr: { build: { outDir: "build/server/__ssr_build" } },
           },
+          build: {
+            rollupOptions: {
+              // Copied from https://github.com/vitejs/vite-plugin-react/blob/c602225271d4acf462ba00f8d6d8a2e42492c5cd/packages/common/warning.ts
+              onwarn(warning, defaultHandler) {
+                if (
+                  warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+                  (warning.message.includes("use client") ||
+                    warning.message.includes("use server"))
+                ) {
+                  return;
+                }
+                // https://github.com/vitejs/vite/issues/15012
+                if (
+                  warning.code === "SOURCEMAP_ERROR" &&
+                  warning.message.includes("resolve original location") &&
+                  warning.pos === 0
+                ) {
+                  return;
+                }
+                if (viteUserConfig.build?.rollupOptions?.onwarn) {
+                  viteUserConfig.build.rollupOptions.onwarn(
+                    warning,
+                    defaultHandler,
+                  );
+                } else {
+                  defaultHandler(warning);
+                }
+              },
+            },
+          },
         };
       },
       async buildEnd() {
