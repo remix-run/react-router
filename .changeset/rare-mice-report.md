@@ -5,6 +5,7 @@
 [UNSTABLE] Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute`
 
 - The API has been renamed to `unstable_generateMiddlewareResponse` for clarity
+- The main functional change is that instead of running the loaders/actions before calling `unstable_respond` and handing you the result, we now pass a `query`/`queryRoute` function as a parameter and you execute the loaders/actions inside your callback, giving you full access to pre-processing and error handling
 - The `query` version of the API now has a signature of `(query: (r: Request) => Promise<StaticHandlerContext | Response>) => Promise<Response>`
 - The `queryRoute` version of the API now has a signature of `(queryRoute: (r: Request) => Promise<Response>) => Promise<Response>`
 - This allows for more advanced usages such as running logic before/after calling `query` and direct error handling of errors thrown from query
