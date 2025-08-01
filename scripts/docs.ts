@@ -80,6 +80,12 @@ const CATEGORIES = [
   "RSC",
   "Utils",
 ] as const;
+
+const warn = (...args: any[]) => console.warn("⚠️ Warning:", ...args);
+
+const isClassApi = (c: SimplifiedComment) =>
+  c.name === "unstable_RouterContextProvider";
+
 const isComponentApi = (c: SimplifiedComment) =>
   c.category === "Components" ||
   c.category === "Framework Routers" ||
@@ -168,8 +174,6 @@ async function run() {
     await generateMarkdownDocs(filePath, apiFilter, outputDir, args.write);
   }
 }
-
-const warn = (...args: any[]) => console.warn("⚠️ Warning:", ...args);
 
 function buildRepoDocsLinks(outputDir: string): Map<string, string> {
   const lookup = new Map<string, string>();
@@ -539,7 +543,7 @@ function getApiName(comment: ParsedComment): string {
     return name;
   }
 
-  let matches = comment.code.match(/^export const ([^=]+)/);
+  let matches = comment.code.match(/^export const ([^:=]+)/);
   if (matches) {
     return matches[1].trim();
   }
@@ -652,7 +656,11 @@ async function simplifyComment(
     returns,
   };
 
-  if (!simplifiedComment.returns && !isComponentApi(simplifiedComment)) {
+  if (
+    !simplifiedComment.returns &&
+    !isComponentApi(simplifiedComment) &&
+    !isClassApi(simplifiedComment)
+  ) {
     throw new Error(`Expected a @returns tag for API: ${name}`);
   }
 
@@ -697,6 +705,12 @@ async function getSignature(code: string) {
     warn(
       `Skipping signature section for \`export const\` component: ${api?.[1]}`,
     );
+    return;
+  }
+
+  if (ts.isClassDeclaration(ast.statements[0])) {
+    let api = code.match(/export class (\w+)/);
+    warn(`Skipping signature section for \`class\` : ${api?.[1]}`);
     return;
   }
 

@@ -209,6 +209,7 @@ export {
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
 export type {
+  LinksProps,
   ScriptsProps,
   PrefetchBehavior,
   DiscoverBehavior,

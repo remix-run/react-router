@@ -45,6 +45,14 @@ export default function Root() {
 ## Signature
 
 ```tsx
-function Links(): React.JSX.Element
+function Links({ nonce }: LinksProps): React.JSX.Element
 ```
+
+## Props
+
+### nonce
+
+A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+element
 

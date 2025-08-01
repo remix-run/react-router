@@ -175,7 +175,7 @@ export interface DOMRouterOpts {
    * [`clientLoader`](../../start/framework/route-module#clientLoader)), you may
    * want to include `loaderData` for only some routes that were loaded/rendered
    * on the server. This allows you to hydrate _some_ of the routes (such as the
-   * app layout/shell) while showing a {@link PathRouteProps.HydrateFallback | `HydrateFallback`}
+   * app layout/shell) while showing a `HydrateFallback`
    * component and running the [`loader`](../../start/data/route-object#loader)s
    * for other routes during hydration.
    *
@@ -183,8 +183,7 @@ export interface DOMRouterOpts {
    * hydration in two scenarios:
    *
    *  1. No hydration data is provided
-   *     In these cases the {@link PathRouteProps.HydrateFallback | `HydrateFallback`}
-   *     component will render on initial hydration
+   *     In these cases the `HydrateFallback` component will render on initial hydration
    *  2. The `loader.hydrate` property is set to `true`
    *     This allows you to run the [`loader`](../../start/data/route-object#loader)
    *     even if you did not render a fallback on initial hydration (i.e., to
@@ -246,9 +245,9 @@ export interface DOMRouterOpts {
    *
    * The `dataStrategy` function should return a key/value-object of
    * `routeId` -> {@link DataStrategyResult} and should include entries for any
-   * routes where a handler was executed. A {@link DataStrategyResult} indicates
-   * if the handler was successful or not based on the {@link DataStrategyResult.type}
-   * field. If the returned {@link DataStrategyResult.result} is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
+   * routes where a handler was executed. A `DataStrategyResult` indicates
+   * if the handler was successful or not based on the `DataStrategyResult.type`
+   * field. If the returned `DataStrategyResult.result` is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
    * React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
    * or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
    * If you need to do custom decoding of a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
@@ -442,7 +441,7 @@ export interface DOMRouterOpts {
    *
    * `patchRoutesOnNavigation` will be called anytime React Router is unable to
    * match a `path`. The arguments include the `path`, any partial
-   * {@link RouteMatch | `matches`}, and a `patch` function you can call to patch
+   * `matches`, and a `patch` function you can call to patch
    * new routes into the tree at a specific location. This method is executed
    * during the `loading` portion of the navigation for `GET` requests and during
    * the `submitting` portion of the navigation for non-`GET` requests.
@@ -545,7 +544,7 @@ export interface DOMRouterOpts {
    *   **Co-locating route discovery with route definition**
    *
    *   If you don't wish to perform your own pseudo-matching, you can leverage
-   *   the partial {@link RouteMatch | `matches`} array and the [`handle`](../../start/data/route-object#handle)
+   *   the partial `matches` array and the [`handle`](../../start/data/route-object#handle)
    *   field on a route to keep the children definitions co-located:
    *
    *   ```tsx

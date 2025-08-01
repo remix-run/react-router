@@ -210,7 +210,7 @@ function createHydratedRouter({
 }
 
 /**
- * Props for the {@link HydratedRouter} component.
+ * Props for the {@link dom.HydratedRouter} component.
  *
  * @category Types
  */
