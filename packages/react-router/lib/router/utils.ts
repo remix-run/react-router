@@ -123,15 +123,17 @@ export interface unstable_RouterContext<T = unknown> {
 }
 
 /**
- * Creates a type-safe context object that can be used to store and retrieve
- * values in middleware, [loaders](../../start/framework/route-module#loader),
- * and [actions](../../start/framework/route-module#action). Similar to React's
- * [`createContext`](https://react.dev/reference/react/createContext), but
- * designed for React Router's request/response lifecycle.
+ * Creates a type-safe {@link unstable_RouterContext} object that can be used to
+ * * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
+ * * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
+ * * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
+ * * but specifically designed for React Router's request/response lifecycle.
  *
- * If a `defaultValue` is provided, it will be returned from `context.get()` when
- * no value has been set for the context. Otherwise reading this context when no
- * value has been set will throw an error.
+ * <docs-warning>Enable this API with the `future.unstable_middleware` flag.</docs-warning>
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()`
+ * when no value has been set for the context. Otherwise, reading this context
+ * when no value has been set will throw an error.
  *
  * ```tsx filename=app/context.ts
  * import { unstable_createContext } from "react-router";
@@ -142,12 +144,12 @@ export interface unstable_RouterContext<T = unknown> {
  * ```
  *
  * ```tsx filename=app/middleware/auth.ts
- * import { userContext } from "~/context";
  * import { getUserFromSession } from "~/auth.server";
+ * import { userContext } from "~/context";
  *
  * export const authMiddleware = async ({
- *   request,
  *   context,
+ *   request,
  * }) => {
  *   const user = await getUserFromSession(request);
  *   context.set(userContext, user);
@@ -174,10 +176,11 @@ export interface unstable_RouterContext<T = unknown> {
  * @category Utils
  * @mode framework
  * @mode data
- * @param defaultValue An optional default value for the context. This value will
- * be returned if no value has been set for this context.
+ * @param defaultValue An optional default value for the context. This value
+ * will be returned if no value has been set for this context.
  * @returns A {@link unstable_RouterContext} object that can be used with
- * `context.get()` and `context.set()` in middleware, loaders, and actions.
+ * `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
+ * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  */
 export function unstable_createContext<T>(
   defaultValue?: T,
@@ -187,7 +190,7 @@ export function unstable_createContext<T>(
 
 /**
  * Provides methods for writing/reading values in application context in a
- * type-safe way.  Primarily for usage with [Middleware](../../how-to/middleware).
+ * type-safe way. Primarily for usage with [middleware](../../how-to/middleware).
  *
  * @example
  * import {
@@ -222,11 +225,11 @@ export class unstable_RouterContextProvider {
   }
 
   /**
-   * Access a value from the context. If no value has been set for the
-   * context, it will return the context's `defaultValue` if provided, or throw an
-   * error if no `defaultValue` was set.
+   * Access a value from the context. If no value has been set for the context,
+   * it will return the context's `defaultValue` if provided, or throw an error
+   * if no `defaultValue` was set.
    * @param context The context to get the value for
-   * @returns The value for the context, or the contexts `defaultValue` if no
+   * @returns The value for the context, or the context's `defaultValue` if no
    * value was set
    */
   get<T>(context: unstable_RouterContext<T>): T {
@@ -242,8 +245,8 @@ export class unstable_RouterContextProvider {
   }
 
   /**
-   * Set a value for the context. If the context already has a value set,
-   * this will overwrite it.
+   * Set a value for the context. If the context already has a value set, this
+   * will overwrite it.
    *
    * @param context The context to set the value for
    * @param value The value to set for the context
@@ -860,6 +863,7 @@ export function convertRoutesToDataRoutes(
  * @param locationArg The location to match against, either a string path or a
  * partial {@link Location} object
  * @param basename Optional base path to strip from the location before matching.
+ * Defaults to `/`.
  * @returns An array of matched routes, or `null` if no matches were found.
  */
 export function matchRoutes<
@@ -1290,13 +1294,13 @@ export function generatePath<Path extends string>(
 }
 
 /**
- * A PathPattern is used to match on some portion of a URL pathname.
+ * Used to match on some portion of a URL pathname.
  */
 export interface PathPattern<Path extends string = string> {
   /**
    * A string to match against a URL pathname. May contain `:id`-style segments
-   * to indicate placeholders for dynamic parameters. May also end with `/*` to
-   * indicate matching the rest of the URL pathname.
+   * to indicate placeholders for dynamic parameters. It May also end with `/*`
+   * to indicate matching the rest of the URL pathname.
    */
   path: Path;
   /**
@@ -1311,7 +1315,7 @@ export interface PathPattern<Path extends string = string> {
 }
 
 /**
- * A PathMatch contains info about how a PathPattern matched on a URL pathname.
+ * Contains info about how a {@link PathPattern} matched on a URL pathname.
  */
 export interface PathMatch<ParamKey extends string = string> {
   /**
@@ -1343,9 +1347,9 @@ type Mutable<T> = {
  * @public
  * @category Utils
  * @param pattern The pattern to match against the URL pathname. This can be a
- * string or a {@link PathPattern} object. If a string is provided, it will
- * be treated as a pattern with `caseSensitive` set to `false` and `end
- * set to `true`.
+ * string or a {@link PathPattern} object. If a string is provided, it will be
+ * treated as a pattern with `caseSensitive` set to `false` and `end` set to
+ * `true`.
  * @param pathname The URL pathname to match against the pattern.
  * @returns A path match object if the pattern matches the pathname,
  * or `null` if it does not match.
@@ -1516,11 +1520,12 @@ export function prependBasename({
 }
 
 /**
- * Returns a resolved path object relative to the given pathname.
+ * Returns a resolved {@link Path} object relative to the given pathname.
  *
  * @public
  * @category Utils
- * @param to The path to resolve, either a string or a partial {@link Path} object.
+ * @param to The path to resolve, either a string or a partial {@link Path}
+ * object.
  * @param fromPathname The pathname to resolve the path from. Defaults to `/`.
  * @returns A {@link Path} object with the resolved pathname, search, and hash.
  */
@@ -1733,18 +1738,18 @@ export class DataWithResponseInit<D> {
 }
 
 /**
- * Create "responses" that contain `status`/`headers` without forcing
- * serialization into an actual `Response`
+ * Create "responses" that contain `headers`/`status` without forcing
+ * serialization into an actual [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  *
  * @example
  * import { data } from "react-router";
  *
- * export async function action({ request }) {
+ * export async function action({ request }: Route.ActionArgs) {
  *   let formData = await request.formData();
  *   let item = await createItem(formData);
  *   return data(item, {
- *     status: 201,
  *     headers: { "X-Custom-Header": "value" }
+ *     status: 201,
  *   });
  * }
  *
@@ -1755,8 +1760,8 @@ export class DataWithResponseInit<D> {
  * @param data The data to be included in the response.
  * @param init The status code or a `ResponseInit` object to be included in the
  * response.
- * @returns A `DataWithResponseInit` instance containing the data and response
- * init.
+ * @returns A {@link DataWithResponseInit} instance containing the data and
+ * response init.
  */
 export function data<D>(data: D, init?: number | ResponseInit) {
   return new DataWithResponseInit(
@@ -1779,13 +1784,14 @@ export type RedirectFunction = (
 ) => Response;
 
 /**
- * A redirect response. Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+ * Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
  * @example
  * import { redirect } from "react-router";
  *
- * export function loader({ request }) {
+ * export async function loader({ request }: Route.LoaderArgs) {
  *   if (!isLoggedIn(request))
  *     throw redirect("/login");
  *   }
@@ -1800,7 +1806,9 @@ export type RedirectFunction = (
  * @param url The URL to redirect to.
  * @param init The status code or a `ResponseInit` object to be included in the
  * response.
- * @returns A `Response` object with the redirect status and `Location` header.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
@@ -1817,21 +1825,23 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 };
 
 /**
- * A redirect response that will force a document reload to the new location.
- * Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that will force a document reload to the new location. Sets the status code
+ * and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
- * @example
- * // routes/logout.tsx
+ * ```tsx filename=routes/logout.tsx
  * import { redirectDocument } from "react-router";
+ *
  * import { destroySession } from "../sessions.server";
  *
- * export async function action({ request }) {
+ * export async function action({ request }: Route.ActionArgs) {
  *   let session = await getSession(request.headers.get("Cookie"));
  *   return redirectDocument("/", {
  *     headers: { "Set-Cookie": await destroySession(session) }
  *   });
  * }
+ * ```
  *
  * @public
  * @category Utils
@@ -1840,7 +1850,9 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  * @param url The URL to redirect to.
  * @param init The status code or a `ResponseInit` object to be included in the
  * response.
- * @returns A `Response` object with the redirect status and `Location` header.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1849,15 +1861,16 @@ export const redirectDocument: RedirectFunction = (url, init) => {
 };
 
 /**
- * A redirect response that will perform a `history.replaceState` instead of a
- * `history.pushState` for client-side navigation redirects.
- * Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that will perform a [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState)
+ * instead of a [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
+ * for client-side navigation redirects. Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
  * @example
  * import { replace } from "react-router";
  *
- * export function loader() {
+ * export async function loader() {
  *   return replace("/new-location");
  * }
  *
@@ -1868,7 +1881,9 @@ export const redirectDocument: RedirectFunction = (url, init) => {
  * @param url The URL to redirect to.
  * @param init The status code or a `ResponseInit` object to be included in the
  * response.
- * @returns A `Response` object with the redirect status and `Location` header.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const replace: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1915,8 +1930,9 @@ export class ErrorResponseImpl implements ErrorResponse {
 }
 
 /**
- * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response thrown from an action/loader
+ * Check if the given error is an {@link ErrorResponse} generated from a 4xx/5xx
+ * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
  *
  * @example
  * import { isRouteErrorResponse } from "react-router";
@@ -1925,7 +1941,7 @@ export class ErrorResponseImpl implements ErrorResponse {
  *   if (isRouteErrorResponse(error)) {
  *     return (
  *       <>
- *         <p>Error: {{error.status}: {error.statusText}}</p>
+ *         <p>Error: `${error.status}: ${error.statusText}`</p>
  *         <p>{error.data}</p>
  *       </>
  *     );
@@ -1941,7 +1957,7 @@ export class ErrorResponseImpl implements ErrorResponse {
  * @mode framework
  * @mode data
  * @param error The error to check.
- * @returns `true` if the error is an `ErrorResponse`, `false` otherwise.
+ * @returns `true` if the error is an {@link ErrorResponse}, `false` otherwise.
  *
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
