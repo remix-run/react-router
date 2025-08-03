@@ -401,14 +401,14 @@ async function resolveConfig({
           return null;
         }
 
-        let presetResult = await preset.reactRouterConfig({
+        let reactRouterConfig = await preset.reactRouterConfig({
           reactRouterUserConfig,
         });
 
-        let configPreset = presetResult;
+        let configPreset = reactRouterConfig;
 
-        if ("presets" in presetResult) {
-          configPreset = omit(presetResult, excludedConfigPresetKeys);
+        if ("presets" in reactRouterConfig) {
+          configPreset = omit(reactRouterConfig, excludedConfigPresetKeys);
         }
 
         return configPreset;
