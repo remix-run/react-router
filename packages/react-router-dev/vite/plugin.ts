@@ -32,10 +32,9 @@ import {
   parse as esModuleLexer,
 } from "es-module-lexer";
 import { escapePath as escapePathAsGlob } from "tinyglobby";
-import pick from "lodash/pick";
+import { pick, kebabCase } from "es-toolkit/compat";
 import jsesc from "jsesc";
 import colors from "picocolors";
-import kebabCase from "lodash/kebabCase";
 
 import * as Typegen from "../typegen";
 import type { RouteManifestEntry, RouteManifest } from "../config/routes";

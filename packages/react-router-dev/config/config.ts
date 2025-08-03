@@ -9,10 +9,7 @@ import chokidar, {
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import colors from "picocolors";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
+import { pick, omit, cloneDeep, isEqual } from "es-toolkit";
 
 import {
   type RouteManifest,
@@ -391,7 +388,7 @@ async function resolveConfig({
   // Prevent mutations to the user config
   reactRouterUserConfig = deepFreeze(cloneDeep(reactRouterUserConfig));
 
-  let presets: ReactRouterConfig[] = (
+  let presets: ConfigPreset[] = (
     await Promise.all(
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
         if (!preset.name) {
@@ -404,10 +401,15 @@ async function resolveConfig({
           return null;
         }
 
-        let configPreset: ReactRouterConfig = omit(
-          await preset.reactRouterConfig({ reactRouterUserConfig }),
-          excludedConfigPresetKeys,
-        );
+        let presetResult = await preset.reactRouterConfig({
+          reactRouterUserConfig,
+        });
+
+        let configPreset = presetResult;
+
+        if ("presets" in presetResult) {
+          configPreset = omit(presetResult, excludedConfigPresetKeys);
+        }
 
         return configPreset;
       }),

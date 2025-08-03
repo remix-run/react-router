@@ -1147,9 +1147,6 @@ importers:
       jsesc:
         specifier: 3.0.2
         version: 3.0.2
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -1199,9 +1196,6 @@ importers:
       '@types/jsesc':
         specifier: ^3.0.1
         version: 3.0.3
-      '@types/lodash':
-        specifier: ^4.14.182
-        version: 4.17.0
       '@types/node':
         specifier: ^20.0.0
         version: 20.11.30
@@ -1214,6 +1208,9 @@ importers:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
         version: 2.4.7
+      es-toolkit:
+        specifier: ^1.39.7
+        version: 1.39.8
       esbuild-register:
         specifier: ^3.6.0
         version: 3.6.0(esbuild@0.25.4)
@@ -4929,9 +4926,6 @@ packages:
   '@types/lambda-tester@3.6.2':
     resolution: {integrity: sha512-nQRUx0AuvTq5KOz1SaxMOOFJvnybo1oAzvSy/p9bVGthZVvg1Dar/051mhMuzdN1DWg++bs+eGq1MdCbm6wjSQ==}
 
-  '@types/lodash@4.17.0':
-    resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
-
   '@types/mdast@3.0.15':
     resolution: {integrity: sha512-LnwD+mUEfxWMa1QpDraczIn6k0Ee3SMicuYSSzS6ZYl2gKS09EClnJYGd8Du6rfc5r/GZEk5o1mRb8TaTj03sQ==}
 
@@ -6230,6 +6224,9 @@ packages:
   es-to-primitive@1.2.1:
     resolution: {integrity: sha512-QCOllgZJtaUo9miYBcLChTUaHNjJF3PYs1VidD7AwiEj1kYxKeQTctLAezAOH5ZKRH0g2IgPn6KwB4IT8iRpvA==}
     engines: {node: '>= 0.4'}
+
+  es-toolkit@1.39.8:
+    resolution: {integrity: sha512-A8QO9TfF+rltS8BXpdu8OS+rpGgEdnRhqIVxO/ZmNvnXBYgOdSsxukT55ELyP94gZIntWJ+Li9QRrT2u1Kitpg==}
 
   esbuild-register@3.6.0:
     resolution: {integrity: sha512-H2/S7Pm8a9CL1uhp9OvjwrBh5Pvx0H8qVOxNu8Wed9Y7qv56MPtq+GGM8RJpq6glYJn9Wspr8uw7l55uyinNeg==}
@@ -13323,8 +13320,6 @@ snapshots:
     dependencies:
       '@types/aws-lambda': 8.10.141
 
-  '@types/lodash@4.17.0': {}
-
   '@types/mdast@3.0.15':
     dependencies:
       '@types/unist': 2.0.10
@@ -14968,6 +14963,8 @@ snapshots:
       is-callable: 1.2.7
       is-date-object: 1.0.5
       is-symbol: 1.0.4
+
+  es-toolkit@1.39.8: {}
 
   esbuild-register@3.6.0(esbuild@0.25.0):
     dependencies:

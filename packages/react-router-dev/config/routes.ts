@@ -1,6 +1,6 @@
 import * as Path from "pathe";
 import * as v from "valibot";
-import pick from "lodash/pick";
+import { pick } from "es-toolkit/compat";
 
 import invariant from "../invariant";
 
