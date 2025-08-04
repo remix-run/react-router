@@ -1923,6 +1923,71 @@ describe("fetchers", () => {
         expect(t.router.getFetcher(keyB)?.state).toBe("idle");
       });
     });
+
+    it("properly ignores aborted action revalidation fetchers when a navigation triggers revalidations", async () => {
+      let keyA = "a";
+      let keyB = "b";
+      let t = initializeTest();
+
+      // Complete a fetch load
+      let A = await t.fetch("/foo", keyA, "root");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "idle",
+        data: "FOO",
+      });
+      expect(t.router.state.fetchers.get(keyA)).toBe(undefined);
+
+      // Submit to trigger fetch revalidation
+      let B = await t.fetch("/bar", keyB, "root", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "fetch", "loader", "foo");
+      await B.actions.bar.resolve("BAR");
+      expect(t.fetchers[keyB]).toMatchObject({
+        state: "loading",
+        data: "BAR",
+      });
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: "FOO",
+      });
+
+      // Interrupt revalidation with GEt navigation
+      // TODO: This shouldn't actually abort the revalidation but it does currently
+      // which then causes the invalid invariant error.  This test is to ensure
+      // the invariant doesn't throw, but we'll fix the unnecessary revalidation
+      // in https://github.com/remix-run/react-router/issues/14115
+      let C = await t.navigate("/baz", undefined, ["foo"]);
+      expect(B.loaders.foo.signal.aborted).toBe(true);
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: "FOO",
+      });
+
+      // Complete the aborted fetcher revalidation calls
+      await B.loaders.root.resolve("NOPE");
+      await B.loaders.index.resolve("NOPE");
+      await B.loaders.foo.resolve("NOPE");
+
+      // Complete the navigation
+      await C.loaders.root.resolve("ROOT*");
+      await C.loaders.baz.resolve("BAZ");
+      await C.loaders.foo.resolve("FOO*");
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        location: { pathname: "/baz" },
+        loaderData: {
+          root: "ROOT*",
+          baz: "BAZ",
+        },
+      });
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "idle",
+        data: "FOO*",
+      });
+    });
   });
 
   describe("fetcher revalidation", () => {
