@@ -5,6 +5,11 @@ unstable: true
 
 # Middleware
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 <docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.unstable_middleware` flag to enable it.</docs-warning>
 
 Middleware allows you to run code before and after the `Response` generation for the matched path. This enables common patterns like authentication, logging, error handling, and data preprocessing in a reusable way.
@@ -23,7 +28,9 @@ For example, on a `GET /parent/child` request, the middleware would run in the f
 - Root middleware end
 ```
 
-## Quick Start
+<docs-info>There are some slight differences between middleware on the server (framework mode) versus the client (framework/data mode). For the purposes of this document, we'll be referring to Server Middleware in most of our examples as it's the most familiar to users who've used middleware in other HTTP servers in the past. Please refer to the [Server vs Client Middleware][server-client] section below for more information.</docs-info>
+
+## Quick Start (Framework mode)
 
 ### 1. Enable the middleware flag
 
@@ -39,7 +46,7 @@ export default {
 } satisfies Config;
 ```
 
-<docs-warning>By enabling the middleware feature, you change the type of the `context` parameter to your loaders and actions. Please pay attention to the section on [getLoadContext](#changes-to-getloadcontextapploadcontext) below if you are actively using `context` today.</docs-warning>
+<docs-warning>By enabling the middleware feature, you change the type of the `context` parameter to your loaders and actions. Please pay attention to the section on [getLoadContext][getloadcontext] below if you are actively using `context` today.</docs-warning>
 
 ### 2. Create a context
 
@@ -61,29 +68,27 @@ import { redirect } from "react-router";
 import { userContext } from "~/context";
 
 // Server-side Authentication Middleware
+async function authMiddleware({ request, context }) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    throw redirect("/login");
+  }
+  context.set(userContext, user);
+}
+
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
-  [
-    async ({ request, context }) => {
-      const user = await getUserFromSession(request);
-      if (!user) {
-        throw redirect("/login");
-      }
-      context.set(userContext, user);
-    },
-  ];
+  [authMiddleware];
 
 // Client-side timing middleware
+async function timingMiddleware({ context }, next) {
+  const start = performance.now();
+  await next();
+  const duration = performance.now() - start;
+  console.log(`Navigation took ${duration}ms`);
+}
+
 export const unstable_clientMiddleware: Route.unstable_ClientMiddlewareFunction[] =
-  [
-    async ({ context }, next) => {
-      const start = performance.now();
-
-      await next();
-
-      const duration = performance.now() - start;
-      console.log(`Navigation took ${duration}ms`);
-    },
-  ];
+  [timingMiddleware];
 
 export async function loader({
   context,
@@ -105,7 +110,7 @@ export default function Dashboard({
 }
 ```
 
-#### 4. Update your `getLoadContext` function (if applicable)
+### 4. Update your `getLoadContext` function (if applicable)
 
 If you're using a custom server and a `getLoadContext` function, you will need to update your implementation to return an instance of `unstable_RouterContextProvider`, instead of a JavaScript object:
 
@@ -126,18 +131,210 @@ function getLoadContext(req, res) {
 }
 ```
 
+## Quick Start (Data Mode)
+
+### 1. Enable the middleware flag
+
+```tsx
+const router = createBrowserRouter(routes, {
+  future: {
+    unstable_middleware: true,
+  },
+});
+```
+
+### 2. Create a context
+
+Middleware uses a `context` provider instance to provide data down the middleware chain.
+You can create type-safe context objects using `unstable_createContext`:
+
+```ts filename=app/context.ts
+import { unstable_createContext } from "react-router";
+import type { User } from "~/types";
+
+export const userContext =
+  unstable_createContext<User | null>(null);
+```
+
+### 3. Add middleware to your routes
+
+```tsx
+import { redirect } from "react-router";
+import { userContext } from "~/context";
+
+const routes = [
+  {
+    path: "/",
+    unstable_middleware: [timingMiddleware], // 👈
+    Component: Root,
+    children: [
+      {
+        path: "profile",
+        unstable_middleware: [authMiddleware], // 👈
+        loader: profileLoader,
+        Component: Profile,
+      },
+      {
+        path: "login",
+        Component: Login,
+      },
+    ],
+  },
+];
+
+async function timingMiddleware({ context }, next) {
+  const start = performance.now();
+  await next();
+  const duration = performance.now() - start;
+  console.log(`Navigation took ${duration}ms`);
+}
+
+async function authMiddleware({ context }) {
+  const user = await getUser();
+  if (!user) {
+    throw redirect("/login");
+  }
+  context.set(userContext, user);
+}
+
+export async function profileLoader({
+  context,
+}: Route.LoaderArgs) {
+  const user = context.get(userContext);
+  const profile = await getProfile(user);
+  return { profile };
+}
+
+export default function Profile() {
+  let loaderData = useLoaderData();
+  return (
+    <div>
+      <h1>Welcome {loaderData.profile.fullName}!</h1>
+      <Profile profile={loaderData.profile} />
+    </div>
+  );
+}
+```
+
+### 4. Add an `unstable_getContext()` function (optional)
+
+If you wish to include a base context on all navigations/fetches, you can add an `unstable_getContext` function to your router. This will be called to populate a fresh context on every navigation/fetch.
+
+```tsx
+let sessionContext = unstable_createContext();
+
+const router = createBrowserRouter(routes, {
+  future: {
+    unstable_middleware: true,
+  },
+  unstable_getContext() {
+    let context = new unstable_RouterContextProvider();
+    context.set(sessionContext, getSession());
+    return context;
+  },
+});
+```
+
 ## Core Concepts
 
 ### Server vs Client Middleware
 
-**Server middleware** (`unstable_middleware`) runs on the server for:
+Server middleware runs on the server in Framework mode for HTML Document requests and `.data` requests for subsequent navigations and fetcher calls.
 
-- HTML Document requests
-- `.data` requests for subsequent navigations and fetcher calls
+Because server middleware runs on the server in response to an HTTP `Request`, it returns an HTTP `Response` back up the middleware chain via the `next` function:
 
-**Client middleware** (`unstable_clientMiddleware`) runs in the browser for:
+```ts
+async function serverMiddleware({ request }, next) {
+  console.log(request.method, request.url);
+  let response = await next();
+  console.log(response.status, request.method, request.url);
+  return response;
+}
+
+export const unstable_middleware = [serverMiddleware];
+```
+
+**Client middleware** (`unstable_clientMiddleware`) runs in the browser in framework and data mode for:
 
 - Client-side navigations and fetcher calls
+
+Client middleware is different because there's no HTTP Request, so it doesn't bubble up anything via the `next` function:
+
+```ts
+async function clientMiddleware({ request }, next) {
+  console.log(request.method, request.url);
+  await next(); // 👈 No return value
+  console.log(response.status, request.method, request.url);
+  // 👈 No need to return anything here
+}
+
+// Framework mode
+export const unstable_clientMiddleware = [clientMiddleware];
+
+// Data mode
+const route = {
+  path: "/",
+  unstable_middleware: [clientMiddleware],
+  loader: rootLoader,
+  Component: Root,
+};
+```
+
+### When Middleware Runs
+
+It is very important to understand _when_ your middlewares will run to make sure your application is behaving as you intend.
+
+#### Server Middleware
+
+In a hydrated Framework Mode app, server middleware is designed such that it prioritizes SPA behavior and does not create new network activity by default. Middleware wraps _existing_ request and only runs when you _need_ to hit the server.
+
+This raises the question of what is a "handler" in React Router? Is it the route? Or the loader? We think "it depends":
+
+- On document requests (`GET /route`), the handler is the route - because the response encompasses both the loader and the route component
+- On data requests (`GET /route.data`) for client-side navigations, the handler is the `loader`/`action`, because that's all that is included in the response
+
+Therefore:
+
+- Document requests run server middleware whether loaders exist or not because we're still in a "handler" to render the UI
+- Client-side navigations will only run server middleware if a `.data` request is made to the server for a `loader`/`action`
+
+This is important behavior for request-annotation middlewares such as logging request durations, checking/setting sessions, setting outgoing caching headers, etc. It would be useless to go to the server and run those types of middlewares when there was no reason to go to the server in the first place. This would result in increased server load and noisy server logs.
+
+```tsx filename=app/root.tsx
+// This middleware won't run on client-side navigations without a `.data` request
+function loggingMiddleware({ request }, next) {
+  console.log(`Request: ${request.method} ${request.url}`);
+  let response = await next();
+  console.log(
+    `Response: ${response.status} ${request.method} ${request.url}`,
+  );
+  return response;
+}
+
+export const unstable_middleware = [loggingMiddleware];
+```
+
+However, there may be cases where you _want_ to run certain middlewares on _every_ client-navigation - even if no loader exists. For example, a form in the authenticated section of your site that doesn't require a `loader` but you'd rather use auth middleware to redirect users away before they fill out the form - rather then when they submit to the `action`. If your middleware meets this criteria, then you can put a `loader` on the route that contains the middleware to force it to always call the server for client side navigations involving that route.
+
+```tsx filename=app/_auth.tsx
+function authMiddleware({ request }, next) {
+  if (!isLoggedIn(request)) {
+    throw redirect("/login");
+  }
+}
+
+export const unstable_middleware = [authMiddleware];
+
+// By adding a loader, we force the authMiddleware to run on every client-side
+// navigation involving this route.
+export function loader() {
+  return null;
+}
+```
+
+#### Client Middleware
+
+Client middleware is simpler because since we are already on the client and are always making a "request" to the router when navigating, client middlewares will run on every client navigation, regardless of whether or not there are loaders to run.
 
 ### Context API
 
@@ -428,31 +625,5 @@ export async function loader({
 }
 ```
 
-## Client-Side Middleware
-
-Client middleware works similar to server-side middleware but doesn't return responses because it's not running ion response to an HTTP `Request`:
-
-```tsx filename=app/routes/dashboard.tsx
-import { userContext } from "~/context";
-
-export const unstable_clientMiddleware = [
-  ({ context }) => {
-    // Set up client-side user data
-    const user = getLocalUser();
-    context.set(userContext, user);
-  },
-
-  async ({ context }, next) => {
-    console.log("Starting client navigation");
-    await next(); // 👈 No return value
-    console.log("Client navigation complete");
-  },
-];
-
-export async function clientLoader({
-  context,
-}: Route.ClientLoaderArgs) {
-  const user = context.get(userContext);
-  return { user };
-}
-```
+[server-client]: #server-vs-client-middleware
+[getloadcontext]: #changes-to-getloadcontextapploadcontext
