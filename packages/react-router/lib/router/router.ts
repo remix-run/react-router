@@ -40,6 +40,7 @@ import type {
   ActionFunction,
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
+  DataStrategyResults,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -2874,7 +2875,7 @@ export function createRouter(init: RouterInit): Router {
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null,
   ): Promise<Record<string, DataResult>> {
-    let results: Record<string, DataStrategyResult>;
+    let results: DataStrategyResults;
     let dataResults: Record<string, DataResult> = {};
     try {
       results = await callDataStrategyImpl(
@@ -3609,7 +3610,7 @@ export function createStaticHandler(
           mapRouteProperties,
         );
         let renderedStaticContext: StaticHandlerContext | undefined;
-        let response = await runMiddlewarePipeline(
+        let response = await runServerMiddlewarePipeline(
           {
             request,
             matches,
@@ -3618,7 +3619,6 @@ export function createStaticHandler(
             // this to the proper type knowing it's not an `AppLoadContext`
             context: requestContext as unstable_RouterContextProvider,
           },
-          true,
           async () => {
             let res = await generateMiddlewareResponse(
               async (revalidationRequest: Request) => {
@@ -3814,7 +3814,7 @@ export function createStaticHandler(
           "`requestContext` must be an instance of `unstable_RouterContextProvider`",
       );
       await loadLazyMiddlewareForMatches(matches, manifest, mapRouteProperties);
-      let response = await runMiddlewarePipeline(
+      let response = await runServerMiddlewarePipeline(
         {
           request,
           matches,
@@ -3823,7 +3823,6 @@ export function createStaticHandler(
           // this to the proper type knowing it's not an `AppLoadContext`
           context: requestContext as unstable_RouterContextProvider,
         },
-        true,
         async () => {
           let res = await generateMiddlewareResponse(
             async (innerRequest: Request) => {
@@ -3852,7 +3851,7 @@ export function createStaticHandler(
         },
         (error) => {
           if (isResponse(error)) {
-            return error;
+            return Promise.resolve(error);
           }
           throw error;
         },
@@ -5349,7 +5348,7 @@ async function defaultDataStrategy(
   args: DataStrategyFunctionArgs<unknown>,
 ): ReturnType<DataStrategyFunction<unknown>> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
-  let keyedResults: Record<string, DataStrategyResult> = {};
+  let keyedResults: DataStrategyResults = {};
   let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
   results.forEach((result, i) => {
     keyedResults[matchesToLoad[i].route.id] = result;
@@ -5367,28 +5366,14 @@ async function defaultDataStrategyWithMiddleware(
     return defaultDataStrategy(args);
   }
 
-  return runMiddlewarePipeline(
+  return runClientMiddlewarePipeline(
     args,
-    false,
     () => defaultDataStrategy(args),
     (error, routeId) => ({ [routeId]: { type: "error", result: error } }),
-  ) as Promise<Record<string, DataStrategyResult>>;
+  );
 }
 
-type MutableMiddlewareState = {
-  // Track the result of the user-provided handler at the bottom of the
-  // middleware chain so we can return it out from runMiddleware for them when
-  // we're not propagating results
-  handlerResult?: unknown;
-  // Capture the throwing routeId for middleware error so we can bubble from the
-  // correct spot
-  middlewareError?: {
-    routeId: string;
-    error: unknown;
-  };
-};
-
-export async function runMiddlewarePipeline<T extends boolean>(
+export async function runServerMiddlewarePipeline(
   args: (
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>
@@ -5397,79 +5382,47 @@ export async function runMiddlewarePipeline<T extends boolean>(
     // back from `DataStrategyMatch` to regular matches for use in the staticHandler
     matches: AgnosticDataRouteMatch[];
   },
-  propagateResult: T,
-  handler: () => T extends true
-    ? MaybePromise<Response>
-    : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (
-    error: unknown,
-    routeId: string,
-  ) => T extends true
-    ? MaybePromise<Response>
-    : Record<string, DataStrategyResult>,
-): Promise<unknown> {
+  handler: () => Promise<Response>,
+  errorHandler: (error: unknown, routeId: string) => Promise<Response>,
+): Promise<Response> {
   let { matches, request, params, context } = args;
-  let middlewareState: MutableMiddlewareState = {
-    handlerResult: undefined,
-  };
-  try {
-    let tuples = matches.flatMap((m) =>
-      m.route.unstable_middleware
-        ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
-        : [],
-    ) as [string, unstable_MiddlewareFunction][];
-    let result = await callRouteMiddleware(
-      { request, params, context },
-      tuples,
-      propagateResult,
-      middlewareState,
-      handler,
-    );
+  let tuples = matches.flatMap((m) =>
+    m.route.unstable_middleware
+      ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
+      : [],
+  ) as [string, unstable_MiddlewareFunction][];
 
-    if (propagateResult) {
-      invariant(
-        isResponse(result) || isDataWithResponseInit(result),
-        `Expected a Response to be returned from route middleware`,
-      );
-      // Upgrade returned data() calls to real Responses
-      if (isDataWithResponseInit(result)) {
-        return new Response(
-          typeof result.data === "string"
-            ? result.data
-            : JSON.stringify(result.data),
-          { ...result.init },
-        );
-      } else {
-        return result;
-      }
-    } else {
-      return middlewareState.handlerResult;
-    }
-  } catch (e) {
-    if (!middlewareState.middlewareError) {
-      // This shouldn't happen?  This would have to come from a bug in our
-      // library code...
-      throw e;
-    }
-    let result = await errorHandler(
-      middlewareState.middlewareError.error,
-      middlewareState.middlewareError.routeId,
+  let result = await callServerRouteMiddleware(
+    { request, params, context },
+    tuples,
+    handler,
+    errorHandler,
+  );
+
+  // Upgrade returned data() calls to real Responses
+  if (isDataWithResponseInit(result)) {
+    return new Response(
+      typeof result.data === "string"
+        ? result.data
+        : JSON.stringify(result.data),
+      { ...result.init },
     );
-    if (propagateResult || !middlewareState.handlerResult) {
-      return result;
-    }
-    return Object.assign(middlewareState.handlerResult, result);
   }
+
+  if (isResponse(result)) {
+    return result;
+  }
+
+  invariant(false, `Expected a Response to be returned from route middleware`);
 }
 
-async function callRouteMiddleware(
+async function callServerRouteMiddleware(
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
   middlewares: [string, unstable_MiddlewareFunction][],
-  propagateResult: boolean,
-  middlewareState: MutableMiddlewareState,
-  handler: () => void,
+  handler: () => Promise<Response>,
+  errorHandler: (error: unknown, routeId: string) => Promise<Response>,
   idx = 0,
 ): Promise<unknown> {
   let { request } = args;
@@ -5485,8 +5438,8 @@ async function callRouteMiddleware(
   let tuple = middlewares[idx];
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
-    middlewareState.handlerResult = await handler();
-    return middlewareState.handlerResult;
+    let result = await handler();
+    return result;
   }
 
   let [routeId, middleware] = tuple;
@@ -5497,16 +5450,19 @@ async function callRouteMiddleware(
       throw new Error("You may only call `next()` once per middleware");
     }
     nextCalled = true;
-    let result = await callRouteMiddleware(
-      args,
-      middlewares,
-      propagateResult,
-      middlewareState,
-      handler,
-      idx + 1,
-    );
-    if (propagateResult) {
+
+    try {
+      let result = await callServerRouteMiddleware(
+        args,
+        middlewares,
+        handler,
+        errorHandler,
+        idx + 1,
+      );
       nextResult = result;
+      return nextResult;
+    } catch (e) {
+      nextResult = await errorHandler(e, routeId);
       return nextResult;
     }
   };
@@ -5521,42 +5477,132 @@ async function callRouteMiddleware(
       next,
     );
 
-    if (propagateResult) {
-      // On the server, handle calling next() if needed and returning the proper result
-      if (nextCalled) {
-        // If they called next() but didn't return the response, we can bubble
-        // it for them. This allows some minor syntactic sugar (or forgetfulness)
-        // where you can grab the response to add a header without re-returning it
-        return typeof result === "undefined" ? nextResult : result;
-      } else if (isResponse(result) || isDataWithResponseInit(result)) {
-        // Use short circuit Response/data() values without having called next()
-        return result;
-      } else {
-        // Otherwise call next() for them
-        nextResult = await next();
-        return nextResult;
-      }
+    // On the server, handle calling next() if needed and returning the proper result
+    if (nextCalled) {
+      // If they called next() but didn't return the response, we can bubble
+      // it for them. This allows some minor syntactic sugar (or forgetfulness)
+      // where you can grab the response to add a header without re-returning it
+      return typeof result === "undefined" ? nextResult : result;
+    } else if (isResponse(result) || isDataWithResponseInit(result)) {
+      // Use short circuit Response/data() values without having called next()
+      return result;
     } else {
-      // On the client, just call next if they didn't
-      if (typeof result !== "undefined") {
-        console.warn(
-          "client middlewares are not intended to return values, the value will be ignored",
-          result,
-        );
-      }
-      if (!nextCalled) {
-        await next();
-      }
+      // Otherwise call next() for them
+      nextResult = await next();
+      return nextResult;
     }
   } catch (error) {
-    if (!middlewareState.middlewareError) {
-      middlewareState.middlewareError = { routeId, error };
-    } else if (middlewareState.middlewareError.error !== error) {
-      // Another middleware already threw, so only capture this new routeId if
-      // it's a different error and not just bubbling up the existing error
-      middlewareState.middlewareError = { routeId, error };
+    let response = await errorHandler(error, routeId);
+    return response;
+  }
+}
+
+export async function runClientMiddlewarePipeline(
+  args: (
+    | LoaderFunctionArgs<unstable_RouterContextProvider>
+    | ActionFunctionArgs<unstable_RouterContextProvider>
+  ) & {
+    // Don't use `DataStrategyFunctionArgs` directly so we can we reduce these
+    // back from `DataStrategyMatch` to regular matches for use in the staticHandler
+    matches: AgnosticDataRouteMatch[];
+  },
+  handler: () => Promise<DataStrategyResults>,
+  errorHandler: (error: unknown, routeId: string) => DataStrategyResults,
+): Promise<DataStrategyResults> {
+  let { matches, request, params, context } = args;
+  let tuples = matches.flatMap((m) =>
+    m.route.unstable_middleware
+      ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
+      : [],
+  ) as [string, unstable_MiddlewareFunction][];
+
+  let handlerResult = {};
+  await callClientRouteMiddleware(
+    { request, params, context },
+    tuples,
+    handler,
+    errorHandler,
+    handlerResult,
+  );
+  return handlerResult;
+}
+
+async function callClientRouteMiddleware(
+  args:
+    | LoaderFunctionArgs<unstable_RouterContextProvider>
+    | ActionFunctionArgs<unstable_RouterContextProvider>,
+  middlewares: [string, unstable_MiddlewareFunction][],
+  handler: () => Promise<DataStrategyResults>,
+  errorHandler: (error: unknown, routeId: string) => DataStrategyResults,
+  handlerResult: DataStrategyResults = {},
+  idx = 0,
+): Promise<unknown> {
+  let { request } = args;
+  if (request.signal.aborted) {
+    if (request.signal.reason) {
+      throw request.signal.reason;
     }
-    throw error;
+    throw new Error(
+      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`,
+    );
+  }
+
+  let tuple = middlewares[idx];
+  if (!tuple) {
+    // We reached the end of our middlewares, call the handler
+    let result = await handler();
+    Object.assign(handlerResult, result);
+    return;
+  }
+
+  let [routeId, middleware] = tuple;
+  let nextCalled = false;
+  let next: unstable_MiddlewareNextFunction = async () => {
+    if (nextCalled) {
+      throw new Error("You may only call `next()` once per middleware");
+    }
+    nextCalled = true;
+
+    try {
+      let result = await callClientRouteMiddleware(
+        args,
+        middlewares,
+        handler,
+        errorHandler,
+        handlerResult,
+        idx + 1,
+      );
+      Object.assign(handlerResult, result);
+    } catch (e) {
+      let result = await errorHandler(e, routeId);
+      Object.assign(handlerResult, result);
+    }
+  };
+
+  try {
+    let result = await middleware(
+      {
+        request: args.request,
+        params: args.params,
+        context: args.context,
+      },
+      next,
+    );
+
+    // On the client, just call next if they didn't
+    if (typeof result !== "undefined") {
+      console.warn(
+        "client middlewares are not intended to return values, the value will be ignored",
+        result,
+      );
+    }
+
+    if (!nextCalled) {
+      await next();
+    }
+  } catch (error) {
+    let result = await errorHandler(error, routeId);
+    Object.assign(handlerResult, result);
   }
 }
 
@@ -5703,7 +5749,7 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   scopedContext: unknown,
   isStaticHandler: boolean,
-): Promise<Record<string, DataStrategyResult>> {
+): Promise<DataStrategyResults> {
   // Ensure all middleware is loaded before we start executing routes
   if (matches.some((m) => m._lazyPromises?.middleware)) {
     await Promise.all(matches.map((m) => m._lazyPromises?.middleware));
@@ -5734,9 +5780,8 @@ async function callDataStrategyImpl(
         ) & {
           matches: DataStrategyMatch[];
         };
-        return runMiddlewarePipeline(
+        return runClientMiddlewarePipeline(
           typedDataStrategyArgs,
-          false,
           () =>
             cb({
               ...typedDataStrategyArgs,
@@ -5751,7 +5796,7 @@ async function callDataStrategyImpl(
           (error: unknown, routeId: string) => ({
             [routeId]: { type: "error", result: error },
           }),
-        ) as Promise<Record<string, DataStrategyResult>>;
+        );
       };
 
   let results = await dataStrategyImpl({

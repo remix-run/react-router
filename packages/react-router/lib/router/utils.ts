@@ -506,6 +506,10 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
+export interface DataStrategyResults {
+  [key: string]: DataStrategyResult;
+}
+
 export interface DataStrategyFunction<Context = DefaultContext> {
   (
     args: DataStrategyFunctionArgs<Context>,
