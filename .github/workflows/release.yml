@@ -21,6 +21,8 @@ jobs:
     outputs:
       published_packages: ${{ steps.changesets.outputs.publishedPackages }}
       published: ${{ steps.changesets.outputs.published }}
+    permissions:
+      id-token: write # to enable use of OIDC for npm provenance
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
@@ -62,6 +64,7 @@ jobs:
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   find_package_version:
