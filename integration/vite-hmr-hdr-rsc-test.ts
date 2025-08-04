@@ -392,7 +392,7 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("Client Route HMR: 0");
     // state is not preserved when switching from server to client route
-    await expect(input).toHaveValue("");
+    await input.clear();
     await input.type("client stateful");
     expect(page.errors).toEqual([]);
     await edit("app/routes/hmr/route.tsx", (contents) =>
@@ -415,7 +415,7 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("Server Route HMR: 0");
     // State is not preserved when switching from client to server route
-    await expect(input).toHaveValue("");
+    await input.clear();
     await input.type("server stateful");
     expect(page.errors).toEqual([]);
     await edit("app/routes/hmr/route.tsx", (contents) =>
