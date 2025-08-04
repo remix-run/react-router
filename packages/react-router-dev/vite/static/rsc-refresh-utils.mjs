@@ -78,7 +78,7 @@ function validateRefreshBoundaryAndEnqueueUpdate(
     nextExports,
     (key, value) => {
       hasExports = true;
-      // Remix can handle Remix-specific exports (e.g. `meta` and `links`)
+      // React Router can handle additional exports (e.g. `meta` and `links`)
       if (acceptExports.includes(key)) return true;
       // React Fast Refresh can handle component exports
       if (exports.isLikelyComponentType(value)) return true;

@@ -100,7 +100,7 @@ async function createVirtualRouteModuleCode({
       }
     }
     if (viteCommand === "serve" && !hasClientExports) {
-      code += `export { __ensureClientRouteModuleForHmr } from "${clientModuleId}";\n`;
+      code += `export { __ensureClientRouteModuleForHMR } from "${clientModuleId}";\n`;
     }
   } else {
     for (const staticExport of staticExports) {
@@ -183,7 +183,7 @@ function createVirtualClientRouteModuleCode({
   }
 
   if (viteCommand === "serve" && isServerFirstRoute && !hasClientExports) {
-    generatorResult.code += `\nexport const __ensureClientRouteModuleForHmr = true;`;
+    generatorResult.code += `\nexport const __ensureClientRouteModuleForHMR = true;`;
   }
 
   return generatorResult;
@@ -198,9 +198,9 @@ export function parseRouteExports(code: string) {
   return {
     staticExports,
     isServerFirstRoute,
-    hasClientExports: isServerFirstRoute
-      ? staticExports.some(isClientNonComponentExport)
-      : staticExports.some(isClientRouteExport),
+    hasClientExports: staticExports.some(
+      isServerFirstRoute ? isClientNonComponentExport : isClientRouteExport,
+    ),
   };
 }
 
