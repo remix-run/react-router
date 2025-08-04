@@ -115,3 +115,10 @@ npx create-react-router@latest --template remix-run/react-router-templates/netli
 
 - Server Rendering
 - Tailwind CSS
+
+### Gadget
+
+React Router v7 is the default framework when creating a new [Gadget](https://gadget.dev/) web app. Simply press `Deploy` in the Gadget UI.
+
+- Server Rendering
+- Tailwind CSS
