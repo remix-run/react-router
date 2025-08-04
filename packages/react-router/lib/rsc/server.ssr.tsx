@@ -8,6 +8,21 @@ import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 
+const react18compatibleUse = (() => {
+  type Usable<T> = Promise<T> | React.Context<T>;
+
+  const errorUse = function <T>(_: Usable<T>): T {
+    throw new Error("React Router v7 requires React 19+ for RSC features.");
+  };
+
+  const functionName = "use";
+  const realUse = (React as any)[functionName];
+
+  return function <T>(promise: Usable<T>): T {
+    return (realUse || errorUse)(promise);
+  };
+})();
+
 export type SSRCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
 ) => Promise<unknown>;
@@ -196,8 +211,8 @@ export interface RSCStaticRouterProps {
  * @returns A React component that renders the {@link unstable_RSCPayload} as HTML.
  */
 export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
-  // @ts-expect-error - need to update the React types
-  const payload = React.use(getPayload()) as RSCPayload;
+  // Can be replaced with React.use when v18 compatibility is no longer required.
+  const payload = react18compatibleUse(getPayload()) as RSCPayload;
 
   if (payload.type === "redirect") {
     throw new Response(null, {
