@@ -405,13 +405,11 @@ async function resolveConfig({
           reactRouterUserConfig,
         });
 
-        let configPreset = reactRouterConfig;
-
-        if ("presets" in reactRouterConfig) {
-          configPreset = omit(reactRouterConfig, excludedConfigPresetKeys);
+        if (reactRouterConfig != null && "presets" in reactRouterConfig) {
+          reactRouterConfig = omit(reactRouterConfig, excludedConfigPresetKeys);
         }
 
-        return configPreset;
+        return reactRouterConfig;
       }),
     )
   ).filter(function isNotNull<T>(value: T | null): value is T {
