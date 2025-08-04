@@ -391,7 +391,8 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     );
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("Client Route HMR: 0");
-    // state is not preserved when switching from server to client route
+    // adding/removing client component exports causes an HMR invalidation and a
+    // page reload. some browsers maintain input state, so we forcibly clear
     await input.clear();
     await input.type("client stateful");
     expect(page.errors).toEqual([]);
@@ -414,7 +415,8 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     );
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("Server Route HMR: 0");
-    // State is not preserved when switching from client to server route
+    // adding/removing client component exports causes an HMR invalidation and a
+    // page reload. some browsers maintain input state, so we forcibly clear
     await input.clear();
     await input.type("server stateful");
     expect(page.errors).toEqual([]);
