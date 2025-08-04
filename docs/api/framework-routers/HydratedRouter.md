@@ -34,6 +34,7 @@ function HydratedRouter(props: HydratedRouterProps)
 ### unstable_getContext
 
 Context object to be passed through to [`createBrowserRouter`](../data-routers/createBrowserRouter) and made
-available to [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+available to
+[`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
 functions
 

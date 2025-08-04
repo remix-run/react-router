@@ -144,8 +144,11 @@ export interface MemoryRouterOpts {
    */
   basename?: string;
   /**
-   * Function to provide the initial context values for all client side
-   * navigations/fetches
+   * A function that returns an {@link unstable_RouterContextProvider} instance
+   * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
+   * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+   * This function is called to generate a fresh `context` instance on each
+   * navigation or fetcher call.
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
   /**
@@ -162,7 +165,7 @@ export interface MemoryRouterOpts {
    */
   initialEntries?: InitialEntry[];
   /**
-   * Index of {@link initialEntries} the application should initialize to
+   * Index of `initialEntries` the application should initialize to
    */
   initialIndex?: number;
   /**
@@ -277,11 +280,11 @@ export interface RouterProviderProps {
  * );
  * ```
  *
- * <docs-info>Please note that this component is exported both from `react-router` and
- * `react-router/dom` with the only difference being that the latter automatically
- * wires up the `react-dom` `flushSync` implementation. You _almost always_ want
- * to use the version from `react-router/dom` unless you're running in a non-DOM
- * environment.</docs-info>
+ * <docs-info>Please note that this component is exported both from
+ * `react-router` and `react-router/dom` with the only difference being that the
+ * latter automatically wires up `react-dom`'s [`flushSync`](https://react.dev/reference/react-dom/flushSync)
+ * implementation. You _almost always_ want to use the version from
+ * `react-router/dom` unless you're running in a non-DOM environment.</docs-info>
  *
  *
  * @public
@@ -572,7 +575,7 @@ export interface MemoryRouterProps {
    */
   initialEntries?: InitialEntry[];
   /**
-   * Index of {@link initialEntries} the application should initialize to
+   * Index of `initialEntries` the application should initialize to
    */
   initialIndex?: number;
 }
@@ -649,7 +652,7 @@ export interface NavigateProps {
    */
   state?: any;
   /**
-   * How to interpret relative routing in the {@link to} prop.
+   * How to interpret relative routing in the `to` prop.
    * See {@link RelativeRoutingType}.
    */
   relative?: RelativeRoutingType;
@@ -814,32 +817,32 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   /**
    * The React element to render when this Route matches.
-   * Mutually exclusive with {@link Component}.
+   * Mutually exclusive with `Component`.
    */
   element?: React.ReactNode | null;
   /**
    * The React element to render while this router is loading data.
-   * Mutually exclusive with {@link HydrateFallback}.
+   * Mutually exclusive with `HydrateFallback`.
    */
   hydrateFallbackElement?: React.ReactNode | null;
   /**
    * The React element to render at this route if an error occurs.
-   * Mutually exclusive with {@link ErrorBoundary}.
+   * Mutually exclusive with `ErrorBoundary`.
    */
   errorElement?: React.ReactNode | null;
   /**
    * The React Component to render when this route matches.
-   * Mutually exclusive with {@link element}.
+   * Mutually exclusive with `element`.
    */
   Component?: React.ComponentType | null;
   /**
    * The React Component to render while this router is loading data.
-   * Mutually exclusive with {@link hydrateFallbackElement}.
+   * Mutually exclusive with `hydrateFallbackElement`.
    */
   HydrateFallback?: React.ComponentType | null;
   /**
    * The React Component to render at this route if an error occurs.
-   * Mutually exclusive with {@link errorElement}.
+   * Mutually exclusive with `errorElement`.
    */
   ErrorBoundary?: React.ComponentType | null;
 }
@@ -902,32 +905,32 @@ export interface IndexRouteProps {
   children?: undefined;
   /**
    * The React element to render when this Route matches.
-   * Mutually exclusive with {@link Component}.
+   * Mutually exclusive with `Component`.
    */
   element?: React.ReactNode | null;
   /**
    * The React element to render while this router is loading data.
-   * Mutually exclusive with {@link HydrateFallback}.
+   * Mutually exclusive with `HydrateFallback`.
    */
   hydrateFallbackElement?: React.ReactNode | null;
   /**
    * The React element to render at this route if an error occurs.
-   * Mutually exclusive with {@link ErrorBoundary}.
+   * Mutually exclusive with `ErrorBoundary`.
    */
   errorElement?: React.ReactNode | null;
   /**
    * The React Component to render when this route matches.
-   * Mutually exclusive with {@link element}.
+   * Mutually exclusive with `element`.
    */
   Component?: React.ComponentType | null;
   /**
    * The React Component to render while this router is loading data.
-   * Mutually exclusive with {@link hydrateFallbackElement}.
+   * Mutually exclusive with `hydrateFallbackElement`.
    */
   HydrateFallback?: React.ComponentType | null;
   /**
    * The React Component to render at this route if an error occurs.
-   * Mutually exclusive with {@link errorElement}.
+   * Mutually exclusive with `errorElement`.
    */
   ErrorBoundary?: React.ComponentType | null;
 }

@@ -40,7 +40,6 @@ import type {
   ActionFunction,
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
-  unstable_InitialContext,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -395,7 +394,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  unstable_getContext?: () => MaybePromise<unstable_InitialContext>;
+  unstable_getContext?: () => MaybePromise<unstable_RouterContextProvider>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -434,11 +433,7 @@ export interface StaticHandler {
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (
-        staticContext: StaticHandlerContext,
-      ) => MaybePromise<Response>;
-      unstable_stream?: (
-        context: unstable_RouterContextProvider,
+      unstable_generateMiddlewareResponse?: (
         query: (r: Request) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
     },
@@ -449,7 +444,9 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (res: Response) => MaybePromise<Response>;
+      unstable_generateMiddlewareResponse?: (
+        queryRoute: (r: Request) => Promise<Response>,
+      ) => MaybePromise<Response>;
     },
   ): Promise<any>;
 }
@@ -1667,9 +1664,9 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
     );
     // Create a new context per navigation
-    let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined,
-    );
+    let scopedContext = init.unstable_getContext
+      ? await init.unstable_getContext()
+      : new unstable_RouterContextProvider();
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -2049,11 +2046,13 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
-    // since they may have different revalidation rules (i.e., single fetch)
+    // Short circuit if we have no loaders/middlewares to run, unless there's a
+    // custom dataStrategy since they may have different revalidation rules
+    // (i.e., single fetch)
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
+      !dsMatches.some((m) => m.route.unstable_middleware) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -2266,9 +2265,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Create a new context per fetch
-    let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined,
-    );
+    let scopedContext = init.unstable_getContext
+      ? await init.unstable_getContext()
+      : new unstable_RouterContextProvider();
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
@@ -3527,8 +3526,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      unstable_stream: stream,
-      unstable_respond: respond,
+      unstable_generateMiddlewareResponse: generateMiddlewareResponse,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3539,18 +3537,6 @@ export function createStaticHandler(
       requestContext != null
         ? requestContext
         : new unstable_RouterContextProvider();
-
-    let respondOrStreamStaticContext = (
-      ctx: StaticHandlerContext,
-    ): MaybePromise<Response> | StaticHandlerContext => {
-      return stream
-        ? stream(requestContext as unstable_RouterContextProvider, () =>
-            Promise.resolve(ctx),
-          )
-        : respond
-          ? respond(ctx)
-          : ctx;
-    };
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD") {
@@ -3570,7 +3556,9 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext);
+      return generateMiddlewareResponse
+        ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
+        : staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3588,19 +3576,27 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext);
+      return generateMiddlewareResponse
+        ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
+        : staticContext;
     }
 
-    if (
-      stream ||
-      (respond &&
-        matches.some(
-          (m) =>
-            m.route.unstable_middleware ||
-            (typeof m.route.lazy === "object" &&
-              m.route.lazy.unstable_middleware),
-        ))
-    ) {
+    // The `stream` API is what enables middleware execution and makes 3 changes
+    // from the original `respond` API:
+    //  - It _always_ runs the middleware pipeline down to the `stream()`
+    //    function even if middleware doesn't exist
+    //  - We can now insert arbitrary logic at the end of the middleware
+    //    chain (inside the leaf `next()` call) such as running a server
+    //    action and let route middlewares apply to that action.
+    //  - We have control over the calling/awaiting of query() which
+    //    theoretically would allow us to send down the `actionResult`
+    //    immediately and then stream the entirety of the `query`/`staticContext`
+    //    info.  That has other implications though which we may not want,
+    //    such as not being able to leverage `headers()`, or respect
+    //    redirects from loaders after a server action, etc.
+    //    - If we decide this isn't warranted than the stream implementation
+    //      can simplify and potentially even collapse back into respond()
+    if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
@@ -3624,100 +3620,30 @@ export function createStaticHandler(
           },
           true,
           async () => {
-            /**
-             * TODO: stream() is a potential breaking change to the unstable_respond()
-             * API, implemented as a sibling option for now so as not to break
-             * any existing middleware logic.
-             *
-             * stream() gives us 3 things:
-             *  - It _always_ runs the middleware pipeline down to the stream()
-             *    function even if middleware doesn't exist
-             *  - we can now insert arbitrary logic at the end of the middleware
-             *    chain (inside the leaf next() call) such as running a server
-             *    action and let route middlewares apply to that action.
-             *  - We have control over the calling./awaiting of query() which
-             *    theoretically would allow us to send down the actionResult
-             *    immediately and then stream the entirety of the query/staticContext
-             *    info.  That has other implications though which we may not want,
-             *    such as not being able to leverage headers(), or respect
-             *    redirects from loaders after a server action, etc.
-             *    - If we decide this isn't warranted than the stream implementation
-             *      can simplify and potentially even collapse back into respond()
-             *
-             * Another totally different approach (larger LOE) would be to extract
-             * static handler middleware to be fully composable:
-             *
-             * // Current behavior
-             * let res = handler.middleware(request, (context) => {
-             *   let results = handler.query(request, context);
-             *   return generateResponse({
-             *     type: 'render',
-             *     payload: results
-             *   });
-             * })
-             *
-             * // RSC Server Action behavior
-             * let res = handler.middleware(request, (context) => {
-             *   let actionResult = serverAction(request);
-             *   let revalidationRequest = new Request(...)
-             *   let payloadPromise = handler.query(revalidationRequest, context)
-             *                               .then(context => getPayload(context));
-             *   return generateResponse({
-             *     type: 'action',
-             *     actionResult,,
-             *     rerender: payloadPromise
-             *   });
-             * })
-             **/
-            if (stream) {
-              let res = await stream(
-                requestContext as unstable_RouterContextProvider,
-                async (revalidationRequest: Request) => {
-                  let result = await queryImpl(
-                    revalidationRequest,
-                    location,
-                    matches!,
-                    requestContext,
-                    dataStrategy || null,
-                    skipLoaderErrorBubbling === true,
-                    null,
-                    filterMatchesToLoad || null,
-                    skipRevalidation === true,
-                  );
+            let res = await generateMiddlewareResponse(
+              async (revalidationRequest: Request) => {
+                let result = await queryImpl(
+                  revalidationRequest,
+                  location,
+                  matches!,
+                  requestContext,
+                  dataStrategy || null,
+                  skipLoaderErrorBubbling === true,
+                  null,
+                  filterMatchesToLoad || null,
+                  skipRevalidation === true,
+                );
 
-                  return isResponse(result)
-                    ? result
-                    : { location, basename, ...result };
-                },
-              );
-              return res;
-            }
-
-            // Should always be true given the if statement above
-            invariant(respond, "Expected respond to be defined");
-
-            let result = await queryImpl(
-              request,
-              location,
-              matches!,
-              requestContext,
-              dataStrategy || null,
-              skipLoaderErrorBubbling === true,
-              null,
-              filterMatchesToLoad || null,
-              skipRevalidation === true,
+                if (isResponse(result)) {
+                  return result;
+                }
+                // When returning StaticHandlerContext, we patch back in the location here
+                // since we need it for React Context.  But this helps keep our submit and
+                // loadRouteData operating on a Request instead of a Location
+                renderedStaticContext = { location, basename, ...result };
+                return renderedStaticContext;
+              },
             );
-
-            if (isResponse(result)) {
-              return result;
-            }
-
-            // When returning StaticHandlerContext, we patch back in the location here
-            // since we need it for React Context.  But this helps keep our submit and
-            // loadRouteData operating on a Request instead of a Location
-            renderedStaticContext = { location, basename, ...result };
-            let res = await respond(renderedStaticContext);
-
             return res;
           },
           async (error, routeId) => {
@@ -3745,7 +3671,9 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id,
               );
-              return respondOrStreamStaticContext(staticContext);
+              return generateMiddlewareResponse(() =>
+                Promise.resolve(staticContext),
+              );
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3775,7 +3703,9 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return respondOrStreamStaticContext(staticContext);
+              return generateMiddlewareResponse(() =>
+                Promise.resolve(staticContext),
+              );
             }
           },
         );
@@ -3844,7 +3774,7 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      unstable_respond: respond,
+      unstable_generateMiddlewareResponse: generateMiddlewareResponse,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3877,15 +3807,7 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (
-      respond &&
-      matches.some(
-        (m) =>
-          m.route.unstable_middleware ||
-          (typeof m.route.lazy === "object" &&
-            m.route.lazy.unstable_middleware),
-      )
-    ) {
+    if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
@@ -3903,51 +3825,36 @@ export function createStaticHandler(
         },
         true,
         async () => {
-          let result = await queryImpl(
-            request,
-            location,
-            matches!,
-            requestContext,
-            dataStrategy || null,
-            false,
-            match!,
-            null,
-            false,
+          let res = await generateMiddlewareResponse(
+            async (innerRequest: Request) => {
+              let result = await queryImpl(
+                innerRequest,
+                location,
+                matches!,
+                requestContext,
+                dataStrategy || null,
+                false,
+                match!,
+                null,
+                false,
+              );
+
+              let processed = handleQueryResult(result);
+
+              return isResponse(processed)
+                ? processed
+                : typeof processed === "string"
+                  ? new Response(processed)
+                  : Response.json(processed);
+            },
           );
-
-          if (isResponse(result)) {
-            return respond(result);
-          }
-
-          let error = result.errors
-            ? Object.values(result.errors)[0]
-            : undefined;
-
-          if (error !== undefined) {
-            // If we got back result.errors, that means the loader/action threw
-            // _something_ that wasn't a Response, but it's not guaranteed/required
-            // to be an `instanceof Error` either, so we have to use throw here to
-            // preserve the "error" state outside of queryImpl.
-            throw error;
-          }
-
-          // Pick off the right state value to return
-          let value = result.actionData
-            ? Object.values(result.actionData)[0]
-            : Object.values(result.loaderData)[0];
-
-          return typeof value === "string"
-            ? new Response(value)
-            : Response.json(value);
+          return res;
         },
         (error) => {
           if (isResponse(error)) {
-            return respond(error);
+            return error;
           }
-          return new Response(String(error), {
-            status: 500,
-            statusText: "Unexpected Server Error",
-          });
+          throw error;
         },
       );
       return response;
@@ -3965,29 +3872,33 @@ export function createStaticHandler(
       false,
     );
 
-    if (isResponse(result)) {
-      return result;
-    }
+    return handleQueryResult(result);
 
-    let error = result.errors ? Object.values(result.errors)[0] : undefined;
-    if (error !== undefined) {
-      // If we got back result.errors, that means the loader/action threw
-      // _something_ that wasn't a Response, but it's not guaranteed/required
-      // to be an `instanceof Error` either, so we have to use throw here to
-      // preserve the "error" state outside of queryImpl.
-      throw error;
-    }
+    function handleQueryResult(result: Awaited<ReturnType<typeof queryImpl>>) {
+      if (isResponse(result)) {
+        return result;
+      }
 
-    // Pick off the right state value to return
-    if (result.actionData) {
-      return Object.values(result.actionData)[0];
-    }
+      let error = result.errors ? Object.values(result.errors)[0] : undefined;
+      if (error !== undefined) {
+        // If we got back result.errors, that means the loader/action threw
+        // _something_ that wasn't a Response, but it's not guaranteed/required
+        // to be an `instanceof Error` either, so we have to use throw here to
+        // preserve the "error" state outside of queryImpl.
+        throw error;
+      }
 
-    if (result.loaderData) {
-      return Object.values(result.loaderData)[0];
-    }
+      // Pick off the right state value to return
+      if (result.actionData) {
+        return Object.values(result.actionData)[0];
+      }
 
-    return undefined;
+      if (result.loaderData) {
+        return Object.values(result.loaderData)[0];
+      }
+
+      return undefined;
+    }
   }
 
   async function queryImpl(
@@ -5490,7 +5401,12 @@ export async function runMiddlewarePipeline<T extends boolean>(
   handler: () => T extends true
     ? MaybePromise<Response>
     : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (error: unknown, routeId: string) => unknown,
+  errorHandler: (
+    error: unknown,
+    routeId: string,
+  ) => T extends true
+    ? MaybePromise<Response>
+    : Record<string, DataStrategyResult>,
 ): Promise<unknown> {
   let { matches, request, params, context } = args;
   let middlewareState: MutableMiddlewareState = {
@@ -5509,7 +5425,26 @@ export async function runMiddlewarePipeline<T extends boolean>(
       middlewareState,
       handler,
     );
-    return propagateResult ? result : middlewareState.handlerResult;
+
+    if (propagateResult) {
+      invariant(
+        isResponse(result) || isDataWithResponseInit(result),
+        `Expected a Response to be returned from route middleware`,
+      );
+      // Upgrade returned data() calls to real Responses
+      if (isDataWithResponseInit(result)) {
+        return new Response(
+          typeof result.data === "string"
+            ? result.data
+            : JSON.stringify(result.data),
+          { ...result.init },
+        );
+      } else {
+        return result;
+      }
+    } else {
+      return middlewareState.handlerResult;
+    }
   } catch (e) {
     if (!middlewareState.middlewareError) {
       // This shouldn't happen?  This would have to come from a bug in our
@@ -5585,17 +5520,33 @@ async function callRouteMiddleware(
       },
       next,
     );
-    if (nextCalled) {
-      if (result === undefined) {
+
+    if (propagateResult) {
+      // On the server, handle calling next() if needed and returning the proper result
+      if (nextCalled) {
         // If they called next() but didn't return the response, we can bubble
-        // it for them. This lets folks do things like grab the response and
-        // add a header without then re-returning it
-        return nextResult;
-      } else {
+        // it for them. This allows some minor syntactic sugar (or forgetfulness)
+        // where you can grab the response to add a header without re-returning it
+        return typeof result === "undefined" ? nextResult : result;
+      } else if (isResponse(result) || isDataWithResponseInit(result)) {
+        // Use short circuit Response/data() values without having called next()
         return result;
+      } else {
+        // Otherwise call next() for them
+        nextResult = await next();
+        return nextResult;
       }
     } else {
-      return next();
+      // On the client, just call next if they didn't
+      if (typeof result !== "undefined") {
+        console.warn(
+          "client middlewares are not intended to return values, the value will be ignored",
+          result,
+        );
+      }
+      if (!nextCalled) {
+        await next();
+      }
     }
   } catch (error) {
     if (!middlewareState.middlewareError) {
@@ -6293,14 +6244,16 @@ function processLoaderData(
     .filter((f) => !f.matches || f.matches.some((m) => m.shouldLoad))
     .forEach((rf) => {
       let { key, match, controller } = rf;
+      if (controller && controller.signal.aborted) {
+        // Nothing to do for aborted fetchers
+        return;
+      }
+
       let result = fetcherResults[key];
       invariant(result, "Did not find corresponding fetcher result");
 
       // Process fetcher non-redirect errors
-      if (controller && controller.signal.aborted) {
-        // Nothing to do for aborted fetchers
-        return;
-      } else if (isErrorResult(result)) {
+      if (isErrorResult(result)) {
         let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
         if (!(errors && errors[boundaryMatch.route.id])) {
           errors = {

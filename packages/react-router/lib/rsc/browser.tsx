@@ -604,9 +604,11 @@ export interface RSCHydratedRouterProps {
    */
   routeDiscovery?: "eager" | "lazy";
   /**
-   * A function that returns an {@link unstable_InitialContext} object
-   * (`Map<RouterContext, unknown>`), for use in client [`action`](../../start/data/route-object#action)s,
+   * A function that returns an {@link unstable_RouterContextProvider} instance
+   * which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
    * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+   * This function is called to generate a fresh `context` instance on each
+   * navigation or fetcher call.
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
 }

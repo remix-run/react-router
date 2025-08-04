@@ -39,7 +39,6 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
-  unstable_InitialContext,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -210,6 +209,7 @@ export {
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
 export type {
+  LinksProps,
   ScriptsProps,
   PrefetchBehavior,
   DiscoverBehavior,

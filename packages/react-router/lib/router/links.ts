@@ -184,6 +184,12 @@ export interface PageLinkDescriptor
     | "title"
   > {
   /**
+   * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+   * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * element
+   */
+  nonce?: string | undefined;
+  /**
    * The absolute path of the page to prefetch, e.g. `/absolute/path`.
    */
   page: string;

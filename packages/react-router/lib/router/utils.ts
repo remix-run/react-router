@@ -113,19 +113,74 @@ export type Submission =
       text: string;
     };
 
+/**
+ * A context instance used as the key for the `get`/`set` methods of a
+ * {@link unstable_RouterContextProvider}. Accepts an optional default
+ * value to be returned if no value has been set.
+ */
 export interface unstable_RouterContext<T = unknown> {
   defaultValue?: T;
 }
 
 /**
- * Creates a context object that may be used to store and retrieve arbitrary values.
+ * Creates a type-safe {@link unstable_RouterContext} object that can be used to
+ * * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
+ * * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
+ * * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
+ * * but specifically designed for React Router's request/response lifecycle.
  *
- * If a `defaultValue` is provided, it will be returned from `context.get()` when no value has been
- * set for the context. Otherwise reading this context when no value has been set will throw an
- * error.
+ * <docs-warning>Enable this API with the `future.unstable_middleware` flag.</docs-warning>
  *
- * @param defaultValue The default value for the context
- * @returns A context object
+ * If a `defaultValue` is provided, it will be returned from `context.get()`
+ * when no value has been set for the context. Otherwise, reading this context
+ * when no value has been set will throw an error.
+ *
+ * ```tsx filename=app/context.ts
+ * import { unstable_createContext } from "react-router";
+ *
+ * // Create a context for user data
+ * export const userContext =
+ *   unstable_createContext<User | null>(null);
+ * ```
+ *
+ * ```tsx filename=app/middleware/auth.ts
+ * import { getUserFromSession } from "~/auth.server";
+ * import { userContext } from "~/context";
+ *
+ * export const authMiddleware = async ({
+ *   context,
+ *   request,
+ * }) => {
+ *   const user = await getUserFromSession(request);
+ *   context.set(userContext, user);
+ * };
+ * ```
+ *
+ * ```tsx filename=app/routes/profile.tsx
+ * import { userContext } from "~/context";
+ *
+ * export async function loader({
+ *   context,
+ * }: Route.LoaderArgs) {
+ *   const user = context.get(userContext);
+ *
+ *   if (!user) {
+ *     throw new Response("Unauthorized", { status: 401 });
+ *   }
+ *
+ *   return { user };
+ * }
+ * ```
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param defaultValue An optional default value for the context. This value
+ * will be returned if no value has been set for this context.
+ * @returns A {@link unstable_RouterContext} object that can be used with
+ * `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
+ * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
  */
 export function unstable_createContext<T>(
   defaultValue?: T,
@@ -134,18 +189,34 @@ export function unstable_createContext<T>(
 }
 
 /**
- * A Map of RouterContext objects to their initial values - used to populate a
- * fresh `context` value per request/navigation/fetch
- */
-export type unstable_InitialContext = Map<unstable_RouterContext, unknown>;
-
-/**
- * Provides methods for writing/reading values in application context in a typesafe way.
+ * Provides methods for writing/reading values in application context in a
+ * type-safe way. Primarily for usage with [middleware](../../how-to/middleware).
+ *
+ * @example
+ * import {
+ *   unstable_createContext,
+ *   unstable_RouterContextProvider
+ * } from "react-router";
+ *
+ * const userContext = unstable_createContext<User | null>(null);
+ * const contextProvider = new unstable_RouterContextProvider();
+ * contextProvider.set(userContext, getUser());
+ * const user = contextProvider.get(userContext);
+ * //    ^ User
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
  */
 export class unstable_RouterContextProvider {
   #map = new Map<unstable_RouterContext, unknown>();
 
-  constructor(init?: unstable_InitialContext) {
+  /**
+   * Create a new `unstable_RouterContextProvider` instance
+   * @param init An optional initial context map to populate the provider with
+   */
+  constructor(init?: Map<unstable_RouterContext, unknown>) {
     if (init) {
       for (let [context, value] of init) {
         this.set(context, value);
@@ -153,6 +224,14 @@ export class unstable_RouterContextProvider {
     }
   }
 
+  /**
+   * Access a value from the context. If no value has been set for the context,
+   * it will return the context's `defaultValue` if provided, or throw an error
+   * if no `defaultValue` was set.
+   * @param context The context to get the value for
+   * @returns The value for the context, or the context's `defaultValue` if no
+   * value was set
+   */
   get<T>(context: unstable_RouterContext<T>): T {
     if (this.#map.has(context)) {
       return this.#map.get(context) as T;
@@ -165,6 +244,14 @@ export class unstable_RouterContextProvider {
     throw new Error("No value found for context");
   }
 
+  /**
+   * Set a value for the context. If the context already has a value set, this
+   * will overwrite it.
+   *
+   * @param context The context to set the value for
+   * @param value The value to set for the context
+   * @returns {void}
+   */
   set<C extends unstable_RouterContext>(
     context: C,
     value: C extends unstable_RouterContext<infer T> ? T : never,
@@ -174,7 +261,7 @@ export class unstable_RouterContextProvider {
 }
 
 type DefaultContext = MiddlewareEnabled extends true
-  ? unstable_RouterContextProvider
+  ? Readonly<unstable_RouterContextProvider>
   : any;
 
 /**
@@ -198,7 +285,7 @@ interface DataFunctionArgs<Context> {
    *   params.teamId;
    *   //        ^ string
    * }
-   **/
+   */
   params: Params;
   /**
    * This is the context passed in to your server adapter's getLoadContext() function.
@@ -223,7 +310,7 @@ export interface unstable_MiddlewareNextFunction<Result = unknown> {
  * and then complete middlewares from the bottom-up
  */
 export type unstable_MiddlewareFunction<Result = unknown> = (
-  args: DataFunctionArgs<unstable_RouterContextProvider>,
+  args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
   next: unstable_MiddlewareNextFunction<Result>,
 ) => MaybePromise<Result | void>;
 
@@ -756,7 +843,28 @@ export function convertRoutesToDataRoutes(
 /**
  * Matches the given routes to a location and returns the match data.
  *
+ * @example
+ * import { matchRoutes } from "react-router";
+ *
+ * let routes = [{
+ *   path: "/",
+ *   Component: Root,
+ *   children: [{
+ *     path: "dashboard",
+ *     Component: Dashboard,
+ *   }]
+ * }];
+ *
+ * matchRoutes(routes, "/dashboard"); // [rootMatch, dashboardMatch]
+ *
+ * @public
  * @category Utils
+ * @param routes The array of route objects to match against.
+ * @param locationArg The location to match against, either a string path or a
+ * partial {@link Location} object
+ * @param basename Optional base path to strip from the location before matching.
+ * Defaults to `/`.
+ * @returns An array of matched routes, or `null` if no matches were found.
  */
 export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
@@ -812,10 +920,16 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
   pathname: string;
   /**
    * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
-   **/
+   */
   params: AgnosticRouteMatch["params"];
-  /** The return value from the matched route's loader or clientLoader */
+  /**
+   * The return value from the matched route's loader or clientLoader
+   *
+   * @deprecated Use `UIMatch.loaderData` instead
+   */
   data: Data;
+  /** The return value from the matched route's loader or clientLoader */
+  loaderData: Data;
   /** The {@link https://reactrouter.com/start/framework/route-module#handle handle object} exported from the matched route module */
   handle: Handle;
 }
@@ -830,6 +944,7 @@ export function convertRouteMatchToUiMatch(
     pathname,
     params,
     data: loaderData[route.id],
+    loaderData: loaderData[route.id],
     handle: route.handle,
   };
 }
@@ -926,7 +1041,7 @@ function flattenRoutes<
   return branches;
 }
 
-/**
+/*
  * Computes all combinations of optional path segments for a given path,
  * excluding combinations that are ambiguous and of lower priority.
  *
@@ -1114,7 +1229,16 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
+ * @example
+ * import { generatePath } from "react-router";
+ *
+ * generatePath("/users/:id", { id: "123" }); // "/users/123"
+ *
+ * @public
  * @category Utils
+ * @param originalPath The original path to generate.
+ * @param params The parameters to interpolate into the path.
+ * @returns The generated path with parameters interpolated.
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
@@ -1170,13 +1294,13 @@ export function generatePath<Path extends string>(
 }
 
 /**
- * A PathPattern is used to match on some portion of a URL pathname.
+ * Used to match on some portion of a URL pathname.
  */
 export interface PathPattern<Path extends string = string> {
   /**
    * A string to match against a URL pathname. May contain `:id`-style segments
-   * to indicate placeholders for dynamic parameters. May also end with `/*` to
-   * indicate matching the rest of the URL pathname.
+   * to indicate placeholders for dynamic parameters. It May also end with `/*`
+   * to indicate matching the rest of the URL pathname.
    */
   path: Path;
   /**
@@ -1191,7 +1315,7 @@ export interface PathPattern<Path extends string = string> {
 }
 
 /**
- * A PathMatch contains info about how a PathPattern matched on a URL pathname.
+ * Contains info about how a {@link PathPattern} matched on a URL pathname.
  */
 export interface PathMatch<ParamKey extends string = string> {
   /**
@@ -1220,7 +1344,15 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
+ * @public
  * @category Utils
+ * @param pattern The pattern to match against the URL pathname. This can be a
+ * string or a {@link PathPattern} object. If a string is provided, it will be
+ * treated as a pattern with `caseSensitive` set to `false` and `end` set to
+ * `true`.
+ * @param pathname The URL pathname to match against the pattern.
+ * @returns A path match object if the pattern matches the pathname,
+ * or `null` if it does not match.
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -1350,9 +1482,6 @@ export function decodePath(value: string) {
   }
 }
 
-/**
- * @private
- */
 export function stripBasename(
   pathname: string,
   basename: string,
@@ -1391,9 +1520,14 @@ export function prependBasename({
 }
 
 /**
- * Returns a resolved path object relative to the given pathname.
+ * Returns a resolved {@link Path} object relative to the given pathname.
  *
+ * @public
  * @category Utils
+ * @param to The path to resolve, either a string or a partial {@link Path}
+ * object.
+ * @param fromPathname The pathname to resolve the path from. Defaults to `/`.
+ * @returns A {@link Path} object with the resolved pathname, search, and hash.
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
@@ -1447,29 +1581,25 @@ function getInvalidPathError(
   );
 }
 
-/**
- * @private
- *
- * When processing relative navigation we want to ignore ancestor routes that
- * do not contribute to the path, such that index/pathless layout routes don't
- * interfere.
- *
- * For example, when moving a route element into an index route and/or a
- * pathless layout route, relative link behavior contained within should stay
- * the same.  Both of the following examples should link back to the root:
- *
- *   <Route path="/">
- *     <Route path="accounts" element={<Link to=".."}>
- *   </Route>
- *
- *   <Route path="/">
- *     <Route path="accounts">
- *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
- *         <Route index element={<Link to=".."} />  // <-- Does not contribute
- *       </Route
- *     </Route>
- *   </Route>
- */
+// When processing relative navigation we want to ignore ancestor routes that
+// do not contribute to the path, such that index/pathless layout routes don't
+// interfere.
+//
+// For example, when moving a route element into an index route and/or a
+// pathless layout route, relative link behavior contained within should stay
+// the same.  Both of the following examples should link back to the root:
+//
+// <Route path="/">
+//   <Route path="accounts" element={<Link to=".."}>
+// </Route>
+//
+// <Route path="/">
+//   <Route path="accounts">
+//     <Route element={<AccountsLayout />}>       // <-- Does not contribute
+//       <Route index element={<Link to=".."} />  // <-- Does not contribute
+//     </Route
+//   </Route>
+// </Route>
 export function getPathContributingMatches<
   T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
@@ -1493,9 +1623,6 @@ export function getResolveToMatches<
   );
 }
 
-/**
- * @private
- */
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
@@ -1577,21 +1704,18 @@ export function resolveTo(
   return path;
 }
 
-/**
- * @private
- */
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
-/**
- * @private
- */
 export const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
 
-/**
- * @private
- */
+/*
+lol - this comment is needed because the JSDoc parser for docs.ts gets confused
+by the star-slash in the normalizePathname regex and messes up the parsed comment
+for data() below.  This comment seems to reset the parser.
+*/
+
 export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
@@ -1599,9 +1723,6 @@ export const normalizeSearch = (search: string): string =>
       ? search
       : "?" + search;
 
-/**
- * @private
- */
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
@@ -1617,10 +1738,30 @@ export class DataWithResponseInit<D> {
 }
 
 /**
- * Create "responses" that contain `status`/`headers` without forcing
- * serialization into an actual `Response` - used by Remix single fetch
+ * Create "responses" that contain `headers`/`status` without forcing
+ * serialization into an actual [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  *
+ * @example
+ * import { data } from "react-router";
+ *
+ * export async function action({ request }: Route.ActionArgs) {
+ *   let formData = await request.formData();
+ *   let item = await createItem(formData);
+ *   return data(item, {
+ *     headers: { "X-Custom-Header": "value" }
+ *     status: 201,
+ *   });
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param data The data to be included in the response.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A {@link DataWithResponseInit} instance containing the data and
+ * response init.
  */
 export function data<D>(data: D, init?: number | ResponseInit) {
   return new DataWithResponseInit(
@@ -1643,10 +1784,31 @@ export type RedirectFunction = (
 ) => Response;
 
 /**
- * A redirect response. Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+ * Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * @example
+ * import { redirect } from "react-router";
+ *
+ * export async function loader({ request }: Route.LoaderArgs) {
+ *   if (!isLoggedIn(request))
+ *     throw redirect("/login");
+ *   }
+ *
+ *   // ...
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param url The URL to redirect to.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
@@ -1663,11 +1825,34 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 };
 
 /**
- * A redirect response that will force a document reload to the new location.
- * Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that will force a document reload to the new location. Sets the status code
+ * and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * ```tsx filename=routes/logout.tsx
+ * import { redirectDocument } from "react-router";
+ *
+ * import { destroySession } from "../sessions.server";
+ *
+ * export async function action({ request }: Route.ActionArgs) {
+ *   let session = await getSession(request.headers.get("Cookie"));
+ *   return redirectDocument("/", {
+ *     headers: { "Set-Cookie": await destroySession(session) }
+ *   });
+ * }
+ * ```
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param url The URL to redirect to.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1676,12 +1861,29 @@ export const redirectDocument: RedirectFunction = (url, init) => {
 };
 
 /**
- * A redirect response that will perform a `history.replaceState` instead of a
- * `history.pushState` for client-side navigation redirects.
- * Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that will perform a [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState)
+ * instead of a [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
+ * for client-side navigation redirects. Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * @example
+ * import { replace } from "react-router";
+ *
+ * export async function loader() {
+ *   return replace("/new-location");
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param url The URL to redirect to.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const replace: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1695,8 +1897,7 @@ export type ErrorResponse = {
   data: any;
 };
 
-/**
- * @private
+/*
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
  *
  * We don't export the class for public use since it's an implementation
@@ -1729,10 +1930,35 @@ export class ErrorResponseImpl implements ErrorResponse {
 }
 
 /**
- * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response thrown from an action/loader
+ * Check if the given error is an {@link ErrorResponse} generated from a 4xx/5xx
+ * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
  *
+ * @example
+ * import { isRouteErrorResponse } from "react-router";
+ *
+ * export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+ *   if (isRouteErrorResponse(error)) {
+ *     return (
+ *       <>
+ *         <p>Error: `${error.status}: ${error.statusText}`</p>
+ *         <p>{error.data}</p>
+ *       </>
+ *     );
+ *   }
+ *
+ *   return (
+ *     <p>Error: {error instanceof Error ? error.message : "Unknown Error"}</p>
+ *   );
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param error The error to check.
+ * @returns `true` if the error is an {@link ErrorResponse}, `false` otherwise.
+ *
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (

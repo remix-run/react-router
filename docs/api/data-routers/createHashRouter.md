@@ -50,8 +50,11 @@ Future flags to enable for the router.
 
 ### opts.unstable_getContext
 
-Function to provide the initial `context` values for all client-side
-navigations/fetches
+A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
+[`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+This function is called to generate a fresh `context` instance on each
+navigation or fetcher call.
 
 ### opts.hydrationData
 
@@ -79,16 +82,16 @@ server-rendered app. But in advanced use-cases (such as Framework Mode's
 [`clientLoader`](../../start/framework/route-module#clientLoader)), you may
 want to include `loaderData` for only some routes that were loaded/rendered
 on the server. This allows you to hydrate _some_ of the routes (such as the
-app layout/shell) while showing a ``HydrateFallback``
-component and running the [`loader`](../../start/data/route-object#loader)s
-for other routes during hydration.
+app layout/shell) while showing a `HydrateFallback` component and running
+the [`loader`](../../start/data/route-object#loader)s for other routes
+during hydration.
 
 A route [`loader`](../../start/data/route-object#loader) will run during
 hydration in two scenarios:
 
  1. No hydration data is provided
-    In these cases the ``HydrateFallback``
-    component will render on initial hydration
+    In these cases the `HydrateFallback` component will render on initial
+    hydration
  2. The `loader.hydrate` property is set to `true`
     This allows you to run the [`loader`](../../start/data/route-object#loader)
     even if you did not render a fallback on initial hydration (i.e., to
@@ -150,8 +153,8 @@ application's data needs.
 
 The `dataStrategy` function should return a key/value-object of
 `routeId` -> [`DataStrategyResult`](https://api.reactrouter.com/v7/interfaces/react_router.DataStrategyResult.html) and should include entries for any
-routes where a handler was executed. A [`DataStrategyResult`](https://api.reactrouter.com/v7/interfaces/react_router.DataStrategyResult.html) indicates
-if the handler was successful or not based on the `DataStrategyResult.type`
+routes where a handler was executed. A `DataStrategyResult` indicates if
+the handler was successful or not based on the `DataStrategyResult.type`
 field. If the returned `DataStrategyResult.result` is a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response),
 React Router will unwrap it for you (via [`res.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)
 or [`res.text`](https://developer.mozilla.org/en-US/docs/Web/API/Response/text)).
@@ -172,7 +175,7 @@ execute:
 let router = createBrowserRouter(routes, {
   async dataStrategy({ matches, request }) {
     const matchesToLoad = matches.filter((m) => m.shouldLoad);
-    const results = {};
+    const results: Record<string, DataStrategyResult> = {};
     await Promise.all(
       matchesToLoad.map(async (match) => {
         console.log(`Processing ${match.route.id}`);
@@ -345,11 +348,11 @@ the app - but would only ever end up loading portions of the tree that the
 user visited.
 
 `patchRoutesOnNavigation` will be called anytime React Router is unable to
-match a `path`. The arguments include the `path`, any partial
-``matches``, and a `patch` function you can call to patch
-new routes into the tree at a specific location. This method is executed
-during the `loading` portion of the navigation for `GET` requests and during
-the `submitting` portion of the navigation for non-`GET` requests.
+match a `path`. The arguments include the `path`, any partial `matches`,
+and a `patch` function you can call to patch new routes into the tree at a
+specific location. This method is executed during the `loading` portion of
+the navigation for `GET` requests and during the `submitting` portion of
+the navigation for non-`GET` requests.
 
 <details>
   <summary><b>Example <code>patchRoutesOnNavigation</code> Use Cases</b></summary>
@@ -449,7 +452,7 @@ the `submitting` portion of the navigation for non-`GET` requests.
   **Co-locating route discovery with route definition**
 
   If you don't wish to perform your own pseudo-matching, you can leverage
-  the partial ``matches`` array and the [`handle`](../../start/data/route-object#handle)
+  the partial `matches` array and the [`handle`](../../start/data/route-object#handle)
   field on a route to keep the children definitions co-located:
 
   ```tsx

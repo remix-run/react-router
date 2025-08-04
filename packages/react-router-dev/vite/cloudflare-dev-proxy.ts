@@ -3,13 +3,13 @@ import {
   type AppLoadContext,
   type ServerBuild,
   type UNSAFE_MiddlewareEnabled,
-  type unstable_InitialContext,
+  type unstable_RouterContextProvider,
 } from "react-router";
 import { type Plugin } from "vite";
 import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
-import { preloadVite, getVite } from "./vite";
+import { preloadVite } from "./vite";
 import { type ResolvedReactRouterConfig, loadConfig } from "../config/config";
 
 let serverBuildId = "virtual:react-router/server-build";
@@ -26,7 +26,7 @@ type GetLoadContext<Env, Cf extends CfProperties> = (args: {
   request: Request;
   context: LoadContext<Env, Cf>;
 }) => UNSAFE_MiddlewareEnabled extends true
-  ? MaybePromise<unstable_InitialContext>
+  ? MaybePromise<unstable_RouterContextProvider>
   : MaybePromise<AppLoadContext>;
 
 function importWrangler() {

@@ -1,5 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type { ErrorResponse, unstable_InitialContext } from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
@@ -48,7 +48,7 @@ import { getManifestPath } from "../dom/ssr/fog-of-war";
 export type RequestHandler = (
   request: Request,
   loadContext?: MiddlewareEnabled extends true
-    ? unstable_InitialContext
+    ? unstable_RouterContextProvider
     : AppLoadContext,
 ) => Promise<Response>;
 
@@ -127,24 +127,19 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     };
 
     if (_build.future.unstable_middleware) {
-      if (initialContext == null) {
-        loadContext = new unstable_RouterContextProvider();
-      } else {
-        try {
-          loadContext = new unstable_RouterContextProvider(
-            initialContext as unknown as unstable_InitialContext,
-          );
-        } catch (e) {
-          let error = new Error(
-            "Unable to create initial `unstable_RouterContextProvider` instance. " +
-              "Please confirm you are returning an instance of " +
-              "`Map<unstable_routerContext, unknown>` from your `getLoadContext` function." +
-              `\n\nError: ${e instanceof Error ? e.toString() : e}`,
-          );
-          handleError(error);
-          return returnLastResortErrorResponse(error, serverMode);
-        }
+      if (
+        initialContext &&
+        !(initialContext instanceof unstable_RouterContextProvider)
+      ) {
+        let error = new Error(
+          "Invalid `context` value provided to `handleRequest`. When middleware " +
+            "is enabled you must return an instance of `unstable_RouterContextProvider` " +
+            "from your `getLoadContext` function.",
+        );
+        handleError(error);
+        return returnLastResortErrorResponse(error, serverMode);
       }
+      loadContext = initialContext || new unstable_RouterContextProvider();
     } else {
       loadContext = initialContext || {};
     }
@@ -444,26 +439,34 @@ async function handleDocumentRequest(
   criticalCss?: CriticalCss,
 ) {
   try {
-    let response = await staticHandler.query(request, {
+    let result = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_respond: build.future.unstable_middleware
-        ? (ctx) => renderHtml(ctx, isSpaMode)
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
+        ? async (query) => {
+            try {
+              let innerResult = await query(request);
+              if (!isResponse(innerResult)) {
+                innerResult = await renderHtml(innerResult, isSpaMode);
+              }
+              return innerResult;
+            } catch (error: unknown) {
+              handleError(error);
+              return new Response(null, { status: 500 });
+            }
+          }
         : undefined,
     });
-    // while middleware is still unstable, we don't run the middleware pipeline
-    // if no routes have middleware, so we still might need to convert context
-    // to a response here
-    return isResponse(response) ? response : renderHtml(response, isSpaMode);
+
+    if (!isResponse(result)) {
+      result = await renderHtml(result, isSpaMode);
+    }
+    return result;
   } catch (error: unknown) {
     handleError(error);
     return new Response(null, { status: 500 });
   }
 
   async function renderHtml(context: StaticHandlerContext, isSpaMode: boolean) {
-    if (isResponse(context)) {
-      return context;
-    }
-
     let headers = getDocumentHeaders(context, build);
 
     // Skip response body for unsupported status codes
@@ -616,24 +619,41 @@ async function handleResourceRequest(
     // Note we keep the routeId here to align with the Remix handling of
     // resource routes which doesn't take ?index into account and just takes
     // the leaf match
-    let response = await staticHandler.queryRoute(request, {
+    let result = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_respond: build.future.unstable_middleware
-        ? (ctx) => ctx
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
+        ? async (queryRoute) => {
+            try {
+              let innerResult = await queryRoute(request);
+              return handleQueryRouteResult(innerResult);
+            } catch (error) {
+              return handleQueryRouteError(error);
+            }
+          }
         : undefined,
     });
 
-    if (isResponse(response)) {
-      return response;
-    }
-
-    if (typeof response === "string") {
-      return new Response(response);
-    }
-
-    return Response.json(response);
+    return handleQueryRouteResult(result);
   } catch (error: unknown) {
+    return handleQueryRouteError(error);
+  }
+
+  function handleQueryRouteResult(
+    result: Awaited<ReturnType<StaticHandler["queryRoute"]>>,
+  ) {
+    if (isResponse(result)) {
+      return result;
+    }
+
+    if (typeof result === "string") {
+      return new Response(result);
+    }
+
+    return Response.json(result);
+  }
+
+  function handleQueryRouteError(error: unknown) {
     if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers
       // match identically to what Remix returns
@@ -642,9 +662,7 @@ async function handleResourceRequest(
     }
 
     if (isRouteErrorResponse(error)) {
-      if (error) {
-        handleError(error);
-      }
+      handleError(error);
       return errorResponseToJson(error, serverMode);
     }
 

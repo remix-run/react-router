@@ -812,6 +812,7 @@ describe("createMemoryRouter", () => {
     expect(spy).toHaveBeenCalledWith("Layout", [
       {
         data: undefined,
+        loaderData: undefined,
         handle: undefined,
         id: "0",
         params: {},
@@ -819,6 +820,7 @@ describe("createMemoryRouter", () => {
       },
       {
         data: "BAR LOADER",
+        loaderData: "BAR LOADER",
         handle: {
           key: "value",
         },

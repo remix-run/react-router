@@ -603,7 +603,6 @@ async function generateResourceResponse(
   requestContext: unstable_RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
-  let result: Response;
   try {
     const staticHandler = createStaticHandler(routes, {
       basename,
@@ -612,44 +611,49 @@ async function generateResourceResponse(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext,
-      unstable_respond: (ctx) => ctx,
+      async unstable_generateMiddlewareResponse(queryRoute) {
+        try {
+          let response = await queryRoute(request);
+          return generateResourceResponse(response);
+        } catch (error) {
+          return generateErrorResponse(error);
+        }
+      },
     });
-
-    if (isResponse(response)) {
-      result = response;
-    } else {
-      if (typeof response === "string") {
-        result = new Response(response);
-      } else {
-        result = Response.json(response);
-      }
-    }
+    return response;
   } catch (error) {
+    return generateErrorResponse(error);
+  }
+
+  function generateErrorResponse(error: unknown) {
+    let response: Response;
     if (isResponse(error)) {
-      result = error;
+      response = error;
     } else if (isRouteErrorResponse(error)) {
       onError?.(error);
       const errorMessage =
         typeof error.data === "string" ? error.data : error.statusText;
-      result = new Response(errorMessage, {
+      response = new Response(errorMessage, {
         status: error.status,
         statusText: error.statusText,
       });
     } else {
       onError?.(error);
-      result = new Response("Internal Server Error", {
-        status: 500,
-      });
+      response = new Response("Internal Server Error", { status: 500 });
     }
+
+    return generateResourceResponse(response);
   }
 
-  const headers = new Headers(result.headers);
-  headers.set("React-Router-Resource", "true");
-  return new Response(result.body, {
-    status: result.status,
-    statusText: result.statusText,
-    headers,
-  });
+  function generateResourceResponse(response: Response) {
+    const headers = new Headers(response.headers);
+    headers.set("React-Router-Resource", "true");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
 }
 
 async function generateRenderResponse(
@@ -702,7 +706,7 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
-      async unstable_stream(_, query) {
+      async unstable_generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the
@@ -980,22 +984,15 @@ async function getRenderPayload(
 
   let matchesPromise = Promise.all(
     staticContext.matches.map((match, i) => {
-      // Only bother rendering Server Components for routes that we're surfacing,
-      // so nothing at/below an error boundary and prune routes if included in
-      // `routeIdsToLoad`.  This is specifically important when a middleware
-      // or loader throws and we don't have any `loaderData` to pass through as
-      // props leading to render-time errors of the server component
-      let shouldRenderComponent =
-        i <= deepestRenderedRouteIdx &&
-        (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
-        (!staticContext.errors || !(match.route.id in staticContext.errors));
-
-      return getRSCRouteMatch(
+      let isBelowErrorBoundary = i > deepestRenderedRouteIdx;
+      let parentId = parentIds[match.route.id];
+      return getRSCRouteMatch({
         staticContext,
         match,
-        shouldRenderComponent,
-        parentIds[match.route.id],
-      );
+        routeIdsToLoad,
+        isBelowErrorBoundary,
+        parentId,
+      });
     }),
   );
 
@@ -1015,12 +1012,19 @@ async function getRenderPayload(
   };
 }
 
-async function getRSCRouteMatch(
-  staticContext: StaticHandlerContext,
-  match: AgnosticDataRouteMatch,
-  shouldRenderComponent: boolean,
-  parentId: string | undefined,
-) {
+async function getRSCRouteMatch({
+  staticContext,
+  match,
+  isBelowErrorBoundary,
+  routeIdsToLoad,
+  parentId,
+}: {
+  staticContext: StaticHandlerContext;
+  match: AgnosticDataRouteMatch;
+  isBelowErrorBoundary: boolean;
+  routeIdsToLoad: string[] | null;
+  parentId: string | undefined;
+}) {
   // @ts-expect-error - FIXME: Fix the types here
   await explodeLazyRoute(match.route);
   const Layout = (match.route as any).Layout || React.Fragment;
@@ -1032,8 +1036,15 @@ async function getRSCRouteMatch(
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
-  if (Component) {
-    element = shouldRenderComponent
+  let shouldLoadRoute =
+    !routeIdsToLoad || routeIdsToLoad.includes(match.route.id);
+  // Only bother rendering Server Components for routes that we're surfacing,
+  // so nothing at/below an error boundary and prune routes if included in
+  // `routeIdsToLoad`.  This is specifically important when a middleware
+  // or loader throws and we don't have any `loaderData` to pass through as
+  // props leading to render-time errors of the server component
+  if (Component && shouldLoadRoute) {
+    element = !isBelowErrorBoundary
       ? React.createElement(
           Layout,
           null,

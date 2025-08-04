@@ -958,14 +958,9 @@ test.describe("Client Data", () => {
               console.error = _consoleError;
             });
 
-            test("hydrating clientLoader redirects trigger new .data requests to the server", async ({
+            test("hydrating clientLoader redirects trigger new data requests to the server", async ({
               page,
             }) => {
-              test.fixme(
-                templateName.includes("rsc"),
-                "Not working in the RSC implementation",
-              );
-
               appFixture = await createAppFixture(
                 await createFixture({
                   templateName,
