@@ -158,7 +158,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     {
       name: "react-router/rsc/virtual-route-modules",
       transform(code, id) {
-        return transformVirtualRouteModules({ code, id });
+        return transformVirtualRouteModules({ code, id, viteCommand });
       },
     },
     {

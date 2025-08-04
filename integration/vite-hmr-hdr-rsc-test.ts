@@ -379,5 +379,51 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     );
     await expect(input).toHaveValue("stateful");
     expect(page.errors).toEqual([]);
+
+    // switch from server-first to client route
+    await edit("app/routes/hmr/route.tsx", (contents) =>
+      contents
+        .replace(
+          "export function ServerComponent",
+          "export default function ClientComponent",
+        )
+        .replace("HMR updated: 3", "Client Route HMR: 0"),
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("Client Route HMR: 0");
+    // state is not preserved when switching from server to client route
+    await expect(input).toHaveValue("");
+    await input.type("client stateful");
+    expect(page.errors).toEqual([]);
+    await edit("app/routes/hmr/route.tsx", (contents) =>
+      contents.replace("Client Route HMR: 0", "Client Route HMR: 1"),
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("Client Route HMR: 1");
+    await expect(input).toHaveValue("client stateful");
+    expect(page.errors).toEqual([]);
+
+    // switch from client route back to server-first route
+    await edit("app/routes/hmr/route.tsx", (contents) =>
+      contents
+        .replace(
+          "export default function ClientComponent",
+          "export function ServerComponent",
+        )
+        .replace("Client Route HMR: 1", "Server Route HMR: 0"),
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("Server Route HMR: 0");
+    // State is not preserved when switching from client to server route
+    await expect(input).toHaveValue("");
+    await input.type("server stateful");
+    expect(page.errors).toEqual([]);
+    await edit("app/routes/hmr/route.tsx", (contents) =>
+      contents.replace("Server Route HMR: 0", "Server Route HMR: 1"),
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("Server Route HMR: 1");
+    await expect(input).toHaveValue("server stateful");
+    expect(page.errors).toEqual([]);
   });
 });

@@ -1110,6 +1110,14 @@ async function getRSCRouteMatch(
     pathname: match.pathname,
     pathnameBase: match.pathnameBase,
     shouldRevalidate: (match.route as any).shouldRevalidate,
+    // Add an unused client-only export (if present) so HMR can support
+    // switching from server-first to client-only routes during development
+    ...((match.route as any).__ensureClientRouteModuleForHmr
+      ? {
+          __ensureClientRouteModuleForHmr: (match.route as any)
+            .__ensureClientRouteModuleForHmr,
+        }
+      : {}),
   };
 }
 

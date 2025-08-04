@@ -1,3 +1,4 @@
+import type { ConfigEnv } from "vite";
 import * as babel from "../babel";
 import { parse as esModuleLexer } from "es-module-lexer";
 import { removeExports } from "../remove-exports";
@@ -44,19 +45,23 @@ function isClientRouteExport(name: string): name is ClientRouteExport {
   return CLIENT_ROUTE_EXPORTS_SET.has(name as ClientRouteExport);
 }
 
+type ViteCommand = ConfigEnv["command"];
+
 export function transformVirtualRouteModules({
   id,
   code,
+  viteCommand,
 }: {
   id: string;
   code: string;
+  viteCommand: ViteCommand;
 }) {
   if (!id.includes("route-module")) {
     return;
   }
 
   if (isVirtualRouteModuleId(id)) {
-    return createVirtualRouteModuleCode({ id, code });
+    return createVirtualRouteModuleCode({ id, code, viteCommand });
   }
 
   if (isVirtualServerRouteModuleId(id)) {
@@ -64,18 +69,21 @@ export function transformVirtualRouteModules({
   }
 
   if (isVirtualClientRouteModuleId(id)) {
-    return createVirtualClientRouteModuleCode({ id, code });
+    return createVirtualClientRouteModuleCode({ id, code, viteCommand });
   }
 }
 
 async function createVirtualRouteModuleCode({
   id,
   code: routeSource,
+  viteCommand,
 }: {
   id: string;
   code: string;
+  viteCommand: ViteCommand;
 }) {
-  const { staticExports, isServerFirstRoute } = parseRouteExports(routeSource);
+  const { staticExports, isServerFirstRoute, hasClientExports } =
+    parseRouteExports(routeSource);
 
   const clientModuleId = getVirtualClientModuleId(id);
   const serverModuleId = getVirtualServerModuleId(id);
@@ -90,6 +98,9 @@ async function createVirtualRouteModuleCode({
       } else {
         code += `export { ${staticExport} } from "${serverModuleId}";\n`;
       }
+    }
+    if (viteCommand === "serve" && !hasClientExports) {
+      code += `export { __ensureClientRouteModuleForHmr } from "${clientModuleId}";\n`;
     }
   } else {
     for (const staticExport of staticExports) {
@@ -142,11 +153,14 @@ function createVirtualServerRouteModuleCode({
 function createVirtualClientRouteModuleCode({
   id,
   code: routeSource,
+  viteCommand,
 }: {
   id: string;
   code: string;
+  viteCommand: ViteCommand;
 }) {
-  const { staticExports, isServerFirstRoute } = parseRouteExports(routeSource);
+  const { staticExports, isServerFirstRoute, hasClientExports } =
+    parseRouteExports(routeSource);
   const exportsToRemove = isServerFirstRoute
     ? [...SERVER_ONLY_ROUTE_EXPORTS, ...COMPONENT_EXPORTS]
     : SERVER_ONLY_ROUTE_EXPORTS;
@@ -168,17 +182,25 @@ function createVirtualClientRouteModuleCode({
     generatorResult.code += `}\n`;
   }
 
+  if (viteCommand === "serve" && isServerFirstRoute && !hasClientExports) {
+    generatorResult.code += `\nexport const __ensureClientRouteModuleForHmr = true;`;
+  }
+
   return generatorResult;
 }
 
 export function parseRouteExports(code: string) {
   const [, exportSpecifiers] = esModuleLexer(code);
   const staticExports = exportSpecifiers.map(({ n: name }) => name);
+  const isServerFirstRoute = staticExports.some(
+    (staticExport) => staticExport === "ServerComponent",
+  );
   return {
     staticExports,
-    isServerFirstRoute: staticExports.some(
-      (staticExport) => staticExport === "ServerComponent",
-    ),
+    isServerFirstRoute,
+    hasClientExports: isServerFirstRoute
+      ? staticExports.some(isClientNonComponentExport)
+      : staticExports.some(isClientRouteExport),
   };
 }
 
