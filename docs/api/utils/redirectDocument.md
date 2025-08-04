@@ -22,16 +22,17 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.redirectDocument.html)
 
-A redirect response that will force a document reload to the new location.
-Sets the status code and the `Location` header.
-Defaults to "302 Found".
+A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+that will force a document reload to the new location. Sets the status code
+and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
 
-```tsx
-// routes/logout.tsx
+```tsx filename=routes/logout.tsx
 import { redirectDocument } from "react-router";
+
 import { destroySession } from "../sessions.server";
 
-export async function action({ request }) {
+export async function action({ request }: Route.ActionArgs) {
   let session = await getSession(request.headers.get("Cookie"));
   return redirectDocument("/", {
     headers: { "Set-Cookie": await destroySession(session) }
@@ -51,5 +52,7 @@ The status code or a `ResponseInit` object to be included in the response.
 
 ## Returns
 
-A `Response` object with the redirect status and `Location` header.
+A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+header.
 

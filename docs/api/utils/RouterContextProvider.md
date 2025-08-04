@@ -31,7 +31,7 @@ to release notes for relevant changes.</docs-warning>
 [Reference Documentation ↗](https://api.reactrouter.com/v7/classes/react_router.unstable_RouterContextProvider.html)
 
 Provides methods for writing/reading values in application context in a
-type-safe way.  Primarily for usage with [Middleware](../../how-to/middleware).
+type-safe way. Primarily for usage with [middleware](../../how-to/middleware).
 
 ```tsx
 import {

@@ -22,18 +22,18 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.data.html)
 
-Create "responses" that contain `status`/`headers` without forcing
-serialization into an actual `Response`
+Create "responses" that contain `headers`/`status` without forcing
+serialization into an actual [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 
 ```tsx
 import { data } from "react-router";
 
-export async function action({ request }) {
+export async function action({ request }: Route.ActionArgs) {
   let formData = await request.formData();
   let item = await createItem(formData);
   return data(item, {
-    status: 201,
     headers: { "X-Custom-Header": "value" }
+    status: 201,
   });
 }
 ```
@@ -56,6 +56,6 @@ The status code or a `ResponseInit` object to be included in the response.
 
 ## Returns
 
-A `DataWithResponseInit` instance containing the data and response
-init.
+A `DataWithResponseInit` instance containing the data and
+response init.
 

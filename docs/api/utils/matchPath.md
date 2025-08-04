@@ -38,9 +38,9 @@ function matchPath<ParamKey extends ParamParseKey<Path>, Path extends string>(
 
 ### pattern
 
-The pattern to match against the URL pathname. This can be a string or a [`PathPattern`](https://api.reactrouter.com/v7/interfaces/react_router.PathPattern.html) object. If a string is provided, it will
-be treated as a pattern with `caseSensitive` set to `false` and `end
-set to `true`.
+The pattern to match against the URL pathname. This can be a string or a [`PathPattern`](https://api.reactrouter.com/v7/interfaces/react_router.PathPattern.html) object. If a string is provided, it will be
+treated as a pattern with `caseSensitive` set to `false` and `end` set to
+`true`.
 
 ### pathname
 

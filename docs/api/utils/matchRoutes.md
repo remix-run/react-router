@@ -63,7 +63,7 @@ The location to match against, either a string path or a partial [`Location`](ht
 
 ### basename
 
-Optional base path to strip from the location before matching.
+Optional base path to strip from the location before matching. Defaults to `/`.
 
 ## Returns
 

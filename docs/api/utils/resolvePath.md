@@ -22,7 +22,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.resolvePath.html)
 
-Returns a resolved path object relative to the given pathname.
+Returns a resolved [`Path`](https://api.reactrouter.com/v7/interfaces/react_router.Path.html) object relative to the given pathname.
 
 ## Signature
 

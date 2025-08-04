@@ -30,15 +30,17 @@ to release notes for relevant changes.</docs-warning>
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_createContext.html)
 
-Creates a type-safe context object that can be used to store and retrieve
-values in middleware, [loaders](../../start/framework/route-module#loader),
-and [actions](../../start/framework/route-module#action). Similar to React's
-[`createContext`](https://react.dev/reference/react/createContext), but
-designed for React Router's request/response lifecycle.
+Creates a type-safe [`unstable_RouterContext`](https://api.reactrouter.com/v7/interfaces/react_router.unstable_RouterContext.html) object that can be used to
+* store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
+* [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
+* Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
+* but specifically designed for React Router's request/response lifecycle.
 
-If a `defaultValue` is provided, it will be returned from `context.get()` when
-no value has been set for the context. Otherwise reading this context when no
-value has been set will throw an error.
+<docs-warning>Enable this API with the `future.unstable_middleware` flag.</docs-warning>
+
+If a `defaultValue` is provided, it will be returned from `context.get()`
+when no value has been set for the context. Otherwise, reading this context
+when no value has been set will throw an error.
 
 ```tsx filename=app/context.ts
 import { unstable_createContext } from "react-router";
@@ -49,12 +51,12 @@ export const userContext =
 ```
 
 ```tsx filename=app/middleware/auth.ts
-import { userContext } from "~/context";
 import { getUserFromSession } from "~/auth.server";
+import { userContext } from "~/context";
 
 export const authMiddleware = async ({
-  request,
   context,
+  request,
 }) => {
   const user = await getUserFromSession(request);
   context.set(userContext, user);
@@ -94,5 +96,6 @@ An optional default value for the context. This value will be returned if no val
 ## Returns
 
 A [`unstable_RouterContext`](https://api.reactrouter.com/v7/interfaces/react_router.unstable_RouterContext.html) object that can be used with
-`context.get()` and `context.set()` in middleware, loaders, and actions.
+`context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
+[`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
 

@@ -22,13 +22,14 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.redirect.html)
 
-A redirect response. Sets the status code and the `Location` header.
-Defaults to "302 Found".
+A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
 
 ```tsx
 import { redirect } from "react-router";
 
-export function loader({ request }) {
+export async function loader({ request }: Route.LoaderArgs) {
   if (!isLoggedIn(request))
     throw redirect("/login");
   }
@@ -49,5 +50,7 @@ The status code or a `ResponseInit` object to be included in the response.
 
 ## Returns
 
-A `Response` object with the redirect status and `Location` header.
+A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+header.
 
