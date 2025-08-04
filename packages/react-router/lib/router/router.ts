@@ -6244,14 +6244,16 @@ function processLoaderData(
     .filter((f) => !f.matches || f.matches.some((m) => m.shouldLoad))
     .forEach((rf) => {
       let { key, match, controller } = rf;
+      if (controller && controller.signal.aborted) {
+        // Nothing to do for aborted fetchers
+        return;
+      }
+
       let result = fetcherResults[key];
       invariant(result, "Did not find corresponding fetcher result");
 
       // Process fetcher non-redirect errors
-      if (controller && controller.signal.aborted) {
-        // Nothing to do for aborted fetchers
-        return;
-      } else if (isErrorResult(result)) {
+      if (isErrorResult(result)) {
         let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
         if (!(errors && errors[boundaryMatch.route.id])) {
           errors = {
