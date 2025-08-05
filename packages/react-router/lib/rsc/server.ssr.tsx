@@ -2,6 +2,7 @@ import * as React from "react";
 import { RSCRouterContext, type DataRouteObject } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
+import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
@@ -124,6 +125,25 @@ export async function routeRSCServerRequest({
   };
 
   try {
+    const payload = await getPayload();
+    if (
+      serverResponse.status === SINGLE_FETCH_REDIRECT_STATUS &&
+      payload.type === "redirect"
+    ) {
+      const headers = new Headers(serverResponse.headers);
+      headers.delete("Content-Encoding");
+      headers.delete("Content-Length");
+      headers.delete("Content-Type");
+      headers.delete("x-remix-response");
+      headers.set("Location", payload.location);
+
+      return new Response(serverResponseB?.body || "", {
+        headers,
+        status: payload.status,
+        statusText: serverResponse.statusText,
+      });
+    }
+
     const html = await renderHTML(getPayload);
 
     const headers = new Headers(serverResponse.headers);
