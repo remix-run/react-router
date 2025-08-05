@@ -110,7 +110,7 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: next
-        version: 6.1.0-canary-19baee81-20250725(eslint@8.57.0)
+        version: 6.1.0-canary-be11cb5c-20250804(eslint@8.57.0)
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
@@ -6358,8 +6358,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
 
-  eslint-plugin-react-hooks@6.1.0-canary-19baee81-20250725:
-    resolution: {integrity: sha512-ryYWKqWvR3I/nRITbbupJxlajWqK8CthGw1yMomw5BUfAVb0MpqD2b2fk7ZmCqQDpPz0I91gmqhH2/FTrjeKWQ==}
+  eslint-plugin-react-hooks@6.1.0-canary-be11cb5c-20250804:
+    resolution: {integrity: sha512-1OEkOyYzJdlfaxQzetiIeNjkAYAnrGSeT0pTgzIPowaiywcsktoiTccyThHXDML+aCYEQoghr2lqfYAVHe04ZQ==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -9120,6 +9120,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
@@ -15190,7 +15191,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-react-hooks@6.1.0-canary-19baee81-20250725(eslint@8.57.0):
+  eslint-plugin-react-hooks@6.1.0-canary-be11cb5c-20250804(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.27.7
       '@babel/parser': 7.27.7
