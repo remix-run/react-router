@@ -40,7 +40,6 @@ import type {
   ActionFunction,
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
-  DataStrategyResults,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -2875,7 +2874,7 @@ export function createRouter(init: RouterInit): Router {
     scopedContext: unstable_RouterContextProvider,
     fetcherKey: string | null,
   ): Promise<Record<string, DataResult>> {
-    let results: DataStrategyResults;
+    let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
     try {
       results = await callDataStrategyImpl(
@@ -5348,7 +5347,7 @@ async function defaultDataStrategy(
   args: DataStrategyFunctionArgs<unknown>,
 ): ReturnType<DataStrategyFunction<unknown>> {
   let matchesToLoad = args.matches.filter((m) => m.shouldLoad);
-  let keyedResults: DataStrategyResults = {};
+  let keyedResults: Record<string, DataStrategyResult> = {};
   let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
   results.forEach((result, i) => {
     keyedResults[matchesToLoad[i].route.id] = result;
@@ -5506,9 +5505,12 @@ export async function runClientMiddlewarePipeline(
     // back from `DataStrategyMatch` to regular matches for use in the staticHandler
     matches: AgnosticDataRouteMatch[];
   },
-  handler: () => Promise<DataStrategyResults>,
-  errorHandler: (error: unknown, routeId: string) => DataStrategyResults,
-): Promise<DataStrategyResults> {
+  handler: () => Promise<Record<string, DataStrategyResult>>,
+  errorHandler: (
+    error: unknown,
+    routeId: string,
+  ) => Record<string, DataStrategyResult>,
+): Promise<Record<string, DataStrategyResult>> {
   let { matches, request, params, context } = args;
   let tuples = matches.flatMap((m) =>
     m.route.unstable_middleware
@@ -5532,9 +5534,12 @@ async function callClientRouteMiddleware(
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
   middlewares: [string, unstable_MiddlewareFunction][],
-  handler: () => Promise<DataStrategyResults>,
-  errorHandler: (error: unknown, routeId: string) => DataStrategyResults,
-  handlerResult: DataStrategyResults = {},
+  handler: () => Promise<Record<string, DataStrategyResult>>,
+  errorHandler: (
+    error: unknown,
+    routeId: string,
+  ) => Record<string, DataStrategyResult>,
+  handlerResult: Record<string, DataStrategyResult> = {},
   idx = 0,
 ): Promise<unknown> {
   let { request } = args;
@@ -5749,7 +5754,7 @@ async function callDataStrategyImpl(
   fetcherKey: string | null,
   scopedContext: unknown,
   isStaticHandler: boolean,
-): Promise<DataStrategyResults> {
+): Promise<Record<string, DataStrategyResult>> {
   // Ensure all middleware is loaded before we start executing routes
   if (matches.some((m) => m._lazyPromises?.middleware)) {
     await Promise.all(matches.map((m) => m._lazyPromises?.middleware));
@@ -5946,7 +5951,7 @@ async function callLoaderOrAction({
     }
   } catch (e) {
     // We should already be catching and converting normal handler executions to
-    // DataStrategyResults and returning them, so anything that throws here is an
+    // Record<string, DataStrategyResult> and returning them, so anything that throws here is an
     // unexpected error we still need to wrap
     return { type: ResultType.error, result: e };
   } finally {
