@@ -1,7 +1,4 @@
 ---
-"@react-router/remix-routes-option-adapter": patch
-"@react-router/fs-routes": patch
-"@react-router/dev": patch
 "react-router": patch
 ---
 
