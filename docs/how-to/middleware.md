@@ -125,9 +125,9 @@ import { createDb } from "./db";
 
 function getLoadContext(req, res) {
 -  return { db: createDb() };
-+  return new unstable_RouterContextProvider(
-+    new Map([[dbContext, createDb()]])
-+  );
++  const context = new unstable_RouterContextProvider();
++  context.set(dbContext, createDb());
++  return context;
 }
 ```
 
@@ -148,7 +148,7 @@ const router = createBrowserRouter(routes, {
 Middleware uses a `context` provider instance to provide data down the middleware chain.
 You can create type-safe context objects using `unstable_createContext`:
 
-```ts filename=app/context.ts
+```ts
 import { unstable_createContext } from "react-router";
 import type { User } from "~/types";
 
@@ -235,13 +235,13 @@ const router = createBrowserRouter(routes, {
 });
 ```
 
+<docs-info>This API exists to mirror the `getLoadContext` API on the server in Framework Mode, which exists as a way to hand off values from your HTTP server to the React Router handler. This `unstable_getContext` API can be used to hand off global values from the `window`/`document` to React Router, but because they're all running in the same context (the browser), you can achieve effectively the the same behavior with a root route middleware. Therefore, you may not need this API the same way you would on the server - but it's provided for consistency.</docs-warning>
+
 ## Core Concepts
 
 ### Server vs Client Middleware
 
-Server middleware runs on the server in Framework mode for HTML Document requests and `.data` requests for subsequent navigations and fetcher calls.
-
-Because server middleware runs on the server in response to an HTTP `Request`, it returns an HTTP `Response` back up the middleware chain via the `next` function:
+Server middleware runs on the server in Framework mode for HTML Document requests and `.data` requests for subsequent navigations and fetcher calls. Because server middleware runs on the server in response to an HTTP `Request`, it returns an HTTP `Response` back up the middleware chain via the `next` function:
 
 ```ts
 async function serverMiddleware({ request }, next) {
@@ -251,14 +251,11 @@ async function serverMiddleware({ request }, next) {
   return response;
 }
 
+// Framework mode only
 export const unstable_middleware = [serverMiddleware];
 ```
 
-**Client middleware** (`unstable_clientMiddleware`) runs in the browser in framework and data mode for:
-
-- Client-side navigations and fetcher calls
-
-Client middleware is different because there's no HTTP Request, so it doesn't bubble up anything via the `next` function:
+Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware is different because there's no HTTP Request, so it doesn't bubble up anything via the `next` function:
 
 ```ts
 async function clientMiddleware({ request }, next) {
@@ -271,7 +268,7 @@ async function clientMiddleware({ request }, next) {
 // Framework mode
 export const unstable_clientMiddleware = [clientMiddleware];
 
-// Data mode
+// Or, Data mode
 const route = {
   path: "/",
   unstable_middleware: [clientMiddleware],
@@ -286,7 +283,7 @@ It is very important to understand _when_ your middlewares will run to make sure
 
 #### Server Middleware
 
-In a hydrated Framework Mode app, server middleware is designed such that it prioritizes SPA behavior and does not create new network activity by default. Middleware wraps _existing_ request and only runs when you _need_ to hit the server.
+In a hydrated Framework Mode app, server middleware is designed such that it prioritizes SPA behavior and does not create new network activity by default. Middleware wraps _existing_ requests and only runs when you _need_ to hit the server.
 
 This raises the question of what is a "handler" in React Router? Is it the route? Or the loader? We think "it depends":
 
@@ -314,7 +311,7 @@ function loggingMiddleware({ request }, next) {
 export const unstable_middleware = [loggingMiddleware];
 ```
 
-However, there may be cases where you _want_ to run certain middlewares on _every_ client-navigation - even if no loader exists. For example, a form in the authenticated section of your site that doesn't require a `loader` but you'd rather use auth middleware to redirect users away before they fill out the form - rather then when they submit to the `action`. If your middleware meets this criteria, then you can put a `loader` on the route that contains the middleware to force it to always call the server for client side navigations involving that route.
+However, there may be cases where you _want_ to run certain server middlewares on _every_ client-navigation - even if no loader exists. For example, a form in the authenticated section of your site that doesn't require a `loader` but you'd rather use auth middleware to redirect users away before they fill out the form - rather then when they submit to the `action`. If your middleware meets this criteria, then you can put a `loader` on the route that contains the middleware to force it to always call the server for client side navigations involving that route.
 
 ```tsx filename=app/_auth.tsx
 function authMiddleware({ request }, next) {
@@ -334,11 +331,11 @@ export function loader() {
 
 #### Client Middleware
 
-Client middleware is simpler because since we are already on the client and are always making a "request" to the router when navigating, client middlewares will run on every client navigation, regardless of whether or not there are loaders to run.
+Client middleware is simpler because since we are already on the client and are always making a "request" to the router when navigating. Client middlewares will run on every client navigation, regardless of whether or not there are loaders to run.
 
 ### Context API
 
-The new context system provides type safety and prevents naming conflicts:
+The new context system provides type safety and prevents naming conflicts and allows you to provide data to nested middlewares and loader/action functions. In Framework Mode, this replaces the previous `AppLoadContext` API.
 
 ```ts
 // ✅ Type-safe
@@ -393,7 +390,7 @@ const authMiddleware = async ({ request, context }) => {
 
 ### `next()` and Error Handling
 
-React Router contains built-in error handling via the route [`ErrorBoundary`](../start/framework/route-module#errorboundary) export. Just like when a loader/acton throws, if a middleware throws an error it will be caught and handled at the appropriate `ErrorBoundary` and the `Response` will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a `Response`, so you don't need to worry about wrapping it in a try/catch.
+React Router contains built-in error handling via the route [`ErrorBoundary`](../start/framework/route-module#errorboundary) export. Just like when a loader/action throws, if a middleware throws an error it will be caught and handled at the appropriate `ErrorBoundary` and the `Response` will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a `Response`, so you don't need to worry about wrapping it in a try/catch.
 
 This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error from a middleware caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
@@ -451,9 +448,9 @@ import { createDb } from "./db";
 
 function getLoadContext(req, res) {
 -  return { db: createDb() };
-+  return new unstable_RouterContextProvider(
-+    new Map([[dbContext, createDb()]])
-+  );
++  const context = new unstable_RouterContextProvider();
++  context.set(dbContext, createDb());
++  return context;
 }
 ```
 

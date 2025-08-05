@@ -56,7 +56,7 @@ function MyRouteComponent() {
 
 ## `unstable_middleware`
 
-Route middleware runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
+Route [middleware][middleware] runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
 
 ```tsx
 createBrowserRouter([

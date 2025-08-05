@@ -80,9 +80,9 @@ export default function MyRouteComponent({
 
 ## `unstable_middleware`
 
-Route middleware runs sequentially on the server before and after document and
+Route [middleware][middleware] runs sequentially on the server before and after document and
 data requests. This gives you a singular place to do things like logging,
-authentication, and post-processing of responses.
+authentication, and post-processing of responses. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
 
 Here's an example middleware to log requests on the server:
 

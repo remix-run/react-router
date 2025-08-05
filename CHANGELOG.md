@@ -414,7 +414,7 @@ The biggest set of changes in `7.8.0` are to the `unstable_middleware` API's as 
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
-- `react-router` - **Middleware**: Change the `unstable_getContext` signature on `RouterProvider`/`HydratedRouter`/`unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to construct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+- `react-router` - **Middleware**: Change the `unstable_getContext` signature on `RouterProvider`, `HydratedRouter`, and `unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to construct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
   - ⚠️ This is a breaking change if you have adopted the `unstable_getContext` prop
 - `react-router` - **Middleware**: Run client middleware on client navigations even if no loaders exist ([#14106](https://github.com/remix-run/react-router/pull/14106))
 - `react-router` - **Middleware**: Convert internal middleware implementations to use the new `unstable_generateMiddlewareResponse` API ([#14103](https://github.com/remix-run/react-router/pull/14103))
