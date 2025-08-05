@@ -1,4 +1,4 @@
-import { createRequestListener } from "@mjackson/node-fetch-server";
+import { createRequestListener } from "@remix-run/node-fetch-server";
 import express from "express";
 // @ts-expect-error - no types
 import { renderToReadableStream as renderHTMLToReadableStream } from "react-dom/server.edge" assert { env: "react-client" };
@@ -28,11 +28,11 @@ app.use(
             bootstrapScriptContent: (
               fetchServer as unknown as { bootstrapScript: string }
             ).bootstrapScript,
-          }
+          },
         );
       },
     });
-  })
+  }),
 );
 
 const server = app.listen(3000);
