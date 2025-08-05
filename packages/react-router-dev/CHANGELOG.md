@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.8.0-pre.0
+
+### Patch Changes
+
+- Fix rename without mkdir in Vite plugin ([#14105](https://github.com/remix-run/react-router/pull/14105))
+- Updated dependencies:
+  - `react-router@7.8.0-pre.0`
+  - `@react-router/node@7.8.0-pre.0`
+  - `@react-router/serve@7.8.0-pre.0`
+
 ## 7.7.1
 
 ### Patch Changes
