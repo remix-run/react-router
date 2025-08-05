@@ -505,6 +505,14 @@ async function bubbleMiddlewareErrors(
           let routeResult = fetchedData.routes[match.route.id];
           if ("error" in routeResult) {
             middlewareError = routeResult.error;
+            // If we didn't have a loader to call for this route but it threw an
+            // error from middleware, assign the error and let the router bubble it
+            if (results[match.route.id]?.result == null) {
+              results[match.route.id] = {
+                type: "error",
+                result: middlewareError,
+              };
+            }
             break;
           }
         }
