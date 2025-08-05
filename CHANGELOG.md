@@ -15,6 +15,8 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v7.8.0](#v780)
     - [What's Changed](#whats-changed)
+      - [Consistently named `loaderData` values](#consistently-named-loaderdata-values)
+      - [Improvements/fixes to the middleware APIs (unstable)](#improvementsfixes-to-the-middleware-apis-unstable)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
     - [Unstable Changes](#unstable-changes)
@@ -362,7 +364,13 @@ Date: 2025-08-07
 
 ### What's Changed
 
-`7.8.0` comes with 2 small new features and a handful of bug fixes, but the biggest set of changes are to the `unstable_middleware` API's as we move closer to stabilizing them. If you've adopted the middleware APIs for early testing, please read the middleware changes below carefully. We hope to stabilize these soon so please let us know of any feedback you have on the API's in their current state!
+#### Consistently named `loaderData` values
+
+Ever noticed the discrepancies in loader data values handed to you by the framework? Like, we call it `loaderData` in your component props, but then `match.data` in your matches? Yeah, us too (as well as some astute React Router users who raised this in a proposal) 😕. We've added new `loaderData` fields alongside existing `data` fields in a few lingering spots to align with the `loaderData` naming used in the new `Route.*` APIs.
+
+#### Improvements/fixes to the middleware APIs (unstable)
+
+The biggest set of changes in `7.8.0` are to the `unstable_middleware` API's as we move closer to stabilizing them. If you've adopted the middleware APIs for early testing, please read the middleware changes below carefully. We hope to stabilize these soon so please let us know of any feedback you have on the API's in their current state!
 
 ### Minor Changes
 
