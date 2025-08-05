@@ -2151,7 +2151,8 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * setSearchParams(new URLSearchParams("?tab=1"));
  * ```
  *
- * It also supports a function callback like React's [`setState`](https://react.dev/reference/react/useState#setstate):
+ * It also supports a function callback like React's
+ * [`setState`](https://react.dev/reference/react/useState#setstate):
  *
  * ```tsx
  * setSearchParams((searchParams) => {
@@ -2159,6 +2160,12 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  *   return searchParams;
  * });
  * ```
+ *
+ * <docs-warning>The function callback version of `setSearchParams` does not support
+ * the [queueing](https://react.dev/reference/react/useState#setstate-parameters)
+ * logic that React's `setState` implements.  Multiple calls to `setSearchParams`
+ * in the same tick will not build on the prior value.  If you need this behavior,
+ * you can use `setState` manually.</docs-warning>
  *
  * ### Notes
  *
