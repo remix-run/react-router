@@ -196,19 +196,31 @@ const authMiddleware = async ({ request, context }) => {
 
 ### `next()` and Error Handling
 
-`next()` is not designed to throw errors under normal conditions, so you generally shouldn't find yourself wrapping `next` in a `try`/`catch`. The responsibility of the `next()` function is to return a `Response` for the current `Request`, so as long as that can be completed, `next()` will return the `Response` and won't `throw`. Even if a `loader` throws an error, or a component fails to render, React Router already handles those by rendering the nearest `ErrorBoundary`, so a `Response` is still generated without issue and propagated up through `next()`.
+React Router contains built-in error handling via the route [`ErrorBoundary`](../start/framework/route-module#errorboundary) export. Just like when a loader/acton throws, if a middleware throws an error it will be caught and handled at the appropriate `ErrorBoundary` and the `Response` will be returned through the ancestor `next()` call. This means that the `next()` function should never throw and should always return a `Response`, so you don't need to worry about wrapping it in a try/catch.
 
-This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error from a loader/action/render caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
+This behavior is important to allow middleware patterns such as automatically setting required headers on outgoing responses (i.e., committing a session) from a root middleware. If any error from a middleware caused `next()` to `throw`, we'd miss the execution of ancestor middlewares on the way out and those required headers wouldn't be set.
 
-The only cases in which `next()` _should_ throw are if we fail to generate a `Response`. There's a few ways in which this could happen:
+```tsx
+// routes/parent.tsx
+export const unstable_middleware = [
+  async (_, next) => {
+    let res = await next();
+    //  ^ res.status = 500
+    // This response contains the ErrorBoundary
+    return res;
+  }
+]
 
-- A middleware can short circuit the rest of the request and throw a `Response` (usually a `redirect`)
-- If the logic directly inside of a middleware function throws, that will cause the ancestor `next()` function to throw
-
-If a middleware _does_ throw (and is not caught by an ancestor middleware), then ancestor middlewares will be skipped, but React Router will still attempt to render that error in an `ErrorBoundary`.
-
-- If the error threw before `next()` was called, then we don't have `loaderData` for any routes so we'll bubble to the first `ErrorBoundary` at or above all `loader` functions
-- If the error threw after `next()` was called, then we will bubble to the nearest `ErrorBoundary` from the throwing route
+// routes/parent.child.tsx
+export const unstable_middleware = [
+  async (_, next) => {
+    let res = await next();
+    //  ^ res.status = 200
+    // This response contains the successful UI render
+    throw new Error('Uh oh, something went wrong!)
+  }
+]
+```
 
 ## Changes to `getLoadContext`/`AppLoadContext`
 
