@@ -202,8 +202,8 @@ importers:
         specifier: ^1.17.4
         version: 1.17.4(babel-plugin-macros@3.1.0)
       '@vanilla-extract/vite-plugin':
-        specifier: ^5.1.0
-        version: 5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
       cheerio:
         specifier: ^1.0.0-rc.12
         version: 1.0.0
@@ -597,8 +597,8 @@ importers:
         specifier: ^1.17.4
         version: 1.17.4(babel-plugin-macros@3.1.0)
       '@vanilla-extract/vite-plugin':
-        specifier: ^5.1.0
-        version: 5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))(yaml@2.8.0)
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))(yaml@2.8.0)
       express:
         specifier: ^4.19.2
         version: 4.21.2
@@ -664,8 +664,8 @@ importers:
         specifier: ^1.17.4
         version: 1.17.4(babel-plugin-macros@3.1.0)
       '@vanilla-extract/vite-plugin':
-        specifier: ^5.1.0
-        version: 5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
       express:
         specifier: ^4.19.2
         version: 4.21.2
@@ -731,8 +731,8 @@ importers:
         specifier: ^1.17.4
         version: 1.17.4(babel-plugin-macros@3.1.0)
       '@vanilla-extract/vite-plugin':
-        specifier: ^5.1.0
-        version: 5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@7.0.0-beta.0(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@7.0.0-beta.0(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)
       express:
         specifier: ^4.19.2
         version: 4.21.2
@@ -853,8 +853,8 @@ importers:
         specifier: ^1.17.4
         version: 1.17.4(babel-plugin-macros@3.1.0)
       '@vanilla-extract/vite-plugin':
-        specifier: ^5.1.0
-        version: 5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(rolldown-vite@6.3.0-beta.5(@types/node@22.14.0)(esbuild@0.25.4)(jiti@2.4.2)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0))(tsx@4.19.3)(yaml@2.8.0)
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(rolldown-vite@6.3.0-beta.5(@types/node@22.14.0)(esbuild@0.25.4)(jiti@2.4.2)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0))(tsx@4.19.3)(yaml@2.8.0)
       express:
         specifier: ^4.19.2
         version: 4.21.2
@@ -5198,8 +5198,8 @@ packages:
   '@vanilla-extract/babel-plugin-debug-ids@1.2.2':
     resolution: {integrity: sha512-MeDWGICAF9zA/OZLOKwhoRlsUW+fiMwnfuOAqFVohL31Agj7Q/RBWAYweqjHLgFBCsdnr6XIfwjJnmb2znEWxw==}
 
-  '@vanilla-extract/compiler@0.3.0':
-    resolution: {integrity: sha512-8EbPmDMXhY9NrN38Kh8xYDENgBk4i6s6ce4p7E9F3kHtCqxtEgfaKSNS08z/SVCTmaX3IB3N/kGSO0gr+APffg==}
+  '@vanilla-extract/compiler@0.3.1':
+    resolution: {integrity: sha512-KZ67DZQu58dMo7Jv4PNMPG5TbMOXB68xxVYV2cRJvUdPeiOmX0FOaPgEsYBAZUgd/oLEx4IyV0AvlvsxJ1akfQ==}
 
   '@vanilla-extract/css@1.17.4':
     resolution: {integrity: sha512-m3g9nQDWPtL+sTFdtCGRMI1Vrp86Ay4PBYq1Bo7Bnchj5ElNtAJpOqD+zg+apthVA4fB7oVpMWNjwpa6ElDWFQ==}
@@ -5210,10 +5210,10 @@ packages:
   '@vanilla-extract/private@1.0.9':
     resolution: {integrity: sha512-gT2jbfZuaaCLrAxwXbRgIhGhcXbRZCG3v4TTUnjw0EJ7ArdBRxkq4msNJkbuRkCgfIK5ATmprB5t9ljvLeFDEA==}
 
-  '@vanilla-extract/vite-plugin@5.1.0':
-    resolution: {integrity: sha512-BzVdmBD+FUyJnY6I29ZezwtDBc1B78l+VvHvIgoJYbgfPj0hvY0RmrGL8B4oNNGY/lOt7KgQflXY5kBMd3MGZg==}
+  '@vanilla-extract/vite-plugin@5.1.1':
+    resolution: {integrity: sha512-Nd1worqkHrd8XED4ZAA7Wmkd3pCqCwpmzCBVF8v6T1BSLHGXQE5HYflVgygw0CsIAbFRMS6zQBIk4F4/r/YKIw==}
     peerDependencies:
-      vite: ^5.0.0 || ^6.0.0
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
   '@vitejs/plugin-react@4.5.2':
     resolution: {integrity: sha512-QNVT3/Lxx99nMQWJWF7K4N6apUEuT0KlZA3mx/mVaoGj3smm/8rc8ezz15J1pcbcjDK0V15rpHetVfya08r76Q==}
@@ -13652,7 +13652,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vanilla-extract/compiler@0.3.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)':
+  '@vanilla-extract/compiler@0.3.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)':
     dependencies:
       '@vanilla-extract/css': 1.17.4(babel-plugin-macros@3.1.0)
       '@vanilla-extract/integration': 8.0.4(babel-plugin-macros@3.1.0)
@@ -13708,9 +13708,9 @@ snapshots:
 
   '@vanilla-extract/private@1.0.9': {}
 
-  '@vanilla-extract/vite-plugin@5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(rolldown-vite@6.3.0-beta.5(@types/node@22.14.0)(esbuild@0.25.4)(jiti@2.4.2)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0))(tsx@4.19.3)(yaml@2.8.0)':
+  '@vanilla-extract/vite-plugin@5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(rolldown-vite@6.3.0-beta.5(@types/node@22.14.0)(esbuild@0.25.4)(jiti@2.4.2)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0))(tsx@4.19.3)(yaml@2.8.0)':
     dependencies:
-      '@vanilla-extract/compiler': 0.3.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
+      '@vanilla-extract/compiler': 0.3.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
       '@vanilla-extract/integration': 8.0.4(babel-plugin-macros@3.1.0)
       vite: rolldown-vite@6.3.0-beta.5(@types/node@22.14.0)(esbuild@0.25.4)(jiti@2.4.2)(tsx@4.19.3)(typescript@5.4.5)(yaml@2.8.0)
     transitivePeerDependencies:
@@ -13728,9 +13728,9 @@ snapshots:
       - tsx
       - yaml
 
-  '@vanilla-extract/vite-plugin@5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))(yaml@2.8.0)':
+  '@vanilla-extract/vite-plugin@5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@5.1.3(@types/node@22.14.0)(lightningcss@1.30.1))(yaml@2.8.0)':
     dependencies:
-      '@vanilla-extract/compiler': 0.3.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
+      '@vanilla-extract/compiler': 0.3.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
       '@vanilla-extract/integration': 8.0.4(babel-plugin-macros@3.1.0)
       vite: 5.1.3(@types/node@22.14.0)(lightningcss@1.30.1)(terser@5.15.0)
     transitivePeerDependencies:
@@ -13748,9 +13748,9 @@ snapshots:
       - tsx
       - yaml
 
-  '@vanilla-extract/vite-plugin@5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)':
+  '@vanilla-extract/vite-plugin@5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)':
     dependencies:
-      '@vanilla-extract/compiler': 0.3.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
+      '@vanilla-extract/compiler': 0.3.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
       '@vanilla-extract/integration': 8.0.4(babel-plugin-macros@3.1.0)
       vite: 6.2.5(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
     transitivePeerDependencies:
@@ -13768,9 +13768,9 @@ snapshots:
       - tsx
       - yaml
 
-  '@vanilla-extract/vite-plugin@5.1.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@7.0.0-beta.0(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)':
+  '@vanilla-extract/vite-plugin@5.1.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(vite@7.0.0-beta.0(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0))(yaml@2.8.0)':
     dependencies:
-      '@vanilla-extract/compiler': 0.3.0(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
+      '@vanilla-extract/compiler': 0.3.1(@types/node@22.14.0)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
       '@vanilla-extract/integration': 8.0.4(babel-plugin-macros@3.1.0)
       vite: 7.0.0-beta.0(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.3)(yaml@2.8.0)
     transitivePeerDependencies:
