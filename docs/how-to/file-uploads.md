@@ -9,8 +9,6 @@ title: File Uploads
 <br/>
 <br/>
 
-Handle file uploads in your React Router applications. This guide uses some packages from the [Remix The Web][remix-the-web] project to make file uploads easier.
-
 _Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) on which this doc is based. You can refer to it for even more examples._
 
 ## Basic File Upload
@@ -38,7 +36,7 @@ export default [
 `form-data-parser` is a wrapper around `request.formData()` that provides streaming support for handling file uploads.
 
 ```shellscript
-npm i @mjackson/form-data-parser
+npm i @remix-run/form-data-parser
 ```
 
 [See the `form-data-parser` docs for more information][form-data-parser]
@@ -57,11 +55,12 @@ You must set the form's `enctype` to `multipart/form-data` for file uploads to w
 import {
   type FileUpload,
   parseFormData,
-} from "@mjackson/form-data-parser";
+} from "@remix-run/form-data-parser";
+import type { Route } from "./+types/user-profile";
 
 export async function action({
   request,
-}: ActionFunctionArgs) {
+}: Route.ActionArgs) {
   const uploadHandler = async (fileUpload: FileUpload) => {
     if (fileUpload.fieldName === "avatar") {
       // process the upload and return a File
@@ -93,7 +92,7 @@ export default function Component() {
 `file-storage` is a key/value interface for storing [File objects][file] in JavaScript. Similar to how `localStorage` allows you to store key/value pairs of strings in the browser, file-storage allows you to store key/value pairs of files on the server.
 
 ```shellscript
-npm i @mjackson/file-storage
+npm i @remix-run/file-storage
 ```
 
 [See the `file-storage` docs for more information][file-storage]
@@ -103,7 +102,7 @@ npm i @mjackson/file-storage
 Create a file that exports a `LocalFileStorage` instance to be used by different routes.
 
 ```ts filename=avatar-storage.server.ts
-import { LocalFileStorage } from "@mjackson/file-storage/local";
+import { LocalFileStorage } from "@remix-run/file-storage/local";
 
 export const fileStorage = new LocalFileStorage(
   "./uploads/avatars",
@@ -122,7 +121,7 @@ Update the form's `action` to store files in the `fileStorage` instance.
 import {
   type FileUpload,
   parseFormData,
-} from "@mjackson/form-data-parser";
+} from "@remix-run/form-data-parser";
 import {
   fileStorage,
   getStorageKey,
@@ -212,8 +211,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 ```
 
-[remix-the-web]: https://github.com/mjackson/remix-the-web
-[form-data-parser]: https://github.com/mjackson/remix-the-web/tree/main/packages/form-data-parser
-[file-storage]: https://github.com/mjackson/remix-the-web/tree/main/packages/file-storage
+[form-data-parser]: https://www.npmjs.com/package/@remix-run/form-data-parser
+[file-storage]: https://www.npmjs.com/package/@remix-run/file-storage
 [file]: https://developer.mozilla.org/en-US/docs/Web/API/File
 [resource-route]: ../how-to/resource-routes
