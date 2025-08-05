@@ -300,7 +300,7 @@ interface DataFunctionArgs<Context> {
  * middlewares from the bottom-up
  */
 export interface unstable_MiddlewareNextFunction<Result = unknown> {
-  (): MaybePromise<Result>;
+  (): Promise<Result>;
 }
 
 /**
