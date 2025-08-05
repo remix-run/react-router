@@ -1,6 +1,4 @@
-# @react-router/serve
-
-Production application server for [React Router.](https://github.com/remix-run/react-router)
+Node.js application server for React Router
 
 ```sh
 npm install @react-router/serve

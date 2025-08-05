@@ -1,18 +1,18 @@
 import arg from "arg";
 import semver from "semver";
+import colors from "picocolors";
 
-import * as colors from "../colors";
 import * as commands from "./commands";
 
 const helpText = `
-${colors.logoBlue("react-router")}
+${colors.blueBright("react-router")}
 
-  ${colors.heading("Usage")}:
-    $ react-router build [${colors.arg("projectDir")}]
-    $ react-router dev [${colors.arg("projectDir")}]
-    $ react-router routes [${colors.arg("projectDir")}]
+  ${colors.underline("Usage")}:
+    $ react-router build [${colors.yellowBright("projectDir")}]
+    $ react-router dev [${colors.yellowBright("projectDir")}]
+    $ react-router routes [${colors.yellowBright("projectDir")}]
 
-  ${colors.heading("Options")}:
+  ${colors.underline("Options")}:
     --help, -h          Print this help message and exit
     --version, -v       Print the CLI version and exit
     --no-color          Disable ANSI colors in console output
@@ -45,23 +45,25 @@ ${colors.logoBlue("react-router")}
   \`reveal\` Options:
     --config, -c        Use specified Vite config file (string)
     --no-typescript     Generate plain JavaScript files
+  \`typegen\` Options:
+    --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
-  ${colors.heading("Build your project")}:
+  ${colors.underline("Build your project")}:
 
     $ react-router build
 
-  ${colors.heading("Run your project locally in development")}:
+  ${colors.underline("Run your project locally in development")}:
 
     $ react-router dev
 
-  ${colors.heading("Show all routes in your app")}:
+  ${colors.underline("Show all routes in your app")}:
 
     $ react-router routes
     $ react-router routes my-app
     $ react-router routes --json
     $ react-router routes --config vite.react-router.config.ts
 
-  ${colors.heading("Reveal the used entry point")}:
+  ${colors.underline("Reveal the used entry point")}:
 
     $ react-router reveal entry.client
     $ react-router reveal entry.server
@@ -69,9 +71,10 @@ ${colors.logoBlue("react-router")}
     $ react-router reveal entry.server --no-typescript
     $ react-router reveal entry.server --config vite.react-router.config.ts
 
-  ${colors.heading("Generate types for route modules")}:
+  ${colors.underline("Generate types for route modules")}:
 
    $ react-router typegen
+   $ react-router typegen --watch
 `;
 
 /**
@@ -87,9 +90,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     versions.node &&
     semver.major(versions.node) < MINIMUM_NODE_VERSION
   ) {
-    throw new Error(
-      `️🚨 Oops, Node v${versions.node} detected. react-router requires ` +
-        `a Node version greater than ${MINIMUM_NODE_VERSION}.`
+    console.warn(
+      `️⚠️ Oops, Node v${versions.node} detected. react-router requires ` +
+        `a Node version greater than ${MINIMUM_NODE_VERSION}.`,
     );
   }
 
@@ -133,10 +136,11 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--sourcemapServer": isBooleanFlag("--sourcemapServer")
         ? Boolean
         : String,
+      "--watch": Boolean,
     },
     {
       argv,
-    }
+    },
   );
 
   let input = args._;
@@ -152,7 +156,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
   if (flags.version) {
-    let version = require("../package.json").version;
+    let version = require("../../package.json").version;
     console.log(version);
     return;
   }
@@ -181,7 +185,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       await commands.dev(input[1], flags);
       break;
     case "typegen":
-      await commands.typegen(input[1]);
+      await commands.typegen(input[1], flags);
       break;
     default:
       // `react-router ./my-project` is shorthand for `react-router dev ./my-project`

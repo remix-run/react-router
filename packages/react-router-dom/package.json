@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.26.2",
+  "version": "7.7.1",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
@@ -41,7 +41,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "wireit"
+    "build": "wireit",
+    "typecheck": "tsc"
   },
   "wireit": {
     "build": {
@@ -60,8 +61,8 @@
     "react-router": "workspace:*"
   },
   "devDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.1.6",
     "wireit": "0.14.9"

@@ -1,11 +1,11 @@
-import { encode } from "turbo-stream";
-
-import type { StaticHandler } from "../router/router";
-import { isRedirectStatusCode, isResponse } from "../router/router";
-import type {
-  DataStrategyFunctionArgs,
-  DataStrategyFunction,
-} from "../router/utils";
+import { encode } from "../../vendor/turbo-stream-v2/turbo-stream";
+import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import {
+  isRedirectResponse,
+  isRedirectStatusCode,
+  isResponse,
+} from "../router/router";
+import type { unstable_RouterContextProvider } from "../router/utils";
 import {
   isRouteErrorResponse,
   ErrorResponseImpl,
@@ -17,51 +17,24 @@ import type {
   SingleFetchResult,
   SingleFetchResults,
 } from "../dom/ssr/single-fetch";
-import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
+import {
+  NO_BODY_STATUS_CODES,
+  SINGLE_FETCH_REDIRECT_STATUS,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
 
-export type { SingleFetchResult, SingleFetchResults };
-export { SingleFetchRedirectSymbol };
-
-// We can't use a 3xx status or else the `fetch()` would follow the redirect.
-// We need to communicate the redirect back as data so we can act on it in the
-// client side router.  We use a 202 to avoid any automatic caching we might
-// get from a 200 since a "temporary" redirect should not be cached.  This lets
-// the user control cache behavior via Cache-Control
-export const SINGLE_FETCH_REDIRECT_STATUS = 202;
-
-export function getSingleFetchDataStrategy({
-  isActionDataRequest,
-  loadRouteIds,
-}: {
-  isActionDataRequest?: boolean;
-  loadRouteIds?: string[];
-} = {}): DataStrategyFunction {
-  return async ({ request, matches }: DataStrategyFunctionArgs) => {
-    // Don't call loaders on action data requests
-    if (isActionDataRequest && request.method === "GET") {
-      return {};
-    }
-
-    // Only run opt-in loaders when fine-grained revalidation is enabled
-    let matchesToLoad = loadRouteIds
-      ? matches.filter((m) => loadRouteIds.includes(m.route.id))
-      : matches;
-
-    let results = await Promise.all(
-      matchesToLoad.map((match) => match.resolve())
-    );
-    return results.reduce(
-      (acc, result, i) =>
-        Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
-      {}
-    );
-  };
-}
+// Add 304 for server side - that is not included in the client side logic
+// because the browser should fill those responses with the cached data
+// https://datatracker.ietf.org/doc/html/rfc9110#name-304-not-modified
+export const SERVER_NO_BODY_STATUS_CODES = new Set([
+  ...NO_BODY_STATUS_CODES,
+  304,
+]);
 
 export async function singleFetchAction(
   build: ServerBuild,
@@ -69,9 +42,9 @@ export async function singleFetchAction(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext,
-  handleError: (err: unknown) => void
-): Promise<{ result: SingleFetchResult; headers: Headers; status: number }> {
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  handleError: (err: unknown) => void,
+): Promise<Response> {
   try {
     let handlerRequest = new Request(handlerUrl, {
       method: request.method,
@@ -84,38 +57,71 @@ export async function singleFetchAction(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      dataStrategy: getSingleFetchDataStrategy({
-        isActionDataRequest: true,
-      }),
+      skipRevalidation: true,
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
+        ? async (query) => {
+            try {
+              let innerResult = await query(handlerRequest);
+              return handleQueryResult(innerResult);
+            } catch (error) {
+              return handleQueryError(error);
+            }
+          }
+        : undefined,
     });
+
+    return handleQueryResult(result);
+  } catch (error) {
+    return handleQueryError(error);
+  }
+
+  function handleQueryResult(
+    result: Awaited<ReturnType<StaticHandler["query"]>>,
+  ) {
+    if (!isResponse(result)) {
+      result = staticContextToResponse(result);
+    }
 
     // Unlike `handleDataRequest`, when singleFetch is enabled, query does
     // let non-Response return values through
-    if (isResponse(result)) {
-      return {
+    if (isRedirectResponse(result)) {
+      return generateSingleFetchResponse(request, build, serverMode, {
         result: getSingleFetchRedirect(
           result.status,
           result.headers,
-          build.basename
+          build.basename,
         ),
         headers: result.headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
+      });
     }
 
-    let context = result;
-    let headers = getDocumentHeaders(build, context);
+    return result;
+  }
+
+  function handleQueryError(error: unknown) {
+    handleError(error);
+    // These should only be internal remix errors, no need to deal with responseStubs
+    return generateSingleFetchResponse(request, build, serverMode, {
+      result: { error },
+      headers: new Headers(),
+      status: 500,
+    });
+  }
+
+  function staticContextToResponse(context: StaticHandlerContext) {
+    let headers = getDocumentHeaders(context, build);
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
-      return {
+      return generateSingleFetchResponse(request, build, serverMode, {
         result: getSingleFetchRedirect(
           context.statusCode,
           headers,
-          build.basename
+          build.basename,
         ),
         headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
+      });
     }
 
     // Sanitize errors outside of development environments
@@ -133,22 +139,16 @@ export async function singleFetchAction(
     if (context.errors) {
       singleFetchResult = { error: Object.values(context.errors)[0] };
     } else {
-      singleFetchResult = { data: Object.values(context.actionData || {})[0] };
+      singleFetchResult = {
+        data: Object.values(context.actionData || {})[0],
+      };
     }
 
-    return {
+    return generateSingleFetchResponse(request, build, serverMode, {
       result: singleFetchResult,
       headers,
       status: context.statusCode,
-    };
-  } catch (error) {
-    handleError(error);
-    // These should only be internal remix errors, no need to deal with responseStubs
-    return {
-      result: { error },
-      headers: new Headers(),
-      status: 500,
-    };
+    });
   }
 }
 
@@ -158,54 +158,89 @@ export async function singleFetchLoaders(
   staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  loadContext: AppLoadContext,
-  handleError: (err: unknown) => void
-): Promise<{ result: SingleFetchResults; headers: Headers; status: number }> {
+  loadContext: AppLoadContext | unstable_RouterContextProvider,
+  handleError: (err: unknown) => void,
+): Promise<Response> {
+  let routesParam = new URL(request.url).searchParams.get("_routes");
+  let loadRouteIds = routesParam ? new Set(routesParam.split(",")) : null;
+
   try {
     let handlerRequest = new Request(handlerUrl, {
       headers: request.headers,
       signal: request.signal,
     });
-    let loadRouteIds =
-      new URL(request.url).searchParams.get("_routes")?.split(",") || undefined;
 
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
+      filterMatchesToLoad: (m) => !loadRouteIds || loadRouteIds.has(m.route.id),
       skipLoaderErrorBubbling: true,
-      dataStrategy: getSingleFetchDataStrategy({
-        loadRouteIds,
-      }),
+      unstable_generateMiddlewareResponse: build.future.unstable_middleware
+        ? async (query) => {
+            try {
+              let innerResult = await query(handlerRequest);
+              return handleQueryResult(innerResult);
+            } catch (error) {
+              return handleQueryError(error);
+            }
+          }
+        : undefined,
     });
 
-    if (isResponse(result)) {
-      return {
+    return handleQueryResult(result);
+  } catch (error: unknown) {
+    return handleQueryError(error);
+  }
+
+  // Handle the query() result - either inside stream() with middleware enabled
+  // or after query() without
+  function handleQueryResult(result: StaticHandlerContext | Response) {
+    let response = isResponse(result)
+      ? result
+      : staticContextToResponse(result);
+    if (isRedirectResponse(response)) {
+      return generateSingleFetchResponse(request, build, serverMode, {
         result: {
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
-            result.status,
-            result.headers,
-            build.basename
+            response.status,
+            response.headers,
+            build.basename,
           ),
         },
-        headers: result.headers,
+        headers: response.headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
+      });
     }
 
-    let context = result;
-    let headers = getDocumentHeaders(build, context);
+    return response;
+  }
+
+  // Handle any thrown errors from query() result - either inside stream() with
+  // middleware enabled or after query() without
+  function handleQueryError(error: unknown) {
+    handleError(error);
+    // These should only be internal remix errors, no need to deal with responseStubs
+    return generateSingleFetchResponse(request, build, serverMode, {
+      result: { error },
+      headers: new Headers(),
+      status: 500,
+    });
+  }
+
+  function staticContextToResponse(context: StaticHandlerContext) {
+    let headers = getDocumentHeaders(context, build);
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
-      return {
+      return generateSingleFetchResponse(request, build, serverMode, {
         result: {
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
             context.statusCode,
             headers,
-            build.basename
+            build.basename,
           ),
         },
         headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
-      };
+      });
     }
 
     // Sanitize errors outside of development environments
@@ -222,41 +257,87 @@ export async function singleFetchLoaders(
     // Aggregate results based on the matches we intended to load since we get
     // `null` values back in `context.loaderData` for routes we didn't load
     let results: SingleFetchResults = {};
-    let loadedMatches = loadRouteIds
-      ? context.matches.filter(
-          (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
+    let loadedMatches = new Set(
+      context.matches
+        .filter((m) =>
+          loadRouteIds ? loadRouteIds.has(m.route.id) : m.route.loader != null,
         )
-      : context.matches;
+        .map((m) => m.route.id),
+    );
 
-    loadedMatches.forEach((m) => {
-      let { id } = m.route;
-      if (context.errors && context.errors.hasOwnProperty(id)) {
-        results[id] = { error: context.errors[id] };
-      } else if (context.loaderData.hasOwnProperty(id)) {
-        results[id] = { data: context.loaderData[id] };
+    if (context.errors) {
+      for (let [id, error] of Object.entries(context.errors)) {
+        results[id] = { error };
       }
-    });
+    }
+    for (let [id, data] of Object.entries(context.loaderData)) {
+      if (!(id in results) && loadedMatches.has(id)) {
+        results[id] = { data };
+      }
+    }
 
-    return {
+    return generateSingleFetchResponse(request, build, serverMode, {
       result: results,
       headers,
       status: context.statusCode,
-    };
-  } catch (error: unknown) {
-    handleError(error);
-    // These should only be internal remix errors, no need to deal with responseStubs
-    return {
-      result: { root: { error } },
-      headers: new Headers(),
-      status: 500,
-    };
+    });
   }
+}
+
+function generateSingleFetchResponse(
+  request: Request,
+  build: ServerBuild,
+  serverMode: ServerMode,
+  {
+    result,
+    headers,
+    status,
+  }: {
+    result: SingleFetchResult | SingleFetchResults;
+    headers: Headers;
+    status: number;
+  },
+) {
+  // Mark all successful responses with a header so we can identify in-flight
+  // network errors that are missing this header
+  let resultHeaders = new Headers(headers);
+  resultHeaders.set("X-Remix-Response", "yes");
+
+  // Skip response body for unsupported status codes
+  if (SERVER_NO_BODY_STATUS_CODES.has(status)) {
+    return new Response(null, { status, headers: resultHeaders });
+  }
+
+  // We use a less-descriptive `text/x-script` here instead of something like
+  // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
+  //  - https://github.com/remix-run/remix/issues/9884
+  //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
+  resultHeaders.set("Content-Type", "text/x-script");
+
+  // Remove Content-Length because node:http will truncate the response body
+  // to match the Content-Length header, which can result in incomplete data
+  // if the actual encoded body is longer.
+  // https://nodejs.org/api/http.html#class-httpclientrequest
+  resultHeaders.delete("Content-Length");
+
+  return new Response(
+    encodeViaTurboStream(
+      result,
+      request.signal,
+      build.entry.module.streamTimeout,
+      serverMode,
+    ),
+    {
+      status: status || 200,
+      headers: resultHeaders,
+    },
+  );
 }
 
 export function getSingleFetchRedirect(
   status: number,
   headers: Headers,
-  basename: string | undefined
+  basename: string | undefined,
 ): SingleFetchRedirectResult {
   let redirect = headers.get("Location")!;
 
@@ -309,18 +390,19 @@ export function encodeViaTurboStream(
   data: any,
   requestSignal: AbortSignal,
   streamTimeout: number | undefined,
-  serverMode: ServerMode
+  serverMode: ServerMode,
 ) {
   let controller = new AbortController();
   // How long are we willing to wait for all of the promises in `data` to resolve
-  // before timing out?  We default this to 50ms shorter than the default value for
-  // `ABORT_DELAY` in our built-in `entry.server.tsx` so that once we reject we
-  // have time to flush the rejections down through React's rendering stream before `
-  // we call abort() on that.  If the user provides their own it's up to them to
-  // decouple the aborting of the stream from the aborting of React's renderToPipeableStream
+  // before timing out?  We default this to 50ms shorter than the default value
+  // of 5000ms we had in `ABORT_DELAY` in Remix v2 that folks may still be using
+  // in RR v7 so that once we reject we have time to flush the rejections down
+  // through React's rendering stream before we call `abort()` on that.  If the
+  // user provides their own it's up to them to decouple the aborting of the
+  // stream from the aborting of React's `renderToPipeableStream`
   let timeoutId = setTimeout(
     () => controller.abort(new Error("Server Timeout")),
-    typeof streamTimeout === "number" ? streamTimeout : 4950
+    typeof streamTimeout === "number" ? streamTimeout : 4950,
   );
   requestSignal.addEventListener("abort", () => clearTimeout(timeoutId));
 

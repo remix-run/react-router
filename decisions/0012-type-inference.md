@@ -167,25 +167,15 @@ import { LoaderArgs, DefaultProps } from "./+types.product";
 TypeScript will even give you import autocompletion for the typegen file and the `+` prefix helps to distinguish it as a special file.
 Big thanks to Svelte Kit for showing us that [`rootDirs` trick](https://svelte.dev/blog/zero-config-type-safety#virtual-files)!
 
-### TypeScript plugin
+### Watch mode
 
 Typegen solutions often receive criticism due to typegen'd files becoming out of sync during development.
 This happens because many typegen solutions require you to then rerun a script to update the typegen'd files.
 
-Instead, our typegen will automatically run within a TypeScript plugin.
-That means you should never need to manually run a typegen command during development.
-It also means that you don't need to run our dev server for typegen to take effect.
-The only requirement is that your editor is open.
+Instead, we'll provide a `--watch` flag for the `react-router typegen` command to automatically regenerate types as files change.
+It's also straightforward to automatically run commands like `react-router typegen --watch` when opening up any modern editors.
 
-Additionally, TypeScript plugins work with any LSP-compatible editor.
-That means that this single plugin will work in VS Code, Neovim, or any other popular editor.
-
-Even more exciting is that a TS plugin sets the stage for tons of other DX goodies:
-
-- jsdoc and links to official documentation when you hover a route export
-- Snippet-like autocomplete for route exports
-- In-editor warnings when you forget to name your React components, which would cause HMR to fail
-- ...and more...
+In the future, we may also kick off typegen watching as part of running a React Router dev server.
 
 ## Rejected solutions
 
@@ -265,9 +255,30 @@ Initially, this seemed like a good fit for React Router too, but we ran into a c
    For Svelte Kit, this isn't as big of an issue since they already need their own typecheck command for the Svelte language: `svelte-check`.
    But since React Router is pure TypeScript, it would be more natural to invoke `tsc` directly in your `package.json` scripts.
 
+### TypeScript plugin
+
+Originally, we created a basic TypeScript plugin to automatically run typegen in watch mode.
+One nice thing about this approach is that it worked across all editors.
+
+However, there were a couple drawbacks:
+
+1. A TypeScript plugin will silently fail to run unless you have installed dependencies prior to opening up the project in your editor.
+
+2. A TypeScript plugin requires your editor to use the local (workspace) version of TypeScript.
+   But by default [VSCode won't use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript), forcing you to run the `Select TypeScript Version` command every time you open up a new project.
+   You can workaround this via the `typescript.tsdk` and `typescript.enablePromptUseWorkspaceTsdk` options in `.vscode/settings.json`, but those only take effect when that _specific_ directory is opened as by VSCode.
+   For example, if you added `.vscode/settings.json` to a subfolder of a monorepo those options would be ignored when opening the root of the monorepo with VSCode.
+
+3. Debugging a TypeScript plugin is not straightforward as you need to know to run the `Open TS Server log` command in VSCode and sift through verbose logs.
+   Without this knowledge, its hard to know if you've set up typegen correctly.
+   And even if you do know this, its tedious to find out what went wrong.
+
+After we decided not to pursue "zero-effort typesafety" (as described above), our TypeScript plugin was already a simple passthrough that kicked off typegen as a side-effect.
+This was an additional indication that maybe a TypeScript plugin was not the right place for our typegen.
+
 ## Summary
 
-By leaning into automated typegen within a TypeScript plugin, we radically simplify React Router's runtime APIs while providing strong type inference across the entire framework.
+By leaning into automated typegen, we radically simplify React Router's runtime APIs while providing strong type inference across the entire framework.
 We can continue to support programmatic routing _and_ file-based routing in `routes.ts` while providing typesafety with the same approach and same code path.
 We can design our runtime APIs without introducing bespoke ways to inform TypeScript of the route hierarchy.
 

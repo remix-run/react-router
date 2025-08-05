@@ -9,14 +9,14 @@ describe("escapeHtml", () => {
   test("with angle brackets should escape", () => {
     let evilObj = { evil: "<script></script>" };
     expect(escapeHtml(JSON.stringify(evilObj))).toBe(
-      '{"evil":"\\u003cscript\\u003e\\u003c/script\\u003e"}'
+      '{"evil":"\\u003cscript\\u003e\\u003c/script\\u003e"}',
     );
   });
 
   test("with angle brackets should parse back", () => {
     let evilObj = { evil: "<script></script>" };
     expect(JSON.parse(escapeHtml(JSON.stringify(evilObj)))).toMatchObject(
-      evilObj
+      evilObj,
     );
   });
 
@@ -28,28 +28,28 @@ describe("escapeHtml", () => {
   test("with ampersands should parse back", () => {
     let evilObj = { evil: "&" };
     expect(JSON.parse(escapeHtml(JSON.stringify(evilObj)))).toMatchObject(
-      evilObj
+      evilObj,
     );
   });
 
   test('with "LINE SEPARATOR" and "PARAGRAPH SEPARATOR" should escape', () => {
     let evilObj = { evil: "\u2028\u2029" };
     expect(escapeHtml(JSON.stringify(evilObj))).toBe(
-      '{"evil":"\\u2028\\u2029"}'
+      '{"evil":"\\u2028\\u2029"}',
     );
   });
 
   test('with "LINE SEPARATOR" and "PARAGRAPH SEPARATOR" should parse back', () => {
     let evilObj = { evil: "\u2028\u2029" };
     expect(JSON.parse(escapeHtml(JSON.stringify(evilObj)))).toMatchObject(
-      evilObj
+      evilObj,
     );
   });
 
   test("escaped line terminators should work", () => {
     expect(() => {
       vm.runInNewContext(
-        "(" + escapeHtml(JSON.stringify({ evil: "\u2028\u2029" })) + ")"
+        "(" + escapeHtml(JSON.stringify({ evil: "\u2028\u2029" })) + ")",
       );
     }).not.toThrow();
   });

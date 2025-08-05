@@ -1,48 +1,50 @@
+import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import fse from "fs-extra";
 import PackageJson from "@npmcli/package-json";
 import exitHook from "exit-hook";
+import colors from "picocolors";
+// Workaround for "ERR_REQUIRE_CYCLE_MODULE" in Node 22.10.0+
+import "react-router";
 
-import * as colors from "../colors";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
+import { loadConfig } from "../config/config";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
-import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
-import * as Typegen from "../typescript/typegen";
+import * as Typegen from "../typegen";
+import { preloadVite, getVite } from "../vite/vite";
 
 export async function routes(
-  reactRouterRoot?: string,
+  rootDirectory?: string,
   flags: {
     config?: string;
     json?: boolean;
-  } = {}
+    mode?: string;
+  } = {},
 ): Promise<void> {
-  let ctx = await loadPluginContext({
-    root: reactRouterRoot,
-    configFile: flags.config,
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
+  let configResult = await loadConfig({
+    rootDirectory,
+    mode: flags.mode ?? "production",
   });
 
-  if (!ctx) {
-    console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
-    );
+  if (!configResult.ok) {
+    console.error(colors.red(configResult.error));
     process.exit(1);
   }
 
   let format: RoutesFormat = flags.json ? "json" : "jsx";
-  console.log(formatRoutes(ctx.reactRouterConfig.routes, format));
+  console.log(formatRoutes(configResult.value.routes, format));
 }
 
 export async function build(
   root?: string,
-  options: ViteBuildOptions = {}
+  options: ViteBuildOptions = {},
 ): Promise<void> {
-  if (!root) {
-    root = process.env.REACT_ROUTER_ROOT || process.cwd();
-  }
+  root = resolveRootDirectory(root, options);
 
   let { build } = await import("../vite/build");
   if (options.profile) {
@@ -55,12 +57,14 @@ export async function build(
   }
 }
 
-export async function dev(root: string, options: ViteDevOptions = {}) {
+export async function dev(root?: string, options: ViteDevOptions = {}) {
   let { dev } = await import("../vite/dev");
   if (options.profile) {
     await profiler.start();
   }
   exitHook(() => profiler.stop(console.info));
+
+  root = resolveRootDirectory(root, options);
   await dev(root, options);
 
   // keep `react-router dev` alive by waiting indefinitely
@@ -77,34 +81,40 @@ let conjunctionListFormat = new Intl.ListFormat("en", {
 });
 
 export async function generateEntry(
-  entry: string,
-  reactRouterRoot: string,
+  entry?: string,
+  rootDirectory?: string,
   flags: {
     typescript?: boolean;
     config?: string;
-  } = {}
+    mode?: string;
+  } = {},
 ) {
-  let ctx = await loadPluginContext({
-    root: reactRouterRoot,
-    configFile: flags.config,
-  });
-
-  let rootDirectory = ctx.rootDirectory;
-  let appDirectory = ctx.reactRouterConfig.appDirectory;
-
   // if no entry passed, attempt to create both
   if (!entry) {
-    await generateEntry("entry.client", reactRouterRoot, flags);
-    await generateEntry("entry.server", reactRouterRoot, flags);
+    await generateEntry("entry.client", rootDirectory, flags);
+    await generateEntry("entry.server", rootDirectory, flags);
     return;
   }
+
+  rootDirectory = resolveRootDirectory(rootDirectory, flags);
+  let configResult = await loadConfig({
+    rootDirectory,
+    mode: flags.mode ?? "production",
+  });
+
+  if (!configResult.ok) {
+    console.error(colors.red(configResult.error));
+    return;
+  }
+
+  let appDirectory = configResult.value.appDirectory;
 
   if (!entries.includes(entry)) {
     let entriesArray = Array.from(entries);
     let list = conjunctionListFormat.format(entriesArray);
 
     console.error(
-      colors.error(`Invalid entry file. Valid entry files are ${list}`)
+      colors.red(`Invalid entry file. Valid entry files are ${list}`),
     );
     return;
   }
@@ -113,7 +123,7 @@ export async function generateEntry(
   let deps = pkgJson.content.dependencies ?? {};
 
   if (!deps["@react-router/node"]) {
-    console.error(colors.error(`No default server entry detected.`));
+    console.error(colors.red(`No default server entry detected.`));
     return;
   }
 
@@ -121,13 +131,13 @@ export async function generateEntry(
     path.dirname(require.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
-    "defaults"
+    "defaults",
   );
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
 
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    `entry.server.node.tsx`
+    `entry.server.node.tsx`,
   );
 
   let isServerEntry = entry === "entry.server";
@@ -142,36 +152,47 @@ export async function generateEntry(
   let outputFile = path.resolve(appDirectory, outputEntry);
 
   if (!useTypeScript) {
-    let javascript = convertFileToJS(contents, {
+    let javascript = await convertFileToJS(contents, {
       cwd: rootDirectory,
       filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
     });
-    await fse.writeFile(outputFile, javascript, "utf-8");
+    await writeFile(outputFile, javascript, "utf-8");
   } else {
-    await fse.writeFile(outputFile, contents, "utf-8");
+    await writeFile(outputFile, contents, "utf-8");
   }
 
   console.log(
     colors.blue(
       `Entry file ${entry} created at ${path.relative(
         rootDirectory,
-        outputFile
-      )}.`
-    )
+        outputFile,
+      )}.`,
+    ),
+  );
+}
+
+function resolveRootDirectory(root?: string, flags?: { config?: string }) {
+  if (root) {
+    return path.resolve(root);
+  }
+
+  return (
+    process.env.REACT_ROUTER_ROOT ||
+    (flags?.config ? path.dirname(path.resolve(flags.config)) : process.cwd())
   );
 }
 
 async function checkForEntry(
   rootDirectory: string,
   appDirectory: string,
-  entries: string[]
+  entries: string[],
 ) {
   for (let entry of entries) {
     let entryPath = path.resolve(appDirectory, entry);
-    let exists = await fse.pathExists(entryPath);
+    let exists = existsSync(entryPath);
     if (exists) {
       let relative = path.relative(rootDirectory, entryPath);
-      console.error(colors.error(`Entry file ${relative} already exists.`));
+      console.error(colors.red(`Entry file ${relative} already exists.`));
       return process.exit(1);
     }
   }
@@ -180,28 +201,47 @@ async function checkForEntry(
 async function createServerEntry(
   rootDirectory: string,
   appDirectory: string,
-  inputFile: string
+  inputFile: string,
 ) {
   await checkForEntry(rootDirectory, appDirectory, serverEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
+  let contents = await readFile(inputFile, "utf-8");
   return contents;
 }
 
 async function createClientEntry(
   rootDirectory: string,
   appDirectory: string,
-  inputFile: string
+  inputFile: string,
 ) {
   await checkForEntry(rootDirectory, appDirectory, clientEntries);
-  let contents = await fse.readFile(inputFile, "utf-8");
+  let contents = await readFile(inputFile, "utf-8");
   return contents;
 }
 
-export async function typegen(root: string) {
-  let ctx = await loadPluginContext({ root });
-  await Typegen.writeAll({
-    rootDirectory: root,
-    appDirectory: ctx.reactRouterConfig.appDirectory,
-    routes: ctx.reactRouterConfig.routes,
+export async function typegen(
+  root: string,
+  flags: {
+    watch: boolean;
+    mode?: string;
+    config?: string;
+  },
+) {
+  root = resolveRootDirectory(root, flags);
+
+  if (flags.watch) {
+    await preloadVite();
+    const vite = getVite();
+    const logger = vite.createLogger("info", { prefix: "[react-router]" });
+
+    await Typegen.watch(root, {
+      mode: flags.mode ?? "development",
+      logger,
+    });
+    await new Promise(() => {}); // keep alive
+    return;
+  }
+
+  await Typegen.run(root, {
+    mode: flags.mode ?? "production",
   });
 }

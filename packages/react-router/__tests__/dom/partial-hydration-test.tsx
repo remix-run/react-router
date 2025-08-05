@@ -1,8 +1,7 @@
 import "@testing-library/jest-dom";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
-import type { LoaderFunction } from "react-router";
-import {} from "react-router";
+import type { LoaderFunction } from "../../index";
 import {
   Outlet,
   RouterProvider as ReactRouter_RouterProvider,
@@ -85,40 +84,40 @@ describe("Partial Hydration Behavior", () => {
             }
           },
           initialEntries: ["/parent/child"],
-        }
+        },
       );
       let { container } = render(
         // eslint-disable-next-line react/jsx-pascal-case
-        <ReactRouter_RouterProvider router={router} />
+        <ReactRouter_RouterProvider router={router} />,
       );
 
       parentDfd.resolve("PARENT DATA");
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <h1>
-                Root
-              </h1>
-              <p>
-                Parent Loading...
-              </p>
-            </div>"
-          `);
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <p>
+            Parent Loading...
+          </p>
+        </div>"
+      `);
 
       childDfd.resolve("CHILD DATA");
       await waitFor(() => screen.getByText(/CHILD DATA/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <h1>
-                Root
-              </h1>
-              <h2>
-                Parent - PARENT DATA
-              </h2>
-              <h3>
-                Child - CHILD DATA
-              </h3>
-            </div>"
-          `);
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Parent - PARENT DATA
+          </h2>
+          <h3>
+            Child - CHILD DATA
+          </h3>
+        </div>"
+      `);
     });
 
     it("supports partial hydration w/patchRoutesOnNavigation (root fallback)", async () => {
@@ -174,37 +173,37 @@ describe("Partial Hydration Behavior", () => {
             }
           },
           initialEntries: ["/parent/child"],
-        }
+        },
       );
       let { container } = render(
         // eslint-disable-next-line react/jsx-pascal-case
-        <ReactRouter_RouterProvider router={router} />
+        <ReactRouter_RouterProvider router={router} />,
       );
 
       parentDfd.resolve("PARENT DATA");
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <p>
-                Root Loading...
-              </p>
-            </div>"
-          `);
+        "<div>
+          <p>
+            Root Loading...
+          </p>
+        </div>"
+      `);
 
       childDfd.resolve("CHILD DATA");
       await waitFor(() => screen.getByText(/CHILD DATA/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-            "<div>
-              <h1>
-                Root
-              </h1>
-              <h2>
-                Parent - PARENT DATA
-              </h2>
-              <h3>
-                Child - CHILD DATA
-              </h3>
-            </div>"
-          `);
+        "<div>
+          <h1>
+            Root
+          </h1>
+          <h2>
+            Parent - PARENT DATA
+          </h2>
+          <h3>
+            Child - CHILD DATA
+          </h3>
+        </div>"
+      `);
     });
   });
 });
@@ -216,7 +215,7 @@ function testPartialHydration(
     | typeof createMemoryRouter,
   RouterProvider:
     | typeof ReactRouterDom_RouterProvider
-    | typeof ReactRouter_RouterProvider
+    | typeof ReactRouter_RouterProvider,
 ) {
   let consoleWarn: jest.SpyInstance;
 
@@ -265,7 +264,7 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -331,7 +330,7 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -393,7 +392,7 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -405,7 +404,7 @@ function testPartialHydration(
       didAssertMissingHydrateFallback = true;
       // eslint-disable-next-line jest/no-conditional-expect
       expect(consoleWarn).toHaveBeenCalledWith(
-        "No `HydrateFallback` element provided to render during initial hydration"
+        "No `HydrateFallback` element provided to render during initial hydration",
       );
     }
 
@@ -467,7 +466,7 @@ function testPartialHydration(
             index: "INDEX ERROR",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -525,7 +524,7 @@ function testPartialHydration(
             index: "INDEX INITIAL",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -717,7 +716,7 @@ function testPartialHydration(
             index: "INDEX ERROR",
           },
         },
-      }
+      },
     );
     let { container } = render(<RouterProvider router={router} />);
 

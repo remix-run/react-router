@@ -18,6 +18,78 @@
       "env": {
         "jest/globals": false
       }
+    },
+    {
+      "files": ["packages/react-router-dev/config/default-rsc-entries/*"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": "off"
+      }
+    },
+    {
+      // Only apply JSDoc lint rules to files we auto-generate docs for
+      "files": [
+        "packages/react-router/lib/components.tsx",
+        "packages/react-router/lib/hooks.tsx",
+        "packages/react-router/lib/dom/lib.tsx",
+        "packages/react-router/lib/dom/ssr/components.tsx",
+        "packages/react-router/lib/dom/ssr/server.tsx",
+        "packages/react-router/lib/dom-export/hydrated-router.tsx",
+        "packages/react-router/lib/dom/server.tsx",
+        "packages/react-router/lib/router/utils.ts",
+        "packages/react-router/lib/rsc/browser.tsx",
+        "packages/react-router/lib/rsc/server.rsc.ts",
+        "packages/react-router/lib/rsc/server.ssr.tsx",
+        "packages/react-router/lib/rsc/html-stream/browser.ts",
+      ],
+      "plugins": ["jsdoc"],
+      "rules": {
+        "jsdoc/check-access": "error",
+        "jsdoc/check-alignment": "error",
+        "jsdoc/check-param-names": "error",
+        "jsdoc/check-property-names": "error",
+        "jsdoc/check-tag-names": [
+          "error",
+          {
+            "definedTags": ["additionalExamples", "category", "mode"]
+          }
+        ],
+        "jsdoc/no-defaults": "error",
+        "jsdoc/no-multi-asterisks": ["error", { "allowWhitespace": true }],
+        "jsdoc/require-description": "error",
+        "jsdoc/require-param": ["error", { "enableRootFixer": false }],
+        "jsdoc/require-param-description": "error",
+        "jsdoc/require-param-name": "error",
+        "jsdoc/require-returns": "error",
+        "jsdoc/require-returns-check": "error",
+        "jsdoc/require-returns-description": "error",
+        "jsdoc/sort-tags": [
+          "error",
+          {
+            "tagSequence": [
+              {
+                "tags": ["description"]
+              },
+              {
+                "tags": ["example"]
+              },
+              {
+                "tags": ["additionalExamples"]
+              },
+              {
+                "tags": [
+                  "name",
+                  "public",
+                  "private",
+                  "category",
+                  "mode",
+                  "param",
+                  "returns"
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "reportUnusedDisableDirectives": true

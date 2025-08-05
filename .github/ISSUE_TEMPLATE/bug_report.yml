@@ -1,39 +1,64 @@
 name: 🐛 Bug Report
 description: Something is wrong with React Router
-title: "[Bug]: "
 labels:
   - bug
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for contributing!
+        Thank you for helping to improve React Router!
 
-        Do you need some help?
-        ======================
-        The issue tracker is meant for bug reports only. This isn't the best place for support
-        or usage questions. Questions here don't have as much visibility as they do elsewhere.
-        Before you ask a question, here are some resources to get help first:
+        Please note that **all** bugs must have a **minimal** and **runnable** reproduction, meaning that it is not just pointing to a deployed site or a branch in your existing application, or showing a small code snippet. For more information, please refer to the [Bug/Issue Process Guidelines](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#bugissue-process).
 
-        - Read the docs: https://reactrouter.com
-        - Check out the list of frequently asked questions: https://reactrouter.com/start/faq
-        - Explore examples: https://reactrouter.com/start/examples
-        - Ask in chat: https://rmx.as/discord
-        - Look for/ask questions on Stack Overflow: https://stackoverflow.com/questions/tagged/react-router
+        ## If you are using **Framework Mode**, you have 2 preferred options
 
-        ### Test Case Starters:
+        ### Option 1 - Create a failing integration test
 
-        * [Using `<RouterProvider>`](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic-data-router?file=src/app.tsx)
-        * [Using `<BrowserRouter>`](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic?file=src/App.tsx)
-  - type: input
+        🏆 The most helpful reproduction is to use our _bug report integration test_ template:
+
+        1. [Fork `remix-run/react-router`](https://github.com/remix-run/react-router/fork)
+        2. Open [`integration/bug-report-test.ts`](https://github.com/remix-run/react-router/blob/dev/integration/bug-report-test.ts) in your editor
+        3. Follow the instructions to create a failing bug report test
+        4. Link to your forked branch with the failing test in this issue
+
+        ### Option 2 - Create a **minimal** reproduction
+
+        - 🥇 Link to a [StackBlitz](https://reactrouter.com/new) environment
+        - 🥈 Link to a GitHub repository containing a minimal reproduction app
+
+        ## If you are using **Data** or **Declarative Mode**
+
+        Create a **minimal** reproduction
+
+        - 🥇 Link to a CodeSandbox repro: [TS](https://codesandbox.io/templates/react-vite-ts) | [JS](https://codesandbox.io/templates/react-vite)
+        - 🥈 Link to a GitHub repository containing a minimal reproduction app
+
+  - type: textarea
+    id: reproduction
     attributes:
-      label: What version of React Router are you using?
+      label: Reproduction
+      description: Link to reproduction and steps to reproduce the behavior
+      placeholder: Go to https://stackblitz.com/edit/... and click the "Submit" button
     validations:
       required: true
   - type: textarea
+    id: system-info
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reproduce the behavior.
+      label: System Info
+      description: Output of `npx envinfo --system --npmPackages '{vite,react-router,@react-router/*}' --binaries --browsers`
+      render: shell
+      placeholder: System, Binaries, Browsers
+    validations:
+      required: true
+  - type: dropdown
+    id: package-manager
+    attributes:
+      label: Used Package Manager
+      description: Select the used package manager
+      options:
+        - npm
+        - yarn
+        - pnpm
     validations:
       required: true
   - type: textarea

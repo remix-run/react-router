@@ -35,7 +35,7 @@ describe("usePrompt", () => {
             Component: () => <h1>Arbitrary</h1>,
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
 
       render(<RouterProvider router={router} />);
@@ -68,7 +68,7 @@ describe("usePrompt", () => {
             Component: () => <h1>Arbitrary</h1>,
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
 
       render(<RouterProvider router={router} />);
@@ -103,7 +103,7 @@ describe("usePrompt", () => {
             Component: () => <h1>Arbitrary</h1>,
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
 
       render(<RouterProvider router={router} />);

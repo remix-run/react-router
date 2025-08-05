@@ -1,39 +1,66 @@
-import { ViteNodeServer } from "vite-node/server";
-import { ViteNodeRunner } from "vite-node/client";
-import { installSourcemapsSupport } from "vite-node/source-map";
+// We can only import types from vite-node at the top level since we're in a CJS
+// context but want to use vite-node's ESM build since Vite 7+ is ESM only
+import type { ViteNodeServer as ViteNodeServerType } from "vite-node/server";
+import type { ViteNodeRunner as ViteNodeRunnerType } from "vite-node/client";
 import type * as Vite from "vite";
 
-import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
+import { ssrExternals } from "./ssr-externals";
 
 export type Context = {
   devServer: Vite.ViteDevServer;
-  server: ViteNodeServer;
-  runner: ViteNodeRunner;
+  server: ViteNodeServerType;
+  runner: ViteNodeRunnerType;
 };
 
-export async function createContext(
-  viteConfig: Vite.InlineConfig = {}
-): Promise<Context> {
-  await preloadViteEsm();
-  const vite = importViteEsmSync();
+export async function createContext({
+  root,
+  mode,
+  customLogger,
+}: {
+  root: Vite.UserConfig["root"];
+  mode: Vite.ConfigEnv["mode"];
+  customLogger: Vite.UserConfig["customLogger"];
+}): Promise<Context> {
+  await preloadVite();
+  const vite = getVite();
 
-  const devServer = await vite.createServer(
-    vite.mergeConfig(
-      {
-        server: {
-          preTransformRequests: false,
-          hmr: false,
-        },
-        optimizeDeps: {
-          noDiscovery: true,
-        },
-        configFile: false,
-        envFile: false,
-        plugins: [],
-      },
-      viteConfig
-    )
-  );
+  // Ensure we're using the ESM build of vite-node since Vite 7+ is ESM only
+  const [{ ViteNodeServer }, { ViteNodeRunner }, { installSourcemapsSupport }] =
+    await Promise.all([
+      import("vite-node/server"),
+      import("vite-node/client"),
+      import("vite-node/source-map"),
+    ]);
+
+  const devServer = await vite.createServer({
+    root,
+    mode,
+    customLogger,
+    server: {
+      preTransformRequests: false,
+      hmr: false,
+      watch: null,
+    },
+    ssr: {
+      external: ssrExternals,
+    },
+    optimizeDeps: {
+      noDiscovery: true,
+    },
+    css: {
+      // This empty PostCSS config object prevents the PostCSS config file from
+      // being loaded. We don't need it in a React Router config context, and
+      // there's also an issue in Vite 5 when using a .ts PostCSS config file in
+      // an ESM project: https://github.com/vitejs/vite/issues/15869. Consumers
+      // can work around this in their own Vite config file, but they can't
+      // configure this internal usage of vite-node.
+      postcss: {},
+    },
+    configFile: false,
+    envFile: false,
+    plugins: [],
+  });
   await devServer.pluginContainer.buildStart({});
 
   const server = new ViteNodeServer(devServer);

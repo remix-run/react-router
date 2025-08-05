@@ -116,6 +116,50 @@ describe("fetchers", () => {
       expect(router._internalFetchControllers.size).toBe(0);
     });
 
+    it("unabstracted loader fetch with fog of war", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            // Note: No path is provided on the root route in this test to
+            // ensure nothing matches before routes are patched
+          },
+        ],
+        hydrationData: {
+          loaderData: { root: "ROOT DATA" },
+        },
+        async patchRoutesOnNavigation({ path, patch }) {
+          if (path === "/lazy") {
+            patch("root", [
+              {
+                id: "lazy",
+                path: "/lazy",
+                loader: () => dfd.promise,
+              },
+            ]);
+          }
+        },
+      });
+      let fetcherData = getFetcherData(router);
+
+      let key = "key";
+      router.fetch(key, "lazy", "/lazy");
+      expect(router.getFetcher(key)).toEqual({
+        state: "loading",
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+      });
+
+      await dfd.resolve("DATA");
+      expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
+      expect(fetcherData.get(key)).toBe("DATA");
+
+      expect(router._internalFetchControllers.size).toBe(0);
+    });
+
     it("loader fetch", async () => {
       let t = initializeTest({
         url: "/foo",
@@ -170,8 +214,8 @@ describe("fetchers", () => {
       expect(A.fetcher.formEncType).toBe("application/x-www-form-urlencoded");
       expect(
         new URL(
-          A.loaders.foo.stub.mock.calls[0][0].request.url
-        ).searchParams.toString()
+          A.loaders.foo.stub.mock.calls[0][0].request.url,
+        ).searchParams.toString(),
       ).toBe("key=value");
 
       await A.loaders.foo.resolve("A DATA");
@@ -329,6 +373,7 @@ describe("fetchers", () => {
         request: new Request("http://localhost/foo", {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
     });
   });
@@ -352,6 +397,43 @@ describe("fetchers", () => {
       // Cleaned up on completion
       await A.loaders.foo.resolve("FOO");
       expect(t.router.state.fetchers.size).toBe(0);
+    });
+
+    it("fetchers removed from data layer upon unmount", async () => {
+      let t = initializeTest();
+
+      let subscriber = jest.fn();
+      t.router.subscribe(subscriber);
+
+      let key = "key";
+      t.router.getFetcher(key); // mount
+      expect(t.router.state.fetchers.size).toBe(0);
+
+      let A = await t.fetch("/foo", key);
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+      expect(subscriber.mock.calls.length).toBe(1);
+      expect(subscriber.mock.calls[0][0].fetchers.get("key").state).toBe(
+        "loading",
+      );
+      subscriber.mockReset();
+
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(subscriber.mock.calls.length).toBe(1);
+      // Fetcher removed from router state upon return to idle
+      expect(subscriber.mock.calls[0][0].fetchers.size).toBe(0);
+      // But still mounted so not deleted from data layer yet
+      expect(subscriber.mock.calls[0][1].deletedFetchers.length).toBe(0);
+      subscriber.mockReset();
+
+      t.router.deleteFetcher(key); // unmount
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(subscriber.mock.calls.length).toBe(1);
+      expect(subscriber.mock.calls[0][0].fetchers.size).toBe(0);
+      // Unmounted so can be deleted from data layer
+      expect(subscriber.mock.calls[0][1].deletedFetchers).toEqual(["key"]);
+      subscriber.mockReset();
     });
 
     it("submitting fetchers persist until completion when removed during submitting phase", async () => {
@@ -525,9 +607,9 @@ describe("fetchers", () => {
           "Method Not Allowed",
           new Error(
             'You made a POST request to "/" but did not provide an `action` ' +
-              'for route "root", so there is no way to handle the request.'
+              'for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
       });
     });
@@ -553,7 +635,7 @@ describe("fetchers", () => {
           400,
           "Bad Request",
           new Error("Unable to encode submission body"),
-          true
+          true,
         ),
       });
     });
@@ -602,7 +684,7 @@ describe("fetchers", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
 
@@ -627,7 +709,7 @@ describe("fetchers", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
 
@@ -638,7 +720,7 @@ describe("fetchers", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
 
@@ -660,7 +742,7 @@ describe("fetchers", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
     });
@@ -802,6 +884,43 @@ describe("fetchers", () => {
       await C.loaders.index.resolve("INDEX");
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.location.key).toBe(key);
+    });
+
+    test("handles loader redirects after a fetcher submission", async () => {
+      let t = initializeTest();
+
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/foo" },
+        navigation: { state: "idle" },
+        loaderData: { root: "ROOT", foo: "FOO" },
+      });
+
+      let key = "key";
+      let B = await t.fetch("/bar", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await B.actions.bar.resolve("ACTION");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "loading",
+        data: "ACTION",
+      });
+      await B.loaders.root.resolve("ROOT*");
+
+      let C = await B.loaders.foo.redirect("/");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.index.resolve("INDEX*");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/" },
+        navigation: { state: "idle" },
+        loaderData: { root: "ROOT**", index: "INDEX*" },
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
     });
   });
 
@@ -1678,7 +1797,7 @@ describe("fetchers", () => {
         let B = await t.navigate(
           "/bar",
           { formMethod: "post", formData: createFormData({}) },
-          ["foo"]
+          ["foo"],
         );
 
         // The fetcher loader redirect should be ignored
@@ -1714,7 +1833,7 @@ describe("fetchers", () => {
         let B = await t.navigate(
           "/bar",
           { formMethod: "post", formData: createFormData({}) },
-          ["foo"]
+          ["foo"],
         );
         expect(A.loaders.foo.signal.aborted).toBe(true);
 
@@ -1802,6 +1921,71 @@ describe("fetchers", () => {
         });
         expect(t.router.getFetcher(keyA)?.state).toBe("idle");
         expect(t.router.getFetcher(keyB)?.state).toBe("idle");
+      });
+    });
+
+    it("properly ignores aborted action revalidation fetchers when a navigation triggers revalidations", async () => {
+      let keyA = "a";
+      let keyB = "b";
+      let t = initializeTest();
+
+      // Complete a fetch load
+      let A = await t.fetch("/foo", keyA, "root");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "idle",
+        data: "FOO",
+      });
+      expect(t.router.state.fetchers.get(keyA)).toBe(undefined);
+
+      // Submit to trigger fetch revalidation
+      let B = await t.fetch("/bar", keyB, "root", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "fetch", "loader", "foo");
+      await B.actions.bar.resolve("BAR");
+      expect(t.fetchers[keyB]).toMatchObject({
+        state: "loading",
+        data: "BAR",
+      });
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: "FOO",
+      });
+
+      // Interrupt revalidation with GEt navigation
+      // TODO: This shouldn't actually abort the revalidation but it does currently
+      // which then causes the invalid invariant error.  This test is to ensure
+      // the invariant doesn't throw, but we'll fix the unnecessary revalidation
+      // in https://github.com/remix-run/react-router/issues/14115
+      let C = await t.navigate("/baz", undefined, ["foo"]);
+      expect(B.loaders.foo.signal.aborted).toBe(true);
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: "FOO",
+      });
+
+      // Complete the aborted fetcher revalidation calls
+      await B.loaders.root.resolve("NOPE");
+      await B.loaders.index.resolve("NOPE");
+      await B.loaders.foo.resolve("NOPE");
+
+      // Complete the navigation
+      await C.loaders.root.resolve("ROOT*");
+      await C.loaders.baz.resolve("BAZ");
+      await C.loaders.foo.resolve("FOO*");
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        location: { pathname: "/baz" },
+        loaderData: {
+          root: "ROOT*",
+          baz: "BAZ",
+        },
+      });
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "idle",
+        data: "FOO*",
       });
     });
   });
@@ -2643,7 +2827,7 @@ describe("fetchers", () => {
           formMethod: "post",
           formData: createFormData({}),
         },
-        ["tasksId"]
+        ["tasksId"],
       );
       await C.actions.tasks.resolve("TASKS ACTION");
 
@@ -2884,7 +3068,7 @@ describe("fetchers", () => {
       let B = await t.navigate(
         "/page",
         { formMethod: "post", body: createFormData({}) },
-        ["fetch"]
+        ["fetch"],
       );
       await B.actions.page.resolve("ACTION");
       expect(t.router.getFetcher(key)?.state).toBe("loading");
@@ -3189,13 +3373,14 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await request.formData()).get("a")).toBe("1");
     });
@@ -3217,6 +3402,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3243,6 +3429,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3269,6 +3456,7 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
@@ -3296,13 +3484,14 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "text/plain;charset=UTF-8"
+        "text/plain;charset=UTF-8",
       );
       expect(await request.text()).toEqual(body);
     });
@@ -3325,13 +3514,14 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "text/plain;charset=UTF-8"
+        "text/plain;charset=UTF-8",
       );
       expect(await request.text()).toEqual(body);
     });
@@ -3353,13 +3543,14 @@ describe("fetchers", () => {
       expect(F.actions.root.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       let request = F.actions.root.stub.mock.calls[0][0].request;
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await request.formData()).get("a")).toBe("1");
     });

@@ -1,6 +1,7 @@
-import { resolve, win32 } from "node:path";
+import * as Path from "pathe";
 import * as v from "valibot";
 import pick from "lodash/pick";
+
 import invariant from "../invariant";
 
 declare global {
@@ -111,20 +112,25 @@ export const routeConfigEntrySchema: v.BaseSchema<
     );
   }, "Invalid type: Expected object but received a promise. Did you forget to await?"),
   v.object({
-    id: v.optional(v.string()),
+    id: v.optional(
+      v.pipe(
+        v.string(),
+        v.notValue("root", "A route cannot use the reserved id 'root'."),
+      ),
+    ),
     path: v.optional(v.string()),
     index: v.optional(v.boolean()),
     caseSensitive: v.optional(v.boolean()),
     file: v.string(),
     children: v.optional(v.array(v.lazy(() => routeConfigEntrySchema))),
-  })
+  }),
 );
 
 export const resolvedRouteConfigSchema = v.array(routeConfigEntrySchema);
 type ResolvedRouteConfig = v.InferInput<typeof resolvedRouteConfigSchema>;
 
 /**
- * Route config to be exported via the `routes` export within `routes.ts`.
+ * Route config to be exported via the default export from `app/routes.ts`.
  */
 export type RouteConfig = ResolvedRouteConfig | Promise<ResolvedRouteConfig>;
 
@@ -134,11 +140,13 @@ export function validateRouteConfig({
 }: {
   routeConfigFile: string;
   routeConfig: unknown;
-}): { valid: false; message: string } | { valid: true } {
+}):
+  | { valid: false; message: string }
+  | { valid: true; routeConfig: RouteConfigEntry[] } {
   if (!routeConfig) {
     return {
       valid: false,
-      message: `No "routes" export defined in "${routeConfigFile}.`,
+      message: `Route config must be the default export in "${routeConfigFile}".`,
     };
   }
 
@@ -160,7 +168,7 @@ export function validateRouteConfig({
         root ? `${root}` : [],
         nested
           ? Object.entries(nested).map(
-              ([path, message]) => `Path: routes.${path}\n${message}`
+              ([path, message]) => `Path: routes.${path}\n${message}`,
             )
           : [],
       ]
@@ -169,7 +177,10 @@ export function validateRouteConfig({
     };
   }
 
-  return { valid: true };
+  return {
+    valid: true,
+    routeConfig: routeConfig as RouteConfigEntry[],
+  };
 }
 
 const createConfigRouteOptionKeys = [
@@ -188,19 +199,19 @@ type CreateRouteOptions = Pick<
 function route(
   path: string | null | undefined,
   file: string,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry;
 function route(
   path: string | null | undefined,
   file: string,
   options: CreateRouteOptions,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry;
 function route(
   path: string | null | undefined,
   file: string,
   optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry {
   let options: CreateRouteOptions = {};
 
@@ -252,12 +263,12 @@ function layout(file: string, children?: RouteConfigEntry[]): RouteConfigEntry;
 function layout(
   file: string,
   options: CreateLayoutOptions,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry;
 function layout(
   file: string,
   optionsOrChildren: CreateLayoutOptions | RouteConfigEntry[] | undefined,
-  children?: RouteConfigEntry[]
+  children?: RouteConfigEntry[],
 ): RouteConfigEntry {
   let options: CreateLayoutOptions = {};
 
@@ -280,7 +291,7 @@ function layout(
  */
 function prefix(
   prefixPath: string,
-  routes: RouteConfigEntry[]
+  routes: RouteConfigEntry[],
 ): RouteConfigEntry[] {
   return routes.map((route) => {
     if (route.index || typeof route.path === "string") {
@@ -315,7 +326,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     route: (path, file, ...rest) => {
-      return route(path, resolve(directory, file), ...(rest as any));
+      return route(path, Path.resolve(directory, file), ...(rest as any));
     },
     /**
      * Helper function for creating a route config entry for an index route, for
@@ -324,7 +335,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     index: (file, ...rest) => {
-      return index(resolve(directory, file), ...(rest as any));
+      return index(Path.resolve(directory, file), ...(rest as any));
     },
     /**
      * Helper function for creating a route config entry for a layout route, for
@@ -333,7 +344,7 @@ export function relative(directory: string): typeof helpers {
      * `relative` call that created this helper.
      */
     layout: (file, ...rest) => {
-      return layout(resolve(directory, file), ...(rest as any));
+      return layout(Path.resolve(directory, file), ...(rest as any));
     },
 
     // Passthrough of helper functions that don't need relative scoping so that
@@ -343,17 +354,19 @@ export function relative(directory: string): typeof helpers {
 }
 
 export function configRoutesToRouteManifest(
+  appDirectory: string,
   routes: RouteConfigEntry[],
-  rootId = "root"
 ): RouteManifest {
   let routeManifest: RouteManifest = {};
 
-  function walk(route: RouteConfigEntry, parentId: string) {
+  function walk(route: RouteConfigEntry, parentId?: string) {
     let id = route.id || createRouteId(route.file);
     let manifestItem: RouteManifestEntry = {
       id,
       parentId,
-      file: route.file,
+      file: Path.isAbsolute(route.file)
+        ? Path.relative(appDirectory, route.file)
+        : route.file,
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
@@ -361,7 +374,7 @@ export function configRoutesToRouteManifest(
 
     if (routeManifest.hasOwnProperty(id)) {
       throw new Error(
-        `Unable to define routes with duplicate route id: "${id}"`
+        `Unable to define routes with duplicate route id: "${id}"`,
       );
     }
     routeManifest[id] = manifestItem;
@@ -374,18 +387,14 @@ export function configRoutesToRouteManifest(
   }
 
   for (let route of routes) {
-    walk(route, rootId);
+    walk(route);
   }
 
   return routeManifest;
 }
 
 function createRouteId(file: string) {
-  return normalizeSlashes(stripFileExtension(file));
-}
-
-function normalizeSlashes(file: string) {
-  return file.split(win32.sep).join("/");
+  return Path.normalize(stripFileExtension(file));
 }
 
 function stripFileExtension(file: string) {

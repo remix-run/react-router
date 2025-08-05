@@ -20,7 +20,7 @@ export interface AppLoadContext {
 // though we know it'll always be provided in remix
 export async function callRouteHandler(
   handler: LoaderFunction | ActionFunction,
-  args: LoaderFunctionArgs | ActionFunctionArgs
+  args: LoaderFunctionArgs | ActionFunctionArgs,
 ) {
   let result = await handler({
     request: stripRoutesParam(stripIndexParam(args.request)),

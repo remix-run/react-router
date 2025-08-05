@@ -1,5 +1,3 @@
-import type { ErrorResponse, Fetcher, RouterState } from "react-router";
-import "@testing-library/jest-dom";
 import {
   act,
   fireEvent,
@@ -9,7 +7,12 @@ import {
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import type { RouteObject } from "../../index";
+import type {
+  RouteObject,
+  ErrorResponse,
+  Fetcher,
+  RouterState,
+} from "../../index";
 import {
   Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
@@ -41,23 +44,23 @@ import getHtml from "../utils/getHtml";
 import { createDeferred, tick } from "../router/utils/utils";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
-  getWindowImpl(url, false)
+  getWindowImpl(url, false),
 );
 
 testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
-  getWindowImpl(url, true)
+  getWindowImpl(url, true),
 );
 
 function testDomRouter(
   name: string,
   createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
-  getWindow: (initialUrl: string, isHash?: boolean) => Window
+  getWindow: (initialUrl: string, isHash?: boolean) => Window,
 ) {
   // Utility to assert location info based on the type of router
   function assertLocation(
     testWindow: Window,
     pathname: string,
-    search?: string
+    search?: string,
   ) {
     if (name === "<DataHashRouter>") {
       expect(testWindow.location.hash).toEqual("#" + pathname + (search || ""));
@@ -86,7 +89,7 @@ function testDomRouter(
 
     it("renders the first route that matches the URL", () => {
       let router = createTestRouter(
-        createRoutesFromElements(<Route path="/" element={<h1>Home</h1>} />)
+        createRoutesFromElements(<Route path="/" element={<h1>Home</h1>} />),
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -106,11 +109,11 @@ function testDomRouter(
             <Route element={<Outlet />}>
               <Route path="thing" element={<h1>Heyooo</h1>} />
             </Route>
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/my/base/path/thing"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -126,12 +129,12 @@ function testDomRouter(
     it("supports a basename prop", () => {
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="thing" element={<h1>Heyooo</h1>} />
+          <Route path="thing" element={<h1>Heyooo</h1>} />,
         ),
         {
           basename: "/my/base/path",
           window: getWindow("/my/base/path/thing"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -149,7 +152,7 @@ function testDomRouter(
         createRoutesFromElements(
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/child"),
@@ -162,7 +165,7 @@ function testDomRouter(
               "0-0": "child action",
             },
           },
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -209,11 +212,11 @@ function testDomRouter(
         createRoutesFromElements(
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/child"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -262,8 +265,12 @@ function testDomRouter(
       };
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
-        )
+          <Route
+            path="/"
+            element={<h1>Nope</h1>}
+            errorElement={<Boundary />}
+          />,
+        ),
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -298,8 +305,12 @@ function testDomRouter(
       };
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
-        )
+          <Route
+            path="/"
+            element={<h1>Nope</h1>}
+            errorElement={<Boundary />}
+          />,
+        ),
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -341,8 +352,12 @@ function testDomRouter(
       };
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
-        )
+          <Route
+            path="/"
+            element={<h1>Nope</h1>}
+            errorElement={<Boundary />}
+          />,
+        ),
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -385,11 +400,11 @@ function testDomRouter(
               element={<Foo />}
             />
             <Route path="bar" element={<Bar />} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/foo"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -445,11 +460,11 @@ function testDomRouter(
               }}
             />
             <Route path="bar" element={<Bar />} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/foo"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -497,14 +512,17 @@ function testDomRouter(
               element={<Foo />}
             />
             <Route path="bar" element={<Bar />} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/bar"),
-        }
+        },
       );
       let { container } = render(
-        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
+        <RouterProvider
+          router={router}
+          fallbackElement={<FallbackElement />}
+        />,
       );
 
       function FallbackElement() {
@@ -543,9 +561,9 @@ function testDomRouter(
               loader={() => fooDefer.promise}
               element={<Foo />}
             />
-          </Route>
+          </Route>,
         ),
-        { window: getWindow("/foo") }
+        { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -586,9 +604,9 @@ function testDomRouter(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>
+          </Route>,
         ),
-        { window: getWindow("/foo") }
+        { window: getWindow("/foo") },
       );
       render(<RouterProvider router={router} />);
 
@@ -617,12 +635,12 @@ function testDomRouter(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>
+          </Route>,
         ),
         {
           window: testWindow,
           basename: "/base/name",
-        }
+        },
       );
       render(<RouterProvider router={router} />);
 
@@ -662,9 +680,9 @@ function testDomRouter(
               loader={() => barDefer.promise}
               element={<Bar />}
             />
-          </Route>
+          </Route>,
         ),
-        { window: getWindow("/foo") }
+        { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -749,11 +767,11 @@ function testDomRouter(
                 element: <Bar />,
               })}
             />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/foo"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -830,9 +848,9 @@ function testDomRouter(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>
+          </Route>,
         ),
-        { window: getWindow("/foo") }
+        { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -879,9 +897,9 @@ function testDomRouter(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
-          </Route>
+          </Route>,
         ),
-        { window: getWindow("/foo") }
+        { window: getWindow("/foo") },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -933,12 +951,12 @@ function testDomRouter(
             action={() => actionDefer.promise}
             loader={() => loaderDefer.promise}
             element={<Home />}
-          />
+          />,
         ),
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1057,11 +1075,11 @@ function testDomRouter(
                 },
               })}
             />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1165,17 +1183,17 @@ function testDomRouter(
             loader={async ({ request }) => {
               let resolvedValue = await loaderDefer.promise;
               let urlParam = new URL(
-                `https://remix.run${request.url}`
+                `https://remix.run${request.url}`,
               ).searchParams.get("test");
               return `${resolvedValue}:${urlParam}`;
             }}
             element={<Home />}
-          />
+          />,
         ),
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1260,7 +1278,7 @@ function testDomRouter(
                 loader: async ({ request }) => {
                   let resolvedValue = await loaderDefer.promise;
                   let urlParam = new URL(
-                    `https://remix.run${request.url}`
+                    `https://remix.run${request.url}`,
                   ).searchParams.get("test");
                   return `${resolvedValue}:${urlParam}`;
                 },
@@ -1277,11 +1295,11 @@ function testDomRouter(
                 },
               })}
             />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1368,12 +1386,12 @@ function testDomRouter(
             }}
             loader={() => loaderDefer.promise}
             element={<Home />}
-          />
+          />,
         ),
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1492,12 +1510,12 @@ function testDomRouter(
                 },
               })}
             />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/"),
           hydrationData: { loaderData: { "0": null } },
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1610,7 +1628,7 @@ function testDomRouter(
             },
           },
         ],
-        { window: testWindow }
+        { window: testWindow },
       );
       let { container } = render(<RouterProvider router={router} />);
       expect(testWindow.history.state.usr).toBeUndefined();
@@ -1631,8 +1649,8 @@ function testDomRouter(
       let actionSpy = jest.fn();
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" action={actionSpy} element={<Home />} />
-        )
+          <Route path="/" action={actionSpy} element={<Home />} />,
+        ),
       );
       render(<RouterProvider router={router} />);
 
@@ -1668,9 +1686,9 @@ function testDomRouter(
             <Route index element={<h1>index</h1>} />
             <Route path="1" element={<h1>Page 1</h1>} />
             <Route path="2" element={<h1>Page 2</h1>} />
-          </Route>
+          </Route>,
         ),
-        {}
+        {},
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1739,9 +1757,9 @@ function testDomRouter(
               element={<FormPage />}
             />
             <Route path="result" element={<h1>Result Page</h1>} />
-          </Route>
+          </Route>,
         ),
-        {}
+        {},
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1807,9 +1825,9 @@ function testDomRouter(
               element={<FormPage />}
             />
             <Route path="result" element={<h1>Result Page</h1>} />
-          </Route>
+          </Route>,
         ),
-        { hydrationData: {} }
+        { hydrationData: {} },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1863,11 +1881,11 @@ function testDomRouter(
             <Route index element={<h1>index</h1>} />
             <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
             <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1936,11 +1954,11 @@ function testDomRouter(
             <Route index element={<h1>index</h1>} />
             <Route path="1" element={<h1>Page 1</h1>} />
             <Route path="2" action={() => "action"} element={<h1>Page 2</h1>} />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2029,11 +2047,11 @@ function testDomRouter(
               loader={() => "1"}
               element={<Page />}
             />
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2129,7 +2147,7 @@ function testDomRouter(
       let testWindow = getWindow("/base/path");
       let router = createTestRouter(
         createRoutesFromElements(<Route path="path" element={<Comp />} />),
-        { basename: "/base", window: testWindow }
+        { basename: "/base", window: testWindow },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2204,13 +2222,13 @@ function testDomRouter(
       let testWindow = getWindow("/base/path");
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="path" action={() => "action data"} element={<Comp />} />
+          <Route path="path" action={() => "action data"} element={<Comp />} />,
         ),
         {
           basename: "/base",
 
           window: testWindow,
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2300,12 +2318,12 @@ function testDomRouter(
             }}
             loader={() => loaderDefer.promise}
             element={<Home />}
-          />
+          />,
         ),
         {
           hydrationData: { loaderData: { index: "Initial Data" } },
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2402,19 +2420,19 @@ function testDomRouter(
                 }}
               />
             </Route>
-          </Route>
+          </Route>,
         ),
         {
           window: getWindow("/foo/bar"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
       expect(container.querySelector("form")?.getAttribute("action")).toBe(
-        "/foo"
+        "/foo",
       );
       expect(
-        container.querySelector("button")?.getAttribute("formaction")
+        container.querySelector("button")?.getAttribute("formaction"),
       ).toBe("/foo/bar");
 
       fireEvent.click(screen.getByText("Submit"));
@@ -2456,12 +2474,12 @@ function testDomRouter(
             }}
             loader={() => loaderDefer.promise}
             element={<Home />}
-          />
+          />,
         ),
         {
           hydrationData: { loaderData: { index: "Initial Data" } },
           window: getWindow("/"),
-        }
+        },
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2545,16 +2563,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path="bar" element={<NoActionComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1"
+            "/foo/bar?a=1",
           );
         });
 
@@ -2565,14 +2583,14 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path="bar" element={<ActionDotComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
-            { window: getWindow("/foo/bar?a=1#hash") }
+            { window: getWindow("/foo/bar?a=1#hash") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
 
@@ -2583,14 +2601,14 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path="bar" element={<ActionEmptyComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
-            { window: getWindow("/foo/bar?a=1#hash") }
+            { window: getWindow("/foo/bar?a=1#hash") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
       });
@@ -2605,16 +2623,16 @@ function testDomRouter(
                     <Route index={true} element={<h1>Index</h1>} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1"
+            "/foo/bar?a=1",
           );
         });
 
@@ -2627,16 +2645,16 @@ function testDomRouter(
                     <Route index={true} element={<h1>Index</h1>} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
 
@@ -2649,16 +2667,16 @@ function testDomRouter(
                     <Route index={true} element={<h1>Index</h1>} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
 
@@ -2669,16 +2687,16 @@ function testDomRouter(
                 <Route path="foo" element={<ActionEmptyComponent />}>
                   <Route path=":param" element={<h1>Param</h1>} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo",
           );
         });
 
@@ -2689,16 +2707,16 @@ function testDomRouter(
                 <Route path="foo" element={<ActionEmptyComponent />}>
                   <Route path="*" element={<h1>Splat</h1>} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar/baz/qux"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo",
           );
         });
 
@@ -2711,16 +2729,16 @@ function testDomRouter(
                     <Route index={true} element={<h1>Index</h1>} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?index&a=1"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1"
+            "/foo/bar?a=1",
           );
         });
       });
@@ -2735,16 +2753,16 @@ function testDomRouter(
                     <Route index={true} element={<NoActionComponent />} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?index&a=1"
+            "/foo/bar?index&a=1",
           );
         });
 
@@ -2757,16 +2775,16 @@ function testDomRouter(
                     <Route index={true} element={<ActionDotComponent />} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?index"
+            "/foo/bar?index",
           );
         });
 
@@ -2779,16 +2797,16 @@ function testDomRouter(
                     <Route index={true} element={<ActionEmptyComponent />} />
                   </Route>
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?index"
+            "/foo/bar?index",
           );
         });
 
@@ -2811,11 +2829,11 @@ function testDomRouter(
                     }
                   />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: testWindow,
-            }
+            },
           );
           render(<RouterProvider router={router} />);
 
@@ -2841,14 +2859,14 @@ function testDomRouter(
                     element={<NoActionComponent />}
                   />
                 </Route>
-              </Route>
+              </Route>,
             ),
-            { window: getWindow("/foo/bar?a=1#hash") }
+            { window: getWindow("/foo/bar?a=1#hash") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?index&a=1"
+            "/foo/bar?index&a=1",
           );
         });
 
@@ -2870,11 +2888,11 @@ function testDomRouter(
                     }
                   />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: testWindow,
-            }
+            },
           );
           render(<RouterProvider router={router} />);
 
@@ -2894,16 +2912,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path=":param" element={<NoActionComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1"
+            "/foo/bar?a=1",
           );
         });
 
@@ -2914,16 +2932,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path=":param" element={<ActionDotComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
 
@@ -2934,16 +2952,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path=":param" element={<ActionEmptyComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
       });
@@ -2956,16 +2974,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path="*" element={<NoActionComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1"
+            "/foo/bar?a=1",
           );
         });
 
@@ -2976,16 +2994,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path="*" element={<ActionDotComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
 
@@ -2996,16 +3014,16 @@ function testDomRouter(
                 <Route path="foo">
                   <Route path="*" element={<ActionEmptyComponent />} />
                 </Route>
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/foo/bar?a=1#hash"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo/bar",
           );
         });
       });
@@ -3026,11 +3044,11 @@ function testDomRouter(
                   element={<Index />}
                   action={({ request }) => "INDEX ACTION: " + request.url}
                 />
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/parent?index&index=keep"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -3065,14 +3083,14 @@ function testDomRouter(
           await tick();
           await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
           expect(getHtml(container.querySelector("#parent")!)).toContain(
-            "PARENT ACTION: http://localhost/parent?index=keep"
+            "PARENT ACTION: http://localhost/parent?index=keep",
           );
 
           fireEvent.click(screen.getByText("Submit from index"));
           await tick();
           await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
           expect(getHtml(container.querySelector("#index")!)).toContain(
-            "INDEX ACTION: http://localhost/parent?index&index=keep"
+            "INDEX ACTION: http://localhost/parent?index&index=keep",
           );
         });
 
@@ -3091,11 +3109,11 @@ function testDomRouter(
                   element={<Index />}
                   action={({ request }) => "INDEX ACTION: " + request.url}
                 />
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/parent?index&index=keep"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -3125,24 +3143,24 @@ function testDomRouter(
           }
 
           expect(
-            container.querySelector("#parent-form")?.getAttribute("action")
+            container.querySelector("#parent-form")?.getAttribute("action"),
           ).toBe("/parent?index=keep");
           expect(
-            container.querySelector("#index-form")?.getAttribute("action")
+            container.querySelector("#index-form")?.getAttribute("action"),
           ).toBe("/parent?index&index=keep");
 
           fireEvent.click(screen.getByText("Submit from parent"));
           await tick();
           await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
           expect(getHtml(container.querySelector("#parent")!)).toContain(
-            "PARENT ACTION: http://localhost/parent?index=keep"
+            "PARENT ACTION: http://localhost/parent?index=keep",
           );
 
           fireEvent.click(screen.getByText("Submit from index"));
           await tick();
           await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
           expect(getHtml(container.querySelector("#index")!)).toContain(
-            "INDEX ACTION: http://localhost/parent?index&index=keep"
+            "INDEX ACTION: http://localhost/parent?index&index=keep",
           );
         });
 
@@ -3161,11 +3179,11 @@ function testDomRouter(
                   element={<Index />}
                   action={({ request }) => "INDEX ACTION: " + request.url}
                 />
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/parent?index&index=keep"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -3200,14 +3218,14 @@ function testDomRouter(
           await tick();
           await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
           expect(getHtml(container.querySelector("#parent")!)).toContain(
-            "PARENT ACTION: http://localhost/parent?index=keep"
+            "PARENT ACTION: http://localhost/parent?index=keep",
           );
 
           fireEvent.click(screen.getByText("Submit from index"));
           await tick();
           await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
           expect(getHtml(container.querySelector("#index")!)).toContain(
-            "INDEX ACTION: http://localhost/parent?index&index=keep"
+            "INDEX ACTION: http://localhost/parent?index&index=keep",
           );
         });
 
@@ -3226,11 +3244,11 @@ function testDomRouter(
                   element={<Index />}
                   action={({ request }) => "INDEX ACTION: " + request.url}
                 />
-              </Route>
+              </Route>,
             ),
             {
               window: getWindow("/parent?index&index=keep"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -3262,24 +3280,24 @@ function testDomRouter(
           }
 
           expect(
-            container.querySelector("#parent-form")?.getAttribute("action")
+            container.querySelector("#parent-form")?.getAttribute("action"),
           ).toBe("/parent?index=keep");
           expect(
-            container.querySelector("#index-form")?.getAttribute("action")
+            container.querySelector("#index-form")?.getAttribute("action"),
           ).toBe("/parent?index&index=keep");
 
           fireEvent.click(screen.getByText("Submit from parent"));
           await tick();
           await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
           expect(getHtml(container.querySelector("#parent")!)).toContain(
-            "PARENT ACTION: http://localhost/parent?index=keep"
+            "PARENT ACTION: http://localhost/parent?index=keep",
           );
 
           fireEvent.click(screen.getByText("Submit from index"));
           await tick();
           await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
           expect(getHtml(container.querySelector("#index")!)).toContain(
-            "INDEX ACTION: http://localhost/parent?index&index=keep"
+            "INDEX ACTION: http://localhost/parent?index&index=keep",
           );
         });
       });
@@ -3291,14 +3309,14 @@ function testDomRouter(
               <Route path="foo">
                 <Route path="bar" element={<Form action=".?a=1#newhash" />} />
               </Route>
-            </Route>
+            </Route>,
           ),
-          { window: getWindow("/foo/bar?a=1#hash") }
+          { window: getWindow("/foo/bar?a=1#hash") },
         );
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/foo/bar?a=1#newhash"
+          "/foo/bar?a=1#newhash",
         );
       });
     });
@@ -3313,16 +3331,16 @@ function testDomRouter(
                 path="messages/edit"
                 element={<Form action=".." relative="path" />}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/inbox/messages/edit"),
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages"
+          "/inbox/messages",
         );
       });
 
@@ -3335,16 +3353,16 @@ function testDomRouter(
                 path="messages/:id"
                 element={<Form action=".." relative="path" />}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/inbox/messages/1"),
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages"
+          "/inbox/messages",
         );
       });
 
@@ -3364,16 +3382,16 @@ function testDomRouter(
               >
                 <Route index element={<h1>Form</h1>} />
               </Route>
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/inbox/messages/1"),
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages"
+          "/inbox/messages",
         );
       });
 
@@ -3385,16 +3403,16 @@ function testDomRouter(
               <Route path="messages/:id">
                 <Route index element={<Form action=".." relative="path" />} />
               </Route>
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/inbox/messages/1"),
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages"
+          "/inbox/messages",
         );
       });
 
@@ -3404,16 +3422,16 @@ function testDomRouter(
             <Route
               path="inbox/messages/*"
               element={<Form action=".." relative="path" />}
-            />
+            />,
           ),
           {
             window: getWindow("/inbox/messages/1/2/3"),
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages/1/2"
+          "/inbox/messages/1/2",
         );
       });
     });
@@ -3423,9 +3441,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3449,9 +3467,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3479,9 +3497,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3515,9 +3533,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3551,9 +3569,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3598,7 +3616,7 @@ function testDomRouter(
               },
             },
           ],
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3609,7 +3627,7 @@ function testDomRouter(
         expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
-          `"application/x-www-form-urlencoded;charset=UTF-8"`
+          `"application/x-www-form-urlencoded;charset=UTF-8"`,
         );
         let actionFormData = await request.formData();
         expect(actionFormData.get("a")).toBe("1");
@@ -3646,7 +3664,7 @@ function testDomRouter(
               },
             },
           ],
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3657,7 +3675,7 @@ function testDomRouter(
         expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
-          `"application/x-www-form-urlencoded;charset=UTF-8"`
+          `"application/x-www-form-urlencoded;charset=UTF-8"`,
         );
         let actionFormData = await request.formData();
         expect(actionFormData.get("a")).toBe("1");
@@ -3694,7 +3712,7 @@ function testDomRouter(
               },
             },
           ],
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3737,7 +3755,7 @@ function testDomRouter(
               },
             },
           ],
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3747,7 +3765,7 @@ function testDomRouter(
         expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toBe(
-          "text/plain;charset=UTF-8"
+          "text/plain;charset=UTF-8",
         );
         expect(await request.text()).toEqual(body);
       });
@@ -3756,9 +3774,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3785,9 +3803,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3814,9 +3832,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3851,9 +3869,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3879,9 +3897,9 @@ function testDomRouter(
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3915,17 +3933,18 @@ function testDomRouter(
         let actionSpy = jest.fn();
         actionSpy.mockReturnValue({});
         async function getPayload() {
-          let formData = await actionSpy.mock.calls[
-            actionSpy.mock.calls.length - 1
-          ][0].request.formData();
+          let formData =
+            await actionSpy.mock.calls[
+              actionSpy.mock.calls.length - 1
+            ][0].request.formData();
           return new URLSearchParams(formData.entries()).toString();
         }
 
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
+            <Route path="/" action={actionSpy} element={<FormPage />} />,
           ),
-          { window: getWindow("/") }
+          { window: getWindow("/") },
         );
         render(<RouterProvider router={router} />);
 
@@ -3954,12 +3973,12 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Add Task"));
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=&tasks=last"
+          "tasks=first&tasks=second&tasks=&tasks=last",
         );
 
         fireEvent.click(screen.getByText("No Name"));
         expect(await getPayload()).toEqual(
-          "tasks=first&tasks=second&tasks=last"
+          "tasks=first&tasks=second&tasks=last",
         );
 
         fireEvent.click(screen.getByAltText("Add Task"), {
@@ -3967,7 +3986,7 @@ function testDomRouter(
           clientY: 2,
         });
         expect(await getPayload()).toMatch(
-          "tasks=first&tasks=second&tasks.x=1&tasks.y=2&tasks=last"
+          "tasks=first&tasks=second&tasks.x=1&tasks.y=2&tasks=last",
         );
 
         fireEvent.click(screen.getByAltText("No Name"), {
@@ -3975,12 +3994,12 @@ function testDomRouter(
           clientY: 2,
         });
         expect(await getPayload()).toMatch(
-          "tasks=first&tasks=second&x=1&y=2&tasks=last"
+          "tasks=first&tasks=second&x=1&y=2&tasks=last",
         );
 
         fireEvent.click(screen.getByText("Outside"));
         expect(await getPayload()).toEqual(
-          "tasks=outside&tasks=first&tasks=second&tasks=last"
+          "tasks=outside&tasks=first&tasks=second&tasks=last",
         );
       });
     });
@@ -4004,17 +4023,17 @@ function testDomRouter(
                 // automatically added in new Request()
                 let increment =
                   new URL(`https://remix.test${request.url}`).searchParams.get(
-                    "increment"
+                    "increment",
                   ) || "1";
                 count = count + parseInt(increment, 10);
                 return { count };
               }}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4131,12 +4150,12 @@ function testDomRouter(
                 action={() => "INDEX ACTION"}
                 loader={() => "INDEX LOADER"}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/parent"),
             hydrationData: { loaderData: { parent: null, index: null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4178,7 +4197,7 @@ function testDomRouter(
                 onClick={() =>
                   fetcher.submit(
                     {},
-                    { method: "post", action: "/parent?index" }
+                    { method: "post", action: "/parent?index" },
                   )
                 }
               >
@@ -4193,7 +4212,7 @@ function testDomRouter(
           await new Promise((r) => setTimeout(r, 1));
           await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
           expect(getHtml(container.querySelector("#output")!)).toContain(
-            expectedOutput
+            expectedOutput,
           );
         }
 
@@ -4216,12 +4235,12 @@ function testDomRouter(
               loader={async () => {
                 throw new Error("Kaboom!");
               }}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4285,12 +4304,12 @@ function testDomRouter(
               element={<Comp />}
               errorElement={<ErrorElement />}
               loader={() => ({ value: dfd.promise })}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4392,12 +4411,12 @@ function testDomRouter(
               action={async () => {
                 throw new Error("Kaboom!");
               }}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4476,17 +4495,17 @@ function testDomRouter(
                 // automatically added in new Request()
                 let increment =
                   new URL(`https://remix.test${request.url}`).searchParams.get(
-                    "increment"
+                    "increment",
                   ) || "1";
                 count = count + parseInt(increment, 10);
                 return { count };
               }}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4573,12 +4592,12 @@ function testDomRouter(
               loader={async () => {
                 throw new Error("Kaboom!");
               }}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4641,12 +4660,12 @@ function testDomRouter(
               action={async () => {
                 throw new Error("Kaboom!");
               }}
-            />
+            />,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4721,7 +4740,7 @@ function testDomRouter(
           ],
           {
             window: getWindow("/"),
-          }
+          },
         );
 
         render(<RouterProvider router={router} />);
@@ -4765,7 +4784,7 @@ function testDomRouter(
           ],
           {
             window: getWindow("/"),
-          }
+          },
         );
 
         render(<RouterProvider router={router} />);
@@ -4809,7 +4828,7 @@ function testDomRouter(
           ],
           {
             window: getWindow("/"),
-          }
+          },
         );
 
         render(<RouterProvider router={router} />);
@@ -4853,7 +4872,7 @@ function testDomRouter(
           ],
           {
             window: getWindow("/"),
-          }
+          },
         );
 
         render(<RouterProvider router={router} />);
@@ -4883,12 +4902,12 @@ function testDomRouter(
               />
               <Route path="/fetch-1" loader={() => fetchDfd1.promise} />
               <Route path="/fetch-2" loader={() => fetchDfd2.promise} />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/1"),
             hydrationData: { loaderData: { "0": null, "0-0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -5104,12 +5123,12 @@ function testDomRouter(
                 path="/fetch"
                 loader={async () => ({ fetchCount: ++fetchCount })}
               />
-            </>
+            </>,
           ),
           {
             window: getWindow("/"),
             hydrationData: { loaderData: { index: null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -5180,12 +5199,12 @@ function testDomRouter(
                 element={<Comp />}
                 errorElement={<ErrorElement />}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -5237,12 +5256,12 @@ function testDomRouter(
                 }}
                 errorElement={<p>Not I!</p>}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -5292,12 +5311,12 @@ function testDomRouter(
                 }}
                 errorElement={<p>Not I!</p>}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -5308,7 +5327,7 @@ function testDomRouter(
               onClick={() =>
                 fetcher.submit(
                   { key: "value" },
-                  { method: "post", action: "/fetch" }
+                  { method: "post", action: "/fetch" },
                 )
               }
             >
@@ -5358,12 +5377,12 @@ function testDomRouter(
                 }}
                 errorElement={<p>Not I!</p>}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/child"),
             hydrationData: { loaderData: { "0": null } },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -5449,7 +5468,7 @@ function testDomRouter(
           ],
           {
             window: getWindow("/"),
-          }
+          },
         );
 
         let { container } = render(<RouterProvider router={router} />);
@@ -5502,32 +5521,32 @@ function testDomRouter(
                 loader: () => dfd2.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("pre")!.innerHTML).toBe(
-            "0, idle/undefined, idle/undefined"
+            "0, idle/undefined, idle/undefined",
           );
 
           fireEvent.click(screen.getByText("Load 1"));
           await waitFor(() =>
-            screen.getByText("1, loading/undefined, idle/undefined")
+            screen.getByText("1, loading/undefined, idle/undefined"),
           );
 
           dfd1.resolve("FETCH 1");
           await waitFor(() =>
-            screen.getByText("0, idle/FETCH 1, idle/undefined")
+            screen.getByText("0, idle/FETCH 1, idle/undefined"),
           );
 
           fireEvent.click(screen.getByText("Load 2"));
           await waitFor(() =>
-            screen.getByText("1, idle/FETCH 1, loading/undefined")
+            screen.getByText("1, idle/FETCH 1, loading/undefined"),
           );
 
           dfd2.resolve("FETCH 2");
           await waitFor(() =>
-            screen.getByText("0, idle/FETCH 1, idle/FETCH 2")
+            screen.getByText("0, idle/FETCH 1, idle/FETCH 2"),
           );
         });
 
@@ -5564,32 +5583,32 @@ function testDomRouter(
                 loader: () => dfd2.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("pre")!.innerHTML).toBe(
-            "0, idle/undefined, idle/undefined"
+            "0, idle/undefined, idle/undefined",
           );
 
           fireEvent.click(screen.getByText("Load 1"));
           await waitFor(() =>
-            screen.getByText("1, loading/undefined, loading/undefined")
+            screen.getByText("1, loading/undefined, loading/undefined"),
           );
 
           dfd1.resolve("FETCH 1");
           await waitFor(() =>
-            screen.getByText("0, idle/FETCH 1, idle/FETCH 1")
+            screen.getByText("0, idle/FETCH 1, idle/FETCH 1"),
           );
 
           fireEvent.click(screen.getByText("Load 2"));
           await waitFor(() =>
-            screen.getByText("1, loading/FETCH 1, loading/FETCH 1")
+            screen.getByText("1, loading/FETCH 1, loading/FETCH 1"),
           );
 
           dfd2.resolve("FETCH 2");
           await waitFor(() =>
-            screen.getByText("0, idle/FETCH 2, idle/FETCH 2")
+            screen.getByText("0, idle/FETCH 2, idle/FETCH 2"),
           );
         });
 
@@ -5618,7 +5637,7 @@ function testDomRouter(
                 loader: ({ request }) => request.url,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
 
           function ReusedFetcher({ fetcherKey }: { fetcherKey: string }) {
@@ -5666,7 +5685,7 @@ function testDomRouter(
 
           fireEvent.click(screen.getByText("Load Fetcher"));
           await waitFor(
-            () => screen.getAllByText(/\/echo\?fetcherKey=a/).length > 0
+            () => screen.getAllByText(/\/echo\?fetcherKey=a/).length > 0,
           );
 
           // Fetcher 'a' now has data
@@ -5753,16 +5772,84 @@ function testDomRouter(
                 loader: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
           expect(container.innerHTML).not.toMatch(/my-key/);
           fireEvent.click(screen.getByText("Load fetchers"));
           await waitFor(() =>
-            // React `useId()` results in something such as `:r2a:`, `:r2i:`,
-            // `:rt:`, or `:rp:` depending on `DataBrowserRouter`/`DataHashRouter`
-            expect(container.innerHTML).toMatch(/(:r[0-9]?[a-z]:),my-key/)
+            // React `useId()` results in something such as `«r2a»`, `«r2i»`,
+            // `«rt»`, or `«rp»` depending on `DataBrowserRouter`/`DataHashRouter`
+            expect(container.innerHTML).toMatch(/«r[0-9]?[a-z]»,my-key/),
           );
+        });
+
+        it("cleans up keyed fetcher data on unmount", async () => {
+          let count = 0;
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                loader() {
+                  return ++count;
+                },
+                Component() {
+                  let [shown, setShown] = React.useState(false);
+                  return (
+                    <div>
+                      <button onClick={() => setShown(!shown)}>
+                        {shown ? "Unmount" : "Mount"}
+                      </button>
+                      {shown ? <FetcherComponent /> : null}
+                    </div>
+                  );
+                },
+                ErrorBoundary() {
+                  let error = useRouteError();
+                  return <pre>{JSON.stringify(error)}</pre>;
+                },
+              },
+            ],
+            {
+              window: getWindow("/"),
+            },
+          );
+
+          render(<RouterProvider router={router} />);
+
+          function FetcherComponent() {
+            let fetcher = useFetcher({ key: "shared" });
+            return (
+              <div>
+                <p>{`Fetcher state:${fetcher.state}`}</p>
+                {fetcher.data != null ? (
+                  <p data-testid="value">{fetcher.data}</p>
+                ) : null}
+                <button onClick={() => fetcher.load(".")}>Fetch</button>
+              </div>
+            );
+          }
+
+          await waitFor(() => screen.getByText("Mount"));
+
+          fireEvent.click(screen.getByText("Mount"));
+          await waitFor(() => screen.getByText("Fetcher state:idle"));
+
+          fireEvent.click(screen.getByText("Fetch"));
+          await waitFor(() => screen.getByTestId("value"));
+          let value = screen.getByTestId("value").innerHTML;
+
+          fireEvent.click(screen.getByText("Unmount"));
+          await waitFor(() => screen.getByText("Mount"));
+
+          fireEvent.click(screen.getByText("Mount"));
+          await waitFor(() => screen.getByText("Fetcher state:idle"));
+          expect(screen.queryByTestId("value")).toBe(null);
+
+          fireEvent.click(screen.getByText("Fetch"));
+          await waitFor(() => screen.getByTestId("value"));
+          let value2 = screen.getByTestId("value").innerHTML;
+          expect(value2).not.toBe(value);
         });
       });
 
@@ -5808,7 +5895,7 @@ function testDomRouter(
                 loader: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -5855,7 +5942,7 @@ function testDomRouter(
                           onClick={() =>
                             fetcher.submit(
                               {},
-                              { method: "post", action: "/fetch" }
+                              { method: "post", action: "/fetch" },
                             )
                           }
                         >
@@ -5877,7 +5964,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -5923,7 +6010,7 @@ function testDomRouter(
                           onClick={() =>
                             fetcher.submit(
                               {},
-                              { method: "post", action: "/fetch" }
+                              { method: "post", action: "/fetch" },
                             )
                           }
                         >
@@ -5950,7 +6037,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -5997,7 +6084,7 @@ function testDomRouter(
                           onClick={() =>
                             fetcher.submit(
                               {},
-                              { method: "post", action: "/fetch" }
+                              { method: "post", action: "/fetch" },
                             )
                           }
                         >
@@ -6030,7 +6117,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6077,7 +6164,7 @@ function testDomRouter(
                           onClick={() =>
                             fetcher.submit(
                               {},
-                              { method: "post", action: "/fetch" }
+                              { method: "post", action: "/fetch" },
                             )
                           }
                         >
@@ -6105,7 +6192,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6170,7 +6257,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6230,7 +6317,7 @@ function testDomRouter(
                 loader: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6250,7 +6337,7 @@ function testDomRouter(
           await waitFor(() => screen.getByText("Num fetchers: 0"));
           expect(getHtml(container)).toMatch("Page");
           expect(getHtml(container)).not.toMatch(
-            "Unexpected Application Error!"
+            "Unexpected Application Error!",
           );
           expect(getHtml(container)).not.toMatch("FETCH ERROR");
         });
@@ -6305,7 +6392,7 @@ function testDomRouter(
                 loader: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6354,7 +6441,7 @@ function testDomRouter(
                           onClick={() =>
                             fetcher.submit(
                               {},
-                              { method: "post", action: "/fetch" }
+                              { method: "post", action: "/fetch" },
                             )
                           }
                         >
@@ -6376,7 +6463,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6396,7 +6483,7 @@ function testDomRouter(
           await waitFor(() => screen.getByText("Num fetchers: 0"));
           expect(getHtml(container)).toMatch("Page");
           expect(getHtml(container)).not.toMatch(
-            "Unexpected Application Error!"
+            "Unexpected Application Error!",
           );
           expect(getHtml(container)).not.toMatch("FETCH ERROR");
         });
@@ -6429,7 +6516,7 @@ function testDomRouter(
                             onClick={() =>
                               fetcher.submit(
                                 {},
-                                { method: "post", action: "/fetch" }
+                                { method: "post", action: "/fetch" },
                               )
                             }
                           >
@@ -6458,7 +6545,7 @@ function testDomRouter(
                 action: () => dfd.promise,
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6528,7 +6615,7 @@ function testDomRouter(
                 },
               },
             ],
-            { window: getWindow("/") }
+            { window: getWindow("/") },
           );
 
           function FetcherComponent({ onClose }) {
@@ -6556,14 +6643,14 @@ function testDomRouter(
           await waitFor(
             () =>
               screen.getByText("Active Fetchers: 1") &&
-              screen.getByText("Fetcher State: loading")
+              screen.getByText("Fetcher State: loading"),
           );
 
           loaderDfd.resolve("FETCHER DATA");
           await waitFor(
             () =>
               screen.getByText("FETCHER DATA") &&
-              screen.getByText("Active Fetchers: 0")
+              screen.getByText("Active Fetchers: 0"),
           );
 
           fireEvent.click(screen.getByText("Submit Form"));
@@ -6574,7 +6661,7 @@ function testDomRouter(
             () =>
               screen.getByText("Navigation State: idle") &&
               screen.getByText("Active Fetchers: 0") &&
-              screen.getByText("Action Data: ACTION")
+              screen.getByText("Action Data: ACTION"),
           );
 
           expect(count).toBe(1);
@@ -6585,7 +6672,7 @@ function testDomRouter(
         function setupTest(
           method: "get" | "post",
           navigate: boolean,
-          renderFetcher = false
+          renderFetcher = false,
         ) {
           let loaderDefer = createDeferred();
           let actionDefer = createDeferred();
@@ -6649,7 +6736,7 @@ function testDomRouter(
             {
               window: getWindow("/"),
               hydrationData: { loaderData: { "0": "INIT" } },
-            }
+            },
           );
 
           let { container } = render(<RouterProvider router={router} />);
@@ -6683,7 +6770,7 @@ function testDomRouter(
 
           actionDefer.resolve("ACTION");
           await waitFor(() =>
-            screen.getByText("default,loading,INIT,ACTION:value,")
+            screen.getByText("default,loading,INIT,ACTION:value,"),
           );
 
           loaderDefer.resolve("LOADER");
@@ -6711,7 +6798,7 @@ function testDomRouter(
         it('uses a fetcher for <Form method="post" navigate={false}>', async () => {
           let { container, loaderDefer, actionDefer } = setupTest(
             "post",
-            false
+            false,
           );
 
           expect(getHtml(container)).toMatch("default,idle,INIT,");
@@ -6719,7 +6806,7 @@ function testDomRouter(
           fireEvent.click(screen.getByText("Submit Form"));
           // Fetcher does not trigger useNavigation
           await waitFor(() =>
-            screen.getByText("default,idle,INIT,,submitting")
+            screen.getByText("default,idle,INIT,,submitting"),
           );
 
           actionDefer.resolve("ACTION");
@@ -6752,7 +6839,7 @@ function testDomRouter(
           let { container, loaderDefer, actionDefer } = setupTest(
             "post",
             false,
-            true
+            true,
           );
 
           expect(getHtml(container)).toMatch("default,idle,INIT,");
@@ -6760,7 +6847,7 @@ function testDomRouter(
           fireEvent.click(screen.getByText("Submit Form"));
           // Fetcher does not trigger useNavigation
           await waitFor(() =>
-            screen.getByText("default,idle,INIT,,submitting")
+            screen.getByText("default,idle,INIT,,submitting"),
           );
 
           actionDefer.resolve("ACTION");
@@ -6781,12 +6868,12 @@ function testDomRouter(
             createRoutesFromElements(
               <Route path="/" element={<Comp />}>
                 <Route path="fetch" loader={() => "FETCH"} />
-              </Route>
+              </Route>,
             ),
             {
               basename: "/base",
               window: getWindow("/base"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6830,12 +6917,12 @@ function testDomRouter(
             createRoutesFromElements(
               <Route path="/" element={<Comp />}>
                 <Route path="fetch" loader={() => "FETCH"} />
-              </Route>
+              </Route>,
             ),
             {
               basename: "/base",
               window: getWindow("/base"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6885,12 +6972,12 @@ function testDomRouter(
             createRoutesFromElements(
               <Route path="/" element={<Comp />}>
                 <Route path="fetch" action={() => "FETCH"} />
-              </Route>
+              </Route>,
             ),
             {
               basename: "/base",
               window: getWindow("/base"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -6939,12 +7026,12 @@ function testDomRouter(
             createRoutesFromElements(
               <Route path="/" element={<Comp />}>
                 <Route path="fetch" action={() => "FETCH"} />
-              </Route>
+              </Route>,
             ),
             {
               basename: "/base",
               window: getWindow("/base"),
-            }
+            },
           );
           let { container } = render(<RouterProvider router={router} />);
 
@@ -7013,7 +7100,7 @@ function testDomRouter(
                 element={<Comp />}
                 errorElement={<ErrorBoundary />}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/child"),
@@ -7028,7 +7115,7 @@ function testDomRouter(
                 "0-0": new Error("Kaboom 💥"),
               },
             },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -7075,11 +7162,11 @@ function testDomRouter(
                 errorElement: <ErrorBoundary />,
               })}
             />
-          </Route>
+          </Route>,
         );
 
         let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
-          (m) => m.route.lazy
+          (m) => m.route.lazy,
         );
 
         if (lazyMatches && lazyMatches?.length > 0) {
@@ -7087,7 +7174,7 @@ function testDomRouter(
             lazyMatches.map(async (m) => {
               let routeModule = await m.route.lazy!();
               Object.assign(m.route, { ...routeModule, lazy: undefined });
-            })
+            }),
           );
         }
 
@@ -7146,7 +7233,7 @@ function testDomRouter(
           createRoutesFromElements(
             <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
               <Route path="child" element={<Comp />} />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/child"),
@@ -7157,7 +7244,7 @@ function testDomRouter(
                 "0": new Error("Kaboom 💥"),
               },
             },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -7199,11 +7286,11 @@ function testDomRouter(
             })}
           >
             <Route path="child" element={<Comp />} />
-          </Route>
+          </Route>,
         );
 
         let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
-          (m) => m.route.lazy
+          (m) => m.route.lazy,
         );
 
         if (lazyMatches && lazyMatches?.length > 0) {
@@ -7211,7 +7298,7 @@ function testDomRouter(
             lazyMatches.map(async (m) => {
               let routeModule = await m.route.lazy!();
               Object.assign(m.route, { ...routeModule, lazy: undefined });
-            })
+            }),
           );
         }
 
@@ -7275,7 +7362,7 @@ function testDomRouter(
                 element={<Bar />}
                 errorElement={<BarError />}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/foo"),
@@ -7286,7 +7373,7 @@ function testDomRouter(
                 },
               },
             },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -7391,7 +7478,7 @@ function testDomRouter(
                 loader={() => barDefer.promise}
                 element={<Bar />}
               />
-            </Route>
+            </Route>,
           ),
           {
             window: getWindow("/foo"),
@@ -7402,7 +7489,7 @@ function testDomRouter(
                 },
               },
             },
-          }
+          },
         );
         let { container } = render(<RouterProvider router={router} />);
 
@@ -7693,7 +7780,7 @@ function testDomRouter(
               ],
             },
           ],
-          { window: testWindow }
+          { window: testWindow },
         );
         render(<RouterProvider router={router} />);
 
@@ -7768,7 +7855,7 @@ function testDomRouter(
               ],
             },
           ],
-          { window: testWindow }
+          { window: testWindow },
         );
         render(<RouterProvider router={router} />);
         await waitFor(() => screen.getByText("INDEX"));
@@ -7790,6 +7877,129 @@ function testDomRouter(
         ]);
       });
     });
+
+    if (name === "<DataBrowserRouter>") {
+      describe("DataBrowserRouter-only tests", () => {
+        it("is defensive against double slash URLs in window.location", async () => {
+          let testWindow = getWindow("http://localhost//");
+          let router = createTestRouter(
+            [
+              {
+                path: "*",
+                Component() {
+                  return <Link to="/page">Go to Page</Link>;
+                },
+              },
+              {
+                path: "/page",
+                Component() {
+                  return <h1>Worked!</h1>;
+                },
+              },
+            ],
+            {
+              window: testWindow,
+            },
+          );
+          render(<RouterProvider router={router} />);
+          expect(testWindow.location.pathname).toBe("//");
+          expect(router.state.location.pathname).toBe("//");
+
+          fireEvent.click(screen.getByText("Go to Page"));
+          await waitFor(() => screen.getByText("Worked!"));
+          expect(testWindow.location.pathname).toBe("/page");
+          expect(router.state.location.pathname).toBe("/page");
+        });
+      });
+
+      it("handles different-origin absolute redirect URLs", async () => {
+        let testWindow = getWindow("http://localhost/");
+
+        // jsdom is making more and more properties non-configurable, so we inject
+        // our own jest-friendly window
+        testWindow = {
+          ...testWindow,
+          addEventListener: testWindow.addEventListener.bind(testWindow),
+          location: {
+            ...testWindow.location,
+            assign: jest.fn(),
+            replace: jest.fn(),
+          },
+        };
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return <Link to="/page">Go to Page</Link>;
+              },
+            },
+            {
+              path: "/page",
+              loader() {
+                return redirect("http://otherhost/parent");
+              },
+              Component() {
+                return null;
+              },
+            },
+          ],
+          {
+            window: testWindow,
+          },
+        );
+
+        await router.navigate("/page");
+        expect(testWindow.location.assign).toHaveBeenCalledWith(
+          "http://otherhost/parent",
+        );
+      });
+
+      it("handles different-origin protocol-less absolute redirect URLs", async () => {
+        let testWindow = getWindow("http://localhost/");
+
+        // jsdom is making more and more properties non-configurable, so we inject
+        // our own jest-friendly window
+        testWindow = {
+          ...testWindow,
+          addEventListener: testWindow.addEventListener.bind(testWindow),
+          location: {
+            ...testWindow.location,
+            assign: jest.fn(),
+            replace: jest.fn(),
+          },
+        };
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return <Link to="/page">Go to Page</Link>;
+              },
+            },
+            {
+              path: "/page",
+              loader() {
+                return redirect("//otherhost/parent");
+              },
+              Component() {
+                return null;
+              },
+            },
+          ],
+          {
+            window: testWindow,
+          },
+        );
+
+        await router.navigate("/page");
+        expect(testWindow.location.assign).toHaveBeenCalledWith(
+          "//otherhost/parent",
+        );
+      });
+    }
   });
 }
 

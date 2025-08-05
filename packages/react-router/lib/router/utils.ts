@@ -1,5 +1,9 @@
+import type { MiddlewareEnabled } from "../types/future";
+import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+
+export type MaybePromise<T> = T | Promise<T>;
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -110,54 +114,242 @@ export type Submission =
     };
 
 /**
+ * A context instance used as the key for the `get`/`set` methods of a
+ * {@link unstable_RouterContextProvider}. Accepts an optional default
+ * value to be returned if no value has been set.
+ */
+export interface unstable_RouterContext<T = unknown> {
+  defaultValue?: T;
+}
+
+/**
+ * Creates a type-safe {@link unstable_RouterContext} object that can be used to
+ * * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
+ * * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
+ * * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
+ * * but specifically designed for React Router's request/response lifecycle.
+ *
+ * <docs-warning>Enable this API with the `future.unstable_middleware` flag.</docs-warning>
+ *
+ * If a `defaultValue` is provided, it will be returned from `context.get()`
+ * when no value has been set for the context. Otherwise, reading this context
+ * when no value has been set will throw an error.
+ *
+ * ```tsx filename=app/context.ts
+ * import { unstable_createContext } from "react-router";
+ *
+ * // Create a context for user data
+ * export const userContext =
+ *   unstable_createContext<User | null>(null);
+ * ```
+ *
+ * ```tsx filename=app/middleware/auth.ts
+ * import { getUserFromSession } from "~/auth.server";
+ * import { userContext } from "~/context";
+ *
+ * export const authMiddleware = async ({
+ *   context,
+ *   request,
+ * }) => {
+ *   const user = await getUserFromSession(request);
+ *   context.set(userContext, user);
+ * };
+ * ```
+ *
+ * ```tsx filename=app/routes/profile.tsx
+ * import { userContext } from "~/context";
+ *
+ * export async function loader({
+ *   context,
+ * }: Route.LoaderArgs) {
+ *   const user = context.get(userContext);
+ *
+ *   if (!user) {
+ *     throw new Response("Unauthorized", { status: 401 });
+ *   }
+ *
+ *   return { user };
+ * }
+ * ```
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ * @param defaultValue An optional default value for the context. This value
+ * will be returned if no value has been set for this context.
+ * @returns A {@link unstable_RouterContext} object that can be used with
+ * `context.get()` and `context.set()` in [`action`](../../start/framework/route-module#action)s,
+ * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
+ */
+export function unstable_createContext<T>(
+  defaultValue?: T,
+): unstable_RouterContext<T> {
+  return { defaultValue };
+}
+
+/**
+ * Provides methods for writing/reading values in application context in a
+ * type-safe way. Primarily for usage with [middleware](../../how-to/middleware).
+ *
+ * @example
+ * import {
+ *   unstable_createContext,
+ *   unstable_RouterContextProvider
+ * } from "react-router";
+ *
+ * const userContext = unstable_createContext<User | null>(null);
+ * const contextProvider = new unstable_RouterContextProvider();
+ * contextProvider.set(userContext, getUser());
+ * const user = contextProvider.get(userContext);
+ * //    ^ User
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @mode data
+ */
+export class unstable_RouterContextProvider {
+  #map = new Map<unstable_RouterContext, unknown>();
+
+  /**
+   * Create a new `unstable_RouterContextProvider` instance
+   * @param init An optional initial context map to populate the provider with
+   */
+  constructor(init?: Map<unstable_RouterContext, unknown>) {
+    if (init) {
+      for (let [context, value] of init) {
+        this.set(context, value);
+      }
+    }
+  }
+
+  /**
+   * Access a value from the context. If no value has been set for the context,
+   * it will return the context's `defaultValue` if provided, or throw an error
+   * if no `defaultValue` was set.
+   * @param context The context to get the value for
+   * @returns The value for the context, or the context's `defaultValue` if no
+   * value was set
+   */
+  get<T>(context: unstable_RouterContext<T>): T {
+    if (this.#map.has(context)) {
+      return this.#map.get(context) as T;
+    }
+
+    if (context.defaultValue !== undefined) {
+      return context.defaultValue;
+    }
+
+    throw new Error("No value found for context");
+  }
+
+  /**
+   * Set a value for the context. If the context already has a value set, this
+   * will overwrite it.
+   *
+   * @param context The context to set the value for
+   * @param value The value to set for the context
+   * @returns {void}
+   */
+  set<C extends unstable_RouterContext>(
+    context: C,
+    value: C extends unstable_RouterContext<infer T> ? T : never,
+  ): void {
+    this.#map.set(context, value);
+  }
+}
+
+type DefaultContext = MiddlewareEnabled extends true
+  ? Readonly<unstable_RouterContextProvider>
+  : any;
+
+/**
  * @private
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
 interface DataFunctionArgs<Context> {
+  /** A {@link https://developer.mozilla.org/en-US/docs/Web/API/Request Fetch Request instance} which you can use to read headers (like cookies, and {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams URLSearchParams} from the request. */
   request: Request;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route.
+   * @example
+   * // app/routes.ts
+   * route("teams/:teamId", "./team.tsx"),
+   *
+   * // app/team.tsx
+   * export function loader({
+   *   params,
+   * }: Route.LoaderArgs) {
+   *   params.teamId;
+   *   //        ^ string
+   * }
+   */
   params: Params;
-  context?: Context;
+  /**
+   * This is the context passed in to your server adapter's getLoadContext() function.
+   * It's a way to bridge the gap between the adapter's request/response API with your React Router app.
+   * It is only applicable if you are using a custom server adapter.
+   */
+  context: Context;
 }
+
+/**
+ * Route middleware `next` function to call downstream handlers and then complete
+ * middlewares from the bottom-up
+ */
+export interface unstable_MiddlewareNextFunction<Result = unknown> {
+  (): MaybePromise<Result>;
+}
+
+/**
+ * Route middleware function signature.  Receives the same "data" arguments as a
+ * `loader`/`action` (`request`, `params`, `context`) as the first parameter and
+ * a `next` function as the second parameter which will call downstream handlers
+ * and then complete middlewares from the bottom-up
+ */
+export type unstable_MiddlewareFunction<Result = unknown> = (
+  args: DataFunctionArgs<Readonly<unstable_RouterContextProvider>>,
+  next: unstable_MiddlewareNextFunction<Result>,
+) => MaybePromise<Result | void>;
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
+export interface LoaderFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
+export interface ActionFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {}
 
 /**
- * Loaders and actions can return anything except `undefined` (`null` is a
- * valid return value if there is no data to return).  Responses are preferred
- * and will ease any future migration to Remix
+ * Loaders and actions can return anything
  */
-type DataFunctionValue = Response | NonNullable<unknown> | null;
+type DataFunctionValue = unknown;
 
-type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+type DataFunctionReturnValue = MaybePromise<DataFunctionValue>;
 
 /**
  * Route loader function signature
  */
-export type LoaderFunction<Context = any> = {
+export type LoaderFunction<Context = DefaultContext> = {
   (
     args: LoaderFunctionArgs<Context>,
-    handlerCtx?: unknown
+    handlerCtx?: unknown,
   ): DataFunctionReturnValue;
 } & { hydrate?: boolean };
 
 /**
  * Route action function signature
  */
-export interface ActionFunction<Context = any> {
+export interface ActionFunction<Context = DefaultContext> {
   (
     args: ActionFunctionArgs<Context>,
-    handlerCtx?: unknown
+    handlerCtx?: unknown,
   ): DataFunctionReturnValue;
 }
 
@@ -165,18 +357,56 @@ export interface ActionFunction<Context = any> {
  * Arguments passed to shouldRevalidate function
  */
 export interface ShouldRevalidateFunctionArgs {
+  /** This is the url the navigation started from. You can compare it with `nextUrl` to decide if you need to revalidate this route's data. */
   currentUrl: URL;
+  /** These are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params} from the URL that can be compared to the `nextParams` to decide if you need to reload or not. Perhaps you're using only a partial piece of the param for data loading, you don't need to revalidate if a superfluous part of the param changed. */
   currentParams: AgnosticDataRouteMatch["params"];
+  /** In the case of navigation, this the URL the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentUrl. */
   nextUrl: URL;
+  /** In the case of navigation, these are the {@link https://reactrouter.com/start/framework/routing#dynamic-segments dynamic route params}  from the next location the user is requesting. Some revalidations are not navigation, so it will simply be the same as currentParams. */
   nextParams: AgnosticDataRouteMatch["params"];
+  /** The method (probably `"GET"` or `"POST"`) used in the form submission that triggered the revalidation. */
   formMethod?: Submission["formMethod"];
+  /** The form action (`<Form action="/somewhere">`) that triggered the revalidation. */
   formAction?: Submission["formAction"];
+  /** The form encType (`<Form encType="application/x-www-form-urlencoded">) used in the form submission that triggered the revalidation*/
   formEncType?: Submission["formEncType"];
+  /** The form submission data when the form's encType is `text/plain` */
   text?: Submission["text"];
+  /** The form submission data when the form's encType is `application/x-www-form-urlencoded` or `multipart/form-data` */
   formData?: Submission["formData"];
+  /** The form submission data when the form's encType is `application/json` */
   json?: Submission["json"];
+  /** The status code of the action response */
   actionStatus?: number;
+  /**
+   * When a submission causes the revalidation this will be the result of the action—either action data or an error if the action failed. It's common to include some information in the action result to instruct shouldRevalidate to revalidate or not.
+   *
+   * @example
+   * export async function action() {
+   *   await saveSomeStuff();
+   *   return { ok: true };
+   * }
+   *
+   * export function shouldRevalidate({
+   *   actionResult,
+   * }) {
+   *   if (actionResult?.ok) {
+   *     return false;
+   *   }
+   *   return true;
+   * }
+   */
   actionResult?: any;
+  /**
+   * By default, React Router doesn't call every loader all the time. There are reliable optimizations it can make by default. For example, only loaders with changing params are called. Consider navigating from the following URL to the one below it:
+   *
+   * /projects/123/tasks/abc
+   * /projects/123/tasks/def
+   * React Router will only call the loader for tasks/def because the param for projects/123 didn't change.
+   *
+   * It's safest to always return defaultShouldRevalidate after you've done your specific optimizations that return false, otherwise your UI might get out of sync with your data on the server.
+   */
   defaultShouldRevalidate: boolean;
 }
 
@@ -193,17 +423,81 @@ export interface ShouldRevalidateFunction {
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  /**
+   * @private
+   */
+  _lazyPromises?: {
+    middleware: Promise<void> | undefined;
+    handler: Promise<void> | undefined;
+    route: Promise<void> | undefined;
+  };
+  /**
+   * A boolean value indicating whether this route handler should be called in
+   * this pass.
+   *
+   * The `matches` array always includes _all_ matched routes even when only
+   * _some_ route handlers need to be called so that things like middleware can
+   * be implemented.
+   *
+   * `shouldLoad` is usually only interesting if you are skipping the route
+   * handler entirely and implementing custom handler logic - since it lets you
+   * determine if that custom logic should run for this route or not.
+   *
+   * For example:
+   *  - If you are on `/parent/child/a` and you navigate to `/parent/child/b` -
+   *    you'll get an array of three matches (`[parent, child, b]`), but only `b`
+   *    will have `shouldLoad=true` because the data for `parent` and `child` is
+   *    already loaded
+   *  - If you are on `/parent/child/a` and you submit to `a`'s [`action`](https://reactrouter.com/docs/start/data/route-object#action),
+   *    then only `a` will have `shouldLoad=true` for the action execution of
+   *    `dataStrategy`
+   *  - After the [`action`](https://reactrouter.com/docs/start/data/route-object#action),
+   *    `dataStrategy` will be called again for the [`loader`](https://reactrouter.com/docs/start/data/route-object#loader)
+   *    revalidation, and all matches will have `shouldLoad=true` (assuming no
+   *    custom `shouldRevalidate` implementations)
+   */
   shouldLoad: boolean;
+  // This can be null for actions calls and for initial hydration calls
+  unstable_shouldRevalidateArgs: ShouldRevalidateFunctionArgs | null;
+  // This function will use a scoped version of `shouldRevalidateArgs` because
+  // they are read-only but let the user provide an optional override value for
+  // `defaultShouldRevalidate` if they choose
+  unstable_shouldCallHandler(defaultShouldRevalidate?: boolean): boolean;
+  /**
+   * An async function that will resolve any `route.lazy` implementations and
+   * execute the route's handler (if necessary), returning a {@link DataStrategyResult}
+   *
+   * - Calling `match.resolve` does not mean you're calling the
+   *   [`action`](https://reactrouter.com/docs/start/data/route-object#action)/[`loader`](https://reactrouter.com/docs/start/data/route-object#loader)
+   *   (the "handler") - `resolve` will only call the `handler` internally if
+   *   needed _and_ if you don't pass your own `handlerOverride` function parameter
+   * - It is safe to call `match.resolve` for all matches, even if they have
+   *   `shouldLoad=false`, and it will no-op if no loading is required
+   * - You should generally always call `match.resolve()` for `shouldLoad:true`
+   *   routes to ensure that any `route.lazy` implementations are processed
+   * - See the examples below for how to implement custom handler execution via
+   *   `match.resolve`
+   */
   resolve: (
     handlerOverride?: (
-      handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => DataFunctionReturnValue
+      handler: (ctx?: unknown) => DataFunctionReturnValue,
+    ) => DataFunctionReturnValue,
   ) => Promise<DataStrategyResult>;
 }
 
-export interface DataStrategyFunctionArgs<Context = any>
+export interface DataStrategyFunctionArgs<Context = DefaultContext>
   extends DataFunctionArgs<Context> {
+  /**
+   * Matches for this route extended with Data strategy APIs
+   */
   matches: DataStrategyMatch[];
+  unstable_runClientMiddleware: (
+    cb: DataStrategyFunction<Context>,
+  ) => Promise<Record<string, DataStrategyResult>>;
+  /**
+   * The key of the fetcher we are calling `dataStrategy` for, otherwise `null`
+   * for navigational executions
+   */
   fetcherKey: string | null;
 }
 
@@ -215,25 +509,29 @@ export interface DataStrategyResult {
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
-export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
+export interface DataStrategyFunction<Context = DefaultContext> {
+  (
+    args: DataStrategyFunctionArgs<Context>,
+  ): Promise<Record<string, DataStrategyResult>>;
 }
 
 export type AgnosticPatchRoutesOnNavigationFunctionArgs<
   O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch
+  M extends AgnosticRouteMatch = AgnosticRouteMatch,
 > = {
+  signal: AbortSignal;
   path: string;
   matches: M[];
+  fetcherKey: string | undefined;
   patch: (routeId: string | null, children: O[]) => void;
 };
 
 export type AgnosticPatchRoutesOnNavigationFunction<
   O extends AgnosticRouteObject = AgnosticRouteObject,
-  M extends AgnosticRouteMatch = AgnosticRouteMatch
+  M extends AgnosticRouteMatch = AgnosticRouteMatch,
 > = (
-  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
-) => void | Promise<void>;
+  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>,
+) => MaybePromise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific
@@ -246,19 +544,18 @@ export interface MapRoutePropertiesFunction {
 }
 
 /**
- * Keys we cannot change from within a lazy() function. We spread all other keys
+ * Keys we cannot change from within a lazy object. We spread all other keys
  * onto the route. Either they're meaningful to the router, or they'll get
  * ignored.
  */
-export type ImmutableRouteKey =
+type UnsupportedLazyRouteObjectKey =
   | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
   | "index"
   | "children";
-
-export const immutableRouteKeys = new Set<ImmutableRouteKey>([
+const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
   "path",
@@ -266,21 +563,64 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "index",
   "children",
 ]);
+export function isUnsupportedLazyRouteObjectKey(
+  key: string,
+): key is UnsupportedLazyRouteObjectKey {
+  return unsupportedLazyRouteObjectKeys.has(
+    key as UnsupportedLazyRouteObjectKey,
+  );
+}
 
-type RequireOne<T, Key = keyof T> = Exclude<
-  {
-    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
-  }[keyof T],
-  undefined
->;
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
+type UnsupportedLazyRouteFunctionKey =
+  | UnsupportedLazyRouteObjectKey
+  | "unstable_middleware";
+const unsupportedLazyRouteFunctionKeys =
+  new Set<UnsupportedLazyRouteFunctionKey>([
+    "lazy",
+    "caseSensitive",
+    "path",
+    "id",
+    "index",
+    "unstable_middleware",
+    "children",
+  ]);
+export function isUnsupportedLazyRouteFunctionKey(
+  key: string,
+): key is UnsupportedLazyRouteFunctionKey {
+  return unsupportedLazyRouteFunctionKeys.has(
+    key as UnsupportedLazyRouteFunctionKey,
+  );
+}
+
+/**
+ * lazy object to load route properties, which can add non-matching
+ * related properties to a route
+ */
+export type LazyRouteObject<R extends AgnosticRouteObject> = {
+  [K in keyof R as K extends UnsupportedLazyRouteObjectKey
+    ? never
+    : K]?: () => Promise<R[K] | null | undefined>;
+};
 
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
+  (): Promise<
+    Omit<R, UnsupportedLazyRouteFunctionKey> &
+      Partial<Record<UnsupportedLazyRouteFunctionKey, never>>
+  >;
 }
+
+export type LazyRouteDefinition<R extends AgnosticRouteObject> =
+  | LazyRouteObject<R>
+  | LazyRouteFunction<R>;
 
 /**
  * Base RouteObject with common props shared by all types of routes
@@ -289,12 +629,13 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  unstable_middleware?: unstable_MiddlewareFunction[];
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
+  lazy?: LazyRouteDefinition<AgnosticBaseRouteObject>;
 };
 
 /**
@@ -342,37 +683,60 @@ export type RouteManifest<R = AgnosticDataRouteObject> = Record<
   R | undefined
 >;
 
+// prettier-ignore
+type Regex_az = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+// prettier-ignore
+type Regez_AZ = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+type Regex_09 = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+type Regex_w = Regex_az | Regez_AZ | Regex_09 | "_";
+type ParamChar = Regex_w | "-";
+
+// Emulates regex `+`
+type RegexMatchPlus<
+  CharPattern extends string,
+  T extends string,
+> = T extends `${infer First}${infer Rest}`
+  ? First extends CharPattern
+    ? RegexMatchPlus<CharPattern, Rest> extends never
+      ? First
+      : `${First}${RegexMatchPlus<CharPattern, Rest>}`
+    : never
+  : never;
+
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
   // split path into individual path segments
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `:${infer Param}`
-    ? Param extends `${infer Optional}?`
-      ? Optional
-      : Param
-    : // otherwise, there aren't any params present
-      never;
+      Path extends `:${infer Param}`
+      ? Param extends `${infer Optional}?${string}`
+        ? RegexMatchPlus<ParamChar, Optional>
+        : RegexMatchPlus<ParamChar, Param>
+      : // otherwise, there aren't any params present
+        never;
 
-/**
- * Examples:
- * "/a/b/*" -> "*"
- * ":a" -> "a"
- * "/a/:b" -> "b"
- * "/a/blahblahblah:b" -> "b"
- * "/:a/:b" -> "a" | "b"
- * "/:a/b/:c/*" -> "a" | "c" | "*"
- */
 export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
     ? "*"
     : // look for wildcard at the end of the path
-    Path extends `${infer Rest}/*`
-    ? "*" | _PathParam<Rest>
-    : // look for params in the absence of wildcards
-      _PathParam<Path>;
+      Path extends `${infer Rest}/*`
+      ? "*" | _PathParam<Rest>
+      : // look for params in the absence of wildcards
+        _PathParam<Path>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _tests = [
+  Expect<Equal<PathParam<"/a/b/*">, "*">>,
+  Expect<Equal<PathParam<":a">, "a">>,
+  Expect<Equal<PathParam<"/a/:b">, "b">>,
+  Expect<Equal<PathParam<"/a/blahblahblah:b">, never>>,
+  Expect<Equal<PathParam<"/:a/:b">, "a" | "b">>,
+  Expect<Equal<PathParam<"/:a/b/:c/*">, "a" | "c" | "*">>,
+  Expect<Equal<PathParam<"/:lang.xml">, "lang">>,
+  Expect<Equal<PathParam<"/:lang?.xml">, "lang">>,
+];
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise, return the union of the
@@ -393,7 +757,7 @@ export type Params<Key extends string = string> = {
  */
 export interface AgnosticRouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -417,7 +781,7 @@ export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
 function isIndexRoute(
-  route: AgnosticRouteObject
+  route: AgnosticRouteObject,
 ): route is AgnosticIndexRouteObject {
   return route.index === true;
 }
@@ -428,19 +792,20 @@ export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
   parentPath: string[] = [],
-  manifest: RouteManifest = {}
+  manifest: RouteManifest = {},
+  allowInPlaceMutations = false,
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
       route.index !== true || !route.children,
-      `Cannot specify children on an index route`
+      `Cannot specify children on an index route`,
     );
     invariant(
-      !manifest[id],
+      allowInPlaceMutations || !manifest[id],
       `Found a route id collision on id "${id}".  Route ` +
-        "id's must be globally unique within Data Router usages"
+        "id's must be globally unique within Data Router usages",
     );
 
     if (isIndexRoute(route)) {
@@ -465,7 +830,8 @@ export function convertRoutesToDataRoutes(
           route.children,
           mapRouteProperties,
           treePath,
-          manifest
+          manifest,
+          allowInPlaceMutations,
         );
       }
 
@@ -477,25 +843,46 @@ export function convertRoutesToDataRoutes(
 /**
  * Matches the given routes to a location and returns the match data.
  *
+ * @example
+ * import { matchRoutes } from "react-router";
+ *
+ * let routes = [{
+ *   path: "/",
+ *   Component: Root,
+ *   children: [{
+ *     path: "dashboard",
+ *     Component: Dashboard,
+ *   }]
+ * }];
+ *
+ * matchRoutes(routes, "/dashboard"); // [rootMatch, dashboardMatch]
+ *
+ * @public
  * @category Utils
+ * @param routes The array of route objects to match against.
+ * @param locationArg The location to match against, either a string path or a
+ * partial {@link Location} object
+ * @param basename Optional base path to strip from the location before matching.
+ * Defaults to `/`.
+ * @returns An array of matched routes, or `null` if no matches were found.
  */
 export function matchRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
-  basename = "/"
+  basename = "/",
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
 export function matchRoutesImpl<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename: string,
-  allowPartial: boolean
+  allowPartial: boolean,
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
@@ -521,7 +908,7 @@ export function matchRoutesImpl<
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
       decoded,
-      allowPartial
+      allowPartial,
     );
   }
 
@@ -531,14 +918,34 @@ export function matchRoutesImpl<
 export interface UIMatch<Data = unknown, Handle = unknown> {
   id: string;
   pathname: string;
+  /**
+   * {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the matched route.
+   */
   params: AgnosticRouteMatch["params"];
+  /**
+   * The return value from the matched route's loader or clientLoader. This might
+   * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
+   * an error and we're currently displaying an `ErrorBoundary`.
+   *
+   * @deprecated Use `UIMatch.loaderData` instead
+   */
   data: Data | undefined;
+  /**
+   * The return value from the matched route's loader or clientLoader. This might
+   * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
+   * an error and we're currently displaying an `ErrorBoundary`.
+   */
+  loaderData: Data | undefined;
+  /**
+   * The {@link https://reactrouter.com/start/framework/route-module#handle handle object}
+   * exported from the matched route module
+   */
   handle: Handle;
 }
 
 export function convertRouteMatchToUiMatch(
   match: AgnosticDataRouteMatch,
-  loaderData: RouteData
+  loaderData: RouteData,
 ): UIMatch {
   let { route, pathname, params } = match;
   return {
@@ -546,12 +953,13 @@ export function convertRouteMatchToUiMatch(
     pathname,
     params,
     data: loaderData[route.id],
+    loaderData: loaderData[route.id],
     handle: route.handle,
   };
 }
 
 interface RouteMeta<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   relativePath: string;
   caseSensitive: boolean;
@@ -560,7 +968,7 @@ interface RouteMeta<
 }
 
 interface RouteBranch<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 > {
   path: string;
   score: number;
@@ -568,17 +976,17 @@ interface RouteBranch<
 }
 
 function flattenRoutes<
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
-  parentPath = ""
+  parentPath = "",
 ): RouteBranch<RouteObjectType>[] {
   let flattenRoute = (
     route: RouteObjectType,
     index: number,
-    relativePath?: string
+    relativePath?: string,
   ) => {
     let meta: RouteMeta<RouteObjectType> = {
       relativePath:
@@ -593,7 +1001,7 @@ function flattenRoutes<
         meta.relativePath.startsWith(parentPath),
         `Absolute route path "${meta.relativePath}" nested under path ` +
           `"${parentPath}" is not valid. An absolute child route path ` +
-          `must start with the combined path of all its parent routes.`
+          `must start with the combined path of all its parent routes.`,
       );
 
       meta.relativePath = meta.relativePath.slice(parentPath.length);
@@ -611,7 +1019,7 @@ function flattenRoutes<
         // @ts-expect-error
         route.index !== true,
         `Index routes must not have child routes. Please remove ` +
-          `all child routes from route path "${path}".`
+          `all child routes from route path "${path}".`,
       );
       flattenRoutes(route.children, branches, routesMeta, path);
     }
@@ -642,7 +1050,7 @@ function flattenRoutes<
   return branches;
 }
 
-/**
+/*
  * Computes all combinations of optional path segments for a given path,
  * excluding combinations that are ambiguous and of lower priority.
  *
@@ -668,7 +1076,7 @@ function explodeOptionalSegments(path: string): string[] {
   let required = first.replace(/\?$/, "");
 
   if (rest.length === 0) {
-    // Intepret empty string as omitting an optional segment
+    // Interpret empty string as omitting an optional segment
     // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
     return isOptional ? [required, ""] : [required];
   }
@@ -686,8 +1094,8 @@ function explodeOptionalSegments(path: string): string[] {
   // first, we avoid this issue
   result.push(
     ...restExploded.map((subpath) =>
-      subpath === "" ? required : [required, subpath].join("/")
-    )
+      subpath === "" ? required : [required, subpath].join("/"),
+    ),
   );
 
   // Then, if this is an optional value, add all child versions without
@@ -697,7 +1105,7 @@ function explodeOptionalSegments(path: string): string[] {
 
   // for absolute paths, ensure `/` instead of empty segment
   return result.map((exploded) =>
-    path.startsWith("/") && exploded === "" ? "/" : exploded
+    path.startsWith("/") && exploded === "" ? "/" : exploded,
   );
 }
 
@@ -707,8 +1115,8 @@ function rankRouteBranches(branches: RouteBranch[]): void {
       ? b.score - a.score // Higher score first
       : compareIndexes(
           a.routesMeta.map((meta) => meta.childrenIndex),
-          b.routesMeta.map((meta) => meta.childrenIndex)
-        )
+          b.routesMeta.map((meta) => meta.childrenIndex),
+        ),
   );
 }
 
@@ -739,9 +1147,9 @@ function computeScore(path: string, index: boolean | undefined): number {
         (paramRe.test(segment)
           ? dynamicSegmentValue
           : segment === ""
-          ? emptySegmentValue
-          : staticSegmentValue),
-      initialScore
+            ? emptySegmentValue
+            : staticSegmentValue),
+      initialScore,
     );
 }
 
@@ -762,11 +1170,11 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject,
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string,
-  allowPartial = false
+  allowPartial = false,
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -782,7 +1190,7 @@ function matchRouteBranch<
         : pathname.slice(matchedPathname.length) || "/";
     let match = matchPath(
       { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
-      remainingPathname
+      remainingPathname,
     );
 
     let route = meta.route;
@@ -799,7 +1207,7 @@ function matchRouteBranch<
           caseSensitive: meta.caseSensitive,
           end: false,
         },
-        remainingPathname
+        remainingPathname,
       );
     }
 
@@ -814,7 +1222,7 @@ function matchRouteBranch<
       params: matchedParams as Params<ParamKey>,
       pathname: joinPaths([matchedPathname, match.pathname]),
       pathnameBase: normalizePathname(
-        joinPaths([matchedPathname, match.pathnameBase])
+        joinPaths([matchedPathname, match.pathnameBase]),
       ),
       route,
     });
@@ -830,13 +1238,22 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
+ * @example
+ * import { generatePath } from "react-router";
+ *
+ * generatePath("/users/:id", { id: "123" }); // "/users/123"
+ *
+ * @public
  * @category Utils
+ * @param originalPath The original path to generate.
+ * @param params The parameters to interpolate into the path.
+ * @returns The generated path with parameters interpolated.
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
   params: {
     [key in PathParam<Path>]: string | null;
-  } = {} as any
+  } = {} as any,
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
@@ -845,7 +1262,7 @@ export function generatePath<Path extends string>(
       `Route path "${path}" will be treated as if it were ` +
         `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
         `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-        `please change the route path to "${path.replace(/\*$/, "/*")}".`
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`,
     );
     path = path.replace(/\*$/, "/*") as Path;
   }
@@ -886,13 +1303,13 @@ export function generatePath<Path extends string>(
 }
 
 /**
- * A PathPattern is used to match on some portion of a URL pathname.
+ * Used to match on some portion of a URL pathname.
  */
 export interface PathPattern<Path extends string = string> {
   /**
    * A string to match against a URL pathname. May contain `:id`-style segments
-   * to indicate placeholders for dynamic parameters. May also end with `/*` to
-   * indicate matching the rest of the URL pathname.
+   * to indicate placeholders for dynamic parameters. It May also end with `/*`
+   * to indicate matching the rest of the URL pathname.
    */
   path: Path;
   /**
@@ -907,7 +1324,7 @@ export interface PathPattern<Path extends string = string> {
 }
 
 /**
- * A PathMatch contains info about how a PathPattern matched on a URL pathname.
+ * Contains info about how a {@link PathPattern} matched on a URL pathname.
  */
 export interface PathMatch<ParamKey extends string = string> {
   /**
@@ -936,14 +1353,22 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
+ * @public
  * @category Utils
+ * @param pattern The pattern to match against the URL pathname. This can be a
+ * string or a {@link PathPattern} object. If a string is provided, it will be
+ * treated as a pattern with `caseSensitive` set to `false` and `end` set to
+ * `true`.
+ * @param pathname The URL pathname to match against the pattern.
+ * @returns A path match object if the pattern matches the pathname,
+ * or `null` if it does not match.
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
-  Path extends string
+  Path extends string,
 >(
   pattern: PathPattern<Path> | Path,
-  pathname: string
+  pathname: string,
 ): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
     pattern = { path: pattern, caseSensitive: false, end: true };
@@ -952,7 +1377,7 @@ export function matchPath<
   let [matcher, compiledParams] = compilePath(
     pattern.path,
     pattern.caseSensitive,
-    pattern.end
+    pattern.end,
   );
 
   let match = pathname.match(matcher);
@@ -980,7 +1405,7 @@ export function matchPath<
       }
       return memo;
     },
-    {}
+    {},
   );
 
   return {
@@ -993,17 +1418,17 @@ export function matchPath<
 
 type CompiledPathParam = { paramName: string; isOptional?: boolean };
 
-function compilePath(
+export function compilePath(
   path: string,
   caseSensitive = false,
-  end = true
+  end = true,
 ): [RegExp, CompiledPathParam[]] {
   warning(
     path === "*" || !path.endsWith("*") || path.endsWith("/*"),
     `Route path "${path}" will be treated as if it were ` +
       `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
       `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-      `please change the route path to "${path.replace(/\*$/, "/*")}".`
+      `please change the route path to "${path.replace(/\*$/, "/*")}".`,
   );
 
   let params: CompiledPathParam[] = [];
@@ -1018,7 +1443,7 @@ function compilePath(
         (_: string, paramName: string, isOptional) => {
           params.push({ paramName, isOptional: isOptional != null });
           return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
-        }
+        },
       );
 
   if (path.endsWith("*")) {
@@ -1057,21 +1482,18 @@ export function decodePath(value: string) {
   } catch (error) {
     warning(
       false,
-      `The URL path "${value}" could not be decoded because it is is a ` +
+      `The URL path "${value}" could not be decoded because it is a ` +
         `malformed URL segment. This is probably due to a bad percent ` +
-        `encoding (${error}).`
+        `encoding (${error}).`,
     );
 
     return value;
   }
 }
 
-/**
- * @private
- */
 export function stripBasename(
   pathname: string,
-  basename: string
+  basename: string,
 ): string | null {
   if (basename === "/") return pathname;
 
@@ -1093,10 +1515,28 @@ export function stripBasename(
   return pathname.slice(startIndex) || "/";
 }
 
+export function prependBasename({
+  basename,
+  pathname,
+}: {
+  basename: string;
+  pathname: string;
+}): string {
+  // If this is a root navigation, then just use the raw basename which allows
+  // the basename to have full control over the presence of a trailing slash on
+  // root actions
+  return pathname === "/" ? basename : joinPaths([basename, pathname]);
+}
+
 /**
- * Returns a resolved path object relative to the given pathname.
+ * Returns a resolved {@link Path} object relative to the given pathname.
  *
+ * @public
  * @category Utils
+ * @param to The path to resolve, either a string or a partial {@link Path}
+ * object.
+ * @param fromPathname The pathname to resolve the path from. Defaults to `/`.
+ * @returns A {@link Path} object with the resolved pathname, search, and hash.
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
@@ -1138,72 +1578,65 @@ function getInvalidPathError(
   char: string,
   field: string,
   dest: string,
-  path: Partial<Path>
+  path: Partial<Path>,
 ) {
   return (
     `Cannot include a '${char}' character in a manually specified ` +
     `\`to.${field}\` field [${JSON.stringify(
-      path
+      path,
     )}].  Please separate it out to the ` +
     `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
     `a string in <Link to="..."> and the router will parse it for you.`
   );
 }
 
-/**
- * @private
- *
- * When processing relative navigation we want to ignore ancestor routes that
- * do not contribute to the path, such that index/pathless layout routes don't
- * interfere.
- *
- * For example, when moving a route element into an index route and/or a
- * pathless layout route, relative link behavior contained within should stay
- * the same.  Both of the following examples should link back to the root:
- *
- *   <Route path="/">
- *     <Route path="accounts" element={<Link to=".."}>
- *   </Route>
- *
- *   <Route path="/">
- *     <Route path="accounts">
- *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
- *         <Route index element={<Link to=".."} />  // <-- Does not contribute
- *       </Route
- *     </Route>
- *   </Route>
- */
+// When processing relative navigation we want to ignore ancestor routes that
+// do not contribute to the path, such that index/pathless layout routes don't
+// interfere.
+//
+// For example, when moving a route element into an index route and/or a
+// pathless layout route, relative link behavior contained within should stay
+// the same.  Both of the following examples should link back to the root:
+//
+// <Route path="/">
+//   <Route path="accounts" element={<Link to=".."}>
+// </Route>
+//
+// <Route path="/">
+//   <Route path="accounts">
+//     <Route element={<AccountsLayout />}>       // <-- Does not contribute
+//       <Route index element={<Link to=".."} />  // <-- Does not contribute
+//     </Route
+//   </Route>
+// </Route>
 export function getPathContributingMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
+  T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
   return matches.filter(
     (match, index) =>
-      index === 0 || (match.route.path && match.route.path.length > 0)
+      index === 0 || (match.route.path && match.route.path.length > 0),
   );
 }
 
 // Return the array of pathnames for the current route matches - used to
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
+  T extends AgnosticRouteMatch = AgnosticRouteMatch,
 >(matches: T[]) {
   let pathMatches = getPathContributingMatches(matches);
 
   // Use the full pathname for the leaf match so we include splat values for "." links
   // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
   return pathMatches.map((match, idx) =>
-    idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
+    idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase,
   );
 }
 
-/**
- * @private
- */
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
   locationPathname: string,
-  isPathRelative = false
+  isPathRelative = false,
 ): Path {
   let to: Partial<Path>;
   if (typeof toArg === "string") {
@@ -1213,15 +1646,15 @@ export function resolveTo(
 
     invariant(
       !to.pathname || !to.pathname.includes("?"),
-      getInvalidPathError("?", "pathname", "search", to)
+      getInvalidPathError("?", "pathname", "search", to),
     );
     invariant(
       !to.pathname || !to.pathname.includes("#"),
-      getInvalidPathError("#", "pathname", "hash", to)
+      getInvalidPathError("#", "pathname", "hash", to),
     );
     invariant(
       !to.search || !to.search.includes("#"),
-      getInvalidPathError("#", "search", "hash", to)
+      getInvalidPathError("#", "search", "hash", to),
     );
   }
 
@@ -1280,31 +1713,25 @@ export function resolveTo(
   return path;
 }
 
-/**
- * @private
- */
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
-/**
- * @private
- */
 export const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
 
-/**
- * @private
- */
+/*
+lol - this comment is needed because the JSDoc parser for docs.ts gets confused
+by the star-slash in the normalizePathname regex and messes up the parsed comment
+for data() below.  This comment seems to reset the parser.
+*/
+
 export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
     : search.startsWith("?")
-    ? search
-    : "?" + search;
+      ? search
+      : "?" + search;
 
-/**
- * @private
- */
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
@@ -1320,15 +1747,35 @@ export class DataWithResponseInit<D> {
 }
 
 /**
- * Create "responses" that contain `status`/`headers` without forcing
- * serialization into an actual `Response` - used by Remix single fetch
+ * Create "responses" that contain `headers`/`status` without forcing
+ * serialization into an actual [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  *
+ * @example
+ * import { data } from "react-router";
+ *
+ * export async function action({ request }: Route.ActionArgs) {
+ *   let formData = await request.formData();
+ *   let item = await createItem(formData);
+ *   return data(item, {
+ *     headers: { "X-Custom-Header": "value" }
+ *     status: 201,
+ *   });
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param data The data to be included in the response.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A {@link DataWithResponseInit} instance containing the data and
+ * response init.
  */
 export function data<D>(data: D, init?: number | ResponseInit) {
   return new DataWithResponseInit(
     data,
-    typeof init === "number" ? { status: init } : init
+    typeof init === "number" ? { status: init } : init,
   );
 }
 
@@ -1342,14 +1789,35 @@ export interface TrackedPromise extends Promise<any> {
 
 export type RedirectFunction = (
   url: string,
-  init?: number | ResponseInit
+  init?: number | ResponseInit,
 ) => Response;
 
 /**
- * A redirect response. Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+ * Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * @example
+ * import { redirect } from "react-router";
+ *
+ * export async function loader({ request }: Route.LoaderArgs) {
+ *   if (!isLoggedIn(request))
+ *     throw redirect("/login");
+ *   }
+ *
+ *   // ...
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param url The URL to redirect to.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
@@ -1362,18 +1830,38 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
-  return new Response(null, {
-    ...responseInit,
-    headers,
-  });
+  return new Response(null, { ...responseInit, headers });
 };
 
 /**
- * A redirect response that will force a document reload to the new location.
- * Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that will force a document reload to the new location. Sets the status code
+ * and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * ```tsx filename=routes/logout.tsx
+ * import { redirectDocument } from "react-router";
+ *
+ * import { destroySession } from "../sessions.server";
+ *
+ * export async function action({ request }: Route.ActionArgs) {
+ *   let session = await getSession(request.headers.get("Cookie"));
+ *   return redirectDocument("/", {
+ *     headers: { "Set-Cookie": await destroySession(session) }
+ *   });
+ * }
+ * ```
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param url The URL to redirect to.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1382,12 +1870,29 @@ export const redirectDocument: RedirectFunction = (url, init) => {
 };
 
 /**
- * A redirect response that will perform a `history.replaceState` instead of a
- * `history.pushState` for client-side navigation redirects.
- * Sets the status code and the `Location` header.
- * Defaults to "302 Found".
+ * A redirect [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that will perform a [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState)
+ * instead of a [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
+ * for client-side navigation redirects. Sets the status code and the [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header. Defaults to [`302 Found`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302).
  *
+ * @example
+ * import { replace } from "react-router";
+ *
+ * export async function loader() {
+ *   return replace("/new-location");
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param url The URL to redirect to.
+ * @param init The status code or a `ResponseInit` object to be included in the
+ * response.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * object with the redirect status and [`Location`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location)
+ * header.
  */
 export const replace: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1401,8 +1906,7 @@ export type ErrorResponse = {
   data: any;
 };
 
-/**
- * @private
+/*
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
  *
  * We don't export the class for public use since it's an implementation
@@ -1420,7 +1924,7 @@ export class ErrorResponseImpl implements ErrorResponse {
     status: number,
     statusText: string | undefined,
     data: any,
-    internal = false
+    internal = false,
   ) {
     this.status = status;
     this.statusText = statusText || "";
@@ -1435,10 +1939,35 @@ export class ErrorResponseImpl implements ErrorResponse {
 }
 
 /**
- * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response thrown from an action/loader
+ * Check if the given error is an {@link ErrorResponse} generated from a 4xx/5xx
+ * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * thrown from an [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
  *
+ * @example
+ * import { isRouteErrorResponse } from "react-router";
+ *
+ * export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+ *   if (isRouteErrorResponse(error)) {
+ *     return (
+ *       <>
+ *         <p>Error: `${error.status}: ${error.statusText}`</p>
+ *         <p>{error.data}</p>
+ *       </>
+ *     );
+ *   }
+ *
+ *   return (
+ *     <p>Error: {error instanceof Error ? error.message : "Unknown Error"}</p>
+ *   );
+ * }
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param error The error to check.
+ * @returns `true` if the error is an {@link ErrorResponse}, `false` otherwise.
+ *
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (

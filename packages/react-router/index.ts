@@ -1,4 +1,11 @@
-// Expose old @remix-run/router API y2
+/**
+ * @module index
+ * @mergeModuleWith react-router
+ */
+
+"use client";
+
+// Expose old @remix-run/router API
 export type { InitialEntry, Location, Path, To } from "./lib/router/history";
 export type {
   HydrationState,
@@ -35,15 +42,21 @@ export type {
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  unstable_MiddlewareFunction,
   ParamParseKey,
   Params,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
+  unstable_RouterContext,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
+} from "./lib/router/utils";
+export {
+  unstable_createContext,
+  unstable_RouterContextProvider,
 } from "./lib/router/utils";
 
 export {
@@ -85,6 +98,7 @@ export type {
   AwaitProps,
   IndexRouteProps,
   LayoutRouteProps,
+  MemoryRouterOpts,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -94,7 +108,6 @@ export type {
   RouterProviderProps,
   RoutesProps,
 } from "./lib/components";
-export type { NavigateFunction } from "./lib/hooks";
 export {
   Await,
   MemoryRouter,
@@ -106,9 +119,10 @@ export {
   Routes,
   createMemoryRouter,
   createRoutesFromChildren,
-  createRoutesFromChildren as createRoutesFromElements,
+  createRoutesFromElements,
   renderMatches,
 } from "./lib/components";
+export type { NavigateFunction } from "./lib/hooks";
 export {
   useBlocker,
   useActionData,
@@ -136,6 +150,7 @@ export {
 // Expose old RR DOM API
 export type {
   BrowserRouterProps,
+  DOMRouterOpts,
   HashRouterProps,
   HistoryRouterProps,
   LinkProps,
@@ -193,13 +208,20 @@ export {
   Scripts,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
-export type { ScriptsProps } from "./lib/dom/ssr/components";
+export type {
+  LinksProps,
+  ScriptsProps,
+  PrefetchBehavior,
+  DiscoverBehavior,
+} from "./lib/dom/ssr/components";
 export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
   ClientActionFunction,
   ClientActionFunctionArgs,
   ClientLoaderFunction,
   ClientLoaderFunctionArgs,
+  HeadersArgs,
+  HeadersFunction,
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
@@ -251,11 +273,6 @@ export type {
   LinkDescriptor,
 } from "./lib/router/links";
 
-export type {
-  HeadersArgs,
-  HeadersFunction,
-} from "./lib/server-runtime/routeModules";
-
 export type { RequestHandler } from "./lib/server-runtime/server";
 
 export type {
@@ -265,6 +282,54 @@ export type {
   SessionStorage,
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
+
+export type {
+  Future,
+  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
+} from "./lib/types/future.ts";
+export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
+export type { Register } from "./lib/types/register";
+export { href } from "./lib/href";
+
+// RSC
+export type {
+  BrowserCreateFromReadableStreamFunction as unstable_BrowserCreateFromReadableStreamFunction,
+  EncodeReplyFunction as unstable_EncodeReplyFunction,
+  RSCHydratedRouterProps as unstable_RSCHydratedRouterProps,
+} from "./lib/rsc/browser";
+export {
+  createCallServer as unstable_createCallServer,
+  RSCHydratedRouter as unstable_RSCHydratedRouter,
+} from "./lib/rsc/browser";
+export type {
+  SSRCreateFromReadableStreamFunction as unstable_SSRCreateFromReadableStreamFunction,
+  RSCStaticRouterProps as unstable_RSCStaticRouterProps,
+} from "./lib/rsc/server.ssr";
+export {
+  routeRSCServerRequest as unstable_routeRSCServerRequest,
+  RSCStaticRouter as unstable_RSCStaticRouter,
+} from "./lib/rsc/server.ssr";
+export { getRSCStream as unstable_getRSCStream } from "./lib/rsc/html-stream/browser";
+export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
+
+// Re-export of RSC types
+import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
+
+export type {
+  DecodeActionFunction as unstable_DecodeActionFunction,
+  DecodeFormStateFunction as unstable_DecodeFormStateFunction,
+  DecodeReplyFunction as unstable_DecodeReplyFunction,
+  LoadServerActionFunction as unstable_LoadServerActionFunction,
+  RSCManifestPayload as unstable_RSCManifestPayload,
+  RSCMatch as unstable_RSCMatch,
+  RSCPayload as unstable_RSCPayload,
+  RSCRenderPayload as unstable_RSCRenderPayload,
+  RSCRouteManifest as unstable_RSCRouteManifest,
+  RSCRouteMatch as unstable_RSCRouteMatch,
+  RSCRouteConfigEntry as unstable_RSCRouteConfigEntry,
+  RSCRouteConfig as unstable_RSCRouteConfig,
+} from "./lib/rsc/server.rsc";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -303,7 +368,16 @@ export {
 } from "./lib/context";
 
 /** @internal */
-export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
+export {
+  hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
+  mapRouteProperties as UNSAFE_mapRouteProperties,
+  WithComponentProps as UNSAFE_WithComponentProps,
+  withComponentProps as UNSAFE_withComponentProps,
+  WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
+  withHydrateFallbackProps as UNSAFE_withHydrateFallbackProps,
+  WithErrorBoundaryProps as UNSAFE_WithErrorBoundaryProps,
+  withErrorBoundaryProps as UNSAFE_withErrorBoundaryProps,
+} from "./lib/components";
 
 /** @internal */
 export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
@@ -324,6 +398,9 @@ export {
 } from "./lib/dom/ssr/fog-of-war";
 
 /** @internal */
+export { getHydrationData as UNSAFE_getHydrationData } from "./lib/dom/ssr/hydration";
+
+/** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
 
 /** @internal */
@@ -334,7 +411,7 @@ export {
 } from "./lib/dom/ssr/routes";
 
 /** @internal */
-export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
+export { getTurboStreamSingleFetchDataStrategy as UNSAFE_getTurboStreamSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
 export {

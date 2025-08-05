@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js"
+  },
+  "dependencies": {
+    "react-router": "*",
+    "react-router-dom": "*",
+    "@react-router/node": "*",
+    "not-react-router": "*"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

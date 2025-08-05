@@ -7,13 +7,16 @@
   "commit": false,
   "fixed": [
     [
+      "create-react-router",
       "react-router",
       "react-router-dom",
       "@react-router/architect",
       "@react-router/cloudflare",
       "@react-router/dev",
+      "@react-router/fs-routes",
       "@react-router/express",
       "@react-router/node",
+      "@react-router/remix-routes-option-adapter",
       "@react-router/serve"
     ]
   ],

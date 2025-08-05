@@ -1,3 +1,7 @@
-# React Router
+`react-router` is the primary package in the React Router project.
 
-The `react-router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all the core functionality.
+## Installation
+
+```sh
+npm i react-router
+```

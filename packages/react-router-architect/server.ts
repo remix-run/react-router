@@ -1,4 +1,9 @@
-import type { AppLoadContext, ServerBuild } from "react-router";
+import type {
+  AppLoadContext,
+  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
+  ServerBuild,
+  unstable_RouterContextProvider,
+} from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { readableStreamToString } from "@react-router/node";
 import type {
@@ -10,6 +15,8 @@ import type {
 
 import { isBinaryType } from "./binaryTypes";
 
+type MaybePromise<T> = T | Promise<T>;
+
 /**
  * A function that returns the value to use as `context` in route `loader` and
  * `action` functions.
@@ -18,8 +25,10 @@ import { isBinaryType } from "./binaryTypes";
  * environment/platform-specific values through to your loader/action.
  */
 export type GetLoadContextFunction = (
-  event: APIGatewayProxyEventV2
-) => Promise<AppLoadContext> | AppLoadContext;
+  event: APIGatewayProxyEventV2,
+) => MiddlewareEnabled extends true
+  ? MaybePromise<unstable_RouterContextProvider>
+  : MaybePromise<AppLoadContext>;
 
 export type RequestHandler = APIGatewayProxyHandlerV2;
 
@@ -49,14 +58,14 @@ export function createRequestHandler({
 }
 
 export function createReactRouterRequest(
-  event: APIGatewayProxyEventV2
+  event: APIGatewayProxyEventV2,
 ): Request {
   let host = event.headers["x-forwarded-host"] || event.headers.host;
   let search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
   let scheme = process.env.ARC_SANDBOX ? "http" : "https";
   let url = new URL(`${scheme}://${host}${event.rawPath}${search}`);
   let isFormData = event.headers["content-type"]?.includes(
-    "multipart/form-data"
+    "multipart/form-data",
   );
   // Note: No current way to abort these for Architect, but our router expects
   // requests to contain a signal, so it can detect aborted requests
@@ -77,7 +86,7 @@ export function createReactRouterRequest(
 
 export function createReactRouterHeaders(
   requestHeaders: APIGatewayProxyEventHeaders,
-  requestCookies?: string[]
+  requestCookies?: string[],
 ): Headers {
   let headers = new Headers();
 
@@ -95,7 +104,7 @@ export function createReactRouterHeaders(
 }
 
 export async function sendReactRouterResponse(
-  nodeResponse: Response
+  nodeResponse: Response,
 ): Promise<APIGatewayProxyStructuredResultV2> {
   let cookies: string[] = [];
 

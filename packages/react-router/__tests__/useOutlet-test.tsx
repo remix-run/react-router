@@ -22,7 +22,7 @@ describe("useOutlet", () => {
             <Routes>
               <Route path="/home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -42,7 +42,7 @@ describe("useOutlet", () => {
             <Routes>
               <Route path="/home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -66,7 +66,7 @@ describe("useOutlet", () => {
             <Routes>
               <Route path="/home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -93,7 +93,7 @@ describe("useOutlet", () => {
                 <Route path="profile" element={<h1>Profile</h1>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -119,7 +119,7 @@ describe("useOutlet", () => {
                 <Route index element={<div>index</div>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -145,7 +145,7 @@ describe("useOutlet", () => {
                 <Route index element={<div>index</div>} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -183,7 +183,7 @@ describe("useOutlet", () => {
                 <Route path="profile" element={<Profile />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -235,7 +235,7 @@ describe("useOutlet", () => {
                 <Route path="profile" element={<Profile />} />
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -286,7 +286,7 @@ describe("useOutlet", () => {
                 </Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -328,7 +328,7 @@ describe("useOutlet", () => {
                 </Route>
               </Route>
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 

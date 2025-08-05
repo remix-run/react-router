@@ -1,8 +1,11 @@
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import type { RouteManifestEntry } from "../manifest";
 
 import {
+  flatRoutes,
   flatRoutesUniversal,
   getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
@@ -83,7 +86,7 @@ describe("flatRoutes", () => {
 
     let manifest = flatRoutesUniversal(
       APP_DIR,
-      tests.map((t) => path.join(APP_DIR, "routes", t[0] + ".tsx"))
+      tests.map((t) => path.join(APP_DIR, "routes", t[0] + ".tsx")),
     );
 
     for (let [input, expected] of tests) {
@@ -104,7 +107,7 @@ describe("flatRoutes", () => {
     for (let invalid of invalidSlashFiles) {
       test("should error when using `/` in a route segment", () => {
         let regex = new RegExp(
-          /Route segment (".*?") for (".*?") cannot contain "\/"/
+          /Route segment (".*?") for (".*?") cannot contain "\/"/,
         );
         expect(() => getRouteSegments(invalid)).toThrow(regex);
       });
@@ -119,7 +122,7 @@ describe("flatRoutes", () => {
     for (let invalid of invalidSplatFiles) {
       test("should error when using `*` in a route segment", () => {
         let regex = new RegExp(
-          /Route segment (".*?") for (".*?") cannot contain "\*"/
+          /Route segment (".*?") for (".*?") cannot contain "\*"/,
         );
         expect(() => getRouteSegments(invalid)).toThrow(regex);
       });
@@ -133,7 +136,7 @@ describe("flatRoutes", () => {
     for (let invalid of invalidParamFiles) {
       test("should error when using `:` in a route segment", () => {
         let regex = new RegExp(
-          /Route segment (".*?") for (".*?") cannot contain ":"/
+          /Route segment (".*?") for (".*?") cannot contain ":"/,
         );
         expect(() => getRouteSegments(invalid)).toThrow(regex);
       });
@@ -141,7 +144,7 @@ describe("flatRoutes", () => {
   });
 
   describe("should return the correct route hierarchy", () => {
-    // we'll add file manually before running the tests
+    // we'll add some files manually before running the tests
     let testFiles: [string, Omit<RouteManifestEntry, "file">][] = [
       [
         "routes/_auth.tsx",
@@ -628,12 +631,12 @@ describe("flatRoutes", () => {
     let files: [string, RouteManifestEntry][] = testFiles.map(
       ([file, route]) => {
         return [file, { ...route, file }];
-      }
+      },
     );
 
     let routeManifest = flatRoutesUniversal(
       APP_DIR,
-      files.map(([file]) => path.join(APP_DIR, file))
+      files.map(([file]) => path.join(APP_DIR, file)),
     );
     let routes = Object.values(routeManifest);
 
@@ -697,7 +700,7 @@ describe("flatRoutes", () => {
 
       expect(routes).toHaveLength(1);
       expect(consoleError).toHaveBeenCalledWith(
-        getRoutePathConflictErrorMessage("/", normalizedTestFiles)
+        getRoutePathConflictErrorMessage("/", normalizedTestFiles),
       );
     });
 
@@ -722,8 +725,8 @@ describe("flatRoutes", () => {
       expect(consoleError).toHaveBeenCalledWith(
         getRouteIdConflictErrorMessage(
           path.posix.join("routes", "dashboard"),
-          normalizedTestFiles
-        )
+          normalizedTestFiles,
+        ),
       );
     });
 
@@ -809,7 +812,7 @@ describe("flatRoutes", () => {
         getRoutePathConflictErrorMessage("/nested/a", [
           "routes/nested._a.a.tsx",
           "routes/nested._b.a.tsx",
-        ])
+        ]),
       );
       expect(routes).toHaveLength(3);
 
@@ -830,7 +833,7 @@ describe("flatRoutes", () => {
         getRoutePathConflictErrorMessage("/nested/a", [
           "routes/nested._a.a/route.tsx",
           "routes/nested._b.a/route.tsx",
-        ])
+        ]),
       );
       expect(routes).toHaveLength(3);
     });
@@ -851,7 +854,7 @@ describe("flatRoutes", () => {
         getRoutePathConflictErrorMessage("/nested", [
           "routes/nested._a._index.tsx",
           "routes/nested._b._index.tsx",
-        ])
+        ]),
       );
       expect(routes).toHaveLength(3);
 
@@ -872,9 +875,41 @@ describe("flatRoutes", () => {
         getRoutePathConflictErrorMessage("/nested", [
           "routes/nested._a._index/route.tsx",
           "routes/nested._b._index/route.tsx",
-        ])
+        ]),
       );
       expect(routes).toHaveLength(3);
+    });
+  });
+
+  describe("throws expected errors", () => {
+    let tempDir = path.join(
+      os.tmpdir(),
+      "react-router-fs-routes-test",
+      Math.random().toString(36).substring(2, 15),
+    );
+
+    beforeEach(() => {
+      mkdirSync(tempDir, { recursive: true });
+    });
+    afterEach(() => {
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    test("root route is not found", () => {
+      expect(() => flatRoutes(tempDir)).toThrow(
+        `Could not find a root route module in the app directory: ${tempDir}`,
+      );
+    });
+
+    test("routes dir is not found", () => {
+      const rootRoute = path.join(tempDir, "root.tsx");
+      writeFileSync(rootRoute, "");
+      expect(() => flatRoutes(tempDir)).toThrow(
+        `Could not find the routes directory: ${path.join(
+          tempDir,
+          "routes",
+        )}. Did you forget to create it?`,
+      );
     });
   });
 });

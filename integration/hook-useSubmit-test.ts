@@ -105,7 +105,7 @@ test.describe("`useSubmit()` returned function", () => {
     await app.clickElement("text=Prepare Third Task");
     await page.waitForLoadState("load");
     expect(await app.getHtml("pre")).toBe(
-      `<pre>tasks=first&amp;tasks=second&amp;tasks=third</pre>`
+      `<pre>tasks=first&amp;tasks=second&amp;tasks=third</pre>`,
     );
   });
 

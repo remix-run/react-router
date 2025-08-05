@@ -1,5 +1,6 @@
-import type { IncomingHttpHeaders, ServerResponse } from "node:http";
 import { once } from "node:events";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { TLSSocket } from "node:tls";
 import { Readable } from "node:stream";
 import { splitCookiesString } from "set-cookie-parser";
 import { createReadableStreamFromReadable } from "@react-router/node";
@@ -9,10 +10,23 @@ import invariant from "../invariant";
 
 export type NodeRequestHandler = (
   req: Vite.Connect.IncomingMessage,
-  res: ServerResponse
+  res: ServerResponse,
 ) => Promise<void>;
 
-function fromNodeHeaders(nodeHeaders: IncomingHttpHeaders): Headers {
+function fromNodeHeaders(nodeReq: IncomingMessage): Headers {
+  let nodeHeaders = nodeReq.headers;
+
+  if (nodeReq.httpVersionMajor >= 2) {
+    nodeHeaders = { ...nodeHeaders };
+    if (nodeHeaders[":authority"]) {
+      nodeHeaders.host = nodeHeaders[":authority"] as string;
+    }
+    delete nodeHeaders[":authority"];
+    delete nodeHeaders[":method"];
+    delete nodeHeaders[":path"];
+    delete nodeHeaders[":scheme"];
+  }
+
   let headers = new Headers();
 
   for (let [key, values] of Object.entries(nodeHeaders)) {
@@ -33,16 +47,20 @@ function fromNodeHeaders(nodeHeaders: IncomingHttpHeaders): Headers {
 // Based on `createRemixRequest` in packages/react-router-express/server.ts
 export function fromNodeRequest(
   nodeReq: Vite.Connect.IncomingMessage,
-  nodeRes: ServerResponse<Vite.Connect.IncomingMessage>
+  nodeRes: ServerResponse<Vite.Connect.IncomingMessage>,
 ): Request {
+  let protocol =
+    nodeReq.socket instanceof TLSSocket && nodeReq.socket.encrypted
+      ? "https"
+      : "http";
   let origin =
     nodeReq.headers.origin && "null" !== nodeReq.headers.origin
       ? nodeReq.headers.origin
-      : `http://${nodeReq.headers.host}`;
+      : `${protocol}://${nodeReq.headers.host}`;
   // Use `req.originalUrl` so React Router is aware of the full path
   invariant(
     nodeReq.originalUrl,
-    "Expected `nodeReq.originalUrl` to be defined"
+    "Expected `nodeReq.originalUrl` to be defined",
   );
   let url = new URL(nodeReq.originalUrl, origin);
 
@@ -50,7 +68,7 @@ export function fromNodeRequest(
   let controller: AbortController | null = new AbortController();
   let init: RequestInit = {
     method: nodeReq.method,
-    headers: fromNodeHeaders(nodeReq.headers),
+    headers: fromNodeHeaders(nodeReq),
     signal: controller.signal,
   };
 
@@ -73,7 +91,12 @@ export function fromNodeRequest(
 // https://github.com/solidjs/solid-start/blob/7398163869b489cce503c167e284891cf51a6613/packages/start/node/fetch.js#L162-L185
 export async function toNodeRequest(res: Response, nodeRes: ServerResponse) {
   nodeRes.statusCode = res.status;
-  nodeRes.statusMessage = res.statusText;
+
+  // HTTP/2 doesn't support status messages
+  // https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.4
+  if (!nodeRes.req || nodeRes.req.httpVersionMajor < 2) {
+    nodeRes.statusMessage = res.statusText;
+  }
 
   let cookiesStrings = [];
 

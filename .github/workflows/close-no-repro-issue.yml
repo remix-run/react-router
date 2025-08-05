@@ -1,0 +1,25 @@
+# Close a singular issue without a reproduction
+# Triggered by adding the `no-reproduction` label to an issue
+
+name: 🚪 Close issue without a reproduction
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  close-no-repro-issue:
+    name: 🚪 Close issue
+    if: github.repository == 'remix-run/react-router' && github.event.label.name == 'no-reproduction'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🚪 Close issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} -F ./scripts/close-no-repro-issue.md
+          gh issue edit ${{ github.event.issue.number }} --remove-label ${{ github.event.label.name }}
+          gh issue close ${{ github.event.issue.number }} -r "not planned";

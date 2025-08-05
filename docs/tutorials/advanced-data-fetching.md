@@ -1,5 +1,6 @@
 ---
 title: Advanced Data Fetching
+hidden: true
 ---
 
 # Advanced Data Fetching

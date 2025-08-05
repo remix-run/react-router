@@ -12,25 +12,19 @@ import {
 
 let fixture: Fixture;
 let appFixture: AppFixture;
+let originalConsoleError: typeof console.error;
+let originalConsoleWarn: typeof console.warn;
 
 test.describe("fs-routes", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "vite.config.js": js`
-          import { defineConfig } from "vite";
-          import { reactRouter } from "@react-router/dev/vite";
-
-          export default defineConfig({
-            plugins: [reactRouter()],
-          });
-        `,
         "app/routes.ts": js`
           import { type RouteConfig } from "@react-router/dev/routes";  
           import { flatRoutes } from "@react-router/fs-routes";
           import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
 
-          export const routes: RouteConfig = [
+          export default [
             ...await flatRoutes({
               ignoredRouteFiles: ["**/ignored-route.*"],
             }),
@@ -42,7 +36,7 @@ test.describe("fs-routes", () => {
                 route("/remix/config/route", "remix-config-route.tsx")
               });
             })
-          ];
+          ] satisfies RouteConfig;
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -138,10 +132,16 @@ test.describe("fs-routes", () => {
     });
 
     appFixture = await createAppFixture(fixture);
+    originalConsoleError = console.error;
+    console.error = () => {};
+    originalConsoleWarn = console.warn;
+    console.warn = () => {};
   });
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   test.describe("without JavaScript", () => {
@@ -267,7 +267,7 @@ test.describe("emits warnings for route conflicts", async () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
   });
@@ -309,7 +309,7 @@ test.describe("", () => {
       buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       buildStdio.on("error", (err) => reject(err));
       buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
+        resolve(Buffer.concat(chunks).toString("utf8")),
       );
     });
   });

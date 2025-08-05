@@ -10,6 +10,7 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
+  ENABLE_DEV_WARNINGS,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -28,6 +29,7 @@ import type {
   RelativeRoutingType,
   Router as DataRouter,
   RevalidationState,
+  Navigation,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
 import type {
@@ -48,35 +50,37 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
-import type { SerializeFrom } from "./types";
-
-// TODO: Let's get this back to using an import map and development/production
-// condition once we get the rollup build replaced
-const ENABLE_DEV_WARNINGS = true;
+import type { SerializeFrom } from "./types/route-data";
 
 /**
-  Resolves a URL against the current location.
-
-  ```tsx
-  import { useHref } from "react-router"
-
-  function SomeComponent() {
-    let href = useHref("some/where");
-    // "/resolved/some/where"
-  }
-  ```
-
-  @category Hooks
+ * Resolves a URL against the current {@link Location}.
+ *
+ * @example
+ * import { useHref } from "react-router";
+ *
+ * function SomeComponent() {
+ *   let href = useHref("some/where");
+ *   // "/resolved/some/where"
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @param to The path to resolve
+ * @param options Options
+ * @param options.relative Defaults to `"route"` so routing is relative to the
+ * route tree.
+ * Set to `"path"` to make relative routing operate against path segments.
+ * @returns The resolved href string
  */
 export function useHref(
   to: To,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  { relative }: { relative?: RelativeRoutingType } = {},
 ): string {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useHref() may be used only in the context of a <Router> component.`
+    `useHref() may be used only in the context of a <Router> component.`,
   );
 
   let { basename, navigator } = React.useContext(NavigationContext);
@@ -97,86 +101,98 @@ export function useHref(
 }
 
 /**
- * Returns true if this component is a descendant of a Router, useful to ensure
- * a component is used within a Router.
+ * Returns `true` if this component is a descendant of a {@link Router}, useful
+ * to ensure a component is used within a {@link Router}.
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns Whether the component is within a {@link Router} context
  */
 export function useInRouterContext(): boolean {
   return React.useContext(LocationContext) != null;
 }
 
 /**
-  Returns the current {@link Location}. This can be useful if you'd like to perform some side effect whenever it changes.
-
-  ```tsx
-  import * as React from 'react'
-  import { useLocation } from 'react-router'
-
-  function SomeComponent() {
-    let location = useLocation()
-
-    React.useEffect(() => {
-      // Google Analytics
-      ga('send', 'pageview')
-    }, [location]);
-
-    return (
-      // ...
-    );
-  }
-  ```
-
-  @category Hooks
+ * Returns the current {@link Location}. This can be useful if you'd like to
+ * perform some side effect whenever it changes.
+ *
+ * @example
+ * import * as React from 'react'
+ * import { useLocation } from 'react-router'
+ *
+ * function SomeComponent() {
+ *   let location = useLocation()
+ *
+ *   React.useEffect(() => {
+ *     // Google Analytics
+ *     ga('send', 'pageview')
+ *   }, [location]);
+ *
+ *   return (
+ *     // ...
+ *   );
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @returns The current {@link Location} object
  */
 export function useLocation(): Location {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useLocation() may be used only in the context of a <Router> component.`
+    `useLocation() may be used only in the context of a <Router> component.`,
   );
 
   return React.useContext(LocationContext).location;
 }
 
 /**
- * Returns the current navigation action which describes how the router came to
- * the current location, either by a pop, push, or replace on the history stack.
+ * Returns the current {@link Navigation} action which describes how the router
+ * came to the current {@link Location}, either by a pop, push, or replace on
+ * the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack.
  *
+ * @public
  * @category Hooks
+ * @returns The current {@link NavigationType} (`"POP"`, `"PUSH"`, or `"REPLACE"`)
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
 }
 
 /**
- * Returns a PathMatch object if the given pattern matches the current URL.
+ * Returns a {@link PathMatch} object if the given pattern matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
- * `<NavLink>`.
+ * {@link NavLink | `<NavLink>`}.
  *
+ * @public
  * @category Hooks
+ * @param pattern The pattern to match against the current {@link Location}
+ * @returns The path match object if the pattern matches, `null` otherwise
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
-  Path extends string
+  Path extends string,
 >(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useMatch() may be used only in the context of a <Router> component.`
+    `useMatch() may be used only in the context of a <Router> component.`,
   );
 
   let { pathname } = useLocation();
   return React.useMemo(
     () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
-    [pathname, pattern]
+    [pathname, pattern],
   );
 }
 
 /**
- * The interface for the navigate() function returned from useNavigate().
+ * The interface for the `navigate` function returned from {@link useNavigate}.
  */
 export interface NavigateFunction {
   (to: To, options?: NavigateOptions): void | Promise<void>;
@@ -189,7 +205,7 @@ const navigateEffectWarning =
 
 // Mute warnings for calls to useNavigate in SSR environments
 function useIsomorphicLayoutEffect(
-  cb: Parameters<typeof React.useLayoutEffect>[0]
+  cb: Parameters<typeof React.useLayoutEffect>[0],
 ) {
   let isStatic = React.useContext(NavigationContext).static;
   if (!isStatic) {
@@ -201,26 +217,110 @@ function useIsomorphicLayoutEffect(
 }
 
 /**
-  Returns a function that lets you navigate programmatically in the browser in response to user interactions or effects.
-
-  ```tsx
-  import { useNavigate } from "react-router";
-
-  function SomeComponent() {
-    let navigate = useNavigate();
-    return (
-      <button
-        onClick={() => {
-          navigate(-1);
-        }}
-      />
-    );
-  }
-  ```
-
-  It's often better to use {@link redirect} in {@link ActionFunction | actions} and {@link LoaderFunction | loaders} than this hook.
-
-  @category Hooks
+ * Returns a function that lets you navigate programmatically in the browser in
+ * response to user interactions or effects.
+ *
+ * It's often better to use {@link redirect} in [`action`](../../start/framework/route-module#action)/[`loader`](../../start/framework/route-module#loader)
+ * functions than this hook.
+ *
+ * The returned function signature is `navigate(to, options?)`/`navigate(delta)` where:
+ *
+ * * `to` can be a string path, a {@link To} object, or a number (delta)
+ * * `options` contains options for modifying the navigation
+ *   * `flushSync`: Wrap the DOM updates in [`ReactDom.flushSync`](https://react.dev/reference/react-dom/flushSync)
+ *   * `preventScrollReset`: Do not scroll back to the top of the page after navigation
+ *   * `relative`: `"route"` or `"path"` to control relative routing logic
+ *   * `replace`: Replace the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History) stack
+ *   * `state`: Optional [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state) to include with the new {@link Location}
+ *   * `viewTransition`: Enable [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition) for this navigation
+ *
+ * @example
+ * import { useNavigate } from "react-router";
+ *
+ * function SomeComponent() {
+ *   let navigate = useNavigate();
+ *   return (
+ *     <button onClick={() => navigate(-1)}>
+ *       Go Back
+ *     </button>
+ *   );
+ * }
+ *
+ * @additionalExamples
+ * ### Navigate to another path
+ *
+ * ```tsx
+ * navigate("/some/route");
+ * navigate("/some/route?search=param");
+ * ```
+ *
+ * ### Navigate with a {@link To} object
+ *
+ * All properties are optional.
+ *
+ * ```tsx
+ * navigate({
+ *   pathname: "/some/route",
+ *   search: "?search=param",
+ *   hash: "#hash",
+ *   state: { some: "state" },
+ * });
+ * ```
+ *
+ * If you use `state`, that will be available on the {@link Location} object on
+ * the next page. Access it with `useLocation().state` (see {@link useLocation}).
+ *
+ * ### Navigate back or forward in the history stack
+ *
+ * ```tsx
+ * // back
+ * // often used to close modals
+ * navigate(-1);
+ *
+ * // forward
+ * // often used in a multistep wizard workflows
+ * navigate(1);
+ * ```
+ *
+ * Be cautious with `navigate(number)`. If your application can load up to a
+ * route that has a button that tries to navigate forward/back, there may not be
+ * a `[`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * entry to go back or forward to, or it can go somewhere you don't expect
+ * (like a different domain).
+ *
+ * Only use this if you're sure they will have an entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * stack to navigate to.
+ *
+ * ### Replace the current entry in the history stack
+ *
+ * This will remove the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
+ * stack, replacing it with a new one, similar to a server side redirect.
+ *
+ * ```tsx
+ * navigate("/some/route", { replace: true });
+ * ```
+ *
+ * ### Prevent Scroll Reset
+ *
+ * [MODES: framework, data]
+ *
+ * <br/>
+ * <br/>
+ *
+ * To prevent {@link ScrollRestoration | `<ScrollRestoration>`} from resetting
+ * the scroll position, use the `preventScrollReset` option.
+ *
+ * ```tsx
+ * navigate("?some-tab=1", { preventScrollReset: true });
+ * ```
+ *
+ * For example, if you have a tab interface connected to search params in the
+ * middle of a page, and you don't want it to scroll to the top when a tab is
+ * clicked.
+ *
+ * @public
+ * @category Hooks
+ * @returns A navigate function for programmatic navigation
  */
 export function useNavigate(): NavigateFunction {
   let { isDataRoute } = React.useContext(RouteContext);
@@ -234,7 +334,7 @@ function useNavigateUnstable(): NavigateFunction {
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useNavigate() may be used only in the context of a <Router> component.`
+    `useNavigate() may be used only in the context of a <Router> component.`,
   );
 
   let dataRouterContext = React.useContext(DataRouterContext);
@@ -266,7 +366,7 @@ function useNavigateUnstable(): NavigateFunction {
         to,
         JSON.parse(routePathnamesJson),
         locationPathname,
-        options.relative === "path"
+        options.relative === "path",
       );
 
       // If we're operating within a basename, prepend it to the pathname prior
@@ -285,7 +385,7 @@ function useNavigateUnstable(): NavigateFunction {
       (!!options.replace ? navigator.replace : navigator.push)(
         path,
         options.state,
-        options
+        options,
       );
     },
     [
@@ -294,7 +394,7 @@ function useNavigateUnstable(): NavigateFunction {
       routePathnamesJson,
       locationPathname,
       dataRouterContext,
-    ]
+    ],
   );
 
   return navigate;
@@ -303,9 +403,80 @@ function useNavigateUnstable(): NavigateFunction {
 const OutletContext = React.createContext<unknown>(null);
 
 /**
- * Returns the parent route {@link OutletProps.context | `<Outlet context>`}.
+ * Returns the parent route {@link Outlet | `<Outlet context>`}.
  *
+ * Often parent routes manage state or other values you want shared with child
+ * routes. You can create your own [context provider](https://react.dev/learn/passing-data-deeply-with-context)
+ * if you like, but this is such a common situation that it's built-into
+ * {@link Outlet | `<Outlet>`}.
+ *
+ * ```tsx
+ * // Parent route
+ * function Parent() {
+ *   const [count, setCount] = React.useState(0);
+ *   return <Outlet context={[count, setCount]} />;
+ * }
+ * ```
+ *
+ * ```tsx
+ * // Child route
+ * import { useOutletContext } from "react-router";
+ *
+ * function Child() {
+ *   const [count, setCount] = useOutletContext();
+ *   const increment = () => setCount((c) => c + 1);
+ *   return <button onClick={increment}>{count}</button>;
+ * }
+ * ```
+ *
+ * If you're using TypeScript, we recommend the parent component provide a
+ * custom hook for accessing the context value. This makes it easier for
+ * consumers to get nice typings, control consumers, and know who's consuming
+ * the context value.
+ *
+ * Here's a more realistic example:
+ *
+ * ```tsx filename=src/routes/dashboard.tsx lines=[14,20]
+ * import { useState } from "react";
+ * import { Outlet, useOutletContext } from "react-router";
+ *
+ * import type { User } from "./types";
+ *
+ * type ContextType = { user: User | null };
+ *
+ * export default function Dashboard() {
+ *   const [user, setUser] = useState<User | null>(null);
+ *
+ *   return (
+ *     <div>
+ *       <h1>Dashboard</h1>
+ *       <Outlet context={{ user } satisfies ContextType} />
+ *     </div>
+ *   );
+ * }
+ *
+ * export function useUser() {
+ *   return useOutletContext<ContextType>();
+ * }
+ * ```
+ *
+ * ```tsx filename=src/routes/dashboard/messages.tsx lines=[1,4]
+ * import { useUser } from "../dashboard";
+ *
+ * export default function DashboardMessages() {
+ *   const { user } = useUser();
+ *   return (
+ *     <div>
+ *       <h2>Messages</h2>
+ *       <p>Hello, {user.name}!</p>
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * @public
  * @category Hooks
+ * @returns The context value passed to the parent {@link Outlet} component
  */
 export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
@@ -313,9 +484,13 @@ export function useOutletContext<Context = unknown>(): Context {
 
 /**
  * Returns the element for the child route at this level of the route
- * hierarchy. Used internally by `<Outlet>` to render child routes.
+ * hierarchy. Used internally by {@link Outlet | `<Outlet>`} to render child
+ * routes.
  *
+ * @public
  * @category Hooks
+ * @param context The context to pass to the outlet
+ * @returns The child route element or `null` if no child routes match
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
@@ -328,23 +503,111 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
 }
 
 /**
-  Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
-
-  ```tsx
-  import { useParams } from "react-router"
-
-  function SomeComponent() {
-    let params = useParams()
-    params.postId
-  }
-  ```
-
-  Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
-
-  @category Hooks
+ * Returns an object of key/value-pairs of the dynamic params from the current
+ * URL that were matched by the routes. Child routes inherit all params from
+ * their parent routes.
+ *
+ * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
+ * then `params.postId` will be `"123"`.
+ *
+ * @example
+ * import { useParams } from "react-router";
+ *
+ * function SomeComponent() {
+ *   let params = useParams();
+ *   params.postId;
+ * }
+ *
+ * @additionalExamples
+ * ### Basic Usage
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * // given a route like:
+ * <Route path="/posts/:postId" element={<Post />} />;
+ *
+ * // or a data route like:
+ * createBrowserRouter([
+ *   {
+ *     path: "/posts/:postId",
+ *     component: Post,
+ *   },
+ * ]);
+ *
+ * // or in routes.ts
+ * route("/posts/:postId", "routes/post.tsx");
+ * ```
+ *
+ * Access the params in a component:
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * export default function Post() {
+ *   let params = useParams();
+ *   return <h1>Post: {params.postId}</h1>;
+ * }
+ * ```
+ *
+ * ### Multiple Params
+ *
+ * Patterns can have multiple params:
+ *
+ * ```tsx
+ * "/posts/:postId/comments/:commentId";
+ * ```
+ *
+ * All will be available in the params object:
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * export default function Post() {
+ *   let params = useParams();
+ *   return (
+ *     <h1>
+ *       Post: {params.postId}, Comment: {params.commentId}
+ *     </h1>
+ *   );
+ * }
+ * ```
+ *
+ * ### Catchall Params
+ *
+ * Catchall params are defined with `*`:
+ *
+ * ```tsx
+ * "/files/*";
+ * ```
+ *
+ * The matched value will be available in the params object as follows:
+ *
+ * ```tsx
+ * import { useParams } from "react-router";
+ *
+ * export default function File() {
+ *   let params = useParams();
+ *   let catchall = params["*"];
+ *   // ...
+ * }
+ * ```
+ *
+ * You can destructure the catchall param:
+ *
+ * ```tsx
+ * export default function File() {
+ *   let { "*": catchall } = useParams();
+ *   console.log(catchall);
+ * }
+ * ```
+ *
+ * @public
+ * @category Hooks
+ * @returns An object containing the dynamic route parameters
  */
 export function useParams<
-  ParamsOrKey extends string | Record<string, string | undefined> = string
+  ParamsOrKey extends string | Record<string, string | undefined> = string,
 >(): Readonly<
   [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
 > {
@@ -354,25 +617,32 @@ export function useParams<
 }
 
 /**
-  Resolves the pathname of the given `to` value against the current location. Similar to {@link useHref}, but returns a {@link Path} instead of a string.
-
-  ```tsx
-  import { useResolvedPath } from "react-router"
-
-  function SomeComponent() {
-    // if the user is at /dashboard/profile
-    let path = useResolvedPath("../accounts")
-    path.pathname // "/dashboard/accounts"
-    path.search // ""
-    path.hash // ""
-  }
-  ```
-
-  @category Hooks
+ * Resolves the pathname of the given `to` value against the current
+ * {@link Location}. Similar to {@link useHref}, but returns a
+ * {@link Path} instead of a string.
+ *
+ * @example
+ * import { useResolvedPath } from "react-router";
+ *
+ * function SomeComponent() {
+ *   // if the user is at /dashboard/profile
+ *   let path = useResolvedPath("../accounts");
+ *   path.pathname; // "/dashboard/accounts"
+ *   path.search; // ""
+ *   path.hash; // ""
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @param to The path to resolve
+ * @param options Options
+ * @param options.relative Defaults to `"route"` so routing is relative to the route tree.
+ *                         Set to `"path"` to make relative routing operate against path segments.
+ * @returns The resolved {@link Path} object with `pathname`, `search`, and `hash`
  */
 export function useResolvedPath(
   to: To,
-  { relative }: { relative?: RelativeRoutingType } = {}
+  { relative }: { relative?: RelativeRoutingType } = {},
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
@@ -384,67 +654,66 @@ export function useResolvedPath(
         to,
         JSON.parse(routePathnamesJson),
         locationPathname,
-        relative === "path"
+        relative === "path",
       ),
-    [to, routePathnamesJson, locationPathname, relative]
+    [to, routePathnamesJson, locationPathname, relative],
   );
 }
 
 /**
-  Hook version of {@link Routes | `<Routes>`} that uses objects instead of components. These objects have the same properties as the component props.
-
-  The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
-
-  ```tsx
-  import * as React from "react";
-  import { useRoutes } from "react-router";
-
-  function App() {
-    let element = useRoutes([
-      {
-        path: "/",
-        element: <Dashboard />,
-        children: [
-          {
-            path: "messages",
-            element: <DashboardMessages />,
-          },
-          { path: "tasks", element: <DashboardTasks /> },
-        ],
-      },
-      { path: "team", element: <AboutPage /> },
-    ]);
-
-    return element;
-  }
-  ```
-
- @category Hooks
+ * Hook version of {@link Routes | `<Routes>`} that uses objects instead of
+ * components. These objects have the same properties as the component props.
+ * The return value of `useRoutes` is either a valid React element you can use
+ * to render the route tree, or `null` if nothing matched.
+ *
+ * @example
+ * import { useRoutes } from "react-router";
+ *
+ * function App() {
+ *   let element = useRoutes([
+ *     {
+ *       path: "/",
+ *       element: <Dashboard />,
+ *       children: [
+ *         {
+ *           path: "messages",
+ *           element: <DashboardMessages />,
+ *         },
+ *         { path: "tasks", element: <DashboardTasks /> },
+ *       ],
+ *     },
+ *     { path: "team", element: <AboutPage /> },
+ *   ]);
+ *
+ *   return element;
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @param routes An array of {@link RouteObject}s that define the route hierarchy
+ * @param locationArg An optional {@link Location} object or pathname string to
+ * use instead of the current {@link Location}
+ * @returns A React element to render the matched route, or `null` if no routes matched
  */
 export function useRoutes(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string
+  locationArg?: Partial<Location> | string,
 ): React.ReactElement | null {
   return useRoutesImpl(routes, locationArg);
 }
 
-/**
- * Internal implementation with accept optional param for RouterProvider usage
- *
- * @private
- * @category Hooks
- */
+// Internal implementation with accept optional param for RouterProvider usage
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: DataRouter["state"],
-  future?: DataRouter["future"]
+  future?: DataRouter["future"],
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
-    `useRoutes() may be used only in the context of a <Router> component.`
+    `useRoutes() may be used only in the context of a <Router> component.`,
   );
 
   let { navigator } = React.useContext(NavigationContext);
@@ -479,14 +748,14 @@ export function useRoutesImpl(
     let parentPath = (parentRoute && parentRoute.path) || "";
     warningOnce(
       parentPathname,
-      !parentRoute || parentPath.endsWith("*"),
+      !parentRoute || parentPath.endsWith("*") || parentPath.endsWith("*?"),
       `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +
         `deeper, the parent won't match anymore and therefore the child ` +
         `routes will never render.\n\n` +
         `Please change the parent <Route path="${parentPath}"> to <Route ` +
-        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`
+        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`,
     );
   }
 
@@ -503,7 +772,7 @@ export function useRoutesImpl(
       `When overriding the location using \`<Routes location>\` or \`useRoutes(routes, location)\`, ` +
         `the location pathname must begin with the portion of the URL pathname that was ` +
         `matched by all parent routes. The current pathname base is "${parentPathnameBase}" ` +
-        `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`
+        `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`,
     );
 
     location = parsedLocationArg;
@@ -539,7 +808,7 @@ export function useRoutesImpl(
   if (ENABLE_DEV_WARNINGS) {
     warning(
       parentRoute || matches != null,
-      `No routes matched location "${location.pathname}${location.search}${location.hash}" `
+      `No routes matched location "${location.pathname}${location.search}${location.hash}" `,
     );
 
     warning(
@@ -549,7 +818,7 @@ export function useRoutesImpl(
         matches[matches.length - 1].route.lazy !== undefined,
       `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" ` +
         `does not have an element or Component. This means it will render an <Outlet /> with a ` +
-        `null value by default resulting in an "empty" page.`
+        `null value by default resulting in an "empty" page.`,
     );
   }
 
@@ -575,11 +844,11 @@ export function useRoutesImpl(
                     ? navigator.encodeLocation(match.pathnameBase).pathname
                     : match.pathnameBase,
                 ]),
-        })
+        }),
       ),
     parentMatches,
     dataRouterState,
-    future
+    future,
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -613,8 +882,8 @@ function DefaultErrorComponent() {
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
-    ? error.message
-    : JSON.stringify(error);
+      ? error.message
+      : JSON.stringify(error);
   let stack = error instanceof Error ? error.stack : null;
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
@@ -624,7 +893,7 @@ function DefaultErrorComponent() {
   if (ENABLE_DEV_WARNINGS) {
     console.error(
       "Error handled by React Router default ErrorBoundary:",
-      error
+      error,
     );
 
     devInfo = (
@@ -684,7 +953,7 @@ export class RenderErrorBoundary extends React.Component<
 
   static getDerivedStateFromProps(
     props: RenderErrorBoundaryProps,
-    state: RenderErrorBoundaryState
+    state: RenderErrorBoundaryState,
   ) {
     // When we get into an error state, the user will likely click "back" to the
     // previous page that didn't have an error. Because this wraps the entire
@@ -720,7 +989,7 @@ export class RenderErrorBoundary extends React.Component<
     console.error(
       "React Router caught the following error during render",
       error,
-      errorInfo
+      errorInfo,
     );
   }
 
@@ -769,7 +1038,7 @@ export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
   dataRouterState: DataRouter["state"] | null = null,
-  future: DataRouter["future"] | null = null
+  future: DataRouter["future"] | null = null,
 ): React.ReactElement | null {
   if (matches == null) {
     if (!dataRouterState) {
@@ -803,17 +1072,17 @@ export function _renderMatches(
   let errors = dataRouterState?.errors;
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(
-      (m) => m.route.id && errors?.[m.route.id] !== undefined
+      (m) => m.route.id && errors?.[m.route.id] !== undefined,
     );
     invariant(
       errorIndex >= 0,
       `Could not find a matching route for errors on route IDs: ${Object.keys(
-        errors
-      ).join(",")}`
+        errors,
+      ).join(",")}`,
     );
     renderedMatches = renderedMatches.slice(
       0,
-      Math.min(renderedMatches.length, errorIndex + 1)
+      Math.min(renderedMatches.length, errorIndex + 1),
     );
   }
 
@@ -851,81 +1120,87 @@ export function _renderMatches(
     }
   }
 
-  return renderedMatches.reduceRight((outlet, match, index) => {
-    // Only data routers handle errors/fallbacks
-    let error: any;
-    let shouldRenderHydrateFallback = false;
-    let errorElement: React.ReactNode | null = null;
-    let hydrateFallbackElement: React.ReactNode | null = null;
-    if (dataRouterState) {
-      error = errors && match.route.id ? errors[match.route.id] : undefined;
-      errorElement = match.route.errorElement || defaultErrorElement;
+  return renderedMatches.reduceRight(
+    (outlet, match, index) => {
+      // Only data routers handle errors/fallbacks
+      let error: any;
+      let shouldRenderHydrateFallback = false;
+      let errorElement: React.ReactNode | null = null;
+      let hydrateFallbackElement: React.ReactNode | null = null;
+      if (dataRouterState) {
+        error = errors && match.route.id ? errors[match.route.id] : undefined;
+        errorElement = match.route.errorElement || defaultErrorElement;
 
-      if (renderFallback) {
-        if (fallbackIndex < 0 && index === 0) {
-          warningOnce(
-            "route-fallback",
-            false,
-            "No `HydrateFallback` element provided to render during initial hydration"
-          );
-          shouldRenderHydrateFallback = true;
-          hydrateFallbackElement = null;
-        } else if (fallbackIndex === index) {
-          shouldRenderHydrateFallback = true;
-          hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+        if (renderFallback) {
+          if (fallbackIndex < 0 && index === 0) {
+            warningOnce(
+              "route-fallback",
+              false,
+              "No `HydrateFallback` element provided to render during initial hydration",
+            );
+            shouldRenderHydrateFallback = true;
+            hydrateFallbackElement = null;
+          } else if (fallbackIndex === index) {
+            shouldRenderHydrateFallback = true;
+            hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+          }
         }
       }
-    }
 
-    let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
-    let getChildren = () => {
-      let children: React.ReactNode;
-      if (error) {
-        children = errorElement;
-      } else if (shouldRenderHydrateFallback) {
-        children = hydrateFallbackElement;
-      } else if (match.route.Component) {
-        // Note: This is a de-optimized path since React won't re-use the
-        // ReactElement since it's identity changes with each new
-        // React.createElement call.  We keep this so folks can use
-        // `<Route Component={...}>` in `<Routes>` but generally `Component`
-        // usage is only advised in `RouterProvider` when we can convert it to
-        // `element` ahead of time.
-        children = <match.route.Component />;
-      } else if (match.route.element) {
-        children = match.route.element;
-      } else {
-        children = outlet;
-      }
-      return (
-        <RenderedRoute
-          match={match}
-          routeContext={{
-            outlet,
-            matches,
-            isDataRoute: dataRouterState != null,
-          }}
-          children={children}
+      let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
+      let getChildren = () => {
+        let children: React.ReactNode;
+        if (error) {
+          children = errorElement;
+        } else if (shouldRenderHydrateFallback) {
+          children = hydrateFallbackElement;
+        } else if (match.route.Component) {
+          // Note: This is a de-optimized path since React won't re-use the
+          // ReactElement since it's identity changes with each new
+          // React.createElement call.  We keep this so folks can use
+          // `<Route Component={...}>` in `<Routes>` but generally `Component`
+          // usage is only advised in `RouterProvider` when we can convert it to
+          // `element` ahead of time.
+          children = <match.route.Component />;
+        } else if (match.route.element) {
+          children = match.route.element;
+        } else {
+          children = outlet;
+        }
+
+        return (
+          <RenderedRoute
+            match={match}
+            routeContext={{
+              outlet,
+              matches,
+              isDataRoute: dataRouterState != null,
+            }}
+            children={children}
+          />
+        );
+      };
+      // Only wrap in an error boundary within data router usages when we have an
+      // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
+      // an ancestor ErrorBoundary/errorElement
+      return dataRouterState &&
+        (match.route.ErrorBoundary ||
+          match.route.errorElement ||
+          index === 0) ? (
+        <RenderErrorBoundary
+          location={dataRouterState.location}
+          revalidation={dataRouterState.revalidation}
+          component={errorElement}
+          error={error}
+          children={getChildren()}
+          routeContext={{ outlet: null, matches, isDataRoute: true }}
         />
+      ) : (
+        getChildren()
       );
-    };
-    // Only wrap in an error boundary within data router usages when we have an
-    // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
-    // an ancestor ErrorBoundary/errorElement
-    return dataRouterState &&
-      (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
-      <RenderErrorBoundary
-        location={dataRouterState.location}
-        revalidation={dataRouterState.revalidation}
-        component={errorElement}
-        error={error}
-        children={getChildren()}
-        routeContext={{ outlet: null, matches, isDataRoute: true }}
-      />
-    ) : (
-      getChildren()
-    );
-  }, null as React.ReactElement | null);
+    },
+    null as React.ReactElement | null,
+  );
 }
 
 enum DataRouterHook {
@@ -948,7 +1223,7 @@ enum DataRouterStateHook {
 }
 
 function getDataRouterConsoleError(
-  hookName: DataRouterHook | DataRouterStateHook
+  hookName: DataRouterHook | DataRouterStateHook,
 ) {
   return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
 }
@@ -977,111 +1252,142 @@ function useCurrentRouteId(hookName: DataRouterStateHook) {
   let thisRoute = route.matches[route.matches.length - 1];
   invariant(
     thisRoute.route.id,
-    `${hookName} can only be used on routes that contain a unique "id"`
+    `${hookName} can only be used on routes that contain a unique "id"`,
   );
   return thisRoute.route.id;
 }
 
 /**
  * Returns the ID for the nearest contextual route
+ *
+ * @category Hooks
+ * @returns The ID of the nearest contextual route
  */
 export function useRouteId() {
   return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
 /**
-  Returns the current navigation, defaulting to an "idle" navigation when no navigation is in progress. You can use this to render pending UI (like a global spinner) or read FormData from a form navigation.
-
-  ```tsx
-  import { useNavigation } from "react-router"
-
-  function SomeComponent() {
-    let navigation = useNavigation();
-    navigation.state
-    navigation.formData
-    // etc.
-  }
-  ```
-
-  @category Hooks
+ * Returns the current {@link Navigation}, defaulting to an "idle" navigation
+ * when no navigation is in progress. You can use this to render pending UI
+ * (like a global spinner) or read [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+ * from a form navigation.
+ *
+ * @example
+ * import { useNavigation } from "react-router";
+ *
+ * function SomeComponent() {
+ *   let navigation = useNavigation();
+ *   navigation.state;
+ *   navigation.formData;
+ *   // etc.
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The current {@link Navigation} object
  */
-export function useNavigation() {
+export function useNavigation(): Navigation {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
   return state.navigation;
 }
 
 /**
-  Revalidate the data on the page for reasons outside of normal data mutations like window focus or polling on an interval.
-
-  ```tsx
-  import { useRevalidator } from "react-router";
-
-  function WindowFocusRevalidator() {
-    const revalidator = useRevalidator();
-
-    useFakeWindowFocus(() => {
-      revalidator.revalidate();
-    });
-
-    return (
-      <div hidden={revalidator.state === "idle"}>
-        Revalidating...
-      </div>
-    );
-  }
-  ```
-
-  Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do this automatically.
-
-  @category Hooks
+ * Revalidate the data on the page for reasons outside of normal data mutations
+ * like [`Window` focus](https://developer.mozilla.org/en-US/docs/Web/API/Window/focus_event)
+ * or polling on an interval.
+ *
+ * Note that page data is already revalidated automatically after actions.
+ * If you find yourself using this for normal CRUD operations on your data in
+ * response to user interactions, you're probably not taking advantage of the
+ * other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do
+ * this automatically.
+ *
+ * @example
+ * import { useRevalidator } from "react-router";
+ *
+ * function WindowFocusRevalidator() {
+ *   const revalidator = useRevalidator();
+ *
+ *   useFakeWindowFocus(() => {
+ *     revalidator.revalidate();
+ *   });
+ *
+ *   return (
+ *     <div hidden={revalidator.state === "idle"}>
+ *       Revalidating...
+ *     </div>
+ *   );
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns An object with a `revalidate` function and the current revalidation
+ * `state`
  */
-export function useRevalidator() {
+export function useRevalidator(): {
+  revalidate: () => Promise<void>;
+  state: DataRouter["state"]["revalidation"];
+} {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
+  let revalidate = React.useCallback(async () => {
+    await dataRouterContext.router.revalidate();
+  }, [dataRouterContext.router]);
+
   return React.useMemo(
-    () => ({
-      async revalidate() {
-        await dataRouterContext.router.revalidate();
-      },
-      state: state.revalidation,
-    }),
-    [dataRouterContext.router, state.revalidation]
+    () => ({ revalidate, state: state.revalidation }),
+    [revalidate, state.revalidation],
   );
 }
 
 /**
- * Returns the active route matches, useful for accessing loaderData for
- * parent/child routes or the route "handle" property
+ * Returns the active route matches, useful for accessing `loaderData` for
+ * parent/child routes or the route [`handle`](../../start/framework/route-module#handle)
+ * property
  *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns An array of {@link UIMatch | UI matches} for the current route hierarchy
  */
 export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
-    DataRouterStateHook.UseMatches
+    DataRouterStateHook.UseMatches,
   );
   return React.useMemo(
     () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
-    [matches, loaderData]
+    [matches, loaderData],
   );
 }
 
 /**
-  Returns the data from the closest route {@link LoaderFunction | loader} or {@link ClientLoaderFunction | client loader}.
-
-  ```tsx
-  import { useLoaderData } from "react-router"
-
-  export async function loader() {
-    return await fakeDb.invoices.findAll();
-  }
-
-  export default function Invoices() {
-    let invoices = useLoaderData<typeof loader>();
-    // ...
-  }
-  ```
-
-  @category Hooks
+ * Returns the data from the closest route
+ * [`loader`](../../start/framework/route-module#loader) or
+ * [`clientLoader`](../../start/framework/route-module#clientloader).
+ *
+ * @example
+ * import { useLoaderData } from "react-router";
+ *
+ * export async function loader() {
+ *   return await fakeDb.invoices.findAll();
+ * }
+ *
+ * export default function Invoices() {
+ *   let invoices = useLoaderData<typeof loader>();
+ *   // ...
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The data returned from the route's [`loader`](../../start/framework/route-module#loader) or [`clientLoader`](../../start/framework/route-module#clientloader) function
  */
 export function useLoaderData<T = any>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
@@ -1090,63 +1396,75 @@ export function useLoaderData<T = any>(): SerializeFrom<T> {
 }
 
 /**
-  Returns the loader data for a given route by route ID.
-
-  ```tsx
-  import { useRouteLoaderData } from "react-router";
-
-  function SomeComponent() {
-    const { user } = useRouteLoaderData("root");
-  }
-  ```
-
-  Route IDs are created automatically. They are simply the path of the route file relative to the app folder without the extension.
-
-  | Route Filename             | Route ID             |
-  | -------------------------- | -------------------- |
-  | `app/root.tsx`             | `"root"`             |
-  | `app/routes/teams.tsx`     | `"routes/teams"`     |
-  | `app/whatever/teams.$id.tsx` | `"whatever/teams.$id"` |
-
-  If you created an ID manually, you can use that instead:
-
-  ```tsx
-  route("/", "containers/app.tsx", { id: "app" }})
-  ```
-
-  @category Hooks
+ * Returns the [`loader`](../../start/framework/route-module#loader) data for a
+ * given route by route ID.
+ *
+ * Route IDs are created automatically. They are simply the path of the route file
+ * relative to the app folder without the extension.
+ *
+ * | Route Filename               | Route ID               |
+ * | ---------------------------- | ---------------------- |
+ * | `app/root.tsx`               | `"root"`               |
+ * | `app/routes/teams.tsx`       | `"routes/teams"`       |
+ * | `app/whatever/teams.$id.tsx` | `"whatever/teams.$id"` |
+ *
+ * @example
+ * import { useRouteLoaderData } from "react-router";
+ *
+ * function SomeComponent() {
+ *   const { user } = useRouteLoaderData("root");
+ * }
+ *
+ * // You can also specify your own route ID's manually in your routes.ts file:
+ * route("/", "containers/app.tsx", { id: "app" })
+ * useRouteLoaderData("app");
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param routeId The ID of the route to return loader data from
+ * @returns The data returned from the specified route's [`loader`](../../start/framework/route-module#loader)
+ * function, or `undefined` if not found
  */
 export function useRouteLoaderData<T = any>(
-  routeId: string
+  routeId: string,
 ): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
   return state.loaderData[routeId] as SerializeFrom<T> | undefined;
 }
 
 /**
-  Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
-
-  ```tsx
-  import { Form, useActionData } from "react-router"
-
-  export async function action({ request }) {
-    const body = await request.formData()
-    const name = body.get("visitorsName")
-    return { message: `Hello, ${name}` }
-  }
-
-  export default function Invoices() {
-    const data = useActionData()
-    return (
-      <Form method="post">
-        <input type="text" name="visitorsName" />
-        {data ? data.message : "Waiting..."}
-      </Form>
-    )
-  }
-  ```
-
-  @category Hooks
+ * Returns the [`action`](../../start/framework/route-module#action) data from
+ * the most recent `POST` navigation form submission or `undefined` if there
+ * hasn't been one.
+ *
+ * @example
+ * import { Form, useActionData } from "react-router";
+ *
+ * export async function action({ request }) {
+ *   const body = await request.formData();
+ *   const name = body.get("visitorsName");
+ *   return { message: `Hello, ${name}` };
+ * }
+ *
+ * export default function Invoices() {
+ *   const data = useActionData();
+ *   return (
+ *     <Form method="post">
+ *       <input type="text" name="visitorsName" />
+ *       {data ? data.message : "Waiting..."}
+ *     </Form>
+ *   );
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The data returned from the route's [`action`](../../start/framework/route-module#action)
+ * function, or `undefined` if no [`action`](../../start/framework/route-module#action)
+ * has been called
  */
 export function useActionData<T = any>(): SerializeFrom<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
@@ -1157,16 +1475,24 @@ export function useActionData<T = any>(): SerializeFrom<T> | undefined {
 }
 
 /**
-  Accesses the error thrown during an {@link ActionFunction | action}, {@link LoaderFunction | loader}, or component render to be used in a route module Error Boundary.
-
-  ```tsx
-  export function ErrorBoundary() {
-    const error = useRouteError();
-    return <div>{error.message}</div>;
-  }
-  ```
-
-  @category Hooks
+ * Accesses the error thrown during an
+ * [`action`](../../start/framework/route-module#action),
+ * [`loader`](../../start/framework/route-module#loader),
+ * or component render to be used in a route module
+ * [`ErrorBoundary`](../../start/framework/route-module#errorboundary).
+ *
+ * @example
+ * export function ErrorBoundary() {
+ *   const error = useRouteError();
+ *   return <div>{error.message}</div>;
+ * }
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The error that was thrown during route [loading](../../start/framework/route-module#loader),
+ * [`action`](../../start/framework/route-module#action) execution, or rendering
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
@@ -1184,21 +1510,24 @@ export function useRouteError(): unknown {
 }
 
 /**
-  Returns the resolved promise value from the closest {@link Await | `<Await>`}.
-
-  ```tsx
-  function SomeDescendant() {
-    const value = useAsyncValue();
-    // ...
-  }
-
-  // somewhere in your app
-  <Await resolve={somePromise}>
-    <SomeDescendant />
-  </Await>
-  ```
-
-  @category Hooks
+ * Returns the resolved promise value from the closest {@link Await | `<Await>`}.
+ *
+ * @example
+ * function SomeDescendant() {
+ *   const value = useAsyncValue();
+ *   // ...
+ * }
+ *
+ * // somewhere in your app
+ * <Await resolve={somePromise}>
+ *   <SomeDescendant />
+ * </Await>;
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The resolved value from the nearest {@link Await} component
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1206,26 +1535,29 @@ export function useAsyncValue(): unknown {
 }
 
 /**
-  Returns the rejection value from the closest {@link Await | `<Await>`}.
-
-  ```tsx
-  import { Await, useAsyncError } from "react-router"
-
-  function ErrorElement() {
-    const error = useAsyncError();
-    return (
-      <p>Uh Oh, something went wrong! {error.message}</p>
-    );
-  }
-
-  // somewhere in your app
-  <Await
-    resolve={promiseThatRejects}
-    errorElement={<ErrorElement />}
-  />
-  ```
-
-  @category Hooks
+ * Returns the rejection value from the closest {@link Await | `<Await>`}.
+ *
+ * @example
+ * import { Await, useAsyncError } from "react-router";
+ *
+ * function ErrorElement() {
+ *   const error = useAsyncError();
+ *   return (
+ *     <p>Uh Oh, something went wrong! {error.message}</p>
+ *   );
+ * }
+ *
+ * // somewhere in your app
+ * <Await
+ *   resolve={promiseThatRejects}
+ *   errorElement={<ErrorElement />}
+ * />;
+ *
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @returns The error that was thrown in the nearest {@link Await} component
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1236,11 +1568,112 @@ let blockerId = 0;
 
 /**
  * Allow the application to block navigations within the SPA and present the
- * user a confirmation dialog to confirm the navigation.  Mostly used to avoid
- * using half-filled form data.  This does not handle hard-reloads or
+ * user a confirmation dialog to confirm the navigation. Mostly used to avoid
+ * using half-filled form data. This does not handle hard-reloads or
  * cross-origin navigations.
  *
+ * The {@link Blocker} object returned by the hook has the following properties:
+ *
+ * - **`state`**
+ *   - `unblocked` - the blocker is idle and has not prevented any navigation
+ *   - `blocked` - the blocker has prevented a navigation
+ *   - `proceeding` - the blocker is proceeding through from a blocked navigation
+ * - **`location`**
+ *   - When in a `blocked` state, this represents the {@link Location} to which
+ *     we blocked a navigation. When in a `proceeding` state, this is the
+ *     location being navigated to after a `blocker.proceed()` call.
+ * - **`proceed()`**
+ *   - When in a `blocked` state, you may call `blocker.proceed()` to proceed to
+ *     the blocked location.
+ * - **`reset()`**
+ *   - When in a `blocked` state, you may call `blocker.reset()` to return the
+ *     blocker to an `unblocked` state and leave the user at the current
+ *     location.
+ *
+ * @example
+ * // Boolean version
+ * let blocker = useBlocker(value !== "");
+ *
+ * // Function version
+ * let blocker = useBlocker(
+ *   ({ currentLocation, nextLocation, historyAction }) =>
+ *     value !== "" &&
+ *     currentLocation.pathname !== nextLocation.pathname
+ * );
+ *
+ * @additionalExamples
+ * ```tsx
+ * import { useCallback, useState } from "react";
+ * import { BlockerFunction, useBlocker } from "react-router";
+ *
+ * export function ImportantForm() {
+ *   const [value, setValue] = useState("");
+ *
+ *   const shouldBlock = useCallback<BlockerFunction>(
+ *     () => value !== "",
+ *     [value]
+ *   );
+ *   const blocker = useBlocker(shouldBlock);
+ *
+ *   return (
+ *     <form
+ *       onSubmit={(e) => {
+ *         e.preventDefault();
+ *         setValue("");
+ *         if (blocker.state === "blocked") {
+ *           blocker.proceed();
+ *         }
+ *       }}
+ *     >
+ *       <input
+ *         name="data"
+ *         value={value}
+ *         onChange={(e) => setValue(e.target.value)}
+ *       />
+ *
+ *       <button type="submit">Save</button>
+ *
+ *       {blocker.state === "blocked" ? (
+ *         <>
+ *           <p style={{ color: "red" }}>
+ *             Blocked the last navigation to
+ *           </p>
+ *           <button
+ *             type="button"
+ *             onClick={() => blocker.proceed()}
+ *           >
+ *             Let me through
+ *           </button>
+ *           <button
+ *             type="button"
+ *             onClick={() => blocker.reset()}
+ *           >
+ *             Keep me here
+ *           </button>
+ *         </>
+ *       ) : blocker.state === "proceeding" ? (
+ *         <p style={{ color: "orange" }}>
+ *           Proceeding through blocked navigation
+ *         </p>
+ *       ) : (
+ *         <p style={{ color: "green" }}>
+ *           Blocker is currently unblocked
+ *         </p>
+ *       )}
+ *     </form>
+ *   );
+ * }
+ * ```
+ *
+ * @public
  * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param shouldBlock Either a boolean or a function returning a boolean which
+ * indicates whether the navigation should be blocked. The function format
+ * receives a single object parameter containing the `currentLocation`,
+ * `nextLocation`, and `historyAction` of the potential navigation.
+ * @returns A {@link Blocker} object with state and reset functionality
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
@@ -1276,7 +1709,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
         historyAction,
       });
     },
-    [basename, shouldBlock]
+    [basename, shouldBlock],
   );
 
   // This effect is in charge of blocker key assignment and deletion (which is
@@ -1304,12 +1737,8 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     : IDLE_BLOCKER;
 }
 
-/**
- * Stable version of useNavigate that is used when we are in the context of
- * a RouterProvider.
- *
- * @private
- */
+// Stable version of useNavigate that is used when we are in the context of
+// a RouterProvider.
 function useNavigateStable(): NavigateFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
   let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
@@ -1333,7 +1762,7 @@ function useNavigateStable(): NavigateFunction {
         await router.navigate(to, { fromRouteId: id, ...options });
       }
     },
-    [router, id]
+    [router, id],
   );
 
   return navigate;

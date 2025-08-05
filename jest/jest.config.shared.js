@@ -15,7 +15,7 @@ module.exports = {
     "@react-router/serve$": "<rootDir>/../react-router-serve/index.ts",
     "^react-router$": "<rootDir>/../react-router/index.ts",
     "^@web3-storage/multipart-parser$": require.resolve(
-      "@web3-storage/multipart-parser"
+      "@web3-storage/multipart-parser",
     ),
   },
   modulePathIgnorePatterns: ignorePatterns,
@@ -24,4 +24,7 @@ module.exports = {
     "\\.[jt]sx?$": require.resolve("./transform"),
   },
   watchPathIgnorePatterns: [...ignorePatterns, "\\/node_modules\\/"],
+  globals: {
+    __DEV__: true,
+  },
 };

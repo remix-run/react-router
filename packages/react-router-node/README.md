@@ -1,6 +1,4 @@
-# @react-router/node
-
-Node.js platform abstractions for [React Router.](https://github.com/remix-run/react-router)
+Node.js platform abstractions for React Router
 
 ```sh
 npm install @react-router/node

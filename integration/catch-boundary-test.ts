@@ -11,6 +11,8 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 test.describe("ErrorBoundary (thrown responses)", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
+  let originalConsoleError: typeof console.error;
+  let originalConsoleWarn: typeof console.warn;
 
   let ROOT_BOUNDARY_TEXT = "ROOT_TEXT" as const;
   let OWN_BOUNDARY_TEXT = "OWN_BOUNDARY_TEXT" as const;
@@ -214,10 +216,16 @@ test.describe("ErrorBoundary (thrown responses)", () => {
     });
 
     appFixture = await createAppFixture(fixture);
+    originalConsoleError = console.error;
+    console.error = () => {};
+    originalConsoleWarn = console.warn;
+    console.warn = () => {};
   });
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   test("non-matching urls on document requests", async () => {
@@ -247,7 +255,13 @@ test.describe("ErrorBoundary (thrown responses)", () => {
 
     // Root loader data sticks around from previous load
     let expected = JSON.stringify([
-      { id: "root", pathname: "", params: {}, data: { data: "ROOT LOADER" } },
+      {
+        id: "root",
+        pathname: "",
+        params: {},
+        data: { data: "ROOT LOADER" },
+        loaderData: { data: "ROOT LOADER" },
+      },
     ]);
     expect(await app.getHtml("#matches")).toContain(expected);
   });

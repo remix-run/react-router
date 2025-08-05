@@ -13,7 +13,8 @@ import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
+import { mockEntryContext, mockFrameworkContext } from "../../utils/framework";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
 type PrefetchEventHandlerProps = {
@@ -21,10 +22,10 @@ type PrefetchEventHandlerProps = {
 };
 
 function itPrefetchesPageLinks<
-  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps
+  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps,
 >(Component: React.ComponentType<Props>) {
   describe('prefetch="intent"', () => {
-    let context = {
+    let context = mockFrameworkContext({
       routeModules: { idk: { default: () => null } },
       manifest: {
         routes: {
@@ -40,8 +41,7 @@ function itPrefetchesPageLinks<
         url: "",
         version: "",
       },
-      future: {},
-    };
+    });
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -72,7 +72,7 @@ function itPrefetchesPageLinks<
         let { container, unmount } = render(
           <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </FrameworkContext.Provider>
+          </FrameworkContext.Provider>,
         );
 
         fireEvent[event](container.firstChild);
@@ -80,11 +80,11 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        let dataHref = container
+        let dataHref = container.ownerDocument
           .querySelector('link[rel="prefetch"][as="fetch"]')
           ?.getAttribute("href");
         expect(dataHref).toBe("/idk.data");
-        let moduleHref = container
+        let moduleHref = container.ownerDocument
           .querySelector('link[rel="modulepreload"]')
           ?.getAttribute("href");
         expect(moduleHref).toBe("idk.js");
@@ -124,7 +124,7 @@ function itPrefetchesPageLinks<
         let { container, unmount } = render(
           <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </FrameworkContext.Provider>
+          </FrameworkContext.Provider>,
         );
 
         fireEvent[event](container.firstChild);
@@ -132,7 +132,9 @@ function itPrefetchesPageLinks<
           jest.runAllTimers();
         });
 
-        expect(container.querySelector("link[rel=prefetch]")).toBeTruthy();
+        expect(
+          container.ownerDocument.querySelector("link[rel=prefetch]"),
+        ).toBeTruthy();
         expect(ranHandler).toBe(true);
         unmount();
       });
@@ -151,14 +153,15 @@ describe("<NavLink />", () => {
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/")
-    );
-    invariant(
-      !(staticHandlerContext instanceof Response),
-      "Expected a context"
+      new Request("http://localhost/"),
     );
 
-    let context = {
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
       manifest: {
         routes: {
           root: {
@@ -196,19 +199,17 @@ describe("<ServerRouter>", () => {
         },
         empty: { default: {} },
       },
-      staticHandlerContext,
-      future: {},
-    };
+    });
 
     jest.spyOn(console, "warn").mockImplementation(() => {});
     jest.spyOn(console, "error");
 
     let { container } = render(
-      <ServerRouter context={context} url="http://localhost/" />
+      <ServerRouter context={context} url="http://localhost/" />,
     );
 
     expect(console.warn).toHaveBeenCalledWith(
-      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.'
+      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.',
     );
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
@@ -217,55 +218,56 @@ describe("<ServerRouter>", () => {
 
 describe("<HydratedRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    window.__reactRouterContext = {
-      url: "/",
-      future: {},
-    };
-    window.__reactRouterRouteModules = {
-      root: {
-        default: () => {
-          return (
-            <>
-              <h1>Root</h1>
-              <Outlet />
-            </>
-          );
+    let context = mockFrameworkContext({
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+          empty: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "empty",
+            module: "empty.js",
+            index: true,
+            parentId: "root",
+          },
         },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
       },
-      empty: { default: {} },
-    };
-    window.__reactRouterManifest = {
-      routes: {
+      routeModules: {
         root: {
-          hasLoader: false,
-          hasAction: false,
-          hasErrorBoundary: false,
-          id: "root",
-          module: "root.js",
-          path: "/",
+          default: () => {
+            return (
+              <>
+                <h1>Root</h1>
+                <Outlet />
+              </>
+            );
+          },
         },
-        empty: {
-          hasLoader: false,
-          hasAction: false,
-          hasErrorBoundary: false,
-          id: "empty",
-          module: "empty.js",
-          index: true,
-          parentId: "root",
-        },
+        empty: { default: {} },
       },
-      entry: { imports: [], module: "" },
-      url: "",
-      version: "",
-    };
+    });
+    window.__reactRouterContext = context;
+    window.__reactRouterRouteModules = context.routeModules;
+    window.__reactRouterManifest = context.manifest;
     window.__reactRouterContext!.stream = new ReadableStream({
       start(controller) {
         window.__reactRouterContext!.streamController = controller;
       },
     }).pipeThrough(new TextEncoderStream());
     window.__reactRouterContext!.streamController.enqueue(
-      // ts-expect-error
-      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n'
+      // @ts-expect-error
+      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n',
     );
     window.__reactRouterContext!.streamController.close();
 

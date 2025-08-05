@@ -1,7 +1,6 @@
 .DS_Store
 npm-debug.log
 
-/docs/api/
 /website/build/
 node_modules/
 
@@ -11,6 +10,7 @@ node_modules/
 /tutorial/dist
 /playground-local/
 /integration/playwright-report
+/integration/test-results
 
 # v5 build files
 /packages/*/cjs/
@@ -22,9 +22,16 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
+# v7 build files
+.react-router
+
 .wireit
 .eslintcache
+.parcel-cache
 .tmp
+tsup.config.bundled_*.mjs
+build.utils.d.ts
+worker-configuration.d.ts
 /.env
 /NOTES.md
 

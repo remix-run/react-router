@@ -1,5 +1,4 @@
 import type { Location } from "../../router/history";
-import { parsePath } from "../../router/history";
 import type { AgnosticDataRouteMatch } from "../../router/utils";
 
 import type { AssetsManifest } from "./entry";
@@ -19,7 +18,7 @@ import type {
 export function getKeyedLinksForMatches(
   matches: AgnosticDataRouteMatch[],
   routeModules: RouteModules,
-  manifest: AssetsManifest
+  manifest: AssetsManifest,
 ): KeyedLinkDescriptor[] {
   let descriptors = matches
     .map((match): LinkDescriptor[][] => {
@@ -34,19 +33,30 @@ export function getKeyedLinksForMatches(
     })
     .flat(2);
 
-  let preloads = getCurrentPageModulePreloadHrefs(matches, manifest);
+  let preloads = getModuleLinkHrefs(matches, manifest);
   return dedupeLinkDescriptors(descriptors, preloads);
+}
+
+function getRouteCssDescriptors(route: EntryRoute): HtmlLinkDescriptor[] {
+  if (!route.css) return [];
+  return route.css.map((href) => ({ rel: "stylesheet", href }));
+}
+
+export async function prefetchRouteCss(route: EntryRoute): Promise<void> {
+  if (!route.css) return;
+  let descriptors = getRouteCssDescriptors(route);
+  await Promise.all(descriptors.map(prefetchStyleLink));
 }
 
 export async function prefetchStyleLinks(
   route: EntryRoute,
-  routeModule: RouteModule
+  routeModule: RouteModule,
 ): Promise<void> {
   if ((!route.css && !routeModule.links) || !isPreloadSupported()) return;
 
-  let descriptors = [];
+  let descriptors: LinkDescriptor[] = [];
   if (route.css) {
-    descriptors.push(...route.css.map((href) => ({ rel: "stylesheet", href })));
+    descriptors.push(...getRouteCssDescriptors(route));
   }
   if (routeModule.links) {
     descriptors.push(...routeModule.links());
@@ -64,21 +74,24 @@ export async function prefetchStyleLinks(
     }
   }
 
-  // don't block for non-matching media queries, or for stylesheets that are
-  // already in the DOM (active route revalidations)
-  let matchingLinks = styleLinks.filter(
-    (link) =>
-      (!link.media || window.matchMedia(link.media).matches) &&
-      !document.querySelector(`link[rel="stylesheet"][href="${link.href}"]`)
-  );
-
-  await Promise.all(matchingLinks.map(prefetchStyleLink));
+  await Promise.all(styleLinks.map(prefetchStyleLink));
 }
 
 async function prefetchStyleLink(
-  descriptor: HtmlLinkDescriptor
+  descriptor: HtmlLinkDescriptor,
 ): Promise<void> {
   return new Promise((resolve) => {
+    // don't prefetch non-matching media queries, or stylesheets that are
+    // already in the DOM (active route revalidations)
+    if (
+      (descriptor.media && !window.matchMedia(descriptor.media).matches) ||
+      document.querySelector(
+        `link[rel="stylesheet"][href="${descriptor.href}"]`,
+      )
+    ) {
+      return resolve();
+    }
+
     let link = document.createElement("link");
     Object.assign(link, descriptor);
 
@@ -107,7 +120,7 @@ async function prefetchStyleLink(
 
 ////////////////////////////////////////////////////////////////////////////////
 export function isPageLinkDescriptor(
-  object: any
+  object: any,
 ): object is PageLinkDescriptor {
   return object != null && typeof object.page === "string";
 }
@@ -136,7 +149,7 @@ export type KeyedHtmlLinkDescriptor = { key: string; link: HtmlLinkDescriptor };
 export async function getKeyedPrefetchLinks(
   matches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
-  routeModules: RouteModules
+  routeModules: RouteModules,
 ): Promise<KeyedHtmlLinkDescriptor[]> {
   let links = await Promise.all(
     matches.map(async (match) => {
@@ -146,7 +159,7 @@ export async function getKeyedPrefetchLinks(
         return mod.links ? mod.links() : [];
       }
       return [];
-    })
+    }),
   );
 
   return dedupeLinkDescriptors(
@@ -157,8 +170,8 @@ export async function getKeyedPrefetchLinks(
       .map((link) =>
         link.rel === "stylesheet"
           ? ({ ...link, rel: "prefetch", as: "style" } as HtmlLinkDescriptor)
-          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor)
-      )
+          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor),
+      ),
   );
 }
 
@@ -169,7 +182,7 @@ export function getNewMatchesForLinks(
   currentMatches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
   location: Location,
-  mode: "data" | "assets"
+  mode: "data" | "assets",
 ): AgnosticDataRouteMatch[] {
   let isNew = (match: AgnosticDataRouteMatch, index: number) => {
     if (!currentMatches[index]) return true;
@@ -189,7 +202,7 @@ export function getNewMatchesForLinks(
 
   if (mode === "assets") {
     return nextMatches.filter(
-      (match, index) => isNew(match, index) || matchPathChanged(match, index)
+      (match, index) => isNew(match, index) || matchPathChanged(match, index),
     );
   }
 
@@ -212,7 +225,7 @@ export function getNewMatchesForLinks(
         let routeChoice = match.route.shouldRevalidate({
           currentUrl: new URL(
             location.pathname + location.search + location.hash,
-            window.origin
+            window.origin,
           ),
           currentParams: currentMatches[0]?.params || {},
           nextUrl: new URL(page, window.origin),
@@ -232,29 +245,8 @@ export function getNewMatchesForLinks(
 
 export function getModuleLinkHrefs(
   matches: AgnosticDataRouteMatch[],
-  manifestPatch: AssetsManifest
-): string[] {
-  return dedupeHrefs(
-    matches
-      .map((match) => {
-        let route = manifestPatch.routes[match.route.id];
-        if (!route) return [];
-        let hrefs = [route.module];
-        if (route.imports) {
-          hrefs = hrefs.concat(route.imports);
-        }
-        return hrefs;
-      })
-      .flat(1)
-  );
-}
-
-// The `<Script>` will render rel=modulepreload for the current page, we don't
-// need to include them in a page prefetch, this gives us the list to remove
-// while deduping.
-function getCurrentPageModulePreloadHrefs(
-  matches: AgnosticDataRouteMatch[],
-  manifest: AssetsManifest
+  manifest: AssetsManifest,
+  { includeHydrateFallback }: { includeHydrateFallback?: boolean } = {},
 ): string[] {
   return dedupeHrefs(
     matches
@@ -262,12 +254,21 @@ function getCurrentPageModulePreloadHrefs(
         let route = manifest.routes[match.route.id];
         if (!route) return [];
         let hrefs = [route.module];
+        if (route.clientActionModule) {
+          hrefs = hrefs.concat(route.clientActionModule);
+        }
+        if (route.clientLoaderModule) {
+          hrefs = hrefs.concat(route.clientLoaderModule);
+        }
+        if (includeHydrateFallback && route.hydrateFallbackModule) {
+          hrefs = hrefs.concat(route.hydrateFallbackModule);
+        }
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
         }
         return hrefs;
       })
-      .flat(1)
+      .flat(1),
   );
 }
 
@@ -293,7 +294,7 @@ type KeyedLinkDescriptor<Descriptor extends LinkDescriptor = LinkDescriptor> = {
 
 function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
   descriptors: Descriptor[],
-  preloads?: string[]
+  preloads?: string[],
 ): KeyedLinkDescriptor<Descriptor>[] {
   let set = new Set();
   let preloadsSet = new Set(preloads);
