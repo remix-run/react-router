@@ -1,8 +1,8 @@
 import * as Path from "pathe";
 import * as v from "valibot";
-import pick from "lodash/pick";
 
 import invariant from "../invariant";
+import { pick } from "../utils";
 
 declare global {
   var __reactRouterAppDirectory: string;
@@ -240,7 +240,10 @@ type CreateIndexOptions = Pick<
  * Helper function for creating a route config entry for an index route, for use
  * within `routes.ts`.
  */
-function index(file: string, options?: CreateIndexOptions): RouteConfigEntry {
+function index(
+  file: string,
+  options: CreateIndexOptions = {},
+): RouteConfigEntry {
   return {
     file,
     index: true,
