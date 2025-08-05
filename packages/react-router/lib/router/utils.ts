@@ -923,14 +923,23 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
    */
   params: AgnosticRouteMatch["params"];
   /**
-   * The return value from the matched route's loader or clientLoader
+   * The return value from the matched route's loader or clientLoader. This might
+   * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
+   * an error and we're currently displaying an `ErrorBoundary`.
    *
    * @deprecated Use `UIMatch.loaderData` instead
    */
-  data: Data;
-  /** The return value from the matched route's loader or clientLoader */
-  loaderData: Data;
-  /** The {@link https://reactrouter.com/start/framework/route-module#handle handle object} exported from the matched route module */
+  data: Data | undefined;
+  /**
+   * The return value from the matched route's loader or clientLoader. This might
+   * be `undefined` if this route's `loader` (or a deeper route's `loader`) threw
+   * an error and we're currently displaying an `ErrorBoundary`.
+   */
+  loaderData: Data | undefined;
+  /**
+   * The {@link https://reactrouter.com/start/framework/route-module#handle handle object}
+   * exported from the matched route module
+   */
   handle: Handle;
 }
 
