@@ -169,14 +169,30 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     if (!_build.ssr) {
       // Decode the URL path before checking against the prerender config
       let decodedPath = decodeURI(normalizedPath);
-      let decodedPathWithoutBasename = stripBasename(
-        normalizedPath,
-        normalizedBasename,
-      );
 
-      // handle root path
-      if (decodedPathWithoutBasename === "/") {
-        decodedPathWithoutBasename = "";
+      if (normalizedBasename !== "/") {
+        let strippedPath = stripBasename(decodedPath, normalizedBasename);
+        if (strippedPath == null) {
+          // 404 on non-pre-rendered `.data` requests
+          errorHandler(
+            new ErrorResponseImpl(
+              404,
+              "Not Found",
+              `Refusing to prerender the \`${decodedPath}\` path because it does ` +
+                `not start with the basename \`${normalizedBasename}\``,
+            ),
+            {
+              context: loadContext,
+              params,
+              request,
+            },
+          );
+          return new Response("Not Found", {
+            status: 404,
+            statusText: "Not Found",
+          });
+        }
+        decodedPath = strippedPath;
       }
 
       // When SSR is disabled this, file can only ever run during dev because we
@@ -185,9 +201,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         // ssr:false and no prerender config indicates "SPA Mode"
         isSpaMode = true;
       } else if (
-        decodedPathWithoutBasename !== null &&
-        !_build.prerender.includes(decodedPathWithoutBasename) &&
-        !_build.prerender.includes(decodedPathWithoutBasename + "/")
+        !_build.prerender.includes(decodedPath) &&
+        !_build.prerender.includes(decodedPath + "/")
       ) {
         if (url.pathname.endsWith(".data")) {
           // 404 on non-pre-rendered `.data` requests
