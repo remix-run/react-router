@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-fixed optional static segment matching
+Fix optional static segment matching in `matchPath`
