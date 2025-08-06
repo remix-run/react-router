@@ -22,7 +22,7 @@ jobs:
       published_packages: ${{ steps.changesets.outputs.publishedPackages }}
       published: ${{ steps.changesets.outputs.published }}
     permissions:
-      id-token: write # to enable use of OIDC for npm provenance
+      id-token: write # enable generation of an ID token for publishing
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
