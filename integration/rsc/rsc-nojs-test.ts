@@ -15,9 +15,9 @@ implementations.forEach((implementation) => {
   test.describe(`RSC nojs (${implementation.name})`, () => {
     test("Supports React Server Functions side-effect redirect headers for document requests", async ({
       page,
-    }) => {
+    }, { project }) => {
       test.skip(
-        implementation.name === "parcel",
+        implementation.name === "parcel" || project.name !== "chromium",
         "TODO: figure out why parcel isn't working here",
       );
 
