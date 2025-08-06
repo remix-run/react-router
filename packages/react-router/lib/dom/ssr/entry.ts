@@ -1,22 +1,25 @@
-import type { StaticHandlerContext } from "../../router";
+import type { StaticHandlerContext } from "../../router/router";
 
-import type { RouteManifest, EntryRoute } from "./routes";
+import type { EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
-
-// Object passed to RemixContext.Provider
+import type { RouteManifest } from "../../router/utils";
+import type { ServerBuild } from "../../server-runtime/build";
 
 type SerializedError = {
   message: string;
   stack?: string;
 };
+
+// Object passed to RemixContext.Provider
 export interface FrameworkContextObject {
   manifest: AssetsManifest;
   routeModules: RouteModules;
-  criticalCss?: string;
+  criticalCss?: CriticalCss;
   serverHandoffString?: string;
   future: FutureConfig;
+  ssr: boolean;
   isSpaMode: boolean;
-  abortDelay?: number;
+  routeDiscovery: ServerBuild["routeDiscovery"];
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
@@ -41,10 +44,11 @@ export interface EntryContext extends FrameworkContextObject {
 }
 
 export interface FutureConfig {
-  v3_fetcherPersist: boolean;
-  v3_relativeSplatPath: boolean;
-  v3_throwAbortReason: boolean;
+  unstable_subResourceIntegrity: boolean;
+  unstable_middleware: boolean;
 }
+
+export type CriticalCss = string | { rel: "stylesheet"; href: string };
 
 export interface AssetsManifest {
   entry: {
@@ -58,4 +62,5 @@ export interface AssetsManifest {
     timestamp?: number;
     runtime: string;
   };
+  sri?: Record<string, string> | true;
 }

@@ -11,37 +11,37 @@ describe("generatePath", () => {
   describe("with params", () => {
     it("returns the path without those params interpolated", () => {
       expect(generatePath("/courses/:id", { id: "routing" })).toBe(
-        "/courses/routing"
+        "/courses/routing",
       );
       expect(
         generatePath("/courses/:id/student/:studentId", {
           id: "routing",
           studentId: "matt",
-        })
+        }),
       ).toBe("/courses/routing/student/matt");
       expect(generatePath("/courses/*", { "*": "routing/grades" })).toBe(
-        "/courses/routing/grades"
+        "/courses/routing/grades",
       );
       expect(generatePath("*", { "*": "routing/grades" })).toBe(
-        "routing/grades"
+        "routing/grades",
       );
       expect(generatePath("/*", {})).toBe("/");
     });
     it("handles * in parameter values", () => {
       expect(generatePath("/courses/:name", { name: "foo*" })).toBe(
-        "/courses/foo*"
+        "/courses/foo*",
       );
       expect(generatePath("/courses/:name", { name: "*foo" })).toBe(
-        "/courses/*foo"
+        "/courses/*foo",
       );
       expect(generatePath("/courses/:name", { name: "*f*oo*" })).toBe(
-        "/courses/*f*oo*"
+        "/courses/*f*oo*",
       );
       expect(
         generatePath("/courses/:name", {
           name: "foo*",
           "*": "splat_should_not_be_added",
-        })
+        }),
       ).toBe("/courses/foo*");
     });
     it("handles a 0 parameter", () => {
@@ -55,7 +55,7 @@ describe("generatePath", () => {
 
     it("handles dashes in dynamic params", () => {
       expect(generatePath("/courses/:foo-bar", { "foo-bar": "baz" })).toBe(
-        "/courses/baz"
+        "/courses/baz",
       );
     });
   });
@@ -91,21 +91,21 @@ describe("generatePath", () => {
           one: "uno",
           two: "dos",
           three: "tres",
-        })
+        }),
       ).toBe("/uno/dos/tres");
       expect(generatePath(path, { one: "uno", three: "tres" })).toBe(
-        "/uno/tres"
+        "/uno/tres",
       );
       expect(generatePath(path, { two: "dos" })).toBe("/dos");
       expect(generatePath(path, { two: "dos", three: "tres" })).toBe(
-        "/dos/tres"
+        "/dos/tres",
       );
     });
 
     it("strips optional aspects of static segments", () => {
       expect(generatePath("/one?/two?/:three?", {})).toBe("/one/two");
       expect(generatePath("/one?/two?/:three?", { three: "tres" })).toBe(
-        "/one/two/tres"
+        "/one/two/tres",
       );
     });
 
@@ -116,21 +116,21 @@ describe("generatePath", () => {
         generatePath(path, {
           two: "dos",
           four: "cuatro",
-        })
+        }),
       ).toBe("/one/dos/three/cuatro");
       expect(
         generatePath(path, {
           two: "dos",
           four: "cuatro",
           "*": "splat",
-        })
+        }),
       ).toBe("/one/dos/three/cuatro/splat");
       expect(
         generatePath(path, {
           two: "dos",
           four: "cuatro",
           "*": "splat/and/then/some",
-        })
+        }),
       ).toBe("/one/dos/three/cuatro/splat/and/then/some");
     });
   });

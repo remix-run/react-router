@@ -1,170 +1,103 @@
-import { test, expect } from "@playwright/test";
-import type { Readable } from "node:stream";
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
-import getPort from "get-port";
-import waitOn from "wait-on";
+import { expect } from "@playwright/test";
+import type { Files } from "./helpers/vite.js";
+import { test, viteConfig } from "./helpers/vite.js";
 
-import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { killtree } from "./helpers/killtree.js";
+const js = String.raw;
 
-test.describe("Vite custom entry dev", () => {
-  let projectDir: string;
-  let devProc: ChildProcessWithoutNullStreams;
-  let devPort: number;
+const files: Files = async ({ port }) => ({
+  "vite.config.ts": await viteConfig.basic({ port }),
+  "app/entry.server.tsx": js`
+    import { PassThrough } from "node:stream";
 
-  test.beforeAll(async () => {
-    devPort = await getPort();
-    projectDir = await createFixtureProject({
-      files: {
-        "vite.config.ts": js`
-          import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+    import type { EntryContext } from "react-router";
+    import { createReadableStreamFromReadable } from "@react-router/node";
+    import { ServerRouter } from "react-router";
+    import { renderToPipeableStream } from "react-dom/server";
 
-          export default defineConfig({
-            server: {
-              port: ${devPort},
-              strictPort: true,
-            },
-            plugins: [
-              reactRouter(),
-            ],
-          });
-        `,
-        "app/entry.server.tsx": js`
-          import { PassThrough } from "node:stream";
+    export default function handleRequest(
+      request: Request,
+      responseStatusCode: number,
+      responseHeaders: Headers,
+      remixContext: EntryContext
+    ) {
+      return new Promise((resolve, reject) => {
+        let shellRendered = false;
+        const { pipe, abort } = renderToPipeableStream(
+          <ServerRouter context={remixContext} url={request.url} />,
+          {
+            onShellReady() {
+              shellRendered = true;
+              const body = new PassThrough();
+              const stream = createReadableStreamFromReadable(body);
 
-          import type { EntryContext } from "react-router";
-          import { createReadableStreamFromReadable } from "@react-router/node";
-          import { ServerRouter } from "react-router";
-          import { renderToPipeableStream } from "react-dom/server";
+              responseHeaders.set("Content-Type", "text/html");
 
-          const ABORT_DELAY = 5_000;
+              // Used to test that the request object is an instance of the global Request constructor
+              responseHeaders.set("x-test-request-instanceof-request", String(request instanceof Request));
 
-          export default function handleRequest(
-            request: Request,
-            responseStatusCode: number,
-            responseHeaders: Headers,
-            remixContext: EntryContext
-          ) {
-            return new Promise((resolve, reject) => {
-              let shellRendered = false;
-              const { pipe, abort } = renderToPipeableStream(
-                <ServerRouter
-                  context={remixContext}
-                  url={request.url}
-                  abortDelay={ABORT_DELAY}
-                />,
-                {
-                  onShellReady() {
-                    shellRendered = true;
-                    const body = new PassThrough();
-                    const stream = createReadableStreamFromReadable(body);
-
-                    responseHeaders.set("Content-Type", "text/html");
-
-                    // Used to test that the request object is an instance of the global Request constructor
-                    responseHeaders.set("x-test-request-instanceof-request", String(request instanceof Request));
-
-                    resolve(
-                      new Response(stream, {
-                        headers: responseHeaders,
-                        status: responseStatusCode,
-                      })
-                    );
-
-                    pipe(body);
-                  },
-                  onShellError(error: unknown) {
-                    reject(error);
-                  },
-                  onError(error: unknown) {
-                    responseStatusCode = 500;
-                    // Log streaming rendering errors from inside the shell.  Don't log
-                    // errors encountered during initial shell rendering since they'll
-                    // reject and get logged in handleDocumentRequest.
-                    if (shellRendered) {
-                      console.error(error);
-                    }
-                  },
-                }
+              resolve(
+                new Response(stream, {
+                  headers: responseHeaders,
+                  status: responseStatusCode,
+                })
               );
 
-              setTimeout(abort, ABORT_DELAY);
-            });
+              pipe(body);
+            },
+            onShellError(error: unknown) {
+              reject(error);
+            },
+            onError(error: unknown) {
+              responseStatusCode = 500;
+              // Log streaming rendering errors from inside the shell.  Don't log
+              // errors encountered during initial shell rendering since they'll
+              // reject and get logged in handleDocumentRequest.
+              if (shellRendered) {
+                console.error(error);
+              }
+            },
           }
-        `,
-        "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router";
+        );
 
-          export default function Root() {
-            return (
-              <html lang="en">
-                <head>
-                  <Meta />
-                  <Links />
-                </head>
-                <body>
-                  <div id="content">
-                    <h1>Root</h1>
-                    <Outlet />
-                  </div>
-                  <Scripts />
-                </body>
-              </html>
-            );
-          }
-        `,
-        "app/routes/_index.tsx": js`
-          export default function IndexRoute() {
-            return <div>IndexRoute</div>
-          }
-        `,
-      },
-    });
+        setTimeout(abort, 5000);
+      });
+    }
+  `,
+  "app/root.tsx": js`
+    import { Links, Meta, Outlet, Scripts } from "react-router";
 
-    let nodeBin = process.argv[0];
-    let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
-    devProc = spawn(nodeBin, [reactRouterBin, "dev"], {
-      cwd: projectDir,
-      env: process.env,
-      stdio: "pipe",
-    });
-    let devStdout = bufferize(devProc.stdout);
-    let devStderr = bufferize(devProc.stderr);
-
-    await waitOn({
-      resources: [`http://localhost:${devPort}/`],
-      timeout: 10000,
-    }).catch((err) => {
-      let stdout = devStdout();
-      let stderr = devStderr();
-      throw new Error(
-        [
-          err.message,
-          "",
-          "exit code: " + devProc.exitCode,
-          "stdout: " + stdout ? `\n${stdout}\n` : "<empty>",
-          "stderr: " + stderr ? `\n${stderr}\n` : "<empty>",
-        ].join("\n")
+    export default function Root() {
+      return (
+        <html lang="en">
+          <head>
+            <Meta />
+            <Links />
+          </head>
+          <body>
+            <div id="content">
+              <h1>Root</h1>
+              <Outlet />
+            </div>
+            <Scripts />
+          </body>
+        </html>
       );
-    });
-  });
+    }
+  `,
+  "app/routes/_index.tsx": js`
+    export default function IndexRoute() {
+      return <div>IndexRoute</div>
+    }
+  `,
+});
 
-  test.afterAll(async () => {
-    devProc.pid && (await killtree(devProc.pid));
-  });
-
+test.describe("Vite custom entry dev", () => {
   // Ensure libraries/consumers can perform an instanceof check on the request
-  test("request instanceof Request", async ({ request }) => {
-    let res = await request.get(`http://localhost:${devPort}/`);
+  test("request instanceof Request", async ({ request, dev }) => {
+    let { port } = await dev(files);
+    let res = await request.get(`http://localhost:${port}/`);
     expect(res.headers()).toMatchObject({
       "x-test-request-instanceof-request": "true",
     });
   });
 });
-
-let bufferize = (stream: Readable): (() => string) => {
-  let buffer = "";
-  stream.on("data", (data) => (buffer += data.toString()));
-  return () => buffer;
-};

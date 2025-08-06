@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
@@ -51,7 +51,9 @@ jobs:
         # publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
-        uses: changesets/action@v1
+        # PLEASE KEEP THIS PINNED TO 1.4.10 to avoid a regression in 1.5.*
+        # See https://github.com/changesets/action/issues/465
+        uses: changesets/action@v1.4.10
         with:
           version: pnpm run changeset:version
           commit: "chore: Update version for release"
@@ -66,7 +68,7 @@ jobs:
     name: 🦋 Find Package
     needs: [release]
     runs-on: ubuntu-latest
-    if: github.repository == 'remix-run/react-router' && needs.release.outputs.published == 'true'
+    if: github.repository == 'remix-run/react-router' && github.ref_name != 'release-v6' && needs.release.outputs.published == 'true'
     outputs:
       package_version: ${{ steps.find_package_version.outputs.package_version }}
     steps:
@@ -74,7 +76,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
@@ -92,6 +94,6 @@ jobs:
 
   comment:
     name: 📝 Comment on related issues and pull requests
-    if: github.repository == 'remix-run/react-router' && needs.find_package_version.outputs.package_version != ''
+    if: github.repository == 'remix-run/react-router' && github.ref_name != 'release-v6' && needs.find_package_version.outputs.package_version != ''
     needs: [release, find_package_version]
     uses: ./.github/workflows/release-comments.yml

@@ -1,205 +1,15 @@
-import type { AgnosticDataRouteMatch, Location } from "../../router";
-import { parsePath } from "../../router";
+import type { Location } from "../../router/history";
+import type { AgnosticDataRouteMatch } from "../../router/utils";
 
 import type { AssetsManifest } from "./entry";
 import type { RouteModules, RouteModule } from "./routeModules";
 import type { EntryRoute } from "./routes";
 import { loadRouteModule } from "./routeModules";
-
-type Primitive = null | undefined | string | number | boolean | symbol | bigint;
-
-type LiteralUnion<LiteralType, BaseType extends Primitive> =
-  | LiteralType
-  | (BaseType & Record<never, never>);
-
-interface HtmlLinkProps {
-  /**
-   * Address of the hyperlink
-   */
-  href?: string;
-
-  /**
-   * How the element handles crossorigin requests
-   */
-  crossOrigin?: "anonymous" | "use-credentials";
-
-  /**
-   * Relationship between the document containing the hyperlink and the destination resource
-   */
-  rel: LiteralUnion<
-    | "alternate"
-    | "dns-prefetch"
-    | "icon"
-    | "manifest"
-    | "modulepreload"
-    | "next"
-    | "pingback"
-    | "preconnect"
-    | "prefetch"
-    | "preload"
-    | "prerender"
-    | "search"
-    | "stylesheet",
-    string
-  >;
-
-  /**
-   * Applicable media: "screen", "print", "(max-width: 764px)"
-   */
-  media?: string;
-
-  /**
-   * Integrity metadata used in Subresource Integrity checks
-   */
-  integrity?: string;
-
-  /**
-   * Language of the linked resource
-   */
-  hrefLang?: string;
-
-  /**
-   * Hint for the type of the referenced resource
-   */
-  type?: string;
-
-  /**
-   * Referrer policy for fetches initiated by the element
-   */
-  referrerPolicy?:
-    | ""
-    | "no-referrer"
-    | "no-referrer-when-downgrade"
-    | "same-origin"
-    | "origin"
-    | "strict-origin"
-    | "origin-when-cross-origin"
-    | "strict-origin-when-cross-origin"
-    | "unsafe-url";
-
-  /**
-   * Sizes of the icons (for rel="icon")
-   */
-  sizes?: string;
-
-  /**
-   * Potential destination for a preload request (for rel="preload" and rel="modulepreload")
-   */
-  as?: LiteralUnion<
-    | "audio"
-    | "audioworklet"
-    | "document"
-    | "embed"
-    | "fetch"
-    | "font"
-    | "frame"
-    | "iframe"
-    | "image"
-    | "manifest"
-    | "object"
-    | "paintworklet"
-    | "report"
-    | "script"
-    | "serviceworker"
-    | "sharedworker"
-    | "style"
-    | "track"
-    | "video"
-    | "worker"
-    | "xslt",
-    string
-  >;
-
-  /**
-   * Color to use when customizing a site's icon (for rel="mask-icon")
-   */
-  color?: string;
-
-  /**
-   * Whether the link is disabled
-   */
-  disabled?: boolean;
-
-  /**
-   * The title attribute has special semantics on this element: Title of the link; CSS style sheet set name.
-   */
-  title?: string;
-
-  /**
-   * Images to use in different situations, e.g., high-resolution displays,
-   * small monitors, etc. (for rel="preload")
-   */
-  imageSrcSet?: string;
-
-  /**
-   * Image sizes for different page layouts (for rel="preload")
-   */
-  imageSizes?: string;
-}
-
-interface HtmlLinkPreloadImage extends HtmlLinkProps {
-  /**
-   * Relationship between the document containing the hyperlink and the destination resource
-   */
-  rel: "preload";
-
-  /**
-   * Potential destination for a preload request (for rel="preload" and rel="modulepreload")
-   */
-  as: "image";
-
-  /**
-   * Address of the hyperlink
-   */
-  href?: string;
-
-  /**
-   * Images to use in different situations, e.g., high-resolution displays,
-   * small monitors, etc. (for rel="preload")
-   */
-  imageSrcSet: string;
-
-  /**
-   * Image sizes for different page layouts (for rel="preload")
-   */
-  imageSizes?: string;
-}
-
-/**
- * Represents a `<link>` element.
- *
- * WHATWG Specification: https://html.spec.whatwg.org/multipage/semantics.html#the-link-element
- */
-export type HtmlLinkDescriptor =
-  // Must have an href *unless* it's a `<link rel="preload" as="image">` with an
-  // `imageSrcSet` and `imageSizes` props
-  | (HtmlLinkProps & Pick<Required<HtmlLinkProps>, "href">)
-  | (HtmlLinkPreloadImage & Pick<Required<HtmlLinkPreloadImage>, "imageSizes">)
-  | (HtmlLinkPreloadImage &
-      Pick<Required<HtmlLinkPreloadImage>, "href"> & { imageSizes?: never });
-
-export interface PrefetchPageDescriptor
-  extends Omit<
-    HtmlLinkDescriptor,
-    | "href"
-    | "rel"
-    | "type"
-    | "sizes"
-    | "imageSrcSet"
-    | "imageSizes"
-    | "as"
-    | "color"
-    | "title"
-  > {
-  /**
-   * The absolute path of the page to prefetch.
-   */
-  page: string;
-}
-
-export type LinkDescriptor = HtmlLinkDescriptor | PrefetchPageDescriptor;
-
-////////////////////////////////////////////////////////////////////////////////
+import type {
+  HtmlLinkDescriptor,
+  LinkDescriptor,
+  PageLinkDescriptor,
+} from "../../router/links";
 
 /**
  * Gets all the links for a set of matches. The modules are assumed to have been
@@ -208,32 +18,45 @@ export type LinkDescriptor = HtmlLinkDescriptor | PrefetchPageDescriptor;
 export function getKeyedLinksForMatches(
   matches: AgnosticDataRouteMatch[],
   routeModules: RouteModules,
-  manifest: AssetsManifest
+  manifest: AssetsManifest,
 ): KeyedLinkDescriptor[] {
   let descriptors = matches
     .map((match): LinkDescriptor[][] => {
       let module = routeModules[match.route.id];
       let route = manifest.routes[match.route.id];
       return [
-        route.css ? route.css.map((href) => ({ rel: "stylesheet", href })) : [],
+        route && route.css
+          ? route.css.map((href) => ({ rel: "stylesheet", href }))
+          : [],
         module?.links?.() || [],
       ];
     })
     .flat(2);
 
-  let preloads = getCurrentPageModulePreloadHrefs(matches, manifest);
+  let preloads = getModuleLinkHrefs(matches, manifest);
   return dedupeLinkDescriptors(descriptors, preloads);
+}
+
+function getRouteCssDescriptors(route: EntryRoute): HtmlLinkDescriptor[] {
+  if (!route.css) return [];
+  return route.css.map((href) => ({ rel: "stylesheet", href }));
+}
+
+export async function prefetchRouteCss(route: EntryRoute): Promise<void> {
+  if (!route.css) return;
+  let descriptors = getRouteCssDescriptors(route);
+  await Promise.all(descriptors.map(prefetchStyleLink));
 }
 
 export async function prefetchStyleLinks(
   route: EntryRoute,
-  routeModule: RouteModule
+  routeModule: RouteModule,
 ): Promise<void> {
   if ((!route.css && !routeModule.links) || !isPreloadSupported()) return;
 
-  let descriptors = [];
+  let descriptors: LinkDescriptor[] = [];
   if (route.css) {
-    descriptors.push(...route.css.map((href) => ({ rel: "stylesheet", href })));
+    descriptors.push(...getRouteCssDescriptors(route));
   }
   if (routeModule.links) {
     descriptors.push(...routeModule.links());
@@ -251,21 +74,24 @@ export async function prefetchStyleLinks(
     }
   }
 
-  // don't block for non-matching media queries, or for stylesheets that are
-  // already in the DOM (active route revalidations)
-  let matchingLinks = styleLinks.filter(
-    (link) =>
-      (!link.media || window.matchMedia(link.media).matches) &&
-      !document.querySelector(`link[rel="stylesheet"][href="${link.href}"]`)
-  );
-
-  await Promise.all(matchingLinks.map(prefetchStyleLink));
+  await Promise.all(styleLinks.map(prefetchStyleLink));
 }
 
 async function prefetchStyleLink(
-  descriptor: HtmlLinkDescriptor
+  descriptor: HtmlLinkDescriptor,
 ): Promise<void> {
   return new Promise((resolve) => {
+    // don't prefetch non-matching media queries, or stylesheets that are
+    // already in the DOM (active route revalidations)
+    if (
+      (descriptor.media && !window.matchMedia(descriptor.media).matches) ||
+      document.querySelector(
+        `link[rel="stylesheet"][href="${descriptor.href}"]`,
+      )
+    ) {
+      return resolve();
+    }
+
     let link = document.createElement("link");
     Object.assign(link, descriptor);
 
@@ -294,8 +120,8 @@ async function prefetchStyleLink(
 
 ////////////////////////////////////////////////////////////////////////////////
 export function isPageLinkDescriptor(
-  object: any
-): object is PrefetchPageDescriptor {
+  object: any,
+): object is PageLinkDescriptor {
   return object != null && typeof object.page === "string";
 }
 
@@ -323,16 +149,17 @@ export type KeyedHtmlLinkDescriptor = { key: string; link: HtmlLinkDescriptor };
 export async function getKeyedPrefetchLinks(
   matches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
-  routeModules: RouteModules
+  routeModules: RouteModules,
 ): Promise<KeyedHtmlLinkDescriptor[]> {
   let links = await Promise.all(
     matches.map(async (match) => {
-      let mod = await loadRouteModule(
-        manifest.routes[match.route.id],
-        routeModules
-      );
-      return mod.links ? mod.links() : [];
-    })
+      let route = manifest.routes[match.route.id];
+      if (route) {
+        let mod = await loadRouteModule(route, routeModules);
+        return mod.links ? mod.links() : [];
+      }
+      return [];
+    }),
   );
 
   return dedupeLinkDescriptors(
@@ -343,8 +170,8 @@ export async function getKeyedPrefetchLinks(
       .map((link) =>
         link.rel === "stylesheet"
           ? ({ ...link, rel: "prefetch", as: "style" } as HtmlLinkDescriptor)
-          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor)
-      )
+          : ({ ...link, rel: "prefetch" } as HtmlLinkDescriptor),
+      ),
   );
 }
 
@@ -355,10 +182,8 @@ export function getNewMatchesForLinks(
   currentMatches: AgnosticDataRouteMatch[],
   manifest: AssetsManifest,
   location: Location,
-  mode: "data" | "assets"
+  mode: "data" | "assets",
 ): AgnosticDataRouteMatch[] {
-  let path = parsePathPatch(page);
-
   let isNew = (match: AgnosticDataRouteMatch, index: number) => {
     if (!currentMatches[index]) return true;
     return match.route.id !== currentMatches[index].route.id;
@@ -375,88 +200,75 @@ export function getNewMatchesForLinks(
     );
   };
 
-  // NOTE: keep this mostly up-to-date w/ the transition data diff, but this
+  if (mode === "assets") {
+    return nextMatches.filter(
+      (match, index) => isNew(match, index) || matchPathChanged(match, index),
+    );
+  }
+
+  // NOTE: keep this mostly up-to-date w/ the router data diff, but this
   // version doesn't care about submissions
-  let newMatches =
-    mode === "data" && location.search !== path.search
-      ? // this is really similar to stuff in transition.ts, maybe somebody smarter
-        // than me (or in less of a hurry) can share some of it. You're the best.
-        nextMatches.filter((match, index) => {
-          let manifestRoute = manifest.routes[match.route.id];
-          if (!manifestRoute.hasLoader) {
-            return false;
-          }
+  // TODO: this is really similar to stuff in router.ts, maybe somebody smarter
+  // than me (or in less of a hurry) can share some of it. You're the best.
+  if (mode === "data") {
+    return nextMatches.filter((match, index) => {
+      let manifestRoute = manifest.routes[match.route.id];
+      if (!manifestRoute || !manifestRoute.hasLoader) {
+        return false;
+      }
 
-          if (isNew(match, index) || matchPathChanged(match, index)) {
-            return true;
-          }
+      if (isNew(match, index) || matchPathChanged(match, index)) {
+        return true;
+      }
 
-          if (match.route.shouldRevalidate) {
-            let routeChoice = match.route.shouldRevalidate({
-              currentUrl: new URL(
-                location.pathname + location.search + location.hash,
-                window.origin
-              ),
-              currentParams: currentMatches[0]?.params || {},
-              nextUrl: new URL(page, window.origin),
-              nextParams: match.params,
-              defaultShouldRevalidate: true,
-            });
-            if (typeof routeChoice === "boolean") {
-              return routeChoice;
-            }
-          }
-          return true;
-        })
-      : nextMatches.filter((match, index) => {
-          let manifestRoute = manifest.routes[match.route.id];
-          return (
-            (mode === "assets" || manifestRoute.hasLoader) &&
-            (isNew(match, index) || matchPathChanged(match, index))
-          );
+      if (match.route.shouldRevalidate) {
+        let routeChoice = match.route.shouldRevalidate({
+          currentUrl: new URL(
+            location.pathname + location.search + location.hash,
+            window.origin,
+          ),
+          currentParams: currentMatches[0]?.params || {},
+          nextUrl: new URL(page, window.origin),
+          nextParams: match.params,
+          defaultShouldRevalidate: true,
         });
+        if (typeof routeChoice === "boolean") {
+          return routeChoice;
+        }
+      }
+      return true;
+    });
+  }
 
-  return newMatches;
+  return [];
 }
 
 export function getModuleLinkHrefs(
   matches: AgnosticDataRouteMatch[],
-  manifestPatch: AssetsManifest
-): string[] {
-  return dedupeHrefs(
-    matches
-      .map((match) => {
-        let route = manifestPatch.routes[match.route.id];
-        let hrefs = [route.module];
-        if (route.imports) {
-          hrefs = hrefs.concat(route.imports);
-        }
-        return hrefs;
-      })
-      .flat(1)
-  );
-}
-
-// The `<Script>` will render rel=modulepreload for the current page, we don't
-// need to include them in a page prefetch, this gives us the list to remove
-// while deduping.
-function getCurrentPageModulePreloadHrefs(
-  matches: AgnosticDataRouteMatch[],
-  manifest: AssetsManifest
+  manifest: AssetsManifest,
+  { includeHydrateFallback }: { includeHydrateFallback?: boolean } = {},
 ): string[] {
   return dedupeHrefs(
     matches
       .map((match) => {
         let route = manifest.routes[match.route.id];
+        if (!route) return [];
         let hrefs = [route.module];
-
+        if (route.clientActionModule) {
+          hrefs = hrefs.concat(route.clientActionModule);
+        }
+        if (route.clientLoaderModule) {
+          hrefs = hrefs.concat(route.clientLoaderModule);
+        }
+        if (includeHydrateFallback && route.hydrateFallbackModule) {
+          hrefs = hrefs.concat(route.hydrateFallbackModule);
+        }
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
         }
-
         return hrefs;
       })
-      .flat(1)
+      .flat(1),
   );
 }
 
@@ -482,7 +294,7 @@ type KeyedLinkDescriptor<Descriptor extends LinkDescriptor = LinkDescriptor> = {
 
 function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
   descriptors: Descriptor[],
-  preloads?: string[]
+  preloads?: string[],
 ): KeyedLinkDescriptor<Descriptor>[] {
   let set = new Set();
   let preloadsSet = new Set(preloads);
@@ -507,13 +319,6 @@ function dedupeLinkDescriptors<Descriptor extends LinkDescriptor>(
 
     return deduped;
   }, [] as KeyedLinkDescriptor<Descriptor>[]);
-}
-
-// https://github.com/remix-run/history/issues/897
-function parsePathPatch(href: string) {
-  let path = parsePath(href);
-  if (path.search === undefined) path.search = "";
-  return path;
 }
 
 // Detect if this browser supports <link rel="preload"> (or has it enabled).

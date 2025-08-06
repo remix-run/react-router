@@ -1,28 +1,20 @@
-import type { HydrationState, Router as RemixRouter } from "../router";
-
-import type { ViewTransition } from "./lib";
-import type {
-  AssetsManifest,
-  FutureConfig as RemixFutureConfig,
-} from "./ssr/entry";
+import type { HydrationState, Router as DataRouter } from "../router/router";
+import type { ServerHandoff } from "../server-runtime/serverHandoff";
+import type { AssetsManifest } from "./ssr/entry";
 import type { RouteModules } from "./ssr/routeModules";
 
-export type WindowRemixContext = {
-  url: string;
-  basename?: string;
-  state: HydrationState;
-  criticalCss?: string;
-  future: RemixFutureConfig;
-  isSpaMode: boolean;
+export type WindowReactRouterContext = ServerHandoff & {
+  state: HydrationState; // Deserialized via the stream
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;
-  // The number of active deferred keys rendered on the server
-  a?: number;
-  dev?: {
-    port?: number;
-    hmrRuntime?: string;
-  };
 };
+
+export interface ViewTransition {
+  finished: Promise<void>;
+  ready: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition(): void;
+}
 
 declare global {
   // TODO: v7 - Can this go away in favor of "just use remix"?
@@ -32,13 +24,11 @@ declare global {
   interface Document {
     startViewTransition(cb: () => Promise<void> | void): ViewTransition;
   }
-  // TODO: v7 - Once this is all working, rename these global variables to __reactRouter*
-  var __remixContext: WindowRemixContext | undefined;
-  var __remixManifest: AssetsManifest | undefined;
-  var __remixRouteModules: RouteModules | undefined;
-  var __remixRouter: RemixRouter | undefined;
-  var __remixRevalidation: number | undefined;
-  var __remixClearCriticalCss: (() => void) | undefined;
+  var __reactRouterContext: WindowReactRouterContext | undefined;
+  var __reactRouterManifest: AssetsManifest | undefined;
+  var __reactRouterRouteModules: RouteModules | undefined;
+  var __reactRouterDataRouter: DataRouter | undefined;
+  var __reactRouterHdrActive: boolean;
   var $RefreshRuntime$:
     | {
         performReactRefresh: () => void;

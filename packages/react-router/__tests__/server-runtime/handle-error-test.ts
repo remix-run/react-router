@@ -1,32 +1,28 @@
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "react-router";
-
-import type { ServerBuild } from "../../lib/server-runtime/build";
 import { createRequestHandler } from "../../lib/server-runtime/server";
-import { json } from "../../lib/server-runtime/responses";
+import { ErrorResponseImpl } from "../../lib/router/utils";
+import { mockServerBuild } from "./utils";
+import type { HandleDocumentRequestFunction } from "../../lib/server-runtime/build";
 
-function getHandler(routeModule = {}, entryServerModule = {}) {
-  let routeId = "root";
+function getHandler(
+  routeModule = {},
+  opts: {
+    handleDocumentRequest?: HandleDocumentRequestFunction;
+  } = {},
+) {
   let handleErrorSpy = jest.fn();
-  let build = {
-    routes: {
-      [routeId]: {
-        id: routeId,
+  let build = mockServerBuild(
+    {
+      root: {
         path: "/",
-        module: {
-          default() {},
-          ...routeModule,
-        },
-      },
-    },
-    entry: {
-      module: {
-        handleError: handleErrorSpy,
         default() {},
-        ...entryServerModule,
+        ...routeModule,
       },
     },
-    future: {},
-  } as unknown as ServerBuild;
+    {
+      handleError: handleErrorSpy,
+      handleDocumentRequest: opts.handleDocumentRequest,
+    },
+  );
 
   return {
     handler: createRequestHandler(build),
@@ -61,21 +57,21 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.'
+            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
         {
           request,
           params: {},
           context: {},
-        }
+        },
       );
     });
 
     it("provides render-thrown Error", async () => {
       let { handler, handleErrorSpy } = getHandler(undefined, {
-        default() {
+        handleDocumentRequest() {
           throw new Error("Render error");
         },
       });
@@ -91,9 +87,9 @@ describe("handleError", () => {
     it("does not provide user-thrown Responses to handleError", async () => {
       let { handler, handleErrorSpy } = getHandler({
         loader() {
-          throw json(
+          throw Response.json(
             { message: "not found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
       });
@@ -111,7 +107,7 @@ describe("handleError", () => {
           throw error;
         },
       });
-      let request = new Request("http://example.com/?_data=root");
+      let request = new Request("http://example.com/_root.data");
       await handler(request);
       expect(handleErrorSpy).toHaveBeenCalledWith(error, {
         request,
@@ -122,7 +118,7 @@ describe("handleError", () => {
 
     it("provides router-thrown ErrorResponse", async () => {
       let { handler, handleErrorSpy } = getHandler({});
-      let request = new Request("http://example.com/?_data=root", {
+      let request = new Request("http://example.com/_root.data", {
         method: "post",
       });
       await handler(request);
@@ -131,30 +127,68 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.'
+            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
         {
           request,
           params: {},
           context: {},
-        }
+        },
       );
     });
 
     it("does not provide user-thrown Responses to handleError", async () => {
       let { handler, handleErrorSpy } = getHandler({
         loader() {
-          throw json(
+          throw Response.json(
             { message: "not found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
       });
-      let request = new Request("http://example.com/?_data=root");
+      let request = new Request("http://example.com/_root.data");
       await handler(request);
       expect(handleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it("provides proper params to handleError", async () => {
+      let error = new Error("💥");
+
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            path: "",
+            default() {
+              return null;
+            },
+          },
+          param: {
+            path: ":param",
+            parentId: "root",
+            default() {
+              return null;
+            },
+            loader() {
+              throw error;
+            },
+          },
+        },
+        {
+          handleError: handleErrorSpy,
+        },
+      );
+
+      let handler = createRequestHandler(build);
+      let request = new Request("http://example.com/a.data");
+      await handler(request);
+      expect(handleErrorSpy).toHaveBeenCalledWith(error, {
+        request,
+        params: { param: "a" },
+        context: {},
+      });
     });
   });
 
@@ -187,24 +221,24 @@ describe("handleError", () => {
           405,
           "Method Not Allowed",
           new Error(
-            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.'
+            'You made a POST request to "/" but did not provide an `action` for route "root", so there is no way to handle the request.',
           ),
-          true
+          true,
         ),
         {
           request,
           params: {},
           context: {},
-        }
+        },
       );
     });
 
     it("does not provide user-thrown Responses to handleError", async () => {
       let { handler, handleErrorSpy } = getHandler({
         loader() {
-          throw json(
+          throw Response.json(
             { message: "not found" },
-            { status: 404, statusText: "Not Found" }
+            { status: 404, statusText: "Not Found" },
           );
         },
         default: null,

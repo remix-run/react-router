@@ -4,11 +4,10 @@ import type {
   TouchEventHandler,
 } from "react";
 import * as React from "react";
-import {
-  matchRoutes,
-  type AgnosticDataRouteMatch,
-  type RouterState,
-} from "../../router";
+
+import type { RouterState } from "../../router/router";
+import type { AgnosticDataRouteMatch } from "../../router/utils";
+import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
@@ -19,7 +18,7 @@ import {
   getNewMatchesForLinks,
   isPageLinkDescriptor,
 } from "./links";
-import type { KeyedHtmlLinkDescriptor, PrefetchPageDescriptor } from "./links";
+import type { KeyedHtmlLinkDescriptor } from "./links";
 import { createHtml } from "./markup";
 import type {
   MetaFunction,
@@ -27,19 +26,22 @@ import type {
   MetaMatch,
   MetaMatches,
 } from "./routeModules";
-import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
-import { DataRouterContext, DataRouterStateContext } from "../../context";
-import { useLocation, useNavigation } from "../../hooks";
+import { singleFetchUrl } from "./single-fetch";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  useIsRSCRouterContext,
+} from "../../context";
+import { warnOnce } from "../../server-runtime/warnings";
+import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
-
-// TODO: Temporary shim until we figure out the way to handle typings in v7
-export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
+import type { PageLinkDescriptor } from "../../router/links";
 
 function useDataRouterContext() {
   let context = React.useContext(DataRouterContext);
   invariant(
     context,
-    "You must render this element inside a <DataRouterContext.Provider> element"
+    "You must render this element inside a <DataRouterContext.Provider> element",
   );
   return context;
 }
@@ -48,7 +50,7 @@ function useDataRouterStateContext() {
   let context = React.useContext(DataRouterStateContext);
   invariant(
     context,
-    "You must render this element inside a <DataRouterStateContext.Provider> element"
+    "You must render this element inside a <DataRouterStateContext.Provider> element",
   );
   return context;
 }
@@ -65,7 +67,7 @@ export function useFrameworkContext(): FrameworkContextObject {
   let context = React.useContext(FrameworkContext);
   invariant(
     context,
-    "You must render this element inside a <HydratedRouter> element"
+    "You must render this element inside a <HydratedRouter> element",
   );
   return context;
 }
@@ -101,7 +103,7 @@ interface PrefetchHandlers {
 
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
-  theirElementProps: PrefetchHandlers
+  theirElementProps: PrefetchHandlers,
 ): [boolean, React.RefObject<T>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
@@ -175,10 +177,10 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
 }
 
 export function composeEventHandlers<
-  EventType extends React.SyntheticEvent | Event
+  EventType extends React.SyntheticEvent | Event,
 >(
   theirHandler: ((event: EventType) => any) | undefined,
-  ourHandler: (event: EventType) => any
+  ourHandler: (event: EventType) => any,
 ): (event: EventType) => any {
   return (event) => {
     theirHandler && theirHandler(event);
@@ -196,7 +198,7 @@ export function composeEventHandlers<
 function getActiveMatches(
   matches: RouterState["matches"],
   errors: RouterState["errors"],
-  isSpaMode: boolean
+  isSpaMode: boolean,
 ) {
   if (isSpaMode && !isHydrated) {
     return [matches[0]];
@@ -210,27 +212,51 @@ function getActiveMatches(
   return matches;
 }
 
+export const CRITICAL_CSS_DATA_ATTRIBUTE = "data-react-router-critical-css";
+
 /**
-  Renders all of the `<link>` tags created by route module {@link LinksFunction} export. You should render it inside the `<head>` of your document.
-
-  ```tsx
-  import { Links } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <head>
-          <Links />
-        </head>
-        <body></body>
-      </html>
-    );
-  }
-  ```
-
-  @category Components
+ * Props for the {@link Links} component.
+ *
+ * @category Types
  */
-export function Links() {
+export interface LinksProps {
+  /**
+   * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+   * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * element
+   */
+  nonce?: string | undefined;
+}
+
+/**
+ * Renders all the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags created by the route module's [`links`](../../start/framework/route-module#links)
+ * export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
+ * of your document.
+ *
+ * @example
+ * import { Links } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head>
+ *         <Links />
+ *       </head>
+ *       <body></body>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @param props Props
+ * @param {LinksProps.nonce} props.nonce n/a
+ * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags
+ */
+export function Links({ nonce }: LinksProps): React.JSX.Element {
   let { isSpaMode, manifest, routeModules, criticalCss } =
     useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
@@ -239,56 +265,75 @@ export function Links() {
 
   let keyedLinks = React.useMemo(
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
-    [matches, routeModules, manifest]
+    [matches, routeModules, manifest],
   );
 
   return (
     <>
-      {criticalCss ? (
-        <style dangerouslySetInnerHTML={{ __html: criticalCss }} />
+      {typeof criticalCss === "string" ? (
+        <style
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          dangerouslySetInnerHTML={{ __html: criticalCss }}
+        />
+      ) : null}
+      {typeof criticalCss === "object" ? (
+        <link
+          {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
+          rel="stylesheet"
+          href={criticalCss.href}
+          nonce={nonce}
+        />
       ) : null}
       {keyedLinks.map(({ key, link }) =>
         isPageLinkDescriptor(link) ? (
-          <PrefetchPageLinks key={key} {...link} />
+          <PrefetchPageLinks key={key} nonce={nonce} {...link} />
         ) : (
-          <link key={key} {...link} />
-        )
+          <link key={key} nonce={nonce} {...link} />
+        ),
       )}
     </>
   );
 }
 
 /**
-  Renders `<link rel=prefetch|modulepreload>` tags for modules and data of another page to enable an instant navigation to that page. {@link LinkProps.prefetch | `<Link prefetch>`} uses this internally, but you can render it to prefetch a page for any other reason.
-
-  ```tsx
-  import { PrefetchPageLinks } from "react-router"
-
-  <PrefetchPageLinks page="/absolute/path" />
-  ```
-
-  For example, you may render one of this as the user types into a search field to prefetch search results before they click through to their selection.
-
-  @category Components
+ * Renders [`<link rel=prefetch|modulepreload>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rel)
+ * tags for modules and data of another page to enable an instant navigation to
+ * that page. [`<Link prefetch>`](./Link#prefetch) uses this internally, but you
+ * can render it to prefetch a page for any other reason.
+ *
+ * For example, you may render one of this as the user types into a search field
+ * to prefetch search results before they click through to their selection.
+ *
+ * @example
+ * import { PrefetchPageLinks } from "react-router";
+ *
+ * <PrefetchPageLinks page="/absolute/path" />
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @param props Props
+ * @param {PageLinkDescriptor.page} props.page n/a
+ * @param props.linkProps Additional props to spread onto the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags, such as [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/crossOrigin),
+ * [`integrity`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/integrity),
+ * [`rel`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rel),
+ * etc.
+ * @returns A collection of React elements for [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+ * tags
  */
-export function PrefetchPageLinks({
-  page,
-  ...dataLinkProps
-}: PrefetchPageDescriptor) {
+export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
-    [router.routes, page, router.basename]
+    [router.routes, page, router.basename],
   );
 
   if (!matches) {
-    console.warn(`Tried to prefetch ${page} but no routes matched.`);
     return null;
   }
 
-  return (
-    <PrefetchPageLinksImpl page={page} matches={matches} {...dataLinkProps} />
-  );
+  return <PrefetchPageLinksImpl page={page} matches={matches} {...linkProps} />;
 }
 
 function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
@@ -306,7 +351,7 @@ function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
         if (!interrupted) {
           setKeyedPrefetchLinks(links);
         }
-      }
+      },
     );
 
     return () => {
@@ -321,12 +366,13 @@ function PrefetchPageLinksImpl({
   page,
   matches: nextMatches,
   ...linkProps
-}: PrefetchPageDescriptor & {
+}: PageLinkDescriptor & {
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
-  let { matches } = useDataRouterStateContext();
+  let { basename } = useDataRouterContext();
+  let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
     () =>
@@ -336,9 +382,9 @@ function PrefetchPageLinksImpl({
         matches,
         manifest,
         location,
-        "data"
+        "data",
       ),
-    [page, nextMatches, matches, manifest, location]
+    [page, nextMatches, matches, manifest, location],
   );
 
   let newMatchesForAssets = React.useMemo(
@@ -349,82 +395,123 @@ function PrefetchPageLinksImpl({
         matches,
         manifest,
         location,
-        "assets"
+        "assets",
       ),
-    [page, nextMatches, matches, manifest, location]
+    [page, nextMatches, matches, manifest, location],
   );
+
+  let dataHrefs = React.useMemo(() => {
+    if (page === location.pathname + location.search + location.hash) {
+      // Because we opt-into revalidation, don't compute this for the current page
+      // since it would always trigger a prefetch of the existing loaders
+      return [];
+    }
+
+    // Single-fetch is harder :)
+    // This parallels the logic in the single fetch data strategy
+    let routesParams = new Set<string>();
+    let foundOptOutRoute = false;
+    nextMatches.forEach((m) => {
+      let manifestRoute = manifest.routes[m.route.id];
+      if (!manifestRoute || !manifestRoute.hasLoader) {
+        return;
+      }
+
+      if (
+        !newMatchesForData.some((m2) => m2.route.id === m.route.id) &&
+        m.route.id in loaderData &&
+        routeModules[m.route.id]?.shouldRevalidate
+      ) {
+        foundOptOutRoute = true;
+      } else if (manifestRoute.hasClientLoader) {
+        foundOptOutRoute = true;
+      } else {
+        routesParams.add(m.route.id);
+      }
+    });
+
+    if (routesParams.size === 0) {
+      return [];
+    }
+
+    let url = singleFetchUrl(page, basename, "data");
+    // When one or more routes have opted out, we add a _routes param to
+    // limit the loaders to those that have a server loader and did not
+    // opt out
+    if (foundOptOutRoute && routesParams.size > 0) {
+      url.searchParams.set(
+        "_routes",
+        nextMatches
+          .filter((m) => routesParams.has(m.route.id))
+          .map((m) => m.route.id)
+          .join(","),
+      );
+    }
+
+    return [url.pathname + url.search];
+  }, [
+    basename,
+    loaderData,
+    location,
+    manifest,
+    newMatchesForData,
+    nextMatches,
+    page,
+    routeModules,
+  ]);
 
   let moduleHrefs = React.useMemo(
     () => getModuleLinkHrefs(newMatchesForAssets, manifest),
-    [newMatchesForAssets, manifest]
+    [newMatchesForAssets, manifest],
   );
 
   // needs to be a hook with async behavior because we need the modules, not
   // just the manifest like the other links in here.
   let keyedPrefetchLinks = useKeyedPrefetchLinks(newMatchesForAssets);
 
-  let linksToRender: React.ReactNode | React.ReactNode[] | null = null;
-  if (newMatchesForData.length > 0) {
-    // Single-fetch with routes that require data
-    let url = addRevalidationParam(
-      manifest,
-      routeModules,
-      nextMatches.map((m) => m.route),
-      newMatchesForData.map((m) => m.route),
-      singleFetchUrl(page)
-    );
-    if (url.searchParams.get("_routes") !== "") {
-      linksToRender = (
-        <link
-          key={url.pathname + url.search}
-          rel="prefetch"
-          as="fetch"
-          href={url.pathname + url.search}
-          {...linkProps}
-        />
-      );
-    } else {
-      // No single-fetch prefetching if _routes param is empty due to `clientLoader`'s
-    }
-  } else {
-    // No single-fetch prefetching if there are no new matches for data
-  }
-
   return (
     <>
-      {linksToRender}
+      {dataHrefs.map((href) => (
+        <link key={href} rel="prefetch" as="fetch" href={href} {...linkProps} />
+      ))}
       {moduleHrefs.map((href) => (
         <link key={href} rel="modulepreload" href={href} {...linkProps} />
       ))}
       {keyedPrefetchLinks.map(({ key, link }) => (
         // these don't spread `linkProps` because they are full link descriptors
         // already with their own props
-        <link key={key} {...link} />
+        <link key={key} nonce={linkProps.nonce} {...link} />
       ))}
     </>
   );
 }
 
 /**
-  Renders all the `<meta>` tags created by route module {@link MetaFunction} exports. You should render it inside the `<head>` of your HTML.
-
-  ```tsx
-  import { Meta } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <head>
-          <Meta />
-        </head>
-      </html>
-    );
-  }
-  ```
-
-  @category Components
+ * Renders all the [`<meta>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta)
+ * tags created by the route module's [`meta`](../../start/framework/route-module#meta)
+ * export. You should render it inside the [`<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head)
+ * of your document.
+ *
+ * @example
+ * import { Meta } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head>
+ *         <Meta />
+ *       </head>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @returns A collection of React elements for [`<meta>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta)
+ * tags
  */
-export function Meta() {
+export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
   let {
     errors,
@@ -454,6 +541,7 @@ export function Meta() {
     let match: MetaMatch = {
       id: routeId,
       data,
+      loaderData: data,
       meta: [],
       params: _match.params,
       pathname: _match.pathname,
@@ -467,14 +555,15 @@ export function Meta() {
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
               data,
+              loaderData: data,
               params,
               location,
               matches,
               error,
             })
           : Array.isArray(routeModule.meta)
-          ? [...routeModule.meta]
-          : routeModule.meta;
+            ? [...routeModule.meta]
+            : routeModule.meta;
     } else if (leafMeta) {
       // We only assign the route's meta to the nearest leaf if there is no meta
       // export in the route. The meta function may return a falsy value which
@@ -489,7 +578,7 @@ export function Meta() {
           _match.route.path +
           " returns an invalid value. All route meta functions must " +
           "return an array of meta objects." +
-          "\n\nTo reference the meta function API, see https://remix.run/route/meta"
+          "\n\nTo reference the meta function API, see https://remix.run/route/meta",
       );
     }
 
@@ -510,7 +599,7 @@ export function Meta() {
           let { tagName, ...rest } = metaProps;
           if (!isValidMetaTag(tagName)) {
             console.warn(
-              `A meta object uses an invalid tagName: ${tagName}. Expected either 'link' or 'meta'`
+              `A meta object uses an invalid tagName: ${tagName}. Expected either 'link' or 'meta'`,
             );
             return null;
           }
@@ -564,55 +653,89 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
 let isHydrated = false;
 
 /**
-  A couple common attributes:
-
-  - `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
-  - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
-
-  You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
-
-  @category Types
+ * A couple common attributes:
+ *
+ * - `<Scripts crossOrigin>` for hosting your static assets on a different
+ *   server than your app.
+ * - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src)
+ * with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources)
+ * for your [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags.
+ *
+ * You cannot pass through attributes such as [`async`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/async),
+ * [`defer`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/defer),
+ * [`noModule`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/noModule),
+ * [`src`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/src),
+ * or [`type`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/type),
+ * because they are managed by React Router internally.
+ *
+ * @category Types
  */
 export type ScriptsProps = Omit<
   React.HTMLProps<HTMLScriptElement>,
-  | "children"
   | "async"
-  | "defer"
-  | "src"
-  | "type"
-  | "noModule"
+  | "children"
   | "dangerouslySetInnerHTML"
+  | "defer"
+  | "noModule"
+  | "src"
   | "suppressHydrationWarning"
->;
+  | "type"
+> & {
+  /**
+   * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
+   * attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+   * element
+   */
+  nonce?: string | undefined;
+};
 
 /**
-  Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.
-
-  ```tsx
-  import { Scripts } from "react-router";
-
-  export default function Root() {
-    return (
-      <html>
-        <head />
-        <body>
-          <Scripts />
-        </body>
-      </html>
-    );
-  }
-  ```
-
-  If server rendering, you can omit `<Scripts/>` and the app will work as a traditional web app without JavaScript, relying solely on HTML and browser behaviors.
-
-  @category Components
+ * Renders the client runtime of your app. It should be rendered inside the
+ * [`<body>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body)
+ *  of the document.
+ *
+ * If server rendering, you can omit `<Scripts/>` and the app will work as a
+ * traditional web app without JavaScript, relying solely on HTML and browser
+ * behaviors.
+ *
+ * @example
+ * import { Scripts } from "react-router";
+ *
+ * export default function Root() {
+ *   return (
+ *     <html>
+ *       <head />
+ *       <body>
+ *         <Scripts />
+ *       </body>
+ *     </html>
+ *   );
+ * }
+ *
+ * @public
+ * @category Components
+ * @mode framework
+ * @param scriptProps Additional props to spread onto the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags, such as [`crossOrigin`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/crossOrigin),
+ * [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce),
+ * etc.
+ * @returns A collection of React elements for [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+ * tags
  */
-export function Scripts(props: ScriptsProps) {
-  let { manifest, serverHandoffString, isSpaMode, renderMeta } =
-    useFrameworkContext();
+export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
+  let {
+    manifest,
+    serverHandoffString,
+    isSpaMode,
+    renderMeta,
+    routeDiscovery,
+    ssr,
+  } = useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let enableFogOfWar = isFogOfWarEnabled(isSpaMode);
+  let isRSCRouterContext = useIsRSCRouterContext();
+  let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
@@ -627,15 +750,19 @@ export function Scripts(props: ScriptsProps) {
   }, []);
 
   let initialScripts = React.useMemo(() => {
+    if (isRSCRouterContext) {
+      return null;
+    }
+
     let streamScript =
-      "window.__remixContext.stream = new ReadableStream({" +
+      "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
-      "window.__remixContext.streamController = controller;" +
+      "window.__reactRouterContext.streamController = controller;" +
       "}" +
       "}).pipeThrough(new TextEncoderStream());";
 
     let contextScript = staticContext
-      ? `window.__remixContext = ${serverHandoffString};${streamScript}`
+      ? `window.__reactRouterContext = ${serverHandoffString};${streamScript}`
       : " ";
 
     let routeModulesScript = !isStatic
@@ -646,24 +773,80 @@ export function Scripts(props: ScriptsProps) {
             : ""
         }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
-  .map(
-    (match, index) =>
-      `import * as route${index} from ${JSON.stringify(
-        manifest.routes[match.route.id].module
-      )};`
-  )
+  .map((match, routeIndex) => {
+    let routeVarName = `route${routeIndex}`;
+    let manifestEntry = manifest.routes[match.route.id];
+    invariant(manifestEntry, `Route ${match.route.id} not found in manifest`);
+    let {
+      clientActionModule,
+      clientLoaderModule,
+      clientMiddlewareModule,
+      hydrateFallbackModule,
+      module,
+    } = manifestEntry;
+
+    let chunks: Array<{ module: string; varName: string }> = [
+      ...(clientActionModule
+        ? [
+            {
+              module: clientActionModule,
+              varName: `${routeVarName}_clientAction`,
+            },
+          ]
+        : []),
+      ...(clientLoaderModule
+        ? [
+            {
+              module: clientLoaderModule,
+              varName: `${routeVarName}_clientLoader`,
+            },
+          ]
+        : []),
+      ...(clientMiddlewareModule
+        ? [
+            {
+              module: clientMiddlewareModule,
+              varName: `${routeVarName}_clientMiddleware`,
+            },
+          ]
+        : []),
+      ...(hydrateFallbackModule
+        ? [
+            {
+              module: hydrateFallbackModule,
+              varName: `${routeVarName}_HydrateFallback`,
+            },
+          ]
+        : []),
+      { module, varName: `${routeVarName}_main` },
+    ];
+
+    if (chunks.length === 1) {
+      return `import * as ${routeVarName} from ${JSON.stringify(module)};`;
+    }
+
+    let chunkImportsSnippet = chunks
+      .map((chunk) => `import * as ${chunk.varName} from "${chunk.module}";`)
+      .join("\n");
+
+    let mergedChunksSnippet = `const ${routeVarName} = {${chunks
+      .map((chunk) => `...${chunk.varName}`)
+      .join(",")}};`;
+
+    return [chunkImportsSnippet, mergedChunksSnippet].join("\n");
+  })
   .join("\n")}
   ${
     enableFogOfWar
       ? // Inline a minimal manifest with the SSR matches
-        `window.__remixManifest = ${JSON.stringify(
+        `window.__reactRouterManifest = ${JSON.stringify(
           getPartialManifest(manifest, router),
           null,
-          2
+          2,
         )};`
       : ""
   }
-  window.__remixRouteModules = {${matches
+  window.__reactRouterRouteModules = {${matches
     .map((match, index) => `${JSON.stringify(match.route.id)}:route${index}`)
     .join(",")}};
 
@@ -672,13 +855,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
     return (
       <>
         <script
-          {...props}
+          {...scriptProps}
           suppressHydrationWarning
           dangerouslySetInnerHTML={createHtml(contextScript)}
           type={undefined}
         />
         <script
-          {...props}
+          {...scriptProps}
           suppressHydrationWarning
           dangerouslySetInnerHTML={createHtml(routeModulesScript)}
           type="module"
@@ -692,35 +875,62 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  let routePreloads = matches
-    .map((match) => {
-      let route = manifest.routes[match.route.id];
-      return (route.imports || []).concat([route.module]);
-    })
-    .flat(1);
+  let preloads =
+    isHydrated || isRSCRouterContext
+      ? []
+      : dedupe(
+          manifest.entry.imports.concat(
+            getModuleLinkHrefs(matches, manifest, {
+              includeHydrateFallback: true,
+            }),
+          ),
+        );
 
-  let preloads = isHydrated ? [] : manifest.entry.imports.concat(routePreloads);
+  let sri = typeof manifest.sri === "object" ? manifest.sri : {};
 
-  return isHydrated ? null : (
+  warnOnce(
+    !isRSCRouterContext,
+    "The <Scripts /> element is a no-op when using RSC and can be safely removed.",
+  );
+
+  return isHydrated || isRSCRouterContext ? null : (
     <>
+      {typeof manifest.sri === "object" ? (
+        <script
+          rr-importmap=""
+          type="importmap"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              integrity: sri,
+            }),
+          }}
+        />
+      ) : null}
       {!enableFogOfWar ? (
         <link
           rel="modulepreload"
           href={manifest.url}
-          crossOrigin={props.crossOrigin}
+          crossOrigin={scriptProps.crossOrigin}
+          integrity={sri[manifest.url]}
+          suppressHydrationWarning
         />
       ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}
-        crossOrigin={props.crossOrigin}
+        crossOrigin={scriptProps.crossOrigin}
+        integrity={sri[manifest.entry.module]}
+        suppressHydrationWarning
       />
-      {dedupe(preloads).map((path) => (
+      {preloads.map((path) => (
         <link
           key={path}
           rel="modulepreload"
           href={path}
-          crossOrigin={props.crossOrigin}
+          crossOrigin={scriptProps.crossOrigin}
+          integrity={sri[path]}
+          suppressHydrationWarning
         />
       ))}
       {initialScripts}

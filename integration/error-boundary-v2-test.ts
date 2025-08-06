@@ -177,8 +177,8 @@ test.describe("ErrorBoundary", () => {
       await waitForAndAssert(
         page,
         app,
-        "#child-error",
-        "Unable to decode turbo-stream response"
+        "#parent-error",
+        "Unable to decode turbo-stream response",
       );
     });
   });
@@ -199,7 +199,7 @@ test.describe("ErrorBoundary", () => {
         page,
         app,
         "#child-error-response",
-        "418 Loader Response"
+        "418 Loader Response",
       );
     });
 
@@ -225,7 +225,7 @@ test.describe("ErrorBoundary", () => {
         page,
         app,
         "#parent-error-response",
-        "418 Loader Response"
+        "418 Loader Response",
       );
     });
 
@@ -250,7 +250,7 @@ async function waitForAndAssert(
   page: Page,
   app: PlaywrightFixture,
   selector: string,
-  match: string
+  match: string,
 ) {
   await page.waitForSelector(selector);
   expect(await app.getHtml(selector)).toMatch(match);

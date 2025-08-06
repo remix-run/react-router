@@ -10,7 +10,7 @@ test.describe(() => {
   test.beforeAll(async () => {
     cwd = await createProject({
       "vite.config.ts": dedent`
-        import { vitePlugin as reactRouter } from "@react-router/dev";
+        import { reactRouter } from "@react-router/dev/vite";
         import mdx from "@mdx-js/rollup";
 
         export default {
@@ -27,7 +27,7 @@ test.describe(() => {
 
   test("Vite / plugin order validation / MDX", () => {
     expect(buildResult.stderr.toString()).toContain(
-      'Error: The "@mdx-js/rollup" plugin should be placed before the React Router plugin in your Vite config file'
+      'Error: The "@mdx-js/rollup" plugin should be placed before the React Router plugin in your Vite config file',
     );
   });
 });

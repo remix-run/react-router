@@ -1,7 +1,7 @@
-import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
+import type { ParseOptions, SerializeOptions } from "cookie";
 
-import type { Cookie, CookieOptions, CreateCookieFunction } from "./cookies";
-import { isCookie } from "./cookies";
+import type { Cookie, CookieOptions } from "./cookies";
+import { createCookie, isCookie } from "./cookies";
 import { warnOnce } from "./warnings";
 
 /**
@@ -14,7 +14,7 @@ export interface SessionData {
 /**
  * Session persists data across HTTP requests.
  *
- * @see https://remix.run/utils/sessions#session-api
+ * @see https://reactrouter.com/explanation/sessions-and-cookies#sessions
  */
 export interface Session<Data = SessionData, FlashData = Data> {
   /**
@@ -43,7 +43,7 @@ export interface Session<Data = SessionData, FlashData = Data> {
    * Returns the value for the given `name` in this session.
    */
   get<Key extends (keyof Data | keyof FlashData) & string>(
-    name: Key
+    name: Key,
   ):
     | (Key extends keyof Data ? Data[Key] : undefined)
     | (Key extends keyof FlashData ? FlashData[Key] : undefined)
@@ -60,7 +60,7 @@ export interface Session<Data = SessionData, FlashData = Data> {
    */
   flash<Key extends keyof FlashData & string>(
     name: Key,
-    value: FlashData[Key]
+    value: FlashData[Key],
   ): void;
 
   /**
@@ -81,7 +81,7 @@ function flash<Key extends string>(name: Key): FlashDataKey<Key> {
 
 export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
   initialData?: Data,
-  id?: string
+  id?: string,
 ) => Session<Data, FlashData>;
 
 /**
@@ -89,15 +89,13 @@ export type CreateSessionFunction = <Data = SessionData, FlashData = Data>(
  *
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
- *
- * @see https://remix.run/utils/sessions#createsession
  */
 export const createSession: CreateSessionFunction = <
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >(
   initialData: Partial<Data> = {},
-  id = ""
+  id = "",
 ): Session<Data, FlashData> => {
   let map = new Map(Object.entries(initialData)) as Map<
     keyof Data | FlashDataKey<keyof FlashData & string>,
@@ -144,9 +142,9 @@ export const createSession: CreateSessionFunction = <
 export type IsSessionFunction = (object: any) => object is Session;
 
 /**
- * Returns true if an object is a Remix session.
+ * Returns true if an object is a React Router session.
  *
- * @see https://remix.run/utils/sessions#issession
+ * @see https://reactrouter.com/api/utils/isSession
  */
 export const isSession: IsSessionFunction = (object): object is Session => {
   return (
@@ -176,7 +174,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   getSession: (
     cookieHeader?: string | null,
-    options?: CookieParseOptions
+    options?: ParseOptions,
   ) => Promise<Session<Data, FlashData>>;
 
   /**
@@ -185,7 +183,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   commitSession: (
     session: Session<Data, FlashData>,
-    options?: CookieSerializeOptions
+    options?: SerializeOptions,
   ) => Promise<string>;
 
   /**
@@ -194,7 +192,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    */
   destroySession: (
     session: Session<Data, FlashData>,
-    options?: CookieSerializeOptions
+    options?: SerializeOptions,
   ) => Promise<string>;
 }
 
@@ -209,7 +207,7 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
  */
 export interface SessionIdStorageStrategy<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 > {
   /**
    * The Cookie used to store the session id, or options used to automatically
@@ -222,7 +220,7 @@ export interface SessionIdStorageStrategy<
    */
   createData: (
     data: FlashSessionData<Data, FlashData>,
-    expires?: Date
+    expires?: Date,
   ) => Promise<string>;
 
   /**
@@ -236,7 +234,7 @@ export interface SessionIdStorageStrategy<
   updateData: (
     id: string,
     data: FlashSessionData<Data, FlashData>,
-    expires?: Date
+    expires?: Date,
   ) => Promise<void>;
 
   /**
@@ -245,70 +243,65 @@ export interface SessionIdStorageStrategy<
   deleteData: (id: string) => Promise<void>;
 }
 
-export type CreateSessionStorageFunction = <
-  Data = SessionData,
-  FlashData = Data
->(
-  strategy: SessionIdStorageStrategy<Data, FlashData>
-) => SessionStorage<Data, FlashData>;
-
 /**
  * Creates a SessionStorage object using a SessionIdStorageStrategy.
  *
  * Note: This is a low-level API that should only be used if none of the
  * existing session storage options meet your requirements.
- *
- * @see https://remix.run/utils/sessions#createsessionstorage
  */
-export const createSessionStorageFactory =
-  (createCookie: CreateCookieFunction): CreateSessionStorageFunction =>
-  ({ cookie: cookieArg, createData, readData, updateData, deleteData }) => {
-    let cookie = isCookie(cookieArg)
-      ? cookieArg
-      : createCookie(cookieArg?.name || "__session", cookieArg);
+export function createSessionStorage<Data = SessionData, FlashData = Data>({
+  cookie: cookieArg,
+  createData,
+  readData,
+  updateData,
+  deleteData,
+}: SessionIdStorageStrategy<Data, FlashData>): SessionStorage<Data, FlashData> {
+  let cookie = isCookie(cookieArg)
+    ? cookieArg
+    : createCookie(cookieArg?.name || "__session", cookieArg);
 
-    warnOnceAboutSigningSessionCookie(cookie);
+  warnOnceAboutSigningSessionCookie(cookie);
 
-    return {
-      async getSession(cookieHeader, options) {
-        let id = cookieHeader && (await cookie.parse(cookieHeader, options));
-        let data = id && (await readData(id));
-        return createSession(data || {}, id || "");
-      },
-      async commitSession(session, options) {
-        let { id, data } = session;
-        let expires =
-          options?.maxAge != null
-            ? new Date(Date.now() + options.maxAge * 1000)
-            : options?.expires != null
+  return {
+    async getSession(cookieHeader, options) {
+      let id = cookieHeader && (await cookie.parse(cookieHeader, options));
+      let data = id && (await readData(id));
+      return createSession(data || {}, id || "");
+    },
+    async commitSession(session, options) {
+      let { id, data } = session;
+      let expires =
+        options?.maxAge != null
+          ? new Date(Date.now() + options.maxAge * 1000)
+          : options?.expires != null
             ? options.expires
             : cookie.expires;
 
-        if (id) {
-          await updateData(id, data, expires);
-        } else {
-          id = await createData(data, expires);
-        }
+      if (id) {
+        await updateData(id, data, expires);
+      } else {
+        id = await createData(data, expires);
+      }
 
-        return cookie.serialize(id, options);
-      },
-      async destroySession(session, options) {
-        await deleteData(session.id);
-        return cookie.serialize("", {
-          ...options,
-          maxAge: undefined,
-          expires: new Date(0),
-        });
-      },
-    };
+      return cookie.serialize(id, options);
+    },
+    async destroySession(session, options) {
+      await deleteData(session.id);
+      return cookie.serialize("", {
+        ...options,
+        maxAge: undefined,
+        expires: new Date(0),
+      });
+    },
   };
+}
 
 export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
   warnOnce(
     cookie.isSigned,
     `The "${cookie.name}" cookie is not signed, but session cookies should be ` +
       `signed to prevent tampering on the client before they are sent back to the ` +
-      `server. See https://remix.run/utils/cookies#signing-cookies ` +
-      `for more information.`
+      `server. See https://reactrouter.com/explanation/sessions-and-cookies#signing-cookies ` +
+      `for more information.`,
   );
 }

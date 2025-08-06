@@ -1,6 +1,7 @@
-import { createMemoryHistory, createRouter, redirect } from "../../lib/router";
-import type { ShouldRevalidateFunctionArgs } from "../../lib/router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter } from "../../lib/router/router";
+import { ErrorResponseImpl, redirect } from "../../lib/router/utils";
+import type { ShouldRevalidateFunctionArgs } from "../../lib/router/utils";
 import { urlMatch } from "./utils/custom-matchers";
 import { cleanup, getFetcherData } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
@@ -25,7 +26,7 @@ describe("shouldRevalidate", () => {
   afterEach(() => cleanup());
 
   it("provides a default implementation", async () => {
-    let rootLoader = jest.fn((args) => "ROOT");
+    let rootLoader = jest.fn((...args) => "ROOT");
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -123,9 +124,9 @@ describe("shouldRevalidate", () => {
   });
 
   it("delegates to the route if it should reload or not", async () => {
-    let rootLoader = jest.fn((args) => "ROOT");
-    let childLoader = jest.fn((args) => "CHILD");
-    let paramsLoader = jest.fn((args) => "PARAMS");
+    let rootLoader = jest.fn((...args) => "ROOT");
+    let childLoader = jest.fn((...args) => "CHILD");
+    let paramsLoader = jest.fn((...args) => "PARAMS");
     let shouldRevalidate = jest.fn((args) => false);
 
     let history = createMemoryHistory();
@@ -202,7 +203,7 @@ describe("shouldRevalidate", () => {
 
     // On actions we send along the action result
     shouldRevalidate.mockImplementation(
-      ({ actionResult }) => actionResult.ok === true
+      ({ actionResult }) => actionResult.ok === true,
     );
     router.navigate("/child", {
       formMethod: "post",
@@ -462,7 +463,7 @@ describe("shouldRevalidate", () => {
   });
 
   it("provides the default implementation to the route function", async () => {
-    let rootLoader = jest.fn((args) => "ROOT");
+    let rootLoader = jest.fn((...args) => "ROOT");
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -563,7 +564,7 @@ describe("shouldRevalidate", () => {
 
   it("applies to fetcher loads", async () => {
     let count = 0;
-    let fetchLoader = jest.fn((args) => `FETCH ${++count}`);
+    let fetchLoader = jest.fn((...args) => `FETCH ${++count}`);
     let shouldRevalidate = jest.fn((args) => false);
 
     let history = createMemoryHistory();
@@ -1038,271 +1039,197 @@ describe("shouldRevalidate", () => {
     router.dispose();
   });
 
-  describe("skipActionRevalidation", () => {
-    it("revalidates after actions returning 4xx/5xx responses by default", async () => {
-      let count = -1;
-      let responses = [
-        new Response("DATA 400", { status: 400 }),
-        new Response("DATA 500", { status: 500 }),
-      ];
-      let rootLoader = jest.fn(() => "ROOT " + count);
+  it("does not revalidates after actions returning 4xx/5xx responses with flag", async () => {
+    let count = -1;
+    let responses = [
+      new Response("DATA 400", { status: 400 }),
+      new Response("DATA 500", { status: 500 }),
+    ];
+    let rootLoader = jest.fn(() => "ROOT " + count);
 
-      let history = createMemoryHistory();
-      let router = createRouter({
-        history,
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            loader: async () => rootLoader(),
-            children: [
-              {
-                id: "index",
-                index: true,
-                hasErrorBoundary: true,
-                action: () => responses[++count],
-              },
-            ],
-          },
-        ],
-        hydrationData: {
-          loaderData: {
-            root: "ROOT",
-          },
+    let history = createMemoryHistory();
+    let router = createRouter({
+      history,
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          loader: async () => rootLoader(),
+          children: [
+            {
+              id: "index",
+              index: true,
+              hasErrorBoundary: true,
+              action: () => responses[++count],
+            },
+          ],
         },
-      });
-      router.initialize();
+      ],
+      hydrationData: {
+        loaderData: {
+          root: "ROOT",
+        },
+      },
+    });
+    router.initialize();
 
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(1);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT 0" },
-        actionData: { index: "DATA 400" },
-        errors: null,
-      });
-
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(2);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT 1" },
-        actionData: { index: "DATA 500" },
-        errors: null,
-      });
-
-      router.dispose();
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(rootLoader.mock.calls.length).toBe(0);
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: { index: "DATA 400" },
+      errors: null,
     });
 
-    it("revalidates after actions throwing 4xx/5xx responses by default", async () => {
-      let count = -1;
-      let responses = [
-        new Response("ERROR 400", { status: 400 }),
-        new Response("ERROR 500", { status: 500 }),
-      ];
-      let rootLoader = jest.fn(() => "ROOT " + count);
-
-      let history = createMemoryHistory();
-      let router = createRouter({
-        history,
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            loader: async () => rootLoader(),
-            children: [
-              {
-                id: "index",
-                index: true,
-                hasErrorBoundary: true,
-                action: () => {
-                  throw responses[++count];
-                },
-              },
-            ],
-          },
-        ],
-        hydrationData: {
-          loaderData: {
-            root: "ROOT",
-          },
-        },
-      });
-      router.initialize();
-
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(1);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT 0" },
-        actionData: null,
-        errors: { index: new ErrorResponseImpl(400, "", "ERROR 400") },
-      });
-
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(2);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT 1" },
-        actionData: null,
-        errors: { index: new ErrorResponseImpl(500, "", "ERROR 500") },
-      });
-
-      router.dispose();
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(rootLoader.mock.calls.length).toBe(0);
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: { index: "DATA 500" },
+      errors: null,
     });
 
-    it("does not revalidates after actions returning 4xx/5xx responses with flag", async () => {
-      let count = -1;
-      let responses = [
-        new Response("DATA 400", { status: 400 }),
-        new Response("DATA 500", { status: 500 }),
-      ];
-      let rootLoader = jest.fn(() => "ROOT " + count);
+    router.dispose();
+  });
 
-      let history = createMemoryHistory();
-      let router = createRouter({
-        history,
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            loader: async () => rootLoader(),
-            children: [
-              {
-                id: "index",
-                index: true,
-                hasErrorBoundary: true,
-                action: () => responses[++count],
+  it("does not revalidate after actions throwing 4xx/5xx responses with flag", async () => {
+    let count = -1;
+    let responses = [
+      new Response("ERROR 400", { status: 400 }),
+      new Response("ERROR 500", { status: 500 }),
+    ];
+    let rootLoader = jest.fn(() => "ROOT " + count);
+
+    let history = createMemoryHistory();
+    let router = createRouter({
+      history,
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          loader: async () => rootLoader(),
+          children: [
+            {
+              id: "index",
+              index: true,
+              hasErrorBoundary: true,
+              action: () => {
+                throw responses[++count];
               },
-            ],
-          },
-        ],
-        hydrationData: {
-          loaderData: {
-            root: "ROOT",
-          },
+            },
+          ],
         },
-        future: { v7_skipActionErrorRevalidation: true },
-      });
-      router.initialize();
+      ],
+      hydrationData: {
+        loaderData: {
+          root: "ROOT",
+        },
+      },
+    });
+    router.initialize();
 
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(0);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT" },
-        actionData: { index: "DATA 400" },
-        errors: null,
-      });
-
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(0);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT" },
-        actionData: { index: "DATA 500" },
-        errors: null,
-      });
-
-      router.dispose();
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(rootLoader.mock.calls.length).toBe(0);
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: null,
+      errors: { index: new ErrorResponseImpl(400, "", "ERROR 400") },
     });
 
-    it("does not revalidate after actions throwing 4xx/5xx responses with flag", async () => {
-      let count = -1;
-      let responses = [
-        new Response("ERROR 400", { status: 400 }),
-        new Response("ERROR 500", { status: 500 }),
-      ];
-      let rootLoader = jest.fn(() => "ROOT " + count);
-
-      let history = createMemoryHistory();
-      let router = createRouter({
-        history,
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            loader: async () => rootLoader(),
-            children: [
-              {
-                id: "index",
-                index: true,
-                hasErrorBoundary: true,
-                action: () => {
-                  throw responses[++count];
-                },
-              },
-            ],
-          },
-        ],
-        hydrationData: {
-          loaderData: {
-            root: "ROOT",
-          },
-        },
-        future: { v7_skipActionErrorRevalidation: true },
-      });
-      router.initialize();
-
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(0);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT" },
-        actionData: null,
-        errors: { index: new ErrorResponseImpl(400, "", "ERROR 400") },
-      });
-
-      router.navigate("/?index", {
-        formMethod: "post",
-        formData: createFormData({ gosh: "dang" }),
-      });
-      await tick();
-      expect(rootLoader.mock.calls.length).toBe(0);
-      expect(router.state).toMatchObject({
-        location: { pathname: "/" },
-        navigation: { state: "idle" },
-        loaderData: { root: "ROOT" },
-        actionData: null,
-        errors: { index: new ErrorResponseImpl(500, "", "ERROR 500") },
-      });
-
-      router.dispose();
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
     });
+    await tick();
+    expect(rootLoader.mock.calls.length).toBe(0);
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: null,
+      errors: { index: new ErrorResponseImpl(500, "", "ERROR 500") },
+    });
+
+    router.dispose();
+  });
+
+  it("preserves ancestor loaderData on bubbled action errors when not revalidating with a custom data strategy", async () => {
+    let history = createMemoryHistory();
+    let router = createRouter({
+      history,
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          hasErrorBoundary: true,
+          loader: () => "NOPE",
+          children: [
+            {
+              id: "index",
+              index: true,
+              action: () => {
+                throw new Response("ERROR 400", { status: 400 });
+              },
+            },
+          ],
+        },
+      ],
+      hydrationData: {
+        loaderData: {
+          root: "ROOT",
+        },
+      },
+      async dataStrategy({ request, matches }) {
+        let keyedResults = {};
+        let matchesToLoad = matches.filter((match) =>
+          match.unstable_shouldCallHandler(
+            request.method === "POST"
+              ? undefined
+              : !match.unstable_shouldRevalidateArgs?.actionStatus ||
+                  match.unstable_shouldRevalidateArgs.actionStatus < 400,
+          ),
+        );
+        await Promise.all(
+          matchesToLoad.map(async (match) => {
+            keyedResults[match.route.id] = await match.resolve();
+          }),
+        );
+        return keyedResults;
+      },
+    });
+    router.initialize();
+
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: null,
+      errors: { root: new ErrorResponseImpl(400, "", "ERROR 400") },
+    });
+
+    router.dispose();
   });
 });

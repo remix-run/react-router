@@ -5,6 +5,8 @@ name: PR (Full)
 on:
   pull_request:
     paths:
+      - "pnpm-lock.yaml"
+      - "integration/**"
       - "packages/react-router-dev/**"
       - "!**/*.md"
 
@@ -19,7 +21,7 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "ubuntu-latest"
-      node_version: "[20]"
+      node_version: "[22]"
       browser: '["firefox"]'
 
   integration-msedge:
@@ -28,8 +30,9 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "windows-latest"
-      node_version: "[20]"
+      node_version: "[22]"
       browser: '["msedge"]'
+      timeout: 120
 
   integration-webkit:
     name: "👀 Integration Test"
@@ -37,5 +40,6 @@ jobs:
     uses: ./.github/workflows/shared-integration.yml
     with:
       os: "macos-latest"
-      node_version: "[20]"
+      node_version: "[22]"
       browser: '["webkit"]'
+      timeout: 40

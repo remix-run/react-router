@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { BoundaryShell } from "./errorBoundaries";
+import { ENABLE_DEV_WARNINGS } from "../../context";
 
 // If the user sets `clientLoader.hydrate=true` somewhere but does not
 // provide a `HydrateFallback` at any level of the tree, then we need to at
@@ -9,17 +10,20 @@ import { BoundaryShell } from "./errorBoundaries";
 export function RemixRootDefaultHydrateFallback() {
   return (
     <BoundaryShell title="Loading..." renderScripts>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
+      {ENABLE_DEV_WARNINGS ? (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
               console.log(
                 "💿 Hey developer 👋. You can provide a way better UX than this " +
-                "when your app is running \`clientLoader\` functions on hydration. " +
-                "Check out https://remix.run/route/hydrate-fallback for more information."
+                "when your app is loading JS modules and/or running \`clientLoader\` " +
+                "functions. Check out https://reactrouter.com/start/framework/route-module#hydratefallback " +
+                "for more information."
               );
             `,
-        }}
-      />
+          }}
+        />
+      ) : null}
     </BoundaryShell>
   );
 }

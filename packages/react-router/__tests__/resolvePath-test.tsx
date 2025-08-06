@@ -40,7 +40,7 @@ describe("resolvePath", () => {
 
   it("normalizes search and hash values", () => {
     expect(
-      resolvePath({ pathname: "/search", search: "q=react", hash: "results" })
+      resolvePath({ pathname: "/search", search: "q=react", hash: "results" }),
     ).toEqual({
       pathname: "/search",
       search: "?q=react",

@@ -1,10 +1,9 @@
-import "@react-router/node/install";
+#!/usr/bin/env node
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import type { ServerBuild } from "react-router";
-import { installGlobals } from "@react-router/node";
 import { createRequestHandler } from "@react-router/express";
 import compression from "compression";
 import express from "express";
@@ -30,7 +29,6 @@ sourceMapSupport.install({
     return null;
   },
 });
-installGlobals();
 
 run();
 
@@ -68,7 +66,7 @@ async function run() {
       console.log(`[react-router-serve] http://localhost:${port}`);
     } else {
       console.log(
-        `[react-router-serve] http://localhost:${port} (http://${address}:${port})`
+        `[react-router-serve] http://localhost:${port} (http://${address}:${port})`,
       );
     }
   };
@@ -81,20 +79,9 @@ async function run() {
     express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
-    })
+    }),
   );
-  app.use(
-    build.publicPath,
-    express.static(build.assetsBuildDirectory, {
-      // Don't redirect directory index.html request to include a trailing slash
-      redirect: false,
-      setHeaders: function (res, path) {
-        if (path.endsWith(".data")) {
-          res.set("Content-Type", "text/x-turbo");
-        }
-      },
-    })
-  );
+  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
@@ -103,7 +90,7 @@ async function run() {
     createRequestHandler({
       build,
       mode: process.env.NODE_ENV,
-    })
+    }),
   );
 
   let server = process.env.HOST

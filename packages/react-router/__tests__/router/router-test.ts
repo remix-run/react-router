@@ -1,14 +1,11 @@
-import type { HydrationState } from "../../lib/router";
-import {
-  createMemoryHistory,
-  createRouter,
-  IDLE_NAVIGATION,
-} from "../../lib/router";
+import type { HydrationState } from "../../lib/router/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter, IDLE_NAVIGATION } from "../../lib/router/router";
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
-} from "../../lib/router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
+} from "../../lib/router/utils";
+import { ErrorResponseImpl } from "../../lib/router/utils";
 
 import { urlMatch } from "./utils/custom-matchers";
 import {
@@ -101,9 +98,9 @@ describe("a router", () => {
           routes: [],
           history,
           hydrationData: {},
-        })
+        }),
       ).toThrowErrorMatchingInlineSnapshot(
-        `"You must provide a non-empty routes array to createRouter"`
+        `"You must provide a non-empty routes array to createRouter"`,
       );
     });
 
@@ -180,9 +177,9 @@ describe("a router", () => {
           routes,
           history,
           hydrationData: {},
-        })
+        }),
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Found a route id collision on id "child".  Route id's must be globally unique within Data Router usages"`
+        `"Found a route id collision on id "child".  Route id's must be globally unique within Data Router usages"`,
       );
     });
 
@@ -202,9 +199,9 @@ describe("a router", () => {
         createRouter({
           routes,
           history: createMemoryHistory(),
-        })
+        }),
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot specify children on an index route"`
+        `"Cannot specify children on an index route"`,
       );
     });
 
@@ -269,13 +266,13 @@ describe("a router", () => {
       await router.navigate("/?key=a");
       expect(subscriber.mock.calls[0][0].navigation.state).toBe("loading");
       expect(subscriber.mock.calls[0][0].navigation.location.search).toBe(
-        "?key=a"
+        "?key=a",
       );
       expect(subscriber.mock.calls[1][0].navigation.state).toBe("idle");
       expect(subscriber.mock.calls[1][0].location.search).toBe("?key=a");
       expect(subscriber2.mock.calls[0][0].navigation.state).toBe("loading");
       expect(subscriber2.mock.calls[0][0].navigation.location.search).toBe(
-        "?key=a"
+        "?key=a",
       );
       expect(subscriber2.mock.calls[1][0].navigation.state).toBe("idle");
       expect(subscriber2.mock.calls[1][0].location.search).toBe("?key=a");
@@ -284,7 +281,7 @@ describe("a router", () => {
       await router.navigate("/?key=b");
       expect(subscriber.mock.calls[2][0].navigation.state).toBe("loading");
       expect(subscriber.mock.calls[2][0].navigation.location.search).toBe(
-        "?key=b"
+        "?key=b",
       );
       expect(subscriber.mock.calls[3][0].navigation.state).toBe("idle");
       expect(subscriber.mock.calls[3][0].location.search).toBe("?key=b");
@@ -308,7 +305,7 @@ describe("a router", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
       expect(t.router.state.matches).toMatchObject([
@@ -337,7 +334,7 @@ describe("a router", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
       expect(t.router.state.matches).toMatchObject([
@@ -384,7 +381,7 @@ describe("a router", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
-          true
+          true,
         ),
       });
       expect(t.router.state.matches).toMatchObject([
@@ -581,7 +578,7 @@ describe("a router", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
-            true
+            true,
           ),
         },
       });
@@ -608,7 +605,7 @@ describe("a router", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
-            true
+            true,
           ),
         },
         initialized: true,
@@ -650,7 +647,7 @@ describe("a router", () => {
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
-            true
+            true,
           ),
         },
         location: {
@@ -681,7 +678,7 @@ describe("a router", () => {
       });
       expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
-        createFormData({ key: "value" })
+        createFormData({ key: "value" }),
       );
     });
 
@@ -701,7 +698,7 @@ describe("a router", () => {
       });
       expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
-        createFormData({ key: "value" })
+        createFormData({ key: "value" }),
       );
     });
 
@@ -721,7 +718,7 @@ describe("a router", () => {
       });
       expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
-        createFormData({ key: "2" })
+        createFormData({ key: "2" }),
       );
     });
 
@@ -741,7 +738,7 @@ describe("a router", () => {
       });
       expect(t.router.state.navigation.formMethod).toBe("POST");
       expect(t.router.state.navigation.formData).toEqual(
-        createFormData({ key: "2" })
+        createFormData({ key: "2" }),
       );
     });
 
@@ -763,7 +760,7 @@ describe("a router", () => {
         new Blob(["<h1>Some html file contents</h1>"], {
           type: "text/html",
         }),
-        "blob.html"
+        "blob.html",
       );
 
       let A = await t.navigate("/tasks", {
@@ -792,7 +789,7 @@ describe("a router", () => {
         "blob",
         new Blob(["<h1>Some html file contents</h1>"], {
           type: "text/html",
-        })
+        }),
       );
 
       await t.navigate("/tasks", {
@@ -810,7 +807,7 @@ describe("a router", () => {
           405,
           "Method Not Allowed",
           new Error('Invalid request method "HEAD"'),
-          true
+          true,
         ),
       });
     });
@@ -832,7 +829,7 @@ describe("a router", () => {
         "blob",
         new Blob(["<h1>Some html file contents</h1>"], {
           type: "text/html",
-        })
+        }),
       );
 
       await t.navigate("/tasks", {
@@ -850,7 +847,7 @@ describe("a router", () => {
           405,
           "Method Not Allowed",
           new Error('Invalid request method "OPTIONS"'),
-          true
+          true,
         ),
       });
     });
@@ -964,6 +961,35 @@ describe("a router", () => {
       router.dispose();
     });
 
+    it("allows routes to be initialized with undefined loaderData", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: undefined,
+          },
+        },
+      });
+
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: undefined,
+        },
+      });
+    });
+
     it("handles interruptions of initial data load", async () => {
       let parentDfd = createDeferred();
       let parentSpy = jest.fn(() => parentDfd.promise);
@@ -1069,6 +1095,37 @@ describe("a router", () => {
         },
         errors: {
           "0": "Kaboom!",
+        },
+      });
+
+      router.dispose();
+    });
+
+    it("handles initial load 404s when the error boundary router has a loader", async () => {
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/404"] }),
+        routes: [
+          {
+            path: "/",
+            hasErrorBoundary: true,
+            loader: () => {},
+          },
+        ],
+      });
+
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/404" }),
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
+        errors: {
+          "0": new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/404"'),
+            true,
+          ),
         },
       });
 
@@ -1323,6 +1380,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       let nav2 = await t.navigate("/tasks/1");
@@ -1331,6 +1389,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
@@ -1339,6 +1398,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       let nav4 = await t.navigate("/tasks#hash", {
@@ -1349,6 +1409,7 @@ describe("a router", () => {
         request: new Request("http://localhost/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
+        context: {},
       });
 
       expect(t.router.state.navigation.formAction).toBe("/tasks");
@@ -1643,7 +1704,7 @@ describe("a router", () => {
       // Throw from tasks, handled by tasks
       let nav = await t.navigate("/tasks");
       await nav.loaders.tasks.reject(
-        new Response("broken", { status: 400, statusText: "Bad Request" })
+        new Response("broken", { status: 400, statusText: "Bad Request" }),
       );
       expect(t.router.state).toMatchObject({
         navigation: IDLE_NAVIGATION,
@@ -1678,7 +1739,7 @@ describe("a router", () => {
           headers: {
             "Content-Type": "application/json",
           },
-        })
+        }),
       );
       expect(t.router.state).toMatchObject({
         navigation: IDLE_NAVIGATION,
@@ -1713,7 +1774,7 @@ describe("a router", () => {
           headers: {
             "Content-Type": "application/json; charset=utf-8",
           },
-        })
+        }),
       );
       expect(t.router.state).toMatchObject({
         navigation: IDLE_NAVIGATION,
@@ -1746,6 +1807,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -1754,7 +1816,7 @@ describe("a router", () => {
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/tasks");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await request.formData()).get("query")).toBe("params");
 
@@ -1789,6 +1851,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
       // Assert request internals, cannot do a deep comparison above since some
       // internals aren't the same on separate creations
@@ -1796,7 +1859,7 @@ describe("a router", () => {
       expect(request.url).toBe("http://localhost/tasks?foo=bar");
       expect(request.method).toBe("POST");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await request.formData()).get("query")).toBe("params");
     });
@@ -1821,6 +1884,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
+        context: {},
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -1829,7 +1893,7 @@ describe("a router", () => {
       expect(request.method).toBe("PATCH");
       expect(request.url).toBe("http://localhost/tasks");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded;charset=UTF-8"
+        "application/x-www-form-urlencoded;charset=UTF-8",
       );
       expect((await request.formData()).get("query")).toBe("params");
 
@@ -1871,9 +1935,11 @@ describe("a router", () => {
       });
 
       expect(
-        A.actions.root.stub.mock.calls[0][0].request.headers.get("Content-Type")
+        A.actions.root.stub.mock.calls[0][0].request.headers.get(
+          "Content-Type",
+        ),
       ).toMatch(
-        /^multipart\/form-data; boundary=----formdata-undici-[a-z0-9]+/
+        /^multipart\/form-data; boundary=----formdata-undici-[a-z0-9]+/,
       );
     });
 
@@ -2455,7 +2521,7 @@ describe("a router", () => {
           404,
           "Not Found",
           new Error('No route matches URL "/foo"'),
-          true
+          true,
         ),
       });
 

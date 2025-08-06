@@ -17,10 +17,9 @@ test.describe("useMatches", () => {
       files: {
         "app/root.tsx": js`
           import * as React from 'react';
-          import { json } from "react-router";
           import { Link, Links, Meta, Outlet, Scripts, useMatches } from "react-router";
           export const handle = { stuff: "root handle"};
-          export const loader = () => json("ROOT");
+          export const loader = () => "ROOT";
           export default function Root() {
             let matches = useMatches();
             let [matchesCount, setMatchesCount] = React.useState(0);
@@ -47,20 +46,18 @@ test.describe("useMatches", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { json } from "react-router";
           export const handle = { stuff: "index handle"};
-          export const loader = () => json("INDEX");
+          export const loader = () => "INDEX";
           export default function Index() {
             return <h1 id="index">Index Page</h1>
           }
         `,
 
         "app/routes/about.tsx": js`
-          import { json } from "react-router";
           export const handle = { stuff: "about handle"};
           export const loader = async () => {
             await new Promise(r => setTimeout(r, 100));
-            return json("ABOUT");
+            return "ABOUT";
           }
           export default function About() {
             return <h1 id="about">About Page</h1>
@@ -112,6 +109,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "ROOT",
+    "loaderData": "ROOT",
     "handle": {
       "stuff": "root handle"
     }
@@ -121,6 +119,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "INDEX",
+    "loaderData": "INDEX",
     "handle": {
       "stuff": "index handle"
     }
@@ -138,6 +137,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "ROOT",
+    "loaderData": "ROOT",
     "handle": {
       "stuff": "root handle"
     }
@@ -147,6 +147,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "INDEX",
+    "loaderData": "INDEX",
     "handle": {
       "stuff": "index handle"
     }
@@ -167,6 +168,7 @@ test.describe("useMatches", () => {
     "pathname": "/",
     "params": {},
     "data": "ROOT",
+    "loaderData": "ROOT",
     "handle": {
       "stuff": "root handle"
     }
@@ -176,6 +178,7 @@ test.describe("useMatches", () => {
     "pathname": "/about",
     "params": {},
     "data": "ABOUT",
+    "loaderData": "ABOUT",
     "handle": {
       "stuff": "about handle"
     }

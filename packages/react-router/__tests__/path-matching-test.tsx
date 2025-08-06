@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router";
-import { matchRoutes } from "react-router";
+import { matchPath, matchRoutes } from "react-router";
 
 function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
   let matches = matchRoutes(routes, pathname);
@@ -167,6 +167,24 @@ describe("path matching", () => {
         },
       ]
     `);
+  });
+
+  test("dynamic segment params match word with dashes `(\\w-)+`", () => {
+    expect(
+      matchPath("/sitemap/:lang.xml", "/sitemap/blah.xml")?.params,
+    ).toStrictEqual({ lang: "blah" });
+    expect(
+      matchPath("/sitemap/:lang.xml", "/sitemap/blah")?.params,
+    ).toStrictEqual(undefined);
+    expect(
+      matchPath("/sitemap/:lang.:xml", "/sitemap/blah.:xml")?.params,
+    ).toStrictEqual({ lang: "blah" });
+    expect(
+      matchPath("/sitemap/:lang.:xml", "/sitemap/blah.pdf")?.params,
+    ).toStrictEqual(undefined);
+    expect(
+      matchPath("/sitemap/:lang?.xml", "/sitemap/.xml")?.params,
+    ).toStrictEqual({ lang: undefined });
   });
 });
 
@@ -573,7 +591,7 @@ describe("path matching with optional dynamic segments", () => {
           path: "/nested/:one/:two/:three/:four",
           params: { one: "foo", two: "bar", three: "baz", four: "qux" },
         },
-      ]
+      ],
     );
     expect(pickPathsAndParams(routes, "/nested/foo/bar/baz/qux")).toEqual([
       {
@@ -582,10 +600,10 @@ describe("path matching with optional dynamic segments", () => {
       },
     ]);
     expect(
-      pickPathsAndParams(manualRoutes, "/nested/foo/bar/baz/qux/zod")
+      pickPathsAndParams(manualRoutes, "/nested/foo/bar/baz/qux/zod"),
     ).toEqual(null);
     expect(pickPathsAndParams(routes, "/nested/foo/bar/baz/qux/zod")).toEqual(
-      null
+      null,
     );
   });
 
@@ -777,7 +795,7 @@ describe("path matching with optional dynamic segments", () => {
     ]);
 
     expect(pickPathsAndParams(manuallyExploded, "/uno/dos/tres/nope")).toEqual(
-      null
+      null,
     );
     expect(pickPathsAndParams(optional, "/uno/dos/tres/nope")).toEqual(null);
   });

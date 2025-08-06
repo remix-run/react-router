@@ -4,16 +4,16 @@
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "target": "ES2022",
-    "module": "ES2022",
-
-    "moduleResolution": "Bundler",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "jsx": "react",
     "declaration": true,
-    "emitDeclarationOnly": true,
     "rootDir": ".",
     "outDir": "./dist",
+    "noEmit": true,
+    "resolveJsonModule": true,
 
     // Avoid naming conflicts between lib.dom.d.ts and globals.ts
     "skipLibCheck": true

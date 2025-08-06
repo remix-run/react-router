@@ -3,8 +3,7 @@ import type {
   SessionIdStorageStrategy,
   SessionData,
 } from "react-router";
-
-import { createSessionStorage } from "../implementations";
+import { createSessionStorage } from "react-router";
 
 interface WorkersKVSessionStorageOptions {
   /**
@@ -27,7 +26,7 @@ interface WorkersKVSessionStorageOptions {
  */
 export function createWorkersKVSessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({
   cookie,
   kv,
@@ -36,8 +35,7 @@ export function createWorkersKVSessionStorage<
     cookie,
     async createData(data, expires) {
       while (true) {
-        let randomBytes = new Uint8Array(8);
-        crypto.getRandomValues(randomBytes);
+        let randomBytes = crypto.getRandomValues(new Uint8Array(8));
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume
         // (2^32). However, the larger id space should help to avoid collisions

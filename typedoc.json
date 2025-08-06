@@ -1,8 +1,0 @@
-{
-  "name": "React Router API Reference",
-  "entryPoints": ["packages/*"],
-  "entryPointStrategy": "packages",
-  "includeVersion": false,
-  "json": "./public/api.json",
-  "out": "./public"
-}

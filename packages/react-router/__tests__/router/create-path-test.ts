@@ -1,4 +1,4 @@
-import { createPath } from "../../lib/router";
+import { createPath } from "../../lib/router/history";
 
 describe("createPath", () => {
   describe("given only a pathname", () => {

@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import path from "node:path";
 import { promises as fsp } from "node:fs";
 import os from "node:os";
@@ -45,7 +49,7 @@ describe("File session storage", () => {
     let setCookie = await commitSession(session);
     session = await getSession(
       // Tamper with the cookie...
-      getCookieFromSetCookie(setCookie).slice(0, -1)
+      getCookieFromSetCookie(setCookie).slice(0, -1),
     );
 
     expect(session.get("user")).toBeUndefined();

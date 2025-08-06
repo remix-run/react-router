@@ -1,9 +1,7 @@
-import type {
-  FormEncType,
-  HTMLFormMethod,
-  RelativeRoutingType,
-} from "../router";
-import { stripBasename, UNSAFE_warning as warning } from "../router";
+import { warning } from "../router/history";
+import type { RelativeRoutingType } from "../router/router";
+import type { FormEncType, HTMLFormMethod } from "../router/utils";
+import { stripBasename } from "../router/utils";
 
 export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
@@ -35,7 +33,7 @@ function isModifiedEvent(event: LimitedMouseEvent) {
 
 export function shouldProcessLinkClick(
   event: LimitedMouseEvent,
-  target?: string
+  target?: string,
 ) {
   return (
     event.button === 0 && // Ignore everything but left clicks
@@ -79,7 +77,7 @@ export type URLSearchParamsInit =
   @category Utils
  */
 export function createSearchParams(
-  init: URLSearchParamsInit = ""
+  init: URLSearchParamsInit = "",
 ): URLSearchParams {
   return new URLSearchParams(
     typeof init === "string" ||
@@ -89,15 +87,15 @@ export function createSearchParams(
       : Object.keys(init).reduce((memo, key) => {
           let value = init[key];
           return memo.concat(
-            Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]
+            Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]],
           );
-        }, [] as ParamKeyValuePair[])
+        }, [] as ParamKeyValuePair[]),
   );
 }
 
 export function getSearchParamsForLocation(
   locationSearch: string,
-  defaultSearchParams: URLSearchParams | null
+  defaultSearchParams: URLSearchParams | null,
 ) {
   let searchParams = createSearchParams(locationSearch);
 
@@ -145,7 +143,7 @@ function isFormDataSubmitterSupported() {
       new FormData(
         document.createElement("form"),
         // @ts-expect-error if FormData supports the submitter parameter, this will throw
-        0
+        0,
       );
       _formDataSupportsSubmitter = false;
     } catch (e) {
@@ -193,7 +191,7 @@ interface SharedSubmitOptions {
   /**
    * Enable flushSync for this submission's state updates
    */
-  unstable_flushSync?: boolean;
+  flushSync?: boolean;
 }
 
 /**
@@ -230,7 +228,7 @@ export interface SubmitOptions extends FetcherSubmitOptions {
   /**
    * Enable view transitions on this submission navigation
    */
-  unstable_viewTransition?: boolean;
+  viewTransition?: boolean;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([
@@ -244,7 +242,7 @@ function getFormEncType(encType: string | null) {
     warning(
       false,
       `"${encType}" is not a valid \`encType\` for \`<Form>\`/\`<fetcher.Form>\` ` +
-        `and will default to "${defaultEncType}"`
+        `and will default to "${defaultEncType}"`,
     );
 
     return null;
@@ -254,7 +252,7 @@ function getFormEncType(encType: string | null) {
 
 export function getFormSubmissionInfo(
   target: SubmitTarget,
-  basename: string
+  basename: string,
 ): {
   action: string | null;
   method: string;
@@ -287,7 +285,7 @@ export function getFormSubmissionInfo(
 
     if (form == null) {
       throw new Error(
-        `Cannot submit a <button> or <input type="submit"> without a <form>`
+        `Cannot submit a <button> or <input type="submit"> without a <form>`,
       );
     }
 
@@ -328,7 +326,7 @@ export function getFormSubmissionInfo(
   } else if (isHtmlElement(target)) {
     throw new Error(
       `Cannot submit element that is not <form>, <button>, or ` +
-        `<input type="submit|image">`
+        `<input type="submit|image">`,
     );
   } else {
     method = defaultMethod;

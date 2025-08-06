@@ -1,13 +1,9 @@
-import type {
-  DataStrategyFunction,
-  DataStrategyFunctionArgs,
-} from "../../lib/router";
+import type { DataStrategyFunction } from "../../../lib/router/utils";
 import { invariant } from "./utils";
 
-export default async function urlDataStrategy({
-  matches,
-}: DataStrategyFunctionArgs): ReturnType<DataStrategyFunction> {
-  return Promise.all(
+const urlDataStrategy: DataStrategyFunction = async ({ matches }) => {
+  let results: Record<string, { type: "data" | "error"; result: unknown }> = {};
+  await Promise.all(
     matches.map((match) =>
       match.resolve(async (handler) => {
         let response = await handler();
@@ -15,13 +11,16 @@ export default async function urlDataStrategy({
         let contentType = response.headers.get("Content-Type");
         invariant(
           contentType === "application/x-www-form-urlencoded",
-          "Invalid Response"
+          "Invalid Response",
         );
-        return {
+        results[match.route.id] = {
           type: "data",
           result: new URLSearchParams(await response.text()),
         };
-      })
-    )
+      }),
+    ),
   );
-}
+  return results;
+};
+
+export default urlDataStrategy;

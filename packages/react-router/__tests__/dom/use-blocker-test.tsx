@@ -1,10 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import type { Blocker, RouteObject } from "../../index";
 import {
   createMemoryRouter,
-  json,
   Link,
   NavLink,
   Outlet,
@@ -15,11 +14,11 @@ import {
 
 type Router = ReturnType<typeof createMemoryRouter>;
 
-const LOADER_LATENCY_MS = 100;
+const LOADER_LATENCY_MS = 200;
 
 async function slowLoader() {
-  await sleep(LOADER_LATENCY_MS);
-  return json(null);
+  await sleep(LOADER_LATENCY_MS / 2);
+  return Response.json(null);
 }
 
 describe("navigation blocking with useBlocker", () => {
@@ -94,7 +93,7 @@ describe("navigation blocking with useBlocker", () => {
       {
         basename: "/base",
         initialEntries: ["/base"],
-      }
+      },
     );
 
     act(() => {
@@ -264,7 +263,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -345,7 +344,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -436,7 +435,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -560,7 +559,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -645,7 +644,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -740,7 +739,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -872,7 +871,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -965,7 +964,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -1068,7 +1067,7 @@ describe("navigation blocking with useBlocker", () => {
           {
             initialEntries,
             initialIndex,
-          }
+          },
         );
         act(() => {
           root = ReactDOM.createRoot(node);
@@ -1084,14 +1083,23 @@ describe("navigation blocking with useBlocker", () => {
         act(() => {
           click(node.querySelector("[data-action='back']"));
         });
-        act(() => {
+        expect(node.innerHTML).toContain("<h1>Contact</h1>");
+        await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          expect([...router.state.blockers.values()][0]).toEqual({
+            state: "proceeding",
+            proceed: undefined,
+            reset: undefined,
+            location: expect.any(Object),
+          });
+          await sleep(LOADER_LATENCY_MS);
         });
+        expect(node.innerHTML).toContain("<h1>About</h1>");
         expect(blocker).toEqual({
-          state: "proceeding",
+          state: "unblocked",
           proceed: undefined,
           reset: undefined,
-          location: expect.any(Object),
+          location: undefined,
         });
       });
 
@@ -1164,6 +1172,6 @@ function click(target: EventTarget | null | undefined) {
       view: window,
       bubbles: true,
       cancelable: true,
-    })
+    }),
   );
 }

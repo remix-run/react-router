@@ -1,10 +1,13 @@
-import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
+import type { ParseOptions, SerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
-import type { SignFunction, UnsignFunction } from "./crypto";
+import { sign, unsign } from "./crypto";
 import { warnOnce } from "./warnings";
 
-export type { CookieParseOptions, CookieSerializeOptions };
+export type {
+  ParseOptions as CookieParseOptions,
+  SerializeOptions as CookieSerializeOptions,
+};
 
 export interface CookieSignatureOptions {
   /**
@@ -18,8 +21,8 @@ export interface CookieSignatureOptions {
   secrets?: string[];
 }
 
-export type CookieOptions = CookieParseOptions &
-  CookieSerializeOptions &
+export type CookieOptions = ParseOptions &
+  SerializeOptions &
   CookieSignatureOptions;
 
 /**
@@ -55,79 +58,70 @@ export interface Cookie {
    * Parses a raw `Cookie` header and returns the value of this cookie or
    * `null` if it's not present.
    */
-  parse(
-    cookieHeader: string | null,
-    options?: CookieParseOptions
-  ): Promise<any>;
+  parse(cookieHeader: string | null, options?: ParseOptions): Promise<any>;
 
   /**
    * Serializes the given value to a string and returns the `Set-Cookie`
    * header.
    */
-  serialize(value: any, options?: CookieSerializeOptions): Promise<string>;
+  serialize(value: any, options?: SerializeOptions): Promise<string>;
 }
-
-export type CreateCookieFunction = (
-  name: string,
-  cookieOptions?: CookieOptions
-) => Cookie;
 
 /**
  * Creates a logical container for managing a browser cookie from the server.
- *
- * @see https://remix.run/utils/cookies#createcookie
  */
-export const createCookieFactory =
-  ({
-    sign,
-    unsign,
-  }: {
-    sign: SignFunction;
-    unsign: UnsignFunction;
-  }): CreateCookieFunction =>
-  (name, cookieOptions = {}) => {
-    let { secrets = [], ...options } = {
-      path: "/",
-      sameSite: "lax" as const,
-      ...cookieOptions,
-    };
-
-    warnOnceAboutExpiresCookie(name, options.expires);
-
-    return {
-      get name() {
-        return name;
-      },
-      get isSigned() {
-        return secrets.length > 0;
-      },
-      get expires() {
-        // Max-Age takes precedence over Expires
-        return typeof options.maxAge !== "undefined"
-          ? new Date(Date.now() + options.maxAge * 1000)
-          : options.expires;
-      },
-      async parse(cookieHeader, parseOptions) {
-        if (!cookieHeader) return null;
-        let cookies = parse(cookieHeader, { ...options, ...parseOptions });
-        return name in cookies
-          ? cookies[name] === ""
-            ? ""
-            : await decodeCookieValue(unsign, cookies[name], secrets)
-          : null;
-      },
-      async serialize(value, serializeOptions) {
-        return serialize(
-          name,
-          value === "" ? "" : await encodeCookieValue(sign, value, secrets),
-          {
-            ...options,
-            ...serializeOptions,
-          }
-        );
-      },
-    };
+export const createCookie = (
+  name: string,
+  cookieOptions: CookieOptions = {},
+): Cookie => {
+  let { secrets = [], ...options } = {
+    path: "/",
+    sameSite: "lax" as const,
+    ...cookieOptions,
   };
+
+  warnOnceAboutExpiresCookie(name, options.expires);
+
+  return {
+    get name() {
+      return name;
+    },
+    get isSigned() {
+      return secrets.length > 0;
+    },
+    get expires() {
+      // Max-Age takes precedence over Expires
+      return typeof options.maxAge !== "undefined"
+        ? new Date(Date.now() + options.maxAge * 1000)
+        : options.expires;
+    },
+    async parse(cookieHeader, parseOptions) {
+      if (!cookieHeader) return null;
+      let cookies = parse(cookieHeader, { ...options, ...parseOptions });
+      if (name in cookies) {
+        let value = cookies[name];
+        if (typeof value === "string" && value !== "") {
+          let decoded = await decodeCookieValue(value, secrets);
+          return decoded;
+        } else {
+          return "";
+        }
+      } else {
+        return null;
+      }
+    },
+    async serialize(value, serializeOptions) {
+      return serialize(
+        name,
+        value === "" ? "" : await encodeCookieValue(value, secrets),
+        {
+          ...options,
+          ...serializeOptions,
+        },
+      );
+    },
+  };
+};
 
 export type IsCookieFunction = (object: any) => object is Cookie;
 
@@ -147,9 +141,8 @@ export const isCookie: IsCookieFunction = (object): object is Cookie => {
 };
 
 async function encodeCookieValue(
-  sign: SignFunction,
   value: any,
-  secrets: string[]
+  secrets: string[],
 ): Promise<string> {
   let encoded = encodeData(value);
 
@@ -161,9 +154,8 @@ async function encodeCookieValue(
 }
 
 async function decodeCookieValue(
-  unsign: UnsignFunction,
   value: string,
-  secrets: string[]
+  secrets: string[],
 ): Promise<any> {
   if (secrets.length > 0) {
     for (let secret of secrets) {
@@ -256,6 +248,6 @@ function warnOnceAboutExpiresCookie(name: string, expires?: Date) {
       `This will cause the expires value to not be updated when the session is committed. ` +
       `Instead, you should set the expires value when serializing the cookie. ` +
       `You can use \`commitSession(session, { expires })\` if using a session storage object, ` +
-      `or \`cookie.serialize("value", { expires })\` if you're using the cookie directly.`
+      `or \`cookie.serialize("value", { expires })\` if you're using the cookie directly.`,
   );
 }

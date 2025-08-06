@@ -1,23 +1,15 @@
-import { json } from "../../lib/server-runtime/responses";
 import { createRequestHandler } from "../../lib/server-runtime/server";
+import { mockServerBuild } from "./utils";
 
 describe("createRequestHandler", () => {
   it("retains request headers when stripping body off for loaders", async () => {
-    let handler = createRequestHandler({
-      routes: {
-        root: {
-          id: "routes/test",
-          path: "/test",
-          module: {
-            loader: ({ request }) => json(request.headers.get("X-Foo")),
-          } as any,
-        },
+    let build = mockServerBuild({
+      root: {
+        path: "/test",
+        loader: ({ request }) => Response.json(request.headers.get("X-Foo")),
       },
-      assets: {} as any,
-      entry: { module: {} as any },
-      // @ts-expect-error
-      future: {},
     });
+    let handler = createRequestHandler(build);
 
     let response = await handler(
       new Request("http://.../test", {
@@ -25,7 +17,7 @@ describe("createRequestHandler", () => {
           "X-Foo": "bar",
         },
         signal: new AbortController().signal,
-      })
+      }),
     );
 
     expect(await response.json()).toBe("bar");

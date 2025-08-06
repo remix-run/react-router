@@ -9,15 +9,13 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-          import { json } from "react-router";
-
           export async function action({ request }) {
             try {
               await request.formData()
             } catch {
-              return json("no pizza");
+              return new Response("no pizza");
             }
-            return json("pizza");
+            return new Response("pizza");
           }
         `,
     },

@@ -1,15 +1,14 @@
 import * as React from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { JSDOM } from "jsdom";
+
 import {
   createBrowserRouter,
   useNavigate,
   useSubmit,
   useFetcher,
 } from "../../index";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { JSDOM } from "jsdom";
-
-// TODO: figure this out
-import { RouterProvider } from "../../lib/dom/lib";
+import { RouterProvider } from "../../lib/dom-export/dom-router-provider";
 
 describe("flushSync", () => {
   it("wraps useNavigate updates in flushSync when specified", async () => {
@@ -34,9 +33,7 @@ describe("flushSync", () => {
             return (
               <>
                 <h1>About</h1>
-                <button
-                  onClick={() => navigate("/", { unstable_flushSync: true })}
-                >
+                <button onClick={() => navigate("/", { flushSync: true })}>
                   Go to /
                 </button>
               </>
@@ -46,7 +43,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -61,14 +58,14 @@ describe("flushSync", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ unstable_flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     fireEvent.click(screen.getByText("Go to /"));
     await waitFor(() => screen.getByText("Home"));
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ unstable_flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -108,10 +105,7 @@ describe("flushSync", () => {
                 <h1>About</h1>
                 <button
                   onClick={() =>
-                    submit(
-                      {},
-                      { method: "post", action: "/", unstable_flushSync: true }
-                    )
+                    submit({}, { method: "post", action: "/", flushSync: true })
                   }
                 >
                   Go to /
@@ -123,7 +117,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -136,14 +130,14 @@ describe("flushSync", () => {
     fireEvent.click(screen.getByText("Go to /about"));
     await waitFor(() => screen.getByText("About"));
     expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy.mock.calls[0][1].unstable_flushSync).toBe(false);
-    expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[0][1].flushSync).toBe(false);
+    expect(spy.mock.calls[1][1].flushSync).toBe(false);
 
     fireEvent.click(screen.getByText("Go to /"));
     await waitFor(() => screen.getByText("Home"));
     expect(spy).toHaveBeenCalledTimes(4);
-    expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[2][1].flushSync).toBe(true);
+    expect(spy.mock.calls[3][1].flushSync).toBe(false);
 
     router.dispose();
   });
@@ -164,9 +158,7 @@ describe("flushSync", () => {
                 </button>
                 <pre>{`async:${fetcher1.data}:${fetcher1.state}`}</pre>
                 <button
-                  onClick={() =>
-                    fetcher2.load("/fetch", { unstable_flushSync: true })
-                  }
+                  onClick={() => fetcher2.load("/fetch", { flushSync: true })}
                 >
                   Load sync
                 </button>
@@ -185,7 +177,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -198,14 +190,14 @@ describe("flushSync", () => {
     fireEvent.click(screen.getByText("Load async"));
     await waitFor(() => screen.getByText("async:LOADER:idle"));
     expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy.mock.calls[0][1].unstable_flushSync).toBe(false);
-    expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[0][1].flushSync).toBe(false);
+    expect(spy.mock.calls[1][1].flushSync).toBe(false);
 
     fireEvent.click(screen.getByText("Load sync"));
     await waitFor(() => screen.getByText("sync:LOADER:idle"));
     expect(spy).toHaveBeenCalledTimes(4);
-    expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[2][1].flushSync).toBe(true);
+    expect(spy.mock.calls[3][1].flushSync).toBe(false);
 
     router.dispose();
   });
@@ -234,7 +226,7 @@ describe("flushSync", () => {
                   onClick={() =>
                     fetcher2.submit(
                       {},
-                      { method: "post", action: "/", unstable_flushSync: true }
+                      { method: "post", action: "/", flushSync: true },
                     )
                   }
                 >
@@ -248,7 +240,7 @@ describe("flushSync", () => {
       ],
       {
         window: getWindowImpl("/"),
-      }
+      },
     );
     render(<RouterProvider router={router} />);
 
@@ -261,16 +253,16 @@ describe("flushSync", () => {
     fireEvent.click(screen.getByText("Submit async"));
     await waitFor(() => screen.getByText("async:ACTION:idle"));
     expect(spy).toHaveBeenCalledTimes(3);
-    expect(spy.mock.calls[0][1].unstable_flushSync).toBe(false);
-    expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
-    expect(spy.mock.calls[2][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[0][1].flushSync).toBe(false);
+    expect(spy.mock.calls[1][1].flushSync).toBe(false);
+    expect(spy.mock.calls[2][1].flushSync).toBe(false);
 
     fireEvent.click(screen.getByText("Submit sync"));
     await waitFor(() => screen.getByText("sync:ACTION:idle"));
     expect(spy).toHaveBeenCalledTimes(6);
-    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[4][1].unstable_flushSync).toBe(false);
-    expect(spy.mock.calls[5][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[3][1].flushSync).toBe(true);
+    expect(spy.mock.calls[4][1].flushSync).toBe(false);
+    expect(spy.mock.calls[5][1].flushSync).toBe(false);
 
     router.dispose();
   });

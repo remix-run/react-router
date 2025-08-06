@@ -1,6 +1,6 @@
 {
   "name": "@react-router/node",
-  "version": "2.9.0-pre.0",
+  "version": "7.7.1",
   "description": "Node.js platform abstractions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -11,40 +11,52 @@
     "directory": "packages/react-router-node"
   },
   "license": "MIT",
+  "types": "dist/index.d.ts",
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    },
-    "./install": {
-      "types": "./dist/install.d.ts",
-      "import": "./dist/install.mjs",
-      "require": "./dist/install.js"
+      "node": {
+        "types": "./dist/index.d.ts",
+        "module-sync": "./dist/index.mjs",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./package.json": "./package.json"
   },
-  "sideEffects": [
-    "./dist/install.js",
-    "./dist/install.mjs"
-  ],
   "scripts": {
-    "tsc": "tsc"
+    "build": "wireit",
+    "typecheck": "tsc"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "sessions/**",
+        "*.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
   },
   "dependencies": {
-    "@web3-storage/multipart-parser": "^1.0.0",
-    "cookie-signature": "^1.1.0",
-    "source-map-support": "^0.5.21",
-    "stream-slice": "^0.1.2",
-    "undici": "^6.19.2"
+    "@mjackson/node-fetch-server": "^0.2.0"
   },
   "devDependencies": {
-    "@types/cookie-signature": "^1.0.3",
-    "@types/source-map-support": "^0.5.4",
     "react-router": "workspace:*",
-    "typescript": "^5.1.6"
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
   },
   "peerDependencies": {
     "react-router": "workspace:*",
@@ -56,13 +68,10 @@
     }
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "files": [
     "dist/",
-    "globals.d.ts",
-    "install.d.ts",
-    "install.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

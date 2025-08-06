@@ -1,362 +1,238 @@
-// Adapted from https://github.com/egoist/babel-plugin-eliminator/blob/d29859396b7708b7f7abbacdd951cbbc80902f00/src/index.ts
-// Which was originally adapted from https://github.com/vercel/next.js/blob/574fe0b582d5cc1b13663121fd47a3d82deaaa17/packages/next/build/babel/plugins/next-ssg-transform.ts
-import type { GeneratorOptions } from "@babel/generator";
+import {
+  findReferencedIdentifiers,
+  deadCodeElimination,
+} from "babel-dead-code-elimination";
 
-import type { BabelTypes, NodePath } from "./babel";
-import { parse, traverse, generate, t } from "./babel";
-
-function getIdentifier(
-  path: NodePath<
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.FunctionExpression
-    | BabelTypes.ArrowFunctionExpression
-  >
-): NodePath<BabelTypes.Identifier> | null {
-  let parentPath = path.parentPath;
-  if (parentPath.type === "VariableDeclarator") {
-    let variablePath = parentPath as NodePath<BabelTypes.VariableDeclarator>;
-    let name = variablePath.get("id");
-    return name.node.type === "Identifier"
-      ? (name as NodePath<BabelTypes.Identifier>)
-      : null;
-  }
-
-  if (parentPath.type === "AssignmentExpression") {
-    let variablePath = parentPath as NodePath<BabelTypes.AssignmentExpression>;
-    let name = variablePath.get("left");
-    return name.node.type === "Identifier"
-      ? (name as NodePath<BabelTypes.Identifier>)
-      : null;
-  }
-
-  if (path.node.type === "ArrowFunctionExpression") {
-    return null;
-  }
-
-  return path.node.id && path.node.id.type === "Identifier"
-    ? (path.get("id") as NodePath<BabelTypes.Identifier>)
-    : null;
-}
-
-function isIdentifierReferenced(
-  ident: NodePath<BabelTypes.Identifier>
-): boolean {
-  let binding = ident.scope.getBinding(ident.node.name);
-  if (binding?.referenced) {
-    // Functions can reference themselves, so we need to check if there's a
-    // binding outside the function scope or not.
-    if (binding.path.type === "FunctionDeclaration") {
-      return !binding.constantViolations
-        .concat(binding.referencePaths)
-        // Check that every reference is contained within the function:
-        .every((ref) => ref.findParent((parent) => parent === binding?.path));
-    }
-
-    return true;
-  }
-  return false;
-}
+import type { Babel, NodePath, ParseResult } from "./babel";
+import { traverse } from "./babel";
 
 export const removeExports = (
-  source: string,
-  exportsToRemove: string[],
-  generateOptions: GeneratorOptions = {}
+  ast: ParseResult<Babel.File>,
+  exportsToRemove: readonly string[],
 ) => {
-  let document = parse(source, { sourceType: "module" });
+  let previouslyReferencedIdentifiers = findReferencedIdentifiers(ast);
+  let exportsFiltered = false;
+  let markedForRemoval = new Set<NodePath<Babel.Node>>();
+  // Keep track of identifiers referenced by removed exports,
+  // e.g. export { localName as exportName }, export default function localName
+  let removedExportLocalNames = new Set<string>();
 
-  let referencedIdentifiers = new Set<NodePath<BabelTypes.Identifier>>();
-  let removedExports = new Set<string>();
-
-  let markImport = (
-    path: NodePath<
-      | BabelTypes.ImportSpecifier
-      | BabelTypes.ImportDefaultSpecifier
-      | BabelTypes.ImportNamespaceSpecifier
-    >
-  ) => {
-    let local = path.get("local");
-    if (isIdentifierReferenced(local)) {
-      referencedIdentifiers.add(local);
-    }
-  };
-
-  let markFunction = (
-    path: NodePath<
-      | BabelTypes.FunctionDeclaration
-      | BabelTypes.FunctionExpression
-      | BabelTypes.ArrowFunctionExpression
-    >
-  ) => {
-    let identifier = getIdentifier(path);
-    if (identifier?.node && isIdentifierReferenced(identifier)) {
-      referencedIdentifiers.add(identifier);
-    }
-  };
-
-  traverse(document, {
-    VariableDeclarator(variablePath) {
-      if (variablePath.node.id.type === "Identifier") {
-        let local = variablePath.get("id") as NodePath<BabelTypes.Identifier>;
-        if (isIdentifierReferenced(local)) {
-          referencedIdentifiers.add(local);
-        }
-      } else if (variablePath.node.id.type === "ObjectPattern") {
-        let pattern = variablePath.get(
-          "id"
-        ) as NodePath<BabelTypes.ObjectPattern>;
-
-        let properties = pattern.get("properties");
-        properties.forEach((p) => {
-          let local = p.get(
-            p.node.type === "ObjectProperty"
-              ? "value"
-              : p.node.type === "RestElement"
-              ? "argument"
-              : (function () {
-                  throw new Error("invariant");
-                })()
-          ) as NodePath<BabelTypes.Identifier>;
-          if (isIdentifierReferenced(local)) {
-            referencedIdentifiers.add(local);
-          }
-        });
-      } else if (variablePath.node.id.type === "ArrayPattern") {
-        let pattern = variablePath.get(
-          "id"
-        ) as NodePath<BabelTypes.ArrayPattern>;
-
-        let elements = pattern.get("elements");
-        elements.forEach((element) => {
-          let local: NodePath<BabelTypes.Identifier>;
-          if (element.node?.type === "Identifier") {
-            local = element as NodePath<BabelTypes.Identifier>;
-          } else if (element.node?.type === "RestElement") {
-            local = element.get("argument") as NodePath<BabelTypes.Identifier>;
-          } else {
-            return;
-          }
-
-          if (isIdentifierReferenced(local)) {
-            referencedIdentifiers.add(local);
-          }
-        });
-      }
-    },
-
-    FunctionDeclaration: markFunction,
-    FunctionExpression: markFunction,
-    ArrowFunctionExpression: markFunction,
-    ImportSpecifier: markImport,
-    ImportDefaultSpecifier: markImport,
-    ImportNamespaceSpecifier: markImport,
-
-    ExportNamedDeclaration(path) {
-      let shouldRemove = false;
-
-      // Handle re-exports: export { preload } from './foo'
-      path.node.specifiers = path.node.specifiers.filter((spec) => {
-        if (spec.exported.type !== "Identifier") {
-          return true;
-        }
-
-        let { name } = spec.exported;
-        for (let namedExport of exportsToRemove) {
-          if (name === namedExport) {
-            removedExports.add(namedExport);
-            return false;
-          }
-        }
-
-        return true;
-      });
-
-      let { declaration } = path.node;
-
-      // When no re-exports are left, remove the path
-      if (!declaration && path.node.specifiers.length === 0) {
-        shouldRemove = true;
-      }
-
-      if (declaration && declaration.type === "VariableDeclaration") {
-        declaration.declarations = declaration.declarations.filter(
-          (declarator: BabelTypes.VariableDeclarator) => {
-            for (let name of exportsToRemove) {
-              if ((declarator.id as BabelTypes.Identifier).name === name) {
-                removedExports.add(name);
+  traverse(ast, {
+    ExportDeclaration(path) {
+      // export { foo };
+      // export { bar } from "./module";
+      if (path.node.type === "ExportNamedDeclaration") {
+        if (path.node.specifiers.length) {
+          path.node.specifiers = path.node.specifiers.filter((specifier) => {
+            // Filter out individual specifiers
+            if (
+              specifier.type === "ExportSpecifier" &&
+              specifier.exported.type === "Identifier"
+            ) {
+              if (exportsToRemove.includes(specifier.exported.name)) {
+                exportsFiltered = true;
+                // Track the local identifier if it's different from the exported name
+                if (
+                  specifier.local &&
+                  specifier.local.name !== specifier.exported.name
+                ) {
+                  removedExportLocalNames.add(specifier.local.name);
+                }
                 return false;
               }
             }
             return true;
+          });
+          // Remove the entire export statement if all specifiers were removed
+          if (path.node.specifiers.length === 0) {
+            markedForRemoval.add(path);
           }
-        );
-        if (declaration.declarations.length === 0) {
-          shouldRemove = true;
+        }
+
+        // export const foo = ...;
+        // export const [ foo ] = ...;
+        if (path.node.declaration?.type === "VariableDeclaration") {
+          let declaration = path.node.declaration;
+          declaration.declarations = declaration.declarations.filter(
+            (declaration) => {
+              // export const foo = ...;
+              // export const foo = ..., bar = ...;
+              if (
+                declaration.id.type === "Identifier" &&
+                exportsToRemove.includes(declaration.id.name)
+              ) {
+                // Filter out individual variables
+                exportsFiltered = true;
+                return false;
+              }
+
+              // export const [ foo ] = ...;
+              // export const { foo } = ...;
+              if (
+                declaration.id.type === "ArrayPattern" ||
+                declaration.id.type === "ObjectPattern"
+              ) {
+                // NOTE: These exports cannot be safely removed, so instead we
+                // validate them to ensure that any exports that are intended to
+                // be removed are not present
+                validateDestructuredExports(declaration.id, exportsToRemove);
+              }
+
+              return true;
+            },
+          );
+          // Remove the entire export statement if all variables were removed
+          if (declaration.declarations.length === 0) {
+            markedForRemoval.add(path);
+          }
+        }
+
+        // export function foo() {}
+        if (path.node.declaration?.type === "FunctionDeclaration") {
+          let id = path.node.declaration.id;
+          if (id && exportsToRemove.includes(id.name)) {
+            markedForRemoval.add(path);
+          }
+        }
+
+        // export class Foo() {}
+        if (path.node.declaration?.type === "ClassDeclaration") {
+          let id = path.node.declaration.id;
+          if (id && exportsToRemove.includes(id.name)) {
+            markedForRemoval.add(path);
+          }
         }
       }
 
-      if (declaration && declaration.type === "FunctionDeclaration") {
-        for (let name of exportsToRemove) {
-          if (declaration.id?.name === name) {
-            shouldRemove = true;
-            removedExports.add(name);
+      // export default ...;
+      if (path.node.type === "ExportDefaultDeclaration") {
+        if (exportsToRemove.includes("default")) {
+          markedForRemoval.add(path);
+          // Track the identifier being exported as default
+          if (path.node.declaration) {
+            if (path.node.declaration.type === "Identifier") {
+              removedExportLocalNames.add(path.node.declaration.name);
+            } else if (
+              (path.node.declaration.type === "FunctionDeclaration" ||
+                path.node.declaration.type === "ClassDeclaration") &&
+              path.node.declaration.id
+            ) {
+              removedExportLocalNames.add(path.node.declaration.id.name);
+            }
           }
         }
-      }
-
-      if (shouldRemove) {
-        path.remove();
       }
     },
   });
 
-  if (removedExports.size === 0) {
-    // No server-specific exports found so there's
-    // no need to remove unused references
-    return generate(document, generateOptions);
+  // Remove top-level property assignments to removed exports. Handles
+  // `clientLoader.hydrate = true`, `Component.displayName = "..."`, etc.
+  traverse(ast, {
+    ExpressionStatement(path) {
+      // Only handle top-level statements
+      if (!path.parentPath.isProgram()) {
+        return;
+      }
+
+      if (path.node.expression.type === "AssignmentExpression") {
+        const left = path.node.expression.left;
+        if (
+          left.type === "MemberExpression" &&
+          left.object.type === "Identifier" &&
+          (exportsToRemove.includes(left.object.name) ||
+            removedExportLocalNames.has(left.object.name))
+        ) {
+          markedForRemoval.add(path);
+        }
+      }
+    },
+  });
+
+  if (markedForRemoval.size > 0 || exportsFiltered) {
+    for (let path of markedForRemoval) {
+      path.remove();
+    }
+
+    // Run dead code elimination on any newly unreferenced identifiers
+    deadCodeElimination(ast, previouslyReferencedIdentifiers);
+  }
+};
+
+function validateDestructuredExports(
+  id: Babel.ArrayPattern | Babel.ObjectPattern,
+  exportsToRemove: readonly string[],
+) {
+  if (id.type === "ArrayPattern") {
+    for (let element of id.elements) {
+      if (!element) {
+        continue;
+      }
+
+      // [ foo ]
+      if (
+        element.type === "Identifier" &&
+        exportsToRemove.includes(element.name)
+      ) {
+        throw invalidDestructureError(element.name);
+      }
+
+      // [ ...foo ]
+      if (
+        element.type === "RestElement" &&
+        element.argument.type === "Identifier" &&
+        exportsToRemove.includes(element.argument.name)
+      ) {
+        throw invalidDestructureError(element.argument.name);
+      }
+
+      // [ [...] ]
+      // [ {...} ]
+      if (element.type === "ArrayPattern" || element.type === "ObjectPattern") {
+        validateDestructuredExports(element, exportsToRemove);
+      }
+    }
   }
 
-  let referencesRemovedInThisPass: number;
-
-  let sweepFunction = (
-    path: NodePath<
-      | BabelTypes.FunctionDeclaration
-      | BabelTypes.FunctionExpression
-      | BabelTypes.ArrowFunctionExpression
-    >
-  ) => {
-    let identifier = getIdentifier(path);
-    if (
-      identifier?.node &&
-      referencedIdentifiers.has(identifier) &&
-      !isIdentifierReferenced(identifier)
-    ) {
-      ++referencesRemovedInThisPass;
+  if (id.type === "ObjectPattern") {
+    for (let property of id.properties) {
+      if (!property) {
+        continue;
+      }
 
       if (
-        t.isAssignmentExpression(path.parentPath.node) ||
-        t.isVariableDeclarator(path.parentPath.node)
+        property.type === "ObjectProperty" &&
+        property.key.type === "Identifier"
       ) {
-        path.parentPath.remove();
-      } else {
-        path.remove();
-      }
-    }
-  };
-
-  let sweepImport = (
-    path: NodePath<
-      | BabelTypes.ImportSpecifier
-      | BabelTypes.ImportDefaultSpecifier
-      | BabelTypes.ImportNamespaceSpecifier
-    >
-  ) => {
-    let local = path.get("local");
-    if (referencedIdentifiers.has(local) && !isIdentifierReferenced(local)) {
-      ++referencesRemovedInThisPass;
-      path.remove();
-      if (
-        (path.parent as BabelTypes.ImportDeclaration).specifiers.length === 0
-      ) {
-        path.parentPath.remove();
-      }
-    }
-  };
-
-  // Traverse again to remove unused references. This happens at least once,
-  // then repeats until no more references are removed.
-  do {
-    referencesRemovedInThisPass = 0;
-
-    traverse(document, {
-      Program(path) {
-        path.scope.crawl();
-      },
-      // eslint-disable-next-line no-loop-func
-      VariableDeclarator(variablePath) {
-        if (variablePath.node.id.type === "Identifier") {
-          let local = variablePath.get("id") as NodePath<BabelTypes.Identifier>;
-          if (
-            referencedIdentifiers.has(local) &&
-            !isIdentifierReferenced(local)
-          ) {
-            ++referencesRemovedInThisPass;
-            variablePath.remove();
-          }
-        } else if (variablePath.node.id.type === "ObjectPattern") {
-          let pattern = variablePath.get(
-            "id"
-          ) as NodePath<BabelTypes.ObjectPattern>;
-
-          let beforeCount = referencesRemovedInThisPass;
-          let properties = pattern.get("properties");
-          properties.forEach((property) => {
-            let local = property.get(
-              property.node.type === "ObjectProperty"
-                ? "value"
-                : property.node.type === "RestElement"
-                ? "argument"
-                : (function () {
-                    throw new Error("invariant");
-                  })()
-            ) as NodePath<BabelTypes.Identifier>;
-
-            if (
-              referencedIdentifiers.has(local) &&
-              !isIdentifierReferenced(local)
-            ) {
-              ++referencesRemovedInThisPass;
-              property.remove();
-            }
-          });
-
-          if (
-            beforeCount !== referencesRemovedInThisPass &&
-            pattern.get("properties").length < 1
-          ) {
-            variablePath.remove();
-          }
-        } else if (variablePath.node.id.type === "ArrayPattern") {
-          let pattern = variablePath.get(
-            "id"
-          ) as NodePath<BabelTypes.ArrayPattern>;
-
-          let beforeCount = referencesRemovedInThisPass;
-          let elements = pattern.get("elements");
-          elements.forEach((e) => {
-            let local: NodePath<BabelTypes.Identifier>;
-            if (e.node?.type === "Identifier") {
-              local = e as NodePath<BabelTypes.Identifier>;
-            } else if (e.node?.type === "RestElement") {
-              local = e.get("argument") as NodePath<BabelTypes.Identifier>;
-            } else {
-              return;
-            }
-
-            if (
-              referencedIdentifiers.has(local) &&
-              !isIdentifierReferenced(local)
-            ) {
-              ++referencesRemovedInThisPass;
-              e.remove();
-            }
-          });
-
-          if (
-            beforeCount !== referencesRemovedInThisPass &&
-            pattern.get("elements").length < 1
-          ) {
-            variablePath.remove();
-          }
+        // { foo }
+        if (
+          property.value.type === "Identifier" &&
+          exportsToRemove.includes(property.value.name)
+        ) {
+          throw invalidDestructureError(property.value.name);
         }
-      },
-      FunctionDeclaration: sweepFunction,
-      FunctionExpression: sweepFunction,
-      ArrowFunctionExpression: sweepFunction,
-      ImportSpecifier: sweepImport,
-      ImportDefaultSpecifier: sweepImport,
-      ImportNamespaceSpecifier: sweepImport,
-    });
-  } while (referencesRemovedInThisPass);
 
-  return generate(document, generateOptions);
-};
+        // { foo: [...] }
+        // { foo: {...} }
+        if (
+          property.value.type === "ArrayPattern" ||
+          property.value.type === "ObjectPattern"
+        ) {
+          validateDestructuredExports(property.value, exportsToRemove);
+        }
+      }
+
+      // { ...foo }
+      if (
+        property.type === "RestElement" &&
+        property.argument.type === "Identifier" &&
+        exportsToRemove.includes(property.argument.name)
+      ) {
+        throw invalidDestructureError(property.argument.name);
+      }
+    }
+  }
+}
+
+function invalidDestructureError(name: string) {
+  return new Error(`Cannot remove destructured export "${name}"`);
+}

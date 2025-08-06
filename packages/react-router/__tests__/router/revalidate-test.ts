@@ -1,5 +1,5 @@
 import { createMemoryRouter } from "../../lib/components";
-import { IDLE_NAVIGATION } from "../../lib/router";
+import { IDLE_NAVIGATION } from "../../lib/router/router";
 import {
   cleanup,
   setup,
@@ -230,7 +230,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -296,7 +296,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -380,7 +380,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -439,7 +439,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -515,7 +515,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -589,7 +589,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
 
     // Action was not resubmitted
@@ -679,7 +679,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
 
     // Action was not resubmitted
@@ -796,7 +796,6 @@ describe("router.revalidate", () => {
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
       loaderData: {
-        root: undefined,
         index: "INDEX_DATA*",
       },
       errors: {
@@ -948,7 +947,7 @@ describe("router.revalidate", () => {
         hydrationData: {
           loaderData: { root: "ROOT" },
         },
-      }
+      },
     );
 
     let revalidationValue = null;
@@ -1047,7 +1046,7 @@ describe("router.revalidate", () => {
         hydrationData: {
           loaderData: { root: "ROOT" },
         },
-      }
+      },
     );
 
     let revalidationValue = null;
@@ -1113,8 +1112,12 @@ describe("router.revalidate", () => {
       revalidation: "idle",
       loaderData: { root: "ROOT**" },
     });
+    // The interrupted revalidation hooks into the next completed navigation
+    // so it reflects the end state value
     expect(revalidationValue).toBe("ROOT**");
-    expect(navigationValue).toBe("ROOT**");
+    // The interim navigation gets interrupted and ends while the router still
+    // reflects the original value
+    expect(navigationValue).toBe("ROOT");
     expect(navigationValue2).toBe("ROOT**");
 
     // no-op
@@ -1127,7 +1130,7 @@ describe("router.revalidate", () => {
       loaderData: { root: "ROOT**" },
     });
     expect(revalidationValue).toBe("ROOT**");
-    expect(navigationValue).toBe("ROOT**");
+    expect(navigationValue).toBe("ROOT");
     expect(navigationValue2).toBe("ROOT**");
   });
 });

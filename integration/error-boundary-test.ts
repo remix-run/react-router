@@ -293,7 +293,7 @@ test.describe("ErrorBoundary", () => {
             `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     appFixture = await createAppFixture(fixture, ServerMode.Development);
@@ -493,109 +493,73 @@ test.describe("ErrorBoundary", () => {
   test.describe("if no error boundary exists in the app", () => {
     let NO_ROOT_BOUNDARY_LOADER = "/loader-bad" as const;
     let NO_ROOT_BOUNDARY_ACTION = "/action-bad" as const;
-    let NO_ROOT_BOUNDARY_LOADER_RETURN = "/loader-no-return" as const;
-    let NO_ROOT_BOUNDARY_ACTION_RETURN = "/action-no-return" as const;
 
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Outlet, Scripts } from "react-router";
+            import { Links, Meta, Outlet, Scripts } from "react-router";
 
-              export default function Root() {
-                return (
-                  <html lang="en">
-                    <head>
-                      <Meta />
-                      <Links />
-                    </head>
-                    <body>
-                      <Outlet />
-                      <Scripts />
-                    </body>
-                  </html>
-                );
-              }
-            `,
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
 
           "app/routes/_index.tsx": js`
-              import { Link, Form } from "react-router";
+            import { Link, Form } from "react-router";
 
-              export default function () {
-                return (
-                  <div>
-                    <h1>Home</h1>
-                    <Link to="${NO_ROOT_BOUNDARY_LOADER_RETURN}">Loader no return</Link>
-                    <Form method="post">
-                      <button formAction="${NO_ROOT_BOUNDARY_ACTION}" type="submit">
-                        Action go boom
-                      </button>
-                      <button formAction="${NO_ROOT_BOUNDARY_ACTION_RETURN}" type="submit">
-                        Action no return
-                      </button>
-                    </Form>
-                  </div>
-                )
-              }
-            `,
+            export default function () {
+              return (
+                <div>
+                  <h1>Home</h1>
+                  <Form method="post">
+                    <button formAction="${NO_ROOT_BOUNDARY_ACTION}" type="submit">
+                      Action go boom
+                    </button>
+                  </Form>
+                </div>
+              )
+            }
+          `,
 
           [`app/routes${NO_ROOT_BOUNDARY_LOADER}.jsx`]: js`
-              export async function loader() {
-                throw Error("BLARGH");
-              }
+            export async function loader() {
+              throw Error("BLARGH");
+            }
 
-              export default function () {
-                return (
-                  <div>
-                    <h1>Hello</h1>
-                  </div>
-                )
-              }
-            `,
+            export default function () {
+              return (
+                <div>
+                  <h1>Hello</h1>
+                </div>
+              )
+            }
+          `,
 
           [`app/routes${NO_ROOT_BOUNDARY_ACTION}.jsx`]: js`
-              export async function action() {
-                throw Error("YOOOOOOOO WHAT ARE YOU DOING");
-              }
+            export async function action() {
+              throw Error("YOOOOOOOO WHAT ARE YOU DOING");
+            }
 
-              export default function () {
-                return (
-                  <div>
-                    <h1>Goodbye</h1>
-                  </div>
-                )
-              }
-            `,
-
-          [`app/routes${NO_ROOT_BOUNDARY_LOADER_RETURN}.jsx`]: js`
-              import { useLoaderData } from "react-router";
-
-              export async function loader() {}
-
-              export default function () {
-                let data = useLoaderData();
-                return (
-                  <div>
-                    <h1>{data}</h1>
-                  </div>
-                )
-              }
-            `,
-
-          [`app/routes${NO_ROOT_BOUNDARY_ACTION_RETURN}.jsx`]: js`
-              import { useActionData } from "react-router";
-
-              export async function action() {}
-
-              export default function () {
-                let data = useActionData();
-                return (
-                  <div>
-                    <h1>{data}</h1>
-                  </div>
-                )
-              }
-            `,
+            export default function () {
+              return (
+                <div>
+                  <h1>Goodbye</h1>
+                </div>
+              )
+            }
+          `,
         },
       });
       appFixture = await createAppFixture(fixture);
@@ -618,291 +582,7 @@ test.describe("ErrorBoundary", () => {
       await page.waitForSelector(`text=${INTERNAL_ERROR_BOUNDARY_HEADING}`);
       expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
     });
-
-    test("bubbles to internal boundary if loader doesn't return (document requests)", async () => {
-      let res = await fixture.requestDocument(NO_ROOT_BOUNDARY_LOADER_RETURN);
-      expect(res.status).toBe(500);
-      expect(await res.text()).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
-    });
-
-    test("bubbles to internal boundary if loader doesn't return", async ({
-      page,
-    }) => {
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await app.clickLink(NO_ROOT_BOUNDARY_LOADER_RETURN);
-      await page.waitForSelector(`text=${INTERNAL_ERROR_BOUNDARY_HEADING}`);
-      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
-    });
-
-    test("bubbles to internal boundary if action doesn't return (document requests)", async () => {
-      let res = await fixture.requestDocument(NO_ROOT_BOUNDARY_ACTION_RETURN, {
-        method: "post",
-      });
-      expect(res.status).toBe(500);
-      expect(await res.text()).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
-    });
-
-    test("bubbles to internal boundary if action doesn't return", async ({
-      page,
-    }) => {
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/");
-      await app.clickSubmitButton(NO_ROOT_BOUNDARY_ACTION_RETURN);
-      await page.waitForSelector(`text=${INTERNAL_ERROR_BOUNDARY_HEADING}`);
-      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
-    });
   });
-});
-
-test.describe("loaderData in ErrorBoundary", () => {
-  let fixture: Fixture;
-  let appFixture: AppFixture;
-  let consoleErrors: string[];
-  let oldConsoleError: () => void;
-
-  test.beforeAll(async () => {
-    fixture = await createFixture({
-      files: {
-        "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "react-router";
-
-            export default function Root() {
-              return (
-                <html lang="en">
-                  <head>
-                    <Meta />
-                    <Links />
-                  </head>
-                  <body>
-                    <main>
-                      <Outlet />
-                    </main>
-                    <Scripts />
-                  </body>
-                </html>
-              );
-            }
-          `,
-
-        "app/routes/parent.tsx": js`
-            import { Outlet, useLoaderData, useMatches, useRouteError } from "react-router";
-
-            export function loader() {
-              return "PARENT";
-            }
-
-            export default function () {
-              return (
-                <div>
-                  <p id="parent-data">{useLoaderData()}</p>
-                  <Outlet />
-                </div>
-              )
-            }
-
-            export function ErrorBoundary() {
-              let error = useRouteError();
-              return (
-                <>
-                  <p id="parent-data">{useLoaderData()}</p>
-                  <p id="parent-matches-data">
-                    {useMatches().find(m => m.id === 'routes/parent').data}
-                  </p>
-                  <p id="parent-error">{error.message}</p>
-                </>
-              );
-            }
-          `,
-
-        "app/routes/parent.child-with-boundary.tsx": js`
-            import { Form, useLoaderData, useRouteError } from "react-router";
-
-            export function loader() {
-              return "CHILD";
-            }
-
-            export function action() {
-              throw new Error("Broken!");
-            }
-
-            export default function () {
-              return (
-                <>
-                  <p id="child-data">{useLoaderData()}</p>
-                  <Form method="post">
-                    <button type="submit" name="key" value="value">
-                      Submit
-                    </button>
-                  </Form>
-                </>
-              )
-            }
-
-            export function ErrorBoundary() {
-              let error = useRouteError();
-              return (
-                <>
-                  <p id="child-data">{useLoaderData()}</p>
-                  <p id="child-error">{error.message}</p>
-                </>
-              );
-            }
-          `,
-
-        "app/routes/parent.child-without-boundary.tsx": js`
-            import { Form, useLoaderData } from "react-router";
-
-            export function loader() {
-              return "CHILD";
-            }
-
-            export function action() {
-              throw new Error("Broken!");
-            }
-
-            export default function () {
-              return (
-                <>
-                  <p id="child-data">{useLoaderData()}</p>
-                  <Form method="post">
-                    <button type="submit" name="key" value="value">
-                      Submit
-                    </button>
-                  </Form>
-                </>
-              )
-            }
-          `,
-      },
-    });
-
-    appFixture = await createAppFixture(fixture, ServerMode.Development);
-  });
-
-  test.afterAll(() => {
-    appFixture.close();
-  });
-
-  test.beforeEach(({ page }) => {
-    oldConsoleError = console.error;
-    console.error = () => {};
-    consoleErrors = [];
-    // Listen for all console events and handle errors
-    page.on("console", (msg) => {
-      if (msg.type() === "error") {
-        consoleErrors.push(msg.text());
-      }
-    });
-  });
-
-  test.afterEach(() => {
-    console.error = oldConsoleError;
-  });
-
-  test.describe("without JavaScript", () => {
-    test.use({ javaScriptEnabled: false });
-    runBoundaryTests();
-  });
-
-  test.describe("with JavaScript", () => {
-    test.use({ javaScriptEnabled: true });
-    runBoundaryTests();
-  });
-
-  function runBoundaryTests() {
-    test("Prevents useLoaderData in self ErrorBoundary", async ({
-      page,
-      javaScriptEnabled,
-    }) => {
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/parent/child-with-boundary");
-
-      expect(await app.getHtml("#parent-data")).toEqual(
-        '<p id="parent-data">PARENT</p>'
-      );
-      expect(await app.getHtml("#child-data")).toEqual(
-        '<p id="child-data">CHILD</p>'
-      );
-      expect(consoleErrors).toEqual([]);
-
-      await app.clickSubmitButton("/parent/child-with-boundary");
-      await page.waitForSelector("#child-error");
-
-      expect(await app.getHtml("#child-error")).toEqual(
-        '<p id="child-error">Broken!</p>'
-      );
-      expect(await app.getHtml("#parent-data")).toEqual(
-        '<p id="parent-data">PARENT</p>'
-      );
-      expect(await app.getHtml("#child-data")).toEqual(
-        '<p id="child-data"></p>'
-      );
-
-      // Only look for this message.  Chromium browsers will also log the
-      // network error but firefox does not
-      //   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
-      let msg =
-        "You cannot `useLoaderData` in an errorElement (routeId: routes/parent.child-with-boundary)";
-      if (javaScriptEnabled) {
-        expect(consoleErrors.filter((m) => m === msg)).toEqual([msg]);
-      } else {
-        // We don't get the useLoaderData message in the client when JS is disabled
-        expect(consoleErrors.filter((m) => m === msg)).toEqual([]);
-      }
-    });
-
-    test("Prevents useLoaderData in bubbled ErrorBoundary", async ({
-      page,
-      javaScriptEnabled,
-    }) => {
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/parent/child-without-boundary");
-
-      expect(await app.getHtml("#parent-data")).toEqual(
-        '<p id="parent-data">PARENT</p>'
-      );
-      expect(await app.getHtml("#child-data")).toEqual(
-        '<p id="child-data">CHILD</p>'
-      );
-      expect(consoleErrors).toEqual([]);
-
-      await app.clickSubmitButton("/parent/child-without-boundary");
-      await page.waitForSelector("#parent-error");
-
-      expect(await app.getHtml("#parent-error")).toEqual(
-        '<p id="parent-error">Broken!</p>'
-      );
-      if (javaScriptEnabled) {
-        // This data remains in single fetch with JS because we don't revalidate
-        // due to the 500 action response
-        expect(await app.getHtml("#parent-matches-data")).toEqual(
-          '<p id="parent-matches-data">PARENT</p>'
-        );
-      } else {
-        // But without JS document requests call all loaders up to the
-        // boundary route so parent's data clears out
-        expect(await app.getHtml("#parent-matches-data")).toEqual(
-          '<p id="parent-matches-data"></p>'
-        );
-      }
-      expect(await app.getHtml("#parent-data")).toEqual(
-        '<p id="parent-data"></p>'
-      );
-
-      // Only look for this message.  Chromium browsers will also log the
-      // network error but firefox does not
-      //   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
-      let msg =
-        "You cannot `useLoaderData` in an errorElement (routeId: routes/parent)";
-      if (javaScriptEnabled) {
-        expect(consoleErrors.filter((m) => m === msg)).toEqual([msg]);
-      } else {
-        // We don't get the useLoaderData message in the client when JS is disabled
-        expect(consoleErrors.filter((m) => m === msg)).toEqual([]);
-      }
-    });
-  }
 });
 
 test.describe("Default ErrorBoundary", () => {
@@ -917,7 +597,7 @@ test.describe("Default ErrorBoundary", () => {
     let errorBoundaryCode = !includeRootErrorBoundary
       ? ""
       : rootErrorBoundaryThrows
-      ? js`
+        ? js`
           export function ErrorBoundary() {
             let error = useRouteError();
             return (
@@ -935,7 +615,7 @@ test.describe("Default ErrorBoundary", () => {
             )
           }
         `
-      : js`
+        : js`
         export function ErrorBoundary() {
           let error = useRouteError();
           return (
@@ -1023,7 +703,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: false }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
@@ -1094,7 +774,7 @@ test.describe("Default ErrorBoundary", () => {
         {
           files: getFiles({ includeRootErrorBoundary: true }),
         },
-        ServerMode.Development
+        ServerMode.Development,
       );
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
@@ -1291,7 +971,6 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
         `,
 
       "app/routes/boom.tsx": js`
-          import { json } from "react-router";
           export function loader() { return boom(); }
           export default function() { return <b>my page</b>; }
         `,

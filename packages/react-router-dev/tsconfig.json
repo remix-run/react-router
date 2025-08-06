@@ -6,14 +6,16 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
+
     "strict": true,
     "jsx": "react",
+
     "skipLibCheck": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
+
+    "outDir": "dist",
     "rootDir": ".",
-    "outDir": "./dist"
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
   }
 }

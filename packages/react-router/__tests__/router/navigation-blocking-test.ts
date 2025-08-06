@@ -1,5 +1,6 @@
-import type { Router } from "../../lib/router";
-import { createMemoryHistory, createRouter } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import type { Router } from "../../lib/router/router";
+import { createRouter } from "../../lib/router/router";
 
 const LOADER_LATENCY_MS = 100;
 const routes = [
@@ -86,7 +87,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
+          initialEntries[initialIndex],
         );
       });
 
@@ -228,7 +229,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
+          initialEntries[initialIndex],
         );
       });
 
@@ -347,7 +348,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex - 1]
+          initialEntries[initialIndex - 1],
         );
       });
 
@@ -381,7 +382,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
+          initialEntries[initialIndex],
         );
       });
 
@@ -442,7 +443,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
+        await sleep(LOADER_LATENCY_MS + 10);
         expect(router.getBlocker("KEY", fn)).toEqual({
           state: "unblocked",
           proceed: undefined,
@@ -455,7 +456,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
+        await sleep(LOADER_LATENCY_MS + 10);
         expect(router.state.location.pathname).toBe("/about");
       });
     });

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
 import {
   createFixture,
   js,
@@ -8,47 +7,40 @@ import {
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-let fixture: Fixture;
-let appFixture: AppFixture;
-
-test.beforeAll(async () => {
-  fixture = await createFixture({
-    files: {
-      "app/routes/_index.tsx": js`
-        import { Link } from "react-router";
-
-        export default function Index() {
-          return (
-            <div>
-              <div id="pizza">pizza</div>
-              <Link to="/burgers">burger link</Link>
-            </div>
-          )
-        }
-      `,
-
-      "app/routes/burgers.tsx": js`
-        export default function Index() {
-          return <div id="cheeseburger">cheeseburger</div>;
-        }
-      `,
-    },
-  });
-
-  // This creates an interactive app using puppeteer.
-  appFixture = await createAppFixture(fixture);
-});
-
-test.afterAll(() => appFixture.close());
-
 test(
   "expect to be able to browse backward out of a remix app, then forward " +
     "twice in history and have pages render correctly",
   async ({ page, browserName }) => {
     test.skip(
       browserName === "firefox",
-      "FireFox doesn't support browsing to an empty page (aka about:blank)"
+      "FireFox doesn't support browsing to an empty page (aka about:blank)",
     );
+
+    let fixture = await createFixture({
+      files: {
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+
+          export default function Index() {
+            return (
+              <div>
+                <div id="pizza">pizza</div>
+                <Link to="/burgers">burger link</Link>
+              </div>
+            )
+          }
+        `,
+
+        "app/routes/burgers.tsx": js`
+          export default function Index() {
+            return <div id="cheeseburger">cheeseburger</div>;
+          }
+        `,
+      },
+    });
+
+    // This creates an interactive app using puppeteer.
+    let appFixture = await createAppFixture(fixture);
 
     let app = new PlaywrightFixture(appFixture, page);
 
@@ -84,5 +76,56 @@ test(
     // successfully render /burgers
     await page.waitForSelector("#cheeseburger");
     expect(await app.getHtml()).toContain("cheeseburger");
-  }
+
+    appFixture.close();
+  },
 );
+
+test("allows users to pass a client side context to HydratedRouter", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "app/entry.client.tsx": js`
+        import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        export const myContext = new unstable_createContext('foo');
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                unstable_getContext={() => {
+                  return new unstable_RouterContextProvider([
+                    [myContext, 'bar']
+                  ]);
+                }}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/routes/_index.tsx": js`
+        import { myContext } from "../entry.client";
+
+        export function clientLoader({ context }) {
+          return context.get(myContext);
+        }
+        export default function Index({ loaderData }) {
+          return <h1>Hello, {loaderData}</h1>
+        }
+      `,
+    },
+  });
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+  await app.goto("/", true);
+  expect(await app.getHtml()).toContain("Hello, bar");
+
+  appFixture.close();
+});

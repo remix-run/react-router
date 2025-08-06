@@ -58,10 +58,8 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/loader-return-json.jsx`]: js`
-          import { json } from "react-router";
-
           export async function loader() {
-            return json({ ok: true });
+            return { ok: true };
           }
 
           export default function () {
@@ -80,10 +78,8 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/action-return-json.jsx`]: js`
-          import { json } from "react-router";
-
           export async function action() {
-            return json({ ok: true });
+            return { ok: true };
           }
 
           export default function () {
@@ -111,19 +107,11 @@ test.describe("ErrorBoundary", () => {
   }
 
   test("returns a 200 empty response on a data fetch to a path with no loaders", async () => {
-    let { status, headers, data } = await fixture.requestSingleFetchData(
-      "/_root.data"
-    );
+    let { status, headers, data } =
+      await fixture.requestSingleFetchData("/_root.data");
     expect(status).toBe(200);
     expect(headers.has("X-Remix-Error")).toBe(false);
-    expect(data).toEqual({
-      root: {
-        data: null,
-      },
-      "routes/_index": {
-        data: null,
-      },
-    });
+    expect(data).toEqual({});
   });
 
   test("returns a 405 on a data fetch POST to a path with no action", async () => {
@@ -131,7 +119,7 @@ test.describe("ErrorBoundary", () => {
       "/_root.data?index",
       {
         method: "POST",
-      }
+      },
     );
     expect(status).toBe(405);
     expect(headers.has("X-Remix-Error")).toBe(false);
@@ -139,11 +127,11 @@ test.describe("ErrorBoundary", () => {
       error: new ErrorResponseImpl(
         405,
         "Method Not Allowed",
-        'Error: You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.'
+        'Error: You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
       ),
     });
     assertLoggedErrorInstance(
-      'You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.'
+      'You made a POST request to "/" but did not provide an `action` for route "routes/_index", so there is no way to handle the request.',
     );
   });
 
@@ -155,14 +143,14 @@ test.describe("ErrorBoundary", () => {
       expect(false).toBe(true);
     } catch (e) {
       expect((e as Error).message).toMatch(
-        "'TRACE' HTTP method is unsupported."
+        "'TRACE' HTTP method is unsupported.",
       );
     }
   });
 
   test("returns a 404 on a data fetch to a path with no matches", async () => {
     let { status, headers, data } = await fixture.requestSingleFetchData(
-      "/i/match/nothing.data"
+      "/i/match/nothing.data",
     );
     expect(status).toBe(404);
     expect(headers.has("X-Remix-Error")).toBe(false);
@@ -171,7 +159,7 @@ test.describe("ErrorBoundary", () => {
         error: new ErrorResponseImpl(
           404,
           "Not Found",
-          'Error: No route matches URL "/i/match/nothing"'
+          'Error: No route matches URL "/i/match/nothing"',
         ),
       },
     });

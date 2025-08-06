@@ -1,7 +1,7 @@
 import type * as Vite from "vite";
 import colors from "picocolors";
 
-import { preloadViteEsm } from "./import-vite-esm-sync";
+import { preloadVite, getVite } from "./vite";
 import * as profiler from "./profiler";
 
 export interface ViteDevOptions {
@@ -31,13 +31,13 @@ export async function dev(
     open,
     port,
     strictPort,
-  }: ViteDevOptions
+  }: ViteDevOptions,
 ) {
   // Ensure Vite's ESM build is preloaded at the start of the process
-  // so it can be accessed synchronously via `importViteEsmSync`
-  await preloadViteEsm();
+  // so it can be accessed synchronously via `getVite`
+  await preloadVite();
+  let vite = getVite();
 
-  let vite = await import("vite");
   let server = await vite.createServer({
     root,
     mode,
@@ -48,9 +48,15 @@ export async function dev(
     logLevel,
   });
 
-  if (!server.config.plugins.find((plugin) => plugin.name === "react-router")) {
+  if (
+    !server.config.plugins.find(
+      (plugin) =>
+        plugin.name === "react-router" ||
+        plugin.name === "react-router/rsc/config",
+    )
+  ) {
     console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
+      colors.red("React Router Vite plugin not found in Vite config"),
     );
     process.exit(1);
   }

@@ -1,13 +1,12 @@
 import * as path from "node:path";
-import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
-import type { ResolvedVitePluginConfig } from "../config";
+import type { ResolvedReactRouterConfig } from "../config/config";
+import type { RouteManifest, RouteManifestEntry } from "../config/routes";
+import type { LoadCssContents } from "./plugin";
 import { resolveFileUrl } from "./resolve-file-url";
-
-type ServerRouteManifest = ServerBuild["routes"];
-type ServerRoute = ServerRouteManifest[string];
+import * as babel from "./babel";
 
 // Style collection logic adapted from solid-start: https://github.com/solidjs/solid-start
 
@@ -21,15 +20,42 @@ const cssModulesRegExp = new RegExp(`\\.module${cssFileRegExp.source}`);
 const isCssFile = (file: string) => cssFileRegExp.test(file);
 export const isCssModulesFile = (file: string) => cssModulesRegExp.test(file);
 
+// https://vitejs.dev/guide/features#disabling-css-injection-into-the-page
+// https://github.com/vitejs/vite/blob/561b940f6f963fbb78058a6e23b4adad53a2edb9/packages/vite/src/node/plugins/css.ts#L194
+// https://vitejs.dev/guide/features#static-assets
+// https://github.com/vitejs/vite/blob/561b940f6f963fbb78058a6e23b4adad53a2edb9/packages/vite/src/node/utils.ts#L309-L310
+const cssUrlParamsWithoutSideEffects = ["url", "inline", "raw", "inline-css"];
+export const isCssUrlWithoutSideEffects = (url: string) => {
+  let queryString = url.split("?")[1];
+
+  if (!queryString) {
+    return false;
+  }
+
+  let params = new URLSearchParams(queryString);
+  for (let paramWithoutSideEffects of cssUrlParamsWithoutSideEffects) {
+    if (
+      // Parameter is blank and not explicitly set, i.e. "?url", not "?url="
+      params.get(paramWithoutSideEffects) === "" &&
+      !url.includes(`?${paramWithoutSideEffects}=`) &&
+      !url.includes(`&${paramWithoutSideEffects}=`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 const getStylesForFiles = async ({
   viteDevServer,
   rootDirectory,
-  cssModulesManifest,
+  loadCssContents,
   files,
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  cssModulesManifest: Record<string, string>;
+  loadCssContents: LoadCssContents;
   files: string[];
 }): Promise<string | undefined> => {
   let styles: Record<string, string> = {};
@@ -48,7 +74,7 @@ const getStylesForFiles = async ({
       if (!node) {
         try {
           await viteDevServer.transformRequest(
-            resolveFileUrl({ rootDirectory }, normalizedPath)
+            resolveFileUrl({ rootDirectory }, normalizedPath),
           );
         } catch (err) {
           console.error(err);
@@ -71,20 +97,12 @@ const getStylesForFiles = async ({
     if (
       dep.file &&
       isCssFile(dep.file) &&
-      !dep.url.endsWith("?url") // Ignore styles that resolved as URLs, otherwise we'll end up injecting URLs into the style tag contents
+      !isCssUrlWithoutSideEffects(dep.url) // Ignore styles that resolved as URLs, inline or raw. These shouldn't get injected.
     ) {
       try {
-        let css = isCssModulesFile(dep.file)
-          ? cssModulesManifest[dep.file]
-          : (await viteDevServer.ssrLoadModule(dep.url)).default;
-
-        if (css === undefined) {
-          throw new Error();
-        }
-
-        styles[dep.url] = css;
+        styles[dep.url] = await loadCssContents(viteDevServer, dep);
       } catch {
-        console.warn(`Could not load ${dep.file}`);
+        console.warn(`Failed to load CSS for ${dep.file}`);
         // this can happen with dynamically imported modules, I think
         // because the Vite module graph doesn't distinguish between
         // static and dynamic imports? TODO investigate, submit fix
@@ -109,7 +127,7 @@ const getStylesForFiles = async ({
 const findDeps = async (
   vite: ViteDevServer,
   node: ModuleNode,
-  deps: Set<ModuleNode>
+  deps: Set<ModuleNode>,
 ) => {
   // since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
   // instead of using `await`, we resolve all branches in parallel.
@@ -133,7 +151,7 @@ const findDeps = async (
   if (node.ssrTransformResult) {
     if (node.ssrTransformResult.deps) {
       node.ssrTransformResult.deps.forEach((url) =>
-        branches.push(addFromUrl(url))
+        branches.push(addFromUrl(url)),
       );
     }
   } else {
@@ -143,68 +161,84 @@ const findDeps = async (
   await Promise.all(branches);
 };
 
-const groupRoutesByParentId = (manifest: ServerRouteManifest) => {
-  let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
+const groupRoutesByParentId = (manifest: RouteManifest) => {
+  let routes: Record<string, Array<RouteManifestEntry>> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;
 };
 
-// Create a map of routes by parentId to use recursively instead of
-// repeatedly filtering the manifest.
-const createRoutes = (
-  manifest: ServerRouteManifest,
+type RouteManifestEntryWithChildren = Omit<RouteManifestEntry, "index"> &
+  (
+    | { index?: false | undefined; children: RouteManifestEntryWithChildren[] }
+    | { index: true; children?: never }
+  );
+
+const createRoutesWithChildren = (
+  manifest: RouteManifest,
   parentId: string = "",
-  routesByParentId: Record<
-    string,
-    Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
-): ServerRoute[] => {
+  routesByParentId = groupRoutesByParentId(manifest),
+): RouteManifestEntryWithChildren[] => {
   return (routesByParentId[parentId] || []).map((route) => ({
     ...route,
-    children: createRoutes(manifest, route.id, routesByParentId),
+    ...(route.index
+      ? {
+          index: true,
+        }
+      : {
+          index: false,
+          children: createRoutesWithChildren(
+            manifest,
+            route.id,
+            routesByParentId,
+          ),
+        }),
   }));
 };
 
-export const getStylesForUrl = async ({
+export const getStylesForPathname = async ({
   viteDevServer,
   rootDirectory,
   reactRouterConfig,
   entryClientFilePath,
-  cssModulesManifest,
-  build,
-  url,
+  loadCssContents,
+  pathname,
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  reactRouterConfig: Pick<ResolvedVitePluginConfig, "appDirectory" | "routes">;
+  reactRouterConfig: Pick<
+    ResolvedReactRouterConfig,
+    "appDirectory" | "routes" | "basename"
+  >;
   entryClientFilePath: string;
-  cssModulesManifest: Record<string, string>;
-  build: ServerBuild;
-  url: string | undefined;
+  loadCssContents: LoadCssContents;
+  pathname: string | undefined;
 }): Promise<string | undefined> => {
-  if (url === undefined || url.includes("?_data=")) {
+  if (pathname === undefined || pathname.includes("?_data=")) {
     return undefined;
   }
 
-  let routes = createRoutes(build.routes);
+  let routesWithChildren = createRoutesWithChildren(reactRouterConfig.routes);
   let appPath = path.relative(process.cwd(), reactRouterConfig.appDirectory);
   let documentRouteFiles =
-    matchRoutes(routes, url, build.basename)?.map((match) =>
-      path.resolve(appPath, reactRouterConfig.routes[match.route.id].file)
+    matchRoutes(routesWithChildren, pathname, reactRouterConfig.basename)?.map(
+      (match) =>
+        path.resolve(appPath, reactRouterConfig.routes[match.route.id].file),
     ) ?? [];
 
   let styles = await getStylesForFiles({
     viteDevServer,
     rootDirectory,
-    cssModulesManifest,
+    loadCssContents,
     files: [
       // Always include the client entry file when crawling the module graph for CSS
       path.relative(rootDirectory, entryClientFilePath),
@@ -214,4 +248,27 @@ export const getStylesForUrl = async ({
   });
 
   return styles;
+};
+
+export const getCssStringFromViteDevModuleCode = (
+  code: string,
+): string | undefined => {
+  let cssContent = undefined;
+
+  const ast = babel.parse(code, { sourceType: "module" });
+  babel.traverse(ast, {
+    VariableDeclaration(path) {
+      const declaration = path.node.declarations[0];
+      if (
+        declaration?.id?.type === "Identifier" &&
+        declaration.id.name === "__vite__css" &&
+        declaration.init?.type === "StringLiteral"
+      ) {
+        cssContent = declaration.init.value;
+        path.stop();
+      }
+    },
+  });
+
+  return cssContent;
 };

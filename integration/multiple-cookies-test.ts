@@ -16,21 +16,20 @@ test.describe("pathless layout routes", () => {
       await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { redirect, json } from "react-router";
-            import { Form, useActionData } from "react-router";
+            import { data, redirect, Form, useActionData } from "react-router";
 
             export let loader = async () => {
               let headers = new Headers();
               headers.append("Set-Cookie", "foo=bar");
               headers.append("Set-Cookie", "bar=baz");
-              return json({}, { headers });
+              return data({}, { headers });
             };
 
             export let action = async () => {
               let headers = new Headers();
               headers.append("Set-Cookie", "another=one");
               headers.append("Set-Cookie", "how-about=two");
-              return json({success: true}, { headers });
+              return data({success: true}, { headers });
             };
 
             export default function MultipleSetCookiesPage() {
@@ -47,7 +46,7 @@ test.describe("pathless layout routes", () => {
             };
           `,
         },
-      })
+      }),
     );
   });
 
@@ -69,7 +68,7 @@ test.describe("pathless layout routes", () => {
     await app.goto("/");
     // do this after the first request so that it doesnt appear in our next assertions
     let responses = app.collectResponses(
-      (url) => url.pathname === "/_root.data"
+      (url) => url.pathname === "/_root.data",
     );
     await page.click("button[type=submit]");
     await page.waitForSelector(`[data-testid="action-success"]`);

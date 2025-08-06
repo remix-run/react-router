@@ -1,9 +1,13 @@
 import type {
-  unstable_DataStrategyFunction as DataStrategyFunction,
-  unstable_DataStrategyMatch as DataStrategyMatch,
-} from "../../lib/router";
-import { json } from "../../lib/router";
-import { createDeferred, setup } from "./utils/data-router-setup";
+  DataStrategyFunction,
+  DataStrategyMatch,
+  DataStrategyResult,
+} from "../../lib/router/utils";
+import {
+  createDeferred,
+  createAsyncStub,
+  setup,
+} from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
 describe("router dataStrategy", () => {
@@ -14,10 +18,26 @@ describe("router dataStrategy", () => {
     >(fn);
   }
 
+  function keyedResults(
+    matches: DataStrategyMatch[],
+    results: DataStrategyResult[],
+  ) {
+    return results.reduce(
+      (acc, r, i) =>
+        Object.assign(
+          acc,
+          matches[i].shouldLoad ? { [matches[i].route.id]: r } : {},
+        ),
+      {},
+    );
+  }
+
   describe("loaders", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results),
+        ),
       );
       let t = setup({
         routes: [
@@ -46,7 +66,7 @@ describe("router dataStrategy", () => {
       expect(A.loaders.json.stub).toHaveBeenCalledTimes(1);
       expect(A.loaders.text.stub).toHaveBeenCalledTimes(1);
 
-      await A.loaders.json.resolve(json({ message: "hello json" }));
+      await A.loaders.json.resolve({ message: "hello json" });
       await A.loaders.text.resolve(new Response("hello text"));
 
       expect(t.router.state.loaderData).toEqual({
@@ -69,14 +89,18 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results),
+        ),
       );
+      let [lazyJson, lazyJsonDeferred] = createAsyncStub();
+      let [lazyText, lazyTextDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -85,12 +109,12 @@ describe("router dataStrategy", () => {
           {
             id: "json",
             path: "/test",
-            lazy: true,
+            lazy: lazyJson,
             children: [
               {
                 id: "text",
                 index: true,
-                lazy: true,
+                lazy: lazyText,
               },
             ],
           },
@@ -98,11 +122,11 @@ describe("router dataStrategy", () => {
         dataStrategy,
       });
 
-      let A = await t.navigate("/test");
-      await A.lazy.json.resolve({
+      await t.navigate("/test");
+      await lazyJsonDeferred.resolve({
         loader: () => ({ message: "hello json" }),
       });
-      await A.lazy.text.resolve({
+      await lazyTextDeferred.resolve({
         loader: () => "hello text",
       });
       expect(t.router.state.loaderData).toEqual({
@@ -124,7 +148,7 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
 
@@ -145,13 +169,10 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async (handler) => {
                 let result = await handler();
-                return {
-                  type: "data",
-                  result: `Route ID "${m.route.id}" returned "${result}"`,
-                };
-              })
-            )
-          );
+                return `Route ID "${m.route.id}" returned "${result}"`;
+              }),
+            ),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -163,7 +184,7 @@ describe("router dataStrategy", () => {
       });
     });
 
-    it("should allow custom implementations to override default behavior with lazy", async () => {
+    it("should allow custom implementations to override default behavior when erroring", async () => {
       let t = setup({
         routes: [
           {
@@ -172,7 +193,40 @@ describe("router dataStrategy", () => {
           {
             id: "test",
             path: "/test",
-            lazy: true,
+            loader: true,
+            hasErrorBoundary: true,
+          },
+        ],
+        async dataStrategy({ matches }) {
+          return Promise.all(
+            matches.map((m) =>
+              m.resolve(async () => {
+                throw new Error(`Route ID "${m.route.id}" errored!`);
+              }),
+            ),
+          ).then((results) => keyedResults(matches, results));
+        },
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.test.resolve("TEST");
+
+      expect(t.router.state.errors).toMatchObject({
+        test: new Error('Route ID "test" errored!'),
+      });
+    });
+
+    it("should allow custom implementations to override default behavior with lazy", async () => {
+      let [lazy, lazyDeferred] = createAsyncStub();
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "test",
+            path: "/test",
+            lazy,
           },
         ],
         async dataStrategy({ matches }) {
@@ -180,18 +234,15 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async (handler) => {
                 let result = await handler();
-                return {
-                  type: "data",
-                  result: `Route ID "${m.route.id}" returned "${result}"`,
-                };
-              })
-            )
-          );
+                return `Route ID "${m.route.id}" returned "${result}"`;
+              }),
+            ),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
-      let A = await t.navigate("/test");
-      await A.lazy.test.resolve({ loader: () => "TEST" });
+      await t.navigate("/test");
+      await lazyDeferred.resolve({ loader: () => "TEST" });
 
       expect(t.router.state.loaderData).toMatchObject({
         test: 'Route ID "test" returned "TEST"',
@@ -223,7 +274,9 @@ describe("router dataStrategy", () => {
           },
         ],
         dataStrategy({ matches }) {
-          return Promise.all(matches.map(async (match) => match.resolve()));
+          return Promise.all(
+            matches.map(async (match) => match.resolve()),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -267,8 +320,8 @@ describe("router dataStrategy", () => {
                   result: await handler(),
                 };
               });
-            })
-          );
+            }),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -318,7 +371,8 @@ describe("router dataStrategy", () => {
       });
     });
 
-    it("throws an error if an implementation does not call resolve", async () => {
+    it("does not require resolve to be called if a match is not being loaded", async () => {
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -333,40 +387,52 @@ describe("router dataStrategy", () => {
               {
                 id: "child",
                 path: "child",
-                lazy: true,
+                lazy,
               },
             ],
           },
         ],
-        // @ts-expect-error
-        dataStrategy({ matches }) {
+        dataStrategy({ matches, request }) {
           return Promise.all(
             matches.map(async (match) => {
-              if (match.route.id === "child") {
-                // noop to cause error
-                return "forgot to load child";
+              if (
+                request.url.endsWith("/parent/child") &&
+                match.route.id === "parent"
+              ) {
+                return undefined;
               }
               return match.resolve();
-            })
+            }),
+          ).then((results) =>
+            // @ts-expect-error
+            keyedResults(matches, results),
           );
         },
       });
 
-      let A = await t.navigate("/parent/child");
+      let A = await t.navigate("/parent");
       await A.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        errors: null,
+        loaderData: {
+          parent: "PARENT",
+        },
+        navigation: {
+          state: "idle",
+        },
+      });
+
+      let B = await t.navigate("/parent/child");
+      await lazyDeferred.resolve({ loader: () => "CHILD" });
+
+      // no-op
+      await B.loaders.parent.resolve("XXX");
 
       expect(t.router.state).toMatchObject({
-        actionData: null,
-        errors: {
-          parent: new Error(
-            '`match.resolve()` was not called for route id "child". ' +
-              "You must call `match.resolve()` on every match passed " +
-              "to `dataStrategy` to ensure all routes are properly loaded."
-          ),
-        },
+        errors: null,
         loaderData: {
-          child: undefined,
-          parent: undefined,
+          child: "CHILD",
+          parent: "PARENT",
         },
         navigation: {
           state: "idle",
@@ -379,8 +445,11 @@ describe("router dataStrategy", () => {
         ReturnType<DataStrategyFunction>,
         Parameters<DataStrategyFunction>
       >(({ matches }) => {
-        return Promise.all(matches.map((m) => m.resolve()));
+        return Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results),
+        );
       });
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -397,7 +466,7 @@ describe("router dataStrategy", () => {
                   {
                     id: "child",
                     path: "child",
-                    lazy: true,
+                    lazy,
                   },
                 ],
               },
@@ -440,7 +509,7 @@ describe("router dataStrategy", () => {
         parent: "PARENT",
       });
 
-      let C = await t.navigate("/parent/child");
+      await t.navigate("/parent/child");
       expect(dataStrategy.mock.calls[2][0].matches).toEqual([
         expect.objectContaining({
           shouldLoad: false,
@@ -455,7 +524,7 @@ describe("router dataStrategy", () => {
           route: expect.objectContaining({ id: "child" }),
         }),
       ]);
-      await C.lazy.child.resolve({
+      await lazyDeferred.resolve({
         action: () => "CHILD ACTION",
         loader: () => "CHILD",
         shouldRevalidate: () => false,
@@ -508,12 +577,100 @@ describe("router dataStrategy", () => {
         child: "CHILD",
       });
     });
+
+    it("does not short circuit when there are no matchesToLoad", async () => {
+      let dataStrategy = mockDataStrategy(async ({ matches }) => {
+        let results = await Promise.all(
+          matches.map((m) => m.resolve((handler) => handler())),
+        );
+        // Don't use keyedResults since it checks for shouldLoad and this test
+        // is always loading
+        return results.reduce(
+          (acc, r, i) => Object.assign(acc, { [matches[i].route.id]: r }),
+          {},
+        );
+      });
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "/parent",
+            loader: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        dataStrategy,
+      });
+
+      let A = await t.navigate("/parent");
+      await A.loaders.parent.resolve("PARENT1");
+      expect(A.loaders.parent.stub).toHaveBeenCalled();
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT1",
+      });
+      expect(dataStrategy.mock.calls[0][0].matches).toEqual([
+        expect.objectContaining({
+          route: expect.objectContaining({
+            id: "parent",
+          }),
+        }),
+      ]);
+
+      let B = await t.navigate("/parent/child");
+      await B.loaders.parent.resolve("PARENT2");
+      await B.loaders.child.resolve("CHILD");
+      expect(B.loaders.parent.stub).toHaveBeenCalled();
+      expect(B.loaders.child.stub).toHaveBeenCalled();
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT2",
+        child: "CHILD",
+      });
+      expect(dataStrategy.mock.calls[1][0].matches).toEqual([
+        expect.objectContaining({
+          route: expect.objectContaining({
+            id: "parent",
+          }),
+        }),
+        expect.objectContaining({
+          route: expect.objectContaining({
+            id: "child",
+          }),
+        }),
+      ]);
+
+      let C = await t.navigate("/parent");
+      await C.loaders.parent.resolve("PARENT3");
+      expect(C.loaders.parent.stub).toHaveBeenCalled();
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT3",
+      });
+      expect(dataStrategy.mock.calls[2][0].matches).toEqual([
+        expect.objectContaining({
+          route: expect.objectContaining({
+            id: "parent",
+          }),
+        }),
+      ]);
+
+      expect(dataStrategy).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe("actions", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results),
+        ),
       );
       let t = setup({
         routes: [
@@ -534,7 +691,7 @@ describe("router dataStrategy", () => {
         formData: createFormData({}),
       });
 
-      await A.actions.json.resolve(json({ message: "hello json" }));
+      await A.actions.json.resolve({ message: "hello json" });
 
       expect(t.router.state.actionData).toEqual({
         json: { message: "hello json" },
@@ -549,14 +706,17 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results),
+        ),
       );
+      let [lazy, lazyDeferred] = createAsyncStub();
       let t = setup({
         routes: [
           {
@@ -565,17 +725,17 @@ describe("router dataStrategy", () => {
           {
             id: "json",
             path: "/test",
-            lazy: true,
+            lazy,
           },
         ],
         dataStrategy,
       });
 
-      let A = await t.navigate("/test", {
+      await t.navigate("/test", {
         formMethod: "post",
         formData: createFormData({}),
       });
-      await A.lazy.json.resolve({
+      await lazyDeferred.resolve({
         action: () => ({ message: "hello json" }),
       });
       expect(t.router.state.actionData).toEqual({
@@ -591,7 +751,7 @@ describe("router dataStrategy", () => {
               }),
             }),
           ],
-        })
+        }),
       );
     });
   });
@@ -600,7 +760,9 @@ describe("router dataStrategy", () => {
     describe("loaders", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results),
+          ),
         );
         let t = setup({
           routes: [
@@ -619,7 +781,7 @@ describe("router dataStrategy", () => {
         let key = "key";
         let A = await t.fetch("/test", key);
 
-        await A.loaders.json.resolve(json({ message: "hello json" }));
+        await A.loaders.json.resolve({ message: "hello json" });
 
         expect(t.fetchers[key].data.message).toBe("hello json");
 
@@ -633,14 +795,17 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ],
-          })
+          }),
         );
       });
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results),
+          ),
         );
+        let [lazy, lazyDeferred] = createAsyncStub();
         let t = setup({
           routes: [
             {
@@ -649,15 +814,15 @@ describe("router dataStrategy", () => {
             {
               id: "json",
               path: "/test",
-              lazy: true,
+              lazy,
             },
           ],
           dataStrategy,
         });
 
         let key = "key";
-        let A = await t.fetch("/test", key);
-        await A.lazy.json.resolve({
+        await t.fetch("/test", key);
+        await lazyDeferred.resolve({
           loader: () => ({ message: "hello json" }),
         });
         expect(t.fetchers[key].data.message).toBe("hello json");
@@ -671,7 +836,7 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ],
-          })
+          }),
         );
       });
     });
@@ -679,7 +844,9 @@ describe("router dataStrategy", () => {
     describe("actions", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results),
+          ),
         );
         let t = setup({
           routes: [
@@ -701,7 +868,7 @@ describe("router dataStrategy", () => {
           formData: createFormData({}),
         });
 
-        await A.actions.json.resolve(json({ message: "hello json" }));
+        await A.actions.json.resolve({ message: "hello json" });
 
         expect(t.fetchers[key].data.message).toBe("hello json");
 
@@ -715,14 +882,17 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ]),
-          })
+          }),
         );
       });
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results),
+          ),
         );
+        let [lazy, lazyDeferred] = createAsyncStub();
         let t = setup({
           routes: [
             {
@@ -731,18 +901,18 @@ describe("router dataStrategy", () => {
             {
               id: "json",
               path: "/test",
-              lazy: true,
+              lazy,
             },
           ],
           dataStrategy,
         });
 
         let key = "key";
-        let A = await t.fetch("/test", key, {
+        await t.fetch("/test", key, {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await A.lazy.json.resolve({
+        await lazyDeferred.resolve({
           action: () => ({ message: "hello json" }),
         });
 
@@ -758,7 +928,7 @@ describe("router dataStrategy", () => {
                 }),
               }),
             ]),
-          })
+          }),
         );
       });
     });
@@ -795,27 +965,24 @@ describe("router dataStrategy", () => {
                 ) {
                   let str = await result.text();
                   return {
-                    type: "data",
-                    result: {
-                      original: str,
-                      reversed: str.split("").reverse().join(""),
-                    },
+                    original: str,
+                    reversed: str.split("").reverse().join(""),
                   };
                 }
                 // This will be a JSON response we expect to be decoded the normal way
-                return { type: "data", result };
+                return result;
               });
-            })
-          );
+            }),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
       let A = await t.navigate("/test");
-      await A.loaders.json.resolve(json({ message: "hello json" }));
+      await A.loaders.json.resolve({ message: "hello json" });
       await A.loaders.reverse.resolve(
         new Response("hello text", {
           headers: { "Content-Type": "application/reverse" },
-        })
+        }),
       );
 
       expect(t.router.state.loaderData).toEqual({
@@ -861,8 +1028,8 @@ describe("router dataStrategy", () => {
               // the single fetch response and return it's promise
               let dfd = createDeferred();
               routeDeferreds.set(m.route.id, dfd);
-              return dfd.promise;
-            })
+              return dfd.promise as Promise<DataStrategyResult>;
+            }),
           );
 
           // Mocked single fetch call response for the routes that need loading
@@ -871,14 +1038,15 @@ describe("router dataStrategy", () => {
               parent: "PARENT",
               child: "CHILD",
             },
-            errors: null,
           };
 
           // Resolve the deferred's above and return the mapped match promises
           routeDeferreds.forEach((dfd, routeId) =>
-            dfd.resolve({ type: "data", result: result.loaderData[routeId] })
+            dfd.resolve(result.loaderData[routeId]),
           );
-          return Promise.all(matchPromises);
+          return Promise.all(matchPromises).then((results) =>
+            keyedResults(matches, results),
+          );
         },
       });
 
@@ -939,7 +1107,7 @@ describe("router dataStrategy", () => {
                     // @ts-expect-error
                     [key]: value(),
                   }),
-                {}
+                {},
               );
               Object.assign(acc, matchContext);
             }
@@ -960,10 +1128,11 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return { type: "data", result: await handler(handlerCtx) };
-              })
-            )
-          );
+                let result = await handler(handlerCtx);
+                return result;
+              }),
+            ),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -981,7 +1150,7 @@ describe("router dataStrategy", () => {
             id: "parent",
             whatever: "PARENT MIDDLEWARE",
           },
-        }
+        },
       );
 
       expect(A.loaders.child.stub).toHaveBeenCalledWith(
@@ -998,7 +1167,7 @@ describe("router dataStrategy", () => {
             id: "child",
             whatever: "CHILD MIDDLEWARE",
           },
-        }
+        },
       );
 
       await A.loaders.parent.resolve("PARENT LOADER");
@@ -1058,7 +1227,7 @@ describe("router dataStrategy", () => {
                     // @ts-expect-error
                     [key]: value(),
                   }),
-                {}
+                {},
               );
               Object.assign(acc, matchContext);
             }
@@ -1079,10 +1248,13 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return { type: "data", result: await callHandler(handlerCtx) };
-              })
-            )
-          );
+                let result = m.shouldLoad
+                  ? await callHandler(handlerCtx)
+                  : t.router.state.loaderData[m.route.id];
+                return result;
+              }),
+            ),
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -1111,7 +1283,7 @@ describe("router dataStrategy", () => {
             id: "child",
             whatever: "CHILD MIDDLEWARE",
           },
-        }
+        },
       );
 
       await B.loaders.child.resolve("CHILD");
@@ -1153,29 +1325,29 @@ describe("router dataStrategy", () => {
               ? [m.route.id, m.route.handle.cacheKey(request.url)].join("-")
               : null;
 
-          return Promise.all(
-            matches.map(async (m) => {
-              return m.resolve(async (handler) => {
-                if (request.method !== "GET") {
-                  // invalidate on actions
-                  cache = {};
-                  return { type: "data", result: await handler() };
-                }
+          if (request.method !== "GET") {
+            // invalidate on actions
+            cache = {};
+          }
 
+          let matchesToLoad = matches.filter((m) => m.shouldLoad);
+          return Promise.all(
+            matchesToLoad.map(async (m) => {
+              return m.resolve(async (handler) => {
                 let key = getCacheKey(m);
                 if (key && cache[key]) {
-                  return { type: "data", result: cache[key] };
+                  return cache[key];
                 }
 
-                let handlerResult = await handler();
-                if (key) {
-                  cache[key] = handlerResult;
+                let dsResult = await handler();
+                if (key && request.method === "GET") {
+                  cache[key] = dsResult;
                 }
 
-                return { type: "data", result: handlerResult };
+                return dsResult;
               });
-            })
-          );
+            }),
+          ).then((results) => keyedResults(matchesToLoad, results));
         },
       });
 

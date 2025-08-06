@@ -1,10 +1,9 @@
-import * as crypto from "node:crypto";
 import type {
   SessionData,
   SessionStorage,
   SessionIdStorageStrategy,
 } from "react-router";
-import { createSessionStorage } from "@react-router/node";
+import { createSessionStorage } from "react-router";
 import arc from "@architect/functions";
 import type { ArcTable } from "@architect/functions/types/tables";
 
@@ -46,7 +45,7 @@ interface ArcTableSessionStorageOptions {
  */
 export function createArcTableSessionStorage<
   Data = SessionData,
-  FlashData = Data
+  FlashData = Data,
 >({
   cookie,
   ...props
@@ -64,7 +63,7 @@ export function createArcTableSessionStorage<
     async createData(data, expires) {
       let table = await getTable();
       while (true) {
-        let randomBytes = crypto.randomBytes(8);
+        let randomBytes = crypto.getRandomValues(new Uint8Array(8));
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume
         // (2^32). However, the larger id space should help to avoid collisions

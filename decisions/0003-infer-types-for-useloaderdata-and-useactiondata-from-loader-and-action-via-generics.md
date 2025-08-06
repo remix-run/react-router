@@ -2,7 +2,7 @@
 
 Date: 2022-07-11
 
-Status: accepted
+Status: Superseded by [#0012](./0012-type-inference.md)
 
 ## Context
 
@@ -32,7 +32,7 @@ export default function Route() {
 }
 ```
 
-For end-to-end type safety, it is then the user's responsability to make sure that `loader` and `action` also use the same type in the `json` generic:
+For end-to-end type safety, it is then the user's responsibility to make sure that `loader` and `action` also use the same type in the `json` generic:
 
 ```ts
 export const loader: LoaderFunction = () => {
@@ -108,7 +108,7 @@ export const loader: LoaderFunction = () => {
 
 export default function Route() {
   const { birthday } = useLoaderData<MyLoaderData>();
-  // ^ `useLoaderData` tricks Typescript into thinking this is a `Date`, when in fact its a `string`!
+  // ^ `useLoaderData` tricks Typescript into thinking this is a `Date`, when in fact it's a `string`!
 }
 ```
 
@@ -144,7 +144,7 @@ Though `loader` and `useLoaderData` exist together in the same file at developme
 Without the `loader` argument to infer types from, `useLoaderData` needs a way to learn about `loader`'s type at compile-time.
 
 Additionally, `loader` and `useLoaderData` are both managed by Remix across the network.
-While its true that Remix doesn't "own" the network in the strictest sense, having `useLoaderData` return data that does not correspond to its `loader` is an exceedingly rare edge-case.
+While it's true that Remix doesn't "own" the network in the strictest sense, having `useLoaderData` return data that does not correspond to its `loader` is an exceedingly rare edge-case.
 
 Same goes for `useActionData`.
 

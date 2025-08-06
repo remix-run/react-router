@@ -1,6 +1,4 @@
-# React Router Cloudflare
-
-Cloudflare platform abstractions for [React Router.](https://reactrouter.com)
+Cloudflare platform abstractions for React Router
 
 ```bash
 npm install @react-router/cloudflare @cloudflare/workers-types

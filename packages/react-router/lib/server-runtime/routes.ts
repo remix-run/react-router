@@ -2,39 +2,26 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-} from "../router";
-import { callRouteAction, callRouteLoader } from "./data";
+  RouteManifest,
+  unstable_MiddlewareFunction,
+} from "../router/utils";
+import { redirectDocument, replace, redirect } from "../router/utils";
+import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
-import type { ServerRouteModule } from "./routeModules";
-import type { DataStrategyCtx } from "./single-fetch";
-
-export interface RouteManifest<Route> {
-  [routeId: string]: Route;
-}
+import type { Route } from "../dom/ssr/routes";
+import type {
+  SingleFetchResult,
+  SingleFetchResults,
+} from "../dom/ssr/single-fetch";
+import {
+  SingleFetchRedirectSymbol,
+  decodeViaTurboStream,
+} from "../dom/ssr/single-fetch";
+import invariant from "./invariant";
+import type { ServerRouteModule } from "../dom/ssr/routeModules";
+import { getBuildTimeHeader } from "./dev";
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
-
-// NOTE: make sure to change the Route in remix-react/react-router-dev if you change this
-export interface Route {
-  index?: boolean;
-  caseSensitive?: boolean;
-  id: string;
-  parentId?: string;
-  path?: string;
-}
-
-// NOTE: make sure to change the EntryRoute in react-router/react-router-dev if you change this
-export interface EntryRoute extends Route {
-  hasAction: boolean;
-  hasLoader: boolean;
-  hasClientAction: boolean;
-  hasClientLoader: boolean;
-  hasErrorBoundary: boolean;
-  imports?: string[];
-  css?: string[];
-  module: string;
-  parentId?: string;
-}
 
 export interface ServerRoute extends Route {
   children: ServerRoute[];
@@ -45,11 +32,13 @@ function groupRoutesByParentId(manifest: ServerRouteManifest) {
   let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
 
   Object.values(manifest).forEach((route) => {
-    let parentId = route.parentId || "";
-    if (!routes[parentId]) {
-      routes[parentId] = [];
+    if (route) {
+      let parentId = route.parentId || "";
+      if (!routes[parentId]) {
+        routes[parentId] = [];
+      }
+      routes[parentId].push(route);
     }
-    routes[parentId].push(route);
   });
 
   return routes;
@@ -63,7 +52,7 @@ export function createRoutes(
   routesByParentId: Record<
     string,
     Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
+  > = groupRoutesByParentId(manifest),
 ): ServerRoute[] {
   return (routesByParentId[parentId] || []).map((route) => ({
     ...route,
@@ -80,7 +69,7 @@ export function createStaticHandlerDataRoutes(
   routesByParentId: Record<
     string,
     Omit<ServerRoute, "children">[]
-  > = groupRoutesByParentId(manifest)
+  > = groupRoutesByParentId(manifest),
 ): AgnosticDataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let commonRoute = {
@@ -89,29 +78,66 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
+      unstable_middleware: route.module.unstable_middleware as unknown as
+        | unstable_MiddlewareFunction[]
+        | undefined,
+      // Need to use RR's version in the param typed here to permit the optional
+      // context even though we know it'll always be provided in remix
       loader: route.module.loader
-        ? // Need to use RR's version here to permit the optional context even
-          // though we know it'll always be provided in remix
-          (args: RRLoaderFunctionArgs, dataStrategyCtx?: unknown) =>
-            callRouteLoader({
-              request: args.request,
-              params: args.params,
-              loadContext: args.context,
-              loader: route.module.loader!,
-              routeId: route.id,
-              response: (dataStrategyCtx as DataStrategyCtx).response,
-            })
+        ? async (args: RRLoaderFunctionArgs) => {
+            // If we're prerendering, use the data passed in from prerendering
+            // the .data route so we don't call loaders twice
+            let preRenderedData = getBuildTimeHeader(
+              args.request,
+              "X-React-Router-Prerender-Data",
+            );
+            if (preRenderedData != null) {
+              let encoded = preRenderedData
+                ? decodeURI(preRenderedData)
+                : preRenderedData;
+              invariant(encoded, "Missing prerendered data for route");
+              let uint8array = new TextEncoder().encode(encoded);
+              let stream = new ReadableStream({
+                start(controller) {
+                  controller.enqueue(uint8array);
+                  controller.close();
+                },
+              });
+              let decoded = await decodeViaTurboStream(stream, global);
+              let data = decoded.value as SingleFetchResults;
+
+              // If the loader returned a `.data` redirect, re-throw a normal
+              // Response here to trigger a document level SSG redirect
+              if (data && SingleFetchRedirectSymbol in data) {
+                let result = data[SingleFetchRedirectSymbol]!;
+                let init = { status: result.status };
+                if (result.reload) {
+                  throw redirectDocument(result.redirect, init);
+                } else if (result.replace) {
+                  throw replace(result.redirect, init);
+                } else {
+                  throw redirect(result.redirect, init);
+                }
+              } else {
+                invariant(
+                  data && route.id in data,
+                  "Unable to decode prerendered data",
+                );
+                let result = data[route.id] as SingleFetchResult;
+                invariant(
+                  "data" in result,
+                  "Unable to process prerendered data",
+                );
+                return result.data;
+              }
+            }
+            let val = await callRouteHandler(route.module.loader!, args);
+            return val;
+          }
         : undefined,
       action: route.module.action
-        ? (args: RRActionFunctionArgs, dataStrategyCtx?: unknown) =>
-            callRouteAction({
-              request: args.request,
-              params: args.params,
-              loadContext: args.context,
-              action: route.module.action!,
-              routeId: route.id,
-              response: (dataStrategyCtx as DataStrategyCtx).response,
-            })
+        ? (args: RRActionFunctionArgs) =>
+            callRouteHandler(route.module.action!, args)
         : undefined,
       handle: route.module.handle,
     };
@@ -127,7 +153,7 @@ export function createStaticHandlerDataRoutes(
             manifest,
             future,
             route.id,
-            routesByParentId
+            routesByParentId,
           ),
           ...commonRoute,
         };

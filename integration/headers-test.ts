@@ -4,7 +4,7 @@ import { UNSAFE_ServerMode as ServerMode } from "react-router";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 
-test.describe.skip("headers export", () => {
+test.describe("headers export", () => {
   let ROOT_HEADER_KEY = "X-Test";
   let ROOT_HEADER_VALUE = "SUCCESS";
   let ACTION_HKEY = "X-Test-Action";
@@ -17,10 +17,9 @@ test.describe.skip("headers export", () => {
       {
         files: {
           "app/root.tsx": js`
-            import { json } from "react-router";
             import { Links, Meta, Outlet, Scripts } from "react-router";
 
-            export const loader = () => json({});
+            export const loader = () => ({});
 
             export default function Root() {
               return (
@@ -39,10 +38,10 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function loader() {
-              return json(null, {
+              return data(null, {
                 headers: {
                   "${ROOT_HEADER_KEY}": "${ROOT_HEADER_VALUE}"
                 }
@@ -61,10 +60,10 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/action.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function action() {
-              return json(null, {
+              return data(null, {
                 headers: {
                   "${ACTION_HKEY}": "${ACTION_HVALUE}"
                 }
@@ -159,11 +158,11 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/cookie.tsx": js`
-            import { json, Outlet } from "react-router";
+            import { data, Outlet } from "react-router";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("parent-throw")) {
-                throw json(null, { headers: { "Set-Cookie": "parent-thrown-cookie=true" } });
+                throw data(null, { headers: { "Set-Cookie": "parent-thrown-cookie=true" } });
               }
               return null
             };
@@ -178,13 +177,13 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/cookie.child.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("throw")) {
-                throw json(null, { headers: { "Set-Cookie": "thrown-cookie=true" } });
+                throw data(null, { headers: { "Set-Cookie": "thrown-cookie=true" } });
               }
-              return json(null, {
+              return data(null, {
                 headers: { "Set-Cookie": "normal-cookie=true" },
               });
             };
@@ -195,14 +194,14 @@ test.describe.skip("headers export", () => {
           `,
         },
       },
-      ServerMode.Test
+      ServerMode.Test,
     );
   });
 
   test("can use `action` headers", async () => {
     let response = await appFixture.postDocument(
       "/action",
-      new URLSearchParams()
+      new URLSearchParams(),
     );
     expect(response.headers.get(ACTION_HKEY)).toBe(ACTION_HVALUE);
   });
@@ -239,10 +238,10 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "react-router";
+            import { data } from "react-router";
 
             export function loader() {
-              return json(null, {
+              return data(null, {
                 headers: {
                   "${HEADER_KEY}": "${HEADER_VALUE}"
                 }
@@ -261,7 +260,7 @@ test.describe.skip("headers export", () => {
           `,
         },
       },
-      ServerMode.Test
+      ServerMode.Test,
     );
     let response = await fixture.requestDocument("/");
     expect(response.headers.get(HEADER_KEY)).toBe(HEADER_VALUE);
@@ -273,7 +272,7 @@ test.describe.skip("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
@@ -283,34 +282,34 @@ test.describe.skip("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("returns headers from successful /parent POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent",
-      new URLSearchParams()
+      new URLSearchParams(),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-action", "success"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("returns headers from successful /parent/child POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent/child",
-      new URLSearchParams()
+      new URLSearchParams(),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
@@ -320,71 +319,71 @@ test.describe.skip("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "error, error"], // Shows up in loaderHeaders and errorHeaders
-      ])
+      ]),
     );
   });
 
   test("returns bubbled headers from failed /parent/child GET requests", async () => {
     let response = await appFixture.requestDocument(
-      "/parent/child?throw=child"
+      "/parent/child?throw=child",
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-child-loader", "error"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("ignores headers from successful non-rendered loaders", async () => {
     let response = await appFixture.requestDocument(
-      "/parent/child?throw=parent"
+      "/parent/child?throw=parent",
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-loader", "error, error"], // Shows up in loaderHeaders and errorHeaders
-      ])
+      ]),
     );
   });
 
   test("chooses higher thrown errors when multiple loaders throw", async () => {
     let response = await appFixture.requestDocument(
-      "/parent/child/grandchild?throw=child"
+      "/parent/child/grandchild?throw=child",
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-child-loader", "error"],
         ["x-parent-loader", "success"],
-      ])
+      ]),
     );
   });
 
   test("returns headers from failed /parent POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent?throw=parent",
-      new URLSearchParams("throw=parent")
+      new URLSearchParams("throw=parent"),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-parent-action", "error, error"], // Shows up in actionHeaders and errorHeaders
-      ])
+      ]),
     );
   });
 
   test("returns bubbled headers from failed /parent/child POST requests", async () => {
     let response = await appFixture.postDocument(
       "/parent/child",
-      new URLSearchParams("throw=child")
+      new URLSearchParams("throw=child"),
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
         ["content-type", "text/html"],
         ["x-child-action", "error"],
-      ])
+      ]),
     );
   });
 
@@ -394,7 +393,7 @@ test.describe.skip("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["set-cookie", "normal-cookie=true"],
-      ])
+      ]),
     );
   });
 
@@ -404,7 +403,7 @@ test.describe.skip("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["set-cookie", "thrown-cookie=true"],
-      ])
+      ]),
     );
   });
 
@@ -414,7 +413,60 @@ test.describe.skip("headers export", () => {
       JSON.stringify([
         ["content-type", "text/html"],
         ["set-cookie", "parent-thrown-cookie=true"],
-      ])
+      ]),
     );
+  });
+
+  test("does not duplicate set-cookie headers also returned via headers() function", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          "app/root.tsx": js`
+            import { Links, Meta, Outlet, Scripts } from "react-router";
+
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+
+          "app/routes/_index.tsx": js`
+            export function headers({ loaderHeaders }) {
+              return loaderHeaders;
+            }
+
+            export function loader() {
+              return new Response(null, {
+                headers: {
+                  "X-Test": "value",
+                  "Set-Cookie": "cookie=yum"
+                }
+              })
+            }
+
+            export default function Index() {
+              return <div>Heyo!</div>
+            }
+          `,
+        },
+      },
+      ServerMode.Test,
+    );
+    let response = await fixture.requestDocument("/");
+    expect([...response.headers.entries()]).toEqual([
+      ["content-type", "text/html"],
+      ["set-cookie", "cookie=yum"],
+      ["x-test", "value"],
+    ]);
   });
 });

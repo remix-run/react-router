@@ -15,7 +15,6 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "react-router";
         import { Form, useLoaderData, useActionData } from "react-router";
 
         async function requestToJson(request) {
@@ -26,12 +25,12 @@ test.beforeAll(async () => {
             body = Object.fromEntries(fd.entries());
           }
 
-          return json({
+          return {
             method: request.method,
             url: request.url,
             headers: Object.fromEntries(request.headers.entries()),
             body,
-          });
+          };
         }
         export async function loader({ request }) {
           return requestToJson(request);

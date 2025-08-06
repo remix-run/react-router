@@ -1,40 +1,37 @@
 import * as React from "react";
-
-import type { Router } from "../../router";
-import { matchRoutes } from "../../router";
-import type { unstable_PatchRoutesOnMissFunction } from "../../components";
+import type { PatchRoutesOnNavigationFunction } from "../../context";
+import type { Router as DataRouter } from "../../router/router";
+import type { RouteManifest } from "../../router/utils";
+import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
+import type { EntryRoute } from "./routes";
 import { createClientRoutes } from "./routes";
+import type { ServerBuild } from "../../server-runtime/build";
 
-declare global {
-  interface Navigator {
-    connection?: { saveData: boolean };
-  }
-}
+// Currently rendered links that may need prefetching
+const nextPaths = new Set<string>();
 
-type FogOfWarInfo = {
-  // Currently rendered links that may need prefetching
-  nextPaths: Set<string>;
-  // Paths we know the client can already match, so no need to perform client-side
-  // matching or prefetching for them.  Just an optimization to avoid re-matching
-  // on a larger and larger route tree over time
-  knownGoodPaths: Set<string>;
-  // Routes the server was unable to match - don't ask for them again
-  known404Paths: Set<string>;
-};
+// FIFO queue of previously discovered routes to prevent re-calling on
+// subsequent navigations to the same path
+const discoveredPathsMaxSize = 1000;
+const discoveredPaths = new Set<string>();
 
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
-let fogOfWar: FogOfWarInfo | null = null;
-
-export function isFogOfWarEnabled(isSpaMode: boolean) {
-  return !isSpaMode;
+export function isFogOfWarEnabled(
+  routeDiscovery: ServerBuild["routeDiscovery"],
+  ssr: boolean,
+) {
+  return routeDiscovery.mode === "lazy" && ssr === true;
 }
 
-export function getPartialManifest(manifest: AssetsManifest, router: Router) {
+export function getPartialManifest(
+  { sri, ...manifest }: AssetsManifest,
+  router: DataRouter,
+) {
   // Start with our matches for this pathname
   let routeIds = new Set(router.state.matches.map((m) => m.route.id));
 
@@ -60,66 +57,60 @@ export function getPartialManifest(manifest: AssetsManifest, router: Router) {
 
   let initialRoutes = [...routeIds].reduce(
     (acc, id) => Object.assign(acc, { [id]: manifest.routes[id] }),
-    {}
+    {},
   );
   return {
     ...manifest,
     routes: initialRoutes,
+    sri: sri ? true : undefined,
   };
 }
 
-export function initFogOfWar(
+export function getPatchRoutesOnNavigationFunction(
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
+  routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
-  basename: string | undefined
-): {
-  enabled: boolean;
-  patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
-} {
-  if (!isFogOfWarEnabled(isSpaMode)) {
-    return { enabled: false };
+  basename: string | undefined,
+): PatchRoutesOnNavigationFunction | undefined {
+  if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
+    return undefined;
   }
 
-  fogOfWar = {
-    nextPaths: new Set<string>(),
-    knownGoodPaths: new Set<string>(),
-    known404Paths: new Set<string>(),
-  };
-
-  return {
-    enabled: true,
-    patchRoutesOnMiss: async ({ path, patch }) => {
-      if (
-        fogOfWar!.known404Paths.has(path) ||
-        fogOfWar!.knownGoodPaths.has(path)
-      ) {
-        return;
-      }
-      await fetchAndApplyManifestPatches(
-        [path],
-        fogOfWar!,
-        manifest,
-        routeModules,
-        isSpaMode,
-        basename,
-        patch
-      );
-    },
+  return async ({ path, patch, signal, fetcherKey }) => {
+    if (discoveredPaths.has(path)) {
+      return;
+    }
+    await fetchAndApplyManifestPatches(
+      [path],
+      fetcherKey ? window.location.href : path,
+      manifest,
+      routeModules,
+      ssr,
+      isSpaMode,
+      basename,
+      routeDiscovery.manifestPath,
+      patch,
+      signal,
+    );
   };
 }
 
 export function useFogOFWarDiscovery(
-  router: Router,
+  router: DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  isSpaMode: boolean
+  ssr: boolean,
+  routeDiscovery: ServerBuild["routeDiscovery"],
+  isSpaMode: boolean,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
     if (
-      !isFogOfWarEnabled(isSpaMode) ||
-      navigator.connection?.saveData === true
+      !isFogOfWarEnabled(routeDiscovery, ssr) ||
+      // @ts-expect-error - TS doesn't know about this yet
+      window.navigator?.connection?.saveData === true
     ) {
       return;
     }
@@ -133,17 +124,31 @@ export function useFogOFWarDiscovery(
       if (!path) {
         return;
       }
-      let url = new URL(path, window.location.origin);
-      let { knownGoodPaths, known404Paths, nextPaths } = fogOfWar!;
-      if (knownGoodPaths.has(url.pathname) || known404Paths.has(url.pathname)) {
-        return;
+      // optimization: use the already-parsed pathname from links
+      let pathname =
+        el.tagName === "A"
+          ? (el as HTMLAnchorElement).pathname
+          : new URL(path, window.location.origin).pathname;
+      if (!discoveredPaths.has(pathname)) {
+        nextPaths.add(pathname);
       }
-      nextPaths.add(url.pathname);
     }
 
     // Register and fetch patches for all initially-rendered links/forms
     async function fetchPatches() {
-      let lazyPaths = getFogOfWarPaths(fogOfWar!, router);
+      // re-check/update registered links
+      document
+        .querySelectorAll("a[data-discover], form[data-discover]")
+        .forEach(registerElement);
+
+      let lazyPaths = Array.from(nextPaths.keys()).filter((path) => {
+        if (discoveredPaths.has(path)) {
+          nextPaths.delete(path);
+          return false;
+        }
+        return true;
+      });
+
       if (lazyPaths.length === 0) {
         return;
       }
@@ -151,55 +156,28 @@ export function useFogOFWarDiscovery(
       try {
         await fetchAndApplyManifestPatches(
           lazyPaths,
-          fogOfWar!,
+          null,
           manifest,
           routeModules,
+          ssr,
           isSpaMode,
           router.basename,
-          router.patchRoutes
+          routeDiscovery.manifestPath,
+          router.patchRoutes,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
       }
     }
 
-    // Register and fetch patches for all initially-rendered links
-    document.body
-      .querySelectorAll("a[data-discover], form[data-discover]")
-      .forEach((el) => registerElement(el));
+    let debouncedFetchPatches = debounce(fetchPatches, 100);
 
+    // scan and fetch initial links
     fetchPatches();
 
     // Setup a MutationObserver to fetch all subsequently rendered links/form
-    let debouncedFetchPatches = debounce(fetchPatches, 100);
-
-    function isElement(node: Node): node is Element {
-      return node.nodeType === Node.ELEMENT_NODE;
-    }
-
-    let observer = new MutationObserver((records) => {
-      let elements = new Set<Element>();
-      records.forEach((r) => {
-        [r.target, ...r.addedNodes].forEach((node) => {
-          if (!isElement(node)) return;
-          if (node.tagName === "A" && node.getAttribute("data-discover")) {
-            elements.add(node);
-          } else if (
-            node.tagName === "FORM" &&
-            node.getAttribute("data-discover")
-          ) {
-            elements.add(node);
-          }
-          if (node.tagName !== "A") {
-            node
-              .querySelectorAll("a[data-discover], form[data-discover]")
-              .forEach((el) => elements.add(el));
-          }
-        });
-      });
-      elements.forEach((el) => registerElement(el));
-      debouncedFetchPatches();
-    });
+    // It just schedules a full scan since that's faster than checking subtrees
+    let observer = new MutationObserver(() => debouncedFetchPatches());
 
     observer.observe(document.documentElement, {
       subtree: true,
@@ -209,43 +187,48 @@ export function useFogOFWarDiscovery(
     });
 
     return () => observer.disconnect();
-  }, [isSpaMode, manifest, routeModules, router]);
+  }, [ssr, isSpaMode, manifest, routeModules, router, routeDiscovery]);
 }
 
-function getFogOfWarPaths(fogOfWar: FogOfWarInfo, router: Router) {
-  let { knownGoodPaths, known404Paths, nextPaths } = fogOfWar;
-  return Array.from(nextPaths.keys()).filter((path) => {
-    if (knownGoodPaths.has(path)) {
-      nextPaths.delete(path);
-      return false;
-    }
+export function getManifestPath(
+  _manifestPath: string | undefined,
+  basename: string | undefined,
+) {
+  let manifestPath = _manifestPath || "/__manifest";
 
-    if (known404Paths.has(path)) {
-      nextPaths.delete(path);
-      return false;
-    }
+  if (basename == null) {
+    return manifestPath;
+  }
 
-    return true;
-  });
+  return `${basename}${manifestPath}`.replace(/\/+/g, "/");
 }
+
+const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
 
 export async function fetchAndApplyManifestPatches(
   paths: string[],
-  _fogOfWar: FogOfWarInfo,
+  errorReloadPath: string | null,
   manifest: AssetsManifest,
   routeModules: RouteModules,
+  ssr: boolean,
   isSpaMode: boolean,
   basename: string | undefined,
-  patchRoutes: Router["patchRoutes"]
+  manifestPath: string,
+  patchRoutes: DataRouter["patchRoutes"],
+  signal?: AbortSignal,
 ): Promise<void> {
-  let { nextPaths, knownGoodPaths, known404Paths } = _fogOfWar;
-  let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
-    /\/+/g,
-    "/"
+  // NOTE: Intentionally using a standalone `URLSearchParams` instance
+  // instead of mutating `url.searchParams`, which is *significantly* slower:
+  // https://issues.chromium.org/issues/331406951
+  // https://github.com/nodejs/node/issues/51518
+  const searchParams = new URLSearchParams();
+  paths.sort().forEach((path) => searchParams.append("p", path));
+  searchParams.set("version", manifest.version);
+  let url = new URL(
+    getManifestPath(manifestPath, basename),
+    window.location.origin,
   );
-  let url = new URL(manifestPath, window.location.origin);
-  url.searchParams.set("version", manifest.version);
-  paths.forEach((path) => url.searchParams.append("p", path));
+  url.search = searchParams.toString();
 
   // If the URL is nearing the ~8k limit on GET requests, skip this optimization
   // step and just let discovery happen on link click.  We also wipe out the
@@ -255,52 +238,101 @@ export async function fetchAndApplyManifestPatches(
     return;
   }
 
-  let res = await fetch(url);
+  let serverPatches: AssetsManifest["routes"];
+  try {
+    let res = await fetch(url, { signal });
 
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}`);
-  } else if (res.status >= 400) {
-    throw new Error(await res.text());
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    } else if (
+      res.status === 204 &&
+      res.headers.has("X-Remix-Reload-Document")
+    ) {
+      if (!errorReloadPath) {
+        // No-op during eager route discovery so we will trigger a hard reload
+        // of the destination during the next navigation instead of reloading
+        // while the user is sitting on the current page.  Slightly more
+        // disruptive on fetcher calls because we reload the current page, but
+        // it's better than the `React.useContext` error that occurs without
+        // this detection.
+        console.warn(
+          "Detected a manifest version mismatch during eager route discovery. " +
+            "The next navigation/fetch to an undiscovered route will result in " +
+            "a new document navigation to sync up with the latest manifest.",
+        );
+        return;
+      }
+
+      // This will hard reload the destination path on navigations, or the
+      // current path on fetcher calls
+      if (
+        sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) ===
+        manifest.version
+      ) {
+        // We've already tried fixing for this version, don' try again to
+        // avoid loops - just let this navigation/fetch 404
+        console.error(
+          "Unable to discover routes due to manifest version mismatch.",
+        );
+        return;
+      }
+
+      sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, manifest.version);
+      window.location.href = errorReloadPath;
+      console.warn("Detected manifest version mismatch, reloading...");
+
+      // Stall here and let the browser reload and avoid triggering a flash of
+      // an ErrorBoundary if we threw (same thing we do in `loadRouteModule()`)
+      await new Promise(() => {
+        // check out of this hook cause the DJs never gonna re[s]olve this
+      });
+    } else if (res.status >= 400) {
+      throw new Error(await res.text());
+    }
+
+    // Reset loop-detection on a successful response
+    sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+    serverPatches = (await res.json()) as AssetsManifest["routes"];
+  } catch (e) {
+    if (signal?.aborted) return;
+    throw e;
   }
 
-  let data = (await res.json()) as {
-    notFoundPaths: string[];
-    patches: AssetsManifest["routes"];
-  };
-
-  // Capture this before we apply the patches to the manifest
-  let knownRoutes = new Set(Object.keys(manifest.routes));
-
   // Patch routes we don't know about yet into the manifest
-  let patches: AssetsManifest["routes"] = Object.values(data.patches).reduce(
-    (acc, route) =>
-      !knownRoutes.has(route.id)
-        ? Object.assign(acc, { [route.id]: route })
-        : acc,
-    {}
-  );
+  let knownRoutes = new Set(Object.keys(manifest.routes));
+  let patches = Object.values(serverPatches).reduce((acc, route) => {
+    if (route && !knownRoutes.has(route.id)) {
+      acc[route.id] = route;
+    }
+    return acc;
+  }, {} as RouteManifest<EntryRoute>);
   Object.assign(manifest.routes, patches);
 
-  // Track legit 404s so we don't try to fetch them again
-  data.notFoundPaths.forEach((p) => known404Paths.add(p));
-
-  // Track matched paths so we don't have to fetch them again
-  paths.forEach((p) => knownGoodPaths.add(p));
+  // Track discovered paths so we don't have to fetch them again
+  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 
   // Identify all parentIds for which we have new children to add and patch
   // in their new children
   let parentIds = new Set<string | undefined>();
   Object.values(patches).forEach((patch) => {
-    if (!patch.parentId || !patches[patch.parentId]) {
+    if (patch && (!patch.parentId || !patches[patch.parentId])) {
       parentIds.add(patch.parentId);
     }
   });
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, isSpaMode, parentId)
-    )
+      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+    ),
   );
+}
+
+function addToFifoQueue(path: string, queue: Set<string>) {
+  if (queue.size >= discoveredPathsMaxSize) {
+    let first = queue.values().next().value;
+    queue.delete(first);
+  }
+  queue.add(path);
 }
 
 // Thanks Josh!

@@ -1,12 +1,12 @@
-import type { Router as RemixRouter } from "../../router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../router";
+import type { RouterState } from "../../router/router";
+import { ErrorResponseImpl } from "../../router/utils";
 
 export function deserializeErrors(
-  errors: RemixRouter["state"]["errors"]
-): RemixRouter["state"]["errors"] {
+  errors: RouterState["errors"],
+): RouterState["errors"] {
   if (!errors) return null;
   let entries = Object.entries(errors);
-  let serialized: RemixRouter["state"]["errors"] = {};
+  let serialized: RouterState["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
     // serializeErrors in react-router/lib/server-runtime/errors.ts :)
@@ -15,7 +15,7 @@ export function deserializeErrors(
         val.status,
         val.statusText,
         val.data,
-        val.internal === true
+        val.internal === true,
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)

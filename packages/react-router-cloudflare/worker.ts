@@ -1,6 +1,13 @@
-import type { AppLoadContext, ServerBuild } from "react-router";
+import type {
+  AppLoadContext,
+  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
+  ServerBuild,
+  unstable_RouterContextProvider,
+} from "react-router";
 import { createRequestHandler as createReactRouterRequestHandler } from "react-router";
 import { type CacheStorage } from "@cloudflare/workers-types";
+
+type MaybePromise<T> = T | Promise<T>;
 
 /**
  * A function that returns the value to use as `context` in route `loader` and
@@ -12,7 +19,7 @@ import { type CacheStorage } from "@cloudflare/workers-types";
 export type GetLoadContextFunction<
   Env = unknown,
   Params extends string = any,
-  Data extends Record<string, unknown> = Record<string, unknown>
+  Data extends Record<string, unknown> = Record<string, unknown>,
 > = (args: {
   request: Request;
   context: {
@@ -29,7 +36,9 @@ export type GetLoadContextFunction<
       caches: CacheStorage;
     };
   };
-}) => AppLoadContext | Promise<AppLoadContext>;
+}) => MiddlewareEnabled extends true
+  ? MaybePromise<unstable_RouterContextProvider>
+  : MaybePromise<AppLoadContext>;
 
 export type RequestHandler<Env = any> = PagesFunction<Env>;
 
@@ -95,7 +104,7 @@ export function createPagesFunctionHandler<Env = any>({
     try {
       response = await context.env.ASSETS.fetch(
         context.request.url,
-        context.request.clone()
+        context.request.clone(),
       );
       response =
         response && response.status >= 200 && response.status < 400

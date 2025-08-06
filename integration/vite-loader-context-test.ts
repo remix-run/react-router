@@ -18,11 +18,10 @@ test.beforeAll(async () => {
     "vite.config.js": await viteConfig.basic({ port }),
     "server.mjs": EXPRESS_SERVER({ port, loadContext: { value: "value" } }),
     "app/routes/_index.tsx": String.raw`
-      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       export const loader = ({ context }) => {
-        return json({ context })
+        return { context }
       }
 
       export default function IndexRoute() {
@@ -47,7 +46,7 @@ test("Vite / Load context / express", async ({ page }) => {
     waitUntil: "networkidle",
   });
   await expect(page.locator("#index [data-context]")).toHaveText(
-    "Context: value"
+    "Context: value",
   );
   expect(pageErrors).toEqual([]);
 });

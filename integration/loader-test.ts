@@ -18,10 +18,9 @@ test.describe("loader", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-            import { json } from "react-router";
             import { Links, Meta, Outlet, Scripts } from "react-router";
 
-            export const loader = () => json("${ROOT_DATA}");
+            export const loader = () => "${ROOT_DATA}";
 
             export default function Root() {
               return (
@@ -40,8 +39,6 @@ test.describe("loader", () => {
           `,
 
         "app/routes/_index.tsx": js`
-            import { json } from "react-router";
-
             export function loader() {
               return "${INDEX_DATA}"
             }
@@ -103,14 +100,12 @@ test.describe("loader in an app", () => {
           `,
 
           "app/routes/fetch-target.tsx": js`
-            import { json } from "react-router";
-
             export function loader() {
-              return json({ message: "${FETCH_TARGET_TEXT}" })
+              return Response.json({ message: "${FETCH_TARGET_TEXT}" })
             }
           `,
         },
-      })
+      }),
     );
   });
 

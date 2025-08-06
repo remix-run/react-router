@@ -23,7 +23,6 @@ test.describe("useFetcher", () => {
     fixture = await createFixture({
       files: {
         "app/routes/resource-route-action-only.ts": js`
-          import { json } from "react-router";
           export function action() {
             return new Response("${CHEESESTEAK}");
           }
@@ -149,7 +148,6 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/fetcher-echo.tsx": js`
-          import { json } from "react-router";
           import { useFetcher } from "react-router";
 
           export async function action({ request }) {
@@ -164,13 +162,13 @@ test.describe("useFetcher", () => {
             } else {
               value = (await request.formData()).get('value');
             }
-            return json({ data: "ACTION (" + contentType + ") " + value })
+            return { data: "ACTION (" + contentType + ") " + value }
           }
 
           export async function loader({ request }) {
             await new Promise(r => setTimeout(r, 1000));
             let value = new URL(request.url).searchParams.get('value');
-            return json({ data: "LOADER " + value })
+            return { data: "LOADER " + value }
           }
 
           export default function Index() {
@@ -249,7 +247,7 @@ test.describe("useFetcher", () => {
       // a <pre> but Edge puts it in some weird code editor markup:
       // <body data-code-mirror="Readonly code editor.">
       //   <div hidden="true">"LUNCH"</div>
-      expect(await app.getHtml()).toContain(LUNCH);
+      await page.getByText(LUNCH);
     });
 
     test("Form can hit an action", async ({ page }) => {
@@ -266,7 +264,7 @@ test.describe("useFetcher", () => {
       // a <pre> but Edge puts it in some weird code editor markup:
       // <body data-code-mirror="Readonly code editor.">
       //   <div hidden="true">"LUNCH"</div>
-      expect(await app.getHtml()).toContain(CHEESESTEAK);
+      await page.getByText(CHEESESTEAK);
     });
   });
 
@@ -290,9 +288,7 @@ test.describe("useFetcher", () => {
     await page.fill("#fetcher-input", "input value");
     await app.clickElement("#fetcher-submit-json");
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch(
-      'ACTION (application/json) input value"'
-    );
+    await page.getByText('ACTION (application/json) input value"');
   });
 
   test("submit can hit an action with null json", async ({ page }) => {
@@ -301,7 +297,7 @@ test.describe("useFetcher", () => {
     await app.clickElement("#fetcher-submit-json-null");
     await new Promise((r) => setTimeout(r, 1000));
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch('ACTION (application/json) null"');
+    await page.getByText('ACTION (application/json) null"');
   });
 
   test("submit can hit an action with text", async ({ page }) => {
@@ -310,9 +306,7 @@ test.describe("useFetcher", () => {
     await page.fill("#fetcher-input", "input value");
     await app.clickElement("#fetcher-submit-text");
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch(
-      'ACTION (text/plain;charset=UTF-8) input value"'
-    );
+    await page.getByText('ACTION (text/plain;charset=UTF-8) input value"');
   });
 
   test("submit can hit an action with empty text", async ({ page }) => {
@@ -321,7 +315,7 @@ test.describe("useFetcher", () => {
     await app.clickElement("#fetcher-submit-text-empty");
     await new Promise((r) => setTimeout(r, 1000));
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch('ACTION (text/plain;charset=UTF-8) "');
+    await page.getByText('ACTION (text/plain;charset=UTF-8) "');
   });
 
   test("submit can hit an action only route", async ({ page }) => {
@@ -362,28 +356,26 @@ test.describe("useFetcher", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.goto("/fetcher-echo", true);
-    expect(await app.getHtml("pre")).toMatch(
-      JSON.stringify(["idle/undefined"])
-    );
+    await page.getByText(JSON.stringify(["idle/undefined"]));
 
     await page.fill("#fetcher-input", "1");
     await app.clickElement("#fetcher-load");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
-      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"])
+    await page.getByText(
+      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"]),
     );
 
     await page.fill("#fetcher-input", "2");
     await app.clickElement("#fetcher-load");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
+    await page.getByText(
       JSON.stringify([
         "idle/undefined",
         "loading/undefined",
         "idle/LOADER 1",
         "loading/LOADER 1", // Preserves old data during reload
         "idle/LOADER 2",
-      ])
+      ]),
     );
   });
 
@@ -393,26 +385,24 @@ test.describe("useFetcher", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.goto("/fetcher-echo", true);
-    expect(await app.getHtml("pre")).toMatch(
-      JSON.stringify(["idle/undefined"])
-    );
+    await page.getByText(JSON.stringify(["idle/undefined"]));
 
     await page.fill("#fetcher-input", "1");
     await app.clickElement("#fetcher-submit");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
+    await page.getByText(
       JSON.stringify([
         "idle/undefined",
         "submitting/undefined",
         "loading/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
-      ])
+      ]),
     );
 
     await page.fill("#fetcher-input", "2");
     await app.clickElement("#fetcher-submit");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
+    await page.getByText(
       JSON.stringify([
         "idle/undefined",
         "submitting/undefined",
@@ -422,7 +412,7 @@ test.describe("useFetcher", () => {
         "submitting/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
         "loading/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
-      ])
+      ]),
     );
   });
 });
@@ -525,5 +515,77 @@ test.describe("fetcher aborts and adjacent forms", () => {
     await app.clickElement("#submit-and-close");
     // Wait for navigation state to be "Idle"
     await page.waitForSelector("#idle", { timeout: 2000 });
+  });
+});
+
+test.describe("fetcher lazy route discovery", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.afterAll(() => {
+    appFixture.close();
+  });
+
+  test("skips revalidation of initial load fetchers performing lazy route discovery", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      files: {
+        "app/routes/parent.tsx": js`
+          import * as React from "react";
+          import { useFetcher, useNavigate, Outlet } from "react-router";
+
+          export default function Index() {
+            const fetcher = useFetcher();
+            const navigate = useNavigate();
+
+            React.useEffect(() => {
+              fetcher.load('/api');
+            }, []);
+
+            React.useEffect(() => {
+              navigate('/parent/child');
+            }, []);
+
+            return (
+              <>
+                <h1>Parent</h1>
+                {fetcher.data ?
+                  <pre data-fetcher>{fetcher.data}</pre> :
+                  null}
+                <Outlet/>
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.child.tsx": js`
+          export default function Index() {
+            return <h2>Child</h2>;
+          }
+        `,
+        "app/routes/api.tsx": js`
+          export async function loader() {
+            return "FETCHED!"
+          }
+        `,
+      },
+    });
+
+    // Slow down the fetcher discovery a tiny bit so it doesn't resolve prior
+    // to the navigation
+    page.route(/\/__manifest/, async (route) => {
+      if (route.request().url().includes(encodeURIComponent("/api"))) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      route.continue();
+    });
+
+    appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/parent");
+    await page.waitForSelector("h2", { timeout: 3000 });
+    await expect(page.locator("h2")).toHaveText("Child");
+    await page.waitForSelector("[data-fetcher]", { timeout: 3000 });
+    await expect(page.locator("[data-fetcher]")).toHaveText("FETCHED!");
   });
 });

@@ -1,31 +1,33 @@
-import { test, expect } from "@playwright/test";
-import type { Readable } from "node:stream";
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import getPort from "get-port";
-import waitOn from "wait-on";
 
-import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { killtree } from "./helpers/killtree.js";
+import { expect } from "@playwright/test";
+import dedent from "dedent";
+
+import {
+  reactRouterConfig,
+  test,
+  type TemplateName,
+  type Files,
+} from "./helpers/vite.js";
+
+const tsx = dedent;
 
 test.describe("Vite dev", () => {
-  let projectDir: string;
-  let devProc: ChildProcessWithoutNullStreams;
-  let devPort: number;
-
-  test.beforeAll(async () => {
-    devPort = await getPort();
-    projectDir = await createFixtureProject({
-      files: {
-        "vite.config.ts": js`
+  [false, true].forEach((viteEnvironmentApi) => {
+    test.describe(`viteEnvironmentApi: ${viteEnvironmentApi}`, () => {
+      const files: Files = async ({ port }) => ({
+        "react-router.config.ts": reactRouterConfig({
+          viteEnvironmentApi,
+        }),
+        "vite.config.ts": tsx`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
             server: {
-              port: ${devPort},
+              port: ${port},
               strictPort: true,
             },
             plugins: [
@@ -34,7 +36,7 @@ test.describe("Vite dev", () => {
             ],
           });
         `,
-        "app/root.tsx": js`
+        "app/root.tsx": tsx`
           import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
@@ -55,7 +57,7 @@ test.describe("Vite dev", () => {
             );
           }
         `,
-        "app/routes/_index.tsx": js`
+        "app/routes/_index.tsx": tsx`
           import { Suspense } from "react";
           import { Await, useLoaderData } from "react-router";
 
@@ -81,8 +83,8 @@ test.describe("Vite dev", () => {
             );
           }
         `,
-        "app/routes/set-cookies.tsx": js`
-          import { LoaderFunction } from "react-router";
+        "app/routes/set-cookies.tsx": tsx`
+          import type { LoaderFunction } from "react-router";
 
           export const loader: LoaderFunction = () => {
             const headers = new Headers();
@@ -102,7 +104,7 @@ test.describe("Vite dev", () => {
               "third=three; Domain=localhost; Path=/; SameSite=Lax"
             );
 
-            headers.set("location", "http://localhost:${devPort}/get-cookies");
+            headers.set("location", "http://localhost:${port}/get-cookies");
 
             const response = new Response(null, {
               headers,
@@ -112,11 +114,12 @@ test.describe("Vite dev", () => {
             return response;
           };
         `,
-        "app/routes/get-cookies.tsx": js`
-          import { json, LoaderFunctionArgs } from "react-router";
-          import { useLoaderData } from "react-router"
+        "app/routes/get-cookies.tsx": tsx`
+          import { useLoaderData, type LoaderFunctionArgs } from "react-router";
 
-          export const loader = ({ request }: LoaderFunctionArgs) => json({cookies: request.headers.get("Cookie")});
+          export const loader = ({ request }: LoaderFunctionArgs) => ({
+            cookies: request.headers.get("Cookie")
+          });
 
           export default function IndexRoute() {
             const { cookies } = useLoaderData<typeof loader>();
@@ -129,7 +132,7 @@ test.describe("Vite dev", () => {
             );
           }
         `,
-        "app/routes/jsx.jsx": js`
+        "app/routes/jsx.jsx": tsx`
           export default function JsxRoute() {
             return (
               <div id="jsx">
@@ -138,14 +141,13 @@ test.describe("Vite dev", () => {
             );
           }
         `,
-        "app/routes/mdx.mdx": js`
-          import { json } from "react-router";
+        "app/routes/mdx.mdx": tsx`
           import { useLoaderData } from "react-router";
 
           export const loader = () => {
-            return json({
+            return {
               content: "MDX route content from loader",
-            })
+            }
           }
 
           export function MdxComponent() {
@@ -160,15 +162,14 @@ test.describe("Vite dev", () => {
         ".env": `
           ENV_VAR_FROM_DOTENV_FILE=Content from .env file
         `,
-        "app/routes/dotenv.tsx": js`
+        "app/routes/dotenv.tsx": tsx`
           import { useState, useEffect } from "react";
-          import { json } from "react-router";
           import { useLoaderData } from "react-router";
 
           export const loader = () => {
-            return json({
+            return {
               loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
-            })
+            }
           }
 
           export default function DotenvRoute() {
@@ -189,9 +190,8 @@ test.describe("Vite dev", () => {
             </>
           }
         `,
-        "app/routes/error-stacktrace.tsx": js`
-          import type { LoaderFunction, MetaFunction } from "react-router";
-          import { Link, useLocation } from "react-router";
+        "app/routes/error-stacktrace.tsx": tsx`
+          import { Link, useLocation, type LoaderFunction, type MetaFunction } from "react-router";
 
           export const loader: LoaderFunction = ({ request }) => {
             if (request.url.includes("crash-loader")) {
@@ -222,7 +222,7 @@ test.describe("Vite dev", () => {
             );
           }
         `,
-        "app/routes/known-route-exports.tsx": js`
+        "app/routes/known-route-exports.tsx": tsx`
           import { useMatches } from "react-router";
 
           export const meta = () => [{
@@ -252,236 +252,203 @@ test.describe("Vite dev", () => {
             );
           }
         `,
-      },
+      });
+
+      const templateName: TemplateName = viteEnvironmentApi
+        ? "vite-6-template"
+        : "vite-5-template";
+
+      test("renders matching routes", async ({ dev, page }) => {
+        const { cwd, port } = await dev(files, templateName);
+
+        await page.goto(`http://localhost:${port}/`, {
+          waitUntil: "networkidle",
+        });
+
+        // Ensure no errors on page load
+        expect(page.errors).toEqual([]);
+
+        await expect(page.locator("#index [data-title]")).toHaveText("Index");
+        await expect(page.locator("#index [data-defer]")).toHaveText(
+          "Defer finished: yes",
+        );
+
+        let hmrStatus = page.locator("#index [data-hmr]");
+        await expect(hmrStatus).toHaveText("HMR updated: no");
+
+        let input = page.locator("#index input");
+        await expect(input).toBeVisible();
+        await input.type("stateful");
+
+        let indexRouteContents = await fs.readFile(
+          path.join(cwd, "app/routes/_index.tsx"),
+          "utf8",
+        );
+        await fs.writeFile(
+          path.join(cwd, "app/routes/_index.tsx"),
+          indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
+          "utf8",
+        );
+        await page.waitForLoadState("networkidle");
+        await expect(hmrStatus).toHaveText("HMR updated: yes");
+        await expect(input).toHaveValue("stateful");
+
+        // Ensure no errors after HMR
+        expect(page.errors).toEqual([]);
+      });
+
+      test("handles multiple set-cookie headers", async ({ dev, page }) => {
+        const { port } = await dev(files, templateName);
+
+        await page.goto(`http://localhost:${port}/set-cookies`, {
+          waitUntil: "networkidle",
+        });
+
+        expect(page.errors).toEqual([]);
+
+        // Ensure we redirected
+        expect(new URL(page.url()).pathname).toBe("/get-cookies");
+
+        await expect(page.locator("#get-cookies [data-cookies]")).toHaveText(
+          "first=one; second=two; third=three",
+        );
+      });
+
+      test("handles JSX in .jsx file without React import", async ({
+        dev,
+        page,
+      }) => {
+        const { cwd, port } = await dev(files, templateName);
+
+        await page.goto(`http://localhost:${port}/jsx`, {
+          waitUntil: "networkidle",
+        });
+        expect(page.errors).toEqual([]);
+
+        let hmrStatus = page.locator("#jsx [data-hmr]");
+        await expect(hmrStatus).toHaveText("HMR updated: no");
+
+        let indexRouteContents = await fs.readFile(
+          path.join(cwd, "app/routes/jsx.jsx"),
+          "utf8",
+        );
+        await fs.writeFile(
+          path.join(cwd, "app/routes/jsx.jsx"),
+          indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
+          "utf8",
+        );
+        await page.waitForLoadState("networkidle");
+        await expect(hmrStatus).toHaveText("HMR updated: yes");
+
+        expect(page.errors).toEqual([]);
+      });
+
+      test("handles MDX routes", async ({ dev, page }) => {
+        const { port } = await dev(files, templateName);
+        await page.goto(`http://localhost:${port}/mdx`, {
+          waitUntil: "networkidle",
+        });
+        expect(page.errors).toEqual([]);
+
+        let mdxContent = page.locator("[data-mdx-route]");
+        await expect(mdxContent).toHaveText("MDX route content from loader");
+
+        expect(page.errors).toEqual([]);
+      });
+
+      test("loads .env file", async ({ dev, page }) => {
+        const { port } = await dev(files, templateName);
+
+        await page.goto(`http://localhost:${port}/dotenv`, {
+          waitUntil: "networkidle",
+        });
+        expect(page.errors).toEqual([]);
+
+        let loaderContent = page.locator("[data-dotenv-route-loader-content]");
+        await expect(loaderContent).toHaveText("Content from .env file");
+
+        let clientContent = page.locator("[data-dotenv-route-client-content]");
+        await expect(clientContent).toHaveText(
+          "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing",
+        );
+
+        expect(page.errors).toEqual([]);
+      });
+
+      test("request errors map to original source code", async ({
+        dev,
+        page,
+      }) => {
+        const { port } = await dev(files, templateName);
+
+        await page.goto(
+          `http://localhost:${port}/error-stacktrace?crash-server-render`,
+        );
+        await expect(page.locator("main")).toContainText(
+          "Error: crash-server-render",
+        );
+        await expect(page.locator("main")).toContainText(
+          "error-stacktrace.tsx:14:11",
+        );
+
+        await page.goto(
+          `http://localhost:${port}/error-stacktrace?crash-loader`,
+        );
+        await expect(page.locator("main")).toContainText("Error: crash-loader");
+        await expect(page.locator("main")).toContainText(
+          "error-stacktrace.tsx:5:11",
+        );
+      });
+
+      test("handle known route exports with HMR", async ({ dev, page }) => {
+        const { cwd, port } = await dev(files, templateName);
+
+        await page.goto(`http://localhost:${port}/known-route-exports`, {
+          waitUntil: "networkidle",
+        });
+        expect(page.errors).toEqual([]);
+
+        // file editing utils
+        let filepath = path.join(cwd, "app/routes/known-route-exports.tsx");
+        let filedata = await fs.readFile(filepath, "utf8");
+        async function editFile(edit: (data: string) => string) {
+          filedata = edit(filedata);
+          await fs.writeFile(filepath, filedata, "utf8");
+        }
+
+        // verify input state is preserved after each update
+        let input = page.locator("input");
+        await input.type("stateful");
+        await expect(input).toHaveValue("stateful");
+
+        // component
+        await editFile((data) =>
+          data.replace("HMR component: 0", "HMR component: 1"),
+        );
+        await expect(page.locator("[data-hmr]")).toHaveText("HMR component: 1");
+        await expect(input).toHaveValue("stateful");
+
+        // handle
+        await editFile((data) =>
+          data.replace("HMR handle: 0", "HMR handle: 1"),
+        );
+        await expect(page.locator("[data-handle]")).toHaveText("HMR handle: 1");
+        await expect(input).toHaveValue("stateful");
+
+        // meta
+        await editFile((data) => data.replace("HMR meta: 0", "HMR meta: 1"));
+        await expect(page).toHaveTitle("HMR meta: 1");
+        await expect(input).toHaveValue("stateful");
+
+        // links
+        await editFile((data) => data.replace("HMR links: 0", "HMR links: 1"));
+        await expect(page.locator("[data-link]")).toHaveAttribute(
+          "data-link",
+          "HMR links: 1",
+        );
+
+        expect(page.errors).toEqual([]);
+      });
     });
-
-    let nodeBin = process.argv[0];
-    let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
-    devProc = spawn(nodeBin, [reactRouterBin, "dev"], {
-      cwd: projectDir,
-      env: process.env,
-      stdio: "pipe",
-    });
-    let devStdout = bufferize(devProc.stdout);
-    let devStderr = bufferize(devProc.stderr);
-
-    await waitOn({
-      resources: [`http://localhost:${devPort}/`],
-      timeout: 10000,
-    }).catch((err) => {
-      let stdout = devStdout();
-      let stderr = devStderr();
-      throw new Error(
-        [
-          err.message,
-          "",
-          "exit code: " + devProc.exitCode,
-          "stdout: " + stdout ? `\n${stdout}\n` : "<empty>",
-          "stderr: " + stderr ? `\n${stderr}\n` : "<empty>",
-        ].join("\n")
-      );
-    });
-  });
-
-  test.afterAll(async () => {
-    devProc.pid && (await killtree(devProc.pid));
-  });
-
-  test("renders matching routes", async ({ page }) => {
-    let pageErrors: unknown[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(`http://localhost:${devPort}/`, {
-      waitUntil: "networkidle",
-    });
-
-    // Ensure no errors on page load
-    expect(pageErrors).toEqual([]);
-
-    await expect(page.locator("#index [data-title]")).toHaveText("Index");
-    await expect(page.locator("#index [data-defer]")).toHaveText(
-      "Defer finished: yes"
-    );
-
-    let hmrStatus = page.locator("#index [data-hmr]");
-    await expect(hmrStatus).toHaveText("HMR updated: no");
-
-    let input = page.locator("#index input");
-    await expect(input).toBeVisible();
-    await input.type("stateful");
-
-    let indexRouteContents = await fs.readFile(
-      path.join(projectDir, "app/routes/_index.tsx"),
-      "utf8"
-    );
-    await fs.writeFile(
-      path.join(projectDir, "app/routes/_index.tsx"),
-      indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
-      "utf8"
-    );
-    await page.waitForLoadState("networkidle");
-    await expect(hmrStatus).toHaveText("HMR updated: yes");
-    await expect(input).toHaveValue("stateful");
-
-    // Ensure no errors after HMR
-    expect(pageErrors).toEqual([]);
-  });
-
-  test("handles multiple set-cookie headers", async ({ page }) => {
-    let pageErrors: Error[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(`http://localhost:${devPort}/set-cookies`, {
-      waitUntil: "networkidle",
-    });
-
-    expect(pageErrors).toEqual([]);
-
-    // Ensure we redirected
-    expect(new URL(page.url()).pathname).toBe("/get-cookies");
-
-    await expect(page.locator("#get-cookies [data-cookies]")).toHaveText(
-      "first=one; second=two; third=three"
-    );
-  });
-
-  test("handles JSX in .jsx file without React import", async ({ page }) => {
-    let pageErrors: unknown[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(`http://localhost:${devPort}/jsx`, {
-      waitUntil: "networkidle",
-    });
-    expect(pageErrors).toEqual([]);
-
-    let hmrStatus = page.locator("#jsx [data-hmr]");
-    await expect(hmrStatus).toHaveText("HMR updated: no");
-
-    let indexRouteContents = await fs.readFile(
-      path.join(projectDir, "app/routes/jsx.jsx"),
-      "utf8"
-    );
-    await fs.writeFile(
-      path.join(projectDir, "app/routes/jsx.jsx"),
-      indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
-      "utf8"
-    );
-    await page.waitForLoadState("networkidle");
-    await expect(hmrStatus).toHaveText("HMR updated: yes");
-
-    expect(pageErrors).toEqual([]);
-  });
-
-  test("handles MDX routes", async ({ page }) => {
-    let pageErrors: unknown[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(`http://localhost:${devPort}/mdx`, {
-      waitUntil: "networkidle",
-    });
-    expect(pageErrors).toEqual([]);
-
-    let mdxContent = page.locator("[data-mdx-route]");
-    await expect(mdxContent).toHaveText("MDX route content from loader");
-
-    expect(pageErrors).toEqual([]);
-  });
-
-  test("loads .env file", async ({ page }) => {
-    let pageErrors: unknown[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(`http://localhost:${devPort}/dotenv`, {
-      waitUntil: "networkidle",
-    });
-    expect(pageErrors).toEqual([]);
-
-    let loaderContent = page.locator("[data-dotenv-route-loader-content]");
-    await expect(loaderContent).toHaveText("Content from .env file");
-
-    let clientContent = page.locator("[data-dotenv-route-client-content]");
-    await expect(clientContent).toHaveText(
-      "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
-    );
-
-    expect(pageErrors).toEqual([]);
-  });
-
-  test("request errors map to original source code", async ({ page }) => {
-    let pageErrors: unknown[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(
-      `http://localhost:${devPort}/error-stacktrace?crash-server-render`
-    );
-    await expect(page.locator("main")).toContainText(
-      "Error: crash-server-render"
-    );
-    await expect(page.locator("main")).toContainText(
-      "error-stacktrace.tsx:16:11"
-    );
-
-    await page.goto(
-      `http://localhost:${devPort}/error-stacktrace?crash-loader`
-    );
-    await expect(page.locator("main")).toContainText("Error: crash-loader");
-    await expect(page.locator("main")).toContainText(
-      "error-stacktrace.tsx:7:11"
-    );
-  });
-
-  test("handle known route exports with HMR", async ({ page }) => {
-    let pageErrors: unknown[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
-
-    await page.goto(`http://localhost:${devPort}/known-route-exports`, {
-      waitUntil: "networkidle",
-    });
-    expect(pageErrors).toEqual([]);
-
-    // file editing utils
-    let filepath = path.join(projectDir, "app/routes/known-route-exports.tsx");
-    let filedata = await fs.readFile(filepath, "utf8");
-    async function editFile(edit: (data: string) => string) {
-      filedata = edit(filedata);
-      await fs.writeFile(filepath, filedata, "utf8");
-    }
-
-    // verify input state is preserved after each update
-    let input = page.locator("input");
-    await input.type("stateful");
-    await expect(input).toHaveValue("stateful");
-
-    // component
-    await editFile((data) =>
-      data.replace("HMR component: 0", "HMR component: 1")
-    );
-    await expect(page.locator("[data-hmr]")).toHaveText("HMR component: 1");
-    await expect(input).toHaveValue("stateful");
-
-    // handle
-    await editFile((data) => data.replace("HMR handle: 0", "HMR handle: 1"));
-    await expect(page.locator("[data-handle]")).toHaveText("HMR handle: 1");
-    await expect(input).toHaveValue("stateful");
-
-    // meta
-    await editFile((data) => data.replace("HMR meta: 0", "HMR meta: 1"));
-    await expect(page).toHaveTitle("HMR meta: 1");
-    await expect(input).toHaveValue("stateful");
-
-    // links
-    await editFile((data) => data.replace("HMR links: 0", "HMR links: 1"));
-    await expect(page.locator("[data-link]")).toHaveAttribute(
-      "data-link",
-      "HMR links: 1"
-    );
-
-    expect(pageErrors).toEqual([]);
   });
 });
-
-let bufferize = (stream: Readable): (() => string) => {
-  let buffer = "";
-  stream.on("data", (data) => (buffer += data.toString()));
-  return () => buffer;
-};

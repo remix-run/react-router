@@ -1,6 +1,6 @@
 {
   "name": "@react-router/serve",
-  "version": "2.9.0-pre.0",
+  "version": "7.7.1",
   "description": "Production application server for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -18,7 +18,22 @@
     "react-router-serve": "bin.js"
   },
   "scripts": {
-    "tsc": "tsc"
+    "build": "wireit",
+    "typecheck": "tsc"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsup",
+      "files": [
+        "*.ts",
+        "bin.js",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**"
+      ]
+    }
   },
   "dependencies": {
     "@react-router/express": "workspace:*",
@@ -36,10 +51,13 @@
     "@types/compression": "^1.7.0",
     "@types/express": "^4.17.9",
     "@types/morgan": "^1.9.2",
-    "@types/source-map-support": "^0.5.6"
+    "@types/source-map-support": "^0.5.6",
+    "tsup": "^8.3.0",
+    "typescript": "^5.1.6",
+    "wireit": "0.14.9"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "files": [
     "dist/",

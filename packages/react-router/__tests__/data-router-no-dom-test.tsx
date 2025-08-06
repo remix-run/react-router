@@ -4,7 +4,8 @@
 
 import * as React from "react";
 import renderer from "react-test-renderer";
-import { RouterProvider, useFetcher } from "../lib/dom/lib";
+import { useFetcher } from "../lib/dom/lib";
+import { RouterProvider } from "../lib/dom-export/dom-router-provider";
 import { createMemoryRouter } from "../lib/components";
 import { useLoaderData, useNavigate } from "../lib/hooks";
 
@@ -27,7 +28,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -52,6 +57,8 @@ describe("RouterProvider works when no DOM APIs are available", () => {
   });
 
   it("is defensive against a view transition navigation", async () => {
+    let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     let router = createMemoryRouter([
       {
         path: "/",
@@ -69,7 +76,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -84,7 +95,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
 
     await renderer.act(async () => {
       router.navigate("/foo", {
-        unstable_viewTransition: true,
+        viewTransition: true,
       });
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -99,11 +110,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
     expect(spy.mock.calls[0][0].location.pathname).toBe("/");
     expect(spy.mock.calls[0][0].navigation.state).toBe("loading");
     expect(spy.mock.calls[0][0].navigation.location.pathname).toBe("/foo");
-    expect(spy.mock.calls[0][1].unstable_viewTransitionOpts).toBeUndefined();
+    expect(spy.mock.calls[0][1].viewTransitionOpts).toBeUndefined();
 
     expect(spy.mock.calls[1][0].location.pathname).toBe("/foo");
     expect(spy.mock.calls[1][0].navigation.state).toBe("idle");
-    expect(spy.mock.calls[1][1].unstable_viewTransitionOpts).toEqual({
+    expect(spy.mock.calls[1][1].viewTransitionOpts).toEqual({
       currentLocation: {
         hash: "",
         key: "default",
@@ -119,6 +130,14 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         state: null,
       },
     });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "You provided the `viewTransition` option to a router update, but you do " +
+        "not appear to be running in a DOM environment as `window.startViewTransition` " +
+        "is not available.",
+    );
+    warnSpy.mockRestore();
 
     unsubscribe();
   });
@@ -141,7 +160,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -156,7 +179,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
 
     await renderer.act(async () => {
       router.navigate("/foo", {
-        unstable_flushSync: true,
+        flushSync: true,
       });
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -171,11 +194,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
     expect(spy.mock.calls[0][0].location.pathname).toBe("/");
     expect(spy.mock.calls[0][0].navigation.state).toBe("loading");
     expect(spy.mock.calls[0][0].navigation.location.pathname).toBe("/foo");
-    expect(spy.mock.calls[0][1].unstable_flushSync).toBe(true);
+    expect(spy.mock.calls[0][1].flushSync).toBe(true);
 
     expect(spy.mock.calls[1][0].location.pathname).toBe("/foo");
     expect(spy.mock.calls[1][0].navigation.state).toBe("idle");
-    expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[1][1].flushSync).toBe(false);
 
     unsubscribe();
   });
@@ -201,7 +224,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button
@@ -243,7 +270,7 @@ describe("RouterProvider works when no DOM APIs are available", () => {
                     method: "post",
                     action: "/fetch",
                     encType: "application/json",
-                  }
+                  },
                 )
               }
             >
@@ -261,7 +288,11 @@ describe("RouterProvider works when no DOM APIs are available", () => {
         },
       },
     ]);
-    const component = renderer.create(<RouterProvider router={router} />);
+    let component: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      component = renderer.create(<RouterProvider router={router} />);
+    });
+    component = component!;
     let tree = component.toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <button

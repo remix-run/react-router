@@ -28,12 +28,21 @@ test.describe("deferred loaders", () => {
         `,
 
         "app/routes/redirect.tsx": js`
-          export function loader({ response }) {
-            response.status = 301;
-            response.headers.set("Location", "/?redirected");
-            return { food: "pizza" };
+          import { data } from 'react-router';
+          export function loader() {
+            return data(
+              { food: "pizza" },
+              {
+                status: 301,
+                headers: {
+                  Location: "/?redirected"
+                }
+              }
+            );
           }
-          export default function Redirect() {return null;}
+          export default function Redirect() {
+            return null;
+          }
         `,
 
         "app/routes/direct-promise-access.tsx": js`

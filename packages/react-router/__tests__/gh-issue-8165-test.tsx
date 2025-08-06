@@ -63,7 +63,7 @@ describe("GH Issue #8165", () => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/en/tab"]}>
           <App />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 

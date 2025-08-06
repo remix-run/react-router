@@ -1,14 +1,9 @@
-import type { ServerBuild } from "./build";
-
 type DevServerHooks = {
-  getCriticalCss?: (
-    build: ServerBuild,
-    pathname: string
-  ) => Promise<string | undefined>;
+  getCriticalCss?: (pathname: string) => Promise<string | undefined>;
   processRequestError?: (error: unknown) => void;
 };
 
-const globalDevServerHooksKey = "__remix_devServerHooks";
+const globalDevServerHooksKey = "__reactRouterDevServerHooks";
 
 export function setDevServerHooks(devServerHooks: DevServerHooks) {
   // @ts-expect-error
@@ -18,4 +13,16 @@ export function setDevServerHooks(devServerHooks: DevServerHooks) {
 export function getDevServerHooks(): DevServerHooks | undefined {
   // @ts-expect-error
   return globalThis[globalDevServerHooksKey];
+}
+
+// Guarded access to build-time-only headers
+export function getBuildTimeHeader(request: Request, headerName: string) {
+  if (typeof process !== "undefined") {
+    try {
+      if (process.env?.IS_RR_BUILD_REQUEST === "yes") {
+        return request.headers.get(headerName);
+      }
+    } catch (e) {}
+  }
+  return null;
 }

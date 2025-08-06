@@ -35,8 +35,8 @@ let router = createBrowserRouter(
       />
       <Route path="four" element={<h2>Four</h2>} />
       <Route path="five" element={<h2>Five</h2>} />
-    </Route>
-  )
+    </Route>,
+  ),
 );
 
 if (import.meta.hot) {
@@ -49,7 +49,7 @@ export default function App() {
 
 function Layout() {
   let [historyIndex, setHistoryIndex] = React.useState(
-    window.history.state?.idx
+    window.history.state?.idx,
   );
   let location = useLocation();
 
@@ -89,7 +89,7 @@ function ImportantForm() {
   let shouldBlock = React.useCallback<BlockerFunction>(
     ({ currentLocation, nextLocation }) =>
       value !== "" && currentLocation.pathname !== nextLocation.pathname,
-    [value]
+    [value],
   );
   let blocker = useBlocker(shouldBlock);
 

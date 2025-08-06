@@ -1,7 +1,9 @@
-import { IDLE_NAVIGATION } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
+import { replace } from "../../lib/router/utils";
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, setup } from "./utils/data-router-setup";
-import { createFormData } from "./utils/utils";
+import { createFormData, tick } from "./utils/utils";
 
 describe("redirects", () => {
   afterEach(() => cleanup());
@@ -97,7 +99,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT 2");
     expect(t.router.state).toMatchObject({
@@ -123,7 +125,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT 2");
     expect(t.router.state).toMatchObject({
@@ -168,7 +170,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
 
     await nav.loaders.parent.resolve("PARENT");
@@ -192,7 +194,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
 
     await nav.loaders.parent.resolve("PARENT");
@@ -217,7 +219,7 @@ describe("redirects", () => {
       "./child",
       undefined,
       undefined,
-      ["parent", "child", "index"]
+      ["parent", "child", "index"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     await nav2.loaders.child.resolve("CHILD");
@@ -248,7 +250,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -275,7 +277,7 @@ describe("redirects", () => {
       "..",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -299,7 +301,7 @@ describe("redirects", () => {
     });
 
     let nav2 = await nav1.actions.child.redirectReturn(
-      "/parent?key=value#hash"
+      "/parent?key=value#hash",
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -328,7 +330,7 @@ describe("redirects", () => {
       "..?key=value#hash",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await nav2.loaders.parent.resolve("PARENT");
     expect(t.router.state).toMatchObject({
@@ -433,7 +435,7 @@ describe("redirects", () => {
       "http://localhost/parent",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await B.loaders.parent.resolve("PARENT");
     expect(t.router.state.location).toMatchObject({
@@ -458,7 +460,7 @@ describe("redirects", () => {
       "http://localhost/base/parent",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await B.loaders.parent.resolve("PARENT");
     expect(t.router.state.location).toMatchObject({
@@ -519,7 +521,7 @@ describe("redirects", () => {
       "http://localhost/parent",
       undefined,
       undefined,
-      ["parent"]
+      ["parent"],
     );
     await C.loaders.parent.resolve("PARENT*");
 
@@ -636,6 +638,70 @@ describe("redirects", () => {
       navigation: IDLE_NAVIGATION,
       loaderData: {
         loader: "LOADER 3",
+      },
+    });
+  });
+
+  it("supports replace() redirects", async () => {
+    let router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          path: "/a",
+        },
+        {
+          path: "/b",
+          loader: () => replace("/c"),
+        },
+        {
+          path: "/c",
+        },
+      ],
+    });
+    router.initialize();
+    await tick();
+
+    // ['/']
+    expect(router.state).toMatchObject({
+      historyAction: "POP",
+      location: {
+        pathname: "/",
+        state: null,
+      },
+    });
+
+    // Push /a: ['/', '/a']
+    await router.navigate("/a");
+    expect(router.state).toMatchObject({
+      historyAction: "PUSH",
+      location: {
+        pathname: "/a",
+        state: null,
+      },
+    });
+
+    // Push /b which calls replace('/c'): ['/', '/c']
+    await router.navigate("/b");
+    expect(router.state).toMatchObject({
+      historyAction: "REPLACE",
+      location: {
+        pathname: "/c",
+        state: {
+          _isRedirect: true,
+        },
+      },
+    });
+
+    // Pop: ['/']
+    await router.navigate(-1);
+    expect(router.state).toMatchObject({
+      historyAction: "POP",
+      location: {
+        pathname: "/",
+        state: null,
       },
     });
   });

@@ -2,63 +2,52 @@
  * @jest-environment node
  */
 
-import type { TypedResponse } from "../../lib/server-runtime/responses";
-import { json, redirect } from "../../lib/server-runtime/responses";
-import { isEqual } from "./utils";
+import { redirect } from "../../lib/router/utils";
 
 describe("json", () => {
   it("sets the Content-Type header", () => {
-    let response = json({});
-    expect(response.headers.get("Content-Type")).toEqual(
-      "application/json; charset=utf-8"
-    );
+    let response = Response.json({});
+    expect(response.headers.get("Content-Type")).toEqual("application/json");
   });
 
   it("preserves existing headers, including Content-Type", () => {
-    let response = json(
+    let response = Response.json(
       {},
       {
         headers: {
           "Content-Type": "application/json; charset=iso-8859-1",
           "X-Remix": "is awesome",
         },
-      }
+      },
     );
 
     expect(response.headers.get("Content-Type")).toEqual(
-      "application/json; charset=iso-8859-1"
+      "application/json; charset=iso-8859-1",
     );
     expect(response.headers.get("X-Remix")).toEqual("is awesome");
   });
 
   it("encodes the response body", async () => {
-    let response = json({ hello: "remix" });
+    let response = Response.json({ hello: "remix" });
     expect(await response.json()).toEqual({ hello: "remix" });
   });
 
   it("accepts status as a second parameter", () => {
-    let response = json({}, 201);
+    let response = Response.json({}, { status: 201 });
     expect(response.status).toEqual(201);
   });
 
   it("infers input type", async () => {
-    let response = json({ hello: "remix" });
-    isEqual<typeof response, TypedResponse<{ hello: string }>>(true);
+    let response = Response.json({ hello: "remix" });
     let result = await response.json();
     expect(result).toMatchObject({ hello: "remix" });
   });
 
-  // eslint-disable-next-line jest/expect-expect
-  it("disallows unmatched typed responses", async () => {
-    let response = json("hello");
-    isEqual<TypedResponse<number>, typeof response>(false);
-  });
-
   it("disallows unserializables", () => {
     // @ts-expect-error
-    expect(() => json(124n)).toThrow();
+    expect(() => Response.json(124n)).toThrow();
     // @ts-expect-error
-    expect(() => json({ field: 124n })).toThrow();
+    expect(() => Response.json({ field: 124n })).toThrow();
   });
 });
 

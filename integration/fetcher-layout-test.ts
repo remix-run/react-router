@@ -15,10 +15,9 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/layout-action.tsx": js`
-        import { json } from "react-router";
         import { Outlet, useFetcher, useFormAction } from "react-router";
 
-        export let action = ({ params }) => json("layout action data");
+        export let action = ({ params }) => "layout action data";
 
         export default function ActionLayout() {
           let fetcher = useFetcher();
@@ -40,16 +39,15 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/layout-action._index.tsx": js`
-        import { json } from "react-router";
         import {
           useFetcher,
           useFormAction,
           useLoaderData,
         } from "react-router";
 
-        export let loader = ({ params }) => json("index data");
+        export let loader = ({ params }) => "index data";
 
-        export let action = ({ params }) => json("index action data");
+        export let action = ({ params }) => "index action data";
 
         export default function ActionLayoutIndex() {
           let data = useLoaderData();
@@ -71,16 +69,15 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/layout-action.$param.tsx": js`
-        import { json } from "react-router";
         import {
           useFetcher,
           useFormAction,
           useLoaderData,
         } from "react-router";
 
-        export let loader = ({ params }) => json(params.param);
+        export let loader = ({ params }) => params.param;
 
-        export let action = ({ params }) => json("param action data");
+        export let action = ({ params }) => "param action data";
 
         export default function ActionLayoutChild() {
           let data = useLoaderData();
@@ -102,10 +99,9 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/layout-loader.tsx": js`
-        import { json } from "react-router";
         import { Outlet, useFetcher, useFormAction } from "react-router";
 
-        export let loader = () => json("layout loader data");
+        export let loader = () => "layout loader data";
 
         export default function LoaderLayout() {
           let fetcher = useFetcher();
@@ -127,14 +123,13 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/layout-loader._index.tsx": js`
-        import { json } from "react-router";
         import {
           useFetcher,
           useFormAction,
           useLoaderData,
         } from "react-router";
 
-        export let loader = ({ params }) => json("index data");
+        export let loader = ({ params }) => "index data";
 
         export default function ActionLayoutIndex() {
           let fetcher = useFetcher();
@@ -154,14 +149,13 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/layout-loader.$param.tsx": js`
-        import { json } from "react-router";
         import {
           useFetcher,
           useFormAction,
           useLoaderData,
         } from "react-router";
 
-        export let loader = ({ params }) => json(params.param);
+        export let loader = ({ params }) => params.param;
 
         export default function ActionLayoutChild() {
           let fetcher = useFetcher();
@@ -237,7 +231,7 @@ test("fetcher calls index route loader when at index route", async ({
   expect(dataElement.text()).toBe("index data");
 });
 
-test("fetcher calls layout route action when at paramaterized route", async ({
+test("fetcher calls layout route action when at parameterized route", async ({
   page,
 }) => {
   let app = new PlaywrightFixture(appFixture, page);

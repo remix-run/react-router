@@ -1,4 +1,5 @@
-import { type StaticHandlerContext, isRouteErrorResponse } from "../router";
+import type { StaticHandlerContext } from "../router/router";
+import { isRouteErrorResponse } from "../router/utils";
 
 import { ServerMode } from "./mode";
 
@@ -55,7 +56,7 @@ export function sanitizeError<T = unknown>(error: T, serverMode: ServerMode) {
 
 export function sanitizeErrors(
   errors: NonNullable<StaticHandlerContext["errors"]>,
-  serverMode: ServerMode
+  serverMode: ServerMode,
 ) {
   return Object.entries(errors).reduce((acc, [routeId, error]) => {
     return Object.assign(acc, { [routeId]: sanitizeError(error, serverMode) });
@@ -71,7 +72,7 @@ export type SerializedError = {
 
 export function serializeError(
   error: Error,
-  serverMode: ServerMode
+  serverMode: ServerMode,
 ): SerializedError {
   let sanitized = sanitizeError(error, serverMode);
   return {
@@ -82,7 +83,7 @@ export function serializeError(
 
 export function serializeErrors(
   errors: StaticHandlerContext["errors"],
-  serverMode: ServerMode
+  serverMode: ServerMode,
 ): StaticHandlerContext["errors"] {
   if (!errors) return null;
   let entries = Object.entries(errors);

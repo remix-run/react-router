@@ -22,7 +22,7 @@ let tsconfig = (aliases: Record<string, string[]>) => `
     "include": ["env.d.ts", "**/*.ts", "**/*.tsx"],
     "compilerOptions": {
       "lib": ["DOM", "DOM.Iterable", "ES2022"],
-      "isolatedModules": true,
+      "verbatimModuleSyntax": true,
       "esModuleInterop": true,
       "jsx": "react-jsx",
       "module": "ESNext",
@@ -31,7 +31,6 @@ let tsconfig = (aliases: Record<string, string[]>) => `
       "target": "ES2022",
       "strict": true,
       "allowJs": true,
-      "forceConsistentCasingInFileNames": true,
       "baseUrl": ".",
       "paths": ${JSON.stringify(aliases)},
       "noEmit": true
@@ -45,7 +44,6 @@ test("Vite / dead-code elimination for server exports", async () => {
     "app/.server/utils.ts": serverOnlyModule,
     "app/routes/remove-server-exports-and-dce.tsx": `
       import fs from "node:fs";
-      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       import { serverOnly as serverOnlyFile } from "../utils.server";
@@ -53,7 +51,7 @@ test("Vite / dead-code elimination for server exports", async () => {
 
       export const loader = () => {
         let contents = fs.readFileSync("server_only.txt");
-        return json({ serverOnlyFile, serverOnlyDir, contents })
+        return { serverOnlyFile, serverOnlyDir, contents }
       }
 
       export const action = () => {
@@ -73,7 +71,7 @@ test("Vite / dead-code elimination for server exports", async () => {
 
   let lines = grep(
     path.join(cwd, "build/client"),
-    /SERVER_ONLY|SERVER_ONLY|node:fs/
+    /SERVER_ONLY|SERVER_ONLY|node:fs/,
   );
   expect(lines).toHaveLength(0);
 });
@@ -144,7 +142,7 @@ test.describe("Vite / route / server-only module referenced by client", () => {
         `    '${specifier}' imported by route 'app/routes/_index.tsx'`,
 
         "  React Router automatically removes server-code from these exports:",
-        "    `loader`, `action`, `headers`",
+        "    `loader`, `action`, `unstable_middleware`, `headers`",
 
         `  But other route exports in 'app/routes/_index.tsx' depend on '${specifier}'.`,
 
@@ -217,7 +215,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 test.describe("Vite / server-only escape hatch", async () => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
-      import { vitePlugin as reactRouter } from "@react-router/dev";
+      import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 

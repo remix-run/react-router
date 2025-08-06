@@ -1,10 +1,10 @@
 import type {
-  ActionFunction,
-  ActionFunctionArgs,
   LoaderFunction,
+  ActionFunction,
   LoaderFunctionArgs,
-} from "./routeModules";
-import type { ResponseStub } from "./single-fetch";
+  ActionFunctionArgs,
+} from "../router/utils";
+import { isDataWithResponseInit, isRedirectStatusCode } from "../router/router";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -16,70 +16,26 @@ export interface AppLoadContext {
   [key: string]: unknown;
 }
 
-/**
- * Data for a route that was returned from a `loader()`.
- */
-export type AppData = unknown;
-
-export async function callRouteAction({
-  loadContext,
-  action,
-  params,
-  request,
-  routeId,
-  response,
-}: {
-  request: Request;
-  action: ActionFunction;
-  params: ActionFunctionArgs["params"];
-  loadContext: AppLoadContext;
-  routeId: string;
-  response: ResponseStub;
-}) {
-  let result = await action({
-    request: stripDataParam(stripIndexParam(request)),
-    context: loadContext,
-    params,
-    response,
+// Need to use RR's version here to permit the optional context even
+// though we know it'll always be provided in remix
+export async function callRouteHandler(
+  handler: LoaderFunction | ActionFunction,
+  args: LoaderFunctionArgs | ActionFunctionArgs,
+) {
+  let result = await handler({
+    request: stripRoutesParam(stripIndexParam(args.request)),
+    params: args.params,
+    context: args.context,
   });
 
-  if (result === undefined) {
-    throw new Error(
-      `You defined an action for route "${routeId}" but didn't return ` +
-        `anything from your \`action\` function. Please return a value or \`null\`.`
-    );
-  }
-
-  return result;
-}
-
-export async function callRouteLoader({
-  loadContext,
-  loader,
-  params,
-  request,
-  routeId,
-  response,
-}: {
-  request: Request;
-  loader: LoaderFunction;
-  params: LoaderFunctionArgs["params"];
-  loadContext: AppLoadContext;
-  routeId: string;
-  response: ResponseStub;
-}) {
-  let result = await loader({
-    request: stripDataParam(stripIndexParam(request)),
-    context: loadContext,
-    params,
-    response,
-  });
-
-  if (result === undefined) {
-    throw new Error(
-      `You defined a loader for route "${routeId}" but didn't return ` +
-        `anything from your \`loader\` function. Please return a value or \`null\`.`
-    );
+  // If they returned a redirect via data(), re-throw it as a Response
+  if (
+    isDataWithResponseInit(result) &&
+    result.init &&
+    result.init.status &&
+    isRedirectStatusCode(result.init.status)
+  ) {
+    throw new Response(null, result.init);
   }
 
   return result;
@@ -118,9 +74,9 @@ function stripIndexParam(request: Request) {
   return new Request(url.href, init);
 }
 
-function stripDataParam(request: Request) {
+function stripRoutesParam(request: Request) {
   let url = new URL(request.url);
-  url.searchParams.delete("_data");
+  url.searchParams.delete("_routes");
   let init: RequestInit = {
     method: request.method,
     body: request.body,

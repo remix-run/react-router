@@ -2,7 +2,8 @@
  * @jest-environment node
  */
 
-import { createMemoryHistory, createRouter } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter } from "../../lib/router/router";
 
 // This suite of tests specifically runs in the node jest environment to catch
 // issues when window is not present
@@ -99,10 +100,10 @@ describe("a memory router", () => {
 
     router.navigate("/a");
     expect(shouldRevalidateSpy.mock.calls[0][0].currentUrl.toString()).toBe(
-      "http://localhost/"
+      "http://localhost/",
     );
     expect(shouldRevalidateSpy.mock.calls[0][0].nextUrl.toString()).toBe(
-      "http://localhost/a"
+      "http://localhost/a",
     );
     router.dispose();
   });
@@ -207,38 +208,6 @@ describe("a memory router", () => {
     });
     request = actionSpy.mock.calls[1][0].request;
     expect(await request.text()).toEqual("body");
-
-    router.dispose();
-  });
-
-  it("throws on submitting FormData when it's not available", async () => {
-    if (global.FormData) {
-      // This is globally available in Node 18, this test is primarily for Node 16
-      // eslint-disable-next-line jest/no-conditional-expect
-      expect(true).toBe(true);
-      return;
-    }
-
-    let actionSpy = jest.fn();
-
-    let router = createRouter({
-      routes: [
-        {
-          path: "/",
-          action: actionSpy,
-        },
-      ],
-      history: createMemoryHistory(),
-    });
-
-    await expect(() =>
-      router.navigate("/", {
-        formMethod: "post",
-        body: { key: "value" },
-      })
-    ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"FormData is not available in this environment"`
-    );
 
     router.dispose();
   });

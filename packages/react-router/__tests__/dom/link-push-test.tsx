@@ -32,7 +32,7 @@ describe("Link push and replace", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<ShowNavigationType />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -44,7 +44,7 @@ describe("Link push and replace", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
@@ -75,7 +75,7 @@ describe("Link push and replace", () => {
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -87,7 +87,7 @@ describe("Link push and replace", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
@@ -100,6 +100,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home?name=michael"
             onClick={[Function]}
+            ref={[Function]}
           >
             Michael
           </a>
@@ -130,7 +131,7 @@ describe("Link push and replace", () => {
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -142,7 +143,7 @@ describe("Link push and replace", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
@@ -155,6 +156,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home#bio"
             onClick={[Function]}
+            ref={[Function]}
           >
             Bio
           </a>
@@ -190,7 +192,7 @@ describe("Link push and replace", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -202,7 +204,7 @@ describe("Link push and replace", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
@@ -215,6 +217,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home"
             onClick={[Function]}
+            ref={[Function]}
           >
             Home
           </a>
@@ -252,7 +255,7 @@ describe("Link push and replace", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -264,7 +267,7 @@ describe("Link push and replace", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
@@ -277,6 +280,7 @@ describe("Link push and replace", () => {
             data-discover="true"
             href="/home"
             onClick={[Function]}
+            ref={[Function]}
           >
             Home
           </a>
@@ -307,7 +311,7 @@ describe("Link push and replace", () => {
               <Route path="home" element={<Home />} />
               <Route path="about" element={<ShowNavigationType />} />
             </Routes>
-          </MemoryRouter>
+          </MemoryRouter>,
         );
       });
 
@@ -319,7 +323,7 @@ describe("Link push and replace", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       });
 
