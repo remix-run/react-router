@@ -194,7 +194,7 @@ A route loader is revalidated when:
 
 - its own route params change
 - any change to URL search params
-- after any actions are called
+- after an action is called and returns a non-error status code
 
 By defining this function, you opt out of the default behavior completely and can manually control when loader data is revalidated for navigations and form submissions.
 

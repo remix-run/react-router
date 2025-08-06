@@ -87,3 +87,26 @@ element
 The key to use for storing scroll positions in [`sessionStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 Defaults to `"react-router-scroll-positions"`.
 
+### scrollTo
+
+A function that will be called to scroll to a specific position.
+This is useful for custom scroll restoration logic, such as explicitly seting the scroll behaviour to "auto"
+so that CSS (scroll-behavior: smooth on the html tag) does not affect the call (the current behaviour jumps around
+when switching pages in a non-intuitive way).
+Defaults to `window.scrollTo(0, y)`.
+
+```css
+html {
+  scroll-behavior: smooth;
+}
+```
+
+```tsx
+<ScrollRestoration
+  scrollTo={(y) => {
+    document.documentElement.style.scrollBehavior = "auto"
+    window.scrollTo(0, y)
+    document.documentElement.style.scrollBehavior = ""
+  }}
+/>
+```
