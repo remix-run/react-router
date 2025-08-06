@@ -8,18 +8,39 @@ import { RemixErrorBoundary } from "./errorBoundaries";
 import { createServerRoutes, shouldHydrateRouteLoader } from "./routes";
 import { StreamTransfer } from "./single-fetch";
 
+/**
+ * @category Types
+ */
 export interface ServerRouterProps {
+  /**
+   * The entry context containing the manifest, route modules, and other data
+   * needed for rendering.
+   */
   context: EntryContext;
+  /**
+   * The URL of the request being handled.
+   */
   url: string | URL;
+  /**
+   * An optional `nonce` for [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)
+   * compliance, used to allow inline scripts to run safely.
+   */
   nonce?: string;
 }
 
 /**
- * The entry point for a Remix app when it is rendered on the server (in
- * `app/entry.server.js`). This component is used to generate the HTML in the
- * response from the server.
+ * The server entry point for a React Router app in Framework Mode. This
+ * component is used to generate the HTML in the response from the server. See
+ * [`entry.server.tsx`](../framework-conventions/entry.server.tsx).
  *
- * @category Components
+ * @public
+ * @category Framework Routers
+ * @mode framework
+ * @param props Props
+ * @param {ServerRouterProps.context} props.context n/a
+ * @param {ServerRouterProps.nonce} props.nonce n/a
+ * @param {ServerRouterProps.url} props.url n/a
+ * @returns A React element that represents the server-rendered application.
  */
 export function ServerRouter({
   context,
@@ -35,7 +56,7 @@ export function ServerRouter({
     manifest.routes,
     routeModules,
     context.future,
-    context.isSpaMode
+    context.isSpaMode,
   );
 
   // Create a shallow clone of `loaderData` we can mutate for partial hydration.
@@ -61,7 +82,7 @@ export function ServerRouter({
         routeId,
         route.clientLoader,
         manifestRoute.hasLoader,
-        context.isSpaMode
+        context.isSpaMode,
       ) &&
       (route.HydrateFallback || !manifestRoute.hasLoader)
     ) {

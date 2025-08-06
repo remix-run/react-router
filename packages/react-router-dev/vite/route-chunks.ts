@@ -29,57 +29,61 @@ function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
   // We use structuredClone to allow AST mutation without modifying the cache.
   return structuredClone(
     getOrSetFromCache(cache, `${cacheKey}::codeToAst`, code, () =>
-      parse(code, { sourceType: "module" })
-    )
+      parse(code, { sourceType: "module" }),
+    ),
   );
 }
 
 function assertNodePath(
-  path: NodePath | NodePath[] | null | undefined
+  path:
+    | NodePath<Babel.Node | null>
+    | NodePath<Babel.Node | null>[]
+    | null
+    | undefined,
 ): asserts path is NodePath {
   invariant(
     path && !Array.isArray(path),
-    `Expected a Path, but got ${Array.isArray(path) ? "an array" : path}`
+    `Expected a Path, but got ${Array.isArray(path) ? "an array" : path}`,
   );
 }
 
 function assertNodePathIsStatement(
-  path: NodePath | NodePath[] | null | undefined
+  path: NodePath | NodePath[] | null | undefined,
 ): asserts path is NodePath<Statement> {
   invariant(
     path && !Array.isArray(path) && t.isStatement(path.node),
     `Expected a Statement path, but got ${
       Array.isArray(path) ? "an array" : path?.node?.type
-    }`
+    }`,
   );
 }
 
 function assertNodePathIsVariableDeclarator(
-  path: NodePath | NodePath[] | null | undefined
+  path: NodePath | NodePath[] | null | undefined,
 ): asserts path is NodePath<VariableDeclarator> {
   invariant(
     path && !Array.isArray(path) && t.isVariableDeclarator(path.node),
     `Expected an Identifier path, but got ${
       Array.isArray(path) ? "an array" : path?.node?.type
-    }`
+    }`,
   );
 }
 
 function assertNodePathIsPattern(
-  path: NodePath | NodePath[] | null | undefined
+  path: NodePath | NodePath[] | null | undefined,
 ): asserts path is NodePath<Pattern> {
   invariant(
     path && !Array.isArray(path) && t.isPattern(path.node),
     `Expected a Pattern path, but got ${
       Array.isArray(path) ? "an array" : path?.node?.type
-    }`
+    }`,
   );
 }
 
 function getExportDependencies(
   code: string,
   cache: Cache,
-  cacheKey: string
+  cacheKey: string,
 ): ExportDependencies {
   return getOrSetFromCache(
     cache,
@@ -92,7 +96,7 @@ function getExportDependencies(
       function handleExport(
         exportName: string,
         exportPath: NodePath<ExportDeclaration>,
-        identifiersPath: NodePath = exportPath
+        identifiersPath: NodePath = exportPath,
       ) {
         let identifiers = getDependentIdentifiersForPath(identifiersPath);
 
@@ -108,8 +112,8 @@ function getExportDependencies(
           Array.from(topLevelStatements).filter(
             (statement) =>
               !t.isImportDeclaration(statement) &&
-              !t.isExportDeclaration(statement)
-          )
+              !t.isExportDeclaration(statement),
+          ),
         );
 
         // We keep track of imported identifiers for each export since we
@@ -140,9 +144,9 @@ function getExportDependencies(
               Boolean(
                 path.isPattern() &&
                   path.parentPath?.isVariableDeclarator() &&
-                  path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration()
-              )
-            )
+                  path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration(),
+              ),
+            ),
           );
           if (isWithinExportDestructuring) {
             let currentPath: NodePath | null = identifier;
@@ -200,7 +204,7 @@ function getExportDependencies(
               // export const foo = ...;
               if (t.isIdentifier(declarator.id)) {
                 let declaratorPath = exportPath.get(
-                  `declaration.declarations.${i}`
+                  `declaration.declarations.${i}`,
                 );
 
                 assertNodePathIsVariableDeclarator(declaratorPath);
@@ -212,7 +216,7 @@ function getExportDependencies(
               // export const { foo } = ...;
               if (t.isPattern(declarator.id)) {
                 let exportedPatternPath = exportPath.get(
-                  `declaration.declarations.${i}.id`
+                  `declaration.declarations.${i}.id`,
                 );
 
                 assertNodePathIsPattern(exportedPatternPath);
@@ -237,7 +241,7 @@ function getExportDependencies(
           ) {
             invariant(
               declaration.id,
-              "Expected exported function or class declaration to have a name when not the default export"
+              "Expected exported function or class declaration to have a name when not the default export",
             );
             handleExport(declaration.id.name, exportPath);
             return;
@@ -254,7 +258,7 @@ function getExportDependencies(
 
                 invariant(
                   specifierPath,
-                  `Expected to find specifier path for ${name}`
+                  `Expected to find specifier path for ${name}`,
                 );
 
                 handleExport(name, exportPath, specifierPath);
@@ -270,13 +274,13 @@ function getExportDependencies(
       });
 
       return exportDependencies;
-    }
+    },
   );
 }
 
 function getDependentIdentifiersForPath(
   path: NodePath,
-  state?: { visited: Set<NodePath>; identifiers: Set<NodePath<Identifier>> }
+  state?: { visited: Set<NodePath>; identifiers: Set<NodePath<Identifier>> },
 ): Set<NodePath<Identifier>> {
   let { visited, identifiers } = state ?? {
     visited: new Set(),
@@ -392,7 +396,7 @@ function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<Statement> {
 
 function getIdentifiersForPatternPath(
   patternPath: NodePath<Pattern>,
-  identifiers: Set<NodePath<Identifier>> = new Set()
+  identifiers: Set<NodePath<Identifier>> = new Set(),
 ): Set<NodePath<Identifier>> {
   function walk(currentPath: NodePath) {
     if (currentPath.isIdentifier()) {
@@ -461,7 +465,7 @@ export function hasChunkableExport(
   code: string,
   exportName: string,
   cache: Cache,
-  cacheKey: string
+  cacheKey: string,
 ): boolean {
   return getOrSetFromCache(
     cache,
@@ -493,7 +497,7 @@ export function hasChunkableExport(
         if (
           setsIntersect(
             currentDependencies.topLevelNonModuleStatements,
-            dependencies.topLevelNonModuleStatements
+            dependencies.topLevelNonModuleStatements,
           )
         ) {
           return false;
@@ -528,7 +532,7 @@ export function hasChunkableExport(
           if (
             setsIntersect(
               currentDependencies.exportedVariableDeclarators,
-              dependencies.exportedVariableDeclarators
+              dependencies.exportedVariableDeclarators,
             )
           ) {
             return false;
@@ -537,7 +541,7 @@ export function hasChunkableExport(
       }
 
       return true;
-    }
+    },
   );
 }
 
@@ -546,12 +550,12 @@ export function getChunkedExport(
   exportName: string,
   generateOptions: GeneratorOptions = {},
   cache: Cache,
-  cacheKey: string
+  cacheKey: string,
 ): GeneratorResult | undefined {
   return getOrSetFromCache(
     cache,
     `${cacheKey}::getChunkedExport::${exportName}::${JSON.stringify(
-      generateOptions
+      generateOptions,
     )}`,
     code,
     () => {
@@ -566,7 +570,7 @@ export function getChunkedExport(
 
       let topLevelStatementsArray = Array.from(dependencies.topLevelStatements);
       let exportedVariableDeclaratorsArray = Array.from(
-        dependencies.exportedVariableDeclarators
+        dependencies.exportedVariableDeclarators,
       );
 
       let ast = codeToAst(code, cache, cacheKey);
@@ -578,8 +582,8 @@ export function getChunkedExport(
       ast.program.body = ast.program.body
         .filter((node) =>
           topLevelStatementsArray.some((statement) =>
-            t.isNodesEquivalent(node, statement)
-          )
+            t.isNodesEquivalent(node, statement),
+          ),
         )
         // Remove unused imports
         .map((node) => {
@@ -597,14 +601,14 @@ export function getChunkedExport(
           // Filter out unused import specifiers. Note that this handles
           // default imports, named imports, and namespace imports.
           node.specifiers = node.specifiers.filter((specifier) =>
-            dependencies.importedIdentifierNames.has(specifier.local.name)
+            dependencies.importedIdentifierNames.has(specifier.local.name),
           );
 
           // Ensure we haven't removed all specifiers. If we have, it means
           // our dependency analysis is incorrect.
           invariant(
             node.specifiers.length > 0,
-            "Expected import statement to have used specifiers"
+            "Expected import statement to have used specifiers",
           );
 
           // Keep the modified AST node
@@ -637,8 +641,8 @@ export function getChunkedExport(
             // Only keep variable declarators for the chunked export
             declaration.declarations = declaration.declarations.filter((node) =>
               exportedVariableDeclaratorsArray.some((declarator) =>
-                t.isNodesEquivalent(node, declarator)
-              )
+                t.isNodesEquivalent(node, declarator),
+              ),
             );
 
             // If the export statement is now empty, remove it
@@ -671,7 +675,7 @@ export function getChunkedExport(
 
             // Only keep specifiers for the chunked export
             node.specifiers = node.specifiers.filter(
-              (specifier) => getExportedName(specifier.exported) === exportName
+              (specifier) => getExportedName(specifier.exported) === exportName,
             );
 
             // If the export statement is now empty, remove it
@@ -690,7 +694,7 @@ export function getChunkedExport(
         .filter((node): node is NonNullable<typeof node> => node !== null);
 
       return generate(ast, generateOptions);
-    }
+    },
   );
 }
 
@@ -699,12 +703,12 @@ export function omitChunkedExports(
   exportNames: readonly string[],
   generateOptions: GeneratorOptions = {},
   cache: Cache,
-  cacheKey: string
+  cacheKey: string,
 ): GeneratorResult | undefined {
   return getOrSetFromCache(
     cache,
     `${cacheKey}::omitChunkedExports::${exportNames.join(
-      ","
+      ",",
     )}::${JSON.stringify(generateOptions)}`,
     code,
     () => {
@@ -731,7 +735,7 @@ export function omitChunkedExports(
 
         invariant(
           dependencies,
-          `Expected dependencies for ${omittedExportName}`
+          `Expected dependencies for ${omittedExportName}`,
         );
 
         // Now that we know the export is chunkable, add all of its top level
@@ -754,7 +758,7 @@ export function omitChunkedExports(
 
       let omittedStatementsArray = Array.from(omittedStatements);
       let omittedExportedVariableDeclaratorsArray = Array.from(
-        omittedExportedVariableDeclarators
+        omittedExportedVariableDeclarators,
       );
 
       ast.program.body = ast.program.body
@@ -762,8 +766,8 @@ export function omitChunkedExports(
         // exports that are being omitted.
         .filter((node) =>
           omittedStatementsArray.every(
-            (statement) => !t.isNodesEquivalent(node, statement)
-          )
+            (statement) => !t.isNodesEquivalent(node, statement),
+          ),
         )
         // Remove unused imports.
         .map((node): Statement | null => {
@@ -837,8 +841,8 @@ export function omitChunkedExports(
             node.declaration.declarations =
               node.declaration.declarations.filter((node) =>
                 omittedExportedVariableDeclaratorsArray.every(
-                  (declarator) => !t.isNodesEquivalent(node, declarator)
-                )
+                  (declarator) => !t.isNodesEquivalent(node, declarator),
+                ),
               );
 
             // If the export statement is now empty, remove it
@@ -858,7 +862,7 @@ export function omitChunkedExports(
           ) {
             invariant(
               node.declaration.id,
-              "Expected exported function or class declaration to have a name when not the default export"
+              "Expected exported function or class declaration to have a name when not the default export",
             );
             return isOmitted(node.declaration.id.name) ? null : node;
           }
@@ -898,14 +902,14 @@ export function omitChunkedExports(
       }
 
       return generate(ast, generateOptions);
-    }
+    },
   );
 }
 
 export function detectRouteChunks(
   code: string,
   cache: Cache,
-  cacheKey: string
+  cacheKey: string,
 ): {
   hasRouteChunks: boolean;
   hasRouteChunkByExportName: Record<RouteChunkExportName, boolean>;
@@ -915,7 +919,7 @@ export function detectRouteChunks(
     routeChunkExportNames.map((exportName) => [
       exportName,
       hasChunkableExport(code, exportName, cache, cacheKey),
-    ])
+    ]),
   ) as Record<RouteChunkExportName, boolean>;
 
   const chunkedExports = Object.entries(hasRouteChunkByExportName)
@@ -947,7 +951,7 @@ export function getRouteChunkCode(
   code: string,
   chunkName: RouteChunkName,
   cache: Cache,
-  cacheKey: string
+  cacheKey: string,
 ): GeneratorResult | undefined {
   if (chunkName === mainChunkName) {
     return omitChunkedExports(code, routeChunkExportNames, {}, cache, cacheKey);
@@ -970,14 +974,14 @@ const routeChunkQueryStrings: Record<RouteChunkName, RouteChunkQueryString> = {
 
 export function getRouteChunkModuleId(
   filePath: string,
-  chunkName: RouteChunkName
+  chunkName: RouteChunkName,
 ): string {
   return `${filePath}${routeChunkQueryStrings[chunkName]}`;
 }
 
 export function isRouteChunkModuleId(id: string): boolean {
   return Object.values(routeChunkQueryStrings).some((queryString) =>
-    id.endsWith(queryString)
+    id.endsWith(queryString),
   );
 }
 
@@ -986,7 +990,7 @@ function isRouteChunkName(name: string): name is RouteChunkName {
 }
 
 export function getRouteChunkNameFromModuleId(
-  id: string
+  id: string,
 ): RouteChunkName | null {
   if (!isRouteChunkModuleId(id)) {
     return null;

@@ -17,7 +17,7 @@ describe("createRequestHandler", () => {
           "X-Foo": "bar",
         },
         signal: new AbortController().signal,
-      })
+      }),
     );
 
     expect(await response.json()).toBe("bar");

@@ -43,7 +43,7 @@ describe(`ScrollRestoration`, () => {
           children: testPages,
         },
       ],
-      { basename: "/base", window: testWindow }
+      { basename: "/base", window: testWindow },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -107,7 +107,7 @@ describe(`ScrollRestoration`, () => {
           ],
         },
       ],
-      { basename: "/base", window: testWindow }
+      { basename: "/base", window: testWindow },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -156,7 +156,7 @@ describe(`ScrollRestoration`, () => {
           children: testPages,
         },
       ],
-      { basename: "/base", window: testWindow }
+      { basename: "/base", window: testWindow },
     );
     let { container } = render(<RouterProvider router={router} />);
 
@@ -185,8 +185,8 @@ describe(`ScrollRestoration`, () => {
 
     expect(consoleWarnMock).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Failed to save scroll positions in sessionStorage"
-      )
+        "Failed to save scroll positions in sessionStorage",
+      ),
     );
 
     consoleWarnMock.mockRestore();
@@ -227,7 +227,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
       let script = screen.getByTestId("scroll-script");
       expect(script instanceof HTMLScriptElement).toBe(true);
@@ -254,7 +254,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
       let script = screen.getByTestId("scroll-script");
       expect(script).toHaveAttribute("nonce", "hello");
@@ -280,7 +280,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
 
       expect(scrollToMock).toHaveBeenCalledWith(0, 20);
@@ -304,7 +304,7 @@ describe(`ScrollRestoration`, () => {
       render(
         <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </FrameworkContext.Provider>
+        </FrameworkContext.Provider>,
       );
       // Always called when using <ScrollRestoration />
       expect(scrollToMock).toHaveBeenCalledWith(0, 0);

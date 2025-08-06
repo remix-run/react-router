@@ -4,7 +4,7 @@ import type {
   AppLoadContext,
   ServerBuild,
   UNSAFE_MiddlewareEnabled,
-  unstable_InitialContext,
+  unstable_RouterContextProvider,
 } from "react-router";
 import { createRequestHandler } from "react-router";
 import type { ClientAddress } from "@mjackson/node-fetch-server";
@@ -16,9 +16,9 @@ export interface RequestListenerOptions {
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>);
   getLoadContext?: (
     request: Request,
-    client: ClientAddress
+    client: ClientAddress,
   ) => UNSAFE_MiddlewareEnabled extends true
-    ? MaybePromise<unstable_InitialContext>
+    ? MaybePromise<unstable_RouterContextProvider>
     : MaybePromise<AppLoadContext>;
   mode?: string;
 }
@@ -30,7 +30,7 @@ export interface RequestListenerOptions {
  * @returns A request listener that can be used with `http.createServer`.
  */
 export function createRequestListener(
-  options: RequestListenerOptions
+  options: RequestListenerOptions,
 ): RequestListener {
   let handleRequest = createRequestHandler(options.build, options.mode);
 

@@ -71,7 +71,7 @@ test("Vite / dead-code elimination for server exports", async () => {
 
   let lines = grep(
     path.join(cwd, "build/client"),
-    /SERVER_ONLY|SERVER_ONLY|node:fs/
+    /SERVER_ONLY|SERVER_ONLY|node:fs/,
   );
   expect(lines).toHaveLength(0);
 });

@@ -1,5 +1,31 @@
 # `@react-router/remix-config-routes-adapter`
 
+## 7.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/dev@7.7.1`
+
+## 7.7.0
+
+### Minor Changes
+
+- Export `DefineRouteFunction` type alongside `DefineRoutesFunction` ([#13945](https://github.com/remix-run/react-router/pull/13945))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@react-router/dev@7.7.0`
+
+## 7.6.3
+
+### Patch Changes
+
+- Use `replaceAll` for normalising windows file system slashes. ([#13738](https://github.com/remix-run/react-router/pull/13738))
+- Updated dependencies:
+  - `@react-router/dev@7.6.3`
+
 ## 7.6.2
 
 ### Patch Changes

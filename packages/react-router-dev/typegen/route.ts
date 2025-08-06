@@ -2,7 +2,7 @@ import type { RouteManifest, RouteManifestEntry } from "../config/routes";
 
 export function lineage(
   routes: RouteManifest,
-  route: RouteManifestEntry
+  route: RouteManifestEntry,
 ): RouteManifestEntry[] {
   const result: RouteManifestEntry[] = [];
   while (route) {

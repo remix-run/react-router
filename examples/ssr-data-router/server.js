@@ -44,7 +44,7 @@ async function createServer() {
       } else {
         template = await fsp.readFile(
           resolve("dist/client/index.html"),
-          "utf8"
+          "utf8",
         );
         render = require(resolve("dist/server/entry.server.js")).render;
       }

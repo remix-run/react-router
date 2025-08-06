@@ -247,7 +247,7 @@ test.describe("useFetcher", () => {
       // a <pre> but Edge puts it in some weird code editor markup:
       // <body data-code-mirror="Readonly code editor.">
       //   <div hidden="true">"LUNCH"</div>
-      expect(await app.getHtml()).toContain(LUNCH);
+      await page.getByText(LUNCH);
     });
 
     test("Form can hit an action", async ({ page }) => {
@@ -264,7 +264,7 @@ test.describe("useFetcher", () => {
       // a <pre> but Edge puts it in some weird code editor markup:
       // <body data-code-mirror="Readonly code editor.">
       //   <div hidden="true">"LUNCH"</div>
-      expect(await app.getHtml()).toContain(CHEESESTEAK);
+      await page.getByText(CHEESESTEAK);
     });
   });
 
@@ -288,9 +288,7 @@ test.describe("useFetcher", () => {
     await page.fill("#fetcher-input", "input value");
     await app.clickElement("#fetcher-submit-json");
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch(
-      'ACTION (application/json) input value"'
-    );
+    await page.getByText('ACTION (application/json) input value"');
   });
 
   test("submit can hit an action with null json", async ({ page }) => {
@@ -299,7 +297,7 @@ test.describe("useFetcher", () => {
     await app.clickElement("#fetcher-submit-json-null");
     await new Promise((r) => setTimeout(r, 1000));
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch('ACTION (application/json) null"');
+    await page.getByText('ACTION (application/json) null"');
   });
 
   test("submit can hit an action with text", async ({ page }) => {
@@ -308,9 +306,7 @@ test.describe("useFetcher", () => {
     await page.fill("#fetcher-input", "input value");
     await app.clickElement("#fetcher-submit-text");
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch(
-      'ACTION (text/plain;charset=UTF-8) input value"'
-    );
+    await page.getByText('ACTION (text/plain;charset=UTF-8) input value"');
   });
 
   test("submit can hit an action with empty text", async ({ page }) => {
@@ -319,7 +315,7 @@ test.describe("useFetcher", () => {
     await app.clickElement("#fetcher-submit-text-empty");
     await new Promise((r) => setTimeout(r, 1000));
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch('ACTION (text/plain;charset=UTF-8) "');
+    await page.getByText('ACTION (text/plain;charset=UTF-8) "');
   });
 
   test("submit can hit an action only route", async ({ page }) => {
@@ -360,28 +356,26 @@ test.describe("useFetcher", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.goto("/fetcher-echo", true);
-    expect(await app.getHtml("pre")).toMatch(
-      JSON.stringify(["idle/undefined"])
-    );
+    await page.getByText(JSON.stringify(["idle/undefined"]));
 
     await page.fill("#fetcher-input", "1");
     await app.clickElement("#fetcher-load");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
-      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"])
+    await page.getByText(
+      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"]),
     );
 
     await page.fill("#fetcher-input", "2");
     await app.clickElement("#fetcher-load");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
+    await page.getByText(
       JSON.stringify([
         "idle/undefined",
         "loading/undefined",
         "idle/LOADER 1",
         "loading/LOADER 1", // Preserves old data during reload
         "idle/LOADER 2",
-      ])
+      ]),
     );
   });
 
@@ -391,26 +385,24 @@ test.describe("useFetcher", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.goto("/fetcher-echo", true);
-    expect(await app.getHtml("pre")).toMatch(
-      JSON.stringify(["idle/undefined"])
-    );
+    await page.getByText(JSON.stringify(["idle/undefined"]));
 
     await page.fill("#fetcher-input", "1");
     await app.clickElement("#fetcher-submit");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
+    await page.getByText(
       JSON.stringify([
         "idle/undefined",
         "submitting/undefined",
         "loading/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
-      ])
+      ]),
     );
 
     await page.fill("#fetcher-input", "2");
     await app.clickElement("#fetcher-submit");
     await page.waitForSelector("#fetcher-idle");
-    expect(await app.getHtml("pre")).toMatch(
+    await page.getByText(
       JSON.stringify([
         "idle/undefined",
         "submitting/undefined",
@@ -420,7 +412,7 @@ test.describe("useFetcher", () => {
         "submitting/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 1",
         "loading/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
         "idle/ACTION (application/x-www-form-urlencoded;charset=UTF-8) 2",
-      ])
+      ]),
     );
   });
 });

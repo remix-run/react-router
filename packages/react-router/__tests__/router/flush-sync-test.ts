@@ -19,23 +19,23 @@ describe("flushSync", () => {
     let A = await t.navigate("/a");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
     await A.loaders.a.resolve("A");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     let B = await t.navigate("/b", { flushSync: true });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
     await B.loaders.b.resolve("B");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     unsubscribe();
@@ -59,12 +59,12 @@ describe("flushSync", () => {
     });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
     await A.actions.a.resolve("A");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     let B = await t.navigate("/b", {
@@ -74,12 +74,12 @@ describe("flushSync", () => {
     });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
     await B.actions.b.resolve("B");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     unsubscribe();
@@ -97,7 +97,7 @@ describe("flushSync", () => {
     let A = await t.fetch("/", key);
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
     expect(t.fetchers[key].state).toBe("loading");
 
@@ -107,7 +107,7 @@ describe("flushSync", () => {
     let B = await t.fetch("/", key, { flushSync: true });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
     expect(t.fetchers[key].state).toBe("loading");
 
@@ -115,7 +115,7 @@ describe("flushSync", () => {
     expect(t.fetchers[key].data).toBe("ROOT2");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     unsubscribe();
@@ -136,14 +136,14 @@ describe("flushSync", () => {
     });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
     expect(t.fetchers[key].state).toBe("submitting");
 
     await A.actions.root.resolve("ROOT");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
     expect(t.fetchers[key].data).toBe("ROOT");
 
@@ -154,7 +154,7 @@ describe("flushSync", () => {
     });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: true })
+      expect.objectContaining({ flushSync: true }),
     );
     expect(t.fetchers[key].state).toBe("submitting");
 
@@ -162,7 +162,7 @@ describe("flushSync", () => {
     expect(t.fetchers[key].data).toBe("ROOT2");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ flushSync: false })
+      expect.objectContaining({ flushSync: false }),
     );
 
     unsubscribe();

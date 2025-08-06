@@ -1,4 +1,5 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
+import { sync as spawnSync, spawn } from "cross-spawn";
 import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { platform } from "node:os";
@@ -71,9 +72,11 @@ type ViteConfigServerArgs = {
 type ViteConfigBuildArgs = {
   assetsInlineLimit?: number;
   assetsDir?: string;
+  cssCodeSplit?: boolean;
 };
 
 type ViteConfigBaseArgs = {
+  templateName?: TemplateName;
   envDir?: string;
 };
 
@@ -98,7 +101,11 @@ export const viteConfig = {
     `;
     return text;
   },
-  build: ({ assetsInlineLimit, assetsDir }: ViteConfigBuildArgs = {}) => {
+  build: ({
+    assetsInlineLimit,
+    assetsDir,
+    cssCodeSplit,
+  }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
         // Detect rolldown-vite. This should ideally use "rolldownVersion"
@@ -115,12 +122,22 @@ export const viteConfig = {
           : undefined,
         assetsInlineLimit: ${assetsInlineLimit ?? "undefined"},
         assetsDir: ${assetsDir ? `"${assetsDir}"` : "undefined"},
+        cssCodeSplit: ${
+          cssCodeSplit !== undefined ? cssCodeSplit : "undefined"
+        },
       },
     `;
   },
   basic: async (args: ViteConfigArgs) => {
     return dedent`
-      import { reactRouter } from "@react-router/dev/vite";
+      ${
+        !args.templateName?.includes("rsc")
+          ? "import { reactRouter } from '@react-router/dev/vite';"
+          : [
+              "import { __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__ } from '@react-router/dev/internal';",
+              "const { unstable_reactRouterRSC: reactRouter } = __INTERNAL_DO_NOT_USE_OR_YOU_WILL_GET_A_STRONGLY_WORDED_LETTER__;",
+            ].join("\n")
+      }
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -185,13 +202,28 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-export type TemplateName =
-  | "cloudflare-dev-proxy-template"
+type FrameworkModeViteMajorTemplateName =
   | "vite-5-template"
   | "vite-6-template"
   | "vite-7-beta-template"
   | "vite-plugin-cloudflare-template"
   | "vite-rolldown-template";
+
+type FrameworkModeRscTemplateName =
+  | "rsc-parcel-framework"
+  | "rsc-vite-framework";
+
+type FrameworkModeCloudflareTemplateName =
+  | "cloudflare-dev-proxy-template"
+  | "vite-plugin-cloudflare-template";
+
+export type RscBundlerTemplateName = "rsc-vite" | "rsc-parcel";
+
+export type TemplateName =
+  | FrameworkModeViteMajorTemplateName
+  | FrameworkModeRscTemplateName
+  | FrameworkModeCloudflareTemplateName
+  | RscBundlerTemplateName;
 
 export const viteMajorTemplates = [
   { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
@@ -202,13 +234,21 @@ export const viteMajorTemplates = [
     templateDisplayName: "Vite Rolldown",
   },
 ] as const satisfies Array<{
-  templateName: TemplateName;
+  templateName: FrameworkModeViteMajorTemplateName;
+  templateDisplayName: string;
+}>;
+
+export const rscBundlerTemplates = [
+  { templateName: "rsc-vite", templateDisplayName: "RSC (Vite)" },
+  { templateName: "rsc-parcel", templateDisplayName: "RSC (Parcel)" },
+] as const satisfies Array<{
+  templateName: RscBundlerTemplateName;
   templateDisplayName: string;
 }>;
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-5-template"
+  templateName: TemplateName = "vite-5-template",
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -224,7 +264,7 @@ export async function createProject(
       let filepath = path.join(projectDir, filename);
       await mkdir(path.dirname(filepath), { recursive: true });
       await writeFile(filepath, stripIndent(contents));
-    })
+    }),
   );
 
   return projectDir;
@@ -282,7 +322,7 @@ export const reactRouterServe = async ({
       cwd,
       stdio: "pipe",
       env: { NODE_ENV: "production", PORT: port.toFixed(0) },
-    }
+    },
   );
   await waitForServer(serveProc, { port, basename });
   return () => serveProc.kill();
@@ -307,7 +347,7 @@ export const wranglerPagesDev = async ({
       cwd,
       stdio: "pipe",
       env: { NODE_ENV: "production" },
-    }
+    },
   );
   await waitForServer(proc, { port, host: "127.0.0.1" });
   return () => proc.kill();
@@ -320,7 +360,7 @@ type ServerArgs = {
   basename?: string;
 };
 
-const createDev =
+export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
     let proc = node(nodeArgs, { cwd, env });
@@ -352,14 +392,14 @@ type Fixtures = {
   page: Page;
   dev: (
     files: Files,
-    templateName?: TemplateName
+    templateName?: TemplateName,
   ) => Promise<{
     port: number;
     cwd: string;
   }>;
   customDev: (
     files: Files,
-    templateName?: TemplateName
+    templateName?: TemplateName,
   ) => Promise<{
     port: number;
     cwd: string;
@@ -422,7 +462,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "cloudflare-dev-proxy-template"
+        "cloudflare-dev-proxy-template",
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
@@ -435,7 +475,7 @@ export const test = base.extend<Fixtures>({
 
 function node(
   args: string[],
-  options: { cwd: string; env?: Record<string, string> }
+  options: { cwd: string; env?: Record<string, string> },
 ) {
   let nodeBin = process.argv[0];
 
@@ -453,14 +493,16 @@ function node(
 
 async function waitForServer(
   proc: ChildProcess & { stdout: Readable; stderr: Readable },
-  args: { port: number; host?: string; basename?: string }
+  args: { port: number; host?: string; basename?: string },
 ) {
   let devStdout = bufferize(proc.stdout);
   let devStderr = bufferize(proc.stderr);
 
   await waitOn({
     resources: [
-      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/"}`,
+      `http://${args.host ?? "localhost"}:${args.port}${
+        args.basename ?? "/favicon.ico"
+      }`,
     ],
     timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {
@@ -474,7 +516,7 @@ async function waitForServer(
         "exit code: " + proc.exitCode,
         "stdout: " + stdout ? `\n${stdout}\n` : "<empty>",
         "stderr: " + stderr ? `\n${stderr}\n` : "<empty>",
-      ].join("\n")
+      ].join("\n"),
     );
   });
 }
@@ -488,7 +530,7 @@ function bufferize(stream: Readable): () => string {
 export function createEditor(projectDir: string) {
   return async function edit(
     file: string,
-    transform: (contents: string) => string
+    transform: (contents: string) => string,
   ) {
     let filepath = path.join(projectDir, file);
     let contents = await readFile(filepath, "utf8");

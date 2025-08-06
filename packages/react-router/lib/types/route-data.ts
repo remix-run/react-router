@@ -98,7 +98,7 @@ export type ClientDataFunctionArgs<Params> = {
    * from your route middlewares.  You may pass in initial context values in your
    * `<HydratedRouter unstable_getContext>` prop
    */
-  context: unstable_RouterContextProvider;
+  context: Readonly<unstable_RouterContextProvider>;
 };
 
 export type ServerDataFunctionArgs<Params> = {
@@ -132,7 +132,7 @@ export type ServerDataFunctionArgs<Params> = {
    * `getLoadContext` function.
    */
   context: MiddlewareEnabled extends true
-    ? unstable_RouterContextProvider
+    ? Readonly<unstable_RouterContextProvider>
     : AppLoadContext;
 };
 
@@ -140,7 +140,7 @@ export type SerializeFrom<T> = T extends (...args: infer Args) => unknown
   ? Args extends [
       | ClientLoaderFunctionArgs
       | ClientActionFunctionArgs
-      | ClientDataFunctionArgs<unknown>
+      | ClientDataFunctionArgs<unknown>,
     ]
     ? ClientDataFrom<T>
     : ServerDataFrom<T>
@@ -345,5 +345,5 @@ type __tests = [
       | { a: string; b: Date; c: undefined }
       | { d: string; e: Date; f: () => boolean }
     >
-  >
+  >,
 ];

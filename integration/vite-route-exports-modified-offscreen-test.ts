@@ -91,7 +91,7 @@ test.describe(async () => {
       await expect(page.locator("[data-mounted]")).toHaveText("Mounted: yes");
       await page.getByRole("link", { name: "/other" }).click();
       await expect(page.locator("[data-loader-data]")).toHaveText(
-        "loaderData = null"
+        "loaderData = null",
       );
     }).toPass();
     expect(pageErrors).toEqual([]);
@@ -100,7 +100,7 @@ test.describe(async () => {
     // original file contents were valid
     await edit("app/routes/other.tsx", () => originalContents);
     await expect(page.locator("[data-loader-data]")).toHaveText(
-      'loaderData = "hello"'
+      'loaderData = "hello"',
     );
     expect(pageErrors).toEqual([]);
   });

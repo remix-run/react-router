@@ -73,7 +73,7 @@ export type DataRouteObject = RouteObject & {
 
 export interface RouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends RouteObject = RouteObject,
 > extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
@@ -101,6 +101,12 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
 
+export const RSCRouterContext = React.createContext<boolean>(false);
+
+export function useIsRSCRouterContext(): boolean {
+  return React.useContext(RSCRouterContext);
+}
+
 export type ViewTransitionContextObject =
   | {
       isTransitioning: false;
@@ -122,7 +128,7 @@ ViewTransitionContext.displayName = "ViewTransition";
 export type FetchersContextObject = Map<string, any>;
 
 export const FetchersContext = React.createContext<FetchersContextObject>(
-  new Map()
+  new Map(),
 );
 FetchersContext.displayName = "Fetchers";
 
@@ -172,7 +178,7 @@ interface NavigationContextObject {
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(
-  null!
+  null!,
 );
 NavigationContext.displayName = "Navigation";
 
@@ -182,7 +188,7 @@ interface LocationContextObject {
 }
 
 export const LocationContext = React.createContext<LocationContextObject>(
-  null!
+  null!,
 );
 LocationContext.displayName = "Location";
 

@@ -37,7 +37,7 @@ describe("lazily loaded route modules", () => {
   });
 
   const createBasicLazyRoutes = (
-    lazy: TestNonIndexRouteObject["lazy"]
+    lazy: TestNonIndexRouteObject["lazy"],
   ): TestRouteObject[] => {
     return [
       {
@@ -601,7 +601,7 @@ describe("lazily loaded route modules", () => {
         ],
         {
           initialEntries: ["/hydration"],
-        }
+        },
       );
       expect(router.state.initialized).toBe(false);
 
@@ -829,7 +829,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({ lazy: { value: "LAZY LOADER" } });
     });
@@ -851,7 +851,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({ lazy: { value: "LAZY LOADER" } });
     });
@@ -915,7 +915,7 @@ describe("lazily loaded route modules", () => {
             },
           },
         ],
-        { hydrationRouteProperties }
+        { hydrationRouteProperties },
       );
 
       let response = await queryRoute(createRequest("/lazy"));
@@ -969,7 +969,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1018,7 +1018,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1065,7 +1065,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1130,7 +1130,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "action" defined but its lazy function is also returning a value for this property. The lazy route property "action" will be ignored."`
+        `"Route "lazy" has a static property "action" defined but its lazy function is also returning a value for this property. The lazy route property "action" will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1199,7 +1199,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "action" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "action" defined. The lazy property will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1263,10 +1263,10 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(2);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "action" defined but its lazy function is also returning a value for this property. The lazy route property "action" will be ignored."`
+        `"Route "lazy" has a static property "action" defined but its lazy function is also returning a value for this property. The lazy route property "action" will be ignored."`,
       );
       expect(consoleWarn.mock.calls[1][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1337,10 +1337,10 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(2);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "action" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "action" defined. The lazy property will be ignored."`,
       );
       expect(consoleWarn.mock.calls[1][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1373,7 +1373,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
@@ -1383,7 +1383,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1416,7 +1416,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
@@ -1426,7 +1426,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1458,7 +1458,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
@@ -1467,7 +1467,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -1500,7 +1500,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({
         lazy: { value: "STATIC LOADER" },
@@ -1510,7 +1510,7 @@ describe("lazily loaded route modules", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
-        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`
+        `"Route "lazy" has a static property "loader" defined. The lazy property will be ignored."`,
       );
       consoleWarn.mockReset();
     });
@@ -2866,7 +2866,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.errors).toEqual({
         root: new Error("LAZY FUNCTION ERROR"),
@@ -2895,7 +2895,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.errors).toEqual({
         root: new Error("LAZY PROPERTY ERROR"),
@@ -2928,7 +2928,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({
@@ -2965,7 +2965,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({
@@ -3000,7 +3000,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({
@@ -3037,7 +3037,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({
@@ -3074,7 +3074,7 @@ describe("lazily loaded route modules", () => {
       let context = await query(createRequest("/lazy"));
       invariant(
         !(context instanceof Response),
-        "Expected a StaticContext instance"
+        "Expected a StaticContext instance",
       );
       expect(context.loaderData).toEqual({});
       expect(context.errors).toEqual({

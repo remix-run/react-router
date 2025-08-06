@@ -53,7 +53,7 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
 
   if (unstable_viteEnvironmentApi && viteMajor === 5) {
     throw new Error(
-      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5"
+      "The future.unstable_viteEnvironmentApi option is not supported in Vite 5",
     );
   }
 
@@ -75,7 +75,7 @@ async function viteAppBuild(
     mode,
     sourcemapClient,
     sourcemapServer,
-  }: ViteBuildOptions
+  }: ViteBuildOptions,
 ) {
   let vite = getVite();
   let builder = await vite.createBuilder({
@@ -111,11 +111,13 @@ async function viteAppBuild(
         },
         configResolved(config) {
           let hasReactRouterPlugin = config.plugins.find(
-            (plugin) => plugin.name === "react-router"
+            (plugin) =>
+              plugin.name === "react-router" ||
+              plugin.name === "react-router/rsc/config",
           );
           if (!hasReactRouterPlugin) {
             throw new Error(
-              "React Router Vite plugin not found in Vite config"
+              "React Router Vite plugin not found in Vite config",
             );
           }
         },
@@ -138,7 +140,7 @@ async function viteBuild(
     mode,
     sourcemapClient,
     sourcemapServer,
-  }: ViteBuildOptions
+  }: ViteBuildOptions,
 ) {
   let viteUserConfig: Vite.UserConfig = {};
   let viteConfig = await resolveViteConfig({
@@ -158,7 +160,7 @@ async function viteBuild(
 
   if (!ctx) {
     console.error(
-      colors.red("React Router Vite plugin not found in Vite config")
+      colors.red("React Router Vite plugin not found in Vite config"),
     );
     process.exit(1);
   }
@@ -201,11 +203,11 @@ async function viteBuild(
 
   let environmentOptionsResolvers = await getEnvironmentOptionsResolvers(
     ctx,
-    "build"
+    "build",
   );
   let environmentsOptions = resolveEnvironmentsOptions(
     environmentOptionsResolvers,
-    { viteUserConfig }
+    { viteUserConfig },
   );
 
   await cleanBuildDirectory(viteConfig, ctx);
@@ -216,7 +218,7 @@ async function viteBuild(
   // Then run Vite SSR builds in parallel
   let serverEnvironmentNames = getServerEnvironmentKeys(
     ctx,
-    environmentOptionsResolvers
+    environmentOptionsResolvers,
   );
 
   await Promise.all(serverEnvironmentNames.map(buildEnvironment));

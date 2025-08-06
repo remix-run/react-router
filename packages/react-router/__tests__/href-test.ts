@@ -13,7 +13,7 @@ describe("href", () => {
 
   it("works with repeated params", () => {
     expect(href("/a/:b?/:b/:b?/:b", { b: "hello" })).toBe(
-      "/a/hello/hello/hello/hello"
+      "/a/hello/hello/hello/hello",
     );
   });
 
@@ -23,7 +23,7 @@ describe("href", () => {
 
   it("throws when required params are missing", () => {
     expect(() => href("/a/:b")).toThrow(
-      `Path '/a/:b' requires param 'b' but it was not provided`
+      `Path '/a/:b' requires param 'b' but it was not provided`,
     );
   });
 });

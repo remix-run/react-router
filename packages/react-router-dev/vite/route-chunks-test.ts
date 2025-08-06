@@ -35,15 +35,15 @@ describe("route chunks", () => {
         }"
       `);
       expect(
-        getChunkedExport(code, "target2", {}, ...cache)?.code
+        getChunkedExport(code, "target2", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const target2 = () => null;"`);
       expect(
         omitChunkedExports(
           code,
           ["default", "target1", "target2"],
           {},
-          ...cache
-        )?.code
+          ...cache,
+        )?.code,
       ).toMatchInlineSnapshot(`
         "export function other1() {
           return null;
@@ -119,8 +119,8 @@ describe("route chunks", () => {
           code,
           ["default", "target1", "target2", "namespaced"],
           {},
-          ...cache
-        )?.code
+          ...cache,
+        )?.code,
       ).toMatchInlineSnapshot(`
         "import { otherMessage1, otherMessage2 } from "./messages";
         const getOtherMessage1 = () => otherMessage1;
@@ -206,7 +206,7 @@ describe("route chunks", () => {
         export const chunk2 = shared("chunk2");"
       `);
       expect(
-        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -220,7 +220,7 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
       expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk", {}, ...cache)?.code
+        getChunkedExport(code, "chunk", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
       expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
@@ -238,13 +238,13 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
       expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk1", {}, ...cache)?.code
+        getChunkedExport(code, "chunk1", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export { chunk1 } from "./shared";"`);
       expect(
-        getChunkedExport(code, "chunk2", {}, ...cache)?.code
+        getChunkedExport(code, "chunk2", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export { chunk2 } from "./shared";"`);
       expect(
-        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export { main } from "./shared";"`);
     });
 
@@ -260,13 +260,13 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
       expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk1", {}, ...cache)?.code
+        getChunkedExport(code, "chunk1", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export { foo as chunk1 } from "./shared";"`);
       expect(
-        getChunkedExport(code, "chunk2", {}, ...cache)?.code
+        getChunkedExport(code, "chunk2", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export { bar as chunk2 } from "./shared";"`);
       expect(
-        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export { baz as main } from "./shared";"`);
     });
 
@@ -439,19 +439,19 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
       expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk1", {}, ...cache)?.code
+        getChunkedExport(code, "chunk1", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(
-        `"export const chunk1 = () => localStorage.getItem("chunk1");"`
+        `"export const chunk1 = () => localStorage.getItem("chunk1");"`,
       );
       expect(
-        getChunkedExport(code, "chunk2", {}, ...cache)?.code
+        getChunkedExport(code, "chunk2", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(
-        `"export const chunk2 = () => localStorage.getItem("chunk2");"`
+        `"export const chunk2 = () => localStorage.getItem("chunk2");"`,
       );
       expect(
-        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(
-        `"export const main = () => localStorage.getItem("main");"`
+        `"export const main = () => localStorage.getItem("main");"`,
       );
     });
 
@@ -463,10 +463,10 @@ describe("route chunks", () => {
 
       expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk", {}, ...cache)?.code
+        getChunkedExport(code, "chunk", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export {};"`);
     });
 
@@ -479,7 +479,7 @@ describe("route chunks", () => {
 
       expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk", {}, ...cache)?.code
+        getChunkedExport(code, "chunk", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
       expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
@@ -497,7 +497,7 @@ describe("route chunks", () => {
 
       expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
       expect(
-        getChunkedExport(code, "chunk", {}, ...cache)?.code
+        getChunkedExport(code, "chunk", {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
       expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
@@ -548,8 +548,8 @@ describe("route chunks", () => {
           code,
           ["default", "target1", "target2"],
           {},
-          ...cache
-        )?.code
+          ...cache,
+        )?.code,
       ).toMatchInlineSnapshot(`
         "import { sharedMessage } from "./sharedMessage";
         const getSharedMessage = () => sharedMessage;
@@ -586,7 +586,7 @@ describe("route chunks", () => {
       `);
       expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`
         "import { sharedMessage } from "./sharedMessage";
         const getOtherMessage1 = () => sharedMessage;
@@ -621,11 +621,11 @@ describe("route chunks", () => {
         export const chunkable = chunkableMessage;"
       `);
       expect(
-        getChunkedExport(code, "unchunkable", {}, ...cache)
+        getChunkedExport(code, "unchunkable", {}, ...cache),
       ).toBeUndefined();
       expect(
         omitChunkedExports(code, ["chunkable", "unchunkable"], {}, ...cache)
-          ?.code
+          ?.code,
       ).toMatchInlineSnapshot(`
         "import { unchunkableMessage } from "./messages";
         export const unchunkable = unchunkableMessage,
@@ -654,11 +654,11 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        getChunkedExport(code, "unchunkable", {}, ...cache)
+        getChunkedExport(code, "unchunkable", {}, ...cache),
       ).toBeUndefined();
       expect(
         omitChunkedExports(code, ["chunkable", "unchunkable"], {}, ...cache)
-          ?.code
+          ?.code,
       ).toMatchInlineSnapshot(`
         "import { unchunkableMessage } from "./messages";
         export const [unchunkable] = [unchunkableMessage],
@@ -681,7 +681,7 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
       expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export default function () {}"`);
     });
 
@@ -702,7 +702,7 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
       expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`
         "const sharedMessage = "shared";
         const getTargetMessage1 = () => sharedMessage;
@@ -733,7 +733,7 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
       expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`
         "import { sharedMessage } from "./messages";
         const getTargetMessage1 = () => sharedMessage;
@@ -764,7 +764,7 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
       expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`
         "import sharedMessage from "./messages";
         const getTargetMessage1 = () => sharedMessage;
@@ -795,7 +795,7 @@ describe("route chunks", () => {
       expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
       expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`
         "import * as messages from "./messages";
         const getTargetMessage1 = () => messages.targetMessage1;
@@ -1043,7 +1043,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1069,7 +1069,7 @@ describe("route chunks", () => {
         export const chunk = messages;"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1105,7 +1105,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1139,7 +1139,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1169,7 +1169,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1202,7 +1202,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1232,7 +1232,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1258,7 +1258,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1286,7 +1286,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1312,7 +1312,7 @@ describe("route chunks", () => {
         };"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1332,7 +1332,7 @@ describe("route chunks", () => {
         export const chunk = () => chunkMessage();"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1354,7 +1354,7 @@ describe("route chunks", () => {
         export const chunk = () => chunkMessage();"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1376,7 +1376,7 @@ describe("route chunks", () => {
         export const chunk = () => chunkMessage();"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1402,7 +1402,7 @@ describe("route chunks", () => {
         export const chunk = () => getChunkMessage("chunk");"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1422,7 +1422,7 @@ describe("route chunks", () => {
         export const chunk = () => chunkMessage();"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1442,7 +1442,7 @@ describe("route chunks", () => {
         export const chunk = () => messages.chunkMessage;"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1466,7 +1466,7 @@ describe("route chunks", () => {
         export const chunk = () => messages.chunkMessage;"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1490,7 +1490,7 @@ describe("route chunks", () => {
         export const chunk = () => messages;"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1516,7 +1516,7 @@ describe("route chunks", () => {
         export const chunk = () => [...chunkGenerator()].join(" ");"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1540,7 +1540,7 @@ describe("route chunks", () => {
         export const chunk = () => new Chunk();"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1568,7 +1568,7 @@ describe("route chunks", () => {
         export const chunk = () => chunkInstance;"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1596,7 +1596,7 @@ describe("route chunks", () => {
         export const chunk = () => new Chunk();"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
 
@@ -1628,7 +1628,7 @@ describe("route chunks", () => {
         export const chunk = () => chunkInstance;"
       `);
       expect(
-        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
   });

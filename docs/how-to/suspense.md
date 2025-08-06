@@ -4,6 +4,11 @@ title: Streaming with Suspense
 
 # Streaming with Suspense
 
+[MODES: framework, data]
+
+<br/>
+<br/>
+
 Streaming with React Suspense allows apps to speed up initial renders by deferring non-critical data and unblocking UI rendering.
 
 React Router supports React Suspense by returning promises from loaders and actions.
@@ -18,11 +23,11 @@ import type { Route } from "./+types/my-route";
 export async function loader({}: Route.LoaderArgs) {
   // note this is NOT awaited
   let nonCriticalData = new Promise((res) =>
-    setTimeout(() => res("non-critical"), 5000)
+    setTimeout(() => res("non-critical"), 5000),
   );
 
   let criticalData = await new Promise((res) =>
-    setTimeout(() => res("critical"), 300)
+    setTimeout(() => res("critical"), 300),
   );
 
   return { nonCriticalData, criticalData };

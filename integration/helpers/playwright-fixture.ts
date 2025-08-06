@@ -34,12 +34,12 @@ export class PlaywrightFixture {
         waitForHydration === true
           ? "networkidle"
           : waitForHydration === false
-          ? "commit"
-          : "load",
+            ? "commit"
+            : "load",
     });
     if (response == null)
       throw new Error(
-        "Unexpected null response, possible about:blank request or same-URL redirect"
+        "Unexpected null response, possible about:blank request or same-URL redirect",
       );
     return response;
   }
@@ -88,7 +88,7 @@ export class PlaywrightFixture {
    */
   async clickSubmitButton(
     action: string,
-    options: { wait?: boolean; method?: string } = { wait: true }
+    options: { wait?: boolean; method?: string } = { wait: true },
   ) {
     let selector: string;
     if (options.method) {
@@ -167,7 +167,9 @@ export class PlaywrightFixture {
    * loaders were called (or not).
    */
   collectSingleFetchResponses() {
-    return this.collectResponses((url) => url.pathname.endsWith(".data"));
+    return this.collectResponses(
+      (url) => url.pathname.endsWith(".data") || url.pathname.endsWith(".rsc"),
+    );
   }
 
   /**
@@ -216,7 +218,7 @@ export class PlaywrightFixture {
     let ms = seconds * 1000;
     test.setTimeout(ms);
     console.log(
-      `🙈 Poke around for ${seconds} seconds 👉 ${this.app.serverUrl}`
+      `🙈 Poke around for ${seconds} seconds 👉 ${this.app.serverUrl}`,
     );
     cp.exec(`open ${this.app.serverUrl}${href}`);
     return new Promise((res) => setTimeout(res, ms));
@@ -225,7 +227,10 @@ export class PlaywrightFixture {
 
 export async function getHtml(page: Page, selector?: string) {
   let html = await page.content();
-  return selector ? selectHtml(html, selector) : prettyHtml(html);
+  let selectedHtml = selector
+    ? await selectHtml(html, selector)
+    : await prettyHtml(html);
+  return selectedHtml;
 }
 
 export function getElement(source: string, selector: string) {
@@ -236,19 +241,20 @@ export function getElement(source: string, selector: string) {
   return el;
 }
 
-export function selectHtml(source: string, selector: string) {
+export async function selectHtml(source: string, selector: string) {
   let el = getElement(source, selector);
-  return prettyHtml(cheerio.html(el)).trim();
+  let html = await prettyHtml(cheerio.html(el));
+  return html.trim();
 }
 
-export function prettyHtml(source: string) {
+export async function prettyHtml(source: string) {
   return prettier.format(source, { parser: "html" });
 }
 
 async function doAndWait(
   page: Page,
   action: () => Promise<unknown>,
-  longPolls = 0
+  longPolls = 0,
 ) {
   let DEBUG = !!process.env.DEBUG;
   let networkSettledCallback: any;

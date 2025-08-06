@@ -30,7 +30,7 @@ const ENTER = "\x0D";
 
 const TEMP_DIR = path.join(
   realpathSync(tmpdir()),
-  `react-router-tests-${Math.random().toString(32).slice(2)}`
+  `react-router-tests-${Math.random().toString(32).slice(2)}`,
 );
 function maskTempDir(string: string) {
   return string.replace(TEMP_DIR, "<TEMP_DIR>");
@@ -180,7 +180,7 @@ describe("create-react-router CLI", () => {
     });
 
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"▲  Oh no! No project directory provided"`
+      `"▲  Oh no! No project directory provided"`,
     );
     expect(status).toBe(1);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
@@ -258,7 +258,7 @@ describe("create-react-router CLI", () => {
     });
 
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"▲  Oh no! The path "this/path/does/not/exist" was not found in this GitHub repo."`
+      `"▲  Oh no! The path "this/path/does/not/exist" was not found in this GitHub repo."`,
     );
     expect(status).toBe(1);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
@@ -279,7 +279,7 @@ describe("create-react-router CLI", () => {
     });
 
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 404 status. Please try again later."`
+      `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 404 status. Please try again later."`,
     );
     expect(status).toBe(1);
   });
@@ -338,7 +338,7 @@ describe("create-react-router CLI", () => {
     });
 
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 404 status. Please try again later."`
+      `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 404 status. Please try again later."`,
     );
     expect(status).toBe(1);
   });
@@ -397,7 +397,7 @@ describe("create-react-router CLI", () => {
     });
 
     expect(stderr.trim()).toMatchInlineSnapshot(
-      `"▲  Oh no! The path "this/path/does/not/exist" was not found in this GitHub repo."`
+      `"▲  Oh no! The path "this/path/does/not/exist" was not found in this GitHub repo."`,
     );
     expect(status).toBe(1);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
@@ -450,7 +450,7 @@ describe("create-react-router CLI", () => {
         projectDir,
         "--template",
         pathToFileURL(
-          path.join(__dirname, "fixtures", "template.tar.gz")
+          path.join(__dirname, "fixtures", "template.tar.gz"),
         ).toString(),
         "--no-git-init",
         "--no-install",
@@ -525,7 +525,7 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
     );
 
     process.env.npm_config_user_agent = originalUserAgent;
@@ -559,7 +559,7 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
     );
 
     process.env.npm_config_user_agent = originalUserAgent;
@@ -593,7 +593,7 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
     );
     process.env.npm_config_user_agent = originalUserAgent;
   });
@@ -626,7 +626,7 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "yarn",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
     );
     process.env.npm_config_user_agent = originalUserAgent;
   });
@@ -659,7 +659,7 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "pnpm",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
     );
     process.env.npm_config_user_agent = originalUserAgent;
   });
@@ -692,7 +692,40 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "bun",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
+    );
+    process.env.npm_config_user_agent = originalUserAgent;
+  });
+
+  it("recognizes when Deno was used to run the command", async () => {
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent =
+      "deno/2.0.6 npm/? deno/2.0.6 linux x86_64";
+
+    let projectDir = getProjectDir("deno-create-from-user-agent");
+
+    let execa = require("execa");
+    execa.mockImplementation(async () => {});
+
+    // Suppress terminal output
+    let stdoutMock = jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+
+    await createReactRouter([
+      projectDir,
+      "--template",
+      path.join(__dirname, "fixtures", "blank"),
+      "--no-git-init",
+      "--yes",
+    ]);
+
+    stdoutMock.mockReset();
+
+    expect(execa).toHaveBeenCalledWith(
+      "deno",
+      expect.arrayContaining(["install"]),
+      expect.anything(),
     );
     process.env.npm_config_user_agent = originalUserAgent;
   });
@@ -727,7 +760,7 @@ describe("create-react-router CLI", () => {
     expect(execa).toHaveBeenCalledWith(
       "pnpm",
       expect.arrayContaining(["install"]),
-      expect.anything()
+      expect.anything(),
     );
     process.env.npm_config_user_agent = originalUserAgent;
   });
@@ -759,21 +792,21 @@ describe("create-react-router CLI", () => {
     let templateWithIgnoredDirs = path.join(
       __dirname,
       "fixtures",
-      "with-ignored-dir"
+      "with-ignored-dir",
     );
     mkdirSync(path.join(templateWithIgnoredDirs, ".git"));
     writeFileSync(
       path.join(templateWithIgnoredDirs, ".git", "some-git-file.txt"),
-      ""
+      "",
     );
     mkdirSync(path.join(templateWithIgnoredDirs, "node_modules"));
     writeFileSync(
       path.join(
         templateWithIgnoredDirs,
         "node_modules",
-        "some-node-module-file.txt"
+        "some-node-module-file.txt",
       ),
-      ""
+      "",
     );
 
     let projectDir = getProjectDir("with-git-dir");
@@ -889,14 +922,14 @@ describe("create-react-router CLI", () => {
         expect(stderr.trim()).toBeFalsy();
         expect(existsSync(path.join(notEmptyDir, "package.json"))).toBeTruthy();
         expect(
-          existsSync(path.join(notEmptyDir, "tsconfig.json"))
+          existsSync(path.join(notEmptyDir, "tsconfig.json")),
         ).toBeTruthy();
         expect(existsSync(path.join(notEmptyDir, "app/root.tsx"))).toBeTruthy();
       });
 
       it("works without prompt when --overwrite is specified", async () => {
         let projectDir = getProjectDir(
-          "not-empty-dir-interactive-collisions-overwrite"
+          "not-empty-dir-interactive-collisions-overwrite",
         );
         mkdirSync(projectDir);
         writeFileSync(path.join(projectDir, "package.json"), "");
@@ -914,7 +947,7 @@ describe("create-react-router CLI", () => {
         });
 
         expect(stdout).toContain(
-          "Overwrite: overwriting files due to `--overwrite`"
+          "Overwrite: overwriting files due to `--overwrite`",
         );
         expect(stdout).toContain("package.json");
         expect(stdout).toContain("tsconfig.json");
@@ -953,7 +986,7 @@ describe("create-react-router CLI", () => {
 
       it("errors when there are collisions", async () => {
         let projectDir = getProjectDir(
-          "not-empty-dir-non-interactive-collisions"
+          "not-empty-dir-non-interactive-collisions",
         );
         mkdirSync(projectDir);
         writeFileSync(path.join(projectDir, "package.json"), "");
@@ -983,7 +1016,7 @@ describe("create-react-router CLI", () => {
 
       it("works when there are collisions and --overwrite is specified", async () => {
         let projectDir = getProjectDir(
-          "not-empty-dir-non-interactive-collisions-overwrite"
+          "not-empty-dir-non-interactive-collisions-overwrite",
         );
         mkdirSync(projectDir);
         writeFileSync(path.join(projectDir, "package.json"), "");
@@ -1002,7 +1035,7 @@ describe("create-react-router CLI", () => {
         });
 
         expect(stdout).toContain(
-          "Overwrite: overwriting files due to `--overwrite`"
+          "Overwrite: overwriting files due to `--overwrite`",
         );
         expect(stdout).toContain("package.json");
         expect(stdout).toContain("tsconfig.json");
@@ -1030,7 +1063,7 @@ describe("create-react-router CLI", () => {
       });
 
       expect(stderr.trim()).toMatchInlineSnapshot(
-        `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 403 status. Please try again later."`
+        `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 403 status. Please try again later."`,
       );
       expect(status).toBe(1);
     });
@@ -1049,7 +1082,7 @@ describe("create-react-router CLI", () => {
       });
 
       expect(stderr.trim()).toMatchInlineSnapshot(
-        `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 404 status. Please try again later."`
+        `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 404 status. Please try again later."`,
       );
       expect(status).toBe(1);
     });
@@ -1068,7 +1101,7 @@ describe("create-react-router CLI", () => {
       });
 
       expect(stderr.trim()).toMatchInlineSnapshot(
-        `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 400 status. Please try again later."`
+        `"▲  Oh no! There was a problem fetching the file from GitHub. The request responded with a 400 status. Please try again later."`,
       );
       expect(status).toBe(1);
     });
@@ -1087,7 +1120,7 @@ describe("create-react-router CLI", () => {
       });
 
       expect(stderr.trim()).toMatchInlineSnapshot(
-        `"▲  Oh no! There was a problem fetching the file. The request responded with a 404 status. Please try again later."`
+        `"▲  Oh no! There was a problem fetching the file. The request responded with a 404 status. Please try again later."`,
       );
       expect(status).toBe(1);
     });
@@ -1106,7 +1139,7 @@ describe("create-react-router CLI", () => {
       });
 
       expect(stderr.trim()).toMatchInlineSnapshot(
-        `"▲  Oh no! There was a problem fetching the file. The request responded with a 400 status. Please try again later."`
+        `"▲  Oh no! There was a problem fetching the file. The request responded with a 400 status. Please try again later."`,
       );
       expect(status).toBe(1);
     });
@@ -1176,7 +1209,7 @@ async function execCreateReactRouter({
           ? { CREATE_REACT_ROUTER_FORCE_INTERACTIVE: "true" }
           : {}),
       },
-    }
+    },
   );
 
   return await interactWithShell(proc, interactions);
@@ -1195,7 +1228,7 @@ type ShellInteractions = Array<
 
 async function interactWithShell(
   proc: ChildProcessWithoutNullStreams,
-  interactions: ShellInteractions
+  interactions: ShellInteractions,
 ): Promise<ShellResult> {
   proc.stdin.setDefaultEncoding("utf-8");
 
@@ -1224,7 +1257,7 @@ async function interactWithShell(
           .slice(1)
           .find(
             (line) =>
-              line.includes("❯") || line.includes(">") || line.includes("●")
+              line.includes("❯") || line.includes(">") || line.includes("●"),
           );
 
         if (currentSelection && answer.test(currentSelection)) {

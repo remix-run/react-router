@@ -1,3 +1,10 @@
+/**
+ * @module index
+ * @mergeModuleWith react-router
+ */
+
+"use client";
+
 // Expose old @remix-run/router API
 export type { InitialEntry, Location, Path, To } from "./lib/router/history";
 export type {
@@ -32,7 +39,6 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
-  unstable_InitialContext,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -202,7 +208,12 @@ export {
   Scripts,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
-export type { ScriptsProps } from "./lib/dom/ssr/components";
+export type {
+  LinksProps,
+  ScriptsProps,
+  PrefetchBehavior,
+  DiscoverBehavior,
+} from "./lib/dom/ssr/components";
 export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
   ClientActionFunction,
@@ -280,6 +291,46 @@ export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
 
+// RSC
+export type {
+  BrowserCreateFromReadableStreamFunction as unstable_BrowserCreateFromReadableStreamFunction,
+  EncodeReplyFunction as unstable_EncodeReplyFunction,
+  RSCHydratedRouterProps as unstable_RSCHydratedRouterProps,
+} from "./lib/rsc/browser";
+export {
+  createCallServer as unstable_createCallServer,
+  RSCHydratedRouter as unstable_RSCHydratedRouter,
+} from "./lib/rsc/browser";
+export type {
+  SSRCreateFromReadableStreamFunction as unstable_SSRCreateFromReadableStreamFunction,
+  RSCStaticRouterProps as unstable_RSCStaticRouterProps,
+} from "./lib/rsc/server.ssr";
+export {
+  routeRSCServerRequest as unstable_routeRSCServerRequest,
+  RSCStaticRouter as unstable_RSCStaticRouter,
+} from "./lib/rsc/server.ssr";
+export { getRSCStream as unstable_getRSCStream } from "./lib/rsc/html-stream/browser";
+export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } from "./lib/rsc/errorBoundaries";
+
+// Re-export of RSC types
+import type { matchRSCServerRequest } from "./lib/rsc/server.rsc";
+export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
+
+export type {
+  DecodeActionFunction as unstable_DecodeActionFunction,
+  DecodeFormStateFunction as unstable_DecodeFormStateFunction,
+  DecodeReplyFunction as unstable_DecodeReplyFunction,
+  LoadServerActionFunction as unstable_LoadServerActionFunction,
+  RSCManifestPayload as unstable_RSCManifestPayload,
+  RSCMatch as unstable_RSCMatch,
+  RSCPayload as unstable_RSCPayload,
+  RSCRenderPayload as unstable_RSCRenderPayload,
+  RSCRouteManifest as unstable_RSCRouteManifest,
+  RSCRouteMatch as unstable_RSCRouteMatch,
+  RSCRouteConfigEntry as unstable_RSCRouteConfigEntry,
+  RSCRouteConfig as unstable_RSCRouteConfig,
+} from "./lib/rsc/server.rsc";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -320,8 +371,11 @@ export {
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  WithComponentProps as UNSAFE_WithComponentProps,
   withComponentProps as UNSAFE_withComponentProps,
+  WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
   withHydrateFallbackProps as UNSAFE_withHydrateFallbackProps,
+  WithErrorBoundaryProps as UNSAFE_WithErrorBoundaryProps,
   withErrorBoundaryProps as UNSAFE_withErrorBoundaryProps,
 } from "./lib/components";
 

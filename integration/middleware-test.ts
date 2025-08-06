@@ -13,6 +13,72 @@ import {
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { reactRouterConfig } from "./helpers/vite.js";
 
+let ENTRY_SERVER_WITH_HANDLE_ERROR = js`
+import { PassThrough } from "node:stream";
+
+import type { AppLoadContext, EntryContext } from "react-router";
+import { createReadableStreamFromReadable } from "@react-router/node";
+import { ServerRouter } from "react-router";
+import type { RenderToPipeableStreamOptions } from "react-dom/server";
+import { renderToPipeableStream } from "react-dom/server";
+
+export const streamTimeout = 5_000;
+
+export function handleError(error, { request }) {
+  if (!request.signal.aborted) {
+    let {pathname, search} = new URL(request.url);
+    console.error("handleError", request.method, pathname + search, error);
+  }
+}
+
+export default function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: EntryContext,
+) {
+  return new Promise((resolve, reject) => {
+    let shellRendered = false;
+
+    const { pipe, abort } = renderToPipeableStream(
+      <ServerRouter context={routerContext} url={request.url} />,
+      {
+        onShellReady() {
+          shellRendered = true;
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
+
+          responseHeaders.set("Content-Type", "text/html");
+
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            }),
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error);
+          }
+        },
+      },
+    );
+
+    setTimeout(abort, streamTimeout + 1000);
+  });
+}
+  `;
+
 test.describe("Middleware", () => {
   let originalConsoleError = console.error;
 
@@ -101,13 +167,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -192,13 +258,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -267,14 +333,14 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty"
+        "Index: a,b - empty",
       );
 
       (await page.getByRole("button"))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       await page.waitForSelector('[data-route]:has-text("- a,b")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b"
+        "Index: a,b - a,b",
       );
 
       appFixture.close();
@@ -429,12 +495,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -496,12 +562,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -675,13 +741,13 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
@@ -763,14 +829,87 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
+
+      appFixture.close();
+    });
+
+    test("calls clientMiddleware when no loaders exist", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            middleware: true,
+          }),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/_index.tsx": js`
+            import { Link } from 'react-router'
+
+            export const unstable_clientMiddleware = [
+              ({ context }) => {
+                console.log('running index middleware')
+              },
+            ];
+
+            export default function Component() {
+              return (
+                <>
+                  <h2 data-route>Index</h2>
+                  <Link to="/about">Go to about</Link>
+                </>
+               );
+            }
+          `,
+          "app/routes/about.tsx": js`
+            import { Link } from 'react-router'
+            export const unstable_clientMiddleware = [
+              ({ context }) => {
+                console.log('running about middleware')
+              },
+            ];
+
+            export default function Component() {
+              return (
+                <>
+                  <h2 data-route>About</h2>
+                  <Link to="/">Go to index</Link>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let logs: string[] = [];
+      page.on("console", (msg) => logs.push(msg.text()));
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      (await page.$('a[href="/about"]'))?.click();
+      await page.waitForSelector('[data-route]:has-text("About")');
+      expect(logs).toEqual(["running about middleware"]);
+      logs.splice(0);
+
+      (await page.$('a[href="/"]'))?.click();
+      await page.waitForSelector('[data-route]:has-text("Index")');
+      expect(logs).toEqual(["running index middleware"]);
 
       appFixture.close();
     });
@@ -836,14 +975,14 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty"
+        "Index: a,b - empty",
       );
 
       (await page.getByRole("button"))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       await page.waitForSelector('[data-route]:has-text("- a,b")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b"
+        "Index: a,b - a,b",
       );
 
       appFixture.close();
@@ -993,12 +1132,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1059,12 +1198,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1256,7 +1395,7 @@ test.describe("Middleware", () => {
       expect(requests.sort()).toEqual([
         expect.stringContaining("/parent/child.data?_routes=routes%2Fparent"),
         expect.stringContaining(
-          "/parent/child.data?_routes=routes%2Fparent.child"
+          "/parent/child.data?_routes=routes%2Fparent.child",
         ),
       ]);
 
@@ -1400,7 +1539,7 @@ test.describe("Middleware", () => {
       expect(await page.locator("[data-parent]").textContent()).toBe("PARENT");
       expect(await page.locator("[data-child]").textContent()).toBe("CHILD");
       expect(
-        JSON.parse((await page.locator("[data-index]").textContent())!)
+        JSON.parse((await page.locator("[data-index]").textContent())!),
       ).toEqual({
         serverData: "INDEX",
         context: {
@@ -1418,11 +1557,11 @@ test.describe("Middleware", () => {
       expect(requests.sort()).toEqual([
         // This is the normal request but only included parent.child because parent opted out
         expect.stringMatching(
-          /\/parent\/child\.data\?_routes=routes%2Fparent\.child$/
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child$/,
         ),
         // index gets it's own due to clientLoader
         expect.stringMatching(
-          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/
+          /\/parent\/child\.data\?_routes=routes%2Fparent\.child\._index$/,
         ),
       ]);
 
@@ -1430,7 +1569,7 @@ test.describe("Middleware", () => {
       expect(await page.locator("[data-parent]").textContent()).toBe("PARENT");
       expect(await page.locator("[data-child]").textContent()).toBe("CHILD");
       expect(
-        JSON.parse((await page.locator("[data-index]").textContent())!)
+        JSON.parse((await page.locator("[data-index]").textContent())!),
       ).toEqual({
         serverData: "INDEX",
         context: {
@@ -1518,16 +1657,104 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b"
+        "Index: a,b",
       );
 
       (await page.$('a[href="/about"]'))?.click();
       await page.waitForSelector('[data-route]:has-text("About")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "About: c,d"
+        "About: c,d",
       );
 
       appFixture.close();
+    });
+
+    test("calls middleware when no loaders exist on document, but not data requests", async ({
+      page,
+    }) => {
+      let oldConsoleLog = console.log;
+      let logs: any[] = [];
+      console.log = (...args) => logs.push(args);
+
+      let fixture = await createFixture({
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            middleware: true,
+          }),
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              build: { manifest: true, minify: false },
+              plugins: [reactRouter()],
+            });
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet } from 'react-router'
+
+            export const unstable_middleware = [
+              ({ request }) => {
+                console.log('Running parent middleware', new URL(request.url).pathname)
+              },
+            ];
+
+            export default function Component() {
+              return (
+                <>
+                  <h2>Parent</h2>
+                  <Link to="/parent/a">Go to A</Link>
+                  <Link to="/parent/b">Go to B</Link>
+                  <Outlet/>
+                </>
+               );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            export const unstable_middleware = [
+              ({ request }) => {
+                console.log('Running A middleware', new URL(request.url).pathname)
+              },
+            ];
+
+            export default function Component() {
+              return <h3>A</h3>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            export const unstable_middleware = [
+              ({ request }) => {
+                console.log('Running B middleware', new URL(request.url).pathname)
+              },
+            ];
+
+            export default function Component() {
+              return <h3>B</h3>;
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/parent/a");
+      await page.waitForSelector('h2:has-text("Parent")');
+      await page.waitForSelector('h3:has-text("A")');
+      expect(logs).toEqual([
+        ["Running parent middleware", "/parent/a"],
+        ["Running A middleware", "/parent/a"],
+      ]);
+
+      (await page.$('a[href="/parent/b"]'))?.click();
+      await page.waitForSelector('h3:has-text("B")');
+      expect(logs).toEqual([
+        ["Running parent middleware", "/parent/a"],
+        ["Running A middleware", "/parent/a"],
+      ]);
+
+      appFixture.close();
+      console.log = oldConsoleLog;
     });
 
     test("calls middleware before/after actions", async ({ page }) => {
@@ -1591,14 +1818,14 @@ test.describe("Middleware", () => {
       await app.goto("/");
       await page.waitForSelector('[data-route]:has-text("Index")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - empty"
+        "Index: a,b - empty",
       );
 
       (await page.getByRole("button"))?.click();
       await new Promise((r) => setTimeout(r, 1000));
       await page.waitForSelector('[data-route]:has-text("- a,b")');
       expect(await page.locator("[data-route]").textContent()).toBe(
-        "Index: a,b - a,b"
+        "Index: a,b - a,b",
       );
 
       appFixture.close();
@@ -1718,6 +1945,9 @@ test.describe("Middleware", () => {
     test("handles errors thrown on the way down (document)", async ({
       page,
     }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
+
       let fixture = await createFixture(
         {
           files: {
@@ -1733,6 +1963,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
 
@@ -1755,22 +1986,27 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/broken");
       expect(await page.innerText("h1")).toBe("broken!");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/broken", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
 
     test("handles errors thrown on the way down (data)", async ({ page }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -1786,6 +2022,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
 
@@ -1811,12 +2048,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1825,11 +2062,16 @@ test.describe("Middleware", () => {
       (await page.$('a[href="/broken"]'))?.click();
       await page.waitForSelector("h1");
       expect(await page.innerText("h1")).toBe("broken!");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/broken.data", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
 
     test("handles errors thrown on the way up (document)", async ({ page }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -1845,6 +2087,7 @@ test.describe("Middleware", () => {
             "react-router.config.ts": reactRouterConfig({
               middleware: true,
             }),
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
 
@@ -1876,23 +2119,28 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/broken");
       expect(await page.innerText("h1")).toBe("broken!");
       expect(await page.innerText("pre")).toBe("empty");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/broken", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
 
     test("handles errors thrown on the way up (data)", async ({ page }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -1908,6 +2156,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
 
@@ -1939,12 +2188,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -1954,11 +2203,16 @@ test.describe("Middleware", () => {
       await page.waitForSelector("h1");
       expect(await page.innerText("h1")).toBe("broken!");
       expect(await page.innerText("pre")).toBe("empty");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/broken.data", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
 
     test("bubbles errors up on document requests", async ({ page }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -1974,6 +2228,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
               export default function Component({ loaderData }) {
@@ -2021,23 +2276,28 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/a/b");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
 
     test("bubbles errors up on data requests", async ({ page }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -2053,6 +2313,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
               export default function Component({ loaderData }) {
@@ -2100,12 +2361,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -2115,6 +2376,9 @@ test.describe("Middleware", () => {
       await page.waitForSelector("pre");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b.data", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
@@ -2122,6 +2386,8 @@ test.describe("Middleware", () => {
     test("bubbles errors on the way down up to at least the highest route with a loader", async ({
       page,
     }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -2137,6 +2403,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
               export default function Component({ loaderData }) {
@@ -2179,23 +2446,30 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/a/b/c/d");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b/c/d", new Error("broken!")],
+      ]);
+      errors.splice(0);
 
       await app.goto("/");
       await app.clickLink("/a/b/c/d");
       expect(await page.locator("h1").textContent()).toBe("A Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b/c/d.data", new Error("broken!")],
+      ]);
 
       appFixture.close();
     });
@@ -2203,6 +2477,8 @@ test.describe("Middleware", () => {
     test("bubbles errors on the way down up to the deepest error boundary when loaders aren't revalidating", async ({
       page,
     }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
       let fixture = await createFixture(
         {
           files: {
@@ -2218,6 +2494,7 @@ test.describe("Middleware", () => {
                 plugins: [reactRouter()],
               });
             `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
             "app/routes/_index.tsx": js`
               import { Link } from 'react-router'
               export default function Component({ loaderData }) {
@@ -2276,12 +2553,12 @@ test.describe("Middleware", () => {
             `,
           },
         },
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let appFixture = await createAppFixture(
         fixture,
-        UNSAFE_ServerMode.Development
+        UNSAFE_ServerMode.Development,
       );
 
       let app = new PlaywrightFixture(appFixture, page);
@@ -2289,11 +2566,374 @@ test.describe("Middleware", () => {
       await app.clickLink("/a/b");
       await page.waitForSelector("[data-ab]");
       expect(await page.locator("[data-ab]").textContent()).toBe("AB: DATA");
+      expect(errors).toEqual([]);
 
       await app.clickLink("/a/b/c/d");
       await page.waitForSelector("[data-error-c]");
       expect(await page.locator("h1").textContent()).toBe("C Error Boundary");
       expect(await page.locator("pre").textContent()).toBe("broken!");
+      expect(errors).toEqual([
+        [
+          "handleError",
+          "GET",
+          "/a/b/c/d.data?_routes=routes%2Fa.b.c.d",
+          new Error("broken!"),
+        ],
+      ]);
+
+      appFixture.close();
+    });
+
+    test("bubbles response up the chain when middleware throws before next", async ({
+      page,
+    }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b/c">/a/b/c</Link>;
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+              export const unstable_middleware = [
+                async (_, next) => {
+                  let res = await next();
+                  res.headers.set('x-a', 'true');
+                  return res;
+                }
+              ];
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error }) {
+                return <><h1 data-error>A Error Boundary</h1><pre>{error.message}</pre></>
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              import { Link, Outlet } from 'react-router'
+              export const unstable_middleware = [
+                async (_, next) => {
+                  let res = await next();
+                  res.headers.set('x-b', 'true');
+                  return res;
+                }
+              ];
+              export default function Component({ loaderData }) {
+                return <Outlet/>;
+              }
+            `,
+            "app/routes/a.b.c.tsx": js`
+              export const unstable_middleware = [(_, next) => {
+                throw new Error('C ERROR')
+              }];
+              // Force middleware to run on client side navs
+              export function loader() {
+                return null;
+              }
+              export default function Component({ loaderData }) {
+                return <h1>C</h1>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestDocument("/a/b/c");
+      expect(res.status).toBe(500);
+      expect(res.headers.get("x-a")).toBe("true");
+      expect(res.headers.get("x-b")).toBe("true");
+      let html = await res.text();
+      expect(html).toContain("A Error Boundary");
+      expect(html).toContain("C ERROR");
+
+      let data = await fixture.requestSingleFetchData("/a/b/c.data");
+      expect(data.status).toBe(500);
+      expect(data.headers.get("x-a")).toBe("true");
+      expect(data.headers.get("x-b")).toBe("true");
+      expect((data.data as any)["routes/a.b.c"]).toEqual({
+        error: new Error("C ERROR"),
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await app.clickLink("/a/b/c");
+      await page.waitForSelector("[data-error]");
+      expect(await page.locator("[data-error]").textContent()).toBe(
+        "A Error Boundary",
+      );
+      expect(await page.locator("pre").textContent()).toBe("C ERROR");
+
+      appFixture.close();
+    });
+
+    test("bubbles response up the chain when middleware throws after next", async ({
+      page,
+    }) => {
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b/c">/a/b/c</Link>;
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+              export const unstable_middleware = [
+                async (_, next) => {
+                  let res = await next();
+                  res.headers.set('x-a', 'true');
+                  return res;
+                }
+              ];
+              export function loader() {
+                return "A LOADER";
+              }
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error, loaderData }) {
+                return (
+                  <>
+                    <h1 data-error>A Error Boundary</h1>
+                    <pre>{error.message}</pre>
+                    <p>{loaderData}</p>
+                  </>
+                );
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              import { Link, Outlet } from 'react-router'
+              export const unstable_middleware = [
+                async (_, next) => {
+                  let res = await next();
+                  res.headers.set('x-b', 'true');
+                  return res;
+                }
+              ];
+              export default function Component({ loaderData }) {
+                return <Outlet/>;
+              }
+            `,
+            "app/routes/a.b.c.tsx": js`
+              export const unstable_middleware = [async (_, next) => {
+                let res = await next();
+                throw new Error('C ERROR')
+              }];
+              // Force middleware to run on client side navs
+              export function loader() {
+                return null;
+              }
+              export default function Component({ loaderData }) {
+                return <h1>C</h1>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestDocument("/a/b/c");
+      expect(res.status).toBe(500);
+      expect(res.headers.get("x-a")).toBe("true");
+      expect(res.headers.get("x-b")).toBe("true");
+      let html = await res.text();
+      expect(html).toContain("A Error Boundary");
+      expect(html).toContain("C ERROR");
+      expect(html).toContain("A LOADER");
+
+      let data = await fixture.requestSingleFetchData("/a/b/c.data");
+      expect(data.status).toBe(500);
+      expect(data.headers.get("x-a")).toBe("true");
+      expect(data.headers.get("x-b")).toBe("true");
+      expect((data.data as any)["routes/a"]).toEqual({
+        data: "A LOADER",
+      });
+      expect((data.data as any)["routes/a.b.c"]).toEqual({
+        error: new Error("C ERROR"),
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await app.clickLink("/a/b/c");
+      await page.waitForSelector("[data-error]");
+      expect(await page.locator("[data-error]").textContent()).toBe(
+        "A Error Boundary",
+      );
+      expect(await page.locator("pre").textContent()).toBe("C ERROR");
+      expect(await page.locator("p").textContent()).toBe("A LOADER");
+
+      appFixture.close();
+    });
+
+    test("bubbles response up the chain when multiple middlewares throw in sequence", async ({
+      page,
+    }) => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component({ loaderData }) {
+                return <Link to="/a/b/c">/a/b/c</Link>;
+              }
+            `,
+            "app/routes/a.tsx": js`
+              import { Outlet } from 'react-router'
+              export const unstable_middleware = [
+                async (_, next) => {
+                  let res = await next();
+                  res.headers.set('x-a', 'true');
+                  return res;
+                }
+              ];
+              export function loader() {
+                return "A LOADER";
+              }
+              export default function Component() {
+                return <Outlet/>
+              }
+              export function ErrorBoundary({ error, loaderData }) {
+                return (
+                  <>
+                    <h1 data-error>A Error Boundary</h1>
+                    <pre>{error.message}</pre>
+                    <p>{loaderData}</p>
+                  </>
+                );
+              }
+            `,
+            "app/routes/a.b.tsx": js`
+              import { Link, Outlet } from 'react-router'
+              export const unstable_middleware = [async (_, next) => {
+                let res = await next();
+                throw new Error('B ERROR')
+              }];
+              export default function Component({ loaderData }) {
+                return <Outlet/>;
+              }
+            `,
+            "app/routes/a.b.c.tsx": js`
+              export const unstable_middleware = [async (_, next) => {
+                let res = await next();
+                throw new Error('C ERROR')
+              }];
+              // Force middleware to run on client side navs
+              export function loader() {
+                return null;
+              }
+              export default function Component({ loaderData }) {
+                return <h1>C</h1>
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let appFixture = await createAppFixture(
+        fixture,
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestDocument("/a/b/c");
+      expect(res.status).toBe(500);
+      expect(res.headers.get("x-a")).toBe("true");
+      expect(res.headers.get("x-b")).toBe(null);
+      let html = await res.text();
+      expect(html).toContain("A Error Boundary");
+      expect(html).toContain("B ERROR");
+      expect(html).toContain("A LOADER");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b/c", new Error("C ERROR")],
+        ["handleError", "GET", "/a/b/c", new Error("B ERROR")],
+      ]);
+      errors.splice(0);
+
+      let data = await fixture.requestSingleFetchData("/a/b/c.data");
+      expect(data.status).toBe(500);
+      expect(data.headers.get("x-a")).toBe("true");
+      expect(data.headers.get("x-b")).toBe(null);
+      expect((data.data as any)["routes/a"]).toEqual({
+        data: "A LOADER",
+      });
+      expect((data.data as any)["routes/a.b"]).toEqual({
+        error: new Error("B ERROR"),
+      });
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b/c.data", new Error("C ERROR")],
+        ["handleError", "GET", "/a/b/c.data", new Error("B ERROR")],
+      ]);
+      errors.splice(0);
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await app.clickLink("/a/b/c");
+      await page.waitForSelector("[data-error]");
+      expect(await page.locator("[data-error]").textContent()).toBe(
+        "A Error Boundary",
+      );
+      expect(await page.locator("pre").textContent()).toBe("B ERROR");
+      expect(await page.locator("p").textContent()).toBe("A LOADER");
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b/c.data", new Error("C ERROR")],
+        ["handleError", "GET", "/a/b/c.data", new Error("B ERROR")],
+      ]);
+      errors.splice(0);
 
       appFixture.close();
     });
@@ -2659,6 +3299,193 @@ test.describe("Middleware", () => {
       expect(fetchHeaders!["x-b"]).toBe("true");
 
       appFixture.close();
+    });
+
+    test("handles errors on the way down on resource routes (document)", async () => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
+            "app/routes/a.tsx": js`
+              export const unstable_middleware = [
+                async ({ context }, next) => {
+                  throw new Error("broken!");
+                },
+              ];
+            `,
+            "app/routes/a.b.tsx": js`
+              export async function loader({ request, context }) {
+                return new Response("ok");
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestResource("/a/b");
+      expect(res.status).toBe(500);
+      await expect(res.text()).resolves.toBe(
+        "Unexpected Server Error\n\nError: broken!",
+      );
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b", new Error("broken!")],
+      ]);
+    });
+
+    test("handles errors on the way down on resource routes (data)", async () => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
+            "app/routes/a.tsx": js`
+              export const unstable_middleware = [
+                async ({ context }, next) => {
+                  throw new Error("broken!");
+                },
+              ];
+            `,
+            "app/routes/a.b.tsx": js`
+              export async function loader({ request, context }) {
+                return new Response("ok");
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestSingleFetchData("/a/b.data");
+      expect(res.status).toBe(500);
+      expect(res.data).toEqual({
+        "routes/a": { error: new Error("broken!") },
+      });
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b.data", new Error("broken!")],
+      ]);
+    });
+
+    test("handles errors on the way up on resource routes (document)", async () => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
+            "app/routes/a.tsx": js`
+              export const unstable_middleware = [
+                async ({ context }, next) => {
+                  let res = await next()
+                  throw new Error("broken!");
+                },
+              ];
+            `,
+            "app/routes/a.b.tsx": js`
+              export async function loader({ request, context }) {
+                return new Response("ok");
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestResource("/a/b");
+      expect(res.status).toBe(500);
+      await expect(res.text()).resolves.toBe(
+        "Unexpected Server Error\n\nError: broken!",
+      );
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b", new Error("broken!")],
+      ]);
+    });
+
+    test("handles errors on the way up on resource routes (data)", async () => {
+      let errors: any[] = [];
+      console.error = (...args) => errors.push(args);
+      let fixture = await createFixture(
+        {
+          files: {
+            "react-router.config.ts": reactRouterConfig({
+              middleware: true,
+            }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default defineConfig({
+                build: { manifest: true, minify: false },
+                plugins: [reactRouter()],
+              });
+            `,
+            "app/entry.server.tsx": ENTRY_SERVER_WITH_HANDLE_ERROR,
+            "app/routes/a.tsx": js`
+              export const unstable_middleware = [
+                async ({ context }, next) => {
+                  let res = await next();
+                  throw new Error("broken!");
+                },
+              ];
+            `,
+            "app/routes/a.b.tsx": js`
+              export async function loader({ request, context }) {
+                return "ok"
+              }
+            `,
+          },
+        },
+        UNSAFE_ServerMode.Development,
+      );
+
+      let res = await fixture.requestSingleFetchData("/a/b.data");
+      expect(res.status).toBe(500);
+      expect(res.data).toEqual({
+        "routes/a": { error: new Error("broken!") },
+        "routes/a.b": { data: "ok" },
+      });
+      expect(errors).toEqual([
+        ["handleError", "GET", "/a/b.data", new Error("broken!")],
+      ]);
     });
   });
 });

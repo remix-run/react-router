@@ -230,7 +230,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -296,7 +296,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -380,7 +380,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -439,7 +439,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -515,7 +515,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
   });
 
@@ -589,7 +589,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
 
     // Action was not resubmitted
@@ -679,7 +679,7 @@ describe("router.revalidate", () => {
     });
     expect(t.history.push).toHaveBeenCalledWith(
       t.router.state.location,
-      t.router.state.location.state
+      t.router.state.location.state,
     );
 
     // Action was not resubmitted
@@ -947,7 +947,7 @@ describe("router.revalidate", () => {
         hydrationData: {
           loaderData: { root: "ROOT" },
         },
-      }
+      },
     );
 
     let revalidationValue = null;
@@ -1046,7 +1046,7 @@ describe("router.revalidate", () => {
         hydrationData: {
           loaderData: { root: "ROOT" },
         },
-      }
+      },
     );
 
     let revalidationValue = null;

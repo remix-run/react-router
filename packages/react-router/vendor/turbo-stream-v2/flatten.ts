@@ -64,7 +64,7 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
         const keyFor = Symbol.keyFor(input);
         if (!keyFor) {
           error = new Error(
-            "Cannot encode symbol unless created with Symbol.for()"
+            "Cannot encode symbol unless created with Symbol.for()",
           );
         } else {
           str[index] = `["${TYPE_SYMBOL}",${JSON.stringify(keyFor)}]`;
@@ -106,12 +106,15 @@ function stringify(this: ThisEncode, input: unknown, index: number) {
                 (i in input ? flatten.call(this, input[i]) : HOLE);
             str[index] = `${result}]`;
           } else if (input instanceof Date) {
-            str[index] = `["${TYPE_DATE}",${input.getTime()}]`;
+            const dateTime = input.getTime();
+            str[index] = `["${TYPE_DATE}",${
+              Number.isNaN(dateTime) ? JSON.stringify("invalid") : dateTime
+            }]`;
           } else if (input instanceof URL) {
             str[index] = `["${TYPE_URL}",${JSON.stringify(input.href)}]`;
           } else if (input instanceof RegExp) {
             str[index] = `["${TYPE_REGEXP}",${JSON.stringify(
-              input.source
+              input.source,
             )},${JSON.stringify(input.flags)}]`;
           } else if (input instanceof Set) {
             if (input.size > 0) {
@@ -211,7 +214,7 @@ const objectProtoNames = Object.getOwnPropertyNames(Object.prototype)
   .join("\0");
 
 function isPlainObject(
-  thing: unknown
+  thing: unknown,
 ): thing is Record<string | number | symbol, unknown> {
   const proto = Object.getPrototypeOf(thing);
   return (

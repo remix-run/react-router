@@ -13,7 +13,7 @@ test(
   async ({ page, browserName }) => {
     test.skip(
       browserName === "firefox",
-      "FireFox doesn't support browsing to an empty page (aka about:blank)"
+      "FireFox doesn't support browsing to an empty page (aka about:blank)",
     );
 
     let fixture = await createFixture({
@@ -78,7 +78,7 @@ test(
     expect(await app.getHtml()).toContain("cheeseburger");
 
     appFixture.close();
-  }
+  },
 );
 
 test("allows users to pass a client side context to HydratedRouter", async ({
@@ -87,29 +87,33 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   let fixture = await createFixture({
     files: {
       "app/entry.client.tsx": js`
-        import { unstable_createContext } from "react-router";
+        import { unstable_createContext, unstable_RouterContextProvider } from "react-router";
         import { HydratedRouter } from "react-router/dom";
         import { startTransition, StrictMode } from "react";
         import { hydrateRoot } from "react-dom/client";
 
-        export const initialContext = new unstable_createContext('empty');
+        export const myContext = new unstable_createContext('foo');
 
         startTransition(() => {
           hydrateRoot(
             document,
             <StrictMode>
-              <HydratedRouter unstable_getContext={() => {
-                return new Map([[initialContext, 'bar']]);
-               }} />
+              <HydratedRouter
+                unstable_getContext={() => {
+                  return new unstable_RouterContextProvider([
+                    [myContext, 'bar']
+                  ]);
+                }}
+              />
             </StrictMode>
           );
         });
       `,
       "app/routes/_index.tsx": js`
-        import { initialContext } from "../entry.client";
+        import { myContext } from "../entry.client";
 
         export function clientLoader({ context }) {
-          return context.get(initialContext);
+          return context.get(myContext);
         }
         export default function Index({ loaderData }) {
           return <h1>Hello, {loaderData}</h1>

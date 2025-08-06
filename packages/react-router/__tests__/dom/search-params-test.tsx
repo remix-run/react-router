@@ -1,7 +1,16 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { act } from "@testing-library/react";
-import { MemoryRouter, Routes, Route, useSearchParams } from "../../index";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  useSearchParams,
+  createBrowserRouter,
+  useBlocker,
+  RouterProvider,
+  useLocation,
+} from "../../index";
 
 describe("useSearchParams", () => {
   let node: HTMLDivElement;
@@ -44,7 +53,7 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -59,7 +68,7 @@ describe("useSearchParams", () => {
     act(() => {
       queryInput.value = "Ryan Florence";
       form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true })
+        new Event("submit", { bubbles: true, cancelable: true }),
       );
     });
 
@@ -101,7 +110,7 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -116,12 +125,12 @@ describe("useSearchParams", () => {
 
     act(() => {
       form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true })
+        new Event("submit", { bubbles: true, cancelable: true }),
       );
     });
 
     expect(node.innerHTML).toMatch(
-      /The current query is "Michael Jackson - appended"/
+      /The current query is "Michael Jackson - appended"/,
     );
     expect(node.innerHTML).toMatch(/The new query is "Ryan Florence"/);
   });
@@ -146,7 +155,7 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -174,12 +183,115 @@ describe("useSearchParams", () => {
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
     expect(node.innerHTML).toMatchInlineSnapshot(
-      `"<p>value=initial&amp;a=1&amp;b=2</p>"`
+      `"<p>value=initial&amp;a=1&amp;b=2</p>"`,
     );
+  });
+
+  it("does not reflect functional update mutation when navigation is blocked", () => {
+    let router = createBrowserRouter([
+      {
+        path: "/",
+        Component() {
+          let location = useLocation();
+          let [searchParams, setSearchParams] = useSearchParams();
+          let [shouldBlock, setShouldBlock] = React.useState(false);
+          let b = useBlocker(shouldBlock);
+          return (
+            <>
+              <pre id="output">
+                {`location.search=${location.search}`}
+                {`searchParams=${searchParams.toString()}`}
+                {`blocked=${b.state}`}
+              </pre>
+              <button
+                id="toggle-blocking"
+                onClick={() => setShouldBlock(!shouldBlock)}
+              >
+                Toggle Blocking
+              </button>
+              <button
+                id="navigate1"
+                onClick={() => {
+                  setSearchParams((prev) => {
+                    prev.set("foo", "bar");
+                    return prev;
+                  });
+                }}
+              >
+                Navigate 1
+              </button>
+              <button
+                id="navigate2"
+                onClick={() => {
+                  setSearchParams((prev) => {
+                    prev.set("foo", "baz");
+                    return prev;
+                  });
+                }}
+              >
+                Navigate 2
+              </button>
+            </>
+          );
+        },
+      },
+    ]);
+
+    act(() => {
+      ReactDOM.createRoot(node).render(<RouterProvider router={router} />);
+    });
+
+    expect(node.querySelector("#output")).toMatchInlineSnapshot(`
+      <pre
+        id="output"
+      >
+        location.search=
+        searchParams=
+        blocked=unblocked
+      </pre>
+    `);
+
+    act(() => {
+      node
+        .querySelector("#navigate1")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")).toMatchInlineSnapshot(`
+      <pre
+        id="output"
+      >
+        location.search=?foo=bar
+        searchParams=foo=bar
+        blocked=unblocked
+      </pre>
+    `);
+
+    act(() => {
+      node
+        .querySelector("#toggle-blocking")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    act(() => {
+      node
+        .querySelector("#navigate2")!
+        .dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.querySelector("#output")).toMatchInlineSnapshot(`
+      <pre
+        id="output"
+      >
+        location.search=?foo=bar
+        searchParams=foo=bar
+        blocked=blocked
+      </pre>
+    `);
   });
 });

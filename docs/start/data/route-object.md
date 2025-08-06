@@ -54,6 +54,53 @@ function MyRouteComponent() {
 }
 ```
 
+## `unstable_middleware`
+
+Route middleware runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
+
+```tsx
+createBrowserRouter([
+  {
+    path: "/",
+    unstable_middleware: [loggingMiddleware],
+    loader: rootLoader,
+    Component: Root,
+    children: [{
+      path: 'auth',
+      unstable_middleware: [authMiddleware],
+      loader: authLoader,
+      Component: Auth,
+      children: [...]
+    }]
+  },
+]);
+
+async function loggingMiddleware({ request }, next) {
+  let url = new URL(request.url);
+  console.log(`Starting navigation: ${url.pathname}${url.search}`);
+  const start = performance.now();
+  await next();
+  const duration = performance.now() - start;
+  console.log(`Navigation completed in ${duration}ms`);
+}
+
+const userContext = unstable_createContext<User>();
+
+async function authMiddleware ({ context }) {
+  const userId = getUserId();
+
+  if (!userId) {
+    throw redirect("/login");
+  }
+
+  context.set(userContext, await getUserById(userId));
+};
+```
+
+See also:
+
+- [Middleware][middleware]
+
 ## `loader`
 
 Route loaders provide data to route components before they are rendered.
@@ -155,7 +202,7 @@ By defining this function, you opt out of the default behavior completely and ca
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
 function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs
+  arg: ShouldRevalidateFunctionArgs,
 ) {
   return true; // false
 }
@@ -198,3 +245,4 @@ createBrowserRouter([
 Next: [Data Loading](./data-loading)
 
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
+[middleware]: ../../how-to/middleware

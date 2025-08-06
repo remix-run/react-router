@@ -170,6 +170,24 @@ const files = {
       )
     }
   `,
+
+  "app/routes/invalid-date.tsx": js`
+    import { useLoaderData, data } from "react-router";
+
+    export function loader({ request }) {
+      return data({ invalidDate: new Date("invalid") });
+    }
+
+    export default function InvalidDate() {
+      let data = useLoaderData();
+      return (
+        <>
+          <h1 id="heading">Invalid Date</h1>
+          <p id="date">{data.invalidDate.toISOString()}</p>
+        </>
+      )
+    }
+  `,
 };
 
 test.describe("single-fetch", () => {
@@ -216,6 +234,25 @@ test.describe("single-fetch", () => {
         },
       },
     });
+
+    res = await fixture.requestSingleFetchData("/invalid-date.data");
+    expect(res.data).toEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/invalid-date": {
+        data: {
+          invalidDate: expect.any(Date),
+        },
+      },
+    });
+
+    let date = (
+      res.data as { ["routes/invalid-date"]: { data: { invalidDate: Date } } }
+    )["routes/invalid-date"].data.invalidDate;
+    expect(isNaN(date.getTime())).toBe(true);
   });
 
   test("loads proper errors on single fetch loader requests", async () => {
@@ -225,7 +262,7 @@ test.describe("single-fetch", () => {
       {
         files,
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     let res = await fixture.requestSingleFetchData("/data.data?error=true");
@@ -1541,9 +1578,8 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/base/target");
     expect(await res.text()).toBe("");
 
-    let { status, data } = await fixture.requestSingleFetchData(
-      "/base/data.data"
-    );
+    let { status, data } =
+      await fixture.requestSingleFetchData("/base/data.data");
     expect(data).toEqual({
       [SingleFetchRedirectSymbol]: {
         status: 302,
@@ -1769,7 +1805,7 @@ test.describe("single-fetch", () => {
     await app.clickElement("#load");
     await page.waitForSelector("#fetcher-data");
     expect(await app.getHtml("#fetcher-data")).toContain(
-      "RESOURCE 2024-03-12T12:00:00.000Z"
+      "RESOURCE 2024-03-12T12:00:00.000Z",
     );
   });
 
@@ -1841,22 +1877,95 @@ test.describe("single-fetch", () => {
     // HTTP Requests contained routes params
     expect(urls.length).toBe(2);
     expect(urls[0].endsWith("/parent/a.data?_routes=routes%2Fparent.a")).toBe(
-      true
+      true,
     );
     expect(
-      urls[1].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent")
+      urls[1].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent"),
     ).toBe(true);
 
     // But loaders don't receive any routes params
     expect(await app.getHtml("#parent")).toMatch(
-      />Parent loader URL: http:\/\/localhost:\d+\/parent\/a</
+      />Parent loader URL: http:\/\/localhost:\d+\/parent\/a</,
     );
     expect(await app.getHtml("#a-server")).toMatch(
-      />A server loader URL: http:\/\/localhost:\d+\/parent\/a</
+      />A server loader URL: http:\/\/localhost:\d+\/parent\/a</,
     );
     expect(await app.getHtml("#a-client")).toMatch(
-      />A client loader URL: http:\/\/localhost:\d+\/parent\/a</
+      />A client loader URL: http:\/\/localhost:\d+\/parent\/a</,
     );
+  });
+
+  test("Strips Content-Length header from loader/action responses", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data-with-response.tsx": js`
+          import { useActionData, useLoaderData, data } from "react-router";
+
+          export function headers ({ actionHeaders, loaderHeaders, errorHeaders }) {
+            if ([...actionHeaders].length > 0) {
+              return actionHeaders;
+            } else {
+              return loaderHeaders;
+            }
+          }
+
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return data({
+              key: formData.get('key'),
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export function loader({ request }) {
+            return data({
+              message: "DATA",
+            }, { headers: { 'Content-Length': '0' }});
+          }
+
+          export default function DataWithResponse() {
+            let data = useLoaderData();
+            let actionData = useActionData();
+            return (
+              <>
+                <h1 id="heading">Data</h1>
+                <p id="message">{data.message}</p>
+                <p id="date">{data.date.toISOString()}</p>
+                {actionData ? <p id="action-data">{actionData.key}</p> : null}
+              </>
+            )
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestSingleFetchData("/data-with-response.data");
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toStrictEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/data-with-response": {
+        data: {
+          message: "DATA",
+        },
+      },
+    });
+
+    let postBody = new URLSearchParams();
+    postBody.set("key", "value");
+    res = await fixture.requestSingleFetchData("/data-with-response.data", {
+      method: "post",
+      body: postBody,
+    });
+    expect(res.headers.get("Content-Length")).toEqual(null);
+    expect(res.data).toEqual({
+      data: {
+        key: "value",
+      },
+    });
   });
 
   test("Action requests do not use _routes and do not call loaders on the server", async ({
@@ -2258,7 +2367,7 @@ test.describe("single-fetch", () => {
       expect(urls.length).toBe(1);
       // Don't reload the parent route
       expect(
-        urls[0].endsWith("/parent/b.data?_routes=root%2Croutes%2Fparent.b")
+        urls[0].endsWith("/parent/b.data?_routes=root%2Croutes%2Fparent.b"),
       ).toBe(true);
       urls = [];
 
@@ -2269,7 +2378,7 @@ test.describe("single-fetch", () => {
       expect(urls.length).toBe(1);
       // Don't reload the parent route
       expect(
-        urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
+        urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a"),
       ).toBe(true);
     });
 
@@ -2349,10 +2458,10 @@ test.describe("single-fetch", () => {
       expect(urls.length).toBe(2);
       // Client loader triggers 2 requests on the first navigation
       expect(urls[0].endsWith("/parent/a.data?_routes=routes%2Fparent")).toBe(
-        true
+        true,
       );
       expect(
-        urls[1].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
+        urls[1].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a"),
       ).toBe(true);
       urls = [];
 
@@ -2363,7 +2472,7 @@ test.describe("single-fetch", () => {
       expect(urls.length).toBe(1);
       // Don't reload the parent route
       expect(
-        urls[0].endsWith("/parent/b.data?_routes=root%2Croutes%2Fparent.b")
+        urls[0].endsWith("/parent/b.data?_routes=root%2Croutes%2Fparent.b"),
       ).toBe(true);
       urls = [];
 
@@ -2374,7 +2483,7 @@ test.describe("single-fetch", () => {
       expect(urls.length).toBe(1);
       // Don't reload the parent route
       expect(
-        urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
+        urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a"),
       ).toBe(true);
     });
 
@@ -2803,13 +2912,13 @@ test.describe("single-fetch", () => {
       expect(await app.getHtml("#a-data")).toContain("A server loader");
       expect(await app.getHtml("#b-data")).toContain("B server loader");
       expect(await app.getHtml("#c-data")).toContain(
-        "C server loader (C client loader)"
+        "C server loader (C client loader)",
       );
 
       // root/A/B can be loaded together, C needs it's own call due to it's clientLoader
       expect(urls.sort()).toEqual([
         expect.stringMatching(
-          /\/a\/b\/c\.data\?_routes=root%2Croutes%2Fa%2Croutes%2Fa\.b$/
+          /\/a\/b\/c\.data\?_routes=root%2Croutes%2Fa%2Croutes%2Fa\.b$/,
         ),
         expect.stringMatching(/\/a\/b\/c\.data\?_routes=routes%2Fa\.b\.c$/),
       ]);
@@ -2899,10 +3008,10 @@ test.describe("single-fetch", () => {
       await page.waitForSelector("#c-data");
       expect(await app.getHtml("#a-data")).toContain("A server loader");
       expect(await app.getHtml("#b-data")).toContain(
-        "B server loader (B client loader)"
+        "B server loader (B client loader)",
       );
       expect(await app.getHtml("#c-data")).toContain(
-        "C server loader (C client loader)"
+        "C server loader (C client loader)",
       );
 
       // B/C have client loaders so they get individual calls, root/A go together
@@ -3001,13 +3110,13 @@ test.describe("single-fetch", () => {
       await app.clickLink("/a/b/c");
       await page.waitForSelector("#c-data");
       expect(await app.getHtml("#a-data")).toContain(
-        "A server loader (A client loader)"
+        "A server loader (A client loader)",
       );
       expect(await app.getHtml("#b-data")).toContain(
-        "B server loader (B client loader)"
+        "B server loader (B client loader)",
       );
       expect(await app.getHtml("#c-data")).toContain(
-        "C server loader (C client loader)"
+        "C server loader (C client loader)",
       );
 
       // root/A/B/C all have client loaders so they get individual calls
@@ -3400,7 +3509,7 @@ test.describe("single-fetch", () => {
       // No clientLoaders so we can make a single parameter-less fetch
       await page.waitForSelector(
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data']",
-        { state: "attached" }
+        { state: "attached" },
       );
       expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
@@ -3488,7 +3597,7 @@ test.describe("single-fetch", () => {
       // root/A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
       await page.waitForSelector(
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
-        { state: "attached" }
+        { state: "attached" },
       );
       expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
@@ -3581,7 +3690,7 @@ test.describe("single-fetch", () => {
       // root/A can get prefetched, B/C can't due to `clientLoader`
       await page.waitForSelector(
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
-        { state: "attached" }
+        { state: "attached" },
       );
       expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
@@ -3773,7 +3882,7 @@ test.describe("single-fetch", () => {
       // A opted out of revalidation
       await page.waitForSelector(
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b%2Croutes%2Fa.b.c']",
-        { state: "attached" }
+        { state: "attached" },
       );
       expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
@@ -3851,7 +3960,7 @@ test.describe("single-fetch", () => {
       // A opted out of revalidation
       await page.waitForSelector(
         "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
-        { state: "attached" }
+        { state: "attached" },
       );
       expect(await app.page.locator("link[as='fetch']").count()).toEqual(1);
     });
@@ -3968,7 +4077,7 @@ test.describe("single-fetch", () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     // Document requests
@@ -4014,7 +4123,7 @@ test.describe("single-fetch", () => {
           `,
         },
       },
-      ServerMode.Development
+      ServerMode.Development,
     );
 
     // Document requests
