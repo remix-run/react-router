@@ -414,7 +414,9 @@ The biggest set of changes in `7.8.0` are to the `unstable_middleware` API's as 
 
 ⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
+- `react-router` - **RSC**: Fix Data Mode issue where routes that return `false` from `shouldRevalidate` would be replaced by an `<Outlet />` ([#14071](https://github.com/remix-run/react-router/pull/14071))
 - `react-router` - **Middleware**: Change the `unstable_getContext` signature on `RouterProvider`, `HydratedRouter`, and `unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to construct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+  - See the [docs](https://reactrouter.com/api/data-routers/createBrowserRouter#optsunstable_getcontext) for more information
   - ⚠️ This is a breaking change if you have adopted the `unstable_getContext` prop
 - `react-router` - **Middleware**: Run client middleware on client navigations even if no loaders exist ([#14106](https://github.com/remix-run/react-router/pull/14106))
 - `react-router` - **Middleware**: Convert internal middleware implementations to use the new `unstable_generateMiddlewareResponse` API ([#14103](https://github.com/remix-run/react-router/pull/14103))
@@ -422,9 +424,11 @@ The biggest set of changes in `7.8.0` are to the `unstable_middleware` API's as 
 - `react-router` - **Middleware**: Propagate returned `Response` from server middleware if `next` wasn't called ([#14093](https://github.com/remix-run/react-router/pull/14093))
 - `react-router` - **Middleware**: Allow server middlewares to return `data()` values which will be converted into a `Response` ([#14093](https://github.com/remix-run/react-router/pull/14093), [#14128](https://github.com/remix-run/react-router/pull/14128))
 - `react-router` - **Middleware**: Update middleware error handling so that the `next` function never throws and instead handles any middleware errors at the proper `ErrorBoundary` and returns the `Response` up through the ancestor `next` function ([#14118](https://github.com/remix-run/react-router/pull/14118))
+  - See the [error handling docs](https://reactrouter.com/how-to/middleware#next-and-error-handling) for more information
   - ⚠️ This changes existing functionality so if you are currently wrapping `next` calls in `try`/`catch` you should be able to remove those
-- `react-router` - **Middleware**: When middleware is enabled, make the `context` parameter read-only (via `Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
+- `react-router` - **Middleware**: When middleware is enabled, make the `context` parameter read-only (`Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
 - `react-router` - **Middleware**: Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
+  - This only impacts users using `createStaticHandler()` for manual data loading during non-Framework Mode SSR
   - The API has been renamed to `unstable_generateMiddlewareResponse` for clarity
   - The main functional change is that instead of running the loaders/actions before calling `unstable_respond` and handing you the result, we now pass a `query`/`queryRoute` function as a parameter and you execute the loaders/actions inside your callback, giving you full access to pre-processing and error handling
   - The `query` version of the API now has a signature of `(query: (r: Request) => Promise<StaticHandlerContext | Response>) => Promise<Response>`
@@ -451,9 +455,9 @@ The biggest set of changes in `7.8.0` are to the `unstable_middleware` API's as 
   });
   ```
 
-- `react-router` - **RSC**: Fix Data Mode issue where routes that return `false` from `shouldRevalidate` would be replaced by an `<Outlet />` ([#14071](https://github.com/remix-run/react-router/pull/14071))
 - `@react-router/{architect,cloudflare,express,node}` - **Middleware**: Change the `getLoadContext` signature (`type GetLoadContextFunction`) when `future.unstable_middleware` is enabled so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to construct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
   - This also removes the `type unstable_InitialContext` export
+  - See the [middleware `getLoadContext` docs](https://reactrouter.com/how-to/middleware#changes-to-getloadcontextapploadcontext) for more information
   - ⚠️ This is a breaking change if you have adopted middleware and are using a custom server with a `getLoadContext` function
 
 ### Changes by Package
