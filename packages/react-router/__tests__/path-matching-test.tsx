@@ -487,6 +487,76 @@ describe("path matching with optional segments", () => {
       { path: "abc", params: {} },
     ]);
   });
+
+  test("optional static segments in nested absolute routes (leading)", () => {
+    let nested = [
+      {
+        path: "/en?",
+        children: [
+          {
+            path: "/en?/abc",
+            children: [
+              {
+                path: "/en?/abc/def",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    expect(pickPathsAndParams(nested, "/en/abc")).toEqual([
+      { path: "/en?", params: {} },
+      { path: "/en?/abc", params: {} },
+    ]);
+    expect(pickPathsAndParams(nested, "/abc")).toEqual([
+      { path: "/en?", params: {} },
+      { path: "/en?/abc", params: {} },
+    ]);
+    expect(pickPathsAndParams(nested, "/en/abc/def")).toEqual([
+      { path: "/en?", params: {} },
+      { path: "/en?/abc", params: {} },
+      { path: "/en?/abc/def", params: {} },
+    ]);
+    expect(pickPathsAndParams(nested, "/abc/def")).toEqual([
+      { path: "/en?", params: {} },
+      { path: "/en?/abc", params: {} },
+      { path: "/en?/abc/def", params: {} },
+    ]);
+  });
+
+  test("optional static segment in nested absolute routes (middle)", () => {
+    let nested = [
+      {
+        path: "/en",
+        children: [
+          {
+            path: "/en/abc?",
+            children: [
+              {
+                path: "/en/abc?/def",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    expect(pickPathsAndParams(nested, "/en/abc")).toEqual([
+      { path: "/en", params: {} },
+      { path: "/en/abc?", params: {} },
+    ]);
+    expect(pickPathsAndParams(nested, "/en/abc/def")).toEqual([
+      { path: "/en", params: {} },
+      { path: "/en/abc?", params: {} },
+      { path: "/en/abc?/def", params: {} },
+    ]);
+    expect(pickPathsAndParams(nested, "/en/def")).toEqual([
+      { path: "/en", params: {} },
+      { path: "/en/abc?", params: {} },
+      { path: "/en/abc?/def", params: {} },
+    ]);
+  });
 });
 
 describe("path matching with optional dynamic segments", () => {
