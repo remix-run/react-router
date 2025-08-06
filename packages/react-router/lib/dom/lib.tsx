@@ -24,6 +24,7 @@ import type {
   RelativeRoutingType,
   Router as DataRouter,
   RouterInit,
+  ScrollToFunction,
 } from "../router/router";
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
@@ -1934,6 +1935,11 @@ export type ScrollRestorationProps = ScriptsProps & {
    * Defaults to `"react-router-scroll-positions"`.
    */
   storageKey?: string;
+  /**
+   * A function that will be called to scroll to a specific position. Defaults to
+   * `window.scrollTo(0, y)`. This is useful for custom scroll restoration.
+   */
+  scrollTo?: ScrollToFunction;
 };
 
 /**
@@ -1968,19 +1974,21 @@ export type ScrollRestorationProps = ScriptsProps & {
  * @param {ScrollRestorationProps.getKey} props.getKey n/a
  * @param {ScriptsProps.nonce} props.nonce n/a
  * @param {ScrollRestorationProps.storageKey} props.storageKey n/a
+ * @param {ScrollRestorationProps.scrollTo} props.scrollTo n/a
  * @returns A [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
  * tag that restores scroll positions on navigation.
  */
 export function ScrollRestoration({
   getKey,
   storageKey,
+  scrollTo,
   ...props
 }: ScrollRestorationProps) {
   let remixContext = React.useContext(FrameworkContext);
   let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
   let matches = useMatches();
-  useScrollRestoration({ getKey, storageKey });
+  useScrollRestoration({ getKey, storageKey, scrollTo });
 
   // In order to support `getKey`, we need to compute a "key" here so we can
   // hydrate that up so that SSR scroll restoration isn't waiting on React to
@@ -2019,7 +2027,7 @@ export function ScrollRestoration({
       let positions = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
       let storedY = positions[restoreKey || window.history.state.key];
       if (typeof storedY === "number") {
-        window.scrollTo(0, storedY);
+        scrollTo ? scrollTo(storedY) : window.scrollTo(0, storedY);
       }
     } catch (error: unknown) {
       console.error(error);
@@ -2911,14 +2919,19 @@ function getScrollRestorationKey(
  * to `location.key`.
  * @param options.storageKey The key to use for storing scroll positions in
  * `sessionStorage`. Defaults to `"react-router-scroll-positions"`.
+ * @param options.scrollTo A function that will be called to scroll to a
+ * specific position. Defaults to `window.scrollTo(0, y)`. This is useful for custom
+ * scroll restoration.
  * @returns {void}
  */
 export function useScrollRestoration({
   getKey,
   storageKey,
+  scrollTo,
 }: {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
+  scrollTo?: ScrollToFunction;
 } = {}): void {
   let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
@@ -2999,7 +3012,7 @@ export function useScrollRestoration({
 
       // been here before, scroll to it
       if (typeof restoreScrollPosition === "number") {
-        window.scrollTo(0, restoreScrollPosition);
+        scrollTo ? scrollTo(restoreScrollPosition) : window.scrollTo(0, restoreScrollPosition);
         return;
       }
 
@@ -3029,7 +3042,7 @@ export function useScrollRestoration({
       }
 
       // otherwise go to the top on new locations
-      window.scrollTo(0, 0);
+      scrollTo ? scrollTo(0) : window.scrollTo(0, 0);
     }, [location, restoreScrollPosition, preventScrollReset]);
   }
 }

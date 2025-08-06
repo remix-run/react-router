@@ -319,6 +319,69 @@ describe(`ScrollRestoration`, () => {
       // Ensure that scroll position is restored
       expect(scrollToMock).toHaveBeenCalledWith(0, 20);
     });
+
+    it("should restore scroll position with custom scrollTo", () => {
+      let scrollToMock = jest.spyOn(window, "scrollTo");
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration
+                scrollTo={(y) => window.scrollTo(0, y)}
+              />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      router.state.restoreScrollPosition = 20;
+      render(
+        <FrameworkContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+
+      expect(scrollToMock).toHaveBeenCalledWith(0, 20);
+    });
+
+    it("should restore scroll position on navigation with custom scrollTo", () => {
+      let scrollToMock = jest.spyOn(window, "scrollTo");
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration
+                scrollTo={(y) => window.scrollTo(0, y)}
+              />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      render(
+        <FrameworkContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      // Always called when using <ScrollRestoration />
+      expect(scrollToMock).toHaveBeenCalledWith(0, 0);
+      // Mock user scroll
+      window.scrollTo(0, 20);
+      // Mock navigation
+      redirect("/otherplace");
+      // Mock return to original page where navigation had happened
+      expect(scrollToMock).toHaveBeenCalledWith(0, 0);
+      // Mock return to original page where navigation had happened
+      redirect("/");
+      // Ensure that scroll position is restored
+      expect(scrollToMock).toHaveBeenCalledWith(0, 20);
+    });
   });
 });
 
