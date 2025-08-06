@@ -173,7 +173,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       if (normalizedBasename !== "/") {
         let strippedPath = stripBasename(decodedPath, normalizedBasename);
         if (strippedPath == null) {
-          // 404 on non-pre-rendered `.data` requests
           errorHandler(
             new ErrorResponseImpl(
               404,
