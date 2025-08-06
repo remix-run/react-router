@@ -13,6 +13,8 @@ jobs:
     name: 🚪 Check Feature PR
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'feature-request'
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
@@ -20,8 +22,6 @@ jobs:
       - name: 🚪 Close PR
         env:
           GH_TOKEN: ${{ github.token }}
-        permissions:
-          pull-requests: write
         run: |
           gh pr comment ${{ github.event.pull_request.number }} -F ./scripts/close-feature-pr.md
           gh pr edit ${{ github.event.pull_request.number }} --remove-label ${{ github.event.label.name }}
