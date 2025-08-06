@@ -364,6 +364,13 @@ describe("matchPath optional static segments", () => {
       pathnameBase: "/school/user/admin",
     });
   });
+
+  it("does not trigger from question marks in the middle of the optional static segment", () => {
+    let match = matchPath("/school?abc/user/:id", "/abc/user/123");
+    expect(match).toBe(null);
+    match = matchPath("/school?abc", "/abc");
+    expect(match).toBe(null);
+  });
 });
 
 describe("matchPath *", () => {
