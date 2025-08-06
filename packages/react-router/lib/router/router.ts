@@ -489,6 +489,13 @@ export interface GetScrollPositionFunction {
 }
 
 /**
+ * Function signature for scrolling to a specific position
+ */
+export interface ScrollToFunction {
+  (y: number): void;
+}
+
+/**
  * - "route": relative to the route hierarchy so `..` means remove all segments
  * of the current route even if it has many. For example, a `route("posts/:id")`
  * would have both `:id` and `posts` removed from the url.
