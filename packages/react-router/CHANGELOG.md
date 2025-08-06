@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.8.0-pre.2
+
+### Patch Changes
+
+- proxy server action side-effect redirects from actions for document and callServer requests ([#14131](https://github.com/remix-run/react-router/pull/14131))
+
 ## 7.8.0-pre.1
 
 ### Patch Changes
