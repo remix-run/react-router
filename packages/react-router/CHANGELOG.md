@@ -1,24 +1,6 @@
 # `react-router`
 
-## 7.8.0-pre.3
-
-### Patch Changes
-
-- Bubble client-side middleware errors prior to `next` to the appropriate ancestor error boundary ([#14138](https://github.com/remix-run/react-router/pull/14138))
-
-## 7.8.0-pre.2
-
-### Patch Changes
-
-- proxy server action side-effect redirects from actions for document and callServer requests ([#14131](https://github.com/remix-run/react-router/pull/14131))
-
-## 7.8.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Few additional fixes for returning/throwing data from middleware - attach to #14093 ([#14128](https://github.com/remix-run/react-router/pull/14128))
-
-## 7.8.0-pre.0
+## 7.8.0
 
 ### Minor Changes
 
@@ -29,14 +11,26 @@
 
 ### Patch Changes
 
-- [UNSTABLE] Ensure resource route errors go through `handleError` w/middleware enabled ([#14078](https://github.com/remix-run/react-router/pull/14078))
+- \[UNSTABLE] Ensure resource route errors go through `handleError` w/middleware enabled ([#14078](https://github.com/remix-run/react-router/pull/14078))
+
+- \[REMOVE] Few additional fixes for returning/throwing data from middleware - attach to #14093 ([#14128](https://github.com/remix-run/react-router/pull/14128))
+
 - Prevent _"Did not find corresponding fetcher result"_ console error when navigating during a `fetcher.submit` revalidation ([#14114](https://github.com/remix-run/react-router/pull/14114))
+
+- Bubble client-side middleware errors prior to `next` to the appropriate ancestor error boundary ([#14138](https://github.com/remix-run/react-router/pull/14138))
+
 - Switch Lazy Route Discovery manifest URL generation to usea standalone `URLSearchParams` instance instead of `URL.searchParams` to avoid a major performance bottleneck in Chrome ([#14084](https://github.com/remix-run/react-router/pull/14084))
-- [UNSTABLE] Propagate returned Response from server middleware if next wasn't called ([#14093](https://github.com/remix-run/react-router/pull/14093))
-- [UNSTABLE] Allow server middlewares to return `data()` values which will be converted into a `Response` ([#14093](https://github.com/remix-run/react-router/pull/14093))
-- [UNSTABLE] Update middleware error handling so that the `next` function never throws and instead handles any middleware errors at the proper `ErrorBoundary` and returns the `Response` up through the ancestor `next` function ([#14118](https://github.com/remix-run/react-router/pull/14118))
-- - [UNSTABLE] When middleware is enabled, make the `context` parameter read-only (via `Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
-- [UNSTABLE] Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
+
+- \[UNSTABLE] Propagate returned Response from server middleware if next wasn't called ([#14093](https://github.com/remix-run/react-router/pull/14093))
+
+- \[UNSTABLE] Allow server middlewares to return `data()` values which will be converted into a `Response` ([#14093](https://github.com/remix-run/react-router/pull/14093))
+
+- \[UNSTABLE] Update middleware error handling so that the `next` function never throws and instead handles any middleware errors at the proper `ErrorBoundary` and returns the `Response` up through the ancestor `next` function ([#14118](https://github.com/remix-run/react-router/pull/14118))
+
+- - \[UNSTABLE] When middleware is enabled, make the `context` parameter read-only (via `Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
+
+- \[UNSTABLE] Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
+
   - The API has been renamed to `unstable_generateMiddlewareResponse` for clarity
   - The main functional change is that instead of running the loaders/actions before calling `unstable_respond` and handing you the result, we now pass a `query`/`queryRoute` function as a parameter and you execute the loaders/actions inside your callback, giving you full access to pre-processing and error handling
   - The `query` version of the API now has a signature of `(query: (r: Request) => Promise<StaticHandlerContext | Response>) => Promise<Response>`
@@ -63,14 +57,18 @@
   });
   ```
 
-- [UNSTABLE] Convert internal middleware implementations to use the new `unstable_generateMiddlewareResponse` API ([#14103](https://github.com/remix-run/react-router/pull/14103))
+- \[UNSTABLE] Convert internal middleware implementations to use the new `unstable_generateMiddlewareResponse` API ([#14103](https://github.com/remix-run/react-router/pull/14103))
+
 - Adjust internal RSC usage of `React.use` to avoid Webpack compilation errors when using React 18 ([#14113](https://github.com/remix-run/react-router/pull/14113))
-- [UNSTABLE] Change `getLoadContext` signature (`type GetLoadContextFunction`) when `future.unstable_middleware` is enabled so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+
+- \[UNSTABLE] Change `getLoadContext` signature (`type GetLoadContextFunction`) when `future.unstable_middleware` is enabled so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
   - This also removes the `type unstable_InitialContext` export
   - ⚠️ This is a breaking change if you have adopted middleware and are using a custom server with a `getLoadContext` function
 
 - Remove dependency on `@types/node` in TypeScript declaration files ([#14059](https://github.com/remix-run/react-router/pull/14059))
+
 - Fix types for `UIMatch` to reflect that the `loaderData`/`data` properties may be `undefined` ([#12206](https://github.com/remix-run/react-router/pull/12206))
+
   - When an `ErrorBoundary` is being rendered, not all active matches will have loader data available, since it may have been their `loader` that threw to trigger the boundary
   - The `UIMatch.data` type was not correctly handing this and would always reflect the presence of data, leading to the unexpected runtime errors when an `ErrorBoundary` was rendered
   - ⚠️ This may cause some type errors to show up in your code for unguarded `match.data` accesses - you should properly guard for `undefined` values in those scenarios.
@@ -93,9 +91,12 @@
   }
   ```
 
-- [UNSTABLE] Run client middleware on client navigations even if no loaders exist ([#14106](https://github.com/remix-run/react-router/pull/14106))
-- [UNSTABLE] Change the `unstable_getContext` signature on `RouterProvider`/`HydratedRouter`/`unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+- \[UNSTABLE] Run client middleware on client navigations even if no loaders exist ([#14106](https://github.com/remix-run/react-router/pull/14106))
+
+- \[UNSTABLE] Change the `unstable_getContext` signature on `RouterProvider`/`HydratedRouter`/`unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
   - ⚠️ This is a breaking change if you have adopted the `unstable_getContext` prop
+
+- proxy server action side-effect redirects from actions for document and callServer requests ([#14131](https://github.com/remix-run/react-router/pull/14131))
 
 - Fix RSC Data Mode issue where routes that return `false` from `shouldRevalidate` would be replaced by an `<Outlet />` ([#14071](https://github.com/remix-run/react-router/pull/14071))
 
@@ -703,6 +704,7 @@
   ```
 
   Similar to server-side requests, a fresh `context` will be created per navigation (or `fetcher` call). If you have initial data you'd like to populate in the context for every request, you can provide an `unstable_getContext` function at the root of your app:
+
   - Library mode - `createBrowserRouter(routes, { unstable_getContext })`
   - Framework mode - `<HydratedRouter unstable_getContext>`
 
@@ -890,6 +892,7 @@ _No changes_
 - Remove `future.v7_normalizeFormMethod` future flag ([#11697](https://github.com/remix-run/react-router/pull/11697))
 
 - For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs. This means that the following APIs are provided from `react-router` rather than platform-specific packages: ([#11837](https://github.com/remix-run/react-router/pull/11837))
+
   - `createCookie`
   - `createCookieSessionStorage`
   - `createMemorySessionStorage`
@@ -898,6 +901,7 @@ _No changes_
   For consumers running older versions of Node, the `installGlobals` function from `@remix-run/node` has been updated to define `globalThis.crypto`, using [Node's `require('node:crypto').webcrypto` implementation.](https://nodejs.org/api/webcrypto.html)
 
   Since platform-specific packages no longer need to implement this API, the following low-level APIs have been removed:
+
   - `createCookieFactory`
   - `createSessionStorageFactory`
   - `createCookieSessionStorageFactory`
@@ -1053,6 +1057,7 @@ _No changes_
   ```
 
   This initial implementation targets type inference for:
+
   - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
@@ -1067,6 +1072,7 @@ _No changes_
   ```
 
   Check out our docs for more:
+
   - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
   - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
