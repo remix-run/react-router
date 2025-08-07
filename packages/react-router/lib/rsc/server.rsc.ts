@@ -67,15 +67,12 @@ const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
 
 type ServerContext = {
   redirect?: Response;
+  runningAction: boolean;
 };
 
-declare global {
-  var ___reactRouterServerStorage___:
-    | AsyncLocalStorage<ServerContext>
-    | undefined;
-}
-
-const globalVar = typeof globalThis !== "undefined" ? globalThis : global;
+const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
+  ___reactRouterServerStorage___?: AsyncLocalStorage<ServerContext>;
+};
 
 const ServerStorage = (globalVar.___reactRouterServerStorage___ ??=
   new AsyncLocalStorage<ServerContext>());
@@ -84,7 +81,7 @@ export const redirect: typeof baseRedirect = (...args) => {
   const response = baseRedirect(...args);
 
   const ctx = ServerStorage.getStore();
-  if (ctx) {
+  if (ctx && ctx.runningAction) {
     ctx.redirect = response;
   }
 
@@ -95,7 +92,7 @@ export const redirectDocument: typeof baseRedirectDocument = (...args) => {
   const response = baseRedirectDocument(...args);
 
   const ctx = ServerStorage.getStore();
-  if (ctx) {
+  if (ctx && ctx.runningAction) {
     ctx.redirect = response;
   }
 
@@ -106,7 +103,7 @@ export const replace: typeof baseReplace = (...args) => {
   const response = baseReplace(...args);
 
   const ctx = ServerStorage.getStore();
-  if (ctx) {
+  if (ctx && ctx.runningAction) {
     ctx.redirect = response;
   }
 
@@ -249,8 +246,11 @@ export type DecodeReplyFunction = (
 export type LoadServerActionFunction = (id: string) => Promise<Function>;
 
 /**
- * Matches the given routes to a Request and returns a RSC Response encoding an
- * `RSCPayload` for consumption by a RSC enabled client router.
+ * Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * and returns an [RSC](https://react.dev/reference/rsc/server-components)
+ * [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * encoding an {@link unstable_RSCPayload} for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
+ * enabled client router.
  *
  * @example
  * import {
@@ -287,27 +287,33 @@ export type LoadServerActionFunction = (id: string) => Promise<Function>;
  * @mode data
  * @param opts Options
  * @param opts.basename The basename to use when matching the request.
+ * @param opts.createTemporaryReferenceSet A function that returns a temporary
+ * reference set for the request, used to track temporary references in the [RSC](https://react.dev/reference/rsc/server-components)
+ * stream.
  * @param opts.decodeAction Your `react-server-dom-xyz/server`'s `decodeAction`
  * function, responsible for loading a server action.
+ * @param opts.decodeFormState A function responsible for decoding form state for
+ * progressively enhanceable forms with React's [`useActionState`](https://react.dev/reference/react/useActionState)
+ * using your `react-server-dom-xyz/server`'s `decodeFormState`.
  * @param opts.decodeReply Your `react-server-dom-xyz/server`'s `decodeReply`
  * function, used to decode the server function's arguments and bind them to the
  * implementation for invocation by the router.
- * @param opts.decodeFormState A function responsible for decoding form state for
- * progressively enhanceable forms with `useActionState` using your
- * `react-server-dom-xyz/server`'s `decodeFormState`.
  * @param opts.generateResponse A function responsible for using your
- * `renderToReadableStream` to generate a Response encoding the `RSCPayload`.
+ * `renderToReadableStream` to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * encoding the {@link unstable_RSCPayload}.
  * @param opts.loadServerAction Your `react-server-dom-xyz/server`'s
  * `loadServerAction` function, used to load a server action by ID.
- * @param opts.request The request to match against.
- * @param opts.requestContext An instance of `unstable_RouterContextProvider`
- * that should be created per request, to be passed to loaders, actions and middleware.
- * @param opts.routes Your route definitions.
- * @param opts.createTemporaryReferenceSet A function that returns a temporary
- * reference set for the request, used to track temporary references in the RSC stream.
  * @param opts.onError An optional error handler that will be called with any
  * errors that occur during the request processing.
- * @returns A Response that contains the RSC data for hydration.
+ * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * to match against.
+ * @param opts.requestContext An instance of {@link unstable_RouterContextProvider}
+ * that should be created per request, to be passed to [`action`](../../start/data/route-object#action)s,
+ * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+ * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that contains the [RSC](https://react.dev/reference/rsc/server-components)
+ * data for hydration.
  */
 export async function matchRSCServerRequest({
   createTemporaryReferenceSet,
@@ -598,7 +604,6 @@ async function generateResourceResponse(
   requestContext: unstable_RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
-  let result: Response;
   try {
     const staticHandler = createStaticHandler(routes, {
       basename,
@@ -607,44 +612,49 @@ async function generateResourceResponse(
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext,
-      unstable_respond: (ctx) => ctx,
+      async unstable_generateMiddlewareResponse(queryRoute) {
+        try {
+          let response = await queryRoute(request);
+          return generateResourceResponse(response);
+        } catch (error) {
+          return generateErrorResponse(error);
+        }
+      },
     });
-
-    if (isResponse(response)) {
-      result = response;
-    } else {
-      if (typeof response === "string") {
-        result = new Response(response);
-      } else {
-        result = Response.json(response);
-      }
-    }
+    return response;
   } catch (error) {
+    return generateErrorResponse(error);
+  }
+
+  function generateErrorResponse(error: unknown) {
+    let response: Response;
     if (isResponse(error)) {
-      result = error;
+      response = error;
     } else if (isRouteErrorResponse(error)) {
       onError?.(error);
       const errorMessage =
         typeof error.data === "string" ? error.data : error.statusText;
-      result = new Response(errorMessage, {
+      response = new Response(errorMessage, {
         status: error.status,
         statusText: error.statusText,
       });
     } else {
       onError?.(error);
-      result = new Response("Internal Server Error", {
-        status: 500,
-      });
+      response = new Response("Internal Server Error", { status: 500 });
     }
+
+    return generateResourceResponse(response);
   }
 
-  const headers = new Headers(result.headers);
-  headers.set("React-Router-Resource", "true");
-  return new Response(result.body, {
-    status: result.status,
-    statusText: result.statusText,
-    headers,
-  });
+  function generateResourceResponse(response: Response) {
+    const headers = new Headers(response.headers);
+    headers.set("React-Router-Resource", "true");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
 }
 
 async function generateRenderResponse(
@@ -688,7 +698,9 @@ async function generateRenderResponse(
   });
 
   let actionResult: Promise<unknown> | undefined;
-  const ctx: ServerContext = {};
+  const ctx: ServerContext = {
+    runningAction: false,
+  };
   const result = await ServerStorage.run(ctx, () =>
     staticHandler.query(request, {
       requestContext,
@@ -697,13 +709,14 @@ async function generateRenderResponse(
       ...(routeIdsToLoad
         ? { filterMatchesToLoad: (m) => routeIdsToLoad!.includes(m.route.id) }
         : null),
-      async unstable_stream(_, query) {
+      async unstable_generateMiddlewareResponse(query) {
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the
         // POST `request` to `query` and process our action there.
         let formState: unknown;
         if (request.method === "POST") {
+          ctx.runningAction = true;
           let result = await processServerAction(
             request,
             basename,
@@ -714,6 +727,8 @@ async function generateRenderResponse(
             onError,
             temporaryReferences,
           );
+          ctx.runningAction = false;
+
           if (isResponse(result)) {
             return generateRedirectResponse(
               result,
@@ -722,22 +737,25 @@ async function generateRenderResponse(
               isDataRequest,
               generateResponse,
               temporaryReferences,
+              (ctx.redirect as unknown as Response)?.headers,
             );
           }
+
           actionResult = result?.actionResult;
           formState = result?.formState;
           request = result?.revalidationRequest ?? request;
-        }
 
-        if (ctx.redirect) {
-          return generateRedirectResponse(
-            ctx.redirect,
-            actionResult,
-            basename,
-            isDataRequest,
-            generateResponse,
-            temporaryReferences,
-          );
+          if (ctx.redirect) {
+            return generateRedirectResponse(
+              ctx.redirect,
+              actionResult,
+              basename,
+              isDataRequest,
+              generateResponse,
+              temporaryReferences,
+              undefined,
+            );
+          }
         }
 
         let staticContext = await query(request);
@@ -750,6 +768,7 @@ async function generateRenderResponse(
             isDataRequest,
             generateResponse,
             temporaryReferences,
+            ctx.redirect?.headers,
           );
         }
 
@@ -765,6 +784,7 @@ async function generateRenderResponse(
           formState,
           staticContext,
           temporaryReferences,
+          ctx.redirect?.headers,
         );
       },
     }),
@@ -778,6 +798,7 @@ async function generateRenderResponse(
       isDataRequest,
       generateResponse,
       temporaryReferences,
+      ctx.redirect?.headers,
     );
   }
 
@@ -795,6 +816,7 @@ function generateRedirectResponse(
     { temporaryReferences }: { temporaryReferences: unknown },
   ) => Response,
   temporaryReferences: unknown,
+  sideEffectRedirectHeaders: Headers | undefined,
 ) {
   let redirect = response.headers.get("Location")!;
 
@@ -811,8 +833,12 @@ function generateRedirectResponse(
     actionResult,
   };
 
-  // Preserve non-internal headers on the user-created redirect
-  let headers = new Headers(response.headers);
+  // Preserve non-internal headers on the user-created redirect and merge in
+  // any side-effect redirect headers
+  let headers = new Headers(sideEffectRedirectHeaders);
+  for (const [key, value] of response.headers.entries()) {
+    headers.append(key, value);
+  }
   headers.delete("Location");
   headers.delete("X-Remix-Reload-Document");
   headers.delete("X-Remix-Replace");
@@ -849,6 +875,7 @@ async function generateStaticContextResponse(
   formState: unknown | undefined,
   staticContext: StaticHandlerContext,
   temporaryReferences: unknown,
+  sideEffectRedirectHeaders: Headers | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -886,6 +913,7 @@ async function generateStaticContextResponse(
   let headers = getDocumentHeadersImpl(
     staticContext,
     (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers,
+    sideEffectRedirectHeaders,
   );
 
   // Remove Content-Length because node:http will truncate the response body
@@ -975,22 +1003,15 @@ async function getRenderPayload(
 
   let matchesPromise = Promise.all(
     staticContext.matches.map((match, i) => {
-      // Only bother rendering Server Components for routes that we're surfacing,
-      // so nothing at/below an error boundary and prune routes if included in
-      // `routeIdsToLoad`.  This is specifically important when a middleware
-      // or loader throws and we don't have any `loaderData` to pass through as
-      // props leading to render-time errors of the server component
-      let shouldRenderComponent =
-        i <= deepestRenderedRouteIdx &&
-        (!routeIdsToLoad || routeIdsToLoad.includes(match.route.id)) &&
-        (!staticContext.errors || !(match.route.id in staticContext.errors));
-
-      return getRSCRouteMatch(
+      let isBelowErrorBoundary = i > deepestRenderedRouteIdx;
+      let parentId = parentIds[match.route.id];
+      return getRSCRouteMatch({
         staticContext,
         match,
-        shouldRenderComponent,
-        parentIds[match.route.id],
-      );
+        routeIdsToLoad,
+        isBelowErrorBoundary,
+        parentId,
+      });
     }),
   );
 
@@ -1010,12 +1031,19 @@ async function getRenderPayload(
   };
 }
 
-async function getRSCRouteMatch(
-  staticContext: StaticHandlerContext,
-  match: AgnosticDataRouteMatch,
-  shouldRenderComponent: boolean,
-  parentId: string | undefined,
-) {
+async function getRSCRouteMatch({
+  staticContext,
+  match,
+  isBelowErrorBoundary,
+  routeIdsToLoad,
+  parentId,
+}: {
+  staticContext: StaticHandlerContext;
+  match: AgnosticDataRouteMatch;
+  isBelowErrorBoundary: boolean;
+  routeIdsToLoad: string[] | null;
+  parentId: string | undefined;
+}) {
   // @ts-expect-error - FIXME: Fix the types here
   await explodeLazyRoute(match.route);
   const Layout = (match.route as any).Layout || React.Fragment;
@@ -1027,8 +1055,15 @@ async function getRSCRouteMatch(
   const params = match.params;
   // TODO: DRY this up once it's fully fleshed out
   let element: React.ReactElement | undefined = undefined;
-  if (Component) {
-    element = shouldRenderComponent
+  let shouldLoadRoute =
+    !routeIdsToLoad || routeIdsToLoad.includes(match.route.id);
+  // Only bother rendering Server Components for routes that we're surfacing,
+  // so nothing at/below an error boundary and prune routes if included in
+  // `routeIdsToLoad`.  This is specifically important when a middleware
+  // or loader throws and we don't have any `loaderData` to pass through as
+  // props leading to render-time errors of the server component
+  if (Component && shouldLoadRoute) {
+    element = !isBelowErrorBoundary
       ? React.createElement(
           Layout,
           null,

@@ -7,7 +7,7 @@ import type {
   AppLoadContext,
   ServerBuild,
   UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  unstable_InitialContext,
+  unstable_RouterContextProvider,
 } from "react-router";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import {
@@ -29,7 +29,7 @@ export type GetLoadContextFunction = (
   req: express.Request,
   res: express.Response,
 ) => MiddlewareEnabled extends true
-  ? MaybePromise<unstable_InitialContext>
+  ? MaybePromise<unstable_RouterContextProvider>
   : MaybePromise<AppLoadContext>;
 
 export type RequestHandler = (

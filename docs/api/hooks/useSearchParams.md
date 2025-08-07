@@ -37,8 +37,8 @@ export function SomeComponent() {
 ### `setSearchParams` function
 
 The second element of the tuple is a function that can be used to update the
-search params. It accepts the same types as `defaultInit` and will
-cause a navigation to the new URL.
+search params. It accepts the same types as `defaultInit` and will cause a
+navigation to the new URL.
 
 ```tsx
 let [searchParams, setSearchParams] = useSearchParams();

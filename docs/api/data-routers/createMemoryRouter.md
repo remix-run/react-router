@@ -56,8 +56,11 @@ Future flags to enable for the router.
 
 ### opts.unstable_getContext
 
-Function to provide the initial context values for all client side
-navigations/fetches
+A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
+[`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+This function is called to generate a fresh `context` instance on each
+navigation or fetcher call.
 
 ### opts.hydrationData
 

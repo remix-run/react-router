@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.NavLink.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react_router.NavLink.html)
 
 Wraps [`<Link>`](../components/Link) with additional props for styling active and
 pending states.
@@ -117,8 +117,8 @@ Defines the link discovery behavior
 <Link discover="none" />
 ```
 
-- **render** - default, discover the route when the link renders
-- **none** - don't eagerly discover, only discover if the link is clicked
+- **render** — default, discover the route when the link renders
+- **none** — don't eagerly discover, only discover if the link is clicked
 
 ### end
 
@@ -153,10 +153,10 @@ Defines the data and module prefetching behavior for the link.
 <Link prefetch="viewport" />
 ```
 
-- **none** - default, no prefetching
-- **intent** - prefetches when the user hovers or focuses the link
-- **render** - prefetches when the link renders
-- **viewport** - prefetches when the link is in the viewport, very useful for mobile
+- **none** — default, no prefetching
+- **intent** — prefetches when the user hovers or focuses the link
+- **render** — prefetches when the link renders
+- **viewport** — prefetches when the link is in the viewport, very useful for mobile
 
 Prefetching is done with HTML [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
 tags. They are inserted after the link.
@@ -199,10 +199,10 @@ Defines the relative path behavior for the link.
 Consider a route hierarchy where a parent route pattern is `"blog"` and a child
 route pattern is `"blog/:slug/edit"`.
 
-- **route** - default, resolves the link relative to the route pattern. In the
-example above, a relative link of `".."` will remove both `:slug/edit` segments
+- **route** — default, resolves the link relative to the route pattern. In the
+example above, a relative link of `"..."` will remove both `:slug/edit` segments
 back to `"/blog"`.
-- **path** - relative to the path so `".."` will only remove one URL segment up
+- **path** — relative to the path so `"..."` will only remove one URL segment up
 to `"/blog/:slug"`
 
 Note that index routes and layout routes do not have paths so they are not
@@ -225,7 +225,7 @@ clicked: the browser will handle the transition normally (as if it were an
 [modes: framework, data, declarative]
 
 Replaces the current entry in the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
-stack instead of pushing a new one  onto it.
+stack instead of pushing a new one onto it.
 
 ```tsx
 <Link replace />

@@ -69,6 +69,7 @@ function useFetcher<T = any>({
 ### options.key
 
 A unique key to identify the fetcher. 
+
 By default, `useFetcher` generates a unique fetcher scoped to that component.
 If you want to identify a fetcher with your own key such that you can access
 it from elsewhere in your app, you can do that with the `key` option:

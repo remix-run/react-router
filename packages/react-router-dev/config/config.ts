@@ -17,6 +17,7 @@ import isEqual from "lodash/isEqual";
 import {
   type RouteManifest,
   type RouteManifestEntry,
+  type RouteConfigEntry,
   setAppDirectory,
   validateRouteConfig,
   configRoutesToRouteManifest,
@@ -261,6 +262,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    * SPA without server-rendering. Default's to `true`.
    */
   ssr: boolean;
+  /**
+   * The resolved array of route config entries exported from `routes.ts`
+   */
+  unstable_routeConfig: RouteConfigEntry[];
 }>;
 
 let mergeReactRouterConfig = (
@@ -501,13 +506,12 @@ async function resolveConfig({
     );
   }
 
-  let routes: RouteManifest = {};
+  let routes: RouteManifest;
+  let routeConfig: RouteConfigEntry[] = [];
 
-  if (!skipRoutes) {
-    routes = {
-      root: { path: "", id: "root", file: rootRouteFile },
-    };
-
+  if (skipRoutes) {
+    routes = {};
+  } else {
     let routeConfigFile = findEntry(appDirectory, "routes");
 
     try {
@@ -527,21 +531,26 @@ async function resolveConfig({
           Path.join(appDirectory, routeConfigFile),
         )
       ).default;
-      let routeConfig = await routeConfigExport;
-
       let result = validateRouteConfig({
         routeConfigFile,
-        routeConfig,
+        routeConfig: await routeConfigExport,
       });
 
       if (!result.valid) {
         return err(result.message);
       }
 
-      routes = {
-        ...routes,
-        ...configRoutesToRouteManifest(appDirectory, routeConfig),
-      };
+      // Nest the route config under the resolved root route
+      routeConfig = [
+        {
+          id: "root",
+          path: "",
+          file: rootRouteFile,
+          children: result.routeConfig,
+        },
+      ];
+
+      routes = configRoutesToRouteManifest(appDirectory, routeConfig);
     } catch (error: any) {
       return err(
         [
@@ -590,6 +599,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_routeConfig: routeConfig,
   } satisfies ResolvedReactRouterConfig);
 
   for (let preset of reactRouterUserConfig.presets ?? []) {

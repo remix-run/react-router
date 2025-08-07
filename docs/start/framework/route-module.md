@@ -78,6 +78,95 @@ export default function MyRouteComponent({
 }
 ```
 
+## `unstable_middleware`
+
+Route [middleware][middleware] runs sequentially on the server before and after document and
+data requests. This gives you a singular place to do things like logging,
+authentication, and post-processing of responses. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
+
+Here's an example middleware to log requests on the server:
+
+```tsx filename=root.tsx
+async function loggingMiddleware(
+  { request, context },
+  next,
+) {
+  console.log(
+    `${new Date().toISOString()} ${request.method} ${request.url}`,
+  );
+  const start = performance.now();
+  const response = await next();
+  const duration = performance.now() - start;
+  console.log(
+    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
+  );
+  return response;
+}
+
+export const unstable_middleware = [loggingMiddleware];
+```
+
+Here's an example middleware to check for logged in users and set the user in
+`context` you can then access from loaders:
+
+```tsx filename=routes/_auth.tsx
+async function authMiddleware ({
+  request,
+  context,
+}) => {
+  const session = await getSession(request);
+  const userId = session.get("userId");
+
+  if (!userId) {
+    throw redirect("/login");
+  }
+
+  const user = await getUserById(userId);
+  context.set(userContext, user);
+};
+
+export const unstable_middleware = [authMiddleware];
+```
+
+<docs-warning>Please make sure you understand [when middleware runs][when-middleware-runs] to make sure your application will behave the way you intend when adding middleware to your routes.</docs-warning>
+
+See also:
+
+- [`unstable_middleware` params][middleware-params]
+- [Middleware][middleware]
+
+## `unstable_clientMiddleware`
+
+This is the client-side equivalent of `unstable_middleware` and runs in the browser during client navigations. The only difference from server middleware is that client middleware doesn't return Responses because they're not wrapping an HTTP request on the server.
+
+Here's an example middleware to log requests on the client:
+
+```tsx filename=root.tsx
+async function loggingMiddleware(
+  { request, context },
+  next,
+) {
+  console.log(
+    `${new Date().toISOString()} ${request.method} ${request.url}`,
+  );
+  const start = performance.now();
+  await next(); // 👈 No Response returned
+  const duration = performance.now() - start;
+  console.log(
+    `${new Date().toISOString()} Response ${response.status} (${duration}ms)`,
+  );
+  // ✅ No need to return anything
+}
+
+export const unstable_clientMiddleware = [
+  loggingMiddleware,
+];
+```
+
+See also:
+
+- [Middleware][middleware]
+
 ## `loader`
 
 Route loaders provide data to route components before they are rendered. They are only called on the server when server rendering or during the build with pre-rendering.
@@ -168,6 +257,10 @@ export async function action({ request }) {
 }
 ```
 
+See also:
+
+- [`action` params][action-params]
+
 ## `clientAction`
 
 Like route actions but only called in the browser.
@@ -222,6 +315,11 @@ export function ErrorBoundary() {
 }
 ```
 
+See also:
+
+- [`useRouteError`][use-route-error]
+- [`isRouteErrorResponse`][is-route-error-response]
+
 ## `HydrateFallback`
 
 On initial page load, the route component renders only after the client loader is finished. If exported, a `HydrateFallback` can render immediately in place of the route component.
@@ -243,7 +341,7 @@ export default function Component({ loaderData }) {
 
 ## `headers`
 
-Route headers define HTTP headers to be sent with the response when server rendering.
+The route `headers` function defines the HTTP headers to be sent with the response when server rendering.
 
 ```tsx
 export function headers() {
@@ -254,6 +352,10 @@ export function headers() {
 }
 ```
 
+See also:
+
+- [`Headers`][headers]
+
 ## `handle`
 
 Route handle allows apps to add anything to a route match in `useMatches` to create abstractions (like breadcrumbs, etc.).
@@ -263,6 +365,10 @@ export const handle = {
   its: "all yours",
 };
 ```
+
+See also:
+
+- [`useMatches`][use-matches]
 
 ## `links`
 
@@ -309,7 +415,7 @@ export default function Root() {
 
 ## `meta`
 
-Route meta defines meta tags to be rendered in the `<Meta />` component, usually placed in the `<head>`.
+Route meta defines [meta tags][meta-element] to be rendered in the `<Meta />` component, usually placed in the `<head>`.
 
 <docs-warning>
 
@@ -396,19 +502,18 @@ export function shouldRevalidate(
 
 Next: [Rendering Strategies](./rendering)
 
-[fetch]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+[middleware-params]: https://api.reactrouter.com/v7/types/react_router.unstable_MiddlewareFunction.html
+[middleware]: ../../how-to/middleware
+[when-middleware-runs]: ../../how-to/middleware#when-middleware-runs
 [loader-params]: https://api.reactrouter.com/v7/interfaces/react_router.LoaderFunctionArgs
 [client-loader-params]: https://api.reactrouter.com/v7/types/react_router.ClientLoaderFunctionArgs
 [action-params]: https://api.reactrouter.com/v7/interfaces/react_router.ActionFunctionArgs
 [client-action-params]: https://api.reactrouter.com/v7/types/react_router.ClientActionFunctionArgs
-[error-boundaries]: https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
-[use-route-error]: https://api.reactrouter.com/v7/functions/react_router.useRouteError
-[is-route-error-response]: https://api.reactrouter.com/v7/functions/react_router.isRouteErrorResponse
-[cache-control-header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-[headers]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[use-matches]: https://api.reactrouter.com/v7/functions/react_router.useMatches
+[use-route-error]: ../../api/hooks/useRouteError
+[is-route-error-response]: ../../api/utils/isRouteErrorResponse
+[headers]: https://developer.mozilla.org/en-US/docs/Web/API/Response/headers
+[use-matches]: ../../api/hooks/useMatches
 [link-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
 [meta-element]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 [meta-params]: https://api.reactrouter.com/v7/interfaces/react_router.MetaArgs
 [meta-function]: https://api.reactrouter.com/v7/types/react_router.MetaDescriptor.html
-[use-revalidator]: https://api.reactrouter.com/v7/functions/react_router.useRevalidator.html

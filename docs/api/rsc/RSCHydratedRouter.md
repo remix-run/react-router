@@ -30,7 +30,7 @@ to release notes for relevant changes.</docs-warning>
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react_router.unstable_RSCHydratedRouter.html)
 
-Hydrates a server rendered `RSCPayload` in the browser.
+Hydrates a server rendered [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) in the browser.
 
 ```tsx
 import { startTransition, StrictMode } from "react";
@@ -41,25 +41,19 @@ import {
 } from "react-router";
 import type { unstable_RSCPayload as RSCPayload } from "react-router";
 
-createFromReadableStream(getRSCStream()).then(
-  (payload: RSCServerPayload) => {
-    startTransition(async () => {
-      hydrateRoot(
-        document,
-        <StrictMode>
-          <RSCHydratedRouter
-            createFromReadableStream={
-              createFromReadableStream
-            }
-            payload={payload}
-          />
-        </StrictMode>,
-        {
-          formState: await getFormState(payload),
-        }
-      );
-    });
-  }
+createFromReadableStream(getRSCStream()).then((payload) =>
+  startTransition(async () => {
+    hydrateRoot(
+      document,
+      <StrictMode>
+        <RSCHydratedRouter
+          createFromReadableStream={createFromReadableStream}
+          payload={payload}
+        />
+      </StrictMode>,
+      { formState: await getFormState(payload) },
+    );
+  }),
 );
 ```
 
@@ -84,20 +78,22 @@ used to decode payloads from the server.
 
 ### fetch
 
-Optional fetch implementation.  Defaults to global `fetch`.
-
-### payload
-
-The decoded `RSCPayload` to hydrate.
-
-### routeDiscovery
-
-`eager` or `lazy` - Determines if links are eagerly discovered, or delayed
-until clicked.
+Optional fetch implementation. Defaults to global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
 
 ### unstable_getContext
 
-A function that returns an `unstable_InitialContext` object
-(`Map<RouterContext, unknown>`), for use in client loaders, actions and
-middleware.
+A function that returns an [`unstable_RouterContextProvider`](../utils/RouterContextProvider) instance
+which is provided as the `context` argument to client [`action`](../../start/data/route-object#action)s,
+[`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
+This function is called to generate a fresh `context` instance on each
+navigation or fetcher call.
+
+### payload
+
+The decoded [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react_router.unstable_RSCPayload.html) to hydrate.
+
+### routeDiscovery
+
+`"eager"` or `"lazy"` - Determines if links are eagerly discovered, or
+delayed until clicked.
 

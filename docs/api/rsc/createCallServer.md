@@ -74,7 +74,8 @@ Your `react-server-dom-xyz/client`'s `createFromReadableStream`. Used to decode 
 
 ### opts.createTemporaryReferenceSet
 
-A function that creates a temporary reference set for the RSC payload.
+A function that creates a temporary reference set for the [RSC](https://react.dev/reference/rsc/server-components)
+payload.
 
 ### opts.encodeReply
 
@@ -82,7 +83,7 @@ Your `react-server-dom-xyz/client`'s `encodeReply`. Used when sending payloads t
 
 ### opts.fetch
 
-Optional fetch implementation. Defaults to global `fetch`.
+Optional [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) implementation. Defaults to global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
 
 ## Returns
 

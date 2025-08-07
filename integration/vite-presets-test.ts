@@ -226,6 +226,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "unstable_routeConfig",
       ]);
 
       // Ensure we get a valid build manifest

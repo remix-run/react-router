@@ -2,20 +2,35 @@ import * as React from "react";
 import { RSCRouterContext, type DataRouteObject } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
+import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 
+// Safe version of React.use() that will not cause compilation errors against
+// React 18 and will result in a runtime error if used (you can't use RSC against
+// React 18).
+const REACT_USE = "use";
+const useImpl = (React as any)[REACT_USE];
+
+function useSafe<T>(promise: Promise<T> | React.Context<T>): T {
+  if (useImpl) {
+    return useImpl(promise);
+  }
+  throw new Error("React Router v7 requires React 19+ for RSC features.");
+}
+
 export type SSRCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
 ) => Promise<unknown>;
 
 /**
- * Routes the incoming request to the RSC server and appropriately proxies the
- * server response for data / resource requests, or renders to HTML for a document
- * request.
+ * Routes the incoming [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * to the [RSC](https://react.dev/reference/rsc/server-components) server and
+ * appropriately proxies the server response for data / resource requests, or
+ * renders to HTML for a document request.
  *
  * @example
  * import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
@@ -49,15 +64,17 @@ export type SSRCreateFromReadableStreamFunction = (
  * @param opts Options
  * @param opts.createFromReadableStream Your `react-server-dom-xyz/client`'s
  * `createFromReadableStream` function, used to decode payloads from the server.
- * @param opts.fetchServer A function that forwards a `Request` to the RSC handler
- * and returns a `Promise<Response>` containing a serialized `RSCPayload`.
- * @param opts.renderHTML A function that renders the `RSCPayload` to HTML, usually
- * using a `<RSCStaticRouter>`.
- * @param opts.request The request to route.
+ * @param opts.fetchServer A function that forwards a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * to the [RSC](https://react.dev/reference/rsc/server-components) handler
+ * and returns a `Promise<Response>` containing a serialized {@link unstable_RSCPayload}.
  * @param opts.hydrate Whether to hydrate the server response with the RSC payload.
  * Defaults to `true`.
- * @returns A `Response` that either contains the RSC payload for data requests, or
- * renders the HTML for document requests.
+ * @param opts.renderHTML A function that renders the {@link unstable_RSCPayload} to
+ * HTML, usually using a {@link unstable_RSCStaticRouter | `<RSCStaticRouter>`}.
+ * @param opts.request The request to route.
+ * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+ * that either contains the [RSC](https://react.dev/reference/rsc/server-components)
+ * payload for data requests, or renders the HTML for document requests.
  */
 export async function routeRSCServerRequest({
   request,
@@ -108,6 +125,25 @@ export async function routeRSCServerRequest({
   };
 
   try {
+    const payload = await getPayload();
+    if (
+      serverResponse.status === SINGLE_FETCH_REDIRECT_STATUS &&
+      payload.type === "redirect"
+    ) {
+      const headers = new Headers(serverResponse.headers);
+      headers.delete("Content-Encoding");
+      headers.delete("Content-Length");
+      headers.delete("Content-Type");
+      headers.delete("x-remix-response");
+      headers.set("Location", payload.location);
+
+      return new Response(serverResponseB?.body || "", {
+        headers,
+        status: payload.status,
+        statusText: serverResponse.statusText,
+      });
+    }
+
     const html = await renderHTML(getPayload);
 
     const headers = new Headers(serverResponse.headers);
@@ -142,20 +178,22 @@ export async function routeRSCServerRequest({
 }
 
 /**
- * Props for the `RSCStaticRouter` component.
+ * Props for the {@link unstable_RSCStaticRouter} component.
+ *
  * @name unstable_RSCStaticRouterProps
+ * @category Types
  */
 export interface RSCStaticRouterProps {
   /**
-   * A function that starts decoding of the `RSCPayload`. Usually passed through
-   * from `routeRSCServerRequest`'s `renderHTML`.
+   * A function that starts decoding of the {@link unstable_RSCPayload}. Usually passed
+   * through from {@link unstable_routeRSCServerRequest}'s `renderHTML`.
    */
   getPayload: () => Promise<RSCPayload>;
 }
 
 /**
- * Pre-renders an `RSCPayload` to HTML. Usually used in `routeRSCServerRequest`'s
- * `renderHTML` callback.
+ * Pre-renders an {@link unstable_RSCPayload} to HTML. Usually used in
+ * {@link unstable_routeRSCServerRequest}'s `renderHTML` callback.
  *
  * @example
  * import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
@@ -188,11 +226,11 @@ export interface RSCStaticRouterProps {
  * @mode data
  * @param props Props
  * @param {unstable_RSCStaticRouterProps.getPayload} props.getPayload n/a
- * @returns A React component that renders the `RSCPayload` as HTML.
+ * @returns A React component that renders the {@link unstable_RSCPayload} as HTML.
  */
 export function RSCStaticRouter({ getPayload }: RSCStaticRouterProps) {
-  // @ts-expect-error - need to update the React types
-  const payload = React.use(getPayload()) as RSCPayload;
+  // Can be replaced with React.use when v18 compatibility is no longer required.
+  const payload = useSafe(getPayload());
 
   if (payload.type === "redirect") {
     throw new Response(null, {

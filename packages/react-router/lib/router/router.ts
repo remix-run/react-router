@@ -40,7 +40,7 @@ import type {
   ActionFunction,
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
-  unstable_InitialContext,
+  ErrorResponse,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -395,7 +395,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  unstable_getContext?: () => MaybePromise<unstable_InitialContext>;
+  unstable_getContext?: () => MaybePromise<unstable_RouterContextProvider>;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationRouteProperties?: string[];
@@ -434,11 +434,7 @@ export interface StaticHandler {
       skipLoaderErrorBubbling?: boolean;
       skipRevalidation?: boolean;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (
-        staticContext: StaticHandlerContext,
-      ) => MaybePromise<Response>;
-      unstable_stream?: (
-        context: unstable_RouterContextProvider,
+      unstable_generateMiddlewareResponse?: (
         query: (r: Request) => Promise<StaticHandlerContext | Response>,
       ) => MaybePromise<Response>;
     },
@@ -449,7 +445,9 @@ export interface StaticHandler {
       routeId?: string;
       requestContext?: unknown;
       dataStrategy?: DataStrategyFunction<unknown>;
-      unstable_respond?: (res: Response) => MaybePromise<Response>;
+      unstable_generateMiddlewareResponse?: (
+        queryRoute: (r: Request) => Promise<Response>,
+      ) => MaybePromise<Response>;
     },
   ): Promise<any>;
 }
@@ -1667,9 +1665,9 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
     );
     // Create a new context per navigation
-    let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined,
-    );
+    let scopedContext = init.unstable_getContext
+      ? await init.unstable_getContext()
+      : new unstable_RouterContextProvider();
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
@@ -2049,11 +2047,13 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
-    // Short circuit if we have no loaders to run, unless there's a custom dataStrategy
-    // since they may have different revalidation rules (i.e., single fetch)
+    // Short circuit if we have no loaders/middlewares to run, unless there's a
+    // custom dataStrategy since they may have different revalidation rules
+    // (i.e., single fetch)
     if (
       !init.dataStrategy &&
       !dsMatches.some((m) => m.shouldLoad) &&
+      !dsMatches.some((m) => m.route.unstable_middleware) &&
       revalidatingFetchers.length === 0
     ) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -2266,9 +2266,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Create a new context per fetch
-    let scopedContext = new unstable_RouterContextProvider(
-      init.unstable_getContext ? await init.unstable_getContext() : undefined,
-    );
+    let scopedContext = init.unstable_getContext
+      ? await init.unstable_getContext()
+      : new unstable_RouterContextProvider();
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
@@ -3527,8 +3527,7 @@ export function createStaticHandler(
       skipLoaderErrorBubbling,
       skipRevalidation,
       dataStrategy,
-      unstable_stream: stream,
-      unstable_respond: respond,
+      unstable_generateMiddlewareResponse: generateMiddlewareResponse,
     }: Parameters<StaticHandler["query"]>[1] = {},
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3539,18 +3538,6 @@ export function createStaticHandler(
       requestContext != null
         ? requestContext
         : new unstable_RouterContextProvider();
-
-    let respondOrStreamStaticContext = (
-      ctx: StaticHandlerContext,
-    ): MaybePromise<Response> | StaticHandlerContext => {
-      return stream
-        ? stream(requestContext as unstable_RouterContextProvider, () =>
-            Promise.resolve(ctx),
-          )
-        : respond
-          ? respond(ctx)
-          : ctx;
-    };
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "HEAD") {
@@ -3570,7 +3557,9 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext);
+      return generateMiddlewareResponse
+        ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
+        : staticContext;
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
@@ -3588,19 +3577,27 @@ export function createStaticHandler(
         loaderHeaders: {},
         actionHeaders: {},
       };
-      return respondOrStreamStaticContext(staticContext);
+      return generateMiddlewareResponse
+        ? generateMiddlewareResponse(() => Promise.resolve(staticContext))
+        : staticContext;
     }
 
-    if (
-      stream ||
-      (respond &&
-        matches.some(
-          (m) =>
-            m.route.unstable_middleware ||
-            (typeof m.route.lazy === "object" &&
-              m.route.lazy.unstable_middleware),
-        ))
-    ) {
+    // The `stream` API is what enables middleware execution and makes 3 changes
+    // from the original `respond` API:
+    //  - It _always_ runs the middleware pipeline down to the `stream()`
+    //    function even if middleware doesn't exist
+    //  - We can now insert arbitrary logic at the end of the middleware
+    //    chain (inside the leaf `next()` call) such as running a server
+    //    action and let route middlewares apply to that action.
+    //  - We have control over the calling/awaiting of query() which
+    //    theoretically would allow us to send down the `actionResult`
+    //    immediately and then stream the entirety of the `query`/`staticContext`
+    //    info.  That has other implications though which we may not want,
+    //    such as not being able to leverage `headers()`, or respect
+    //    redirects from loaders after a server action, etc.
+    //    - If we decide this isn't warranted than the stream implementation
+    //      can simplify and potentially even collapse back into respond()
+    if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.query()`, any provided " +
@@ -3613,7 +3610,7 @@ export function createStaticHandler(
           mapRouteProperties,
         );
         let renderedStaticContext: StaticHandlerContext | undefined;
-        let response = await runMiddlewarePipeline(
+        let response = await runServerMiddlewarePipeline(
           {
             request,
             matches,
@@ -3622,102 +3619,31 @@ export function createStaticHandler(
             // this to the proper type knowing it's not an `AppLoadContext`
             context: requestContext as unstable_RouterContextProvider,
           },
-          true,
           async () => {
-            /**
-             * TODO: stream() is a potential breaking change to the unstable_respond()
-             * API, implemented as a sibling option for now so as not to break
-             * any existing middleware logic.
-             *
-             * stream() gives us 3 things:
-             *  - It _always_ runs the middleware pipeline down to the stream()
-             *    function even if middleware doesn't exist
-             *  - we can now insert arbitrary logic at the end of the middleware
-             *    chain (inside the leaf next() call) such as running a server
-             *    action and let route middlewares apply to that action.
-             *  - We have control over the calling./awaiting of query() which
-             *    theoretically would allow us to send down the actionResult
-             *    immediately and then stream the entirety of the query/staticContext
-             *    info.  That has other implications though which we may not want,
-             *    such as not being able to leverage headers(), or respect
-             *    redirects from loaders after a server action, etc.
-             *    - If we decide this isn't warranted than the stream implementation
-             *      can simplify and potentially even collapse back into respond()
-             *
-             * Another totally different approach (larger LOE) would be to extract
-             * static handler middleware to be fully composable:
-             *
-             * // Current behavior
-             * let res = handler.middleware(request, (context) => {
-             *   let results = handler.query(request, context);
-             *   return generateResponse({
-             *     type: 'render',
-             *     payload: results
-             *   });
-             * })
-             *
-             * // RSC Server Action behavior
-             * let res = handler.middleware(request, (context) => {
-             *   let actionResult = serverAction(request);
-             *   let revalidationRequest = new Request(...)
-             *   let payloadPromise = handler.query(revalidationRequest, context)
-             *                               .then(context => getPayload(context));
-             *   return generateResponse({
-             *     type: 'action',
-             *     actionResult,,
-             *     rerender: payloadPromise
-             *   });
-             * })
-             **/
-            if (stream) {
-              let res = await stream(
-                requestContext as unstable_RouterContextProvider,
-                async (revalidationRequest: Request) => {
-                  let result = await queryImpl(
-                    revalidationRequest,
-                    location,
-                    matches!,
-                    requestContext,
-                    dataStrategy || null,
-                    skipLoaderErrorBubbling === true,
-                    null,
-                    filterMatchesToLoad || null,
-                    skipRevalidation === true,
-                  );
+            let res = await generateMiddlewareResponse(
+              async (revalidationRequest: Request) => {
+                let result = await queryImpl(
+                  revalidationRequest,
+                  location,
+                  matches!,
+                  requestContext,
+                  dataStrategy || null,
+                  skipLoaderErrorBubbling === true,
+                  null,
+                  filterMatchesToLoad || null,
+                  skipRevalidation === true,
+                );
 
-                  return isResponse(result)
-                    ? result
-                    : { location, basename, ...result };
-                },
-              );
-              return res;
-            }
-
-            // Should always be true given the if statement above
-            invariant(respond, "Expected respond to be defined");
-
-            let result = await queryImpl(
-              request,
-              location,
-              matches!,
-              requestContext,
-              dataStrategy || null,
-              skipLoaderErrorBubbling === true,
-              null,
-              filterMatchesToLoad || null,
-              skipRevalidation === true,
+                if (isResponse(result)) {
+                  return result;
+                }
+                // When returning StaticHandlerContext, we patch back in the location here
+                // since we need it for React Context.  But this helps keep our submit and
+                // loadRouteData operating on a Request instead of a Location
+                renderedStaticContext = { location, basename, ...result };
+                return renderedStaticContext;
+              },
             );
-
-            if (isResponse(result)) {
-              return result;
-            }
-
-            // When returning StaticHandlerContext, we patch back in the location here
-            // since we need it for React Context.  But this helps keep our submit and
-            // loadRouteData operating on a Request instead of a Location
-            renderedStaticContext = { location, basename, ...result };
-            let res = await respond(renderedStaticContext);
-
             return res;
           },
           async (error, routeId) => {
@@ -3745,7 +3671,9 @@ export function createStaticHandler(
                   ? routeId
                   : findNearestBoundary(matches, routeId).route.id,
               );
-              return respondOrStreamStaticContext(staticContext);
+              return generateMiddlewareResponse(() =>
+                Promise.resolve(staticContext),
+              );
             } else {
               // We never even got to the handlers, so we've got no data -
               // just create an empty context reflecting the error.
@@ -3775,7 +3703,9 @@ export function createStaticHandler(
                 actionHeaders: {},
                 loaderHeaders: {},
               };
-              return respondOrStreamStaticContext(staticContext);
+              return generateMiddlewareResponse(() =>
+                Promise.resolve(staticContext),
+              );
             }
           },
         );
@@ -3844,7 +3774,7 @@ export function createStaticHandler(
       routeId,
       requestContext,
       dataStrategy,
-      unstable_respond: respond,
+      unstable_generateMiddlewareResponse: generateMiddlewareResponse,
     }: Parameters<StaticHandler["queryRoute"]>[1] = {},
   ): Promise<any> {
     let url = new URL(request.url);
@@ -3877,22 +3807,14 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    if (
-      respond &&
-      matches.some(
-        (m) =>
-          m.route.unstable_middleware ||
-          (typeof m.route.lazy === "object" &&
-            m.route.lazy.unstable_middleware),
-      )
-    ) {
+    if (generateMiddlewareResponse) {
       invariant(
         requestContext instanceof unstable_RouterContextProvider,
         "When using middleware in `staticHandler.queryRoute()`, any provided " +
           "`requestContext` must be an instance of `unstable_RouterContextProvider`",
       );
       await loadLazyMiddlewareForMatches(matches, manifest, mapRouteProperties);
-      let response = await runMiddlewarePipeline(
+      let response = await runServerMiddlewarePipeline(
         {
           request,
           matches,
@@ -3901,53 +3823,40 @@ export function createStaticHandler(
           // this to the proper type knowing it's not an `AppLoadContext`
           context: requestContext as unstable_RouterContextProvider,
         },
-        true,
         async () => {
-          let result = await queryImpl(
-            request,
-            location,
-            matches!,
-            requestContext,
-            dataStrategy || null,
-            false,
-            match!,
-            null,
-            false,
+          let res = await generateMiddlewareResponse(
+            async (innerRequest: Request) => {
+              let result = await queryImpl(
+                innerRequest,
+                location,
+                matches!,
+                requestContext,
+                dataStrategy || null,
+                false,
+                match!,
+                null,
+                false,
+              );
+
+              let processed = handleQueryResult(result);
+
+              return isResponse(processed)
+                ? processed
+                : typeof processed === "string"
+                  ? new Response(processed)
+                  : Response.json(processed);
+            },
           );
-
-          if (isResponse(result)) {
-            return respond(result);
-          }
-
-          let error = result.errors
-            ? Object.values(result.errors)[0]
-            : undefined;
-
-          if (error !== undefined) {
-            // If we got back result.errors, that means the loader/action threw
-            // _something_ that wasn't a Response, but it's not guaranteed/required
-            // to be an `instanceof Error` either, so we have to use throw here to
-            // preserve the "error" state outside of queryImpl.
-            throw error;
-          }
-
-          // Pick off the right state value to return
-          let value = result.actionData
-            ? Object.values(result.actionData)[0]
-            : Object.values(result.loaderData)[0];
-
-          return typeof value === "string"
-            ? new Response(value)
-            : Response.json(value);
+          return res;
         },
         (error) => {
-          if (isResponse(error)) {
-            return respond(error);
+          if (isRouteErrorResponse(error)) {
+            return Promise.resolve(errorResponseToResponse(error));
           }
-          return new Response(String(error), {
-            status: 500,
-            statusText: "Unexpected Server Error",
-          });
+          if (isResponse(error)) {
+            return Promise.resolve(error);
+          }
+          throw error;
         },
       );
       return response;
@@ -3965,29 +3874,33 @@ export function createStaticHandler(
       false,
     );
 
-    if (isResponse(result)) {
-      return result;
-    }
+    return handleQueryResult(result);
 
-    let error = result.errors ? Object.values(result.errors)[0] : undefined;
-    if (error !== undefined) {
-      // If we got back result.errors, that means the loader/action threw
-      // _something_ that wasn't a Response, but it's not guaranteed/required
-      // to be an `instanceof Error` either, so we have to use throw here to
-      // preserve the "error" state outside of queryImpl.
-      throw error;
-    }
+    function handleQueryResult(result: Awaited<ReturnType<typeof queryImpl>>) {
+      if (isResponse(result)) {
+        return result;
+      }
 
-    // Pick off the right state value to return
-    if (result.actionData) {
-      return Object.values(result.actionData)[0];
-    }
+      let error = result.errors ? Object.values(result.errors)[0] : undefined;
+      if (error !== undefined) {
+        // If we got back result.errors, that means the loader/action threw
+        // _something_ that wasn't a Response, but it's not guaranteed/required
+        // to be an `instanceof Error` either, so we have to use throw here to
+        // preserve the "error" state outside of queryImpl.
+        throw error;
+      }
 
-    if (result.loaderData) {
-      return Object.values(result.loaderData)[0];
-    }
+      // Pick off the right state value to return
+      if (result.actionData) {
+        return Object.values(result.actionData)[0];
+      }
 
-    return undefined;
+      if (result.loaderData) {
+        return Object.values(result.loaderData)[0];
+      }
+
+      return undefined;
+    }
   }
 
   async function queryImpl(
@@ -5456,28 +5369,50 @@ async function defaultDataStrategyWithMiddleware(
     return defaultDataStrategy(args);
   }
 
-  return runMiddlewarePipeline(
+  let didCallHandler = false;
+  return runClientMiddlewarePipeline(
     args,
-    false,
-    () => defaultDataStrategy(args),
-    (error, routeId) => ({ [routeId]: { type: "error", result: error } }),
-  ) as Promise<Record<string, DataStrategyResult>>;
+    () => {
+      didCallHandler = true;
+      return defaultDataStrategy(args);
+    },
+    (error, routeId) =>
+      clientMiddlewareErrorHandler(
+        error,
+        routeId,
+        args.matches,
+        didCallHandler,
+      ),
+  );
 }
 
-type MutableMiddlewareState = {
-  // Track the result of the user-provided handler at the bottom of the
-  // middleware chain so we can return it out from runMiddleware for them when
-  // we're not propagating results
-  handlerResult?: unknown;
-  // Capture the throwing routeId for middleware error so we can bubble from the
-  // correct spot
-  middlewareError?: {
-    routeId: string;
-    error: unknown;
-  };
-};
+function clientMiddlewareErrorHandler(
+  error: unknown,
+  routeId: string,
+  matches: AgnosticDataRouteMatch[],
+  didCallHandler: boolean,
+): Record<string, DataStrategyResult> {
+  if (didCallHandler) {
+    return {
+      [routeId]: { type: "error", result: error },
+    };
+  } else {
+    // We never even got to the handlers, so we've got no data.
+    // Find the boundary at or above the source of the middleware
+    // error or the highest loader. We can't render any UI below
+    // the highest loader since we have no loader data available
+    let boundaryRouteId = findNearestBoundary(
+      matches,
+      matches.find((m) => m.route.id === routeId || m.route.loader)?.route.id ||
+        routeId,
+    ).route.id;
+    return {
+      [boundaryRouteId]: { type: "error", result: error },
+    };
+  }
+}
 
-export async function runMiddlewarePipeline<T extends boolean>(
+export async function runServerMiddlewarePipeline(
   args: (
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>
@@ -5486,55 +5421,37 @@ export async function runMiddlewarePipeline<T extends boolean>(
     // back from `DataStrategyMatch` to regular matches for use in the staticHandler
     matches: AgnosticDataRouteMatch[];
   },
-  propagateResult: T,
-  handler: () => T extends true
-    ? MaybePromise<Response>
-    : MaybePromise<Record<string, DataStrategyResult>>,
-  errorHandler: (error: unknown, routeId: string) => unknown,
-): Promise<unknown> {
+  handler: () => Promise<Response>,
+  errorHandler: (error: unknown, routeId: string) => Promise<Response>,
+): Promise<Response> {
   let { matches, request, params, context } = args;
-  let middlewareState: MutableMiddlewareState = {
-    handlerResult: undefined,
-  };
-  try {
-    let tuples = matches.flatMap((m) =>
-      m.route.unstable_middleware
-        ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
-        : [],
-    ) as [string, unstable_MiddlewareFunction][];
-    let result = await callRouteMiddleware(
-      { request, params, context },
-      tuples,
-      propagateResult,
-      middlewareState,
-      handler,
-    );
-    return propagateResult ? result : middlewareState.handlerResult;
-  } catch (e) {
-    if (!middlewareState.middlewareError) {
-      // This shouldn't happen?  This would have to come from a bug in our
-      // library code...
-      throw e;
-    }
-    let result = await errorHandler(
-      middlewareState.middlewareError.error,
-      middlewareState.middlewareError.routeId,
-    );
-    if (propagateResult || !middlewareState.handlerResult) {
-      return result;
-    }
-    return Object.assign(middlewareState.handlerResult, result);
+  let tuples = matches.flatMap((m) =>
+    m.route.unstable_middleware
+      ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
+      : [],
+  ) as [string, unstable_MiddlewareFunction][];
+
+  let result = await callServerRouteMiddleware(
+    { request, params, context },
+    tuples,
+    handler,
+    errorHandler,
+  );
+
+  if (isResponse(result)) {
+    return result;
   }
+
+  invariant(false, `Expected a Response to be returned from route middleware`);
 }
 
-async function callRouteMiddleware(
+async function callServerRouteMiddleware(
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
   middlewares: [string, unstable_MiddlewareFunction][],
-  propagateResult: boolean,
-  middlewareState: MutableMiddlewareState,
-  handler: () => void,
+  handler: () => Promise<Response>,
+  errorHandler: (error: unknown, routeId: string) => Promise<Response>,
   idx = 0,
 ): Promise<unknown> {
   let { request } = args;
@@ -5550,8 +5467,8 @@ async function callRouteMiddleware(
   let tuple = middlewares[idx];
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
-    middlewareState.handlerResult = await handler();
-    return middlewareState.handlerResult;
+    let result = await handler();
+    return result;
   }
 
   let [routeId, middleware] = tuple;
@@ -5562,16 +5479,29 @@ async function callRouteMiddleware(
       throw new Error("You may only call `next()` once per middleware");
     }
     nextCalled = true;
-    let result = await callRouteMiddleware(
-      args,
-      middlewares,
-      propagateResult,
-      middlewareState,
-      handler,
-      idx + 1,
-    );
-    if (propagateResult) {
+
+    try {
+      let result = await callServerRouteMiddleware(
+        args,
+        middlewares,
+        handler,
+        errorHandler,
+        idx + 1,
+      );
+
+      // Upgrade returned data() values to real Responses
+      if (isDataWithResponseInit(result)) {
+        result = dataWithResponseInitToResponse(result);
+      }
+
       nextResult = result;
+      return nextResult;
+    } catch (e) {
+      nextResult = await errorHandler(
+        // Convert thrown data() values to ErrorResponses
+        isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
+        routeId,
+      );
       return nextResult;
     }
   };
@@ -5585,27 +5515,148 @@ async function callRouteMiddleware(
       },
       next,
     );
+
+    // Upgrade returned data() values to real Responses
+    if (isDataWithResponseInit(result)) {
+      result = dataWithResponseInitToResponse(result);
+    }
+
+    // On the server, handle calling next() if needed and returning the proper result
     if (nextCalled) {
-      if (result === undefined) {
-        // If they called next() but didn't return the response, we can bubble
-        // it for them. This lets folks do things like grab the response and
-        // add a header without then re-returning it
-        return nextResult;
-      } else {
-        return result;
-      }
+      // If they called next() but didn't return the response, we can bubble
+      // it for them. This allows some minor syntactic sugar (or forgetfulness)
+      // where you can grab the response to add a header without re-returning it
+      return typeof result === "undefined" ? nextResult : result;
+    } else if (isResponse(result)) {
+      // Use short circuit Response/data() values without having called next()
+      return result;
     } else {
-      return next();
+      // Otherwise call next() for them
+      nextResult = await next();
+      return nextResult;
+    }
+  } catch (e) {
+    let response = await errorHandler(
+      // Convert thrown data() values to ErrorResponses
+      isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
+      routeId,
+    );
+    return response;
+  }
+}
+
+export async function runClientMiddlewarePipeline(
+  args: (
+    | LoaderFunctionArgs<unstable_RouterContextProvider>
+    | ActionFunctionArgs<unstable_RouterContextProvider>
+  ) & {
+    // Don't use `DataStrategyFunctionArgs` directly so we can we reduce these
+    // back from `DataStrategyMatch` to regular matches for use in the staticHandler
+    matches: AgnosticDataRouteMatch[];
+  },
+  handler: () => Promise<Record<string, DataStrategyResult>>,
+  errorHandler: (
+    error: unknown,
+    routeId: string,
+  ) => Record<string, DataStrategyResult>,
+): Promise<Record<string, DataStrategyResult>> {
+  let { matches, request, params, context } = args;
+  let tuples = matches.flatMap((m) =>
+    m.route.unstable_middleware
+      ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
+      : [],
+  ) as [string, unstable_MiddlewareFunction][];
+
+  let handlerResult = {};
+  await callClientRouteMiddleware(
+    { request, params, context },
+    tuples,
+    handler,
+    errorHandler,
+    handlerResult,
+  );
+  return handlerResult;
+}
+
+async function callClientRouteMiddleware(
+  args:
+    | LoaderFunctionArgs<unstable_RouterContextProvider>
+    | ActionFunctionArgs<unstable_RouterContextProvider>,
+  middlewares: [string, unstable_MiddlewareFunction][],
+  handler: () => Promise<Record<string, DataStrategyResult>>,
+  errorHandler: (
+    error: unknown,
+    routeId: string,
+  ) => Record<string, DataStrategyResult>,
+  handlerResult: Record<string, DataStrategyResult> = {},
+  idx = 0,
+): Promise<unknown> {
+  let { request } = args;
+  if (request.signal.aborted) {
+    if (request.signal.reason) {
+      throw request.signal.reason;
+    }
+    throw new Error(
+      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`,
+    );
+  }
+
+  let tuple = middlewares[idx];
+  if (!tuple) {
+    // We reached the end of our middlewares, call the handler
+    let result = await handler();
+    Object.assign(handlerResult, result);
+    return;
+  }
+
+  let [routeId, middleware] = tuple;
+  let nextCalled = false;
+  let next: unstable_MiddlewareNextFunction = async () => {
+    if (nextCalled) {
+      throw new Error("You may only call `next()` once per middleware");
+    }
+    nextCalled = true;
+
+    try {
+      let result = await callClientRouteMiddleware(
+        args,
+        middlewares,
+        handler,
+        errorHandler,
+        handlerResult,
+        idx + 1,
+      );
+      Object.assign(handlerResult, result);
+    } catch (e) {
+      let result = await errorHandler(e, routeId);
+      Object.assign(handlerResult, result);
+    }
+  };
+
+  try {
+    let result = await middleware(
+      {
+        request: args.request,
+        params: args.params,
+        context: args.context,
+      },
+      next,
+    );
+
+    // On the client, just call next if they didn't
+    if (typeof result !== "undefined") {
+      console.warn(
+        "client middlewares are not intended to return values, the value will be ignored",
+        result,
+      );
+    }
+
+    if (!nextCalled) {
+      await next();
     }
   } catch (error) {
-    if (!middlewareState.middlewareError) {
-      middlewareState.middlewareError = { routeId, error };
-    } else if (middlewareState.middlewareError.error !== error) {
-      // Another middleware already threw, so only capture this new routeId if
-      // it's a different error and not just bubbling up the existing error
-      middlewareState.middlewareError = { routeId, error };
-    }
-    throw error;
+    let result = await errorHandler(error, routeId);
+    Object.assign(handlerResult, result);
   }
 }
 
@@ -5783,11 +5834,12 @@ async function callDataStrategyImpl(
         ) & {
           matches: DataStrategyMatch[];
         };
-        return runMiddlewarePipeline(
+        let didCallHandler = false;
+        return runClientMiddlewarePipeline(
           typedDataStrategyArgs,
-          false,
-          () =>
-            cb({
+          () => {
+            didCallHandler = true;
+            return cb({
               ...typedDataStrategyArgs,
               fetcherKey,
               unstable_runClientMiddleware: () => {
@@ -5796,11 +5848,16 @@ async function callDataStrategyImpl(
                     "`unstable_runClientMiddleware` handler",
                 );
               },
-            }),
-          (error: unknown, routeId: string) => ({
-            [routeId]: { type: "error", result: error },
-          }),
-        ) as Promise<Record<string, DataStrategyResult>>;
+            });
+          },
+          (error, routeId) =>
+            clientMiddlewareErrorHandler(
+              error,
+              routeId,
+              matches,
+              didCallHandler,
+            ),
+        );
       };
 
   let results = await dataStrategyImpl({
@@ -5950,7 +6007,7 @@ async function callLoaderOrAction({
     }
   } catch (e) {
     // We should already be catching and converting normal handler executions to
-    // DataStrategyResults and returning them, so anything that throws here is an
+    // Record<string, DataStrategyResult> and returning them, so anything that throws here is an
     // unexpected error we still need to wrap
     return { type: ResultType.error, result: e };
   } finally {
@@ -6293,14 +6350,16 @@ function processLoaderData(
     .filter((f) => !f.matches || f.matches.some((m) => m.shouldLoad))
     .forEach((rf) => {
       let { key, match, controller } = rf;
+      if (controller && controller.signal.aborted) {
+        // Nothing to do for aborted fetchers
+        return;
+      }
+
       let result = fetcherResults[key];
       invariant(result, "Did not find corresponding fetcher result");
 
       // Process fetcher non-redirect errors
-      if (controller && controller.signal.aborted) {
-        // Nothing to do for aborted fetchers
-        return;
-      } else if (isErrorResult(result)) {
+      if (isErrorResult(result)) {
         let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
         if (!(errors && errors[boundaryMatch.route.id])) {
           errors = {
@@ -6507,6 +6566,35 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   // If the hash is removed the browser will re-perform a request to the server
   // /page#hash -> /page
   return false;
+}
+
+function dataWithResponseInitToResponse<D>(
+  data: DataWithResponseInit<D>,
+): Response {
+  return new Response(
+    typeof data.data === "string" ? data.data : JSON.stringify(data.data),
+    data.init || undefined,
+  );
+}
+
+function dataWithResponseInitToErrorResponse<D>(
+  data: DataWithResponseInit<D>,
+): ErrorResponseImpl {
+  return new ErrorResponseImpl(
+    data.init?.status ?? 500,
+    data.init?.statusText ?? "Internal Server Error",
+    data.data,
+  );
+}
+
+function errorResponseToResponse(error: ErrorResponse): Response {
+  return new Response(
+    typeof error.data === "string" ? error.data : JSON.stringify(error.data),
+    {
+      status: error.status,
+      statusText: error.statusText,
+    },
+  );
 }
 
 function isDataStrategyResult(result: unknown): result is DataStrategyResult {

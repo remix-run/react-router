@@ -88,7 +88,7 @@
     "remark-parse": "^10.0.1",
     "remark-stringify": "^10.0.2",
     "semver": "^7.5.4",
-    "typedoc": "^0.26.11",
+    "typedoc": "^0.28.7",
     "typescript": "^5.4.5",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",

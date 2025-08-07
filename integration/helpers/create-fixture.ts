@@ -199,13 +199,20 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   let build: ServerBuild | null = null;
   type RequestHandler = (request: Request) => Promise<Response>;
   let handler: RequestHandler;
-  if (templateName.includes("parcel")) {
+  if (templateName === "rsc-vite-framework") {
+    handler = (await import(buildPath)).default;
+    if (typeof handler !== "function") {
+      throw new Error(
+        "Expected a default request handler function export in Vite RSC Framework Mode server build",
+      );
+    }
+  } else if (templateName === "rsc-parcel-framework") {
     let serverBuild = await import(buildPath);
     handler = (serverBuild?.requestHandler ??
       serverBuild?.default?.requestHandler) as RequestHandler;
-    if (!handler) {
+    if (typeof handler !== "function") {
       throw new Error(
-        "Expected a 'requestHandler' export in Parcel server build",
+        "Expected a 'requestHandler' function export in Parcel RSC Framework server build",
       );
     }
   } else {
@@ -356,7 +363,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       });
     }
 
-    if (fixture.templateName.includes("parcel")) {
+    if (fixture.templateName.includes("rsc")) {
       let port = await getPort();
       let { stop } = await spawnTestServer({
         cwd: fixture.projectDir,
@@ -370,7 +377,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           let parsedPort = parseInt(matches[1], 10);
           if (port !== parsedPort) {
             throw new Error(
-              `Expected Parcel build server to start on port ${port}, but it started on port ${parsedPort}`,
+              `Expected RSC Framework Mode build server to start on port ${port}, but it started on port ${parsedPort}`,
             );
           }
         },
@@ -458,6 +465,7 @@ export async function createFixtureProject(
         : {
             "vite.config.js": await viteConfig.basic({
               port,
+              templateName,
             }),
           }),
       ...(hasReactRouterConfig

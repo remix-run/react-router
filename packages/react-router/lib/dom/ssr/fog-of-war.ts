@@ -217,12 +217,18 @@ export async function fetchAndApplyManifestPatches(
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
 ): Promise<void> {
+  // NOTE: Intentionally using a standalone `URLSearchParams` instance
+  // instead of mutating `url.searchParams`, which is *significantly* slower:
+  // https://issues.chromium.org/issues/331406951
+  // https://github.com/nodejs/node/issues/51518
+  const searchParams = new URLSearchParams();
+  paths.sort().forEach((path) => searchParams.append("p", path));
+  searchParams.set("version", manifest.version);
   let url = new URL(
     getManifestPath(manifestPath, basename),
     window.location.origin,
   );
-  paths.sort().forEach((path) => url.searchParams.append("p", path));
-  url.searchParams.set("version", manifest.version);
+  url.search = searchParams.toString();
 
   // If the URL is nearing the ~8k limit on GET requests, skip this optimization
   // step and just let discovery happen on link click.  We also wipe out the
