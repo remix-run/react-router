@@ -5369,11 +5369,47 @@ async function defaultDataStrategyWithMiddleware(
     return defaultDataStrategy(args);
   }
 
+  let didCallHandler = false;
   return runClientMiddlewarePipeline(
     args,
-    () => defaultDataStrategy(args),
-    (error, routeId) => ({ [routeId]: { type: "error", result: error } }),
+    () => {
+      didCallHandler = true;
+      return defaultDataStrategy(args);
+    },
+    (error, routeId) =>
+      clientMiddlewareErrorHandler(
+        error,
+        routeId,
+        args.matches,
+        didCallHandler,
+      ),
   );
+}
+
+function clientMiddlewareErrorHandler(
+  error: unknown,
+  routeId: string,
+  matches: AgnosticDataRouteMatch[],
+  didCallHandler: boolean,
+): Record<string, DataStrategyResult> {
+  if (didCallHandler) {
+    return {
+      [routeId]: { type: "error", result: error },
+    };
+  } else {
+    // We never even got to the handlers, so we've got no data.
+    // Find the boundary at or above the source of the middleware
+    // error or the highest loader. We can't render any UI below
+    // the highest loader since we have no loader data available
+    let boundaryRouteId = findNearestBoundary(
+      matches,
+      matches.find((m) => m.route.id === routeId || m.route.loader)?.route.id ||
+        routeId,
+    ).route.id;
+    return {
+      [boundaryRouteId]: { type: "error", result: error },
+    };
+  }
 }
 
 export async function runServerMiddlewarePipeline(
@@ -5798,10 +5834,12 @@ async function callDataStrategyImpl(
         ) & {
           matches: DataStrategyMatch[];
         };
+        let didCallHandler = false;
         return runClientMiddlewarePipeline(
           typedDataStrategyArgs,
-          () =>
-            cb({
+          () => {
+            didCallHandler = true;
+            return cb({
               ...typedDataStrategyArgs,
               fetcherKey,
               unstable_runClientMiddleware: () => {
@@ -5810,10 +5848,15 @@ async function callDataStrategyImpl(
                     "`unstable_runClientMiddleware` handler",
                 );
               },
-            }),
-          (error: unknown, routeId: string) => ({
-            [routeId]: { type: "error", result: error },
-          }),
+            });
+          },
+          (error, routeId) =>
+            clientMiddlewareErrorHandler(
+              error,
+              routeId,
+              matches,
+              didCallHandler,
+            ),
         );
       };
 
