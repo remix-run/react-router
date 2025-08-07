@@ -16,6 +16,9 @@ type ToArgs<Params extends Record<string, string | undefined>> =
   Returns a resolved URL path for the specified route.
 
   ```tsx
+  const h = href("/:lang?", {})
+  // -> `/`
+
   const h = href("/:lang?/about", { lang: "en" })
   // -> `/en/about`
 
@@ -48,5 +51,5 @@ export function href<Path extends keyof Args>(
       return value;
     })
     .filter((segment) => segment !== undefined)
-    .join("/");
+    .join("/") || "/";
 }
