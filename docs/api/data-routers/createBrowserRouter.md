@@ -243,12 +243,29 @@ which is provided as the `context` argument to client [`action`](../../start/dat
 This function is called to generate a fresh `context` instance on each
 navigation or fetcher call.
 
+```tsx
+import {
+  unstable_createContext,
+  unstable_RouterContextProvider,
+} from "react-router";
+
+const apiClientContext = unstable_createContext<APIClient>();
+
+function createBrowserRouter(routes, {
+  unstable_getContext() {
+    let context = new unstable_RouterContextProvider();
+    context.set(apiClientContext, getApiClient());
+    return context;
+  }
+})
+```
+
 ### opts.hydrationData
 
 When Server-Rendering and opting-out of automatic hydration, the
 `hydrationData` option allows you to pass in hydration data from your
 server-render. This will almost always be a subset of data from the
-[`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandlerContext.html) value you get back from [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandler.html)'s
+[`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react_router.StaticHandler.html)'s
 `query` method:
 
 ```tsx

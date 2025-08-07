@@ -42,6 +42,7 @@ import {
 const userContext = unstable_createContext<User | null>(null);
 const contextProvider = new unstable_RouterContextProvider();
 contextProvider.set(userContext, getUser());
+//                               ^ Type-safe
 const user = contextProvider.get(userContext);
 //    ^ User
 ```
