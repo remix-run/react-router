@@ -158,16 +158,15 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       prerender: init.prerender,
       requestDocument(href: string) {
         let file = new URL(href, "test://test").pathname + "/index.html";
-        let mainPath = path.join(projectDir, "build", "client", file);
-        let fallbackPath = path.join(
-          projectDir,
-          "build",
-          "client",
-          "__spa-fallback.html",
-        );
+        let clientDir = path.join(projectDir, "build", "client");
+        let mainPath = path.join(clientDir, file);
+        let fallbackPath = path.join(clientDir, "__spa-fallback.html");
+        let fallbackPath2 = path.join(clientDir, "index.html");
         let html = existsSync(mainPath)
           ? readFileSync(mainPath)
-          : readFileSync(fallbackPath);
+          : existsSync(fallbackPath)
+            ? readFileSync(fallbackPath)
+            : readFileSync(fallbackPath2);
         return new Response(html, {
           headers: {
             "Content-Type": "text/html",
@@ -344,11 +343,18 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         );
         app.get("*", (req, res, next) => {
           let dir = path.join(fixture.projectDir, "build", "client");
-          let file = req.path.endsWith(".data")
-            ? req.path
-            : req.path + "/index.html";
-          if (file.endsWith(".html") && !existsSync(path.join(dir, file))) {
-            file = "__spa-fallback.html";
+          let file;
+          if (req.path.endsWith(".data")) {
+            file = req.path;
+          } else {
+            let mainPath = req.path + "/index.html";
+            let fallbackPath = "__spa-fallback.html";
+            let fallbackPath2 = "index.html";
+            file = existsSync(mainPath)
+              ? mainPath
+              : existsSync(fallbackPath)
+                ? fallbackPath
+                : fallbackPath2;
           }
           let filePath = path.join(dir, file);
           if (existsSync(filePath)) {

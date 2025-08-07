@@ -1,13 +1,14 @@
-import path from "node:path";
+import path from "pathe";
 import type { RouteConfigEntry } from "../../routes";
 
-export function createVirtualRouteConfigCode({
+export function createVirtualRouteConfig({
   appDirectory,
   routeConfig,
 }: {
   appDirectory: string;
   routeConfig: RouteConfigEntry[];
-}) {
+}): { code: string; routeIdByFile: Map<string, string> } {
+  let routeIdByFile = new Map<string, string>();
   let code = "export default [";
 
   const closeRouteSymbol = Symbol("CLOSE_ROUTE");
@@ -23,15 +24,14 @@ export function createVirtualRouteConfigCode({
     }
 
     code += "{";
+    const routeFile = path.resolve(appDirectory, route.file);
+    const routeId = route.id || createRouteId(route.file, appDirectory);
+    routeIdByFile.set(routeFile, routeId);
     code += `lazy: () => import(${JSON.stringify(
-      `${path.resolve(appDirectory, route.file)}?route-module${
-        route.id === "root" ? "&root-route=true" : ""
-      }`,
+      `${routeFile}?route-module${routeId === "root" ? "&root-route=true" : ""}`,
     )}),`;
 
-    code += `id: ${JSON.stringify(
-      route.id || createRouteId(route.file, appDirectory),
-    )},`;
+    code += `id: ${JSON.stringify(routeId)},`;
     if (typeof route.path === "string") {
       code += `path: ${JSON.stringify(route.path)},`;
     }
@@ -52,7 +52,7 @@ export function createVirtualRouteConfigCode({
 
   code += "];\n";
 
-  return code;
+  return { code, routeIdByFile };
 }
 
 function createRouteId(file: string, appDirectory: string) {

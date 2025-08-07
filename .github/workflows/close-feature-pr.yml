@@ -13,6 +13,8 @@ jobs:
     name: 🚪 Check Feature PR
     if: github.repository == 'remix-run/react-router' && github.event.label.name == 'feature-request'
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4

@@ -170,6 +170,30 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       // Decode the URL path before checking against the prerender config
       let decodedPath = decodeURI(normalizedPath);
 
+      if (normalizedBasename !== "/") {
+        let strippedPath = stripBasename(decodedPath, normalizedBasename);
+        if (strippedPath == null) {
+          errorHandler(
+            new ErrorResponseImpl(
+              404,
+              "Not Found",
+              `Refusing to prerender the \`${decodedPath}\` path because it does ` +
+                `not start with the basename \`${normalizedBasename}\``,
+            ),
+            {
+              context: loadContext,
+              params,
+              request,
+            },
+          );
+          return new Response("Not Found", {
+            status: 404,
+            statusText: "Not Found",
+          });
+        }
+        decodedPath = strippedPath;
+      }
+
       // When SSR is disabled this, file can only ever run during dev because we
       // delete the server build at the end of the build
       if (_build.prerender.length === 0) {

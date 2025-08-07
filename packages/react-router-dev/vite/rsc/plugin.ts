@@ -1,30 +1,38 @@
 import type * as Vite from "vite";
 import rsc, { type RscPluginOptions } from "@vitejs/plugin-rsc";
-import react from "@vitejs/plugin-react";
 import { init as initEsModuleLexer } from "es-module-lexer";
+import * as babel from "@babel/core";
 
 import { create } from "../virtual-module";
 import * as Typegen from "../../typegen";
 import { readFileSync } from "fs";
-import { join, dirname } from "path";
+import { readFile } from "fs/promises";
+import path, { join, dirname } from "pathe";
 import {
   type ConfigLoader,
   type ResolvedReactRouterConfig,
   createConfigLoader,
 } from "../../config/config";
-import { createVirtualRouteConfigCode } from "./virtual-route-config";
-import { transformVirtualRouteModules } from "./virtual-route-modules";
+import { createVirtualRouteConfig } from "./virtual-route-config";
+import {
+  transformVirtualRouteModules,
+  parseRouteExports,
+  CLIENT_NON_COMPONENT_EXPORTS,
+} from "./virtual-route-modules";
 
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let configLoader: ConfigLoader;
   let config: ResolvedReactRouterConfig;
   let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
+  let viteCommand: Vite.ConfigEnv["command"];
+  let routeIdByFile: Map<string, string> | undefined;
 
   return [
     {
       name: "react-router/rsc/config",
       async config(viteUserConfig, { command, mode }) {
         await initEsModuleLexer;
+        viteCommand = command;
         const rootDirectory = getRootDirectory(viteUserConfig);
         const watch = command === "serve";
 
@@ -35,10 +43,71 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         config = configResult.value;
 
         return {
+          resolve: {
+            dedupe: [
+              // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+              "react",
+              "react-dom",
+              // Avoid router duplicates since mismatching routers cause `Error:
+              // You must render this element inside a <Remix> element`.
+              "react-router",
+              "react-router/dom",
+              "react-router-dom",
+            ],
+          },
+          optimizeDeps: {
+            esbuildOptions: {
+              jsx: "automatic",
+            },
+            include: [
+              // Pre-bundle React dependencies to avoid React duplicates,
+              // even if React dependencies are not direct dependencies.
+              // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+              "react",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
+              "react-dom",
+              "react-dom/client",
+            ],
+          },
+          esbuild: {
+            jsx: "automatic",
+            jsxDev: viteCommand !== "build",
+          },
           environments: {
             client: { build: { outDir: "build/client" } },
             rsc: { build: { outDir: "build/server" } },
             ssr: { build: { outDir: "build/server/__ssr_build" } },
+          },
+          build: {
+            rollupOptions: {
+              // Copied from https://github.com/vitejs/vite-plugin-react/blob/c602225271d4acf462ba00f8d6d8a2e42492c5cd/packages/common/warning.ts
+              onwarn(warning, defaultHandler) {
+                if (
+                  warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+                  (warning.message.includes("use client") ||
+                    warning.message.includes("use server"))
+                ) {
+                  return;
+                }
+                // https://github.com/vitejs/vite/issues/15012
+                if (
+                  warning.code === "SOURCEMAP_ERROR" &&
+                  warning.message.includes("resolve original location") &&
+                  warning.pos === 0
+                ) {
+                  return;
+                }
+                if (viteUserConfig.build?.rollupOptions?.onwarn) {
+                  viteUserConfig.build.rollupOptions.onwarn(
+                    warning,
+                    defaultHandler,
+                  );
+                } else {
+                  defaultHandler(warning);
+                }
+              },
+            },
           },
         };
       },
@@ -77,26 +146,168 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
       load(id) {
         if (id === virtual.routeConfig.resolvedId) {
-          return createVirtualRouteConfigCode({
+          const result = createVirtualRouteConfig({
             appDirectory: config.appDirectory,
             routeConfig: config.unstable_routeConfig,
           });
+          routeIdByFile = result.routeIdByFile;
+          return result.code;
         }
       },
     },
     {
       name: "react-router/rsc/virtual-route-modules",
       transform(code, id) {
-        return transformVirtualRouteModules({ code, id });
+        return transformVirtualRouteModules({ code, id, viteCommand });
       },
     },
-    react(),
+    {
+      name: "react-router/rsc/hmr/inject-runtime",
+      enforce: "pre",
+      resolveId(id) {
+        if (id === virtual.injectHmrRuntime.id) {
+          return virtual.injectHmrRuntime.resolvedId;
+        }
+      },
+      async load(id) {
+        if (id !== virtual.injectHmrRuntime.resolvedId) return;
+
+        return viteCommand === "serve"
+          ? [
+              `import RefreshRuntime from "${virtual.hmrRuntime.id}"`,
+              "RefreshRuntime.injectIntoGlobalHook(window)",
+              "window.$RefreshReg$ = () => {}",
+              "window.$RefreshSig$ = () => (type) => type",
+              "window.__vite_plugin_react_preamble_installed__ = true",
+            ].join("\n")
+          : "";
+      },
+    },
+    {
+      name: "react-router/rsc/hmr/runtime",
+      enforce: "pre",
+      resolveId(id) {
+        if (id === virtual.hmrRuntime.id) return virtual.hmrRuntime.resolvedId;
+      },
+      async load(id) {
+        if (id !== virtual.hmrRuntime.resolvedId) return;
+
+        const reactRefreshDir = path.dirname(
+          require.resolve("react-refresh/package.json"),
+        );
+        const reactRefreshRuntimePath = path.join(
+          reactRefreshDir,
+          "cjs/react-refresh-runtime.development.js",
+        );
+
+        return [
+          "const exports = {}",
+          await readFile(reactRefreshRuntimePath, "utf8"),
+          await readFile(
+            require.resolve("./static/rsc-refresh-utils.mjs"),
+            "utf8",
+          ),
+          "export default exports",
+        ].join("\n");
+      },
+    },
+    {
+      name: "react-router/rsc/hmr/react-refresh",
+      async transform(code, id, options) {
+        if (viteCommand !== "serve") return;
+        if (id.includes("/node_modules/")) return;
+
+        const filepath = id.split("?")[0];
+        const extensionsRE = /\.(jsx?|tsx?|mdx?)$/;
+        if (!extensionsRE.test(filepath)) return;
+
+        const devRuntime = "react/jsx-dev-runtime";
+        const ssr = options?.ssr === true;
+        const isJSX = filepath.endsWith("x");
+        const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
+        if (!useFastRefresh) return;
+
+        const routeId = routeIdByFile?.get(filepath);
+        if (routeId !== undefined) {
+          return { code: addRefreshWrapper({ routeId, code, id }) };
+        }
+
+        const result = await babel.transformAsync(code, {
+          babelrc: false,
+          configFile: false,
+          filename: id,
+          sourceFileName: filepath,
+          parserOpts: {
+            sourceType: "module",
+            allowAwaitOutsideFunction: true,
+          },
+          plugins: [[require("react-refresh/babel"), { skipEnvCheck: true }]],
+          sourceMaps: true,
+        });
+        if (result === null) return;
+
+        code = result.code!;
+        const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
+        if (refreshContentRE.test(code)) {
+          code = addRefreshWrapper({ code, id });
+        }
+        return { code, map: result.map };
+      },
+    },
+    {
+      name: "react-router/rsc/hmr/updates",
+      async hotUpdate(this, { server, file, modules }) {
+        if (this.environment.name !== "rsc") return;
+
+        const isServerOnlyChange =
+          (server.environments.client.moduleGraph.getModulesByFile(file)
+            ?.size ?? 0) === 0;
+
+        for (const mod of getModulesWithImporters(modules)) {
+          if (!mod.file) continue;
+
+          const normalizedPath = path.normalize(mod.file);
+          const routeId = routeIdByFile?.get(normalizedPath);
+          if (routeId !== undefined) {
+            const routeSource = await readFile(normalizedPath, "utf8");
+            const virtualRouteModuleCode = (
+              await server.environments.rsc.pluginContainer.transform(
+                routeSource,
+                `${normalizedPath}?route-module`,
+              )
+            ).code;
+            const { staticExports } = parseRouteExports(virtualRouteModuleCode);
+            const hasAction = staticExports.includes("action");
+            const hasComponent = staticExports.includes("default");
+            const hasErrorBoundary = staticExports.includes("ErrorBoundary");
+            const hasLoader = staticExports.includes("loader");
+
+            server.hot.send({
+              type: "custom",
+              event: "react-router:hmr",
+              data: {
+                routeId,
+                isServerOnlyChange,
+                hasAction,
+                hasComponent,
+                hasErrorBoundary,
+                hasLoader,
+              },
+            });
+          }
+        }
+
+        return modules;
+      },
+    },
     rsc({ entries: getRscEntries() }),
   ];
 }
 
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
+  injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
+  hmrRuntime: create("unstable_rsc/runtime"),
 };
 
 function getRootDirectory(viteUserConfig: Vite.UserConfig) {
@@ -131,3 +342,84 @@ function getDevPackageRoot(): string {
   }
   throw new Error("Could not find package.json");
 }
+
+function getModulesWithImporters(
+  modules: Vite.EnvironmentModuleNode[],
+): Set<Vite.EnvironmentModuleNode> {
+  const visited = new Set<Vite.EnvironmentModuleNode>();
+  const result = new Set<Vite.EnvironmentModuleNode>();
+
+  function walk(module: Vite.EnvironmentModuleNode) {
+    if (visited.has(module)) return;
+
+    visited.add(module);
+    result.add(module);
+
+    for (const importer of module.importers) {
+      walk(importer);
+    }
+  }
+
+  for (const module of modules) {
+    walk(module);
+  }
+
+  return result;
+}
+
+function addRefreshWrapper({
+  routeId,
+  code,
+  id,
+}: {
+  routeId?: string;
+  code: string;
+  id: string;
+}): string {
+  const acceptExports =
+    routeId !== undefined ? CLIENT_NON_COMPONENT_EXPORTS : [];
+  return (
+    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
+    code +
+    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+      .replaceAll("__ROUTE_ID__", JSON.stringify(routeId))
+  );
+}
+
+const REACT_REFRESH_HEADER = `
+import RefreshRuntime from "${virtual.hmrRuntime.id}";
+
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.__vite_plugin_react_preamble_installed__) {
+    throw new Error(
+      "React Router Vite plugin can't detect preamble. Something is wrong."
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = (type, id) => {
+    RefreshRuntime.register(type, __SOURCE__ + " " + id)
+  };
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
+
+const REACT_REFRESH_FOOTER = `
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      __ROUTE_ID__ && window.__reactRouterRouteModuleUpdates.set(__ROUTE_ID__, nextExports);
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports, __ACCEPT_EXPORTS__);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}`;
