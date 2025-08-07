@@ -7,7 +7,7 @@ import {
   type DataRouteMatch,
   type DataRouteObject,
 } from "../context";
-import { FrameworkContext } from "../dom/ssr/components";
+import { FrameworkContext, setIsHydrated } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { createBrowserHistory, invariant } from "../router/history";
 import type { Router as DataRouter, RouterInit } from "../router/router";
@@ -39,6 +39,8 @@ import {
   shouldHydrateRouteLoader,
 } from "../dom/ssr/routes";
 import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
+import type { RouteModules } from "../dom/ssr/routeModules";
+import { populateRSCRouteModules } from "./route-modules";
 
 export type BrowserCreateFromReadableStreamFunction = (
   body: ReadableStream<Uint8Array>,
@@ -228,13 +230,23 @@ function createRouterFromPayload({
   createFromReadableStream: BrowserCreateFromReadableStreamFunction;
   fetchImplementation: (request: Request) => Promise<Response>;
   unstable_getContext: RouterInit["unstable_getContext"] | undefined;
-}) {
+}): {
+  router: DataRouter;
+  routeModules: RouteModules;
+} {
   const globalVar = window as WindowWithRouterGlobals;
 
-  if (globalVar.__reactRouterDataRouter)
-    return globalVar.__reactRouterDataRouter;
+  if (globalVar.__reactRouterDataRouter && globalVar.__reactRouterRouteModules)
+    return {
+      router: globalVar.__reactRouterDataRouter,
+      routeModules: globalVar.__reactRouterRouteModules,
+    };
 
   if (payload.type !== "render") throw new Error("Invalid payload type");
+
+  globalVar.__reactRouterRouteModules =
+    globalVar.__reactRouterRouteModules ?? {};
+  populateRSCRouteModules(globalVar.__reactRouterRouteModules, payload.matches);
 
   let patches = new Map<string, RSCRouteManifest[]>();
   payload.patches?.forEach((patch) => {
@@ -398,7 +410,10 @@ function createRouterFromPayload({
     ).__reactRouterDataRouter._internalSetRoutes(newRoutes);
   };
 
-  return globalVar.__reactRouterDataRouter;
+  return {
+    router: globalVar.__reactRouterDataRouter,
+    routeModules: globalVar.__reactRouterRouteModules,
+  };
 }
 
 const renderedRoutesContext = unstable_createContext<RSCRouteManifest[]>();
@@ -662,7 +677,7 @@ export function RSCHydratedRouter({
 }: RSCHydratedRouterProps) {
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
-  let router = React.useMemo(
+  let { router, routeModules } = React.useMemo(
     () =>
       createRouterFromPayload({
         payload,
@@ -677,6 +692,10 @@ export function RSCHydratedRouter({
       unstable_getContext,
     ],
   );
+
+  React.useEffect(() => {
+    setIsHydrated();
+  }, []);
 
   React.useLayoutEffect(() => {
     // If we had to run clientLoaders on hydration, we delay initialization until
@@ -780,7 +799,7 @@ export function RSCHydratedRouter({
       unstable_middleware: false,
       unstable_subResourceIntegrity: false,
     },
-    isSpaMode: true,
+    isSpaMode: false,
     ssr: true,
     criticalCss: "",
     manifest: {
@@ -793,7 +812,7 @@ export function RSCHydratedRouter({
       },
     },
     routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
-    routeModules: {},
+    routeModules,
   };
 
   return (
@@ -831,6 +850,9 @@ function createRouteFromServerManifest(
     // the server loader flow regardless of whether the client loader calls
     // `serverLoader` or not, otherwise we'll have nothing to render.
     (match.hasComponent && !match.element);
+
+  invariant(window.__reactRouterRouteModules);
+  populateRSCRouteModules(window.__reactRouterRouteModules, match);
 
   let dataRoute: DataRouteObjectWithManifestInfo = {
     id: match.id,

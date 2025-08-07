@@ -168,11 +168,7 @@ async function workflow({
   // setup: browser state
   let hmrStatus = page.locator("#index [data-hmr]");
 
-  // RSC doesn't support meta export?
-  if (!templateName.includes("rsc")) {
-    await expect(page).toHaveTitle("HMR updated title: 0");
-  }
-
+  await expect(page).toHaveTitle("HMR updated title: 0");
   await expect(hmrStatus).toHaveText("HMR updated: 0");
   let input = page.locator("#index input");
   await expect(input).toBeVisible();
@@ -187,11 +183,7 @@ async function workflow({
   );
   await page.waitForLoadState("networkidle");
 
-  // RSC doesn't support meta export?
-  if (!templateName.includes("rsc")) {
-    await expect(page).toHaveTitle("HMR updated title: 1");
-  }
-
+  await expect(page).toHaveTitle("HMR updated title: 1");
   await expect(hmrStatus).toHaveText("HMR updated: 1");
   await expect(input).toHaveValue("stateful");
   expect(page.errors).toEqual([]);
