@@ -1,24 +1,6 @@
 # `react-router`
 
-## 7.8.0-pre.3
-
-### Patch Changes
-
-- Bubble client-side middleware errors prior to `next` to the appropriate ancestor error boundary ([#14138](https://github.com/remix-run/react-router/pull/14138))
-
-## 7.8.0-pre.2
-
-### Patch Changes
-
-- proxy server action side-effect redirects from actions for document and callServer requests ([#14131](https://github.com/remix-run/react-router/pull/14131))
-
-## 7.8.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Few additional fixes for returning/throwing data from middleware - attach to #14093 ([#14128](https://github.com/remix-run/react-router/pull/14128))
-
-## 7.8.0-pre.0
+## 7.8.0
 
 ### Minor Changes
 
@@ -29,14 +11,50 @@
 
 ### Patch Changes
 
-- [UNSTABLE] Ensure resource route errors go through `handleError` w/middleware enabled ([#14078](https://github.com/remix-run/react-router/pull/14078))
 - Prevent _"Did not find corresponding fetcher result"_ console error when navigating during a `fetcher.submit` revalidation ([#14114](https://github.com/remix-run/react-router/pull/14114))
+
+- Bubble client-side middleware errors prior to `next` to the appropriate ancestor error boundary ([#14138](https://github.com/remix-run/react-router/pull/14138))
+
 - Switch Lazy Route Discovery manifest URL generation to usea standalone `URLSearchParams` instance instead of `URL.searchParams` to avoid a major performance bottleneck in Chrome ([#14084](https://github.com/remix-run/react-router/pull/14084))
-- [UNSTABLE] Propagate returned Response from server middleware if next wasn't called ([#14093](https://github.com/remix-run/react-router/pull/14093))
-- [UNSTABLE] Allow server middlewares to return `data()` values which will be converted into a `Response` ([#14093](https://github.com/remix-run/react-router/pull/14093))
-- [UNSTABLE] Update middleware error handling so that the `next` function never throws and instead handles any middleware errors at the proper `ErrorBoundary` and returns the `Response` up through the ancestor `next` function ([#14118](https://github.com/remix-run/react-router/pull/14118))
-- - [UNSTABLE] When middleware is enabled, make the `context` parameter read-only (via `Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
-- [UNSTABLE] Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
+
+- Adjust internal RSC usage of `React.use` to avoid Webpack compilation errors when using React 18 ([#14113](https://github.com/remix-run/react-router/pull/14113))
+
+- Remove dependency on `@types/node` in TypeScript declaration files ([#14059](https://github.com/remix-run/react-router/pull/14059))
+
+- Fix types for `UIMatch` to reflect that the `loaderData`/`data` properties may be `undefined` ([#12206](https://github.com/remix-run/react-router/pull/12206))
+  - When an `ErrorBoundary` is being rendered, not all active matches will have loader data available, since it may have been their `loader` that threw to trigger the boundary
+  - The `UIMatch.data` type was not correctly handing this and would always reflect the presence of data, leading to the unexpected runtime errors when an `ErrorBoundary` was rendered
+  - ⚠️ This may cause some type errors to show up in your code for unguarded `match.data` accesses - you should properly guard for `undefined` values in those scenarios.
+
+  ```tsx
+  // app/root.tsx
+  export function loader() {
+    someFunctionThatThrows(); // ❌ Throws an Error
+    return { title: "My Title" };
+  }
+
+  export function Layout({ children }: { children: React.ReactNode }) {
+    let matches = useMatches();
+    let rootMatch = matches[0] as UIMatch<Awaited<ReturnType<typeof loader>>>;
+    //  ^ rootMatch.data is incorrectly typed here, so TypeScript does not
+    //    complain if you do the following which throws an error at runtime:
+    let { title } = rootMatch.data; // 💥
+
+    return <html>...</html>;
+  }
+  ```
+
+- \[UNSTABLE] Ensure resource route errors go through `handleError` w/middleware enabled ([#14078](https://github.com/remix-run/react-router/pull/14078))
+
+- \[UNSTABLE] Propagate returned Response from server middleware if next wasn't called ([#14093](https://github.com/remix-run/react-router/pull/14093))
+
+- \[UNSTABLE] Allow server middlewares to return `data()` values which will be converted into a `Response` ([#14093](https://github.com/remix-run/react-router/pull/14093))
+
+- \[UNSTABLE] Update middleware error handling so that the `next` function never throws and instead handles any middleware errors at the proper `ErrorBoundary` and returns the `Response` up through the ancestor `next` function ([#14118](https://github.com/remix-run/react-router/pull/14118))
+
+- \[UNSTABLE] When middleware is enabled, make the `context` parameter read-only (via `Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
+
+- \[UNSTABLE] Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
   - The API has been renamed to `unstable_generateMiddlewareResponse` for clarity
   - The main functional change is that instead of running the loaders/actions before calling `unstable_respond` and handing you the result, we now pass a `query`/`queryRoute` function as a parameter and you execute the loaders/actions inside your callback, giving you full access to pre-processing and error handling
   - The `query` version of the API now has a signature of `(query: (r: Request) => Promise<StaticHandlerContext | Response>) => Promise<Response>`
@@ -63,41 +81,20 @@
   });
   ```
 
-- [UNSTABLE] Convert internal middleware implementations to use the new `unstable_generateMiddlewareResponse` API ([#14103](https://github.com/remix-run/react-router/pull/14103))
-- Adjust internal RSC usage of `React.use` to avoid Webpack compilation errors when using React 18 ([#14113](https://github.com/remix-run/react-router/pull/14113))
-- [UNSTABLE] Change `getLoadContext` signature (`type GetLoadContextFunction`) when `future.unstable_middleware` is enabled so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+- \[UNSTABLE] Convert internal middleware implementations to use the new `unstable_generateMiddlewareResponse` API ([#14103](https://github.com/remix-run/react-router/pull/14103))
+
+- \[UNSTABLE] Change `getLoadContext` signature (`type GetLoadContextFunction`) when `future.unstable_middleware` is enabled so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
   - This also removes the `type unstable_InitialContext` export
   - ⚠️ This is a breaking change if you have adopted middleware and are using a custom server with a `getLoadContext` function
 
-- Remove dependency on `@types/node` in TypeScript declaration files ([#14059](https://github.com/remix-run/react-router/pull/14059))
-- Fix types for `UIMatch` to reflect that the `loaderData`/`data` properties may be `undefined` ([#12206](https://github.com/remix-run/react-router/pull/12206))
-  - When an `ErrorBoundary` is being rendered, not all active matches will have loader data available, since it may have been their `loader` that threw to trigger the boundary
-  - The `UIMatch.data` type was not correctly handing this and would always reflect the presence of data, leading to the unexpected runtime errors when an `ErrorBoundary` was rendered
-  - ⚠️ This may cause some type errors to show up in your code for unguarded `match.data` accesses - you should properly guard for `undefined` values in those scenarios.
+- \[UNSTABLE] Run client middleware on client navigations even if no loaders exist ([#14106](https://github.com/remix-run/react-router/pull/14106))
 
-  ```tsx
-  // app/root.tsx
-  export function loader() {
-    someFunctionThatThrows(); // ❌ Throws an Error
-    return { title: "My Title" };
-  }
-
-  export function Layout({ children }: { children: React.ReactNode }) {
-    let matches = useMatches();
-    let rootMatch = matches[0] as UIMatch<Awaited<ReturnType<typeof loader>>>;
-    //  ^ rootMatch.data is incorrectly typed here, so TypeScript does not
-    //    complain if you do the following which throws an error at runtime:
-    let { title } = rootMatch.data; // 💥
-
-    return <html>...</html>;
-  }
-  ```
-
-- [UNSTABLE] Run client middleware on client navigations even if no loaders exist ([#14106](https://github.com/remix-run/react-router/pull/14106))
-- [UNSTABLE] Change the `unstable_getContext` signature on `RouterProvider`/`HydratedRouter`/`unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
+- \[UNSTABLE] Change the `unstable_getContext` signature on `RouterProvider`/`HydratedRouter`/`unstable_RSCHydratedRouter` so that it returns an `unstable_RouterContextProvider` instance instead of a `Map` used to contruct the instance internally ([#14097](https://github.com/remix-run/react-router/pull/14097))
   - ⚠️ This is a breaking change if you have adopted the `unstable_getContext` prop
 
-- Fix RSC Data Mode issue where routes that return `false` from `shouldRevalidate` would be replaced by an `<Outlet />` ([#14071](https://github.com/remix-run/react-router/pull/14071))
+- [UNSTABLE] proxy server action side-effect redirects from actions for document and callServer requests ([#14131](https://github.com/remix-run/react-router/pull/14131))
+
+- [UNSTABLE] Fix RSC Data Mode issue where routes that return `false` from `shouldRevalidate` would be replaced by an `<Outlet />` ([#14071](https://github.com/remix-run/react-router/pull/14071))
 
 ## 7.7.1
 
