@@ -67,6 +67,7 @@ const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
 
 type ServerContext = {
   redirect?: Response;
+  runningAction: boolean;
 };
 
 const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
@@ -80,7 +81,7 @@ export const redirect: typeof baseRedirect = (...args) => {
   const response = baseRedirect(...args);
 
   const ctx = ServerStorage.getStore();
-  if (ctx) {
+  if (ctx && ctx.runningAction) {
     ctx.redirect = response;
   }
 
@@ -91,7 +92,7 @@ export const redirectDocument: typeof baseRedirectDocument = (...args) => {
   const response = baseRedirectDocument(...args);
 
   const ctx = ServerStorage.getStore();
-  if (ctx) {
+  if (ctx && ctx.runningAction) {
     ctx.redirect = response;
   }
 
@@ -102,7 +103,7 @@ export const replace: typeof baseReplace = (...args) => {
   const response = baseReplace(...args);
 
   const ctx = ServerStorage.getStore();
-  if (ctx) {
+  if (ctx && ctx.runningAction) {
     ctx.redirect = response;
   }
 
@@ -697,7 +698,9 @@ async function generateRenderResponse(
   });
 
   let actionResult: Promise<unknown> | undefined;
-  const ctx: ServerContext = {};
+  const ctx: ServerContext = {
+    runningAction: false,
+  };
   const result = await ServerStorage.run(ctx, () =>
     staticHandler.query(request, {
       requestContext,
@@ -713,6 +716,7 @@ async function generateRenderResponse(
         // POST `request` to `query` and process our action there.
         let formState: unknown;
         if (request.method === "POST") {
+          ctx.runningAction = true;
           let result = await processServerAction(
             request,
             basename,
@@ -723,6 +727,8 @@ async function generateRenderResponse(
             onError,
             temporaryReferences,
           );
+          ctx.runningAction = false;
+
           if (isResponse(result)) {
             return generateRedirectResponse(
               result,
@@ -731,22 +737,25 @@ async function generateRenderResponse(
               isDataRequest,
               generateResponse,
               temporaryReferences,
+              (ctx.redirect as unknown as Response)?.headers,
             );
           }
+
           actionResult = result?.actionResult;
           formState = result?.formState;
           request = result?.revalidationRequest ?? request;
-        }
 
-        if (ctx.redirect) {
-          return generateRedirectResponse(
-            ctx.redirect,
-            actionResult,
-            basename,
-            isDataRequest,
-            generateResponse,
-            temporaryReferences,
-          );
+          if (ctx.redirect) {
+            return generateRedirectResponse(
+              ctx.redirect,
+              actionResult,
+              basename,
+              isDataRequest,
+              generateResponse,
+              temporaryReferences,
+              undefined,
+            );
+          }
         }
 
         let staticContext = await query(request);
@@ -759,6 +768,7 @@ async function generateRenderResponse(
             isDataRequest,
             generateResponse,
             temporaryReferences,
+            ctx.redirect?.headers,
           );
         }
 
@@ -774,6 +784,7 @@ async function generateRenderResponse(
           formState,
           staticContext,
           temporaryReferences,
+          ctx.redirect?.headers,
         );
       },
     }),
@@ -787,6 +798,7 @@ async function generateRenderResponse(
       isDataRequest,
       generateResponse,
       temporaryReferences,
+      ctx.redirect?.headers,
     );
   }
 
@@ -804,6 +816,7 @@ function generateRedirectResponse(
     { temporaryReferences }: { temporaryReferences: unknown },
   ) => Response,
   temporaryReferences: unknown,
+  sideEffectRedirectHeaders: Headers | undefined,
 ) {
   let redirect = response.headers.get("Location")!;
 
@@ -820,8 +833,12 @@ function generateRedirectResponse(
     actionResult,
   };
 
-  // Preserve non-internal headers on the user-created redirect
-  let headers = new Headers(response.headers);
+  // Preserve non-internal headers on the user-created redirect and merge in
+  // any side-effect redirect headers
+  let headers = new Headers(sideEffectRedirectHeaders);
+  for (const [key, value] of response.headers.entries()) {
+    headers.append(key, value);
+  }
   headers.delete("Location");
   headers.delete("X-Remix-Reload-Document");
   headers.delete("X-Remix-Replace");
@@ -858,6 +875,7 @@ async function generateStaticContextResponse(
   formState: unknown | undefined,
   staticContext: StaticHandlerContext,
   temporaryReferences: unknown,
+  sideEffectRedirectHeaders: Headers | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -895,6 +913,7 @@ async function generateStaticContextResponse(
   let headers = getDocumentHeadersImpl(
     staticContext,
     (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers,
+    sideEffectRedirectHeaders,
   );
 
   // Remove Content-Length because node:http will truncate the response body

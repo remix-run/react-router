@@ -124,12 +124,10 @@ export interface unstable_RouterContext<T = unknown> {
 
 /**
  * Creates a type-safe {@link unstable_RouterContext} object that can be used to
- * * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
- * * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
- * * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
- * * but specifically designed for React Router's request/response lifecycle.
- *
- * <docs-warning>Enable this API with the `future.unstable_middleware` flag.</docs-warning>
+ * store and retrieve arbitrary values in [`action`](../../start/framework/route-module#action)s,
+ * [`loader`](../../start/framework/route-module#loader)s, and [middleware](../../how-to/middleware).
+ * Similar to React's [`createContext`](https://react.dev/reference/react/createContext),
+ * but specifically designed for React Router's request/response lifecycle.
  *
  * If a `defaultValue` is provided, it will be returned from `context.get()`
  * when no value has been set for the context. Otherwise, reading this context
@@ -201,6 +199,7 @@ export function unstable_createContext<T>(
  * const userContext = unstable_createContext<User | null>(null);
  * const contextProvider = new unstable_RouterContextProvider();
  * contextProvider.set(userContext, getUser());
+ * //                               ^ Type-safe
  * const user = contextProvider.get(userContext);
  * //    ^ User
  *
@@ -300,7 +299,7 @@ interface DataFunctionArgs<Context> {
  * middlewares from the bottom-up
  */
 export interface unstable_MiddlewareNextFunction<Result = unknown> {
-  (): MaybePromise<Result>;
+  (): Promise<Result>;
 }
 
 /**

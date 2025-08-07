@@ -256,7 +256,7 @@ The following naming conventions have been chosen for familiarity and simplicity
 
 See the relevant bundler documentation below for specific code examples for each of the following entry points.
 
-These examples all use [express][express] and [@mjackson/node-fetch-server][node-fetch-server] for the server and request handling.
+These examples all use [express][express] and [@remix-run/node-fetch-server][node-fetch-server] for the server and request handling.
 
 **Routes**
 
@@ -332,7 +332,7 @@ To configure Parcel, add the following to your `package.json`:
       "source": "src/entry.rsc.tsx",
       "scopeHoist": false,
       "includeNodeModules": {
-        "@mjackson/node-fetch-server": false,
+        "@remix-run/node-fetch-server": false,
         "compression": false,
         "express": false
       }
@@ -425,7 +425,7 @@ export async function generateHTML(
 The following is a simplified example of a Parcel RSC Server.
 
 ```tsx filename=src/entry.rsc.tsx
-import { createRequestListener } from "@mjackson/node-fetch-server";
+import { createRequestListener } from "@remix-run/node-fetch-server";
 import express from "express";
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 import {
@@ -781,6 +781,6 @@ createFromReadableStream<RSCServerPayload>(
 [get-rsc-stream]: ../api/rsc/getRSCStream
 [rsc-hydrated-router]: ../api/rsc/RSCHydratedRouter
 [express]: https://expressjs.com/
-[node-fetch-server]: https://github.com/mjackson/remix-the-web/tree/main/packages/node-fetch-server
+[node-fetch-server]: https://www.npmjs.com/package/@remix-run/node-fetch-server
 [parcel-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-parcel
 [vite-rsc-template]: https://github.com/remix-run/react-router-templates/tree/main/unstable_rsc-vite

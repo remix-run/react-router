@@ -56,7 +56,7 @@ function MyRouteComponent() {
 
 ## `unstable_middleware`
 
-Route middleware runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
+Route [middleware][middleware] runs sequentially before and after navigations. This gives you a singular place to do things like logging and authentication. The `next` function continues down the chain, and on the leaf route the `next` function executes the loaders/actions for the navigation.
 
 ```tsx
 createBrowserRouter([
@@ -194,7 +194,7 @@ A route loader is revalidated when:
 
 - its own route params change
 - any change to URL search params
-- after any actions are called
+- after an action is called and returns a non-error status code
 
 By defining this function, you opt out of the default behavior completely and can manually control when loader data is revalidated for navigations and form submissions.
 

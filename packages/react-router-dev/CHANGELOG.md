@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## 7.8.0
+
+### Patch Changes
+
+- Fix rename without mkdir in Vite plugin ([#14105](https://github.com/remix-run/react-router/pull/14105))
+- Updated dependencies:
+  - `react-router@7.8.0`
+  - `@react-router/node@7.8.0`
+  - `@react-router/serve@7.8.0`
+
 ## 7.7.1
 
 ### Patch Changes
@@ -698,6 +708,7 @@
   ```
 
   This initial implementation targets type inference for:
+
   - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
   - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
   - `ActionData` : Action data from `action` and/or `clientAction` within your route module
@@ -712,6 +723,7 @@
   ```
 
   Check out our docs for more:
+
   - [_Explanations > Type Safety_](https://reactrouter.com/dev/guides/explanation/type-safety)
   - [_How-To > Setting up type safety_](https://reactrouter.com/dev/guides/how-to/setting-up-type-safety)
 
@@ -911,6 +923,7 @@
 - Vite: Provide `Unstable_ServerBundlesFunction` and `Unstable_VitePluginConfig` types ([#8654](https://github.com/remix-run/remix/pull/8654))
 
 - Vite: add `--sourcemapClient` and `--sourcemapServer` flags to `remix vite:build` ([#8613](https://github.com/remix-run/remix/pull/8613))
+
   - `--sourcemapClient`
 
   - `--sourcemapClient=inline`
@@ -1247,6 +1260,7 @@
 - Add support for `clientLoader`/`clientAction`/`HydrateFallback` route exports ([RFC](https://github.com/remix-run/remix/discussions/7634)) ([#8173](https://github.com/remix-run/remix/pull/8173))
 
   Remix now supports loaders/actions that run on the client (in addition to, or instead of the loader/action that runs on the server). While we still recommend server loaders/actions for the majority of your data needs in a Remix app - these provide some levers you can pull for more advanced use-cases such as:
+
   - Leveraging a data source local to the browser (i.e., `localStorage`)
   - Managing a client-side cache of server data (like `IndexedDB`)
   - Bypassing the Remix server in a BFF setup and hitting your API directly from the browser
@@ -1650,6 +1664,7 @@
 - Output esbuild metafiles for bundle analysis ([#6772](https://github.com/remix-run/remix/pull/6772))
 
   Written to server build directory (`build/` by default):
+
   - `metafile.css.json`
   - `metafile.js.json` (browser JS)
   - `metafile.server.json` (server JS)
@@ -1747,6 +1762,7 @@
 - built-in tls support ([#6483](https://github.com/remix-run/remix/pull/6483))
 
   New options:
+
   - `--tls-key` / `tlsKey`: TLS key
   - `--tls-cert` / `tlsCert`: TLS Certificate
 
@@ -2017,6 +2033,7 @@
   ```
 
   The dev server will:
+
   - force `NODE_ENV=development` and warn you if it was previously set to something else
   - rebuild your app whenever your Remix app code changes
   - restart your app server whenever rebuilds succeed

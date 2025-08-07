@@ -16,6 +16,7 @@ import {
   redirect,
   unstable_RouterContextProvider,
   data,
+  ErrorResponseImpl,
 } from "../../lib/router/utils";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData, invariant, tick } from "./utils/utils";
@@ -38,6 +39,7 @@ function respondWithJson(staticContext: StaticHandlerContext | Response) {
       value instanceof Error ? `ERROR: ${value.message}` : value,
     ),
     {
+      status: staticContext.statusCode ?? 200,
       headers: {
         "Content-Type": "application/json",
       },
@@ -1372,6 +1374,57 @@ describe("context/middleware", () => {
           errors: null,
         });
       });
+
+      it("throwing from a middleware before next bubbles up to the highest route with a loader", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "a",
+              path: "/a",
+              hasErrorBoundary: true,
+              children: [
+                {
+                  id: "b",
+                  path: "b",
+                  hasErrorBoundary: true,
+                  loader: () => "B",
+                  children: [
+                    {
+                      id: "c",
+                      path: "c",
+                      hasErrorBoundary: true,
+                      children: [
+                        {
+                          id: "d",
+                          path: "d",
+                          hasErrorBoundary: true,
+                          unstable_middleware: [
+                            () => {
+                              throw new Error("D ERROR");
+                            },
+                          ],
+                          loader: () => "D",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/a/b/c/d");
+
+        expect(router.state.loaderData).toEqual({});
+        expect(router.state.errors).toEqual({
+          b: new Error("D ERROR"),
+        });
+      });
     });
   });
 
@@ -1620,7 +1673,8 @@ describe("context/middleware", () => {
           unstable_middleware: [
             async (_, next) => {
               let result = await next();
-              expect(isDataWithResponseInit(result)).toBe(true);
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
               return result;
             },
             async (_, next) => {
@@ -1640,6 +1694,140 @@ describe("context/middleware", () => {
       })) as Response;
       expect(res.status).toBe(404);
       await expect(res.text()).resolves.toEqual("not found");
+    });
+
+    it("propagates a thrown data() response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              throw data("not found", { status: 404, statusText: "Not Found" });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
+      })) as Response;
+      expect(res.status).toBe(404);
+      let staticContext = (await res.json()) as StaticHandlerContext;
+      expect(staticContext).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        statusCode: 404,
+        loaderData: {},
+        actionData: null,
+        errors: {
+          parent: {
+            status: 404,
+            statusText: "Not Found",
+            data: "not found",
+          },
+        },
+      });
+    });
+
+    it("propagates a returned data() response if next is called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              await next();
+              return data("not found", { status: 404 });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
+      })) as Response;
+      expect(res.status).toBe(404);
+      await expect(res.text()).resolves.toEqual("not found");
+    });
+
+    it("propagates a thrown data() response if next is called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              await next();
+              throw data("not found", { status: 404, statusText: "Not Found" });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.query(request, {
+        unstable_generateMiddlewareResponse: async (q) =>
+          respondWithJson(await q(request)),
+      })) as Response;
+      expect(res.status).toBe(404);
+      let staticContext = (await res.json()) as StaticHandlerContext;
+      expect(staticContext).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        statusCode: 404,
+        loaderData: {},
+        actionData: null,
+        errors: {
+          parent: {
+            status: 404,
+            statusText: "Not Found",
+            data: "not found",
+          },
+        },
+      });
     });
 
     describe("ordering", () => {
@@ -2545,7 +2733,8 @@ describe("context/middleware", () => {
           unstable_middleware: [
             async (_, next) => {
               let result = await next();
-              expect(isDataWithResponseInit(result)).toBe(true);
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
               return result;
             },
             async (_, next) => {
@@ -2561,6 +2750,107 @@ describe("context/middleware", () => {
       let request = new Request("http://localhost/parent");
       let res = (await handler.queryRoute(request, {
         unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
+      expect(res.status).toBe(404);
+      await expect(res.text()).resolves.toEqual("not found");
+    });
+
+    it("propagates a thrown data() response if next isn't called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              throw data("not found", { status: 404 });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: async (q) => q(request),
+      })) as Response;
+      expect(res.status).toBe(404);
+      await expect(res.text()).resolves.toEqual("not found");
+    });
+
+    it("propagates a returned data() response if next is called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              await next();
+              return data("not found", { status: 404 });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: (q) => q(request),
+      })) as Response;
+      expect(res.status).toBe(404);
+      await expect(res.text()).resolves.toEqual("not found");
+    });
+
+    it("propagates a thrown data() response if next is called", async () => {
+      let handler = createStaticHandler([
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          unstable_middleware: [
+            async (_, next) => {
+              let result = await next();
+              expect(isDataWithResponseInit(result)).toBe(false);
+              expect(isResponse(result)).toBe(true);
+              return result;
+            },
+            async (_, next) => {
+              await next();
+              throw data("not found", { status: 404 });
+            },
+          ],
+          loader() {
+            return "PARENT";
+          },
+        },
+      ]);
+
+      let request = new Request("http://localhost/parent");
+      let res = (await handler.queryRoute(request, {
+        unstable_generateMiddlewareResponse: async (q) => q(request),
       })) as Response;
       expect(res.status).toBe(404);
       await expect(res.text()).resolves.toEqual("not found");

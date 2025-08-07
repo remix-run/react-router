@@ -40,6 +40,7 @@ import type {
   ActionFunction,
   unstable_MiddlewareFunction,
   unstable_MiddlewareNextFunction,
+  ErrorResponse,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -3849,6 +3850,9 @@ export function createStaticHandler(
           return res;
         },
         (error) => {
+          if (isRouteErrorResponse(error)) {
+            return Promise.resolve(errorResponseToResponse(error));
+          }
           if (isResponse(error)) {
             return Promise.resolve(error);
           }
@@ -5365,11 +5369,47 @@ async function defaultDataStrategyWithMiddleware(
     return defaultDataStrategy(args);
   }
 
+  let didCallHandler = false;
   return runClientMiddlewarePipeline(
     args,
-    () => defaultDataStrategy(args),
-    (error, routeId) => ({ [routeId]: { type: "error", result: error } }),
+    () => {
+      didCallHandler = true;
+      return defaultDataStrategy(args);
+    },
+    (error, routeId) =>
+      clientMiddlewareErrorHandler(
+        error,
+        routeId,
+        args.matches,
+        didCallHandler,
+      ),
   );
+}
+
+function clientMiddlewareErrorHandler(
+  error: unknown,
+  routeId: string,
+  matches: AgnosticDataRouteMatch[],
+  didCallHandler: boolean,
+): Record<string, DataStrategyResult> {
+  if (didCallHandler) {
+    return {
+      [routeId]: { type: "error", result: error },
+    };
+  } else {
+    // We never even got to the handlers, so we've got no data.
+    // Find the boundary at or above the source of the middleware
+    // error or the highest loader. We can't render any UI below
+    // the highest loader since we have no loader data available
+    let boundaryRouteId = findNearestBoundary(
+      matches,
+      matches.find((m) => m.route.id === routeId || m.route.loader)?.route.id ||
+        routeId,
+    ).route.id;
+    return {
+      [boundaryRouteId]: { type: "error", result: error },
+    };
+  }
 }
 
 export async function runServerMiddlewarePipeline(
@@ -5397,16 +5437,6 @@ export async function runServerMiddlewarePipeline(
     handler,
     errorHandler,
   );
-
-  // Upgrade returned data() calls to real Responses
-  if (isDataWithResponseInit(result)) {
-    return new Response(
-      typeof result.data === "string"
-        ? result.data
-        : JSON.stringify(result.data),
-      { ...result.init },
-    );
-  }
 
   if (isResponse(result)) {
     return result;
@@ -5458,10 +5488,20 @@ async function callServerRouteMiddleware(
         errorHandler,
         idx + 1,
       );
+
+      // Upgrade returned data() values to real Responses
+      if (isDataWithResponseInit(result)) {
+        result = dataWithResponseInitToResponse(result);
+      }
+
       nextResult = result;
       return nextResult;
     } catch (e) {
-      nextResult = await errorHandler(e, routeId);
+      nextResult = await errorHandler(
+        // Convert thrown data() values to ErrorResponses
+        isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
+        routeId,
+      );
       return nextResult;
     }
   };
@@ -5476,13 +5516,18 @@ async function callServerRouteMiddleware(
       next,
     );
 
+    // Upgrade returned data() values to real Responses
+    if (isDataWithResponseInit(result)) {
+      result = dataWithResponseInitToResponse(result);
+    }
+
     // On the server, handle calling next() if needed and returning the proper result
     if (nextCalled) {
       // If they called next() but didn't return the response, we can bubble
       // it for them. This allows some minor syntactic sugar (or forgetfulness)
       // where you can grab the response to add a header without re-returning it
       return typeof result === "undefined" ? nextResult : result;
-    } else if (isResponse(result) || isDataWithResponseInit(result)) {
+    } else if (isResponse(result)) {
       // Use short circuit Response/data() values without having called next()
       return result;
     } else {
@@ -5490,8 +5535,12 @@ async function callServerRouteMiddleware(
       nextResult = await next();
       return nextResult;
     }
-  } catch (error) {
-    let response = await errorHandler(error, routeId);
+  } catch (e) {
+    let response = await errorHandler(
+      // Convert thrown data() values to ErrorResponses
+      isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
+      routeId,
+    );
     return response;
   }
 }
@@ -5785,10 +5834,12 @@ async function callDataStrategyImpl(
         ) & {
           matches: DataStrategyMatch[];
         };
+        let didCallHandler = false;
         return runClientMiddlewarePipeline(
           typedDataStrategyArgs,
-          () =>
-            cb({
+          () => {
+            didCallHandler = true;
+            return cb({
               ...typedDataStrategyArgs,
               fetcherKey,
               unstable_runClientMiddleware: () => {
@@ -5797,10 +5848,15 @@ async function callDataStrategyImpl(
                     "`unstable_runClientMiddleware` handler",
                 );
               },
-            }),
-          (error: unknown, routeId: string) => ({
-            [routeId]: { type: "error", result: error },
-          }),
+            });
+          },
+          (error, routeId) =>
+            clientMiddlewareErrorHandler(
+              error,
+              routeId,
+              matches,
+              didCallHandler,
+            ),
         );
       };
 
@@ -6510,6 +6566,35 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   // If the hash is removed the browser will re-perform a request to the server
   // /page#hash -> /page
   return false;
+}
+
+function dataWithResponseInitToResponse<D>(
+  data: DataWithResponseInit<D>,
+): Response {
+  return new Response(
+    typeof data.data === "string" ? data.data : JSON.stringify(data.data),
+    data.init || undefined,
+  );
+}
+
+function dataWithResponseInitToErrorResponse<D>(
+  data: DataWithResponseInit<D>,
+): ErrorResponseImpl {
+  return new ErrorResponseImpl(
+    data.init?.status ?? 500,
+    data.init?.statusText ?? "Internal Server Error",
+    data.data,
+  );
+}
+
+function errorResponseToResponse(error: ErrorResponse): Response {
+  return new Response(
+    typeof error.data === "string" ? error.data : JSON.stringify(error.data),
+    {
+      status: error.status,
+      statusText: error.statusText,
+    },
+  );
 }
 
 function isDataStrategyResult(result: unknown): result is DataStrategyResult {

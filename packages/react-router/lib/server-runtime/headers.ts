@@ -21,6 +21,7 @@ export function getDocumentHeaders(
 export function getDocumentHeadersImpl(
   context: StaticHandlerContext,
   getRouteHeadersFn: (match: DataRouteMatch) => ServerRouteModule["headers"],
+  _defaultHeaders?: Headers,
 ): Headers {
   let boundaryIdx = context.errors
     ? context.matches.findIndex((m) => context.errors![m.route.id])
@@ -49,6 +50,8 @@ export function getDocumentHeadersImpl(
       return errorHeaders != null;
     });
   }
+
+  const defaultHeaders = new Headers(_defaultHeaders);
 
   return matches.reduce((parentHeaders, match, idx) => {
     let { id } = match.route;
@@ -101,7 +104,7 @@ export function getDocumentHeadersImpl(
     prependCookies(parentHeaders, headers);
 
     return headers;
-  }, new Headers());
+  }, new Headers(defaultHeaders));
 }
 
 function prependCookies(parentHeaders: Headers, childHeaders: Headers): void {
