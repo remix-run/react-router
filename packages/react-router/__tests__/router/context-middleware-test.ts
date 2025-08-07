@@ -1374,6 +1374,57 @@ describe("context/middleware", () => {
           errors: null,
         });
       });
+
+      it("throwing from a middleware before next bubbles up to the highest route with a loader", async () => {
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "a",
+              path: "/a",
+              hasErrorBoundary: true,
+              children: [
+                {
+                  id: "b",
+                  path: "b",
+                  hasErrorBoundary: true,
+                  loader: () => "B",
+                  children: [
+                    {
+                      id: "c",
+                      path: "c",
+                      hasErrorBoundary: true,
+                      children: [
+                        {
+                          id: "d",
+                          path: "d",
+                          hasErrorBoundary: true,
+                          unstable_middleware: [
+                            () => {
+                              throw new Error("D ERROR");
+                            },
+                          ],
+                          loader: () => "D",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        await router.navigate("/a/b/c/d");
+
+        expect(router.state.loaderData).toEqual({});
+        expect(router.state.errors).toEqual({
+          b: new Error("D ERROR"),
+        });
+      });
     });
   });
 

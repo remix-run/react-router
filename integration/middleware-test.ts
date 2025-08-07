@@ -508,7 +508,10 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("broken!")');
+      // Bubbles to the root error boundary in SPA mode because every route has
+      // a loader to load the client assets
+      await page.waitForSelector('h1:has-text("Application Error")');
+      await page.waitForSelector('pre:has-text("Error: broken!")');
 
       appFixture.close();
     });
@@ -1145,7 +1148,10 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("broken!")');
+      // Bubbles to the root error boundary in SPA mode because every route has
+      // a loader to load the client assets
+      await page.waitForSelector('h1:has-text("Application Error")');
+      await page.waitForSelector('pre:has-text("Error: broken!")');
 
       appFixture.close();
     });
