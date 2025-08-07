@@ -1,5 +1,11 @@
 # `react-router`
 
+## 7.8.0-pre.3
+
+### Patch Changes
+
+- Bubble client-side middleware errors prior to `next` to the appropriate ancestor error boundary ([#14138](https://github.com/remix-run/react-router/pull/14138))
+
 ## 7.8.0-pre.2
 
 ### Patch Changes

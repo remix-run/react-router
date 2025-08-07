@@ -1,5 +1,13 @@
 # `@react-router/express`
 
+## 7.8.0-pre.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.8.0-pre.3`
+  - `@react-router/node@7.8.0-pre.3`
+
 ## 7.8.0-pre.2
 
 ### Patch Changes
