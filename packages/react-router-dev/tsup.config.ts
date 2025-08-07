@@ -16,7 +16,11 @@ const entry = [
   "vite/cloudflare.ts",
 ];
 
-const external = ["./static/refresh-utils.mjs", /\.json$/];
+const external = [
+  "./static/refresh-utils.mjs",
+  "./static/rsc-refresh-utils.mjs",
+  /\.json$/,
+];
 
 export default defineConfig([
   {
@@ -37,6 +41,16 @@ export default defineConfig([
           await fsp.copyFile(
             "vite/static/refresh-utils.mjs",
             "dist/static/refresh-utils.mjs",
+          );
+
+          await fsp.mkdir("dist/static", { recursive: true });
+          await fsp.copyFile(
+            "vite/static/refresh-utils.mjs",
+            "dist/static/refresh-utils.mjs",
+          );
+          await fsp.copyFile(
+            "vite/static/rsc-refresh-utils.mjs",
+            "dist/static/rsc-refresh-utils.mjs",
           );
 
           await fsp.mkdir("dist/config/defaults", { recursive: true });

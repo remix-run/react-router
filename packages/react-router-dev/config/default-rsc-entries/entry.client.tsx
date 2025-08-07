@@ -1,3 +1,5 @@
+import "virtual:react-router/unstable_rsc/inject-hmr-runtime";
+
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import {
