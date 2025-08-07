@@ -432,6 +432,7 @@ The biggest set of changes in `7.8.0` are to the `unstable_middleware` API's as 
 - `react-router` - Update middleware error handling so that the `next` function never throws and instead handles any middleware errors at the proper `ErrorBoundary` and returns the `Response` up through the ancestor `next` function ([#14118](https://github.com/remix-run/react-router/pull/14118))
   - See the [error handling docs](https://reactrouter.com/how-to/middleware#next-and-error-handling) for more information
   - ⚠️ This changes existing functionality so if you are currently wrapping `next` calls in `try`/`catch` you should be able to remove those
+- `react-router` - Bubble client-side middleware errors prior to `next` to the appropriate ancestor error boundary ([#14138](https://github.com/remix-run/react-router/pull/14138))
 - `react-router` - When middleware is enabled, make the `context` parameter read-only (`Readonly<unstable_RouterContextProvider>`) so that TypeScript will not allow you to write arbitrary fields to it in loaders, actions, or middleware. ([#14097](https://github.com/remix-run/react-router/pull/14097))
 - `react-router` - Rename and alter the signature/functionality of the `unstable_respond` API in `staticHandler.query`/`staticHandler.queryRoute` ([#14103](https://github.com/remix-run/react-router/pull/14103))
   - This only impacts users using `createStaticHandler()` for manual data loading during non-Framework Mode SSR
