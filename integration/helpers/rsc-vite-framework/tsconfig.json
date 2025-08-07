@@ -14,6 +14,9 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "@vitejs/plugin-rsc/types"],
     "jsx": "react-jsx",
+    "paths": {
+      "~/*": ["./app/*"]
+    },
     "rootDirs": [".", "./.react-router/types"]
   }
 }
