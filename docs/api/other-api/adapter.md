@@ -22,6 +22,8 @@ Each adapter has the same API. In the future we may have helpers specific to the
 
 ## `@react-router/express`
 
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_express.html)
+
 Here's a simple example with Express:
 
 ```tsx
@@ -119,6 +121,8 @@ Update the `dev` and `start` scripts to use your new Express server:
 
 ## `@react-router/architect`
 
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_architect.html)
+
 Here's an example with Architect (AWS):
 
 ```ts
@@ -132,6 +136,8 @@ exports.handler = createRequestHandler({
 
 ## `@react-router/cloudflare`
 
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_cloudflare.html)
+
 Here's an example with the simplified Cloudflare Workers API:
 
 ```ts
@@ -143,6 +149,18 @@ addEventListener("fetch", createEventHandler({ build }));
 ```
 
 <!-- TODO: We used to have a Community Adapters section here, but unsure which of those are RR friendly so we should check that before re-including? -->
+
+## `@react-router/node`
+
+While not a direct "adapter" like the above, this package contains utilities for working with Node-based adapters.
+
+[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_node.html)
+
+### Node Version Support
+
+React Router officially supports **Active** and **Maintenance** [Node LTS versions][node-releases] at any given point in time. Dropped support for End of Life Node versions is done in a React Router Minor release.
+
+[node-releases]: https://nodejs.org/en/about/previous-releases
 
 ## Creating an Adapter
 
