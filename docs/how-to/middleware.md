@@ -350,6 +350,57 @@ const user = context.get(userContext); // Returns User type
 // context.user = user; // Could be anything
 ```
 
+#### Context and AsyncLocalStorage
+
+Node provides an [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage) API which gives you a way to provide values through asynchronous execution contexts. While this is a Node API, most modern runtimes have have made it (mostly) available (i.e., [Cloudflare](https://developers.cloudflare.com/workers/runtime-apis/nodejs/asynclocalstorage/), [Bun](https://bun.sh/blog/bun-v0.7.0#asynclocalstorage-support), [Deno](https://docs.deno.com/api/node/async_hooks/~/AsyncLocalStorage)).
+
+In theory, we could have leveraged `AsyncLocalStorage` directly as the way to pass values from middlewares to to child routes, but the lack of 100% cross-platform compatibility was concerning enough that we wanted to still ship a first-class `context` API so there would be way to publish reusable middleware packages guaranteed to work in a runtime-agnostic manner.
+
+That said, this API still works great with React Router middleware and can be used in place of, or alongside of the `context` API:
+
+<docs-info>`AsyncLocalStorage` is _especially_ powerful when using [React Server Components](../how-to/react-server-components) because it allows you to provide information from `middleware` to your Server Components and Server Actions because they run in the same server execution context 🤯</docs-info>
+
+```tsx filename=app/user-context.ts
+import { AsyncLocalStorage } from "node:async_hooks";
+
+const USER = new AsyncLocalStorage<User>();
+
+export async function provideUser(
+  request: Request,
+  cb: () => Promise<Response>,
+) {
+  let user = await getUser(request);
+  return USER.run(user, cb);
+}
+
+export function getUser() {
+  return USER.getStore();
+}
+```
+
+```tsx filename=app/root.tsx
+import { provideUser } from "./user-context";
+
+export const unstable_middleware: Route.unstable_MiddlewareFunction[] =
+  [
+    async ({ request, context }, next) => {
+      return provideUser(request, async () => {
+        let res = await next();
+        return res;
+      });
+    },
+  ];
+```
+
+```tsx filename=app/routes/_index.tsx
+import { getUser } from "../user-context";
+
+export function loader() {
+  let user = getUser();
+  //...
+}
+```
+
 ### The `next` Function
 
 The `next` function logic depends on which route middleware it's being called from:
