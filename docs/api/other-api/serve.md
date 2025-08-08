@@ -53,18 +53,15 @@ In development, `react-router-serve` will ensure the latest code is run by purgi
   // cleared and this will be required brand new
   const cache = new Map();
 
-  export async function loader({
-    params,
-  }: LoaderFunctionArgs) {
+  export async function loader({ params }) {
     if (cache.has(params.foo)) {
-      return json(cache.get(params.foo));
+      return cache.get(params.foo);
     }
 
     const record = await fakeDb.stuff.find(params.foo);
     cache.set(params.foo, record);
-    return json(record);
+    return record;
   }
-  ```
 
   If you need a workaround for preserving cache in development, you can set up a [singleton][singleton] in your server.
 
