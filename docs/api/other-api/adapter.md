@@ -24,31 +24,32 @@ Each adapter has the same API. In the future we may have helpers specific to the
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_express.html)
 
-Here's a simple example with Express:
+Here's an example with express:
 
-```tsx
-import express from "express";
-
-const BUILD_PATH = "./build/server/index.js";
-const PORT = Number.parseInt(process.env.PORT || "3000");
+```ts lines=[1-3,11-22]
+const {
+  createRequestHandler,
+} = require("@react-router/express");
+const express = require("express");
 
 const app = express();
 
-app.use(
-  "/assets",
-  express.static("build/client/assets", {
-    immutable: true,
-    maxAge: "1y",
+// needs to handle all verbs (GET, POST, etc.)
+app.all(
+  "*",
+  createRequestHandler({
+    // `react-router build` and `react-router dev` output files to a build directory,
+    // you need to pass that build to the request handler
+    build: require("./build"),
+
+    // Return anything you want here to be available as `context` in your
+    // loaders and actions. This is where you can bridge the gap between your
+    // server and React Router
+    getLoadContext(req, res) {
+      return {};
+    },
   }),
 );
-app.use(express.static("build/client", { maxAge: "1h" }));
-app.use(await import(BUILD_PATH).then((mod) => mod.app));
-
-app.listen(PORT, () => {
-  console.log(
-    `Server is running on http://localhost:${PORT}`,
-  );
-});
 ```
 
 ### Migrating from the React Router App Server
@@ -173,34 +174,6 @@ const {
   createRequestHandler,
 } = require("@react-router/{adapter}");
 createRequestHandler({ build, getLoadContext });
-```
-
-Here's a full example with express:
-
-```ts lines=[1-3,11-22]
-const {
-  createRequestHandler,
-} = require("@react-router/express");
-const express = require("express");
-
-const app = express();
-
-// needs to handle all verbs (GET, POST, etc.)
-app.all(
-  "*",
-  createRequestHandler({
-    // `react-router build` and `react-router dev` output files to a build directory,
-    // you need to pass that build to the request handler
-    build: require("./build"),
-
-    // Return anything you want here to be available as `context` in your
-    // loaders and actions. This is where you can bridge the gap between your
-    // server and React Router
-    getLoadContext(req, res) {
-      return {};
-    },
-  }),
-);
 ```
 
 [web-fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
