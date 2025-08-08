@@ -12,7 +12,7 @@ unstable: true
 
 <docs-warning>The middleware feature is currently experimental and subject to breaking changes. Use the `future.unstable_middleware` flag to enable it.</docs-warning>
 
-Middleware allows you to run code before and after the `Response` generation for the matched path. This enables common patterns like authentication, logging, error handling, and data preprocessing in a reusable way.
+Middleware allows you to run code before and after the `Response` generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
 Middleware runs in a nested chain, executing from parent routes to child routes on the way "down" to your route handlers, then from child routes back to parent routes on the way "up" after a `Response` is generated.
 
@@ -352,7 +352,7 @@ const user = context.get(userContext); // Returns User type
 
 #### Context and AsyncLocalStorage
 
-Node provides an [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage) API which gives you a way to provide values through asynchronous execution contexts. While this is a Node API, most modern runtimes have have made it (mostly) available (i.e., [Cloudflare](https://developers.cloudflare.com/workers/runtime-apis/nodejs/asynclocalstorage/), [Bun](https://bun.sh/blog/bun-v0.7.0#asynclocalstorage-support), [Deno](https://docs.deno.com/api/node/async_hooks/~/AsyncLocalStorage)).
+Node provides an [`AsyncLocalStorage`][asynclocalstorage] API which gives you a way to provide values through asynchronous execution contexts. While this is a Node API, most modern runtimes have have made it (mostly) available (i.e., [Cloudflare][cloudflare], [Bun][bun], [Deno][deno]).
 
 In theory, we could have leveraged `AsyncLocalStorage` directly as the way to pass values from middlewares to to child routes, but the lack of 100% cross-platform compatibility was concerning enough that we wanted to still ship a first-class `context` API so there would be way to publish reusable middleware packages guaranteed to work in a runtime-agnostic manner.
 
@@ -687,5 +687,10 @@ export async function loader({
 }
 ```
 
+[common-patterns]: #common-patterns
 [server-client]: #server-vs-client-middleware
 [getloadcontext]: #changes-to-getloadcontextapploadcontext
+[asynclocalstorage]: https://nodejs.org/api/async_context.html#class-asynclocalstorage
+[cloudflare]: https://developers.cloudflare.com/workers/runtime-apis/nodejs/asynclocalstorage/
+[bun]: https://bun.sh/blog/bun-v0.7.0#asynclocalstorage-support
+[deno]: https://docs.deno.com/api/node/async_hooks/~/AsyncLocalStorage
