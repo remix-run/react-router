@@ -65,11 +65,11 @@ In development, `react-router-serve` will ensure the latest code is run by purgi
 
   If you need a workaround for preserving cache in development, you can set up a [singleton][singleton] in your server.
 
+  ```
+
 - Any **module side effects** will remain in place! This may cause problems but should probably be avoided anyway.
 
-  ```tsx lines=[3-6]
-  import { json } from "@react-router/node"; // or cloudflare/deno
-
+  ```tsx lines=[1-4]
   // this starts running the moment the module is imported
   setInterval(() => {
     console.log(Date.now());

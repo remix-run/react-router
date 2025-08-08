@@ -56,7 +56,7 @@ app.all(
 
 If you started an app with the [React Router App Server][rr-serve] but find that you want to take control over the Express server and customize it, it should be fairly straightforward to migrate way from `@react-router/serve`.
 
-You can refer to the [Express template][express-template] as a reference, gut here's the main changes you should have to make:
+You can refer to the [Express template][express-template] as a reference, but here are the main changes you will need to make:
 
 **1. Update deps**
 
@@ -118,21 +118,6 @@ Update the `dev` and `start` scripts to use your new Express server:
   }
   // ...
 }
-```
-
-## `@react-router/architect`
-
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_architect.html)
-
-Here's an example with Architect (AWS):
-
-```ts
-const {
-  createRequestHandler,
-} = require("@react-router/architect");
-exports.handler = createRequestHandler({
-  build: require("./build"),
-});
 ```
 
 ## `@react-router/cloudflare`
