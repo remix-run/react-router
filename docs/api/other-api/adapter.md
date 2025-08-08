@@ -148,7 +148,7 @@ addEventListener("fetch", createEventHandler({ build }));
 
 ### `createRequestHandler`
 
-Creates a request handler for your server to serve the app. This is the ultimate entry point of your Remix application.
+Creates a request handler for your server to serve the app. This is the ultimate entry point of your React Router application.
 
 ```ts
 const {
