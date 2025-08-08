@@ -139,17 +139,33 @@ exports.handler = createRequestHandler({
 
 [Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react_router_cloudflare.html)
 
-Here's an example with the simplified Cloudflare Workers API:
+Here's an example with Cloudflare:
 
 ```ts
-import { createEventHandler } from "@react-router/cloudflare-workers";
+import { createRequestHandler } from "react-router";
 
-import * as build from "../build";
+declare module "react-router" {
+  export interface AppLoadContext {
+    cloudflare: {
+      env: Env;
+      ctx: ExecutionContext;
+    };
+  }
+}
 
-addEventListener("fetch", createEventHandler({ build }));
+const requestHandler = createRequestHandler(
+  () => import("virtual:react-router/server-build"),
+  import.meta.env.MODE,
+);
+
+export default {
+  async fetch(request, env, ctx) {
+    return requestHandler(request, {
+      cloudflare: { env, ctx },
+    });
+  },
+} satisfies ExportedHandler<Env>;
 ```
-
-<!-- TODO: We used to have a Community Adapters section here, but unsure which of those are RR friendly so we should check that before re-including? -->
 
 ## `@react-router/node`
 
@@ -162,20 +178,6 @@ While not a direct "adapter" like the above, this package contains utilities for
 React Router officially supports **Active** and **Maintenance** [Node LTS versions][node-releases] at any given point in time. Dropped support for End of Life Node versions is done in a React Router Minor release.
 
 [node-releases]: https://nodejs.org/en/about/previous-releases
-
-## Creating an Adapter
-
-### `createRequestHandler`
-
-Creates a request handler for your server to serve the app. This is the ultimate entry point of your React Router application.
-
-```ts
-const {
-  createRequestHandler,
-} = require("@react-router/{adapter}");
-createRequestHandler({ build, getLoadContext });
-```
-
 [web-fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [rr-serve]: ./serve
 [express-template]: https://github.com/remix-run/react-router-templates/tree/main/node-custom-server
