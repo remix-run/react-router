@@ -3517,6 +3517,7 @@ export async function getEnvironmentOptionsResolvers(
   );
   let vite = getVite();
 
+
   function getBaseOptions({
     viteUserConfig,
   }: {
@@ -3590,6 +3591,14 @@ export async function getEnvironmentOptionsResolvers(
     // conditions arrays do not exist.
     // https://vite.dev/guide/migration.html#default-value-for-resolve-conditions
     let maybeDefaultServerConditions = vite.defaultServerConditions || [];
+
+
+    if (process.env.VITEST) {
+      // Vitest will fail to import packages that distribute invalid ESM if the condition "module" is added: https://github.com/remix-run/react-router/issues/13869
+      maybeDefaultServerConditions = maybeDefaultServerConditions.filter(
+        (condition) => condition !== "module"
+      );
+    }
 
     // There is no helpful export with the default external conditions (see
     // https://github.com/vitejs/vite/pull/20279 for more details). So, for now,
