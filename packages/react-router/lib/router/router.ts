@@ -5403,13 +5403,6 @@ function clientMiddlewareErrorHandler(
       // or the shallowest route that needs to load data
       matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
     );
-    console.log({
-      maxBoundaryIdx,
-      // Throwing route
-      throwing: matches.findIndex((m) => m.route.id === routeId) || 0,
-      // or the shallowest route that needs to load data
-      shallowest: matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
-    });
     // We never even got to the handlers, so we've got no data.
     // Find the boundary at or above the source of the middleware
     // error or the highest loader. We can't render any UI below
