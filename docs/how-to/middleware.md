@@ -255,14 +255,13 @@ async function serverMiddleware({ request }, next) {
 export const unstable_middleware = [serverMiddleware];
 ```
 
-Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware is different because there's no HTTP Request, so it doesn't bubble up anything via the `next` function:
+Client middleware runs in the browser in framework and data mode for client-side navigations and fetcher calls. Client middleware differs from server middleware because there's no HTTP Request, so it doesn't have a `Response` to bubble up. In most cases, you can just ignore the return value from `next` and return nothing from your middleware on the client:
 
 ```ts
 async function clientMiddleware({ request }, next) {
   console.log(request.method, request.url);
-  await next(); // 👈 No return value
+  await next();
   console.log(response.status, request.method, request.url);
-  // 👈 No need to return anything here
 }
 
 // Framework mode
@@ -275,6 +274,32 @@ const route = {
   loader: rootLoader,
   Component: Root,
 };
+```
+
+However, there may be some cases where you want to do some post-processing based on the result of the loaders/action. In lieu of a `Response`, client middleware bubbles up a `Record<string, DataStrategy>` object because it is implemented as part of the default [`dataStrategy`] internally. This allows you to take conditional action in your middleware based on the outcome of the executed `loader`/`action` functions.
+
+Here's an example of the [CMS Redirect on 404][cms-redirect] use case implemented as a client side middleware:
+
+```tsx
+async function cmsFallbackMiddleware({ request }, next) {
+  const results = await next();
+
+  // Check if we got a 404 from any of our routes
+  let is404 =
+    isRouteErrorResponse(r.result) &&
+    r.result.status === 404;
+  if (Object.values(results).some((r) => is404(r))) {
+    // Check CMS for a redirect
+    const cmsRedirect = await checkCMSRedirects(
+      request.url,
+    );
+    if (cmsRedirect) {
+      throw redirect(cmsRedirect, 302);
+    }
+  }
+
+  return results;
+}
 ```
 
 ### When Middleware Runs
@@ -546,7 +571,7 @@ export const loggingMiddleware = async (
 };
 ```
 
-### 404 to CMS Redirect
+### CMS Redirect on 404
 
 ```tsx filename=app/middleware/cms-fallback.ts
 export const cmsFallbackMiddleware = async (
@@ -636,3 +661,5 @@ export async function loader({
 
 [server-client]: #server-vs-client-middleware
 [getloadcontext]: #changes-to-getloadcontextapploadcontext
+[datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
+[cms-redirect]: #cms-redirect-on-404
