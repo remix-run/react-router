@@ -5389,7 +5389,7 @@ async function defaultDataStrategyWithMiddleware(
 function clientMiddlewareErrorHandler(
   error: unknown,
   routeId: string,
-  matches: AgnosticDataRouteMatch[],
+  matches: DataStrategyMatch[],
   didCallHandler: boolean,
 ): Record<string, DataStrategyResult> {
   if (didCallHandler) {
@@ -5397,14 +5397,26 @@ function clientMiddlewareErrorHandler(
       [routeId]: { type: "error", result: error },
     };
   } else {
+    let maxBoundaryIdx = Math.min(
+      // Throwing route
+      matches.findIndex((m) => m.route.id === routeId) || 0,
+      // or the shallowest route that needs to load data
+      matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
+    );
+    console.log({
+      maxBoundaryIdx,
+      // Throwing route
+      throwing: matches.findIndex((m) => m.route.id === routeId) || 0,
+      // or the shallowest route that needs to load data
+      shallowest: matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
+    });
     // We never even got to the handlers, so we've got no data.
     // Find the boundary at or above the source of the middleware
     // error or the highest loader. We can't render any UI below
     // the highest loader since we have no loader data available
     let boundaryRouteId = findNearestBoundary(
       matches,
-      matches.find((m) => m.route.id === routeId || m.route.loader)?.route.id ||
-        routeId,
+      matches[maxBoundaryIdx].route.id,
     ).route.id;
     return {
       [boundaryRouteId]: { type: "error", result: error },

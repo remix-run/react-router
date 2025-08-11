@@ -490,7 +490,7 @@ test.describe("Middleware", () => {
                 return <h1>Should not see me</h1>
               }
               export function ErrorBoundary({ error }) {
-                return <h1>{error.message}</h1>
+                return <h1 data-error>{error.message}</h1>
               }
             `,
           },
@@ -508,10 +508,8 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      // Bubbles to the root error boundary in SPA mode because every route has
-      // a loader to load the client assets
-      await page.waitForSelector('h1:has-text("Application Error")');
-      await page.waitForSelector('pre:has-text("Error: broken!")');
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
 
       appFixture.close();
     });
@@ -557,7 +555,7 @@ test.describe("Middleware", () => {
               export function ErrorBoundary({ loaderData, error }) {
                 return (
                   <>
-                    <h1>{error.message}</h1>
+                    <h1 data-error>{error.message}</h1>
                     <pre>{loaderData ?? 'empty'}</pre>
                   </>
                 );
@@ -578,7 +576,8 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("broken!")');
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
       expect(await page.innerText("pre")).toBe("empty");
 
       appFixture.close();
@@ -1120,7 +1119,6 @@ test.describe("Middleware", () => {
               }
             `,
             "app/routes/broken.tsx": js`
-              import { useRouteError } from 'react-router'
               export const unstable_clientMiddleware = [
                 async ({ request, context }, next) => {
                   throw new Error('broken!')
@@ -1129,8 +1127,8 @@ test.describe("Middleware", () => {
               export default function Component() {
                 return <h1>Should not see me</h1>
               }
-              export function ErrorBoundary() {
-                return <h1>{useRouteError().message}</h1>
+              export function ErrorBoundary({ error }) {
+                return <h1 data-error>{error.message}</h1>
               }
             `,
           },
@@ -1148,10 +1146,8 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      // Bubbles to the root error boundary in SPA mode because every route has
-      // a loader to load the client assets
-      await page.waitForSelector('h1:has-text("Application Error")');
-      await page.waitForSelector('pre:has-text("Error: broken!")');
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
 
       appFixture.close();
     });
@@ -1196,7 +1192,7 @@ test.describe("Middleware", () => {
               export function ErrorBoundary({ loaderData, error }) {
                 return (
                   <>
-                    <h1>{error.message}</h1>
+                    <h1 data-error>{error.message}</h1>
                     <pre>{loaderData ?? 'empty'}</pre>
                   </>
                 );
@@ -1217,7 +1213,8 @@ test.describe("Middleware", () => {
       await page.waitForSelector('a:has-text("Link")');
 
       (await page.getByRole("link"))?.click();
-      await page.waitForSelector('h1:has-text("broken!")');
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
       expect(await page.innerText("pre")).toBe("empty");
 
       appFixture.close();
@@ -1987,7 +1984,7 @@ test.describe("Middleware", () => {
                 return <h1>Should not see me</h1>
               }
               export function ErrorBoundary({ error }) {
-                return <h1>{error.message}</h1>
+                return <h1 data-error>{error.message}</h1>
               }
             `,
           },
@@ -2002,7 +1999,7 @@ test.describe("Middleware", () => {
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/broken");
-      expect(await page.innerText("h1")).toBe("broken!");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
       expect(errors).toEqual([
         ["handleError", "GET", "/broken", new Error("broken!")],
       ]);
@@ -2049,7 +2046,7 @@ test.describe("Middleware", () => {
                 return <h1>Should not see me</h1>
               }
               export function ErrorBoundary({ error }) {
-                return <h1>{error.message}</h1>
+                return <h1 data-error>{error.message}</h1>
               }
             `,
           },
@@ -2066,8 +2063,8 @@ test.describe("Middleware", () => {
       await app.goto("/");
 
       (await page.$('a[href="/broken"]'))?.click();
-      await page.waitForSelector("h1");
-      expect(await page.innerText("h1")).toBe("broken!");
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
       expect(errors).toEqual([
         ["handleError", "GET", "/broken.data", new Error("broken!")],
       ]);
@@ -2117,7 +2114,7 @@ test.describe("Middleware", () => {
               export function ErrorBoundary({ error, loaderData }) {
                 return (
                   <>
-                    <h1>{error.message}</h1>
+                    <h1 data-error>{error.message}</h1>
                     <pre>{loaderData ?? 'empty'}</pre>
                   </>
                 );
@@ -2135,7 +2132,7 @@ test.describe("Middleware", () => {
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/broken");
-      expect(await page.innerText("h1")).toBe("broken!");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
       expect(await page.innerText("pre")).toBe("empty");
       expect(errors).toEqual([
         ["handleError", "GET", "/broken", new Error("broken!")],
@@ -2186,7 +2183,7 @@ test.describe("Middleware", () => {
               export function ErrorBoundary({ error, loaderData }) {
                 return (
                   <>
-                    <h1>{error.message}</h1>
+                    <h1 data-error>{error.message}</h1>
                     <pre>{loaderData ?? 'empty'}</pre>
                   </>
                 );
@@ -2207,7 +2204,8 @@ test.describe("Middleware", () => {
 
       (await page.$('a[href="/broken"]'))?.click();
       await page.waitForSelector("h1");
-      expect(await page.innerText("h1")).toBe("broken!");
+      await page.waitForSelector("[data-error]");
+      expect(await page.innerText("[data-error]")).toBe("broken!");
       expect(await page.innerText("pre")).toBe("empty");
       expect(errors).toEqual([
         ["handleError", "GET", "/broken.data", new Error("broken!")],
