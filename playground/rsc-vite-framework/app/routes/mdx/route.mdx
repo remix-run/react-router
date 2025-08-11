@@ -1,0 +1,16 @@
+import { useLoaderData } from "react-router";
+
+export const meta = () => [{ title: "MDX Route" }];
+
+export const loader = () => ({ message: "Loader data" });
+
+export function Message() {
+  const { message } = useLoaderData();
+  return <div>Loader data: {message}</div>;
+}
+
+# This is an MDX route
+
+Hello from an MDX route!
+
+<Message />

@@ -19,6 +19,9 @@ patchedDependencies:
   '@changesets/get-dependents-graph@1.3.6':
     hash: arforfmj6nw2w4znv7h66rwf5y
     path: patches/@changesets__get-dependents-graph@1.3.6.patch
+  '@mdx-js/rollup':
+    hash: wjxfd5pqp7spa3snsugst7roxm
+    path: patches/@mdx-js__rollup.patch
 
 importers:
 
@@ -43,8 +46,8 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@mdx-js/rollup':
-        specifier: ^3.0.0
-        version: 3.1.0(rollup@4.43.0)
+        specifier: ^3.1.0
+        version: 3.1.0(patch_hash=wjxfd5pqp7spa3snsugst7roxm)(rollup@4.43.0)
       '@playwright/test':
         specifier: ^1.49.1
         version: 1.49.1
@@ -164,7 +167,7 @@ importers:
     dependencies:
       '@mdx-js/rollup':
         specifier: ^3.1.0
-        version: 3.1.0(rollup@4.43.0)
+        version: 3.1.0(patch_hash=wjxfd5pqp7spa3snsugst7roxm)(rollup@4.43.0)
       '@playwright/test':
         specifier: ^1.49.1
         version: 1.49.1
@@ -539,6 +542,9 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router
     devDependencies:
+      '@mdx-js/rollup':
+        specifier: ^3.1.0
+        version: 3.1.0(patch_hash=wjxfd5pqp7spa3snsugst7roxm)(rollup@4.43.0)
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
@@ -1935,6 +1941,9 @@ importers:
         specifier: ^8.7.0
         version: 8.7.0(react-router@packages+react-router)(react@19.1.0)(zod@3.24.2)
     devDependencies:
+      '@mdx-js/rollup':
+        specifier: ^3.1.0
+        version: 3.1.0(patch_hash=wjxfd5pqp7spa3snsugst7roxm)(rollup@4.43.0)
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../packages/react-router-dev
@@ -11912,7 +11921,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mdx-js/rollup@3.1.0(rollup@4.43.0)':
+  '@mdx-js/rollup@3.1.0(patch_hash=wjxfd5pqp7spa3snsugst7roxm)(rollup@4.43.0)':
     dependencies:
       '@mdx-js/mdx': 3.0.1
       '@rollup/pluginutils': 5.1.0(rollup@4.43.0)

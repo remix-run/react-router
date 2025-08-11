@@ -113,7 +113,7 @@ async function viteAppBuild(
           let hasReactRouterPlugin = config.plugins.find(
             (plugin) =>
               plugin.name === "react-router" ||
-              plugin.name === "react-router/rsc/config",
+              plugin.name === "react-router/rsc",
           );
           if (!hasReactRouterPlugin) {
             throw new Error(
