@@ -1413,6 +1413,17 @@ describe("context/middleware", () => {
                           ],
                           loader: () => "D",
                         },
+                        {
+                          id: "e",
+                          path: "e",
+                          hasErrorBoundary: true,
+                          unstable_middleware: [
+                            () => {
+                              throw new Error("E ERROR");
+                            },
+                          ],
+                          loader: () => "E",
+                        },
                       ],
                     },
                   ],
@@ -1422,11 +1433,23 @@ describe("context/middleware", () => {
           ],
         });
 
+        // Bubbles to B because it's the initial load and it's loader hasn't run
         await router.navigate("/a/b/c/d");
-
         expect(router.state.loaderData).toEqual({});
         expect(router.state.errors).toEqual({
           b: new Error("D ERROR"),
+        });
+
+        // Load data into B
+        await router.navigate("/a/b");
+        expect(router.state.loaderData).toEqual({ b: "B" });
+        expect(router.state.errors).toEqual(null);
+
+        // B doesn't have to revalidate so we can surface this error at E
+        await router.navigate("/a/b/c/e");
+        expect(router.state.loaderData).toEqual({ b: "B" });
+        expect(router.state.errors).toEqual({
+          e: new Error("E ERROR"),
         });
       });
     });

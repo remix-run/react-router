@@ -5431,14 +5431,20 @@ function runClientMiddlewarePipeline(
           }),
         );
       } else {
-        // We never even got to the handlers, so we've got no data.
-        // Find the boundary at or above the source of the middleware
-        // error or the highest loader. We can't render any UI below
-        // the highest loader since we have no loader data available
+        // We never even got to the handlers, so we might not have data for new routes.
+        // Find the boundary at or above the source of the middleware error or the
+        // highest route that needs to load - we can't render any UI below that since
+        // we won't have valid loader data.
+        let { matches } = args;
+        let maxBoundaryIdx = Math.min(
+          // Throwing route
+          matches.findIndex((m) => m.route.id === routeId) || 0,
+          // or the shallowest route that needs to load data
+          matches.findIndex((m) => m.unstable_shouldCallHandler()) || 0,
+        );
         let boundaryRouteId = findNearestBoundary(
-          args.matches,
-          args.matches.find((m) => m.route.id === routeId || m.route.loader)
-            ?.route.id || routeId,
+          matches,
+          matches[maxBoundaryIdx].route.id,
         ).route.id;
         return Promise.resolve({
           [boundaryRouteId]: { type: "error", result: error },
