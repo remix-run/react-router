@@ -418,7 +418,7 @@ describe("context/middleware", () => {
         ]);
       });
 
-      it("does not return result of middleware in client side routers", async () => {
+      it("returns result of middleware in client side routers", async () => {
         let values: unknown[] = [];
         let consoleSpy = jest
           .spyOn(console, "warn")
@@ -434,12 +434,9 @@ describe("context/middleware", () => {
               path: "/parent",
               unstable_middleware: [
                 async ({ context }, next) => {
-                  values.push(await next());
-                  return "NOPE";
-                },
-                async ({ context }, next) => {
-                  values.push(await next());
-                  return "NOPE";
+                  let results = await next();
+                  values.push({ ...results });
+                  return results;
                 },
               ],
               loader() {
@@ -451,16 +448,13 @@ describe("context/middleware", () => {
                   path: "child",
                   unstable_middleware: [
                     async ({ context }, next) => {
-                      values.push(await next());
-                      return "NOPE";
-                    },
-                    async ({ context }, next) => {
-                      values.push(await next());
-                      return "NOPE";
+                      let results = await next();
+                      values.push({ ...results });
+                      return results;
                     },
                   ],
                   loader() {
-                    return values;
+                    return "CHILD";
                   },
                 },
               ],
@@ -472,8 +466,18 @@ describe("context/middleware", () => {
 
         expect(router.state.loaderData).toMatchObject({
           parent: "PARENT",
-          child: [undefined, undefined, undefined, undefined],
+          child: "CHILD",
         });
+        expect(values).toEqual([
+          {
+            parent: { type: "data", result: "PARENT" },
+            child: { type: "data", result: "CHILD" },
+          },
+          {
+            parent: { type: "data", result: "PARENT" },
+            child: { type: "data", result: "CHILD" },
+          },
+        ]);
 
         consoleSpy.mockRestore();
       });

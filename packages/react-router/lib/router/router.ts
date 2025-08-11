@@ -5429,7 +5429,7 @@ export async function runServerMiddlewarePipeline(
     m.route.unstable_middleware
       ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
       : [],
-  ) as [string, unstable_MiddlewareFunction][];
+  ) as [string, unstable_MiddlewareFunction<Response>][];
 
   let result = await callServerRouteMiddleware(
     { request, params, context },
@@ -5449,18 +5449,16 @@ async function callServerRouteMiddleware(
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
-  middlewares: [string, unstable_MiddlewareFunction][],
+  middlewares: [string, unstable_MiddlewareFunction<Response>][],
   handler: () => Promise<Response>,
   errorHandler: (error: unknown, routeId: string) => Promise<Response>,
   idx = 0,
-): Promise<unknown> {
+): Promise<Response> {
   let { request } = args;
   if (request.signal.aborted) {
-    if (request.signal.reason) {
-      throw request.signal.reason;
-    }
-    throw new Error(
-      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`,
+    throw (
+      request.signal.reason ??
+      new Error(`Request aborted: ${request.method} ${request.url}`)
     );
   }
 
@@ -5473,8 +5471,8 @@ async function callServerRouteMiddleware(
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
-  let nextResult = undefined;
-  let next: unstable_MiddlewareNextFunction = async () => {
+  let nextResult: Response | undefined = undefined;
+  let next: unstable_MiddlewareNextFunction<Response> = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
@@ -5497,11 +5495,11 @@ async function callServerRouteMiddleware(
       nextResult = result;
       return nextResult;
     } catch (e) {
-      nextResult = await errorHandler(
-        // Convert thrown data() values to ErrorResponses
-        isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
-        routeId,
-      );
+      // Convert thrown data() values to ErrorResponses
+      let error = isDataWithResponseInit(e)
+        ? dataWithResponseInitToErrorResponse(e)
+        : e;
+      nextResult = await errorHandler(error, routeId);
       return nextResult;
     }
   };
@@ -5526,7 +5524,7 @@ async function callServerRouteMiddleware(
       // If they called next() but didn't return the response, we can bubble
       // it for them. This allows some minor syntactic sugar (or forgetfulness)
       // where you can grab the response to add a header without re-returning it
-      return typeof result === "undefined" ? nextResult : result;
+      return typeof result === "undefined" ? nextResult! : result;
     } else if (isResponse(result)) {
       // Use short circuit Response/data() values without having called next()
       return result;
@@ -5536,11 +5534,11 @@ async function callServerRouteMiddleware(
       return nextResult;
     }
   } catch (e) {
-    let response = await errorHandler(
-      // Convert thrown data() values to ErrorResponses
-      isDataWithResponseInit(e) ? dataWithResponseInitToErrorResponse(e) : e,
-      routeId,
-    );
+    // Convert thrown data() values to ErrorResponses
+    let error = isDataWithResponseInit(e)
+      ? dataWithResponseInitToErrorResponse(e)
+      : e;
+    let response = await errorHandler(error, routeId);
     return response;
   }
 }
@@ -5565,39 +5563,40 @@ export async function runClientMiddlewarePipeline(
     m.route.unstable_middleware
       ? m.route.unstable_middleware.map((fn) => [m.route.id, fn])
       : [],
-  ) as [string, unstable_MiddlewareFunction][];
+  ) as [
+    string,
+    unstable_MiddlewareFunction<Record<string, DataStrategyResult>>,
+  ][];
 
-  let handlerResult = {};
-  await callClientRouteMiddleware(
+  let result = await callClientRouteMiddleware(
     { request, params, context },
     tuples,
     handler,
     errorHandler,
-    handlerResult,
   );
-  return handlerResult;
+  return result;
 }
 
 async function callClientRouteMiddleware(
   args:
     | LoaderFunctionArgs<unstable_RouterContextProvider>
     | ActionFunctionArgs<unstable_RouterContextProvider>,
-  middlewares: [string, unstable_MiddlewareFunction][],
+  middlewares: [
+    string,
+    unstable_MiddlewareFunction<Record<string, DataStrategyResult>>,
+  ][],
   handler: () => Promise<Record<string, DataStrategyResult>>,
   errorHandler: (
     error: unknown,
     routeId: string,
   ) => Record<string, DataStrategyResult>,
-  handlerResult: Record<string, DataStrategyResult> = {},
   idx = 0,
-): Promise<unknown> {
+): Promise<Record<string, DataStrategyResult>> {
   let { request } = args;
   if (request.signal.aborted) {
-    if (request.signal.reason) {
-      throw request.signal.reason;
-    }
-    throw new Error(
-      `Request aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`,
+    throw (
+      request.signal.reason ??
+      new Error(`Request aborted: ${request.method} ${request.url}`)
     );
   }
 
@@ -5605,13 +5604,15 @@ async function callClientRouteMiddleware(
   if (!tuple) {
     // We reached the end of our middlewares, call the handler
     let result = await handler();
-    Object.assign(handlerResult, result);
-    return;
+    return result;
   }
 
   let [routeId, middleware] = tuple;
   let nextCalled = false;
-  let next: unstable_MiddlewareNextFunction = async () => {
+  let nextResult: Record<string, DataStrategyResult> | undefined = undefined;
+  let next: unstable_MiddlewareNextFunction<
+    Record<string, DataStrategyResult>
+  > = async () => {
     if (nextCalled) {
       throw new Error("You may only call `next()` once per middleware");
     }
@@ -5623,13 +5624,13 @@ async function callClientRouteMiddleware(
         middlewares,
         handler,
         errorHandler,
-        handlerResult,
         idx + 1,
       );
-      Object.assign(handlerResult, result);
+      nextResult = result;
+      return nextResult;
     } catch (e) {
-      let result = await errorHandler(e, routeId);
-      Object.assign(handlerResult, result);
+      nextResult = await errorHandler(e, routeId);
+      return nextResult;
     }
   };
 
@@ -5643,20 +5644,27 @@ async function callClientRouteMiddleware(
       next,
     );
 
-    // On the client, just call next if they didn't
-    if (typeof result !== "undefined") {
-      console.warn(
-        "client middlewares are not intended to return values, the value will be ignored",
-        result,
-      );
-    }
-
-    if (!nextCalled) {
-      await next();
+    if (nextCalled) {
+      // If they called next() but didn't return the response, we can bubble
+      // it for them. This allows some minor syntactic sugar (or forgetfulness)
+      // where you can grab the response to add a header without re-returning it
+      return typeof result === "undefined" ? nextResult! : result;
+    } else if (
+      typeof result === "object" &&
+      Object.values(result).every((v) => isDataStrategyResult(v))
+    ) {
+      return result;
+    } else {
+      // Otherwise call next() for them
+      nextResult = await next();
+      return nextResult;
     }
   } catch (error) {
     let result = await errorHandler(error, routeId);
-    Object.assign(handlerResult, result);
+    if (nextResult) {
+      return Object.assign(nextResult, result);
+    }
+    return result;
   }
 }
 
