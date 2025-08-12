@@ -77,8 +77,10 @@ function initSsrInfo(): void {
 
 function createHydratedRouter({
   unstable_getContext,
+  unstable_handleError,
 }: {
   unstable_getContext?: RouterInit["unstable_getContext"];
+  unstable_handleError?: RouterInit["unstable_handleError"];
 }): DataRouter {
   initSsrInfo();
 
@@ -169,6 +171,7 @@ function createHydratedRouter({
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
     unstable_getContext,
+    unstable_handleError,
     hydrationData,
     hydrationRouteProperties,
     mapRouteProperties,
@@ -222,6 +225,27 @@ export interface HydratedRouterProps {
    * functions
    */
   unstable_getContext?: RouterInit["unstable_getContext"];
+  /**
+   * An error handler function that will be called for any loader/action/render
+   * errors that are encountered in your application.  This is useful for
+   * logging or reporting errors instead of the `ErrorBoundary` because it's not
+   * subject to re-rendering and will only run one time per error.
+   *
+   * The `errorInfo` parameter is passed along from
+   * [`componentDidCatch`](https://react.dev/reference/react/Component#componentdidcatch)
+   * and is only present for render errors.
+   *
+   * ```tsx
+   * <HydratedRouter unstable_handleError={(error, { location, errorInfo }) => {
+   *   console.log(
+   *     `Error at location ${location.pathname}`,
+   *     error,
+   *     errorInfo
+   *   );
+   * }} />
+   * ```
+   */
+  unstable_handleError?: RouterInit["unstable_handleError"];
 }
 
 /**
@@ -233,12 +257,14 @@ export interface HydratedRouterProps {
  * @mode framework
  * @param props Props
  * @param {dom.HydratedRouterProps.unstable_getContext} props.unstable_getContext n/a
+ * @param {dom.HydratedRouterProps.unstable_handleError} props.unstable_handleError n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
   if (!router) {
     router = createHydratedRouter({
       unstable_getContext: props.unstable_getContext,
+      unstable_handleError: props.unstable_handleError,
     });
   }
 
