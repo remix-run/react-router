@@ -145,8 +145,8 @@ test("allows users to pass a handleError function to HydratedRouter", async ({
             document,
             <StrictMode>
               <HydratedRouter
-                unstable_handleError={(error, { location, errorInfo }) => {
-                  console.log(error.message, JSON.stringify(errorInfo), location.pathname)
+                unstable_handleError={(error, errorInfo) => {
+                  console.log(error.message, JSON.stringify(errorInfo))
                 }}
               />
             </StrictMode>
@@ -188,7 +188,6 @@ test("allows users to pass a handleError function to HydratedRouter", async ({
   // Second one is ours
   expect(logs[1]).toContain("Render error");
   expect(logs[1]).toContain('"componentStack":');
-  expect(logs[1]).toContain("/page");
 
   appFixture.close();
 });
